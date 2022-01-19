@@ -6,13 +6,28 @@ const onerror = require('koa-onerror')
 const bodyparser = require('koa-bodyparser')
 const logger = require('koa-logger')
 
+const session = require('koa-generic-session')
+const redisStore = require('koa-redis')
+
 const index = require('./routes/index')
 const users = require('./routes/users')
 
 // error handler
 onerror(app)
 
+app.keys = ['keys']
+
 // middlewares
+app.use(session({
+  key: 'blog.sid', //cookie name前綴
+  prefix: 'blog.sess', //redis key前綴
+  store: redisStore({
+    path: '/',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 //ms
+  })
+}))
+
 app.use(bodyparser({
   enableTypes:['json', 'form', 'text']
 }))
@@ -35,6 +50,8 @@ app.use(async (ctx, next) => {
 // routes
 app.use(index.routes(), index.allowedMethods())
 app.use(users.routes(), users.allowedMethods())
+
+
 
 // error-handling
 app.on('error', (err, ctx) => {
