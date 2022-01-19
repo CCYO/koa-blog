@@ -19,8 +19,12 @@ app.keys = ['keys']
 
 // middlewares
 app.use(session({
+  key: 'blog.sid', //cookie name前綴
+  prefix: 'blog.sess', //redis key前綴
   store: redisStore({
-
+    path: '/',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 //ms
   })
 }))
 
