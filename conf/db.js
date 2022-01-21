@@ -2,7 +2,7 @@
  * @description 緩存配置
  */
 
-const { isPro } = require('./utils/env')
+const { isPro } = require('../utils/env')
 
 let REDIS_CONF = {
     port: 6379,
