@@ -46,7 +46,7 @@ const register = async (username, password) => {
         try{
             const user = await create({
                 username,
-                password: hash(password)
+                password
             })
             console.log('@@@成功創建user ===> ', user)
             return new SuccModel(user)
