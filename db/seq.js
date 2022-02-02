@@ -3,13 +3,9 @@
  */
 const { Sequelize, DataTypes } = require('sequelize')
 
-const {MYSQL_CONF, MYSQL_CONF: {
-    database,
-    username,
-    password,
-}} = require('../conf/db')
+const { MYSQL_CONF } = require('../conf/db')
 
-const seq = new Sequelize(database, username, password, MYSQL_CONF)
+const seq = new Sequelize(MYSQL_CONF)
 
 const test = async () => {
     try {

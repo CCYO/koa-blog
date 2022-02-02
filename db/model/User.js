@@ -9,25 +9,37 @@ const User = seq.define('User', {
     username: {
         type: STRING,
         allowNull: false,
+        unique: true,
         validate: {
-            is: /\w{2,20}/,
+            is: /^[\w]+$/,
+            len: [2, 20],
             notNull: true,
+        }
+    },
+    password: {
+        type: STRING,
+        allowNull: false,
+        validate: {
+            notNull: true,
+            is: /^[\w]+$/,
+            len: [32, 32]
         }
     },
     age: {
         type: INTEGER,
         validate: {
-            is: /\d/,
+            is: /^[\d]+$/,
             max: 150,
             min: 1
         }
     },
     nickName: {
         type: STRING,
-        allowNull: false,
+        allowNull: true,
         validate: {
-            is: /\w{2,20}/,
-            notNull: true,
+            is: /^[\w]+$/,
+            len: [2,20],
+            notNull: false,
         }
     },
     avatar: {
