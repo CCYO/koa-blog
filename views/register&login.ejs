@@ -82,18 +82,26 @@
                     <div class="mb-3">
                       <label for="input_username" class="form-label">帳號</label>
                       <input
-                        type="text" id="input_username" name="input_username" class="form-control" autocomplete="off" required 
-                        aria-describedby="username_help">
+                        type="text" class="form-control"
+                        name="input_username" data-form-id='#form_register' 
+                        aria-describedby="username_help"
+                        autocomplete="off" required>
                       <div class="d-block">&nbsp;</div>
                     </div>
                     <div class="mb-3">
                       <label for="input_password" class="form-label">密碼</label>
-                      <input type="password" id="input_password" name="input_password" autocomplete="new-password" data-form-id='#form_register' data-retry='yes' class="form-control">
+                      <input
+                        type="password" class="form-control"
+                        name="input_password" data-form-id='#form_register' data-retry='yes'
+                        autocomplete="new-password" required>
                       <div class="d-block">&nbsp;</div>
                     </div>
                     <div class="mb-3">
                       <label for="input_check_password" class="form-label">密碼確認</label>
-                      <input type="password" id="input_check_password" class="form-control" autocomplete="off" disabled>
+                      <input
+                        type="password" class="form-control"
+                        name='input_check_password'
+                        autocomplete="off" disabled>
                       <div class="d-block">&nbsp;</div>
                     </div>
                     <button type="submit" class="btn btn-primary" disabled>送出</button>
@@ -106,13 +114,18 @@
                   <div class="mb-3">
                     <label for="input_username" class="form-label">帳號</label>
                     <input
-                      type="text" id="input_username" name="input_username" class="form-control" autocomplete="off" required 
+                      type="text" class="form-control"
+                      name="input_username" data-form-id='#form_login'
+                      autocomplete="off" required 
                       aria-describedby="username_help">
                     <div class="d-block">&nbsp;</div>
                   </div>
                   <div class="mb-3">
                     <label for="input_password" class="form-label">密碼</label>
-                    <input type="password" id="input_password" name="input_password" autocomplete="new-password" data-form-id='#form_register' data-retry='yes' class="form-control">
+                    <input
+                      type="password" class="form-control"
+                      name="input_password" data-form-id='#form_login' 
+                      autocomplete="new-password">
                     <div class="d-block">&nbsp;</div>
                   </div>
                   <button type="submit" class="btn btn-primary" disabled>送出</button>
@@ -137,10 +150,12 @@
       //  selector__ 對應 selector
       const selector__form_register = '#form_register'
       const selector__form_login = '#form_login'
-      const selector__inp_username = `#input_username`
-      const selector__inp_password = `#input_password`
-      const selector__inp_check_password = `#input_check_password`
-      const selector__feedback_check_password = `#input_check_password ~ div`
+      //const selector__inp_username = `#input_username`
+      const selector__inp_username = `input[name='input_username']`
+      //const selector__inp_password = `#input_password`
+      const selector__inp_password = `input[name='input_password']`
+      const selector__inp_check_password = `input[name='input_check_password']`
+      let selector__feedback_check_password = `${selector__inp_check_password} ~ div`
 
       //  $ 對應 ele
       const $check_password = $(selector__inp_check_password)
@@ -235,28 +250,31 @@
       const form_UI_register = _form_UI(selector__form_register)
 
       //  form_UI_login
-      const form_UI_login = _form_UI('#form_login')      
+      const form_UI_login = _form_UI(selector__form_login)      
 
-      // 驗證 register username 是否已存在
-      $(`${selector__form_register} ${selector__inp_username}`).addEventListener(
-        'input',
-        async (e) => {
-          const $target = e.target
-          const $feedback = $(`${selector__form_register} ${selector__inp_username} ~ div`)
+      const validate_username = async (e) => {
+        const $target = e.target
 
-          const selector = selector__inp_username
-          const username = $target.value
+        let form_id = $target.dataset['formId']
+        const $feedback = $(`${form_id} ${selector__inp_username} ~ div`)
 
-          if(!username){
-            //  無值
-            form_UI_register(selector, true)
-            return
-          }else if( !(/^[\w]+$/.exec(username)) ){
-            //  格式錯誤
-            form_UI_register(selector, false, '帳號必須由數字或英文字母組成')
-            return 
-          }
+        const form_UI = (form_id = form_id === '#form_register') ? form_UI_register : form_UI_login
+        
+        const username = $target.value
 
+        if(!username){
+          //  無值
+          form_UI(selector__inp_username, true)
+          return
+        }else if( !(/^[\w]+$/.exec(username)) ){
+          //  格式錯誤
+          form_UI(selector__inp_username, false, '帳號必須由數字或英文字母組成')
+          return 
+        }
+
+        //  格式驗證成功
+        if(form_id){
+          //  若是 register_input_username
           //  添加 loading 樣式
           $target.classList.remove('is-valid', 'is-invalid')
           $feedback.classList.add('loading')
@@ -275,15 +293,27 @@
           $feedback.classList.remove('loading')
 
           if(errno){
-            //  驗證失敗
-            form_UI_register(selector, false, msg)
+            //  DB驗證失敗
+            form_UI_register(selector__inp_username, false, msg)
             return
           }else{
-            //  驗證成功
-            form_UI_register(selector)
+            //  DB驗證成功
+            form_UI_register(selector__inp_username)
             return
           }
+        }else{
+          //  若是 login_input_username
+          form_UI(selector__inp_username)
         }
+      }
+      
+
+      // 驗證 register username 是否已存在
+      $$(`${selector__inp_username}`).forEach(
+        inp => inp.addEventListener(
+          'input',
+          validate_username
+        )
       )
 
       //  handle 密碼格式
@@ -305,7 +335,7 @@
 
         if(!password){
           //  無效，密碼為空
-          form_id && $check_password.setAttribute('disabled', true)
+          form_id && $check_password.setAttribute('disabled', true) && console.log(123456)
           form_UI(selector__inp_password, true)
           return
         }else if(!( /^[\w]+$/.exec(password) )){
