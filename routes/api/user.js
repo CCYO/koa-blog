@@ -17,7 +17,17 @@ router.post('/register', async (ctx, next) => {
 //  login
 router.post('/', async (ctx, next) => {
     const { username, password } = ctx.request.body
-    ctx.body = await findUser(username, password)
+    const resModel = await findUser(username, password)
+    const {
+        errno,
+        data = undefined,
+    } = resModel
+    if( !errno && !ctx.session.user ){
+        console.log(`@@ ctx.session ===> ${ctx.session}`)
+        ctx.session.user = data
+        console.log(`@@ ctx.session.user ===> ${ctx.session}`)
+    }
+    ctx.body = resModel
 })
 
 module.exports = router
