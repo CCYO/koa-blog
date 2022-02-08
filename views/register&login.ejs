@@ -423,7 +423,7 @@
               msg = undefined,
               data = undefined
             }
-          } = await axios.post('/api/user/login', {
+          } = await axios.post('/api/user/', {
             username: $(`${selector__form_login} ${selector__inp_username}`).value,
             password: $(`${selector__form_login} ${selector__inp_password}`).value
           })
