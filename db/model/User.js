@@ -33,7 +33,7 @@ const User = seq.define('User', {
             min: 1
         }
     },
-    nickName: {
+    nickname: {
         type: STRING,
         allowNull: true,
         validate: {
