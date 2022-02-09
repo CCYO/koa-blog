@@ -22,10 +22,8 @@ router.post('/', async (ctx, next) => {
         errno,
         data = undefined,
     } = resModel
-    if( !errno && !ctx.session.user ){
-        console.log(`@@ ctx.session ===> ${ctx.session}`)
+    if( !errno && ctx.session.user == null ){        
         ctx.session.user = data
-        console.log(`@@ ctx.session.user ===> ${ctx.session}`)
     }
     ctx.body = resModel
 })
