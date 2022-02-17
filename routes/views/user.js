@@ -4,7 +4,7 @@
 
 const router = require('koa-router')()
 
-const api_check_login = require('../../middleware/check_login')
+const { view_check_login } = require('../../middleware/check_login')
 
 router.get('/register', async (ctx, next) => {
     await ctx.render('register&login', {
@@ -20,7 +20,7 @@ router.get('/login', async (ctx, next) => {
     })
 })
 
-router.get('/square', api_check_login, async (ctx, next) => {
+router.get('/square', view_check_login, async (ctx, next) => {
     ctx.body = 'okok'
 })
 

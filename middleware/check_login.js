@@ -7,9 +7,11 @@ const view_check_login = async (ctx, next) => {
     if(user){
         await next()
     }else{
-        ctx.redirect(`/login?from=${encodeURIComponent(ctx.path)}`)
+        ctx.redirect(`/login?from=${encodeURIComponent(ctx.href)}`)
     }
     return
 }
 
-module.exports = view_check_login
+module.exports = {
+    view_check_login
+}

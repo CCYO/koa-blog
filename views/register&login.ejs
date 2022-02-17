@@ -431,7 +431,8 @@
             alert(msg)
           }else{
             alert('登入成功')
-            location.href = '/square'
+            let from = location.search ? new URLSearchParams(location.search).get('from') : false
+            location.href = from || '/square'
           }
       })
     
