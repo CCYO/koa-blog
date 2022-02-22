@@ -6,6 +6,8 @@ const router = require('koa-router')()
 
 const { register, findUser } = require('../../controller/user')
 
+const { api_check_login } = require('../../middleware/check_login')
+
 router.prefix('/api/user')
 
 //  register
@@ -26,6 +28,10 @@ router.post('/', async (ctx, next) => {
         ctx.session.user = data
     }
     ctx.body = resModel
+})
+
+router.get('/logout', api_check_login, async (ctx, next) => {
+    ctx.body = 'okok'
 })
 
 module.exports = router
