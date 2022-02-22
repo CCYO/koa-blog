@@ -1,7 +1,7 @@
 /**
  * @description Controller user相關
  */
-const { create, read } = require('../server/user')
+const { create, read, update } = require('../server/user')
 const hash = require('../utils/crypto')
 const { ErrModel, SuccModel } = require('../model')
 
@@ -12,9 +12,8 @@ const {
         NO_USERNAME,
         NO_PASSWORD
     },
-    READ: {
-        NOT_EXIST
-    }
+    READ,
+    UPDATE
 } = require('../model/errRes')
 
 const findUser = async (username, password) => {
@@ -29,7 +28,7 @@ const findUser = async (username, password) => {
     // 取得帳號
     }else{
         if(res) return new SuccModel(res)
-        return new ErrModel(NOT_EXIST)
+        return new ErrModel(READ.NOT_EXIST)
     }
 }
 
@@ -57,7 +56,22 @@ const register = async (username, password) => {
     }
 }
 
+const modifyUserInfo = async (newUserInfo ) => {
+    try{
+        const user = await update(newUserInfo)
+        if(user) return new SuccModel(user)
+        return new ErrModel(READ.NOT_EXIST)
+    }catch(e){
+        if(e.name === 'SequelizeValidationError'){
+            return new ErrModel({...UPDATE.INVALICATE, msg: e})
+        }else{
+            return new ErrModel({...UPDATE.UNEXPECTED, msg: e})
+        }
+    }   
+}
+
 module.exports = {
     register,
-    findUser
+    findUser,
+    modifyUserInfo
 }

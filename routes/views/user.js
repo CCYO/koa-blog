@@ -20,6 +20,10 @@ router.get('/login', async (ctx, next) => {
     })
 })
 
+router.get('/setting', view_check_login, async (ctx, next) => {
+    await ctx.render('setting')
+})
+
 router.get('/square', view_check_login, async (ctx, next) => {
     ctx.body = 'okok'
 })

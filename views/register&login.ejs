@@ -135,6 +135,7 @@
         </div>
     </div>
     <%- include('wedgets/cdn') %>
+    <%- include('wedgets/utils') %>
     <style>
       .nav-link.active {
         pointer-events: none
@@ -144,9 +145,6 @@
       }
     </style>
     <script>
-      const $ = (selector) => document.querySelector(selector)
-      const $$ = (selector) => document.querySelectorAll(selector)
-
       //  selector__ 對應 selector
       const selector__form_register = '#form_register'
       const selector__form_login = '#form_login'

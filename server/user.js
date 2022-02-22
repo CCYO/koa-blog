@@ -21,7 +21,21 @@ const read = async ({username, password}) => {
     return init_4_user(user.dataValues)
 }
 
+const update = async (newUserInfo ) => {
+    let data = { ...newUserInfo }
+    if(data.password){
+        data.password = hash(password)
+    }
+    let user = await User.findOne({
+        where: { id: data.id }
+    })
+    if(!user) return false
+    await user.update(data)
+    return init_4_user(user.dataValues)
+}
+
 module.exports = {
     create,
-    read
+    read,
+    update
 }

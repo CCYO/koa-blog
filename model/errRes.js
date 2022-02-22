@@ -12,7 +12,11 @@ module.exports = {
     READ: {
         NOT_EXIST: {errno: 201, msg: '沒有相符的使用者資料'}
     },
+    UPDATE: {
+        INVALICATE: { errno: 301}
+    },
     LOGIN: {
+        UNEXPECTED: {errno: 399},
         NOT_LOGIN: {errno: 301, msg: '未登入'}
     }
 }
