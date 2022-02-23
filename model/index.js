@@ -16,9 +16,19 @@ class SuccModel extends _Model {
     }
 }
 
+const _init_error = (e) => {
+    if(!(e instanceof Error)) return e
+    return JSON.parse(
+        JSON.stringify(
+            e,
+            Object.getOwnPropertyNames(e)
+        )
+    )
+}
+
 class ErrModel extends _Model {
     constructor({errno, msg}){
-        super({errno, msg})
+        super({errno, msg: _init_error(msg)})
     }
 }
 

@@ -59,9 +59,11 @@ const register = async (username, password) => {
 const modifyUserInfo = async (newUserInfo ) => {
     try{
         const user = await update(newUserInfo)
+        console.log('x ==> ', user)
         if(user) return new SuccModel(user)
         return new ErrModel(READ.NOT_EXIST)
     }catch(e){
+        console.log('xxx => ', e)
         if(e.name === 'SequelizeValidationError'){
             return new ErrModel({...UPDATE.INVALICATE, msg: e})
         }else{

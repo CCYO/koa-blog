@@ -34,8 +34,13 @@ router.post('/', async (ctx, next) => {
 router.patch('/',  api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
     const newUserInfo = { ...ctx.request.body, id }
-    ctx.body = await modifyUserInfo(newUserInfo)
-    
+    console.log(newUserInfo)
+    const resModel = await modifyUserInfo(newUserInfo)
+    if( !resModel.errno ){        
+        ctx.session.user = resModel.data
+    }
+    console.log('xxx => ', resModel)
+    ctx.body = resModel
 })
 
 router.get('/logout', api_check_login, async (ctx, next) => {
