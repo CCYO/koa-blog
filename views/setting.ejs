@@ -19,7 +19,7 @@
                 type="text" class="form-control"
                 name="username"
                 aria-describedby="username_help"
-                autocomplete="off" required>
+                autocomplete="off">
                 <div class="d-block">&nbsp;</div>
                 </label>
             </div>
@@ -28,7 +28,7 @@
                     <input
                     type="password" class="form-control"
                     name="password" data-retry='yes'
-                    autocomplete="new-password" required>
+                    autocomplete="new-password">
                     <div class="d-block">&nbsp;</div>
                 </label>
             </div>
@@ -44,7 +44,7 @@
             <div class="mb-3">
                 <label class="form-label w-100">年齡
                     <input
-                    type="text" class="form-control"
+                    type="number" class="form-control"
                     name="age"
                     autocomplete="off">
                     <div class="d-block">&nbsp;</div>
@@ -72,15 +72,28 @@
             let newUserInfo = {}
             for({type, name, value} of e.target){
                 if(type !== 'submit' && value){
+                    value = (type === 'number') ? value*1 : value
                     newUserInfo[name] = value
                 }
             }
             let {
-                errno,
-                data,
-                msg
+                data: {
+                    errno,
+                    data,
+                    msg
+                }
             } = await axios.patch('/api/user/', newUserInfo)
-            if(errno)
+            if(errno){
+                if(Array.isArray(msg)){
+                    alert(`${msg[0].instancePath} ${msg[0].message}`)
+                    console.log(msg)
+                    return
+                }
+                alert(msg.message)
+                console.error(msg.stack)
+            }else{
+                console.log(data)
+            }
         })
     </script>
 </body>

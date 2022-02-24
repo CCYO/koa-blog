@@ -8,6 +8,8 @@ const { register, findUser, modifyUserInfo } = require('../../controller/user')
 
 const { api_check_login } = require('../../middleware/check_login')
 
+const { validate_user } = require('../../middleware/validate')
+
 router.prefix('/api/user')
 
 //  register
@@ -20,18 +22,14 @@ router.post('/register', async (ctx, next) => {
 router.post('/', async (ctx, next) => {
     const { username, password } = ctx.request.body
     const resModel = await findUser(username, password)
-    const {
-        errno,
-        data = undefined,
-    } = resModel
-    if( !errno && ctx.session.user == null ){        
-        ctx.session.user = data
+    if( !resModel.errno && ctx.session.user == null ){        
+        ctx.session.user = resModel.data
     }
     ctx.body = resModel
 })
 
 //  setting
-router.patch('/',  api_check_login, async (ctx, next) => {
+router.patch('/',  api_check_login, validate_user, async (ctx, next) => {
     const { id } = ctx.session.user
     const newUserInfo = { ...ctx.request.body, id }
     console.log(newUserInfo)
@@ -39,7 +37,6 @@ router.patch('/',  api_check_login, async (ctx, next) => {
     if( !resModel.errno ){        
         ctx.session.user = resModel.data
     }
-    console.log('xxx => ', resModel)
     ctx.body = resModel
 })
 

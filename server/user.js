@@ -30,10 +30,8 @@ const update = async (newUserInfo ) => {
     let user = await User.findOne({
         where: { id: data.id }
     })
-    console.log('@@@x    ===> ', user)
     if(!user) return false
     await user.update(data)
-    console.log('@@@ ===> ', user)
     return init_4_user(user.dataValues)
 }
 

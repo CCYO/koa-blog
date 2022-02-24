@@ -18,5 +18,6 @@ module.exports = {
     },
     LOGIN: {
         NOT_LOGIN: {errno: 501, msg: '未登入'}
-    }
+    },
+    FORMAT_ERR: { errno: 601}
 }
