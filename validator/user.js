@@ -11,20 +11,20 @@ const schema = {
     properties: {
         username: {
             type: 'string',
-            pattern: '^[\w]+$',
+            pattern: '^[\\w]+$',
             minLength: 2,
             maxLength: 20
         },
         nickname: {
             type: 'string',
-            pattern: '^[\w]+$',
+            pattern: '^[\\w]+$',
             minLength: 2,
             maxLength: 20
         },
         password: {
             type: 'string',
-            pattern: '^[\w]+$',
-            minLength: 32,
+            pattern: '^[\\w]+$',
+            minLength: 3,
             maxLength: 32
         },
         age: {
@@ -40,6 +40,7 @@ const schema = {
 }
 
 const validator_user = (data) => {
+    console.log('## ==> ', data)
     if(!ajv.validate(schema, data)){
         return ajv.errors
     }

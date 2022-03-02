@@ -24,9 +24,9 @@ const read = async ({username, password}) => {
 const update = async (newUserInfo ) => {
     let data = { ...newUserInfo }
     if(data.password){
-        //data.password = hash(data.password)
-        data.password = hash(password)
+        data.password = hash(data.password)
     }
+    console.log(data)
     let user = await User.findOne({
         where: { id: data.id }
     })
