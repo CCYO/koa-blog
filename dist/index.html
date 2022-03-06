@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+<script defer src="264aa.firebase_auth.js"></script></head>
+<body>
+    <input type="file" name="file" id="file">
+    <script>
+        const inp_file = document.querySelector('#file')
+        const update = async ( e ) => {
+            const file = e.target.files[0]
+            const reader = new FileReader()
+            reader.onload = async (e) => {
+                await _firebase.storage.update(file.name, e.target.result)
+                console.log("檔案上傳結束")
+            }
+            reader.readAsBinaryString(file)
+            console.log("檔案上傳開始")
+        }
+        inp_file.addEventListener('change', update)
+    </script>
+</body>
+</html>

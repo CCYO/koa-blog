@@ -11,9 +11,8 @@ const User = seq.define('User', {
         allowNull: false,
         unique: true,
         validate: {
-            is: /^[\w]+$/,
-            len: [2, 20],
-            notNull: true,
+            isEmail: true,
+            notNull: true
         }
     },
     password: {

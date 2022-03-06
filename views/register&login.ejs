@@ -136,6 +136,7 @@
     </div>
     <%- include('wedgets/cdn') %>
     <%- include('wedgets/utils') %>
+    <script src="/js/ee687.firebase_auth.js"></script>
     <style>
       .nav-link.active {
         pointer-events: none
@@ -265,7 +266,7 @@
           //  無值
           form_UI(selector__inp_username, true)
           return
-        }else if( !(/^[\w]+$/.exec(username)) ){
+        }else if( !(/^[\w]+@[\w\.]+$/.exec(username)) ){
           //  格式錯誤
           form_UI(selector__inp_username, false, '帳號必須由數字或英文字母組成')
           return 
@@ -392,6 +393,8 @@
         'submit',
         async (e) => {
           e.preventDefault()
+          const username = $(`${selector__form_register} ${selector__inp_username}`).value
+          const password = $(`${selector__form_register} ${selector__inp_password}`).value
           const {
             data: {
               errno,
@@ -399,15 +402,16 @@
               data = undefined
             }
           } = await axios.post('/api/user/register', {
-            username: $(`${selector__form_register} ${selector__inp_username}`).value,
-            password: $(`${selector__form_register} ${selector__inp_password}`).value
+            username,
+            password
           })
           if(errno){
-            alert(msg)
+            alert(msg.message)
           }else{
+            window.userCredential = await _firebase.auth.create( username, password )
             alert('註冊成功，請嘗試登入')
-            location.href = '/login'
-            user = data
+            //location.href = '/login'
+            
           }
       })
     
