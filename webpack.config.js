@@ -1,5 +1,6 @@
 const { resolve } = require("path");
 const HTMLWebpackPlugin = require("html-webpack-plugin")
+const { CleanWebpackPlugin } = require("clean-webpack-plugin")
 module.exports = {
   devtool: "source-map",
   entry: {
@@ -12,7 +13,8 @@ module.exports = {
   plugins: [
       new HTMLWebpackPlugin({
         template: resolve(__dirname, './index.html')
-      })    
+      }),
+      new CleanWebpackPlugin()
   ],
   mode: "development"
 };

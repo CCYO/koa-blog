@@ -10,12 +10,51 @@
     <input type="file" name="file" id="file">
     <script>
         const inp_file = document.querySelector('#file')
+        let download_url
         const update = async ( e ) => {
             const file = e.target.files[0]
             const reader = new FileReader()
+            //  開始
+            reader.onloadstart = async (e) => {
+                console.log('reader start')
+            }
+            // 進度
+            reader.onprogress = async (e) => {
+                console.log('reader progress')
+                console.log('reader progress ok')
+            } 
+            // 成功
             reader.onload = async (e) => {
-                await _firebase.storage.update(file.name, e.target.result)
-                console.log("檔案上傳結束")
+                console.log('reader load')
+                console.log("檔案上傳成功,開始進行firebase storage上傳")
+                try{
+                    await _firebase.storage.update(file.name, e.target.result)
+                    console.log('firebase storage上傳成功')
+                    const fileName = file.name
+                    console.log(fileName)
+                    console.log('抓取 firebase storage 檔案的 download url -- 開始')
+                    const avatar = await _firebase.storage.getUrl(file.name)
+                    console.log('抓取 firebase storage 檔案的 download url -- 完成, url => ', avatar)
+                    let { uid, email } = await _firebase.auth.findCurrentUser()
+                    console.log(uid)
+                    console.log(email)
+                    let [ _ , username ] = /^([\w]+)@/.exec(email)
+                    console.log(username)
+                    console.log('realtime資料寫入 -- 開始')
+                    await _firebase.realtimeDB.writeUserData(uid, username, email, avatar)
+                    console.log('realtime資料寫入 -- 完成')
+                }catch(e){
+                    console.log('建立realtimeDB資料時發生錯誤 => ', e)
+                }
+                
+            }
+            // 結束(不一定成功)
+            reader.onloadend = async (e) => {
+                console.log('reader loadend')
+            }
+            //  異常
+            reader.onerror = async (e) => {
+                console.log('reader error')
             }
             reader.readAsBinaryString(file)
             console.log("檔案上傳開始")

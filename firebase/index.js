@@ -1,7 +1,9 @@
-import create from './auth'
-import update from './storage'
+import { create, findCurrentUser, signIn, logout } from './auth'
+import { update, getUrl } from './storage'
+import { writeUserData } from './realtimeDB'
 
 window._firebase = {
-    auth: { create },
-    storage: { update }
+    auth: { create, findCurrentUser, signIn, logout },
+    storage: { update, getUrl },
+    realtimeDB: { writeUserData }
 }

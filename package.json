@@ -30,6 +30,7 @@
     "sequelize": "^6.14.0"
   },
   "devDependencies": {
+    "clean-webpack-plugin": "^4.0.0",
     "html-webpack-plugin": "^5.5.0",
     "nodemon": "^1.19.1",
     "webpack": "^5.70.0",
