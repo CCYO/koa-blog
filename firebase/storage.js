@@ -2,7 +2,6 @@ import './init'
 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getApp } from "firebase/app";
-import { async } from '@firebase/util';
 
 // Get a non-default Storage bucket
 const firebaseApp = getApp();
@@ -18,9 +17,10 @@ const mountainsRef = ref(storage, 'mountains.jpg');
 const mountainImagesRef = ref(storage, 'images/mountains.jpg');
 
 // 'file' comes from the Blob or File API
-const update = async (filename, file) => {
+const update = async (filename, file, ext) => {
     const storageRef = ref(storage, filename)
-    const snapshot = await uploadBytes(storageRef, file)
+    const mata = { contentType: `image/${ext}`}
+    const snapshot = await uploadBytes(storageRef, file , mata)
     console.log('Uploaded a blob or file! snapshot => ', snapshot);
     return snapshot
 };

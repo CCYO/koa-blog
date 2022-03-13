@@ -5,33 +5,81 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <div id="show"></div>
 </head>
 <body>
     <input type="file" name="file" id="file">
     <script>
-        const inp_file = document.querySelector('#file')
-        let download_url
-        const update = async ( e ) => {
-            const file = e.target.files[0]
-            const reader = new FileReader()
-            //  開始
-            reader.onloadstart = async (e) => {
-                console.log('reader start')
+        //------------------------------------------------- VARs & Refs
+        const imgToUpload = document.querySelector('#file'),
+        labName = document.querySelector('#labName'),
+        labExt = document.querySelector('#labExt')
+
+        const myImg = imgToUpload.files[0],
+        imgName = labName.value,
+        imgExt = labExt.textContent,
+        uploadToStorage = window._firebase.storage.update
+        //------------------------------------------------- GET EXT
+        const getExt = (file) => {
+            const [ext] = file.name
+                .split('/\./')
+                .filter( (item, ind, arr) => { 
+                    return ind + 1 === arr.length })
+            return ext
+        }
+        //------------------------------------------------- img檔案的基本判斷
+        const checkImgAndGetExt = (img) => {
+            if(!img){
+                alert('請選則要上傳的圖片')
+                return 
             }
-            // 進度
-            reader.onprogress = async (e) => {
-                console.log('reader progress')
-                console.log('reader progress ok')
-            } 
+            if((myImg.size / 1024).ceil() > 10){
+                alert('圖片必須小於10M')
+                return
+            }
+            const ext =
+                getExt(myImg) === 'png' ? 'png' : 
+                getExt(myImg) === 'jpg' || 'jpeg' ? 'jpeg' :
+                false
+            if(!ext){   
+                alert('僅能選用jpg或png檔')
+                return
+            }
+            return ext
+        }
+        //------------------------------------------------- Handle For READER
+        const handleForReader = (reader) => {
+            return new Promise( (r, j ) => {
+                reader.onloadstart = (e) => {
+                    console.log('圖檔從本地上傳到Browser -- 開始')
+                }
+                reader.onloadend = (e) => {
+                    console.log('圖檔從本地上傳到Browser -- 結束')
+                }
+                reader.onload = (e) => {
+                    if(e.readyState === 2) console.log('圖檔從本地上傳到Browser -- 完成')
+                    r(reader.response)
+                    return
+                }
+                reader.onerror = (e) => {
+                    console.log('圖檔從本地上傳到Browser -- 發生錯誤, 錯誤為 => ', reader.error)
+                    j(reader.error)
+                    return
+                }
+            })
+        }
+        //------------------------------------------------- ONCHANGE
+        const onchange = async ( e ) => {
+            imgExt = checkImgAndGetExt(myImg)
+            const reader = new FileReader()
             // 成功
+            const response = await handleForReader(reader)
             reader.onload = async (e) => {
-                console.log('reader load')
+                console.log('reader load => ', e.target.readyState)
                 console.log("檔案上傳成功,開始進行firebase storage上傳")
                 try{
-                    await _firebase.storage.update(file.name, e.target.result)
-                    console.log('firebase storage上傳成功')
-                    const fileName = file.name
-                    console.log(fileName)
+                    await _firebase.storage.update(file.name, e.target.result, ext)
+                    console.log('firebase storage上傳成功')                    
                     console.log('抓取 firebase storage 檔案的 download url -- 開始')
                     const avatar = await _firebase.storage.getUrl(file.name)
                     console.log('抓取 firebase storage 檔案的 download url -- 完成, url => ', avatar)
@@ -43,6 +91,17 @@
                     console.log('realtime資料寫入 -- 開始')
                     await _firebase.realtimeDB.writeUserData(uid, username, email, avatar)
                     console.log('realtime資料寫入 -- 完成')
+                    const xhr = new XMLHttpRequest();
+                    xhr.responseType = 'blob';
+                    xhr.onload = (event) => {
+                    const blob = xhr.response;
+                    };
+                    xhr.open('GET', avatar);
+                    xhr.send();
+
+                    let img = document.createElement('img')
+                    img.setAttribute('src', avatar);
+                    document.querySelector('#show').append(img)
                 }catch(e){
                     console.log('建立realtimeDB資料時發生錯誤 => ', e)
                 }
@@ -50,16 +109,28 @@
             }
             // 結束(不一定成功)
             reader.onloadend = async (e) => {
-                console.log('reader loadend')
+                console.log('reader loadend => ', e.target.readyState)
             }
             //  異常
             reader.onerror = async (e) => {
-                console.log('reader error')
+                console.log('reader error => ', e.target.readyState)
             }
-            reader.readAsBinaryString(file)
+
+            // 進度
+            reader.onprogress = async (e) => {
+                console.log('reader progress => ', e.target.readyState)
+                console.log('reader progress ok')
+            }
+            
+            //  開始
+            reader.onloadstart = async (e) => {
+                console.log('reader start => ', e.target.readyState)
+            }
+            
+            reader.readAsArrayBuffer(file)
             console.log("檔案上傳開始")
         }
-        inp_file.addEventListener('change', update)
+        inp_file.addEventListener('change', onchange)
     </script>
 </body>
 </html>

@@ -163,8 +163,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _init__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./init */ "./firebase/init.js");
 /* harmony import */ var firebase_storage__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! firebase/storage */ "./node_modules/firebase/storage/dist/index.esm.js");
 /* harmony import */ var firebase_app__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! firebase/app */ "./node_modules/firebase/app/dist/index.esm.js");
-/* harmony import */ var _firebase_util__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @firebase/util */ "./node_modules/@firebase/util/dist/index.esm2017.js");
-
 
 
 
@@ -184,9 +182,10 @@ const mountainsRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(stora
 const mountainImagesRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(storage, 'images/mountains.jpg');
 
 // 'file' comes from the Blob or File API
-const update = async (filename, file) => {
+const update = async (filename, file, ext) => {
     const storageRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(storage, filename)
-    const snapshot = await (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.uploadBytes)(storageRef, file)
+    const mata = { contentType: `image/${ext}`}
+    const snapshot = await (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.uploadBytes)(storageRef, file , mata)
     console.log('Uploaded a blob or file! snapshot => ', snapshot);
     return snapshot
 };
@@ -33907,4 +33906,4 @@ window._firebase = {
 
 /******/ })()
 ;
-//# sourceMappingURL=e2902.firebase_auth.js.map
+//# sourceMappingURL=ddc97.firebase_auth.js.map

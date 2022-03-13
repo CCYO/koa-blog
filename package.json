@@ -9,6 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@google-cloud/storage": "^5.18.2",
     "ajv": "^8.10.0",
     "cross-env": "^7.0.3",
     "debug": "^4.1.1",
