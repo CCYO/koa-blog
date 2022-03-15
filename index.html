@@ -9,26 +9,36 @@
 </head>
 <body>
     <input type="file" name="file" id="file">
-    <script>
+    檔名：<input type="text" id="labName">
+    檔案類型：<input type="text" id="labExt">
+    <input type="button" value="UPLOAD TO FIREBASE STORAGE" id="uploadToStorage">
+    <input type="button" value="CANCEL THE IMAGE" id="reset">
+    <script defer>
         //------------------------------------------------- VARs & Refs
         const imgToUpload = document.querySelector('#file'),
+        btn_upload = document.querySelector('#uploadToStorage'),
+        btn_reset = document.querySelector('#reset'),
         labName = document.querySelector('#labName'),
         labExt = document.querySelector('#labExt')
 
-        const myImg = imgToUpload.files[0],
-        imgName = labName.value,
-        imgExt = labExt.textContent,
-        uploadToStorage = window._firebase.storage.update
-        //------------------------------------------------- GET EXT
-        const getExt = (file) => {
-            const [ext] = file.name
-                .split('/\./')
-                .filter( (item, ind, arr) => { 
-                    return ind + 1 === arr.length })
-            return ext
-        }
+        let myImg
+        let imgExt
+        let imgName
+        
+        const uploadToStorage = window._firebase.storage.update
+        const findCurUser = window._firebase.auth.findCurrentUser
+        const updateToRealtimeDB = _firebase.realtimeDB.writeUserData
         //------------------------------------------------- img檔案的基本判斷
         const checkImgAndGetExt = (img) => {
+            //------------------------------------------------- GET EXT
+            const _getExt = (file) => {
+                const [ext] = file.name
+                    .split('/\./')
+                    .filter( (item, ind, arr) => { 
+                        return ind + 1 === arr.length })
+                return ext
+            }
+
             if(!img){
                 alert('請選則要上傳的圖片')
                 return 
@@ -38,8 +48,8 @@
                 return
             }
             const ext =
-                getExt(myImg) === 'png' ? 'png' : 
-                getExt(myImg) === 'jpg' || 'jpeg' ? 'jpeg' :
+                _getExt(myImg) === 'png' ? 'png' : 
+                _getExt(myImg) === 'jpg' || 'jpeg' ? 'jpeg' :
                 false
             if(!ext){   
                 alert('僅能選用jpg或png檔')
@@ -48,89 +58,109 @@
             return ext
         }
         //------------------------------------------------- Handle For READER
-        const handleForReader = (reader) => {
+        const createReaderAndGetArrBuf = (file) => {
             return new Promise( (r, j ) => {
-                reader.onloadstart = (e) => {
+                const reader = new FileReader()
+                reader.addEventListener('start', (e) => {
                     console.log('圖檔從本地上傳到Browser -- 開始')
-                }
-                reader.onloadend = (e) => {
+                })
+                reader.addEventListener('end', (e) => {
                     console.log('圖檔從本地上傳到Browser -- 結束')
-                }
-                reader.onload = (e) => {
+                })
+                reader.addEventListener('load', (e) => {
                     if(e.readyState === 2) console.log('圖檔從本地上傳到Browser -- 完成')
                     r(reader.response)
                     return
-                }
-                reader.onerror = (e) => {
+                })
+                reader.addEventListener('error', (e) => {
                     console.log('圖檔從本地上傳到Browser -- 發生錯誤, 錯誤為 => ', reader.error)
                     j(reader.error)
                     return
-                }
+                })
+                reader.readAsArrayBuffer(file)
             })
         }
-        //------------------------------------------------- ONCHANGE
-        const onchange = async ( e ) => {
-            imgExt = checkImgAndGetExt(myImg)
-            const reader = new FileReader()
-            // 成功
-            const response = await handleForReader(reader)
-            reader.onload = async (e) => {
-                console.log('reader load => ', e.target.readyState)
-                console.log("檔案上傳成功,開始進行firebase storage上傳")
-                try{
-                    await _firebase.storage.update(file.name, e.target.result, ext)
-                    console.log('firebase storage上傳成功')                    
-                    console.log('抓取 firebase storage 檔案的 download url -- 開始')
-                    const avatar = await _firebase.storage.getUrl(file.name)
-                    console.log('抓取 firebase storage 檔案的 download url -- 完成, url => ', avatar)
-                    let { uid, email } = await _firebase.auth.findCurrentUser()
-                    console.log(uid)
-                    console.log(email)
-                    let [ _ , username ] = /^([\w]+)@/.exec(email)
-                    console.log(username)
-                    console.log('realtime資料寫入 -- 開始')
-                    await _firebase.realtimeDB.writeUserData(uid, username, email, avatar)
-                    console.log('realtime資料寫入 -- 完成')
-                    const xhr = new XMLHttpRequest();
-                    xhr.responseType = 'blob';
-                    xhr.onload = (event) => {
-                    const blob = xhr.response;
-                    };
-                    xhr.open('GET', avatar);
-                    xhr.send();
-
-                    let img = document.createElement('img')
-                    img.setAttribute('src', avatar);
-                    document.querySelector('#show').append(img)
-                }catch(e){
-                    console.log('建立realtimeDB資料時發生錯誤 => ', e)
-                }
-                
+        //------------------------------------------------- GET IMG NAME
+        const handleChangeImgName = (originName) => (e) => {
+            if(e.target.value.length > 12 ){
+                alert('名稱不能超過12位')
+                e.target.value = originName
+            }else{
+                e.target.value =
+                !e.target.value ? originName :
+                //\u4e00-\u9fa5 中文
+                //\u3105-\u3129 注音
+                //\u02CA\u02C7\u02CB\u02D9 二三四輕聲
+                !/^[\u4e00-\u9fa5\u3105-\u3129\u02CA\u02C7\u02CB\u02D9_a-zA-Z0-9\.]+$/.exec(e.target.value) ? originName :
+                e.target.value
             }
-            // 結束(不一定成功)
-            reader.onloadend = async (e) => {
-                console.log('reader loadend => ', e.target.readyState)
-            }
-            //  異常
-            reader.onerror = async (e) => {
-                console.log('reader error => ', e.target.readyState)
-            }
-
-            // 進度
-            reader.onprogress = async (e) => {
-                console.log('reader progress => ', e.target.readyState)
-                console.log('reader progress ok')
-            }
-            
-            //  開始
-            reader.onloadstart = async (e) => {
-                console.log('reader start => ', e.target.readyState)
-            }
-            
-            reader.readAsArrayBuffer(file)
-            console.log("檔案上傳開始")
+            return 
         }
-        inp_file.addEventListener('change', onchange)
+        //------------------------------------------------- REALTIME UPLOAD
+        const getUserAndUpdateRealtimeDB = async (avatar) => {
+            let { uid, email } = await findCurUser()
+            let [ _ , username ] = /^([\w]+)@/.exec(email)
+            console.log(`當前用戶為 ${username},其 uid => ${uid}`)
+            await updateToRealtimeDB(uid, username, email, avatar)
+            console.log('realtime資料寫入 -- 完成')
+        }
+        
+        //------------------------------------------------- ONCHANGE
+        const onChange = async ( e ) => {
+            myImg = e.target.files[0]
+            e.target.setAttribute('disabled', true)
+            //若檔案確實存在
+            if(myImg){
+                //撈取圖片類型
+                imgExt = labExt.textContent = checkImgAndGetExt(myImg)
+                if(!imgExt){
+                    return
+                }else{
+                    //檔名欄自動填入名稱
+                    imgName = labName.value = myImg.name
+                        .split('/\./')
+                        .reduce((pre, cur,ind,arr)=> {
+                            if(ind +1 === arr.length){
+                                return pre
+                            }else if(!ind){
+                                return cur
+                            }else{
+                                return pre + '.' + cur
+                            }
+                            return curItem
+                        }, '')
+                    //檔名欄可改
+                    labName.removeAttribute('disabled')
+                    labName.addEventListener('change', handleChangeImgName(imgName))
+                }
+            }else{
+                alert('請確實選擇圖檔')
+            }
+            return
+        }
+        //------------------------------------------------- ONUPDATE
+        const onUpdate = async ( e ) => {
+            const response = await createReaderAndGetArrBuf(myImg)
+            imgName = labName.value
+            fileName = `${imgName}.${imgExt}`
+            await uploadToStorage(fileName, response, imgExt)
+            console.log('firebase storage上傳成功')
+            const avatar = await _firebase.storage.getUrl(fileName)
+            console.log('抓取 firebase storage 檔案的 download url -- 完成, url => ', avatar)
+            await getUserAndUpdateRealtimeDB(avatar)
+            let img = document.createElement('img')
+            img.setAttribute('src', avatar);
+            document.querySelector('#show').append(img)
+        }
+        //------------------------------------------------- RESET THE IMG
+        const onReset = async (e) => {
+            imgToUpload.value = ''
+            vimgToUpload.removeAttribute('disabled')
+        }
+        //------------------------------------------------- add handles
+        imgToUpload.addEventListener('change', onChange)
+        btn_upload.addEventListener('click', onUpdate)
+        btn_reset.addEventListener('click', onReset)
     </script>
 </body>
 </html>
