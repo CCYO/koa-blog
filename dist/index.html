@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <div id="show"></div>
-<script defer src="17d22.main.js"></script></head>
+<script defer src="23069.main.js"></script></head>
 <body>
     <input type="file" name="file" id="file">
     檔名：<input type="text" id="labName">
@@ -14,6 +14,7 @@
     <input type="button" value="UPLOAD TO FIREBASE STORAGE" id="uploadToStorage">
     <input type="button" value="CANCEL THE IMAGE" id="reset">
     <script defer>
+        window.onload = function(){
         //------------------------------------------------- VARs & Refs
         const imgToUpload = document.querySelector('#file'),
         btn_upload = document.querySelector('#uploadToStorage'),
@@ -161,6 +162,7 @@
         imgToUpload.addEventListener('change', onChange)
         btn_upload.addEventListener('click', onUpdate)
         btn_reset.addEventListener('click', onReset)
+    }
     </script>
 </body>
 </html>

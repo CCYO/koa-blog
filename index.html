@@ -14,6 +14,7 @@
     <input type="button" value="UPLOAD TO FIREBASE STORAGE" id="uploadToStorage">
     <input type="button" value="CANCEL THE IMAGE" id="reset">
     <script defer>
+        window.onload = function(){
         //------------------------------------------------- VARs & Refs
         const imgToUpload = document.querySelector('#file'),
         btn_upload = document.querySelector('#uploadToStorage'),
@@ -161,6 +162,7 @@
         imgToUpload.addEventListener('change', onChange)
         btn_upload.addEventListener('click', onUpdate)
         btn_reset.addEventListener('click', onReset)
+    }
     </script>
 </body>
 </html>
