@@ -8,9 +8,9 @@
     <div id="show"></div>
 </head>
 <body>
-    <input type="file" name="file" id="file">
-    檔名：<input type="text" id="labName">
-    檔案類型：<input type="text" id="labExt">
+    <input type="file" name="file" id="file"><br>
+    檔名：<input type="text" id="labName" disabled>
+    檔案類型：<span id="labExt"></span><br>
     <input type="button" value="UPLOAD TO FIREBASE STORAGE" id="uploadToStorage">
     <input type="button" value="CANCEL THE IMAGE" id="reset">
     <script defer>
@@ -44,13 +44,13 @@
                 alert('請選則要上傳的圖片')
                 return 
             }
-            if((myImg.size / 1024).ceil() > 10){
+            if(Math.ceil(img.size / 1024) > 10){
                 alert('圖片必須小於10M')
                 return
             }
             const ext =
-                _getExt(myImg) === 'png' ? 'png' : 
-                _getExt(myImg) === 'jpg' || 'jpeg' ? 'jpeg' :
+                _getExt(img) === 'png' ? 'png' : 
+                _getExt(img) === 'jpg' || 'jpeg' ? 'jpeg' :
                 false
             if(!ext){   
                 alert('僅能選用jpg或png檔')
