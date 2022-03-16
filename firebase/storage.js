@@ -19,7 +19,8 @@ const mountainImagesRef = ref(storage, 'images/mountains.jpg');
 // 'file' comes from the Blob or File API
 const update = async (filename, file, ext) => {
     const storageRef = ref(storage, filename)
-    const mata = { contentType: `image/${ext}`}
+    let contentType = ext === 'jpg' ? 'image/jpeg' : 'image/png'
+    const mata = { contentType }
     const snapshot = await uploadBytes(storageRef, file , mata)
     console.log('Uploaded a blob or file! snapshot => ', snapshot);
     return snapshot

@@ -184,7 +184,8 @@ const mountainImagesRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(
 // 'file' comes from the Blob or File API
 const update = async (filename, file, ext) => {
     const storageRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(storage, filename)
-    const mata = { contentType: `image/${ext}`}
+    let contentType = ext === 'jpg' ? 'image/jpeg' : 'image/png'
+    const mata = { contentType }
     const snapshot = await (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.uploadBytes)(storageRef, file , mata)
     console.log('Uploaded a blob or file! snapshot => ', snapshot);
     return snapshot
@@ -33906,4 +33907,4 @@ window._firebase = {
 
 /******/ })()
 ;
-//# sourceMappingURL=03cd5.main.js.map
+//# sourceMappingURL=65013.main.js.map

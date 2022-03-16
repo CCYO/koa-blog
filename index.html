@@ -13,6 +13,10 @@
     檔案類型：<span id="labExt"></span><br>
     <input type="button" value="UPLOAD TO FIREBASE STORAGE" id="uploadToStorage">
     <input type="button" value="CANCEL THE IMAGE" id="reset">
+    <div>
+        <span id="percentFromLocal"></span>%
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <script defer>
         window.onload = function(){
         //------------------------------------------------- VARs & Refs
@@ -20,12 +24,16 @@
         btn_upload = document.querySelector('#uploadToStorage'),
         btn_reset = document.querySelector('#reset'),
         labName = document.querySelector('#labName'),
-        labExt = document.querySelector('#labExt')
+        labExt = document.querySelector('#labExt'),
+        labPercent = document.querySelector('#percentFromLocal')
 
         let myImg
         let imgExt
         let imgName
-        
+        let imgHash
+
+        const SparkMD5 = window.SparkMD5
+
         const uploadToStorage = window._firebase.storage.update
         const findCurUser = window._firebase.auth.findCurrentUser
         const updateToRealtimeDB = _firebase.realtimeDB.writeUserData
@@ -34,7 +42,7 @@
             //------------------------------------------------- GET EXT
             const _getExt = (file) => {
                 const [ext] = file.name
-                    .split('/\./')
+                    .split(/\./)
                     .filter( (item, ind, arr) => { 
                         return ind + 1 === arr.length })
                 return ext
@@ -44,33 +52,41 @@
                 alert('請選則要上傳的圖片')
                 return 
             }
-            if(Math.ceil(img.size / 1024) > 10){
+            console.log(img.size)
+            if(Math.ceil(img.size / (1024 * 1024) ) > 10){
                 alert('圖片必須小於10M')
                 return
             }
-            const ext =
-                _getExt(img) === 'png' ? 'png' : 
-                _getExt(img) === 'jpg' || 'jpeg' ? 'jpeg' :
-                false
+            const ext = _getExt(img)
             if(!ext){   
                 alert('僅能選用jpg或png檔')
-                return
+                return false
             }
             return ext
         }
         //------------------------------------------------- Handle For READER
-        const createReaderAndGetArrBuf = (file) => {
+        const createReaderAndGetArrBuf = (file, options) => {
             return new Promise( (r, j ) => {
                 const reader = new FileReader()
-                reader.addEventListener('start', (e) => {
+                reader.addEventListener('loadstart', (e) => {
                     console.log('圖檔從本地上傳到Browser -- 開始')
                 })
-                reader.addEventListener('end', (e) => {
+                reader.addEventListener('loadend', (e) => {
                     console.log('圖檔從本地上傳到Browser -- 結束')
                 })
+                reader.addEventListener('progress', (e) => {
+                    const loaded = e.loaded
+                    const total = e.total
+                    const percent = Math.ceil( (loaded/total) * 100 )
+                    if(e.target.readyState === 1) console.log('圖檔從本地上傳到Browser -- ING')
+                    console.log(`圖檔從本地上傳到Browser -- ${percent}%`)
+                    if(options.labPercent){
+                        options.labPercent.textContent = percent
+                    }
+                })
                 reader.addEventListener('load', (e) => {
-                    if(e.readyState === 2) console.log('圖檔從本地上傳到Browser -- 完成')
-                    r(reader.response)
+                    if(e.target.readyState === 2) console.log('圖檔從本地上傳到Browser -- 完成')
+                    r(reader.result)
                     return
                 })
                 reader.addEventListener('error', (e) => {
@@ -109,17 +125,17 @@
         //------------------------------------------------- ONCHANGE
         const onChange = async ( e ) => {
             myImg = e.target.files[0]
-            e.target.setAttribute('disabled', true)
             //若檔案確實存在
             if(myImg){
                 //撈取圖片類型
                 imgExt = labExt.textContent = checkImgAndGetExt(myImg)
                 if(!imgExt){
+                    e.target.value = ''
                     return
                 }else{
                     //檔名欄自動填入名稱
                     imgName = labName.value = myImg.name
-                        .split('/\./')
+                        .split(/\./)
                         .reduce((pre, cur,ind,arr)=> {
                             if(ind +1 === arr.length){
                                 return pre
@@ -130,6 +146,7 @@
                             }
                             return curItem
                         }, '')
+                    e.target.setAttribute('disabled', true)
                     //檔名欄可改
                     labName.removeAttribute('disabled')
                     labName.addEventListener('change', handleChangeImgName(imgName))
@@ -141,9 +158,13 @@
         }
         //------------------------------------------------- ONUPDATE
         const onUpdate = async ( e ) => {
-            const response = await createReaderAndGetArrBuf(myImg)
+            const response = await createReaderAndGetArrBuf(myImg, {labPercent})
+            console.log(response)
+            spark = new SparkMD5.ArrayBuffer()
+            imgHash = spark.append(response).end()
             imgName = labName.value
             fileName = `${imgName}.${imgExt}`
+            /*
             await uploadToStorage(fileName, response, imgExt)
             console.log('firebase storage上傳成功')
             const avatar = await _firebase.storage.getUrl(fileName)
@@ -152,11 +173,13 @@
             let img = document.createElement('img')
             img.setAttribute('src', avatar);
             document.querySelector('#show').append(img)
+            */
         }
         //------------------------------------------------- RESET THE IMG
         const onReset = async (e) => {
-            imgToUpload.value = ''
-            vimgToUpload.removeAttribute('disabled')
+            imgToUpload.value = labExt.textContent = labName.value = myImg = ''
+            labPercent.textContent = ''
+            imgToUpload.removeAttribute('disabled')
         }
         //------------------------------------------------- add handles
         imgToUpload.addEventListener('change', onChange)
