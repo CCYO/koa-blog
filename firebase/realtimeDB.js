@@ -1,16 +1,31 @@
 import './init'
-import { getDatabase, ref, set } from "firebase/database";
+import { getDatabase, ref, child, set, get } from "firebase/database";
 
-const writeUserData = async (uid, username, email, avatar) => {
-  const db = getDatabase();
-  await set(ref(db, 'users/' + uid), {
+const db = getDatabase()
+const dbRef = ref(db)
+
+const writeUserData = async (uid, username, email, avatarHash, avatarUrl) => {
+  await set(child(dbRef, `users/${uid}`), {
     username,
     email,
-    avatar
+    avatarHash,
+    avatarUrl
   });
   console.log('RealtimeDB set OK!')
 }
 
+const readUserData = async (uid) => {
+  try{
+    const snapshot = await get(child(dbRef, `users/${uid}`))
+    return snapshot
+  }catch(e){
+    console.log('Err => ', e)
+  }
+  
+
+}
+
 export {
-    writeUserData
+    writeUserData,
+    readUserData
 }

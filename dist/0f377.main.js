@@ -127,6 +127,7 @@ const database = (0,firebase_database__WEBPACK_IMPORTED_MODULE_2__.getDatabase)(
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "readUserData": () => (/* binding */ readUserData),
 /* harmony export */   "writeUserData": () => (/* binding */ writeUserData)
 /* harmony export */ });
 /* harmony import */ var _init__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./init */ "./firebase/init.js");
@@ -134,14 +135,28 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const writeUserData = async (uid, username, email, avatar) => {
-  const db = (0,firebase_database__WEBPACK_IMPORTED_MODULE_1__.getDatabase)();
-  await (0,firebase_database__WEBPACK_IMPORTED_MODULE_1__.set)((0,firebase_database__WEBPACK_IMPORTED_MODULE_1__.ref)(db, 'users/' + uid), {
+const db = (0,firebase_database__WEBPACK_IMPORTED_MODULE_1__.getDatabase)()
+const dbRef = (0,firebase_database__WEBPACK_IMPORTED_MODULE_1__.ref)(db)
+
+const writeUserData = async (uid, username, email, avatarHash, avatarUrl) => {
+  await (0,firebase_database__WEBPACK_IMPORTED_MODULE_1__.set)((0,firebase_database__WEBPACK_IMPORTED_MODULE_1__.child)(dbRef, `users/${uid}`), {
     username,
     email,
-    avatar
+    avatarHash,
+    avatarUrl
   });
   console.log('RealtimeDB set OK!')
+}
+
+const readUserData = async (uid) => {
+  try{
+    const snapshot = await (0,firebase_database__WEBPACK_IMPORTED_MODULE_1__.get)((0,firebase_database__WEBPACK_IMPORTED_MODULE_1__.child)(dbRef, `users/${uid}`))
+    return snapshot
+  }catch(e){
+    console.log('Err => ', e)
+  }
+  
+
 }
 
 
@@ -182,8 +197,10 @@ const mountainsRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(stora
 const mountainImagesRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(storage, 'images/mountains.jpg');
 
 // 'file' comes from the Blob or File API
-const update = async (filename, file, ext) => {
-    const storageRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(storage, filename)
+const update = async (key, keyId, filename, file, ext) => {
+    let storageRef
+    if(key === 'avatar') storageRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(storage, `uid_${keyId}/${filename}`)
+    if(key === 'blogImg') storageRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(storage, `bid_${keyId}/${filename}`)
     let contentType = ext === 'jpg' ? 'image/jpeg' : 'image/png'
     const mata = { contentType }
     const snapshot = await (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.uploadBytes)(storageRef, file , mata)
@@ -191,8 +208,10 @@ const update = async (filename, file, ext) => {
     return snapshot
 };
 
-const getUrl = async (filename) => {
-    const storageRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(storage, filename)
+const getUrl = async (key, keyId, filename) => {
+    let storageRef
+    if(key === 'avatar') storageRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(storage, `uid_${keyId}/${filename}`)
+    if(key === 'blogImg') storageRef = (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.ref)(storage, `bid_${keyId}/${filename}`)
     const url = await (0,firebase_storage__WEBPACK_IMPORTED_MODULE_1__.getDownloadURL)(storageRef)
     return url
 }
@@ -33901,10 +33920,10 @@ __webpack_require__.r(__webpack_exports__);
 window._firebase = {
     auth: { create: _auth__WEBPACK_IMPORTED_MODULE_0__.create, findCurrentUser: _auth__WEBPACK_IMPORTED_MODULE_0__.findCurrentUser, signIn: _auth__WEBPACK_IMPORTED_MODULE_0__.signIn, logout: _auth__WEBPACK_IMPORTED_MODULE_0__.logout },
     storage: { update: _storage__WEBPACK_IMPORTED_MODULE_1__.update, getUrl: _storage__WEBPACK_IMPORTED_MODULE_1__.getUrl },
-    realtimeDB: { writeUserData: _realtimeDB__WEBPACK_IMPORTED_MODULE_2__.writeUserData }
+    realtimeDB: { writeUserData: _realtimeDB__WEBPACK_IMPORTED_MODULE_2__.writeUserData ,readUserData: _realtimeDB__WEBPACK_IMPORTED_MODULE_2__.readUserData }
 }
 })();
 
 /******/ })()
 ;
-//# sourceMappingURL=65013.main.js.map
+//# sourceMappingURL=0f377.main.js.map

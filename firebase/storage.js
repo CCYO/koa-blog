@@ -17,8 +17,10 @@ const mountainsRef = ref(storage, 'mountains.jpg');
 const mountainImagesRef = ref(storage, 'images/mountains.jpg');
 
 // 'file' comes from the Blob or File API
-const update = async (filename, file, ext) => {
-    const storageRef = ref(storage, filename)
+const update = async (key, keyId, filename, file, ext) => {
+    let storageRef
+    if(key === 'avatar') storageRef = ref(storage, `uid_${keyId}/${filename}`)
+    if(key === 'blogImg') storageRef = ref(storage, `bid_${keyId}/${filename}`)
     let contentType = ext === 'jpg' ? 'image/jpeg' : 'image/png'
     const mata = { contentType }
     const snapshot = await uploadBytes(storageRef, file , mata)
@@ -26,8 +28,10 @@ const update = async (filename, file, ext) => {
     return snapshot
 };
 
-const getUrl = async (filename) => {
-    const storageRef = ref(storage, filename)
+const getUrl = async (key, keyId, filename) => {
+    let storageRef
+    if(key === 'avatar') storageRef = ref(storage, `uid_${keyId}/${filename}`)
+    if(key === 'blogImg') storageRef = ref(storage, `bid_${keyId}/${filename}`)
     const url = await getDownloadURL(storageRef)
     return url
 }

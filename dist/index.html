@@ -6,13 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <div id="show"></div>
-<script defer src="65013.main.js"></script></head>
+<script defer src="0f377.main.js"></script></head>
 <body>
+    <div>
+        <img id="avatarImg"/>
+    </div>
     <input type="file" name="file" id="file"><br>
     檔名：<input type="text" id="labName" disabled>
     檔案類型：<span id="labExt"></span><br>
     <input type="button" value="UPLOAD TO FIREBASE STORAGE" id="uploadToStorage">
     <input type="button" value="CANCEL THE IMAGE" id="reset">
+    <style>
+        #avatarImg {
+            display: none;
+        }
+    </style>
     <div>
         <span id="percentFromLocal"></span>%
     </div>
@@ -20,7 +28,8 @@
     <script defer>
         window.onload = function(){
         //------------------------------------------------- VARs & Refs
-        const imgToUpload = document.querySelector('#file'),
+        const avatarImg = document.querySelector('#avatarImg'),
+        imgToUpload = document.querySelector('#file'),
         btn_upload = document.querySelector('#uploadToStorage'),
         btn_reset = document.querySelector('#reset'),
         labName = document.querySelector('#labName'),
@@ -29,13 +38,13 @@
 
         let myImg
         let imgExt
-        let imgName
-        let imgHash
+        
 
         const SparkMD5 = window.SparkMD5
 
         const uploadToStorage = window._firebase.storage.update
         const findCurUser = window._firebase.auth.findCurrentUser
+        const readFromRealtimeDB = _firebase.realtimeDB.readUserData
         const updateToRealtimeDB = _firebase.realtimeDB.writeUserData
         //------------------------------------------------- img檔案的基本判斷
         const checkImgAndGetExt = (img) => {
@@ -114,11 +123,11 @@
             return 
         }
         //------------------------------------------------- REALTIME UPLOAD
-        const getUserAndUpdateRealtimeDB = async (avatar) => {
+        const getUserAndUpdateRealtimeDB = async ({avatarHash, avatarUrl}) => {
             let { uid, email } = await findCurUser()
             let [ _ , username ] = /^([\w]+)@/.exec(email)
             console.log(`當前用戶為 ${username},其 uid => ${uid}`)
-            await updateToRealtimeDB(uid, username, email, avatar)
+            await updateToRealtimeDB(uid, username, email, avatarHash, avatarUrl)
             console.log('realtime資料寫入 -- 完成')
         }
         
@@ -159,30 +168,38 @@
         //------------------------------------------------- ONUPDATE
         const onUpdate = async ( e ) => {
             const response = await createReaderAndGetArrBuf(myImg, {labPercent})
-            console.log(response)
-            spark = new SparkMD5.ArrayBuffer()
-            var x = spark.append(response)
-            console.log(x)
-            console.log(x === spark)
-            imgHash = spark.end()
-            console.log(imgHash)
-            imgName = labName.value
-            fileName = `${imgName}.${imgExt}`
-            /*
-            await uploadToStorage(fileName, response, imgExt)
-            console.log('firebase storage上傳成功')
-            const avatar = await _firebase.storage.getUrl(fileName)
-            console.log('抓取 firebase storage 檔案的 download url -- 完成, url => ', avatar)
-            await getUserAndUpdateRealtimeDB(avatar)
-            let img = document.createElement('img')
-            img.setAttribute('src', avatar);
-            document.querySelector('#show').append(img)
-            */
+            const spark = new SparkMD5.ArrayBuffer()
+            const avatarHash = spark.append(response).end()
+            const imgName = labName.value
+            const fileName = `${imgName}.${imgExt}`
+            let user = await findCurUser()
+            let avatarUrl
+            if(!user){
+                alert('尚未登入')
+            }else{
+                const snapshot = await readFromRealtimeDB(user.uid)
+                if(snapshot.exists() && snapshot.child('avatarHash').val() === avatarHash){
+                    alert('已完成上傳')
+                    avatarUrl = snapshot.child('avatarUrl').val()
+                }else{
+                    await uploadToStorage('avatar', user.uid, fileName, response, imgExt)
+                    console.log('firebase storage上傳成功')
+                    avatarUrl = await _firebase.storage.getUrl('avatar', user.uid, fileName)
+                    console.log('抓取 firebase storage 檔案的 download url -- 完成, url => ', avatarUrl)
+                    await getUserAndUpdateRealtimeDB({avatarHash, avatarUrl})
+                }
+                console.log(avatarUrl)
+                avatarImg.setAttribute('src', avatarUrl);
+                avatarImg.style.display = 'block'
+            }
+            return
         }
         //------------------------------------------------- RESET THE IMG
         const onReset = async (e) => {
             imgToUpload.value = labExt.textContent = labName.value = myImg = ''
             labPercent.textContent = ''
+            avatarImg.setAttribute('src', '');
+            avatarImg.style.display = 'none'
             imgToUpload.removeAttribute('disabled')
         }
         //------------------------------------------------- add handles
