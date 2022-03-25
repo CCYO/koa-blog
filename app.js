@@ -3,7 +3,10 @@ const app = new Koa()
 const views = require('koa-views')
 const json = require('koa-json')
 const onerror = require('koa-onerror')
-const bodyparser = require('koa-bodyparser')
+//const bodyparser = require('koa-bodyparser')
+
+const koaBody = require('koa-body')
+
 const logger = require('koa-logger')
 const store = require('./cache/store')
 const session = require('koa-generic-session')
@@ -11,6 +14,10 @@ const session = require('koa-generic-session')
 
 const index = require('./routes/index')
 const users = require('./routes/users')
+
+const tt_upload = require('./routes/views/tt-upload')
+
+const firebase_test = require('./routes/firebase-test')
 
 const api__user = require('./routes/api/user')
 
@@ -30,9 +37,18 @@ app.use(session({
   store
 }))
 
-app.use(bodyparser({
-  enableTypes:['json', 'form', 'text']
-}))
+// app.use(bodyparser({
+//   enableTypes:['json', 'form', 'text']
+// }))
+
+app.use(koaBody({
+  multipart: true, // 支援檔案上傳
+  formidable: {
+    maxFieldsSize: 2 * 1024 * 1024, // 最大檔案為2兆
+    multipart: true // 是否支援 multipart-formdate 的表單
+  }
+}));
+
 app.use(json())
 app.use(logger())
 app.use(require('koa-static')(__dirname + '/public'))
@@ -52,6 +68,10 @@ app.use(async (ctx, next) => {
 // routes
 app.use(index.routes(), index.allowedMethods())
 app.use(users.routes(), users.allowedMethods())
+
+app.use(tt_upload.routes(), tt_upload.allowedMethods())
+
+app.use(firebase_test.routes(), firebase_test.allowedMethods())
 
 app.use(api__user.routes(), api__user.allowedMethods())
 

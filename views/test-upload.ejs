@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form>
+        <input type="file" name="" id="">
+        <input type="submit" value="GO">
+    </form>
+    <%- include('wedgets/cdn') %>
+    <script>
+        const from = document.querySelector(`form`)
+        const ipt_file = document.querySelector(`input[type='file']`)
+        const ipt_submit = document.querySelector(`input[type='submit']`)
+        let blob
+        const getBlobFromFile = (file) => {
+            return new Promise( ( resolve, reject) => {
+                const fr = new FileReader()
+                fr.addEventListener('loadstart', (e) => {
+                    console.log('檔案傳入Browser --- start')
+                })
+                fr.addEventListener('loadend', (e) => {
+                    console.log('檔案傳入Browser --- end')
+                })
+                fr.addEventListener('load', (e) => {
+                    console.log('檔案傳入Browser --- finish')
+                    resolve(fr.result)
+                })
+                fr.addEventListener('error', (e) => {
+                    console.log('檔案傳入Browser --- error')
+                    reject('失敗了啦')
+                })
+                fr.readAsArrayBuffer(file)
+            })
+        }
+        const handleChange = async (e) => {
+            const file = e.target.files[0]
+            blob = await getBlobFromFile(file)
+        }
+        const handleSubmit = async (e) => {
+            e.preventDefault()
+            let formData = new FormData()
+            formData.append('img', blob)
+            try{
+                let res = await axios({
+                    method: 'POST',
+                    url: '/api/tt-upload',
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    },
+                    data: formData
+                })
+                console.log('@ => ', res)
+                if(res.data.errno){
+                    console.log(res.data.msg)
+                }else{
+                    console.log(res.data.data)
+                }
+            }catch(e){
+                console.log('error => ', e)
+            }
+        }
+        ipt_file.addEventListener('change', handleChange )
+        from.addEventListener('submit', handleSubmit)
+    </script>
+</body>
+</html>
