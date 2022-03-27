@@ -2,27 +2,16 @@
  * @description firebase init
  */
 
+const admin = require('firebase-admin');
+const { getStorage } = require('firebase-admin/storage')
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getDatabase } from "firebase/database";
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyB_6oxFoSBBPZ0GQG1pjuH9r2ZoIx6Nnwo",
-  authDomain: "a001ccy-koa-blog.firebaseapp.com",
-  databaseURL: "https://a001ccy-koa-blog-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "a001ccy-koa-blog",
-  storageBucket: "a001ccy-koa-blog.appspot.com",
-  messagingSenderId: "858947802118",
-  appId: "1:858947802118:web:01e5fa94c57af74f211f87",
-  measurementId: "G-FK694Y1YQ1"
-};
+const serviceAccount = require('../keys/admin/firebase-4-koa-blog.json');
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const app = admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: "fir-4-koa-blog.appspot.com",
+  });
 
-// Get a reference to the database service
-const database = getDatabase(app);
+const storage = getStorage(app)
+
+module.exports = storage

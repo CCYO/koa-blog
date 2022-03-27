@@ -8,7 +8,7 @@
 </head>
 <body>
     <form>
-        <input type="file" name="" id="">
+        <input type="file" name="avatar" id="">
         <input type="submit" value="GO">
     </form>
     <%- include('wedgets/cdn') %>
@@ -38,19 +38,27 @@
             })
         }
         const handleChange = async (e) => {
-            const file = e.target.files[0]
-            blob = await getBlobFromFile(file)
+            try{
+                const file = e.target.files[0]
+                blob = await getBlobFromFile(file)
+            }catch(e){
+                console.log('@@ => e')
+            }
         }
+        let formData
         const handleSubmit = async (e) => {
             e.preventDefault()
-            let formData = new FormData()
-            formData.append('img', blob)
+            formData = new FormData()
+            //formData.append('image', ipt_file.files[0])
+            formData.append('image', new Blob([blob]))
+            console.log(formData)
             try{
                 let res = await axios({
                     method: 'POST',
                     url: '/api/tt-upload',
                     headers: {
-                        'Content-Type': 'multipart/form-data'
+                        'Content-Type': 'multipart/form-data',
+                        
                     },
                     data: formData
                 })

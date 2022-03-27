@@ -41,13 +41,15 @@ app.use(session({
 //   enableTypes:['json', 'form', 'text']
 // }))
 
-app.use(koaBody({
-  multipart: true, // 支援檔案上傳
-  formidable: {
-    maxFieldsSize: 2 * 1024 * 1024, // 最大檔案為2兆
-    multipart: true // 是否支援 multipart-formdate 的表單
-  }
-}));
+// app.use(koaBody({
+//   multipart: true, // 支援檔案上傳
+//   uploadDir: './myFile'
+//   // formidable: {
+//   //   maxFieldsSize: 2 * 1024 * 1024, // 最大檔案為2兆
+//   //   multipart: true, // 是否支援 multipart-formdate 的表單
+    
+//   // }
+// }));
 
 app.use(json())
 app.use(logger())

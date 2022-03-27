@@ -2,30 +2,7 @@ const router = require('koa-router')()
 
 const axios = require('axios')
 
-const { async } = require('@firebase/util');
-
-const admin = require('firebase-admin');
-const { getDatabase } = require('firebase-admin/database');
-const { getAuth } = require('firebase-admin/auth')
-const { getStorage } = require('firebase-admin/storage')
-
-//const { Storage } = require('@google-cloud/storage')
-
-//console.log(process.env.GOOGLE_APPLICATION_CREDENTIALS)
-
-const serviceAccount = require('../keys/admin/firebase-4-koa-blog.json');
-
-const app = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: "fir-4-koa-blog.appspot.com",
-  });
-
-console.log(`APP NAME => ${app.name}`)
-
-//const auth = getAuth()
-const storage = getStorage(app)
-//const storage = new Storage()
-console.log(`STORAGE => ${storage.app.name}`)
+const storage = require('../firebase/init')
 
 router.get('/ttt', async (ctx, next) => {
   try {
