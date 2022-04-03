@@ -7,13 +7,23 @@
     <title>Document</title>
 </head>
 <body>
-    <form>
+    <form id="aa" method="POST" action="/tt-www" enctype="application/x-www-form-urlencoded">
+        <input type="text" name="a">
+        <input type="text" name="b">
+        <input type="submit" value="GO">
+    </form>
+    <script>
+        //  document.querySelector('#aa').addEventListener('submit', (e) => {
+        //     e.preventDefault()
+        //  })
+    </script>
+    <form id="upload">
         <input type="file" name="avatar" id="">
         <input type="submit" value="GO">
     </form>
     <%- include('wedgets/cdn') %>
     <script>
-        const from = document.querySelector(`form`)
+        const from = document.querySelector(`#upload`)
         const ipt_file = document.querySelector(`input[type='file']`)
         const ipt_submit = document.querySelector(`input[type='submit']`)
         let blob
@@ -50,15 +60,15 @@
             e.preventDefault()
             formData = new FormData()
             //formData.append('image', ipt_file.files[0])
-            formData.append('image', new Blob([blob]))
-            console.log(formData)
+            formData.append('image', new Blob([blob], { type: 'image/jpeg'}))
+            //console.log(formData)
             try{
                 let res = await axios({
                     method: 'POST',
-                    url: '/api/tt-upload',
+                    url: '/tt-www',
                     headers: {
-                        'Content-Type': 'multipart/form-data',
-                        
+                       'Content-Type': 'multipart/form-data',
+                    //  'content-type' : 'application/octet-stream',
                     },
                     data: formData
                 })

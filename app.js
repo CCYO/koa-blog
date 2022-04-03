@@ -26,7 +26,29 @@ const view__user = require('./routes/views/user')
 
 
 // error handler
-onerror(app)
+//onerror(app)
+
+app.use( async(ctx, next) => {
+  try {
+    await next()
+  }catch(err){
+    console.log('handle err => ', err)
+    console.log('custom ErrHandle Fire!!!!')
+    let status = err.status || 500
+    let msg =
+      (err.message) ? err.message :
+      (status === 500) ? 'SERVER ERR' :
+      '我不知道'
+    console.log(`status => ${status}`)
+    console.log(`msg => ${msg}`)
+    ctx.body =
+      (status === 404) ? "404 PAGE" :
+      (status === 500) ? { errno: 1, msg } :      
+      { errno: 1, msg: "我不知道"}
+  }
+  
+  //console.error('server error', err, ctx)
+});
 
 app.keys = ['keys']
 
@@ -81,6 +103,10 @@ app.use(view__user.routes(), view__user.allowedMethods())
 
 // error-handling
 app.on('error', (err, ctx) => {
+  ctx.body =
+  (ctx.status === 500) ? { errno: 1, msg: 'Server錯誤'} : 
+  (ctx.status === 404) ? "404 PAGE" :
+  { errno: 1, msg: "我不知道", err}
   console.error('server error', err, ctx)
 });
 
