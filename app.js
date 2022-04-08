@@ -3,9 +3,14 @@ const app = new Koa()
 const views = require('koa-views')
 const json = require('koa-json')
 const onerror = require('koa-onerror')
-//const bodyparser = require('koa-bodyparser')
 
-const koaBody = require('koa-body')
+const bodyparser = require('koa-bodyparser')
+// const koaBody = require('koa-body')({
+//   multipart: true, // 支援檔案上傳
+//    formidable: {
+//        uploadDir
+//    }
+// })
 
 const logger = require('koa-logger')
 const store = require('./cache/store')
@@ -59,9 +64,9 @@ app.use(session({
   store
 }))
 
-// app.use(bodyparser({
-//   enableTypes:['json', 'form', 'text']
-// }))
+app.use(bodyparser({
+  enableTypes:['json', 'form', 'text']
+}))
 
 // app.use(koaBody({
 //   multipart: true, // 支援檔案上傳

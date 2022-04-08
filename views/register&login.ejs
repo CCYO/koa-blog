@@ -136,7 +136,7 @@
     </div>
     <%- include('wedgets/cdn') %>
     <%- include('wedgets/utils') %>
-    <script src="/js/ee687.firebase_auth.js"></script>
+    
     <style>
       .nav-link.active {
         pointer-events: none
@@ -261,14 +261,15 @@
         const form_UI = (form_id = form_id === '#form_register') ? form_UI_register : form_UI_login
         
         const username = $target.value
-
+        const regex_username = /^[\w]+$/
+        const regex_email = /^[\w]+@[\w\.]+$/
         if(!username){
           //  無值
           form_UI(selector__inp_username, true)
           return
-        }else if( !(/^[\w]+@[\w\.]+$/.exec(username)) ){
+        }else if( !(regex_email.exec(username)) ){
           //  格式錯誤
-          form_UI(selector__inp_username, false, '帳號必須由數字或英文字母組成')
+          form_UI(selector__inp_username, false, '必須由數字或英文字母組成')
           return 
         }
 
@@ -408,9 +409,9 @@
           if(errno){
             alert(msg.message)
           }else{
-            window.userCredential = await _firebase.auth.create( username, password )
+            //window.userCredential = await _firebase.auth.create( username, password )
             alert('註冊成功，請嘗試登入')
-            //location.href = '/login'
+            location.href = '/login'
             
           }
       })

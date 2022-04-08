@@ -5,22 +5,21 @@ const mime = require('mime')
 const fs = require('fs')
 const path = require('path')
 const { resolve } = require('path')
-const getRawBody = require('raw-body')
+const router = require('koa-router')()
+const multer = require('@koa/multer')
 
-const storage = require('../../firebase/init')
+const genCustomStorage = require('../../middleware/genCustomStorage')
+const { api_check_login } = require('../../middleware/check_login')
 
-let uploadDir = resolve( __dirname , '..', '..', './myFile')
-
-const koaBody = require('koa-body')({
-    multipart: true, // 支援檔案上傳
-     formidable: {
-         uploadDir
-     }
+const upload = multer({
+    storage: genCustomStorage()
 })
 
+const uploadDist = multer({
+    dest: resolve(__dirname, '../', '../', 'maybeHaveFile')
+})
 
-
-const router = require('koa-router')()
+let uploadDir = resolve( __dirname , '..', '..', './myFile')
 
 const tttt = async (ctx) => {
     return new Promise(
@@ -60,75 +59,40 @@ const tttt = async (ctx) => {
     )
 }
 
-const setTime = async (ctx, next) => {
-    console.log('setTime ready...')
-    return new Promise( r => {
-        setTimeout( () => {
-            console.log('setTime finish...')
-            r()
-        }, 1000)
-    }).then( next )
-}
-
-const getBody = async (ctx, next) => {
-    console.log('getRawBody start')
-    console.log(`ctx.req.headers['content-length'] => ${ctx.req.headers['content-length']}`)
-    console.log(`ctx.req.readable => ${ctx.req.readable}`)
-    console.log(`ctx.req.readableFlowing => ${ctx.req.readableFlowing}`)
-    console.log(`ctx.req.readableEnded => ${ctx.req.readableEnded}`)
-    //const rawBody = await getRawBody(ctx.req, { length: ctx.req.headers['content-length']})
-    const rawBody = await getRawBody(ctx.req)
-    console.log('getRowBody end')
-    await next()
-}
-
 router.get('/view/tt-upload',
     async (ctx, next) => {
-        await setTime(ctx, next)
-        //console.log('????')
-        //await next()
-    },
-    async (ctx, next) => {
         await ctx.render('test-upload')
-        await next()
     }
 )
 
-router.post('/tt-www',
-    async (ctx, next) => {
-        console.log('test ing ... 1')
-        await tttt(ctx)
-        await next()
-    },
-    async (ctx, next) => {
-        console.log('test ing ... 2')
-        await tttt(ctx)
-        await next()
-    },
-    async (ctx, next) => {
-        try{
-            await tttt(ctx)
-            ctx.body = { errno: 0, data: 'ok'}
-        }catch(e){
-            console.log('123 => ', e)
-            ctx.body = { errno: 1, msg: 'err'}
-        }
+/*
+**** 方法1
+**** Req >>> Server Dist >>> GCP
+**** ex: koaBody
+********
+**** 方法2
+**** Req >>> Server Dest >>> GCP
+*/
+router.post('/api/uploadSwitchToGCS', api_check_login, upload.any(), async (ctx, next) => {
+    console.log('@@@ => ', ctx.request.files)
+    console.log('@@@ => ', ctx.files)
+    ctx.body = { errno: 0, data: 'ok'}
 })
 
-router.post('/tt-json', koaBody, async (ctx, next) => {
-    console.log(ctx.body)
-    ctx.body = 'tt-json'
+router.post('/api/uploadFromDistToGCS', api_check_login, uploadDist.any(), async (ctx, next) => {
+    console.log('@@@ => ', ctx.request.files)
+    console.log('@@@ => ', ctx.files)
+    ctx.body = { errno: 0, data: 'ok'}
 })
 
-router.post('/api/tt-upload', koaBody, async (ctx, next) => {
+router.post('/api/upload', async (ctx, next) => {
     try{
         let { image } = ctx.request.files
         console.log('@@ => ', image)
         var rs = fs.createReadStream(image.path)
-        const bucket = storage.bucket('abc44561')
-        const file = bucket.file('image.jpg')
+        
         let url 
-        //var ws = fs.createWriteStream( resolve(uploadDir, './myjpg.jpg'))
+        
         rs
         .pipe( file.createWriteStream({
             metadata: {

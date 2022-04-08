@@ -27,6 +27,7 @@
         const ipt_file = document.querySelector(`input[type='file']`)
         const ipt_submit = document.querySelector(`input[type='submit']`)
         let blob
+        let file
         const getBlobFromFile = (file) => {
             return new Promise( ( resolve, reject) => {
                 const fr = new FileReader()
@@ -49,7 +50,7 @@
         }
         const handleChange = async (e) => {
             try{
-                const file = e.target.files[0]
+                file = e.target.files[0]
                 blob = await getBlobFromFile(file)
             }catch(e){
                 console.log('@@ => e')
@@ -59,13 +60,13 @@
         const handleSubmit = async (e) => {
             e.preventDefault()
             formData = new FormData()
-            //formData.append('image', ipt_file.files[0])
-            formData.append('image', new Blob([blob], { type: 'image/jpeg'}))
+            formData.append('image', ipt_file.files[0])
+            //formData.append('image', new Blob([blob]), file.name)
             //console.log(formData)
             try{
                 let res = await axios({
                     method: 'POST',
-                    url: '/tt-www',
+                    url: '/api/uploadSwitchToGCS',
                     headers: {
                        'Content-Type': 'multipart/form-data',
                     //  'content-type' : 'application/octet-stream',
