@@ -258,6 +258,7 @@
         let form_id = $target.dataset['formId']
         const $feedback = $(`${form_id} ${selector__inp_username} ~ div`)
 
+        //  判斷使用 register || login 的 UI驗證
         const form_UI = (form_id = form_id === '#form_register') ? form_UI_register : form_UI_login
         
         const username = $target.value

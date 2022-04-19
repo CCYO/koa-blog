@@ -34,6 +34,11 @@
                 fr.addEventListener('loadstart', (e) => {
                     console.log('檔案傳入Browser --- start')
                 })
+                fr.addEventListener('progress', (e) => {
+                    console.log('檔案傳入Browser --- progress')
+                    console.log(`e.total -> ${e.total}`)
+                    console.log(`e.loaded -> ${e.loaded}`)
+                })
                 fr.addEventListener('loadend', (e) => {
                     console.log('檔案傳入Browser --- end')
                 })
@@ -60,9 +65,9 @@
         const handleSubmit = async (e) => {
             e.preventDefault()
             formData = new FormData()
-            formData.append('image', ipt_file.files[0])
-            //formData.append('image', new Blob([blob]), file.name)
-            //console.log(formData)
+            //formData.append('image', ipt_file.files[0])
+            formData.append('image', new Blob([blob]), file.name)
+            console.log(formData)
             try{
                 let res = await axios({
                     method: 'POST',

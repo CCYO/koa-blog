@@ -17,6 +17,7 @@ const view_check_login = async (ctx, next) => {
 
 const api_check_login = async (ctx, next) => {
     const { session: {user} } = ctx
+    console.log( '000 => ', ctx.session )
     if(user){
         await next()
     }else{

@@ -8,12 +8,18 @@ const { resolve } = require('path')
 const router = require('koa-router')()
 const multer = require('@koa/multer')
 
-const genCustomStorage = require('../../middleware/genCustomStorage')
+const myCustomStorage = require('../../middleware/genCustomStorage')
 const { api_check_login } = require('../../middleware/check_login')
 
-const upload = multer({
-    storage: genCustomStorage()
-})
+var storage = myCustomStorage({
+    destination: function (ctx_req, file, cb) {
+        
+      cb(null, ctx_req.session.user.username + '/avatar.jpg')
+    }
+  })
+
+
+const upload = multer({storage})
 
 const uploadDist = multer({
     dest: resolve(__dirname, '../', '../', 'maybeHaveFile')
@@ -73,9 +79,13 @@ router.get('/view/tt-upload',
 **** 方法2
 **** Req >>> Server Dest >>> GCP
 */
+
 router.post('/api/uploadSwitchToGCS', api_check_login, upload.any(), async (ctx, next) => {
-    console.log('@@@ => ', ctx.request.files)
-    console.log('@@@ => ', ctx.files)
+    console.log('@1@ => ', `${JSON.stringify(ctx.request)}`)
+    console.log('@1-1@ => ', `${JSON.stringify(ctx.req.body)}`)
+    console.log('@1-1@ => ', `${JSON.stringify(ctx.request.body)}`)
+    console.log('@2@ => ', ctx.request.files)
+    console.log('@3@ => ', ctx.files)
     ctx.body = { errno: 0, data: 'ok'}
 })
 

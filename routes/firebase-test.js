@@ -6,8 +6,9 @@ const storage = require('../firebase/init')
 
 router.get('/ttt', async (ctx, next) => {
   try {
-    let bucket = storage.bucket('abc44561')
-    let file = bucket.file('gg/Logo321.jpg')
+    let bucket = storage.bucket()
+    console.log('### => ', bucket.name)
+    let file = bucket.file('0419/Logo321.jpg')
     let res = file.publicUrl()
     console.log(res)
     //let res = await bucket.upload('/home/a001ccy/koa-blog/index.html', {destination: '祐/首頁圖.html'})
