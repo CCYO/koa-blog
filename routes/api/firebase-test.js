@@ -2,7 +2,7 @@ const router = require('koa-router')()
 
 const axios = require('axios')
 
-const storage = require('../firebase/init')
+const storage = require('../../firebase/init')
 
 router.get('/ttt', async (ctx, next) => {
   try {
@@ -37,11 +37,6 @@ router.get('/ttt', async (ctx, next) => {
   }
 })
 
-
-//let db = getDatabase()
-//let ref = db.ref("test")
-
-//ok
 router.get('/tt-realtime', async (ctx, next) => {
   let st = ref.child('st')
   let res
@@ -59,8 +54,6 @@ router.get('/tt-realtime', async (ctx, next) => {
   }  
 })
 
-
-//ok
 router.get('/tt-auth', async (ctx, next) => {
   try{
     userRecord = await auth.getUserByEmail('tt20220320@gmail.com')
@@ -72,7 +65,6 @@ router.get('/tt-auth', async (ctx, next) => {
   }
 })
 
-//d
 router.get('/tt-storage', async (ctx, next ) => {
   try{
     const b = storage.bucket('abc')
@@ -86,6 +78,5 @@ router.get('/tt-storage', async (ctx, next ) => {
     ctx.body = 'Nok'
   }  
 })
-
 
 module.exports = router

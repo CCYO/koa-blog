@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
     <form id="aa" method="POST" action="/tt-www" enctype="application/x-www-form-urlencoded">
         <input type="text" name="a">
@@ -17,79 +19,127 @@
         //     e.preventDefault()
         //  })
     </script>
-    <form id="upload">
-        <input type="file" name="avatar" id="">
-        <input type="submit" value="GO">
-    </form>
+    <div>
+        <p>以 ReadFiler >> FormData(key, blob, filename) 處理上傳</p>
+        <form id="upload_by_ReadFiler">
+            <input type="file" name="avatar" id="">
+            <input type="submit" value="以koa-body處理">
+        </form>
+    </div>
+    <div>
+        <p>以 FormData(key, File) 處理上傳</p>
+        <form id="upload_by_File">
+            <input type="file" name="avatar" id="">
+            <input type="submit" value="以koa-body處理">
+        </form>
+    </div>
+
     <%- include('wedgets/cdn') %>
-    <script>
-        const from = document.querySelector(`#upload`)
-        const ipt_file = document.querySelector(`input[type='file']`)
-        const ipt_submit = document.querySelector(`input[type='submit']`)
-        let blob
-        let file
-        const getBlobFromFile = (file) => {
-            return new Promise( ( resolve, reject) => {
-                const fr = new FileReader()
-                fr.addEventListener('loadstart', (e) => {
-                    console.log('檔案傳入Browser --- start')
-                })
-                fr.addEventListener('progress', (e) => {
-                    console.log('檔案傳入Browser --- progress')
-                    console.log(`e.total -> ${e.total}`)
-                    console.log(`e.loaded -> ${e.loaded}`)
-                })
-                fr.addEventListener('loadend', (e) => {
-                    console.log('檔案傳入Browser --- end')
-                })
-                fr.addEventListener('load', (e) => {
-                    console.log('檔案傳入Browser --- finish')
-                    resolve(fr.result)
-                })
-                fr.addEventListener('error', (e) => {
-                    console.log('檔案傳入Browser --- error')
-                    reject('失敗了啦')
-                })
-                fr.readAsArrayBuffer(file)
-            })
-        }
-        const handleChange = async (e) => {
-            try{
+        <script>
+            const from_by_FileReader = document.querySelector(`#upload_by_ReadFiler`)
+            const ipt_by_FileReader = document.querySelector(`#upload_by_ReadFiler > input[type='file']`)
+            const from_by_File = document.querySelector(`#upload_by_File`)
+            const ipt_by_File = document.querySelector(`#upload_by_File > input[type='file']`)
+
+            ipt_by_FileReader.addEventListener('change', handle_Change_4_ipt_by_FileReader)
+            from_by_FileReader.addEventListener('submit', handle_Submit_4_from_by_FileReader)
+
+            ipt_by_File.addEventListener('change', handle_Change_4_ipt_by_File)
+            from_by_File.addEventListener('submit', handle_Submit_4_from_by_File)
+
+            let file
+            let arraybuffer
+
+            function handle_Change_4_ipt_by_File(e){
                 file = e.target.files[0]
-                blob = await getBlobFromFile(file)
-            }catch(e){
-                console.log('@@ => e')
             }
-        }
-        let formData
-        const handleSubmit = async (e) => {
-            e.preventDefault()
-            formData = new FormData()
-            //formData.append('image', ipt_file.files[0])
-            formData.append('image', new Blob([blob]), file.name)
-            console.log(formData)
-            try{
-                let res = await axios({
-                    method: 'POST',
-                    url: '/api/uploadSwitchToGCS',
-                    headers: {
-                       'Content-Type': 'multipart/form-data',
-                    //  'content-type' : 'application/octet-stream',
-                    },
-                    data: formData
-                })
-                console.log('@ => ', res)
-                if(res.data.errno){
-                    console.log(res.data.msg)
-                }else{
-                    console.log(res.data.data)
+
+            async function handle_Submit_4_from_by_File(e){
+                e.preventDefault()
+
+                let formData = new FormData()
+                formData.append('image', file)
+
+                let {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await _axios('/api/upload_by_File_in_FormData', formData)
+
+                if (!errno) {
+                    console.log('upload success, res.data => ', data)
+                } else {
+                    console.log('upload error, err.msg => ', msg)
                 }
-            }catch(e){
-                console.log('error => ', e)
             }
-        }
-        ipt_file.addEventListener('change', handleChange )
-        from.addEventListener('submit', handleSubmit)
-    </script>
+
+            async function handle_Submit_4_from_by_FileReader(e) {
+                e.preventDefault()
+
+                let formData = new FormData()
+                formData.append('image', new Blob([arraybuffer]), file.name)
+
+                let {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await _axios('/api/upload_by_Blob_in_FormData', formData)
+
+                if (!errno) {
+                    console.log('upload success, res.data => ', data)
+                } else {
+                    console.log('upload error, err.msg => ', msg)
+                }
+
+            }
+
+            function get_Blob_from_FileReader(file) {
+                return new Promise((resolve, reject) => {
+                    const fr = new FileReader()
+
+                    fr.addEventListener('loadstart', (e) => {
+                        console.log('檔案傳入Browser --- start')
+                    })
+                    fr.addEventListener('progress', (e) => {
+                        console.log('檔案傳入Browser --- progress')
+                        console.log(`e.total -> ${e.total}`)
+                        console.log(`e.loaded -> ${e.loaded}`)
+                    })
+                    fr.addEventListener('loadend', (e) => {
+                        console.log('檔案傳入Browser --- end')
+                    })
+                    fr.addEventListener('load', (e) => {
+                        console.log('檔案傳入Browser --- finish')
+                        resolve(fr.result)
+                    })
+                    fr.addEventListener('error', (e) => {
+                        console.log('檔案傳入Browser --- error')
+                        reject('失敗了啦')
+                    })
+                    fr.readAsArrayBuffer(file)
+                })
+            }
+
+            async function handle_Change_4_ipt_by_FileReader(e) {
+                try {
+                    file = e.target.files[0]
+                    arraybuffer = await get_Blob_from_FileReader(file)
+                } catch (e) {
+                    console.log('@@ => e')
+                }
+            }
+
+            async function _axios(url, data) {
+                return await axios({
+                    url, data,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        //  'content-type' : 'application/octet-stream',
+                    }
+                })
+            }
+        </script>
 </body>
+
 </html>
