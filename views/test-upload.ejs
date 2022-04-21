@@ -33,13 +33,21 @@
             <input type="submit" value="以koa-body處理">
         </form>
     </div>
-
+    <div>
+        <p>以 FormData(key, File) 處理上傳 >>> koa/multer storage >>> GCS</p>
+        <form id="upload_by_KoaMulterStorage">
+            <input type="file" name="avatar" id="">
+            <input type="submit" value="以koa/multer storage處理">
+        </form>
+    </div>
     <%- include('wedgets/cdn') %>
         <script>
             const from_by_FileReader = document.querySelector(`#upload_by_ReadFiler`)
             const ipt_by_FileReader = document.querySelector(`#upload_by_ReadFiler > input[type='file']`)
             const from_by_File = document.querySelector(`#upload_by_File`)
             const ipt_by_File = document.querySelector(`#upload_by_File > input[type='file']`)
+            const from_by_KoaMulterStorage = document.querySelector(`#upload_by_KoaMulterStorage`)
+            const ipt_by_KoaMulterStorage = document.querySelector(`#upload_by_KoaMulterStorage > input[type='file']`)
 
             ipt_by_FileReader.addEventListener('change', handle_Change_4_ipt_by_FileReader)
             from_by_FileReader.addEventListener('submit', handle_Submit_4_from_by_FileReader)
@@ -47,8 +55,34 @@
             ipt_by_File.addEventListener('change', handle_Change_4_ipt_by_File)
             from_by_File.addEventListener('submit', handle_Submit_4_from_by_File)
 
+            ipt_by_KoaMulterStorage.addEventListener('change', handle_Change_4_ipt_by_KoaMulterStorage)
+            from_by_KoaMulterStorage.addEventListener('submit', handle_Submit_4_from_by_KoaMulterStorage)
+
             let file
             let arraybuffer
+
+            function handle_Change_4_ipt_by_KoaMulterStorage(e){
+                file = e.target.files[0]
+            }
+
+            async function handle_Submit_4_from_by_KoaMulterStorage(e){
+                e.preventDefault()
+
+                let formData = new FormData()
+                formData.append('image', file)
+
+                let {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await _axios('/api/upload_by_MulterStorage_to_GCS', formData)
+
+                if (!errno) {
+                    console.log('upload success, res.data => ', data)
+                } else {
+                    console.log('upload error, err.msg => ', msg)
+                }
+            }
 
             function handle_Change_4_ipt_by_File(e){
                 file = e.target.files[0]
@@ -70,6 +104,15 @@
                     console.log('upload success, res.data => ', data)
                 } else {
                     console.log('upload error, err.msg => ', msg)
+                }
+            }
+
+            async function handle_Change_4_ipt_by_FileReader(e) {
+                try {
+                    file = e.target.files[0]
+                    arraybuffer = await get_Blob_from_FileReader(file)
+                } catch (e) {
+                    console.log('@@ => e')
                 }
             }
 
@@ -118,15 +161,6 @@
                     })
                     fr.readAsArrayBuffer(file)
                 })
-            }
-
-            async function handle_Change_4_ipt_by_FileReader(e) {
-                try {
-                    file = e.target.files[0]
-                    arraybuffer = await get_Blob_from_FileReader(file)
-                } catch (e) {
-                    console.log('@@ => e')
-                }
             }
 
             async function _axios(url, data) {

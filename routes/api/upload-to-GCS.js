@@ -1,4 +1,5 @@
 const fs = require('fs')
+const stream = require('stream')
 const { resolve } = require('path')
 
 let uploadDir = resolve(__dirname, '..', '..', './myFile')
@@ -16,17 +17,74 @@ const mime = require('mime')
 
 const storage = require('../../firebase/init')
 const { api_check_login } = require('../../middleware/check_login')
+const { Stream } = require('stream')
 
-const uploadDist = multer({
+const uploadDist = Multer({
     dest: resolve(__dirname, '../', '../', 'maybeHaveFile')
 })
 
-router.post('/api/upload_by_MulterStorage_to_GCS', async (ctx, next) => {
-    let filename = 'avatar.jpg'
-    let file_from_GCS = storage.bucket().file(filename)
+router.post('/api/upload_by_MulterStorage_to_GCS',
+    Multer({ storage: Multer.memoryStorage() }).any(),
+    async (ctx, next) => {
+        console.log('accross Multer.memoryStorage >>>')
+        console.log('ctx.request.files >>> ', ctx.request.files)
+        console.log('ctx.request.file >>> ', ctx.request.file)
+        /**
+         * {
+         *   fieldname(formData.key),
+         *   originalname,
+         *   encoding,
+         *   mimetype(根據originalname),
+         *   buffer(Buffer)
+         * }
+         */
+         console.log('ctx.req.files >>> ', ctx.req.files)
+        console.log('ctx.req.file >>> ', ctx.req.file)
+        // undefined
+        console.log('ctx.files >>> ', ctx.files)
+        console.log('ctx.file >>> ', ctx.file)
+        // 同 ctx.request.file
 
-    let multer = Multer({ storage: Multer.memoryStorage() })
-    
+        let filename = 'avatar.jpg'
+
+        let file_from_GCS = storage.bucket().file(filename)
+        let rs = new stream.PassThrough().end(ctx.file.buffer)
+        let ws = file_from_GCS.createWriteStream({
+            metadata: {
+                contentType: 'image/jpeg'
+            }
+        })
+
+        let publicUrl = await upload_to_GCS()
+
+        ctx.body = { errno: 0, data: { publicUrl } }
+
+        function upload_to_GCS() {
+            return new Promise((resolve, reject) => {
+                rs
+                    .pipe(ws)
+                    .on('finish', async () => {
+                        const res_api = await file_from_GCS.makePublic()
+                        console.log('GCS File.makePublic 的 res_api => ', res_api)
+                        /**
+                         * [{
+                         *     kind, object, generation, id, selfLink, bucket, entity, role, etag
+                         * }]
+                         */
+
+                        let publicUrl = file_from_GCS.publicUrl()
+                        console.log('GCS File.PublicUrl 的 RV => ', publicUrl)
+                        resolve(publicUrl)
+                    })
+                    .on('error', err => {
+                        console.log('Upload From Koa to GCS , Error => ', err)
+                        reject(err)
+                    })
+            })
+        }
+
+        ctx.body = 'ok'
+
 })
 
 //  Req FormData(Blob) >>> koa-body >>> Server Dist >>> GCP
