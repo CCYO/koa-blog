@@ -40,6 +40,20 @@
             <input type="submit" value="以koa/multer storage處理">
         </form>
     </div>
+    <div>
+        <p>以 FormData(key, File) 處理上傳 >>> node/formidable storage >>> GCS</p>
+        <form id="upload_by_Formidable">
+            <input type="file" name="avatar" id="">
+            <input type="submit" value="以node/formidable storage處理">
+        </form>
+    </div>
+    <div>
+        <p>以 Form 的 原生submit 處理上傳 >>> node/formidable storage >>> GCS</p>
+        <form id="upload_by_from_Formidable" action="/api/upload_by_Formidable" enctype="multipart/form-data" method="POST">
+            <input type="file" name="avatar" id="">
+            <input type="submit" value="使用form原生submit">
+        </form>
+    </div>
     <%- include('wedgets/cdn') %>
         <script>
             const from_by_FileReader = document.querySelector(`#upload_by_ReadFiler`)
@@ -48,6 +62,8 @@
             const ipt_by_File = document.querySelector(`#upload_by_File > input[type='file']`)
             const from_by_KoaMulterStorage = document.querySelector(`#upload_by_KoaMulterStorage`)
             const ipt_by_KoaMulterStorage = document.querySelector(`#upload_by_KoaMulterStorage > input[type='file']`)
+            const from_by_Formidable = document.querySelector(`#upload_by_Formidable`)
+            const ipt_by_Formidable = document.querySelector(`#upload_by_Formidable > input[type='file']`)
 
             ipt_by_FileReader.addEventListener('change', handle_Change_4_ipt_by_FileReader)
             from_by_FileReader.addEventListener('submit', handle_Submit_4_from_by_FileReader)
@@ -58,8 +74,33 @@
             ipt_by_KoaMulterStorage.addEventListener('change', handle_Change_4_ipt_by_KoaMulterStorage)
             from_by_KoaMulterStorage.addEventListener('submit', handle_Submit_4_from_by_KoaMulterStorage)
 
+            ipt_by_Formidable.addEventListener('change', handle_Change_4_ipt_by_Formidable)
+            from_by_Formidable.addEventListener('submit', handle_Submit_4_by_Formidable)
+
             let file
             let arraybuffer
+
+            function handle_Change_4_ipt_by_Formidable(e){
+                file = e.target.files[0]
+            }
+
+            async function handle_Submit_4_by_Formidable(e){
+                e.preventDefault()
+                let formData = new FormData()
+                formData.append('image', file)
+
+                let {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await _axios('/api/upload_by_Formidable', formData)
+
+                if (!errno) {
+                    console.log('upload success, res.data => ', data)
+                } else {
+                    console.log('upload error, err.msg => ', msg)
+                }
+            }
 
             function handle_Change_4_ipt_by_KoaMulterStorage(e){
                 file = e.target.files[0]
