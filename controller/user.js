@@ -20,6 +20,7 @@ const findUser = async (username, password) => {
     const res = await read({username, password})
     // 僅檢查帳號是否存在
     if(!password){
+        console.log('僅檢查帳號是否已被註冊')
         if(!res){
             return new SuccModel('此帳號可用')
         }else{
@@ -27,6 +28,7 @@ const findUser = async (username, password) => {
         }
     // 取得帳號
     }else{
+        console.log('取得帳號')
         if(res) return new SuccModel(res)
         return new ErrModel(READ.NOT_EXIST)
     }

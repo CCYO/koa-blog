@@ -47,13 +47,7 @@
             <input type="submit" value="以node/formidable storage處理">
         </form>
     </div>
-    <div>
-        <p>以 Form 的 原生submit 處理上傳 >>> node/formidable storage >>> GCS</p>
-        <form id="upload_by_from_Formidable" action="/api/upload_by_Formidable" enctype="multipart/form-data" method="POST">
-            <input type="file" name="avatar" id="">
-            <input type="submit" value="使用form原生submit">
-        </form>
-    </div>
+    
     <%- include('wedgets/cdn') %>
         <script>
             const from_by_FileReader = document.querySelector(`#upload_by_ReadFiler`)
@@ -64,7 +58,7 @@
             const ipt_by_KoaMulterStorage = document.querySelector(`#upload_by_KoaMulterStorage > input[type='file']`)
             const from_by_Formidable = document.querySelector(`#upload_by_Formidable`)
             const ipt_by_Formidable = document.querySelector(`#upload_by_Formidable > input[type='file']`)
-
+            
             ipt_by_FileReader.addEventListener('change', handle_Change_4_ipt_by_FileReader)
             from_by_FileReader.addEventListener('submit', handle_Submit_4_from_by_FileReader)
 

@@ -18,6 +18,7 @@
     "ejs": "~2.3.3",
     "firebase": "^9.6.7",
     "firebase-admin": "^10.0.2",
+    "formidable": "^2.0.1",
     "koa": "^2.7.0",
     "koa-body": "^4.2.0",
     "koa-bodyparser": "^4.2.1",

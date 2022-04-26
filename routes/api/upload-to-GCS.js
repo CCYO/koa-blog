@@ -21,6 +21,8 @@ const storage = require('../../firebase/init')
 const { api_check_login } = require('../../middleware/check_login')
 const { Stream } = require('stream')
 
+const upload_avatar_to_GCS = require('../../utils/upload_2_GCS_by_formidable')
+
 const uploadDist = Multer({
     dest: resolve(__dirname, '../', '../', 'maybeHaveFile')
 })
@@ -198,48 +200,8 @@ router.post('/api/upload_by_File_in_FormData', koaBody, async (ctx, next) => {
 
 //  Req FormData(File) >>> Formitable >>> GCP
 router.post('/api/upload_by_Formidable', async (ctx, next) => {
-    //const { user : {id} } = ctx.session
-    //let filename = `${id}/avatar.jpg`
-    let filename = `avatar.jpg`
-    let file_from_GCS = storage.bucket().file(filename)
-    const incomingform = await gen_incomingform(file_from_GCS)
-
-    await new Promise((resolve, reject) => {
-        incomingform.parse(ctx.req, (err, files, fields) => {
-            if (err) {
-                console.log('nokokokoko')
-                reject(err)
-            }else{
-                console.log('FFF =>', files)
-                console.log('FFF =>', fields)
-                console.log('okokokoko')
-                resolve()
-            }
-            return
-        })
-    })
-    await file_from_GCS.makePublic()
-    const publicUrl = file_from_GCS.publicUrl()    
-
-    async function gen_incomingform(file_from_GCS){
-        return formidable({
-            // fileWriteStreamHandler(){
-            //     console.log('abcccccccccccccc')
-            //     const pass = new stream.PassThrough()
-            //     file_from_GCS.createWriteStream({
-            //         contentType: 'image/jpeg'
-            //     })
-            //     pass.pipe(file_from_GCS)
-            //     pass.on('pipe', () => console.log('PIPEPIPEPIPEPIPEPIPEPIPEPIPEPIPE'))
-            //     file_from_GCS
-            //         .on('finish', () => console.log('GCS UPLOAD OK -------------'))
-            //         .on('error', (e) => console.log('GCS UPLOAD ERR => ', e))
-            //     return pass
-            // }
-        })
-    }
-
-    ctx.body = { errno: 0, data: publicUrl }
+    let avatarUrl = await upload_avatar_to_GCS(ctx)
+    return ctx.body = { errno: 0, data: avatarUrl }
 })
 
 module.exports = router
