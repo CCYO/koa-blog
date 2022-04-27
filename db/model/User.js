@@ -43,6 +43,9 @@ const User = seq.define('User', {
     },
     avatar: {
         type: STRING
+    },
+    avatar_md5Hash: {
+        type: STRING
     }
 })
 

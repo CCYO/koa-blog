@@ -10,6 +10,8 @@ const { api_check_login } = require('../../middleware/check_login')
 
 const { validate_user } = require('../../middleware/validate')
 
+const upload_avatar_to_GCS = require('../../utils/upload_2_GCS_by_formidable')
+
 router.prefix('/api/user')
 
 //  register
@@ -31,6 +33,7 @@ router.post('/', async (ctx, next) => {
 //  setting
 router.patch('/',  api_check_login, validate_user, async (ctx, next) => {
     const { id } = ctx.session.user
+    const { publicUrl, md5Hash } = await upload_avatar_to_GCS(ctx)
     const newUserInfo = { ...ctx.request.body, id }
     console.log(newUserInfo)
     const resModel = await modifyUserInfo(newUserInfo)

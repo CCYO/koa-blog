@@ -29,7 +29,7 @@ router.get('/setting', view_check_login, async (ctx, next) => {
 })
 
 router.get('/square', view_check_login, async (ctx, next) => {
-    await ctx.render('test-upload')
+    await ctx.render('square')
 })
 
 module.exports = router

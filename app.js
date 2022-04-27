@@ -22,7 +22,6 @@ const users = require('./routes/users')
 
 const tt_upload = require('./routes/views/tt-upload')
 
-const firebase_test = require('./routes/api/firebase-test')
 const upload_to_GCS = require('./routes/api/upload-to-GCS')
 
 const api__user = require('./routes/api/user')
@@ -101,7 +100,6 @@ app.use(users.routes(), users.allowedMethods())
 
 app.use(tt_upload.routes(), tt_upload.allowedMethods())
 
-app.use(firebase_test.routes(), firebase_test.allowedMethods())
 app.use(upload_to_GCS.routes(), upload_to_GCS.allowedMethods())
 
 app.use(api__user.routes(), api__user.allowedMethods())
