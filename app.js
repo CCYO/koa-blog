@@ -16,7 +16,6 @@ const logger = require('koa-logger')
 const store = require('./cache/store')
 const session = require('koa-generic-session')
 
-
 const index = require('./routes/index')
 const users = require('./routes/users')
 

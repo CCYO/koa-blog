@@ -6,14 +6,12 @@ const Ajv = require('ajv')
 
 const ajv = new Ajv()
 
-const schema = {
+const schema_common = {
     type: 'object',
     properties: {
-        username: {
+        email: {
             type: 'string',
-            pattern: '^[\\w]+$',
-            minLength: 2,
-            maxLength: 20
+            pattern: '^[\\w]+@[\\w.]+$'
         },
         nickname: {
             type: 'string',
@@ -39,12 +37,23 @@ const schema = {
     }
 }
 
-const validator_user = (data) => {
-    console.log('## ==> ', data)
-    if(!ajv.validate(schema, data)){
+const schema_register = { ...schema_common, required: ['email', 'password']}
+
+const validator_user_register = (data) => {
+    if(!ajv.validate(schema_register, data)){
         return ajv.errors
     }
     return null
 }
 
-module.exports = validator_user
+const validator_user_update = (data) => {
+    if(!ajv.validate(schema_common, data)){
+        return ajv.errors
+    }
+    return null
+}
+
+module.exports = {
+    validator_user_register,
+    validator_user_update
+}

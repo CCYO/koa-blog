@@ -7,6 +7,7 @@ const { LOGIN: { NOT_LOGIN }} = require('../model/errRes')
 
 const view_check_login = async (ctx, next) => {
     const { session: { user }} = ctx
+    console.log('MIDDLEWARE -> view_check_login -> ctx.session.user => ', user)
     if(user){
         await next()
     }else{
@@ -17,7 +18,7 @@ const view_check_login = async (ctx, next) => {
 
 const api_check_login = async (ctx, next) => {
     const { session: {user} } = ctx
-    console.log( '000 => ', ctx.session )
+    console.log('MIDDLEWARE -> api_check_login -> ctx.session.user => ', user)
     if(user){
         await next()
     }else{

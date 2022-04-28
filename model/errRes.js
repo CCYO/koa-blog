@@ -5,8 +5,8 @@
 module.exports = {
     REGISTER: {
         UNEXPECTED: {errno: 199},
-        IS_EXIST: {errno: 101, msg: '此帳號已被登記'},
-        NO_USERNAME: {errno: 102, msg: '帳號未填'},
+        IS_EXIST: {errno: 101, msg: '此信箱已被登記'},
+        NO_EMAIL: {errno: 102, msg: '信箱未填'},
         NO_PASSWORD: {errno: 103, msg: '密碼未填'}
     },
     READ: {

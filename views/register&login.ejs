@@ -80,11 +80,11 @@
                 <form id='form_register' class="row">
                   <div class="col-8 mx-auto">
                     <div class="mb-3">
-                      <label for="input_username" class="form-label">帳號</label>
+                      <label for="input_email" class="form-label">信箱</label>
                       <input
                         type="text" class="form-control"
-                        name="input_username" data-form-id='#form_register' 
-                        aria-describedby="username_help"
+                        name="input_email" data-form-id='#form_register' 
+                        aria-describedby="email_help"
                         autocomplete="off" required>
                       <div class="d-block">&nbsp;</div>
                     </div>
@@ -112,12 +112,12 @@
               <form id='form_login' class="row">
                 <div class="col-8 mx-auto">
                   <div class="mb-3">
-                    <label for="input_username" class="form-label">帳號</label>
+                    <label for="input_email" class="form-label">信箱</label>
                     <input
                       type="text" class="form-control"
-                      name="input_username" data-form-id='#form_login'
+                      name="input_email" data-form-id='#form_login'
                       autocomplete="off" required 
-                      aria-describedby="username_help">
+                      aria-describedby="email_help">
                     <div class="d-block">&nbsp;</div>
                   </div>
                   <div class="mb-3">
@@ -150,8 +150,8 @@
       //  selector__ 對應 selector
       const selector__form_register = '#form_register'
       const selector__form_login = '#form_login'
-      //const selector__inp_username = `#input_username`
-      const selector__inp_username = `input[name='input_username']`
+      //const selector__inp_email = `#input_email`
+      const selector__inp_email = `input[name='input_email']`
       //const selector__inp_password = `#input_password`
       const selector__inp_password = `input[name='input_password']`
       const selector__inp_check_password = `input[name='input_check_password']`
@@ -252,31 +252,31 @@
       //  form_UI_login
       const form_UI_login = _form_UI(selector__form_login)      
 
-      const validate_username = async (e) => {
+      const validate_email = async (e) => {
+        console.log('進入驗證')
         const $target = e.target
 
         let form_id = $target.dataset['formId']
-        const $feedback = $(`${form_id} ${selector__inp_username} ~ div`)
+        const $feedback = $(`${form_id} ${selector__inp_email} ~ div`)
 
         //  判斷使用 register || login 的 UI驗證
         const form_UI = (form_id = form_id === '#form_register') ? form_UI_register : form_UI_login
         
-        const username = $target.value
-        const regex_username = /^[\w]+$/
+        const email = $target.value
         const regex_email = /^[\w]+@[\w\.]+$/
-        if(!username){
+        if(!email){
           //  無值
-          form_UI(selector__inp_username, true)
+          form_UI(selector__inp_email, true)
           return
-        }else if( !(regex_email.exec(username)) ){
+        }else if( !(regex_email.exec(email)) ){
           //  格式錯誤
-          form_UI(selector__inp_username, false, '必須由數字或英文字母組成')
+          form_UI(selector__inp_email, false, '必須由數字或英文字母組成')
           return 
         }
 
         //  格式驗證成功
         if(form_id){
-          //  若是 register_input_username
+          //  若是 register_input_email
           //  添加 loading 樣式
           $target.classList.remove('is-valid', 'is-invalid')
           $feedback.classList.add('loading')
@@ -289,32 +289,32 @@
               msg = undefined,
               data = undefined
             }
-          } = await axios.post('/api/user', { username })
+          } = await axios.post('/api/user', { email })
 
           //  AJAX結束，移除 loading 樣式
           $feedback.classList.remove('loading')
 
           if(errno){
             //  DB驗證失敗
-            form_UI_register(selector__inp_username, false, msg)
+            form_UI_register(selector__inp_email, false, msg)
             return
           }else{
             //  DB驗證成功
-            form_UI_register(selector__inp_username)
+            form_UI_register(selector__inp_email)
             return
           }
         }else{
-          //  若是 login_input_username
-          form_UI(selector__inp_username)
+          //  若是 login_input_email
+          form_UI(selector__inp_email)
         }
       }
       
 
-      // 驗證 register username 是否已存在
-      $$(`${selector__inp_username}`).forEach(
+      // 驗證 register email 是否已存在
+      $$(`${selector__inp_email}`).forEach(
         inp => inp.addEventListener(
           'input',
-          validate_username
+          validate_email
         )
       )
 
@@ -395,7 +395,7 @@
         'submit',
         async (e) => {
           e.preventDefault()
-          const username = $(`${selector__form_register} ${selector__inp_username}`).value
+          const email = $(`${selector__form_register} ${selector__inp_email}`).value
           const password = $(`${selector__form_register} ${selector__inp_password}`).value
           const {
             data: {
@@ -404,13 +404,13 @@
               data = undefined
             }
           } = await axios.post('/api/user/register', {
-            username,
+            email,
             password
           })
           if(errno){
             alert(msg.message)
           }else{
-            //window.userCredential = await _firebase.auth.create( username, password )
+            //window.userCredential = await _firebase.auth.create( email, password )
             alert('註冊成功，請嘗試登入')
             location.href = '/login'
             
@@ -429,7 +429,7 @@
               data = undefined
             }
           } = await axios.post('/api/user/', {
-            username: $(`${selector__form_login} ${selector__inp_username}`).value,
+            email: $(`${selector__form_login} ${selector__inp_email}`).value,
             password: $(`${selector__form_login} ${selector__inp_password}`).value
           })
           if(errno){
@@ -437,7 +437,7 @@
           }else{
             alert('登入成功')
             let from = location.search ? new URLSearchParams(location.search).get('from') : false
-            location.href = from || '/square'
+            location.href = from || '/setting'
           }
       })
     

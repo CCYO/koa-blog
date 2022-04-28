@@ -1,102 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <!-- BS5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
 </head>
+
 <body>
     <div class="container">
         <h3>修改個人資訊</h3>
         <form class="row">
             <div class="col-8 mx-auto">
-            <div class="mb-3">
-                <label class="form-label w-100">帳號
-                <input
-                type="text" class="form-control"
-                name="username"
-                aria-describedby="username_help"
-                autocomplete="off">
-                <div class="d-block">&nbsp;</div>
-                </label>
-            </div>
-            <div class="mb-3">
-                <label class="form-label w-100">密碼
-                    <input
-                    type="password" class="form-control"
-                    name="password" data-retry='yes'
-                    autocomplete="new-password">
-                    <div class="d-block">&nbsp;</div>
-                </label>
-            </div>
-            <div class="mb-3">
-                <label for="nickname" class="form-label">暱稱
-                    <input
-                    type="text" class="form-control"
-                    name="nickname"
-                    autocomplete="off">
-                    <div class="d-block">&nbsp;</div>
-                </label>
-            </div>
-            <div class="mb-3">
-                <label class="form-label w-100">年齡
-                    <input
-                    type="number" class="form-control"
-                    name="age"
-                    autocomplete="off">
-                    <div class="d-block">&nbsp;</div>
-                </label>
-            </div>
-            <div class="mb-3">
-                <label class="form-label w-100">頭像
-                    <input
-                    type="file" class="form-control"
-                    name="avatar"
-                    autocomplete="off">
-                    <div class="d-block">&nbsp;</div>
-                </label>
-            </div>
-            <button type="submit" class="btn btn-primary">送出</button>
+                <div class="mb-3">
+                    <label class="form-label w-100">信箱
+                        <input type="text" class="form-control" name="email" aria-describedby="email_help"
+                            autocomplete="off">
+                        <div class="d-block">&nbsp;</div>
+                    </label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label w-100">密碼
+                        <input type="password" class="form-control" name="password" data-retry='yes'
+                            autocomplete="new-password">
+                        <div class="d-block">&nbsp;</div>
+                    </label>
+                </div>
+                <div class="mb-3">
+                    <label for="nickname" class="form-label">暱稱
+                        <input type="text" class="form-control" name="nickname" autocomplete="off">
+                        <div class="d-block">&nbsp;</div>
+                    </label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label w-100">年齡
+                        <input type="number" class="form-control" name="age" autocomplete="off">
+                        <div class="d-block">&nbsp;</div>
+                    </label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label w-100">頭像
+                        <input type="file" class="form-control" name="avatar" autocomplete="off">
+                        <div class="d-block">&nbsp;</div>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">送出</button>
             </div>
         </form>
+        <button id="logout">登出</button>
     </div>
-    
-    <%- include('wedgets/cdn') %>
-    <%- include('wedgets/utils') %>
-    <!-- 引入firebase服務模塊 -->
-    <script>
 
-        $('form').addEventListener('submit', async (e) => {
-            e.preventDefault()
-            let newUserInfo = {}
-            for({type, name, value} of e.target){
-                if(type !== 'submit' && value){
-                    value = (type === 'number') ? value*1 : value
-                    newUserInfo[name] = value
-                }
-            }
-            let {
-                data: {
-                    errno,
-                    data,
-                    msg
-                }
-            } = await axios.patch('/api/user/', newUserInfo)
-            if(errno){
-                if(Array.isArray(msg)){
-                    alert(`${msg[0].instancePath} ${msg[0].message}`)
-                    console.log(msg)
-                    return
-                }
-                alert(msg.message)
-                console.error(msg.stack)
-            }else{
-                console.log(data)
-            }
-        })
-    </script>
+    <%- include('wedgets/cdn') %>
+        <%- include('wedgets/utils') %>
+            <!-- 引入firebase服務模塊 -->
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+            <script>
+                let user = <%- JSON.stringify(user) %>
+
+                    $('#logout').addEventListener('click', async () => {
+                        const {
+                            data: {
+                                errno,
+                                data,
+                                msg
+                            }
+                        } = await axios.get('/api/user/logout')
+                        if (!errno) {
+                            alert(data)
+                            location.href = '/register'
+                        }
+                    })
+                let formData = new FormData()
+                let md5Hash
+                let md5Hash_is_new = false
+
+                $('input[type="file"]').addEventListener('change', (e) => {
+                    let file = e.target.files[0]
+                    //  當有檔案時，先確認 md5hash 是否相同
+                    let fr = new FileReader()
+                    fr.addEventListener('load', async (evt) => {
+                        if (evt.target.readyState == FileReader.DONE) {
+                            let hash = CryptoJS.MD5(CryptoJS.enc.Latin1.parse(fr.result))
+                            avatar_md5Hash = hash.toString(CryptoJS.enc.Base64)
+                            console.log('md5Hash => ', avatar_md5Hash)
+                            if (user.avatar_md5Hash && user.avatar_md5Hash === avatar_md5Hash) {
+                                alert('現在就是這個頭像')
+                            } else {
+                                const { data: {
+                                    errno, data, msg
+                                } } = await axios.post('/api/user/check_avatar', { avatar_md5Hash })
+                                if (!errno) {
+                                    alert(data)
+                                    formData.append('avatar', file)
+                                } else {
+                                    alert(msg)
+                                }
+                            }
+                        }
+                    })
+                    fr.readAsBinaryString(file)
+                })
+
+                $('form').addEventListener('submit', async (e) => {
+                    e.preventDefault()
+                    for ({ type, name, value } of e.target) {
+                        if ((type !== 'file' && 'submit') && value) {
+                            value = (type === 'number') ? value * 1 : value
+                            formData.append(name, value)
+                        }
+                    }
+
+                    let {
+                        data: {
+                            errno,
+                            data,
+                            msg
+                        }
+                    } = await axios.patch('/api/user/', formData)
+
+                    if (errno) {
+                        if (Array.isArray(msg)) {
+                            alert(`${msg[0].instancePath} ${msg[0].message}`)
+                            console.log(msg)
+                            return
+                        }
+                        alert(msg.message)
+                        console.error(msg.stack)
+                    } else {
+                        console.log(data)
+                    }
+                })
+            </script>
 </body>
+
 </html>

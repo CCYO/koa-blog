@@ -6,7 +6,7 @@ const { STRING , INTEGER} = require('../types')
 
 
 const User = seq.define('User', {
-    username: {
+    email: {
         type: STRING,
         allowNull: false,
         unique: true,
@@ -36,16 +36,18 @@ const User = seq.define('User', {
         type: STRING,
         allowNull: true,
         validate: {
-            is: /^[\w]+$/,
-            len: [2,20],
+            is: /^[\w@.]+$/,
+            len: [2,30],
             notNull: false,
         }
     },
     avatar: {
-        type: STRING
+        type: STRING,
+        allowNull: true,
     },
     avatar_md5Hash: {
-        type: STRING
+        type: STRING,
+        allowNull: true,
     }
 })
 

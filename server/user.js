@@ -13,8 +13,8 @@ const create = async (data) => {
     return init_4_user(dataValues)
 }
 
-const read = async ({username, password}) => {
-    const data = { username }
+const read = async ({email, password}) => {
+    const data = { email }
     if(password) data.password = hash(password)
     const user = await User.findOne({ where: data})
     if(!user) return false

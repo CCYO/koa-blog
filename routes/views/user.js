@@ -25,7 +25,10 @@ router.get('/login', async (ctx, next) => {
 })
 
 router.get('/setting', view_check_login, async (ctx, next) => {
-    await ctx.render('setting')
+    console.log('@session.user => ', ctx.session.user)
+    await ctx.render('setting', {
+        user: ctx.session.user
+    })
 })
 
 router.get('/square', view_check_login, async (ctx, next) => {

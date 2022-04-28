@@ -9,15 +9,15 @@ const {
     REGISTER: {
         UNEXPECTED,
         IS_EXIST,
-        NO_USERNAME,
+        NO_EMAIL,
         NO_PASSWORD
     },
     READ,
     UPDATE
 } = require('../model/errRes')
 
-const findUser = async (username, password) => {
-    const res = await read({username, password})
+const findUser = async (email, password) => {
+    const res = await read({email, password})
     // 僅檢查帳號是否存在
     if(!password){
         console.log('僅檢查帳號是否已被註冊')
@@ -34,19 +34,19 @@ const findUser = async (username, password) => {
     }
 }
 
-const register = async (username, password) => {
+const register = async (email, password) => {
     if(!password){
         console.error(`@@@創建user時，${NO_PASSWORD.msg}`)
         return new ErrModel(NO_PASSWORD)
     }
-    const { errno } = await findUser(username)
+    const { errno } = await findUser(email)
     if( errno ){
         console.error(`@@@創建user時，${IS_EXIST.msg}`)
         return new ErrModel(IS_EXIST)
     } else {
         try{
             const user = await create({
-                username,
+                email,
                 password
             })
             console.log('@@@成功創建user ===> ', user)

@@ -5,8 +5,12 @@
 const { USER: { AVATAR }} = require('../conf/constant')
 
 const init_4_user = (user) => {
-    const { username, nickname, avatar } = user
-    if(!nickname) user.nickname = username
+    const { email, nickname, avatar } = user
+    if(!nickname){
+        let regex = /^([\w]+)@/
+        let [_, target] = regex.exec(email)
+        user.nickname = target
+    }
     if(!avatar) user.avatar = AVATAR
     delete user.password
     return user
