@@ -52,89 +52,92 @@
             </div>
         </form>
         <button id="logout">登出</button>
+        <div id="eval" style="display: none"><%- JSON.stringify(user) %></div>
     </div>
 
     <%- include('wedgets/cdn') %>
-        <%- include('wedgets/utils') %>
-            <!-- 引入firebase服務模塊 -->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-            <script>
-                let user = <%- JSON.stringify(user) %>
+    <%- include('wedgets/utils') %>
+    <!-- 引入firebase服務模塊 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        let go = document.getElementById('eval')
+        let user
+        eval('user = ' + go.innerText)
 
-                    $('#logout').addEventListener('click', async () => {
-                        const {
-                            data: {
-                                errno,
-                                data,
-                                msg
-                            }
-                        } = await axios.get('/api/user/logout')
+        $('#logout').addEventListener('click', async () => {
+            const {
+                data: {
+                    errno,
+                    data,
+                    msg
+                }
+            } = await axios.get('/api/user/logout')
+            if (!errno) {
+                alert(data)
+                location.href = '/register'
+            }
+        })
+        let formData = new FormData()
+        let md5Hash
+        let md5Hash_is_new = false
+
+        $('input[type="file"]').addEventListener('change', (e) => {
+            let file = e.target.files[0]
+            //  當有檔案時，先確認 md5hash 是否相同
+            let fr = new FileReader()
+            fr.addEventListener('load', async (evt) => {
+                if (evt.target.readyState == FileReader.DONE) {
+                    let hash = CryptoJS.MD5(CryptoJS.enc.Latin1.parse(fr.result))
+                    avatar_md5Hash = hash.toString(CryptoJS.enc.Base64)
+                    console.log('md5Hash => ', avatar_md5Hash)
+                    if (user.avatar_md5Hash && user.avatar_md5Hash === avatar_md5Hash) {
+                        alert('現在就是這個頭像')
+                    } else {
+                        const { data: {
+                            errno, data, msg
+                        } } = await axios.post('/api/user/check_avatar', { avatar_md5Hash })
                         if (!errno) {
                             alert(data)
-                            location.href = '/register'
-                        }
-                    })
-                let formData = new FormData()
-                let md5Hash
-                let md5Hash_is_new = false
-
-                $('input[type="file"]').addEventListener('change', (e) => {
-                    let file = e.target.files[0]
-                    //  當有檔案時，先確認 md5hash 是否相同
-                    let fr = new FileReader()
-                    fr.addEventListener('load', async (evt) => {
-                        if (evt.target.readyState == FileReader.DONE) {
-                            let hash = CryptoJS.MD5(CryptoJS.enc.Latin1.parse(fr.result))
-                            avatar_md5Hash = hash.toString(CryptoJS.enc.Base64)
-                            console.log('md5Hash => ', avatar_md5Hash)
-                            if (user.avatar_md5Hash && user.avatar_md5Hash === avatar_md5Hash) {
-                                alert('現在就是這個頭像')
-                            } else {
-                                const { data: {
-                                    errno, data, msg
-                                } } = await axios.post('/api/user/check_avatar', { avatar_md5Hash })
-                                if (!errno) {
-                                    alert(data)
-                                    formData.append('avatar', file)
-                                } else {
-                                    alert(msg)
-                                }
-                            }
-                        }
-                    })
-                    fr.readAsBinaryString(file)
-                })
-
-                $('form').addEventListener('submit', async (e) => {
-                    e.preventDefault()
-                    for ({ type, name, value } of e.target) {
-                        if ((type !== 'file' && 'submit') && value) {
-                            value = (type === 'number') ? value * 1 : value
-                            formData.append(name, value)
+                            formData.append('avatar', file)
+                        } else {
+                            alert(msg)
                         }
                     }
+                }
+            })
+            fr.readAsBinaryString(file)
+        })
 
-                    let {
-                        data: {
-                            errno,
-                            data,
-                            msg
-                        }
-                    } = await axios.patch('/api/user/', formData)
+        $('form').addEventListener('submit', async (e) => {
+            e.preventDefault()
+            for ({ type, name, value } of e.target) {
+                if ((type !== 'file' && 'submit') && value) {
+                    value = (type === 'number') ? value * 1 : value
+                    formData.append(name, value)
+                }
+            }
 
-                    if (errno) {
-                        if (Array.isArray(msg)) {
-                            alert(`${msg[0].instancePath} ${msg[0].message}`)
-                            console.log(msg)
-                            return
-                        }
-                        alert(msg.message)
-                        console.error(msg.stack)
-                    } else {
-                        console.log(data)
-                    }
-                })
-            </script>
+            let {
+                data: {
+                    errno,
+                    data,
+                    msg
+                }
+            } = await axios.patch('/api/user/', formData)
+
+            if (errno) {
+                if (Array.isArray(msg)) {
+                    alert(`${msg[0].instancePath} ${msg[0].message}`)
+                    console.log(msg)
+                    return
+                }
+                alert(msg.message)
+                console.error(msg.stack)
+            } else {
+                console.log(data)
+            }
+        })
+    </script>
 </body>
 
 </html>

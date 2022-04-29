@@ -35,4 +35,10 @@ router.get('/square', view_check_login, async (ctx, next) => {
     await ctx.render('square')
 })
 
+router.get('/blog-edit', async (ctx, next) => {
+    await ctx.render('blog-edit', {
+        user: ctx.session.user
+    })
+})
+
 module.exports = router

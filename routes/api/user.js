@@ -63,6 +63,25 @@ router.patch('/',  api_check_login, validate_user_update, async (ctx, next) => {
     ctx.body = resModel
 })
 
+router.post('/blog_img', async (ctx, next) => {
+    await upload_avatar_to_GCS(ctx) 
+    let newUserInfo = { ...ctx.session.user, ...ctx.fields}
+    let resModel = await modifyUserInfo(newUserInfo)
+    if( resModel.errno ){
+        ctx.session.user = resModel.data
+    }else{
+        resModel = {
+            "errno": 0, // 注意：值是数字，不能是字符串
+            "data": {
+                "url": ctx.fields.avatar, // 图片 src ，必须
+                "alt": "yyy", // 图片描述文字，非必须
+                "href": "zzz" // 图片的链接，非必须
+            }
+        }
+    }
+    ctx.body = resModel
+})
+
 router.get('/logout', api_check_login, async (ctx, next) => {
     ctx.session = null
     ctx.body = { errno: 0, data: '成功登出'}
