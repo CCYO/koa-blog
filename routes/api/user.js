@@ -68,11 +68,14 @@ router.post('/blog_img', async (ctx, next) => {
     let newUserInfo = { ...ctx.session.user, ...ctx.fields}
     let resModel = await modifyUserInfo(newUserInfo)
     if( resModel.errno ){
-        ctx.session.user = resModel.data
+        return { errno: 111}
     }else{
+        ctx.session.user = resModel.data
+        const { avatar_md5Hash } = resModel.data
         resModel = {
             "errno": 0, // 注意：值是数字，不能是字符串
             "data": {
+                avatar_md5Hash,
                 "url": ctx.fields.avatar, // 图片 src ，必须
                 "alt": "yyy", // 图片描述文字，非必须
                 "href": "zzz" // 图片的链接，非必须

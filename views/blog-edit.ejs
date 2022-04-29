@@ -11,91 +11,119 @@
 <body>
     <div id="toolbar-container"></div>
     <div id="editor-container"></div>
-    <div id="eval" style="display: none"><%- JSON.stringify(user) %></div>
+    <div id="eval" style="display: none">
+        <%- JSON.stringify(user) %>
+    </div>
     <%- include('wedgets/cdn') %>
-    <%- include('wedgets/utils') %>
-    <!-- 引入 css -->
-    <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
-    <!-- 引入 js -->
-    <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
-    <!-- 引入 crypto -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>
-        let go = document.getElementById('eval')
-        let user
-        eval('user = ' + go.innerText)
-        var E = window.wangEditor; // 全局变量
-        E.i18nAddResources('tw', {
-            // 标题
-            header: {
-                title: '標題',
-                text: '文字',
-            },
-            blockQuote: {
-                title: '圖標'
-            },
+        <%- include('wedgets/utils') %>
+            <!-- 引入 css -->
+            <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
+            <!-- 引入 js -->
+            <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
+            <!-- 引入 crypto -->
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+            <script>
+                let go = document.getElementById('eval')
+                let user
+                eval('user = ' + go.innerText)
+                var E = window.wangEditor; // 全局变量
+                E.i18nAddResources('tw', {
+                    // 标题
+                    header: {
+                        title: '標題',
+                        text: '文字',
+                    },
+                    blockQuote: {
+                        title: '圖標'
+                    },
 
-            // ... 其他语言词汇，下文说明 ...
-        })
-        E.i18nChangeLanguage('tw')
-    </script>
-    <script>
-        const { createEditor, createToolbar } = window.wangEditor
-        const editorConfig = { MENU_CONF: {} }
-        editorConfig.placeholder = '请输入内容'
-        editorConfig.onChange = (editor) => {
-            // 当编辑器选区、内容变化时，即触发
-            console.log('content', editor.children)
-            console.log('html', editor.getHtml())
-        }
-        editorConfig.MENU_CONF['uploadImage'] = {
-            // 上传图片的配置
-            server: '/api/user/blog_img',
-            onBeforeUpload: async function (file) {
-                // file 选中的文件，格式如 { key: file }
-                let [_file] = Object.values(file)
-                console.log(_file.data)
-                let fr = new FileReader()
-                let check_hash = new Promise((resolve, reject) => {
-                    fr.addEventListener('load', (evt) => {
-                        if (evt.target.readyState == FileReader.DONE) {
-                            let hash = CryptoJS.MD5(CryptoJS.enc.Latin1.parse(fr.result))
+                    // ... 其他语言词汇，下文说明 ...
+                })
+                E.i18nChangeLanguage('tw')
+            </script>
+            <script>
+                const { createEditor, createToolbar } = window.wangEditor
+                const editorConfig = { MENU_CONF: {} }
+                editorConfig.placeholder = '请输入内容'
+                editorConfig.onChange = (editor) => {
+                    // 当编辑器选区、内容变化时，即触发
+                    console.log('content', editor.children)
+                    console.log('html', editor.getHtml())
+                }
+                editorConfig.MENU_CONF['uploadImage'] = {
+                    // 上传图片的配置
+                    //server: '/api/user/blog_img',
+                    async customUpload(file, insertFn) {
+                        console.log('123456')
+                        let check_hash = async (file, user, promise) => {
+                            console.log('123456789')
+                            let fr = new FileReader()
+                            promise = new Promise((resolve, reject) => {
+                                fr.addEventListener('load', async (evt) => {
+                                    console.log('loading 1')
+                                    if (evt.target.readyState == FileReader.DONE) {
+                                        console.log('loading 2')
+                                        console.log('fr_res => ', fr.result)
+                                        resolve(fr.result)
+                                    } else {
+                                        console.log('失敗拉')
+                                        reject('失敗')
+                                    }
+                                })
+                            })
+                            console.log('12345677891011')
+                            fr.readAsBinaryString(file)
+                            return await promise
+                        }
+                        let _file = file
+                        if (user && user.avatar_md5Hash) {
+                            let _promise
+                            console.log('1234567789101112')
+                            let fr_result = await check_hash(_file, user, _promise)
+                            console.log('外面 => ', fr_result)
+                            let hash = CryptoJS.MD5(CryptoJS.enc.Latin1.parse(fr_result))
                             avatar_md5Hash = hash.toString(CryptoJS.enc.Base64)
                             console.log('md5Hash => ', avatar_md5Hash)
-                            if (user.avatar_md5Hash && user.avatar_md5Hash === avatar_md5Hash) {
-                                alert('這個圖已經有了')
-                                reject(false)
-                            } else {
-                                console.log('GO')
-                                return resolve(_file.data)
+                            if (user.avatar_md5Hash === avatar_md5Hash) {
+                                alert('已上傳完畢')
+                                insertFn(user.avatar)
+                                return
                             }
                         }
-                    })
+                        let formdata = new FormData()
+                        formdata.append('avatar', _file)
+                        console.log("開始axios")
+
+                        const { data: {
+                            errno, data, msg
+                        } } = await axios.post('/api/user/blog_img', formdata)
+                        console.log('123456778910111213')
+                        if (!errno) {
+                            const { url, alt, href, avatar_md5Hash } = data
+                            user = { ...user, avatar: url, avatar_md5Hash }
+                            insertFn(url, alt, href)
+                        } else {
+                            console.log("ERR")
+                        }
+                        return
+                    },
+
+                }
+
+
+                // 创建编辑器
+                const editor = createEditor({
+                    selector: '#editor-container',
+                    config: editorConfig,
+                    mode: 'simple' // 或 'simple' 参考下文
                 })
-                fr.readAsBinaryString(_file.data)
-                return await check_hash
-                
-
-                // 可以 return
-                // 1. return file 或者 new 一个 file ，接下来将上传
-                // 2. return false ，不上传这个 file
-            },
-        }
-
-
-        // 创建编辑器
-        const editor = createEditor({
-            selector: '#editor-container',
-            config: editorConfig,
-            mode: 'simple' // 或 'simple' 参考下文
-        })
-        // 创建工具栏
-        const toolbar = createToolbar({
-            editor,
-            selector: '#toolbar-container',
-            mode: 'simple' // 或 'simple' 参考下文
-        })
-    </script>
+                // 创建工具栏
+                const toolbar = createToolbar({
+                    editor,
+                    selector: '#toolbar-container',
+                    mode: 'simple' // 或 'simple' 参考下文
+                })
+            </script>
 </body>
 
 </html>
