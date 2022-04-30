@@ -20,8 +20,6 @@ const upload_avatar_to_GCS = async (ctx) => {
     let formidableIns = _gen_formidable(file, promise_4_upload_from_formidable_2_GCS)
 
     let { fields, files } = await _parse(formidableIns, ctx, promise_4_upload_from_formidable_2_GCS)
-    console.log('fields => ', fields)
-    console.log('files => ', files)
 
     if (file_is_exist) {
         await file.makePublic()
@@ -101,7 +99,6 @@ async function _parse(formidableIns, ctx, promise) {
 const _gen_formidable = (file, promise) => {
     return formidable({
         fileWriteStreamHandler() {
-            console.log('@@file =>', file)
             let ws = file.createWriteStream({
                 //  https://cloud.google.com/storage/docs/metadata#caching_data
                 metadata: {

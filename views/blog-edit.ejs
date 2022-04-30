@@ -11,119 +11,160 @@
 <body>
     <div id="toolbar-container"></div>
     <div id="editor-container"></div>
+    <button id="getHTML">GET HTML</button>
     <div id="eval" style="display: none">
         <%- JSON.stringify(user) %>
     </div>
     <%- include('wedgets/cdn') %>
-        <%- include('wedgets/utils') %>
-            <!-- 引入 css -->
-            <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
-            <!-- 引入 js -->
-            <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
-            <!-- 引入 crypto -->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-            <script>
-                let go = document.getElementById('eval')
-                let user
-                eval('user = ' + go.innerText)
-                var E = window.wangEditor; // 全局变量
-                E.i18nAddResources('tw', {
-                    // 标题
-                    header: {
-                        title: '標題',
-                        text: '文字',
-                    },
-                    blockQuote: {
-                        title: '圖標'
-                    },
+    <%- include('wedgets/utils') %>
+    <!-- 引入 css -->
+    <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
+    <!-- 引入 js -->
+    <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
+    <!-- 引入 crypto -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        let go = document.getElementById('eval')
+        let user
+        let blog
+        var img_list = []
+        eval('user = ' + go.innerText)
+    </script>
+    <script>
+        wangEditor.i18nAddResources('tw', {
+            // 标题
+            header: {
+                title: '標題',
+                text: '文字',
+            },
+            blockQuote: {
+                title: '圖標'
+            },
 
-                    // ... 其他语言词汇，下文说明 ...
-                })
-                E.i18nChangeLanguage('tw')
-            </script>
-            <script>
-                const { createEditor, createToolbar } = window.wangEditor
-                const editorConfig = { MENU_CONF: {} }
-                editorConfig.placeholder = '请输入内容'
-                editorConfig.onChange = (editor) => {
-                    // 当编辑器选区、内容变化时，即触发
-                    console.log('content', editor.children)
-                    console.log('html', editor.getHtml())
-                }
-                editorConfig.MENU_CONF['uploadImage'] = {
-                    // 上传图片的配置
-                    //server: '/api/user/blog_img',
-                    async customUpload(file, insertFn) {
-                        console.log('123456')
-                        let check_hash = async (file, user, promise) => {
-                            console.log('123456789')
-                            let fr = new FileReader()
-                            promise = new Promise((resolve, reject) => {
-                                fr.addEventListener('load', async (evt) => {
-                                    console.log('loading 1')
-                                    if (evt.target.readyState == FileReader.DONE) {
-                                        console.log('loading 2')
-                                        console.log('fr_res => ', fr.result)
-                                        resolve(fr.result)
-                                    } else {
-                                        console.log('失敗拉')
-                                        reject('失敗')
-                                    }
-                                })
-                            })
-                            console.log('12345677891011')
-                            fr.readAsBinaryString(file)
-                            return await promise
-                        }
-                        let _file = file
-                        if (user && user.avatar_md5Hash) {
-                            let _promise
-                            console.log('1234567789101112')
-                            let fr_result = await check_hash(_file, user, _promise)
-                            console.log('外面 => ', fr_result)
-                            let hash = CryptoJS.MD5(CryptoJS.enc.Latin1.parse(fr_result))
-                            avatar_md5Hash = hash.toString(CryptoJS.enc.Base64)
-                            console.log('md5Hash => ', avatar_md5Hash)
-                            if (user.avatar_md5Hash === avatar_md5Hash) {
-                                alert('已上傳完畢')
-                                insertFn(user.avatar)
-                                return
-                            }
-                        }
-                        let formdata = new FormData()
-                        formdata.append('avatar', _file)
-                        console.log("開始axios")
+            // ... 其他语言词汇，下文说明 ...
+        })
+        wangEditor.i18nChangeLanguage('tw')
 
-                        const { data: {
-                            errno, data, msg
-                        } } = await axios.post('/api/user/blog_img', formdata)
-                        console.log('123456778910111213')
-                        if (!errno) {
-                            const { url, alt, href, avatar_md5Hash } = data
-                            user = { ...user, avatar: url, avatar_md5Hash }
-                            insertFn(url, alt, href)
-                        } else {
-                            console.log("ERR")
-                        }
+        const { createEditor, createToolbar } = window.wangEditor
+        const editorConfig = { MENU_CONF: {} }
+
+        editorConfig.placeholder = '请输入内容'
+        editorConfig.onChange = (editor) => {
+            // 当编辑器选区、内容变化时，即触发
+            console.log('content', editor.children)
+            console.log('html', editor.getHtml())
+        }
+        editorConfig.MENU_CONF['uploadImage'] = {
+            // 上传图片的配置
+            //server: '/api/user/blog_img',
+            async customUpload(file, insertFn) {
+                //  若使用者資訊存在
+                if (user && user.avatar_md5Hash) {
+                    //  以 FileReader 取得 file 的 BinaryString
+                    let fr_result = await readAsBinaryString(file)
+                    //  比對 file 的 md5Hash
+                    if (!check_file_is_new(user.avatar_md5Hash, fr_result)) {
+                        //  將圖片插入
+                        insertFn(user.avatar)
+                        alert('上傳完成，其實我說瞎話')
                         return
-                    },
-
+                    }
                 }
 
+                let formdata = new FormData()
+                formdata.append('avatar', file)
 
-                // 创建编辑器
-                const editor = createEditor({
-                    selector: '#editor-container',
-                    config: editorConfig,
-                    mode: 'simple' // 或 'simple' 参考下文
+                const { data: {
+                    errno, data, msg
+                } } = await axios.post('/api/user/blog_img', formdata)
+
+                if (!errno) {
+                    const { url, alt, href, avatar_md5Hash } = data
+                    user = { ...user, avatar: url, avatar_md5Hash }
+                    insertFn(url, alt, href)
+                } else {
+                    console.log("ERR")
+                }
+
+                //  比對file是否為新
+                function check_file_is_new(md5Hash, binaryString) {
+                    let new_md5Hash = CryptoJS.MD5(CryptoJS.enc.Latin1.parse(binaryString))
+                    new_md5Hash = new_md5Hash.toString(CryptoJS.enc.Base64)
+                    console.log('生成的 md5Hash => ', new_md5Hash)
+                    if (md5Hash === new_md5Hash) {
+                        return false
+                    } else {
+                        return true
+                    }
+                }
+                //  返回 file 的 FileReader.result
+                function readAsBinaryString(file) {
+                    return new Promise((resolve, reject) => {
+                        let fr = new FileReader()
+                        fr.addEventListener('load', (evt) => {
+                            if (fr.readyState === FileReader.DONE) {
+                                resolve(fr.result)
+                            }
+                        })
+                        fr.addEventListener('error', (error) => {
+                            console.log('fr load 發生錯誤 => ', error)
+                            reject(error)
+                        })
+                        fr.readAsBinaryString(file)
+                    })
+                }
+            },
+        }
+        editorConfig.MENU_CONF['insertImage'] = {
+            onInsertedImage(imageNode) {
+                if (imageNode == null) return
+                const { src, alt, url, href } = imageNode
+                img_list.push(imageNode)
+                imageNode.isNew = false
+                console.log('inserted image, imageNode =>', imageNode)
+            }
+        }
+        editorConfig.MENU_CONF['editImage'] = {
+            onUpdatedImage(imageNode) {
+                console.log('@editImage imageNode => ', imageNode)
+            }
+        }
+
+        // 创建编辑器
+        const editor = createEditor({
+            html: '<p>hello <strong>world</strong></p>',
+            selector: '#editor-container',
+            config: editorConfig,
+            mode: 'simple' // 或 'simple' 参考下文
+        })
+        // 创建工具栏
+        const toolbar = createToolbar({
+            editor,
+            selector: '#toolbar-container',
+            mode: 'simple' // 或 'simple' 参考下文
+        })
+
+        $('#getHTML').addEventListener('click', (e) => {
+            var data_html = editor.getHtml()
+            var data_text = editor.getText()
+            let last_img_list = []
+            editor.children.forEach(({ children }) => {
+                children.forEach(item => {
+                    if (item.type === 'image') last_img_list.push(item)
                 })
-                // 创建工具栏
-                const toolbar = createToolbar({
-                    editor,
-                    selector: '#toolbar-container',
-                    mode: 'simple' // 或 'simple' 参考下文
-                })
-            </script>
+            })
+            const go_to_delete = img_list.filter((item) => {
+                return !last_img_list.includes(item)
+            })
+            console.log('@last_img_list => ', last_img_list)
+            console.log('@img_ist => ', img_list)
+            console.log('@go_to_delete => ', go_to_delete)
+            console.log('@data_html => ', data_html)
+            console.log('@data_text => ', data_text)
+
+
+        })
+    </script>
 </body>
 
 </html>
