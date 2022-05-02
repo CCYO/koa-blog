@@ -7,22 +7,18 @@ const formidable = require('formidable')
 const storage = require('../firebase/init')
 
 const upload_avatar_to_GCS = async (ctx) => {
-    let { user: { id } } = ctx.session
-
-    let filename = `${id}/avatar.jpg`
-    let file = storage.bucket().file(filename)
-    let [file_is_exist] = await file.exists()
-    if (file_is_exist) {
-
+    const hash = ctx.params.hash
+    let filename_gcs = `blog/${hash}.jpg`
+    let file_gcs = storage.bucket().file(filename_gcs)
+    let [file_is_exist] = await file_gcs.exists()
+    
+    //  不存在，upload to GCS
+    if (!file_is_exist) {
+        let promise_4_upload_from_formidable_2_GCS
+        let formidableIns = _gen_formidable(file_gcs, promise_4_upload_from_formidable_2_GCS)
+        var { fields, files } = await _parse(formidableIns, ctx, promise_4_upload_from_formidable_2_GCS)
+        await file_gcs.makePublic()
     }
-    let promise_4_upload_from_formidable_2_GCS
-
-    let formidableIns = _gen_formidable(file, promise_4_upload_from_formidable_2_GCS)
-
-    let { fields, files } = await _parse(formidableIns, ctx, promise_4_upload_from_formidable_2_GCS)
-
-    if (file_is_exist) {
-        await file.makePublic()
         /**
          * [
          *   {
@@ -38,7 +34,7 @@ const upload_avatar_to_GCS = async (ctx) => {
          *   }
          * ]
          */
-        avatar = file.publicUrl()
+        let url = file_gcs.publicUrl()
         /**
          * [ 
          *   {
@@ -63,14 +59,9 @@ const upload_avatar_to_GCS = async (ctx) => {
          *   PassThrough { xxx }
          * ]
          */
-        const metadata = await file.getMetadata()
-        console.log('@metadata => ', metadata)
-        const [{ md5Hash: avatar_md5Hash }] = metadata
-        fields = { ...fields, avatar, avatar_md5Hash }
-    }
-    ctx.fields = fields
-    ctx.files = files
-    return
+        // const metadata = await file.getMetadata()
+        console.log('@fields => ', fields)
+    return { url }
 }
 
 async function _parse(formidableIns, ctx, promise) {
@@ -96,10 +87,30 @@ async function _parse(formidableIns, ctx, promise) {
     })
 }
 
-const _gen_formidable = (file, promise) => {
+const _gen_formidable = (file_gcs, promise) => {
     return formidable({
-        fileWriteStreamHandler() {
-            let ws = file.createWriteStream({
+        fileWriteStreamHandler(file) {
+            /**
+             * VolatileFile {
+             *    _events: [Object: null prototype] { error: [Function (anonymous)] },
+             *    _eventsCount: 1,
+             *    _maxListeners: undefined,
+             *    lastModifiedDate: null,
+             *    filepath: '/tmp/9cd4640d94ec41a4e3a352400',
+             *    newFilename: '9cd4640d94ec41a4e3a352400',
+             *    originalFilename: '6097898.jpg',
+             *    mimetype: 'image/jpeg',
+             *    hashAlgorithm: false,
+             *    createFileWriteStream: [Function: fileWriteStreamHandler],
+             *    size: 0,
+             *    _writeStream: null,
+             *    hash: null,
+             *    [Symbol(kCapture)]: false
+             * }
+             */
+            
+            
+            let ws = file_gcs.createWriteStream({
                 //  https://cloud.google.com/storage/docs/metadata#caching_data
                 metadata: {
                     contnetType: 'image/jpeg',

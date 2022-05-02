@@ -12,8 +12,14 @@
     <div id="toolbar-container"></div>
     <div id="editor-container"></div>
     <button id="getHTML">GET HTML</button>
-    <div id="eval" style="display: none">
+    <div id="user" style="display: none">
         <%- JSON.stringify(user) %>
+    </div>
+    <div id="blog" style="display: none">
+        <%- JSON.stringify(blog) %>
+        <!--
+            [{ hex_md5, url}, ...
+        -->
     </div>
     <%- include('wedgets/cdn') %>
     <%- include('wedgets/utils') %>
@@ -21,14 +27,13 @@
     <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
     <!-- 引入 js -->
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
-    <!-- 引入 crypto -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- 引入 Spark-MD5 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <script>
-        let go = document.getElementById('eval')
-        let user
-        let blog
-        var img_list = []
-        eval('user = ' + go.innerText)
+        let user = document.getElementById('user')
+        let blog = document.getElementById('blog')
+        eval('user = ' + user.innerText)
+        eval('blog = ' + blog.innerText)
     </script>
     <script>
         wangEditor.i18nAddResources('tw', {
@@ -58,76 +63,67 @@
             // 上传图片的配置
             //server: '/api/user/blog_img',
             async customUpload(file, insertFn) {
-                //  若使用者資訊存在
-                if (user && user.avatar_md5Hash) {
-                    //  以 FileReader 取得 file 的 BinaryString
-                    let fr_result = await readAsBinaryString(file)
-                    //  比對 file 的 md5Hash
-                    if (!check_file_is_new(user.avatar_md5Hash, fr_result)) {
-                        //  將圖片插入
-                        insertFn(user.avatar)
+                //  計算出 img 的 md5Hash，是hex格式
+                let md5Hash = await getMD5Hash(file)
+                //  若blog.img_list有檔案
+                if (blog && blog.img_list) {
+                    //  利用 md5Hash 比對 blog 內是否已有該 img
+                    let same = blog.img_list.filter(({ hex_md5: key }) => {
+                        return md5Hash === key
+                    })
+                    //  若有，就直接取 blog 內的資料插入
+                    if (same.length) {
+                        insertFn(init_img_data(same[0].url, md5Hash))
                         alert('上傳完成，其實我說瞎話')
                         return
                     }
                 }
 
                 let formdata = new FormData()
-                formdata.append('avatar', file)
+                formdata.append(md5Hash, file)
 
                 const { data: {
                     errno, data, msg
-                } } = await axios.post('/api/user/blog_img', formdata)
+                } } = await axios.post(`/api/user/blog_img/${md5Hash}`, formdata)
 
                 if (!errno) {
-                    const { url, alt, href, avatar_md5Hash } = data
-                    user = { ...user, avatar: url, avatar_md5Hash }
-                    insertFn(url, alt, href)
+                    if(!blog.img_list) blog.img_list = []
+                    blog.img_list.push({ ...data, hex_md5: md5Hash})
+                    /*
+                    * data { url, md5Hash }
+                    */
+                    var d = init_img_data(data.url, md5Hash)
+                    console.log('@d => ', d)
+                    insertFn(d.url, d.alt, d.href)
                 } else {
                     console.log("ERR")
                 }
 
-                //  比對file是否為新
-                function check_file_is_new(md5Hash, binaryString) {
-                    let new_md5Hash = CryptoJS.MD5(CryptoJS.enc.Latin1.parse(binaryString))
-                    new_md5Hash = new_md5Hash.toString(CryptoJS.enc.Base64)
-                    console.log('生成的 md5Hash => ', new_md5Hash)
-                    if (md5Hash === new_md5Hash) {
-                        return false
-                    } else {
-                        return true
+                //  格式化要傳入 insertFn 的 imgData
+                function init_img_data(url, md5_hash){
+                    return {
+                        url, href: url, alt: md5_hash
                     }
                 }
                 //  返回 file 的 FileReader.result
-                function readAsBinaryString(file) {
+                function getMD5Hash(file) {
                     return new Promise((resolve, reject) => {
                         let fr = new FileReader()
                         fr.addEventListener('load', (evt) => {
                             if (fr.readyState === FileReader.DONE) {
-                                resolve(fr.result)
+                                let hash = SparkMD5.ArrayBuffer.hash(fr.result)
+                                console.log('計算出的hash => ', hash)
+                                resolve(hash)
                             }
                         })
                         fr.addEventListener('error', (error) => {
                             console.log('fr load 發生錯誤 => ', error)
                             reject(error)
                         })
-                        fr.readAsBinaryString(file)
+                        fr.readAsArrayBuffer(file)
                     })
                 }
             },
-        }
-        editorConfig.MENU_CONF['insertImage'] = {
-            onInsertedImage(imageNode) {
-                if (imageNode == null) return
-                const { src, alt, url, href } = imageNode
-                img_list.push(imageNode)
-                imageNode.isNew = false
-                console.log('inserted image, imageNode =>', imageNode)
-            }
-        }
-        editorConfig.MENU_CONF['editImage'] = {
-            onUpdatedImage(imageNode) {
-                console.log('@editImage imageNode => ', imageNode)
-            }
         }
 
         // 创建编辑器

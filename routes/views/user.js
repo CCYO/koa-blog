@@ -35,9 +35,10 @@ router.get('/square', view_check_login, async (ctx, next) => {
     await ctx.render('square')
 })
 
-router.get('/blog-edit', async (ctx, next) => {
+router.get('/blog-edit', view_check_login, async (ctx, next) => {
     await ctx.render('blog-edit', {
-        user: ctx.session.user
+        user: ctx.session.user,
+        blog: {}
     })
 })
 

@@ -63,10 +63,10 @@ router.patch('/',  api_check_login, validate_user_update, async (ctx, next) => {
     ctx.body = resModel
 })
 
-router.post('/blog_img', async (ctx, next) => {
-    await upload_avatar_to_GCS(ctx) 
-    let newUserInfo = { ...ctx.session.user, ...ctx.fields}
-    let resModel = await modifyUserInfo(newUserInfo)
+router.post('/blog_img/:hash', async (ctx, next) => {
+    let { url } = await upload_avatar_to_GCS(ctx) 
+    ctx.body = { errno: 0, data: { url }} 
+    return
     if( resModel.errno ){
         return { errno: 111}
     }else{
