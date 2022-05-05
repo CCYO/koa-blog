@@ -9,6 +9,9 @@
      name: {
          type: STRING,
          allowNull: false
+     },
+     user_id: {
+         type: INTEGER
      }
  })
  
