@@ -12,6 +12,7 @@ User.hasMany(Blog, {foreignKey: 'user_id', sourceKey: 'id'})
 //  Img : Imgname = 1 : N
 Imgname.belongsTo(Img, { foreignKey: 'img_id', targetKey: 'id'})
 Img.hasMany(Imgname, {foreignKey: 'img_id', sourceKey: 'id'})
+
 //  Blog : Imgname = M : N
 Blog.belongsToMany(Imgname, { through: BlogImgname, foreignKey: 'blog_id', targetKey: 'id'})
 Imgname.belongsToMany(Blog, { through: BlogImgname, foreignKey: 'imgname_id', targetKey: 'id'})

@@ -26,39 +26,89 @@ const imgs = [
 
 Promise
     .all([createUserAndBlog(users, blogs), createImgAndName(imgs)])
-    .then(_ => console.log('OK啦~安啦'))
+    .then(async () => {
+        const blog = await Blog.findOne({
+            where: { name: '活動組管理' }
+        })
+        const img = await Img.findOne({
+            where: { hash: 'TTT' },
+            attributes: ['id'],
+            raw: true
+        })
+        console.log('@img => ', img)
+        let imgnames = await Imgname.findAll({
+            where: { img_id: img.id },
+            raw: true,
+            attributes: ['id']
+        })
+        imgnames = imgnames.map(({ id }) => id)
+        const res = await blog.addImgnames(imgnames)
+    })
+    .then(async () => {
+        let {
+            dataValues: {
+                name,
+                Imgnames: Imgnames_arr
+            }
+        } = await Blog.findOne({
+            where: { id: 1 },
+            attributes: ['name'],
+            include: {
+                model: Imgname,
+                attributes: ['name'],
+                include: {
+                    model: Img,
+                    attributes: ['hash', 'url']
+                }
+            }
+        })
+
+        let blog = { name }
+        let imgnames = Imgnames_arr.map(({ dataValues }) => ({ name: dataValues.name }))
+         let imgs = Imgnames_arr.map(
+            ({
+                dataValues: {
+                    Img: {
+                        dataValues: {
+                            hash, url
+                        }
+                    }
+                }
+            }) => ({ img: { hash, url }}))
+
+        console.log('@blog => ', blog)
+        console.log('@imgnames_arr => ', Imgnames_arr)
+        console.log('@imgnames => ', imgnames)
+        console.log('@imgs => ', imgs)
+        console.log('------------------------------------------------------------')
+    })
+    .then(_ => console.log('OK'))
     .catch(e => console.log('安屁安', e))
 
 
 async function createUserAndBlog(users, blogs) {
-    const p = await Promise.all(
+    return await Promise.all(
         users.map(async ({ name }, ind) => {
             const user = await User.create({ name })
-            const blog = await Blog.create({ name: blogs[ind].name })
-            const res = await blog.setUser({ user })
-            console.log('===================================@res => ', res)
+            let blog = await Blog.create({ name: blogs[ind].name })
+            blog = await blog.setUser(user)
+            return { blog, user }
         })
     )
-    console.log("user @p => ", p)
-    return
 }
 
 async function createImgAndName(imgs) {
     const p = await Promise.all(
         imgs.map(async ({ hash, url, name }, ind) => {
             const img = await Img.create({ hash, url })
-            const imgnames = await Promise.all(
+            let imgnames = await Promise.all(
                 name.map(
                     async (v) => await Imgname.create({ name: v })
                 )
             )
-            console.log('------------------------@imgnames => ', imgnames)
-            const res = await img.addImgnames(imgnames)
-            console.log('@res => ', res)
-            return res
+            return await img.addImgnames(imgnames)
         })
     )
-    console.log("img @p => ", p)
     return
 }
 
