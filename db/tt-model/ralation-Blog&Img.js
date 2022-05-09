@@ -5,21 +5,29 @@
  const { STRING , INTEGER} = require('../types')
  
  
- const BlogImgname = seq.define('BlogImgname', {
+ const BlogImg = seq.define('BlogImg', {
      id: {
          type: INTEGER,
          primaryKey: true,
          allowNull: false,
          autoIncrement: true
      },
-     imgname_id: {
+     img_id: {
          type: INTEGER,
          allowNull: false
      },
      blog_id: {
          type: INTEGER,
          allowNull: false
+     },
+     alt: {
+         type: STRING,
+         allowNull: true
+     },
+     href: {
+         type: STRING,
+         allowNull: true
      }
  })
  
- module.exports = BlogImgname
+ module.exports = BlogImg
