@@ -24,8 +24,10 @@ const tt_upload = require('./routes/views/tt-upload')
 const upload_to_GCS = require('./routes/api/upload-to-GCS')
 
 const api__user = require('./routes/api/user')
+const api__blog_editor = require('./routes/api/editor')
 
 const view__user = require('./routes/views/user')
+const view__blog = require('./routes/views/blog')
 
 
 
@@ -102,8 +104,10 @@ app.use(tt_upload.routes(), tt_upload.allowedMethods())
 app.use(upload_to_GCS.routes(), upload_to_GCS.allowedMethods())
 
 app.use(api__user.routes(), api__user.allowedMethods())
+app.use(api__blog_editor.routes(), api__blog_editor.allowedMethods())
 
 app.use(view__user.routes(), view__user.allowedMethods())
+app.use(view__blog.routes(), view__blog.allowedMethods())
 
 // error-handling
 app.on('error', (err, ctx) => {

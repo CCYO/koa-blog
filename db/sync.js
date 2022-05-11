@@ -1,5 +1,5 @@
 // const { seq } = require('./model')
-const { seq } = require('./tt-model')
+const { seq } = require('./model')
 
 const sync = async () => {    
     try{

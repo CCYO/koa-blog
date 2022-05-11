@@ -16,7 +16,9 @@ const create = async (data) => {
 const read = async ({email, password}) => {
     const data = { email }
     if(password) data.password = hash(password)
+    console.log('@data => ', data)
     const user = await User.findOne({ where: data})
+    console.log('@user => ', user)
     if(!user) return false
     return init_4_user(user.dataValues)
 }

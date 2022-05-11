@@ -6,12 +6,16 @@
  
  
  const Blog = seq.define('Blog', {
-     name: {
+     title: {
          type: STRING,
          allowNull: false
      },
      user_id: {
          type: INTEGER
+     },
+     html: {
+         type: STRING,
+         allowNull: true
      }
  })
  

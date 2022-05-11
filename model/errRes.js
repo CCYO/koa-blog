@@ -19,5 +19,10 @@ module.exports = {
     LOGIN: {
         NOT_LOGIN: {errno: 501, msg: '未登入'}
     },
-    FORMAT_ERR: { errno: 601}
+    FORMAT_ERR: { errno: 601},
+    BLOG: {
+        CREATE_ERR: { errno: 701},
+        NOT_EXIST: { errno: 702, msg: 'BLOG不存在'},
+        NO_UPDATE: { errno: 703, msg: 'BLOG資料更新失敗'}
+    }
 }

@@ -6,11 +6,47 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        #showBox {
+            position: relative;
+            z-index: 999;
+        }
+
+        #hiddenBox {
+            position: absolute;
+            z-index: 888;
+            height: 100%;
+            width: 100%;
+            background: rgba(200, 200, 200, 0.5);
+        }
+    </style>
 </head>
 
 <body>
-    <div id="toolbar-container"></div>
-    <div id="editor-container"></div>
+    <% if (blog.title) { %>
+    <div id="hiddenBox" style="display: none"></div>
+    <% } else { %>
+    <div id="hiddenBox"></div>
+    <% } %>
+    <div id="showBox">
+        <input type="text" id="title" value="<%= blog.title %>">
+        <button id="sentTitle">
+            <% if (blog.title) { %>
+            修改標題
+            <% } else { %>
+            創建BLOG
+            <% } %>
+        </button>
+    </div>
+    <div>
+        <div id="toolbar-container"></div>
+        <div id="editor-container"></div>
+    </div>
     <button id="getHTML">GET HTML</button>
     <div id="user" style="display: none">
         <%- JSON.stringify(user) %>
@@ -32,10 +68,39 @@
     <script>
         let user = document.getElementById('user')
         let blog = document.getElementById('blog')
+        let hiddenBox = $('#hiddenBox')
+        let title = $('#title')
+        let sentTile = $('#sentTitle')
         eval('user = ' + user.innerText)
         eval('blog = ' + blog.innerText)
     </script>
     <script>
+        sentTile.addEventListener('click', async (e) => {
+            if (!title.value) {
+                alert('請填入標題')
+                title.value = blog.title
+                return 
+            } else if (title.value === blog.title) {
+                return alert('若要更改，請填入新標題')
+            }
+            let payload = { title: title.value }
+            if (blog.id) payload.id = blog.id
+            const {
+                data: {
+                    errno, data, msg
+                }
+            } = await axios.post('/api/editor/blog', payload)
+            if (!errno && !data) {
+                blog.title = title.value
+            } else if (!errno) {
+                console.log('@data => ', data)
+                hiddenBox.style.display = 'none'
+                blog = data
+                //  自動focus到 editor
+            } else {
+                console.log('@msg => ', msg)
+            }
+        })
         wangEditor.i18nAddResources('tw', {
             // 标题
             header: {
@@ -61,24 +126,12 @@
         }
         editorConfig.MENU_CONF['uploadImage'] = {
             // 上传图片的配置
-            //server: '/api/user/blog_img',
-            async customUpload(file, insertFn) {
-                //  計算出 img 的 md5Hash，是hex格式
-                let md5Hash = await getMD5Hash(file)
-                //  若blog.img_list有檔案
-                if (blog && blog.img_list) {
-                    //  利用 md5Hash 比對 blog 內是否已有該 img
-                    let same = blog.img_list.filter(({ hex_md5: key }) => {
-                        return md5Hash === key
-                    })
-                    //  若有，就直接取 blog 內的資料插入
-                    if (same.length) {
-                        insertFn(init_img_data(same[0].url, md5Hash))
-                        alert('上傳完成，其實我說瞎話')
-                        return
-                    }
-                }
+            //server: '/api/blog/uploadImg',
+            async customUpload(img, insertFn) {
+                let { url, md5_hash } = await is_img_exist_and_getMD5_hex(img)
+                if (!url) {
 
+                }
                 let formdata = new FormData()
                 formdata.append(md5Hash, file)
 
@@ -87,8 +140,8 @@
                 } } = await axios.post(`/api/user/blog_img/${md5Hash}`, formdata)
 
                 if (!errno) {
-                    if(!blog.img_list) blog.img_list = []
-                    blog.img_list.push({ ...data, hex_md5: md5Hash})
+                    if (!blog.img_list) blog.img_list = []
+                    blog.img_list.push({ ...data, hex_md5: md5Hash })
                     /*
                     * data { url, md5Hash }
                     */
@@ -100,7 +153,7 @@
                 }
 
                 //  格式化要傳入 insertFn 的 imgData
-                function init_img_data(url, md5_hash){
+                function init_img_data(url, md5_hash) {
                     return {
                         url, href: url, alt: md5_hash
                     }
@@ -160,6 +213,28 @@
 
 
         })
+
+        async function is_img_exist_and_getMD5_hex(img) {
+            let res
+            //  計算出 img 的 md5Hash，是hex格式
+            let md5Hash = await getMD5Hash(img)
+            //  若blog.img_list有檔案
+            if (blog && blog.img_list) {
+                //  利用 md5Hash 比對 blog 內是否已有該 img
+                let exist = blog.img_list.some((img) => {
+                    let { hex_md5: key } = img
+                    if (md5Hash === key) {
+                        res = img
+                        return true
+                    }
+                })
+                //  若有，就直接取 blog 內的資料插入
+                if (!exist) {
+                    res = { hex_md5: md5Hash }
+                }
+                return res
+            }
+        }
     </script>
 </body>
 
