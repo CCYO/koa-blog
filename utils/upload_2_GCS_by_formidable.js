@@ -6,6 +6,22 @@ const formidable = require('formidable')
 
 const storage = require('../firebase/init')
 
+const upload_blogImg_to_GCS = async (ctx) => {
+    const { hash } = ctx.params
+    let filename = `blog/${hash}.jpg`
+    let file = storage.bucket().file(filename)
+    //  確認檔案是否已存在
+    let [ exist ] = await file.exists()
+    //  若不存在，執行 upload
+    if(!exist){
+        await upload_jpg_to_GCS(file, ctx)
+        let makePublic = await file.makePublic()
+        console.log('@makePublic => ', makePublic)
+    }
+    //  若存在，直接返回 PublicUrl.
+    return file.publicUrl()
+}
+
 const upload_avatar_to_GCS = async (ctx) => {
     const hash = ctx.params.hash
     let filename_gcs = `blog/${hash}.jpg`
@@ -80,6 +96,11 @@ async function _parse(formidableIns, ctx, promise) {
                 reject(err)
             } else {
                 console.log('@OKOK')
+                /**
+                 * files, fields 是 KV-pairs 類型，
+                 * key 由前端 formData(key, file) 的 key 決定
+                 * val 是 obj 類型
+                 */
                 resolve({ fields, files })
             }
             return
@@ -127,4 +148,14 @@ const _gen_formidable = (file_gcs, promise) => {
     })
 }
 
-module.exports = upload_avatar_to_GCS
+async function upload_jpg_to_GCS(file_gcs, ctx){
+    let promise
+    let form = _gen_formidable(file_gcs, promise)
+    await _parse(form, ctx, promise)
+    return file
+} 
+
+module.exports = {
+    upload_avatar_to_GCS,
+    upload_blogImg_to_GCS
+}

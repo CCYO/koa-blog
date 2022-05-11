@@ -23,6 +23,7 @@ module.exports = {
     BLOG: {
         CREATE_ERR: { errno: 701},
         NOT_EXIST: { errno: 702, msg: 'BLOG不存在'},
-        NO_UPDATE: { errno: 703, msg: 'BLOG資料更新失敗'}
+        NO_UPDATE: { errno: 703, msg: 'BLOG資料更新失敗'},
+        UPLOAD_IMG_ERR: { errno: 704 }
     }
 }

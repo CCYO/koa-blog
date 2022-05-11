@@ -20,6 +20,14 @@ router.get('/blog-list', async (ctx, next) => {
     })
 })
 
+
+router.get('/blog/edit', view_check_login, async (ctx, next) => {
+    await ctx.render('blog-edit', {
+        user: ctx.session.user,
+        blog: {}
+    })
+})
+
 router.get('/blog/edit/:blog_id', async(ctx, next) => {
     const { blog_id } = ctx.params
     const { user } = ctx.session
@@ -32,11 +40,5 @@ router.get('/blog/edit/:blog_id', async(ctx, next) => {
 
 })
 
-router.get('/blog-edit', view_check_login, async (ctx, next) => {
-    await ctx.render('blog-edit', {
-        user: ctx.session.user,
-        blog: {}
-    })
-})
 
 module.exports = router

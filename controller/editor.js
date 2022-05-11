@@ -1,6 +1,11 @@
 const {
-    createBlog, updateBlog: updateBlog_S
+    createBlog, updateBlog: updateBlog_S,
+    readImg,
+    createImg,
+    img_associate_blog
 } = require('../server/editor')
+
+const { upload_blogImg_to_GCS } = require('../utils/upload_2_GCS_by_formidable')
 
 const { SuccModel, ErrModel } = require('../model')
 const {
@@ -18,20 +23,20 @@ const {
  *  SuccModel for { data: { id: blog.id }} || ErrModel
  */
 async function addBlog(title, userId) {
-    try{
+    try {
         const blog = await createBlog(title, userId)
-        return new SuccModel({id: blog.id})
-    }catch(e){
+        return new SuccModel({ id: blog.id })
+    } catch (e) {
         console.log('@創建Blog時發生錯誤 => ', e)
-        return new ErrModel({ ...BLOG.CREATE_ERR, msg: e})
+        return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
     }
 }
 
-async function updateBlog(data, blog_id){
+async function updateBlog(data, blog_id) {
     const raw = await updateBlog_S(data, blog_id)
-    if(raw){
+    if (raw) {
         return new SuccModel()
-    }else{
+    } else {
         return new ErrModel()
     }
 }
@@ -41,15 +46,15 @@ async function updateBlog(data, blog_id){
  * @param {String} img_hash 圖片hash值
  * @returns {Object} 回傳 { hash, url }
  */
- async function findImg(img_hash){
+async function findImg(img_hash) {
     const img = await Img.findOne({
         where: { hash: img_hash },
         attributes: ['hash', 'url'],
         raw: true
     })
-    if(img){
+    if (img) {
         return { id: img.id, hash: img.hash, url: img.url }
-    }else{
+    } else {
         return false
     }
 }
@@ -61,20 +66,25 @@ async function updateBlog(data, blog_id){
  * @param { String } img_hash
  * @returns { Number } blogImg.id
  */
-async function uploadImg(blog_id, img_hash) {
-    //  先確認 DB 是否有此圖片，若有就不用建立 img
-    let img = await findImg(img_hash)
-    if(!img){
-        // upload img to GCE
-        img = { hash: img_hash, url: img_hash + '-url'}
-        //  Img Table 創建 img
-        img = await Img.create(img)
-    }    
-    //  建立 blog : img = M : N
-    let blog = await Blog.findByPk(blog_id)  
-    let blogImgs = await blog.addImg(img)
-    //  RV 為 img data
-    return blogImgs[0].id
+async function uploadImg(ctx) {
+    try {
+        let { hash, blog_id } = ctx.params
+        //  確認 SQL 是否有此圖片的紀錄
+        let img = await readImg({ hash })
+        //  若無值，則 upload to GCE
+        if (!img) {
+            // upload img to GCE
+            let url = await upload_blogImg_to_GCS(ctx)
+            //  Img Table 建檔，且與 Blog 建立關聯
+            img = await createImg({ url, hash })
+        }
+        //  若有值，與 Blog 建立關聯
+        await img_associate_blog(img.id, blog_id)
+        return new SuccModel(img)
+    } catch (e) {
+        console.log('UPLOAD BLOG IMG ERR => ', e)
+        return new ErrModel({ ...BLOG.UPLOAD_IMG_ERR, msg: e })
+    }
 }
 
 

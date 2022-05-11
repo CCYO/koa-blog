@@ -1,4 +1,4 @@
-const { User, Blog } = require('../db/model')
+const { User, Blog, Img } = require('../db/model')
 
 /**
  * 
@@ -21,7 +21,28 @@ async function updateBlog(data, blog_id){
     return raw
 }
 
+async function readImg(data){
+    let img = await Img.findOne({ where: data })
+    if(!img){
+        return null
+    }
+    return { id: img.id, url: img.url, hash: img.hash }
+}
+
+async function createImg(data){
+    let img = await Img.create(data)
+    return { id: img.id, url: img.url, hash: img.hash }
+}
+
+async function img_associate_blog(img_id, blog_id){
+    let img = await Img.findByPk(img_id)
+    return await img.addBlog(blog_id)
+}
+
 module.exports = {
     createBlog,
-    updateBlog
+    updateBlog,
+    readImg,
+    createImg,
+    img_associate_blog
 }

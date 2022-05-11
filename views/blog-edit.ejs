@@ -75,32 +75,9 @@
         eval('blog = ' + blog.innerText)
     </script>
     <script>
-        sentTile.addEventListener('click', async (e) => {
-            if (!title.value) {
-                alert('請填入標題')
-                title.value = blog.title
-                return 
-            } else if (title.value === blog.title) {
-                return alert('若要更改，請填入新標題')
-            }
-            let payload = { title: title.value }
-            if (blog.id) payload.id = blog.id
-            const {
-                data: {
-                    errno, data, msg
-                }
-            } = await axios.post('/api/editor/blog', payload)
-            if (!errno && !data) {
-                blog.title = title.value
-            } else if (!errno) {
-                console.log('@data => ', data)
-                hiddenBox.style.display = 'none'
-                blog = data
-                //  自動focus到 editor
-            } else {
-                console.log('@msg => ', msg)
-            }
-        })
+        //  btn.click 綁定 handle，創建Blog or 更新Title
+        sentTile.addEventListener('click', addBlog_or_updateTitle)
+
         wangEditor.i18nAddResources('tw', {
             // 标题
             header: {
@@ -126,57 +103,39 @@
         }
         editorConfig.MENU_CONF['uploadImage'] = {
             // 上传图片的配置
-            //server: '/api/blog/uploadImg',
+
+            //  自定義 upload imgage
             async customUpload(img, insertFn) {
-                let { url, md5_hash } = await is_img_exist_and_getMD5_hex(img)
+                //  生成 img 的 hash(hex格式)
+                let { url, hash } = await getImgHash(img)
+                //  url無值，代表 blog.imgs 內無此圖
                 if (!url) {
+                    //  upload img
+                    let formdata = new FormData()
+                    formdata.append('imgage', img)
 
-                }
-                let formdata = new FormData()
-                formdata.append(md5Hash, file)
+                    const {
+                        data: {
+                            errno, data, msg
+                        }
+                    } = await axios.post(`/api/editor/img/${hash}/${blog.id}`, formdata)
 
-                const { data: {
-                    errno, data, msg
-                } } = await axios.post(`/api/user/blog_img/${md5Hash}`, formdata)
-
-                if (!errno) {
-                    if (!blog.img_list) blog.img_list = []
-                    blog.img_list.push({ ...data, hex_md5: md5Hash })
-                    /*
-                    * data { url, md5Hash }
-                    */
-                    var d = init_img_data(data.url, md5Hash)
-                    console.log('@d => ', d)
-                    insertFn(d.url, d.alt, d.href)
-                } else {
-                    console.log("ERR")
-                }
-
-                //  格式化要傳入 insertFn 的 imgData
-                function init_img_data(url, md5_hash) {
-                    return {
-                        url, href: url, alt: md5_hash
+                    if (!errno) {
+                        if (!blog.imgs) blog.imgs = []
+                        data = init_img(data)
+                        blog.imgs.push(data)
+                        insertFn(data.url, data.alt, data.href)
+                    } else {
+                        alert(msg)
                     }
-                }
-                //  返回 file 的 FileReader.result
-                function getMD5Hash(file) {
-                    return new Promise((resolve, reject) => {
-                        let fr = new FileReader()
-                        fr.addEventListener('load', (evt) => {
-                            if (fr.readyState === FileReader.DONE) {
-                                let hash = SparkMD5.ArrayBuffer.hash(fr.result)
-                                console.log('計算出的hash => ', hash)
-                                resolve(hash)
-                            }
-                        })
-                        fr.addEventListener('error', (error) => {
-                            console.log('fr load 發生錯誤 => ', error)
-                            reject(error)
-                        })
-                        fr.readAsArrayBuffer(file)
-                    })
+                    //  url 有值，代表 blog.imgs 已有此圖
+                }else{
+                    //  直接插入圖片
+                    insertFn( url, hash, url)
                 }
             },
+
+            // 還要補充上傳失敗的動作
         }
 
         // 创建编辑器
@@ -214,25 +173,84 @@
 
         })
 
-        async function is_img_exist_and_getMD5_hex(img) {
+
+
+        async function addBlog_or_updateTitle(e) {
+            if (!title.value) {
+                alert('請填入標題')
+                title.value = blog.title
+                return
+            } else if (title.value === blog.title) {
+                return alert('若要更改，請填入新標題')
+            }
+            let payload = { title: title.value }
+            if (blog.id) payload.id = blog.id
+            const {
+                data: {
+                    errno, data, msg
+                }
+            } = await axios.post('/api/editor/blog', payload)
+            if (!errno && !data) {
+                blog.title = title.value
+                alert('標題修改完成')
+            } else if (!errno) {
+                console.log('@data => ', data)
+                hiddenBox.style.display = 'none'
+                blog = data
+                //  自動focus到 editor
+            } else {
+                alert(`標題修改失敗 => ${msg}`)
+            }
+            return
+        }
+
+        async function getImgHash(img) {
             let res
-            //  計算出 img 的 md5Hash，是hex格式
-            let md5Hash = await getMD5Hash(img)
-            //  若blog.img_list有檔案
-            if (blog && blog.img_list) {
+            //  計算出 img 的 md5Hash(hex格式)
+            let md5hash = await getMD5Hash(img)
+            //  若blog.imgs有檔案
+            if (blog && blog.imgs) {
                 //  利用 md5Hash 比對 blog 內是否已有該 img
-                let exist = blog.img_list.some((img) => {
-                    let { hex_md5: key } = img
-                    if (md5Hash === key) {
+                let exist = blog.imgs.some((img) => {
+                    let { hash } = img
+                    //  同hash，代表同img
+                    if (md5hash === hash) {
+                        //  返回 blog.imgs 內相同的img資料
                         res = img
                         return true
                     }
                 })
-                //  若有，就直接取 blog 內的資料插入
+                //  blog.imgs 內沒有該img，返回計算出的 md5hash
                 if (!exist) {
-                    res = { hex_md5: md5Hash }
+                    res = { hash: md5hash }
                 }
                 return res
+            }
+        }
+
+        //  返回 file 的 FileReader.result
+        function getMD5Hash(file) {
+            return new Promise((resolve, reject) => {
+                let fr = new FileReader()
+                fr.addEventListener('load', (evt) => {
+                    if (fr.readyState === FileReader.DONE) {
+                        let hash = SparkMD5.ArrayBuffer.hash(fr.result)
+                        console.log('計算出的hash => ', hash)
+                        resolve(hash)
+                    }
+                })
+                fr.addEventListener('error', (error) => {
+                    console.log('fr load 發生錯誤 => ', error)
+                    reject(error)
+                })
+                fr.readAsArrayBuffer(file)
+            })
+        }
+
+        //  格式化要傳入 insertFn 的 imgData
+        function init_img({ url, hash }) {
+            return {
+                url, hash, href: url, alt: hash
             }
         }
     </script>

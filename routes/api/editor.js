@@ -23,6 +23,9 @@ router.post('/blog', async (ctx, next) => {
     return ctx.body = resModel
 })
 
-// router.post('/uploadImg', )
+router.post('/img/:hash/:blog_id', async (ctx, next) => {
+    //  upload img
+    return ctx.body = await uploadImg(ctx)
+})
 
 module.exports = router
