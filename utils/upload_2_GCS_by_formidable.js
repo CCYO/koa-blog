@@ -152,7 +152,6 @@ async function upload_jpg_to_GCS(file_gcs, ctx){
     let promise
     let form = _gen_formidable(file_gcs, promise)
     await _parse(form, ctx, promise)
-    return file
 } 
 
 module.exports = {

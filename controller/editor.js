@@ -79,8 +79,8 @@ async function uploadImg(ctx) {
             img = await createImg({ url, hash })
         }
         //  若有值，與 Blog 建立關聯
-        await img_associate_blog(img.id, blog_id)
-        return new SuccModel(img)
+        let blogImg_id = await img_associate_blog(img.id, blog_id)
+        return new SuccModel({...img, blogImg_id: blogImg_id})
     } catch (e) {
         console.log('UPLOAD BLOG IMG ERR => ', e)
         return new ErrModel({ ...BLOG.UPLOAD_IMG_ERR, msg: e })

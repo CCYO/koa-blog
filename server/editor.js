@@ -36,7 +36,8 @@ async function createImg(data){
 
 async function img_associate_blog(img_id, blog_id){
     let img = await Img.findByPk(img_id)
-    return await img.addBlog(blog_id)
+    let [ { dataValues: { id } } ] = await img.addBlog(blog_id)
+    return id
 }
 
 module.exports = {

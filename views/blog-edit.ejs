@@ -114,7 +114,7 @@
                     let formdata = new FormData()
                     formdata.append('imgage', img)
 
-                    const {
+                    let {
                         data: {
                             errno, data, msg
                         }
@@ -122,8 +122,8 @@
 
                     if (!errno) {
                         if (!blog.imgs) blog.imgs = []
-                        data = init_img(data)
-                        blog.imgs.push(data)
+                        let init_data = init_img(data)
+                        blog.imgs.push({...init_data, ...data} )
                         insertFn(data.url, data.alt, data.href)
                     } else {
                         alert(msg)
