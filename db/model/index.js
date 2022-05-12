@@ -26,5 +26,5 @@ Img.belongsToMany(Blog, { through: BlogImg, foreignKey: 'img_id', targetKey: 'id
 
 
 module.exports = {
-    User, Blog, Img,BlogImg, seq
+    User, Blog, Img, BlogImg, seq
 }

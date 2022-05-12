@@ -110,6 +110,7 @@ async function findBlogs(user_id){
     })
     console.log('@blogs => ', blogs)
 }
+
 async function readBlog(blog_id){
     let blog = await Blog.findByPk(blog_id, {
         attributes: ['id', 'title', 'html'],
@@ -118,7 +119,7 @@ async function readBlog(blog_id){
             attributes: ['id', 'url', 'hash'],
             through: {
                 model: BlogImg,
-                attributes: ['id', 'alt', 'href']
+                attributes: ['id', 'name']
             }
         }
     })
@@ -128,7 +129,7 @@ async function readBlog(blog_id){
             id: img_id, url, hash,
             BlogImg: {
                 dataValues: {
-                    id: blogImg_id, alt, href
+                    id: blogImg_id, name
                 }
             }
         }

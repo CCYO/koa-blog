@@ -37,7 +37,6 @@ router.get('/blog/edit/:blog_id', async(ctx, next) => {
     }else{
         return await ctx.render('blog-edit', { user, blog })
     }
-
 })
 
 

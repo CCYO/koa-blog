@@ -14,17 +14,13 @@
      },
      img_id: {
          type: INTEGER,
-         allowNull: false
+         allowNull: false,
      },
      blog_id: {
          type: INTEGER,
-         allowNull: false
+         allowNull: false,
      },
-     alt: {
-         type: STRING,
-         allowNull: true
-     },
-     href: {
+     name: {
          type: STRING,
          allowNull: true
      }

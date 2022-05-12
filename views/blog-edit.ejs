@@ -71,6 +71,7 @@
         let hiddenBox = $('#hiddenBox')
         let title = $('#title')
         let sentTile = $('#sentTitle')
+        let insertImg
         eval('user = ' + user.innerText)
         eval('blog = ' + blog.innerText)
     </script>
@@ -122,16 +123,16 @@
 
                     if (!errno) {
                         if (!blog.imgs) blog.imgs = []
-                        let init_data = init_img(data)
-                        blog.imgs.push({...init_data, ...data} )
-                        insertFn(data.url, data.alt, data.href)
+                        let { url, alt, href } = init_img(data)
+                        blog.imgs.push(data)
+                        insertImg = insertFn(url, alt, href)
                     } else {
                         alert(msg)
                     }
                     //  url 有值，代表 blog.imgs 已有此圖
                 }else{
                     //  直接插入圖片
-                    insertFn( url, hash, url)
+                    insertImg = insertFn( url, hash, url)
                 }
             },
 
@@ -140,7 +141,7 @@
 
         // 创建编辑器
         const editor = createEditor({
-            html: '<p>hello <strong>world</strong></p>',
+            html: blog.html,
             selector: '#editor-container',
             config: editorConfig,
             mode: 'simple' // 或 'simple' 参考下文
@@ -153,9 +154,11 @@
         })
 
         $('#getHTML').addEventListener('click', (e) => {
+            //  獲取 html
             var data_html = editor.getHtml()
-            var data_text = editor.getText()
-            let last_img_list = []
+            //  獲取 html 內的 image
+            let imgs = editor.getElemsByType('image')
+
             editor.children.forEach(({ children }) => {
                 children.forEach(item => {
                     if (item.type === 'image') last_img_list.push(item)
@@ -205,9 +208,9 @@
         }
 
         async function getImgHash(img) {
-            let res
             //  計算出 img 的 md5Hash(hex格式)
             let md5hash = await getMD5Hash(img)
+            let res = { hash: md5hash }
             //  若blog.imgs有檔案
             if (blog && blog.imgs) {
                 //  利用 md5Hash 比對 blog 內是否已有該 img
@@ -221,11 +224,9 @@
                     }
                 })
                 //  blog.imgs 內沒有該img，返回計算出的 md5hash
-                if (!exist) {
-                    res = { hash: md5hash }
-                }
-                return res
+                console.log('@res => ', res)
             }
+            return res
         }
 
         //  返回 file 的 FileReader.result

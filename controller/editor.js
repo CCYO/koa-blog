@@ -2,7 +2,8 @@ const {
     createBlog, updateBlog: updateBlog_S,
     readImg,
     createImg,
-    img_associate_blog
+    img_associate_blog,
+    deleteBlogImg
 } = require('../server/editor')
 
 const { upload_blogImg_to_GCS } = require('../utils/upload_2_GCS_by_formidable')
@@ -32,12 +33,19 @@ async function addBlog(title, userId) {
     }
 }
 
-async function updateBlog(data, blog_id) {
-    const raw = await updateBlog_S(data, blog_id)
-    if (raw) {
+async function updateBlog(data, blog_id, imgs) {
+    let row = await updateBlog_S(data, blog_id)
+    if(!row){
+        return new ErrModel(BLOG.NO_UPDATE)
+    }else if(imgs){
+        row = await deleteBlogImg(id_arr)
+        if(row === imgs.length){
+            return new SuccModel()
+        }else{
+            return new ErrModel(BLOG.IMAGE_REMOVE_ERR)
+        }
+    }else{
         return new SuccModel()
-    } else {
-        return new ErrModel()
     }
 }
 
@@ -75,10 +83,10 @@ async function uploadImg(ctx) {
         if (!img) {
             // upload img to GCE
             let url = await upload_blogImg_to_GCS(ctx)
-            //  Img Table 建檔，且與 Blog 建立關聯
+            //  Img Table 建檔
             img = await createImg({ url, hash })
         }
-        //  若有值，與 Blog 建立關聯
+        //  無論有無值，都需與 Blog 建立關聯
         let blogImg_id = await img_associate_blog(img.id, blog_id)
         return new SuccModel({...img, blogImg_id: blogImg_id})
     } catch (e) {
@@ -86,8 +94,6 @@ async function uploadImg(ctx) {
         return new ErrModel({ ...BLOG.UPLOAD_IMG_ERR, msg: e })
     }
 }
-
-
 
 module.exports = {
     addBlog,

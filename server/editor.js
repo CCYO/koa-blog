@@ -1,4 +1,4 @@
-const { User, Blog, Img } = require('../db/model')
+const { User, Blog, Img, BlogImg } = require('../db/model')
 
 /**
  * 
@@ -15,10 +15,10 @@ async function createBlog(title, userId){
 }
 
 async function updateBlog(data, blog_id){
-    let [ raw ] = await Blog.update( data, {
+    let [ row ] = await Blog.update( data, {
         where: { id: blog_id }
     })
-    return raw
+    return row
 }
 
 async function readImg(data){
@@ -40,10 +40,16 @@ async function img_associate_blog(img_id, blog_id){
     return id
 }
 
+async function deleteBlogImg(id_arr){
+    let [ row ] = await BlogImg.destroy({where: { id: id_arr }})
+    return row
+}
+
 module.exports = {
     createBlog,
     updateBlog,
     readImg,
     createImg,
-    img_associate_blog
+    img_associate_blog,
+    deleteBlogImg
 }

@@ -29,7 +29,7 @@ async function readBlog(blog_id) {
             attributes: ['id', 'url', 'hash'],
             through: {
                 model: BlogImg,
-                attributes: ['id', 'alt', 'href']
+                attributes: ['id', 'name']
             }
         }
     })
@@ -39,12 +39,12 @@ async function readBlog(blog_id) {
                 id: img_id, url, hash,
                 BlogImg: {
                     dataValues: {
-                        id: blogImg_id, alt, href
+                        id: blogImg_id, name
                     }
                 }
             }
         }) => {
-            return { img_id, hash, blogImg_id, alt, href }
+            return { img_id, url, hash, blogImg_id, name }
         })
         blog = { id: blog.id, title: blog.title, html: blog.html, imgs: blog.Imgs }
     }
