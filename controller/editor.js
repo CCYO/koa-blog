@@ -1,3 +1,5 @@
+const xss = require('xss')
+
 const {
     createBlog, updateBlog: updateBlog_S,
     readImg,
@@ -25,7 +27,7 @@ const {
  */
 async function addBlog(title, userId) {
     try {
-        const blog = await createBlog(title, userId)
+        const blog = await createBlog(xss(title), userId)
         return new SuccModel({ id: blog.id })
     } catch (e) {
         console.log('@創建Blog時發生錯誤 => ', e)
@@ -33,13 +35,21 @@ async function addBlog(title, userId) {
     }
 }
 
-async function updateBlog(data, blog_id, imgs) {
+async function updateBlog(data, blog_id, remove_imgs) {
+    if(data.title){
+        data.title = xss(data.title)
+    }
+    if(data.html){
+        data.html = xss(data.html)
+        console.log('@html => ', data.html)
+    }
+    
     let row = await updateBlog_S(data, blog_id)
     if(!row){
         return new ErrModel(BLOG.NO_UPDATE)
-    }else if(imgs){
-        row = await deleteBlogImg(id_arr)
-        if(row === imgs.length){
+    }else if(remove_imgs){
+        res = await deleteBlogImg(remove_imgs)
+        if(row){
             return new SuccModel()
         }else{
             return new ErrModel(BLOG.IMAGE_REMOVE_ERR)

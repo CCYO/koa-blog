@@ -2,19 +2,19 @@
  * @description Sequelize Model
  */
  const seq = require('../seq')
- const { STRING , INTEGER} = require('../types')
+ const { STRING , INTEGER, TEXT} = require('../types')
  
  
  const Blog = seq.define('Blog', {
      title: {
-         type: STRING,
+         type: STRING(),
          allowNull: false
      },
      user_id: {
          type: INTEGER
      },
      html: {
-         type: STRING,
+         type: TEXT,
          allowNull: true
      }
  })

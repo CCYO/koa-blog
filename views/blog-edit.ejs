@@ -47,16 +47,8 @@
         <div id="toolbar-container"></div>
         <div id="editor-container"></div>
     </div>
-    <button id="getHTML">GET HTML</button>
-    <div id="user" style="display: none">
-        <%- JSON.stringify(user) %>
-    </div>
-    <div id="blog" style="display: none">
-        <%- JSON.stringify(blog) %>
-        <!--
-            [{ hex_md5, url}, ...
-        -->
-    </div>
+    <button id="save">存檔</button>
+
     <%- include('wedgets/cdn') %>
     <%- include('wedgets/utils') %>
     <!-- 引入 css -->
@@ -66,19 +58,16 @@
     <!-- 引入 Spark-MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <script>
-        let user = document.getElementById('user')
-        let blog = document.getElementById('blog')
+        let user = <%- JSON.stringify(user) %>
+        let blog = <%- JSON.stringify(blog) %>
         let hiddenBox = $('#hiddenBox')
         let title = $('#title')
-        let sentTile = $('#sentTitle')
-        let insertImg
-        eval('user = ' + user.innerText)
-        eval('blog = ' + blog.innerText)
+        let sentTitle = $('#sentTitle')
+
+        if(blog.title) sentTitle.setAttribute('disabled', true)
     </script>
     <script>
-        //  btn.click 綁定 handle，創建Blog or 更新Title
-        sentTile.addEventListener('click', addBlog_or_updateTitle)
-
+        //  editor 的 繁中設定
         wangEditor.i18nAddResources('tw', {
             // 标题
             header: {
@@ -93,96 +82,75 @@
         })
         wangEditor.i18nChangeLanguage('tw')
 
+        //  editor config
         const { createEditor, createToolbar } = window.wangEditor
         const editorConfig = { MENU_CONF: {} }
 
+        //  editor config : placeholder
         editorConfig.placeholder = '请输入内容'
-        editorConfig.onChange = (editor) => {
-            // 当编辑器选区、内容变化时，即触发
-            console.log('content', editor.children)
-            console.log('html', editor.getHtml())
-        }
+
+        //  editor config : image upload
         editorConfig.MENU_CONF['uploadImage'] = {
             // 上传图片的配置
 
             //  自定義 upload imgage
-            async customUpload(img, insertFn) {
-                //  生成 img 的 hash(hex格式)
-                let { url, hash } = await getImgHash(img)
-                //  url無值，代表 blog.imgs 內無此圖
-                if (!url) {
-                    //  upload img
-                    let formdata = new FormData()
-                    formdata.append('imgage', img)
-
-                    let {
-                        data: {
-                            errno, data, msg
-                        }
-                    } = await axios.post(`/api/editor/img/${hash}/${blog.id}`, formdata)
-
-                    if (!errno) {
-                        if (!blog.imgs) blog.imgs = []
-                        let { url, alt, href } = init_img(data)
-                        blog.imgs.push(data)
-                        insertImg = insertFn(url, alt, href)
-                    } else {
-                        alert(msg)
-                    }
-                    //  url 有值，代表 blog.imgs 已有此圖
-                }else{
-                    //  直接插入圖片
-                    insertImg = insertFn( url, hash, url)
-                }
-            },
-
-            // 還要補充上傳失敗的動作
+            customUpload,
+            
+            //  (待補)自定義 upload imgage 失敗
         }
 
-        // 创建编辑器
+        // editor 創建
         const editor = createEditor({
-            html: blog.html,
+            //  插入後端取得的 html
+            html: blog.html || '',
             selector: '#editor-container',
             config: editorConfig,
-            mode: 'simple' // 或 'simple' 参考下文
+            mode: 'simple'
         })
-        // 创建工具栏
+        
+        // editor 工具欄創建
         const toolbar = createToolbar({
             editor,
             selector: '#toolbar-container',
-            mode: 'simple' // 或 'simple' 参考下文
+            mode: 'simple'
         })
 
-        $('#getHTML').addEventListener('click', (e) => {
-            //  獲取 html
-            var data_html = editor.getHtml()
-            //  獲取 html 內的 image
-            let imgs = editor.getElemsByType('image')
+        //  btn#sentTitle.click 綁定 handle，創建Blog or 更新Title
+        sentTitle.addEventListener('click', addBlog_or_updateTitle)
 
-            editor.children.forEach(({ children }) => {
-                children.forEach(item => {
-                    if (item.type === 'image') last_img_list.push(item)
-                })
-            })
-            const go_to_delete = img_list.filter((item) => {
-                return !last_img_list.includes(item)
-            })
-            console.log('@last_img_list => ', last_img_list)
-            console.log('@img_ist => ', img_list)
-            console.log('@go_to_delete => ', go_to_delete)
-            console.log('@data_html => ', data_html)
-            console.log('@data_text => ', data_text)
+        //  inp#title.input 綁定 handle，若有標題才准點擊 btn#sentTitle
+        title.addEventListener('input', UI_check_new_title)
 
+        //  inpt#title.blur 綁定 handle，若title無值卻離開，則恢復原值
+        title.addEventListener('blur', UI_recover_title)
 
-        })
+        //  btn#save 綁定 click handle : 存檔
+        $('#save').addEventListener('click', save)
 
+        function UI_check_new_title(e){
+            if(blog.title && title.value && title.value !== blog.title){
+                return sentTitle.hasAttribute('disabled') && sentTitle.removeAttribute('disabled')
+            //  title 不變
+            }else{
+                return !sentTitle.hasAttribute('disabled') && sentTitle.setAttribute('disabled', true)
+            }
+        }
 
+        function UI_recover_title(e){
+            if(blog.title && !title.value){
+                title.value = blog.title
+            }
+        }
 
+        //  創建 Blog || 修改 title
         async function addBlog_or_updateTitle(e) {
+            //  若 title 為空
             if (!title.value) {
                 alert('請填入標題')
-                title.value = blog.title
-                return
+                //  恢復為原標題
+                return title.value = blog.title
+            
+            //  若 title 不變
             } else if (title.value === blog.title) {
                 return alert('若要更改，請填入新標題')
             }
@@ -193,18 +161,54 @@
                     errno, data, msg
                 }
             } = await axios.post('/api/editor/blog', payload)
+
+            //  title修改成功
             if (!errno && !data) {
                 blog.title = title.value
+                sentTitle.setAttribute('disabled', true)
+                editor.focus(true)
                 alert('標題修改完成')
+            //  blog創建成功
             } else if (!errno) {
-                console.log('@data => ', data)
-                hiddenBox.style.display = 'none'
                 blog = data
-                //  自動focus到 editor
+                hiddenBox.style.display = 'none'
+                sentTitle.setAttribute('disabled', true)
+                editor.focus(true)
+                alert('BLOG存檔成功')
+            // 失敗
             } else {
                 alert(`標題修改失敗 => ${msg}`)
             }
             return
+        }
+
+        async function customUpload(img, insertFn) {
+            //  生成 img 的 hash(hex格式)
+            let { url, hash } = await getImgHash(img)
+            //  url無值，代表 blog.imgs 內無此圖
+            if (!url) {
+                //  upload img
+                let formdata = new FormData()
+                formdata.append('imgage', img)
+
+                let {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.post(`/api/editor/img/${hash}/${blog.id}`, formdata)
+
+                if (!errno) {
+                    if (!blog.imgs) blog.imgs = []
+                    blog.imgs.push(data)
+                    insertFn(url)
+                } else {
+                    alert(msg)
+                }
+                //  url 有值，代表 blog.imgs 已有此圖
+            } else {
+                //  直接插入圖片
+                insertFn(url)
+            }
         }
 
         async function getImgHash(img) {
@@ -248,10 +252,32 @@
             })
         }
 
-        //  格式化要傳入 insertFn 的 imgData
-        function init_img({ url, hash }) {
-            return {
-                url, hash, href: url, alt: hash
+        async function save(e) {
+            //  獲取 html
+            var html = editor.getHtml()
+            //  獲取 html 內的 image
+            let editor_imgs = [...new Set(editor.getElemsByType('image'))]
+            let blog_imgs = [...new Set(blog.imgs)]
+
+            editor_imgs = editor_imgs.map(({ src }) => src)
+            blog_imgs = blog_imgs.map(({ url, blogImg_id }) => ({ url, blogImg_id }))
+
+            let remove_imgs = blog_imgs.filter(({ url }) => {
+                return !editor_imgs.includes(url)
+            })
+
+            let remove_blogImg_id_arr = remove_imgs.map(({ blogImg_id }) => blogImg_id)
+
+            const {
+                data: {
+                    errno, data, msg
+                }
+            } = await axios.put(`/api/editor/blog/${blog.id}`, { remove_blogImg_id_arr, html })
+
+            if (!errno) {
+                alert('blog save success!')
+            } else {
+                alert('blog save error!')
             }
         }
     </script>

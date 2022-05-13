@@ -41,8 +41,12 @@ async function img_associate_blog(img_id, blog_id){
 }
 
 async function deleteBlogImg(id_arr){
-    let [ row ] = await BlogImg.destroy({where: { id: id_arr }})
-    return row
+    let row = await BlogImg.destroy({where: { id: id_arr }})
+    if(id_arr.length === row){
+        return true
+    }else{
+        return false
+    }
 }
 
 module.exports = {

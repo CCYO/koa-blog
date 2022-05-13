@@ -29,13 +29,11 @@ router.post('/img/:hash/:blog_id', async (ctx, next) => {
 })
 
 //  更新 blog html 資料
-router.post('/blog/:blog_id', async(ctx, next) => {
+router.put('/blog/:blog_id', async(ctx, next) => {
     const { blog_id } = ctx.params
     const { user } = ctx.session
-    const { html , remove_blogImgId_arr: imgs } = ctx.request.body  
+    const { html , remove_blogImg_id_arr: imgs } = ctx.request.body
     return ctx.body = await updateBlog({ html }, blog_id, imgs)
-    
-
 })
 
 module.exports = router

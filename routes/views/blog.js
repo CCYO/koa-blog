@@ -35,6 +35,8 @@ router.get('/blog/edit/:blog_id', async(ctx, next) => {
     if( errno ){
         return ctx.body = msg
     }else{
+        console.log('@user=> ', user)
+        console.log('@blog=> ', blog)
         return await ctx.render('blog-edit', { user, blog })
     }
 })
