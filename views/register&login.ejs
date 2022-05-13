@@ -150,9 +150,7 @@
       //  selector__ 對應 selector
       const selector__form_register = '#form_register'
       const selector__form_login = '#form_login'
-      //const selector__inp_email = `#input_email`
       const selector__inp_email = `input[name='input_email']`
-      //const selector__inp_password = `#input_password`
       const selector__inp_password = `input[name='input_password']`
       const selector__inp_check_password = `input[name='input_check_password']`
       let selector__feedback_check_password = `${selector__inp_check_password} ~ div`
@@ -161,11 +159,14 @@
       const $check_password = $(selector__inp_check_password)
       const $feedback_check_password = $(selector__feedback_check_password)
 
-      //  存放 手動註冊BS5 Tab
-      let tabTriggerList = []
+      /*  BS5 Tab : Register & Login */
 
-      //  將 Register/Login card_tab 手動註冊為 BS5_Tab
+      //  手動註冊的 BS5 Tab 列表
+      let BS5_tabs = []
+
+      //  手動註冊 BS5 Tab 將 Register/Login card_tab 手動註冊為 BS5_Tab
       $$(`.card a[role='tab']`).forEach( tab => {
+        //  手動註冊 tab
         const tabTrigger = new bootstrap.Tab(tab)
         tabTrigger.mark = tab.dataset['myTab']
         //  card_tab 觸發時，更新 Navbar_tab 的 toggle 樣式
@@ -177,10 +178,11 @@
             }
           })
         })
-        tabTriggerList.push(tabTrigger)
+        BS5_tabs.push(tabTrigger)
+
       })
 
-      //  Navbar 的 toggle 效果
+      //  Navbar 的  toggle 效果
       $$(`.navbar-nav .nav-link`).forEach( (a, ind, arr) => {
         a.addEventListener(
           'click',
@@ -189,8 +191,9 @@
             const $target = e.target
             const mark = e.target.dataset['myTab']
             //  觸發 card_tab 的 toggle 效果
-            tabTriggerList.find( tabTarigger => tabTarigger['mark'] === mark ).show()
-            //  改變 Navbar 的 toggle 樣式
+            BS5_tabs.find( tabTarigger => tabTarigger['mark'] === mark ).show()
+
+            //  改變 觸發 c d_tab 的 Navbar 的 toggle 樣式
             arr.forEach( a => {
               a.classList.remove('active')
               $target.classList.add('active')

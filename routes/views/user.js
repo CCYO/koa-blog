@@ -6,10 +6,6 @@ const router = require('koa-router')()
 
 const { view_check_login } = require('../../middleware/check_login')
 
-router.get('/test', async (ctx, next) => {
-    await ctx.render('test')
-})
-
 router.get('/register', async (ctx, next) => {
     await ctx.render('register&login', {
         register: true,
