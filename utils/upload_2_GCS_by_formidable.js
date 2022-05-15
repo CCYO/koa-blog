@@ -11,9 +11,9 @@ const upload_blogImg_to_GCS = async (ctx) => {
     let filename = `blog/${hash}.jpg`
     let file = storage.bucket().file(filename)
     //  確認檔案是否已存在
-    let [ exist ] = await file.exists()
+    let [exist] = await file.exists()
     //  若不存在，執行 upload
-    if(!exist){
+    if (!exist) {
         await upload_jpg_to_GCS(file, ctx)
         let makePublic = await file.makePublic()
         console.log('@makePublic => ', makePublic)
@@ -23,61 +23,57 @@ const upload_blogImg_to_GCS = async (ctx) => {
 }
 
 const upload_avatar_to_GCS = async (ctx) => {
-    const hash = ctx.params.hash
-    let filename_gcs = `blog/${hash}.jpg`
-    let file_gcs = storage.bucket().file(filename_gcs)
-    let [file_is_exist] = await file_gcs.exists()
+    const { hash: avatar_hash } = ctx.params
+    const { id } = ctx.session.user
+    let filename = `avatar/${id}.jpg`
+    let file = storage.bucket().file(filename)
+    let {fields, files} = await upload_jpg_to_GCS(file, ctx)    
+    /**
+     * [
+     *   {
+     *     kind: 'storage#objectAccessControl',
+     *     object: '2/avatar.jpg',
+     *     generation: '1650967655043642',
+     *     id: 'gfb20220419.appspot.com/2/avatar.jpg/1650967655043642/allUsers',
+     *     selfLink: 'https://www.googleapis.com/storage/v1/b/gfb20220419.appspot.com/o/2%2Favatar.jpg/acl/allUsers',
+     *     bucket: 'gfb20220419.appspot.com',
+     *     entity: 'allUsers',
+     *     role: 'READER',
+     *     etag: 'CLqk9eS9sfcCEAM='
+     *   }
+     * ]
+     */
+    let makePublic = await file.makePublic()
+    ctx.files = files
+    ctx.fields = { ...fields, avatar: file.publicUrl(), avatar_hash }
+    return 
     
-    //  不存在，upload to GCS
-    if (!file_is_exist) {
-        let promise_4_upload_from_formidable_2_GCS
-        let formidableIns = _gen_formidable(file_gcs, promise_4_upload_from_formidable_2_GCS)
-        var { fields, files } = await _parse(formidableIns, ctx, promise_4_upload_from_formidable_2_GCS)
-        await file_gcs.makePublic()
-    }
-        /**
-         * [
-         *   {
-         *     kind: 'storage#objectAccessControl',
-         *     object: '2/avatar.jpg',
-         *     generation: '1650967655043642',
-         *     id: 'gfb20220419.appspot.com/2/avatar.jpg/1650967655043642/allUsers',
-         *     selfLink: 'https://www.googleapis.com/storage/v1/b/gfb20220419.appspot.com/o/2%2Favatar.jpg/acl/allUsers',
-         *     bucket: 'gfb20220419.appspot.com',
-         *     entity: 'allUsers',
-         *     role: 'READER',
-         *     etag: 'CLqk9eS9sfcCEAM='
-         *   }
-         * ]
-         */
-        let url = file_gcs.publicUrl()
-        /**
-         * [ 
-         *   {
-         *     kind: 'storage#object',
-         *     id: 'gfb20220419.appspot.com/2/avatar.jpg/1650967655043642',
-         *     selfLink: 'https://www.googleapis.com/storage/v1/b/gfb20220419.appspot.com/o/2%2Favatar.jpg',
-         *     mediaLink: 'https://storage.googleapis.com/download/storage/v1/b/gfb20220419.appspot.com/o/2%2Favatar.jpg?generation=1650967655043642&alt=media',
-         *     name: '2/avatar.jpg',
-         *     bucket: 'gfb20220419.appspot.com',
-         *     generation: '1650967655043642',
-         *     metageneration: '2',
-         *     contentType: 'image/jpeg',
-         *     storageClass: 'STANDARD',
-         *     size: '9861',
-         *     md5Hash: 'OjojAbdEsRJSsCrX7/6MCA==',
-         *     crc32c: '82ub8w==',
-         *     etag: 'CLqk9eS9sfcCEAI=',
-         *     timeCreated: '2022-04-26T10:07:35.050Z',
-         *     updated: '2022-04-26T10:07:35.151Z',
-         *     timeStorageClassUpdated: '2022-04-26T10:07:35.050Z'
-         *   },
-         *   PassThrough { xxx }
-         * ]
-         */
-        // const metadata = await file.getMetadata()
-        console.log('@fields => ', fields)
-    return { url }
+    
+    /**
+     * [ 
+     *   {
+     *     kind: 'storage#object',
+     *     id: 'gfb20220419.appspot.com/2/avatar.jpg/1650967655043642',
+     *     selfLink: 'https://www.googleapis.com/storage/v1/b/gfb20220419.appspot.com/o/2%2Favatar.jpg',
+     *     mediaLink: 'https://storage.googleapis.com/download/storage/v1/b/gfb20220419.appspot.com/o/2%2Favatar.jpg?generation=1650967655043642&alt=media',
+     *     name: '2/avatar.jpg',
+     *     bucket: 'gfb20220419.appspot.com',
+     *     generation: '1650967655043642',
+     *     metageneration: '2',
+     *     contentType: 'image/jpeg',
+     *     storageClass: 'STANDARD',
+     *     size: '9861',
+     *     md5Hash: 'OjojAbdEsRJSsCrX7/6MCA==',
+     *     crc32c: '82ub8w==',
+     *     etag: 'CLqk9eS9sfcCEAI=',
+     *     timeCreated: '2022-04-26T10:07:35.050Z',
+     *     updated: '2022-04-26T10:07:35.151Z',
+     *     timeStorageClassUpdated: '2022-04-26T10:07:35.050Z'
+     *   },
+     *   PassThrough { xxx }
+     * ]
+     */
+    // const metadata = await file.getMetadata()
 }
 
 async function _parse(formidableIns, ctx, promise) {
@@ -129,8 +125,8 @@ const _gen_formidable = (file_gcs, promise) => {
              *    [Symbol(kCapture)]: false
              * }
              */
-            
-            
+
+
             let ws = file_gcs.createWriteStream({
                 //  https://cloud.google.com/storage/docs/metadata#caching_data
                 metadata: {
@@ -148,11 +144,11 @@ const _gen_formidable = (file_gcs, promise) => {
     })
 }
 
-async function upload_jpg_to_GCS(file_gcs, ctx){
+async function upload_jpg_to_GCS(file_gcs, ctx) {
     let promise
     let form = _gen_formidable(file_gcs, promise)
-    await _parse(form, ctx, promise)
-} 
+    return await _parse(form, ctx, promise)
+}
 
 module.exports = {
     upload_avatar_to_GCS,

@@ -57,61 +57,27 @@
 
     <%- include('wedgets/cdn') %>
     <%- include('wedgets/utils') %>
-    <!-- 引入firebase服務模塊 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- 引入 Spark-MD5 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <script>
         let go = document.getElementById('eval')
         let user
         eval('user = ' + go.innerText)
 
-        $('#logout').addEventListener('click', async () => {
-            const {
-                data: {
-                    errno,
-                    data,
-                    msg
-                }
-            } = await axios.get('/api/user/logout')
-            if (!errno) {
-                alert(data)
-                location.href = '/register'
-            }
-        })
         let formData = new FormData()
-        let md5Hash
+        let hash
         let md5Hash_is_new = false
 
-        $('input[type="file"]').addEventListener('change', (e) => {
-            let file = e.target.files[0]
-            //  當有檔案時，先確認 md5hash 是否相同
-            let fr = new FileReader()
-            fr.addEventListener('load', async (evt) => {
-                if (evt.target.readyState == FileReader.DONE) {
-                    let hash = CryptoJS.MD5(CryptoJS.enc.Latin1.parse(fr.result))
-                    avatar_md5Hash = hash.toString(CryptoJS.enc.Base64)
-                    console.log('md5Hash => ', avatar_md5Hash)
-                    if (user.avatar_md5Hash && user.avatar_md5Hash === avatar_md5Hash) {
-                        alert('現在就是這個頭像')
-                    } else {
-                        const { data: {
-                            errno, data, msg
-                        } } = await axios.post('/api/user/check_avatar', { avatar_md5Hash })
-                        if (!errno) {
-                            alert(data)
-                            formData.append('avatar', file)
-                        } else {
-                            alert(msg)
-                        }
-                    }
-                }
-            })
-            fr.readAsBinaryString(file)
-        })
+        //  input[name='avatar'].onchange handle：取得頭像hash
+        $('input[name="avatar"]').addEventListener('change', getImgHash)
 
         $('form').addEventListener('submit', async (e) => {
             e.preventDefault()
-            for ({ type, name, value } of e.target) {
-                if ((type !== 'file' && 'submit') && value) {
+            for (item of e.target) {
+                let { type, name, value } = item
+                if ( type === 'file'){
+                    formData.append('avatar', item.files[0])
+                }else if ((type !== 'submit') && value) {
                     value = (type === 'number') ? value * 1 : value
                     formData.append(name, value)
                 }
@@ -123,7 +89,7 @@
                     data,
                     msg
                 }
-            } = await axios.patch('/api/user/', formData)
+            } = await axios.patch(`/api/user/${hash}`, formData)
 
             if (errno) {
                 if (Array.isArray(msg)) {
@@ -137,6 +103,61 @@
                 console.log(data)
             }
         })
+
+        // btn#logout.onclick handle：登出 
+        $('#logout').addEventListener('click', logout)
+
+        // 登出
+        async function logout() {
+            if (!confirm('真的要登出嗎?')) {
+                return alert('對拉，多待一下拉')
+            }
+
+            const {
+                data: {
+                    errno,
+                    data,
+                    msg
+                }
+            } = await axios.get('/api/user/logout')
+
+            if (!errno) {
+                alert(data)
+                location.href = '/register'
+            }
+        }
+
+
+        async function getImgHash(e){
+            let file = e.target.files[0]
+            
+            //  user.avatar 若有值，確認當前欲更新的 img md5hash 是否相同
+            hash = await getMD5Hash(file)
+
+            if(hash === user.avatar_hash){
+                return alert('目前就是這個頭像唷！')
+            }
+        }
+
+        //  返回 file 的 FileReader.result
+        function getMD5Hash(file) {
+            return new Promise((resolve, reject) => {
+                let fr = new FileReader()
+                fr.addEventListener('load', (evt) => {
+                    if (fr.readyState === FileReader.DONE) {
+                        let hash = SparkMD5.ArrayBuffer.hash(fr.result)
+                        console.log('計算出的hash => ', hash)
+                        resolve(hash)
+                    }
+                })
+                fr.addEventListener('error', (error) => {
+                    console.log('fr load 發生錯誤 => ', error)
+                    reject(error)
+                })
+                fr.readAsArrayBuffer(file)
+            })
+        }
+
     </script>
 </body>
 

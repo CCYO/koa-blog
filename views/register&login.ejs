@@ -1,213 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register/Login</title>
-    <!-- BS5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register/Login</title>
+  <!-- BS5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
 </head>
+
 <body>
-    <!-- 主導覽 -->
-    <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
-        <div class="container-fluid">
-          <a class="navbar-brand" href="#">Navbar</a>
-          <!-- 收合鈕 -->
-          <button class="navbar-toggler" type="button"
-                  data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                  aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <!-- 收合內容 -->
-          <div class="collapse navbar-collapse" id="navbarNav">
-              <!-- 表單列 -->
-            <ul class="navbar-nav">
-                <!-- 表單項 -->
-              <li class="nav-item">
-                <a  class="nav-link" href="#">Home</a>
-              </li>
-              <li class="nav-item">
-                <a  class="nav-link" href="#">Features</a>
-              </li>
-              <li class="nav-item">
-                <a  class="nav-link" href="#">Pricing</a>
-              </li>
-              <form class="d-flex">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success" type="submit">Search</button>
-              </form>
-              <li class="nav-item">
-                <a  class="nav-link <%= register ? `active` : `` %>" href="#"
-                    data-my-tab="#register">註冊</a>
-              </li>
-              <li class="nav-item">
-                <a  class="nav-link <%= login ? `active` : `` %>" href="#"
-                    data-my-tab="#login">登入</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-    </nav>
-
-    
-    <!-- 註冊/登入 互動卡片-->
-    <div class="card w-50 mx-auto" style='margin-top: 4rem;'>
-        <!-- 卡片頭部 -->
-        <div class="card-header">
-            <!-- 頭部導行列-->
-            <ul class="card-header-tabs nav nav-tabs ">
-                <!-- 頭部導行項-->
-                <li class="nav-item">
-                    <a 
-                      class="nav-link <%= register ? `active` : `` %>" href="#" 
-                      data-my-tab='#register'
-                      data-bs-toggle='tab' data-bs-target='#register'
-                      role="tab" aria-controls="register" aria-selected="true">註冊</a>
-                </li>
-                <li class="nav-item">
-                    <a 
-                      class="nav-link <%= login ? `active` : `` %>" href="#"
-                      data-my-tab='#login'
-                      data-bs-toggle='tab' data-bs-target='#login'
-                      role="tab" aria-controls="login" aria-selected="false">登入</a>
-                </li>            
-            </ul>
-        </div>
-        <!-- 卡片主體 -->
-        <div class="card-body tab-content">
-            <div class="tab-pane fade <%= register ? `show active` : ``%>" id="register" role="tabpanel" aria-labelledby="register-tab">
-                <form id='form_register' class="row">
-                  <div class="col-8 mx-auto">
-                    <div class="mb-3">
-                      <label for="input_email" class="form-label">信箱</label>
-                      <input
-                        type="text" class="form-control"
-                        name="input_email" data-form-id='#form_register' 
-                        aria-describedby="email_help"
-                        autocomplete="off" required>
-                      <div class="d-block">&nbsp;</div>
-                    </div>
-                    <div class="mb-3">
-                      <label for="input_password" class="form-label">密碼</label>
-                      <input
-                        type="password" class="form-control"
-                        name="input_password" data-form-id='#form_register' data-retry='yes'
-                        autocomplete="new-password" required>
-                      <div class="d-block">&nbsp;</div>
-                    </div>
-                    <div class="mb-3">
-                      <label for="input_check_password" class="form-label">密碼確認</label>
-                      <input
-                        type="password" class="form-control"
-                        name='input_check_password'
-                        autocomplete="off" disabled>
-                      <div class="d-block">&nbsp;</div>
-                    </div>
-                    <button type="submit" class="btn btn-primary" disabled>送出</button>
-                  </div>
-                </form>
-            </div>
-            <div class="tab-pane fade <%= login ? `show active` : ``%>" id="login" role="tabpanel" aria-labelledby="login-tab">
-              <form id='form_login' class="row">
-                <div class="col-8 mx-auto">
-                  <div class="mb-3">
-                    <label for="input_email" class="form-label">信箱</label>
-                    <input
-                      type="text" class="form-control"
-                      name="input_email" data-form-id='#form_login'
-                      autocomplete="off" required 
-                      aria-describedby="email_help">
-                    <div class="d-block">&nbsp;</div>
-                  </div>
-                  <div class="mb-3">
-                    <label for="input_password" class="form-label">密碼</label>
-                    <input
-                      type="password" class="form-control"
-                      name="input_password" data-form-id='#form_login' 
-                      autocomplete="new-password">
-                    <div class="d-block">&nbsp;</div>
-                  </div>
-                  <button type="submit" class="btn btn-primary" disabled>送出</button>
-                </div>
-              </form>
-            </div>
-        </div>
+  <!-- 主導覽 -->
+  <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Navbar</a>
+      <!-- 收合鈕 -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- 收合內容 -->
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <!-- 表單列 -->
+        <ul class="navbar-nav">
+          <!-- 表單項 -->
+          <li class="nav-item">
+            <a class="nav-link" href="#">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Features</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Pricing</a>
+          </li>
+          <form class="d-flex">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+          </form>
+          <li class="nav-item">
+            <a class="nav-link nav-tab <%= register ? `active` : `` %>" href="#" data-my-tab="#register">註冊</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-tab <%= login ? `active` : `` %>" href="#" data-my-tab="#login">登入</a>
+          </li>
+        </ul>
+      </div>
     </div>
-    <%- include('wedgets/cdn') %>
-    <%- include('wedgets/utils') %>
-    
-    <style>
-      .nav-link.active {
-        pointer-events: none
-      }
-      .loading {
-        color: blue
-      }
-    </style>
-    <script>
-      
-      //  selector__ 對應 selector
-      const selector__form_register = '#form_register'
-      const selector__form_login = '#form_login'
-      const selector__inp_email = `input[name='input_email']`
-      const selector__inp_password = `input[name='input_password']`
-      const selector__inp_check_password = `input[name='input_check_password']`
-      let selector__feedback_check_password = `${selector__inp_check_password} ~ div`
+  </nav>
 
-      //  $ 對應 ele
-      const $check_password = $(selector__inp_check_password)
-      const $feedback_check_password = $(selector__feedback_check_password)
 
-      /*  BS5 Tab : Register & Login */
+  <!-- 註冊/登入 互動卡片-->
+  <div class="card w-50 mx-auto" style='margin-top: 4rem;'>
+    <!-- 卡片頭部 -->
+    <div class="card-header">
+      <!-- 頭部導行列-->
+      <ul class="card-header-tabs nav nav-tabs ">
+        <!-- 頭部導行項-->
+        <li class="nav-item">
+          <a class="nav-link <%= register ? `active` : `` %>" href="#" data-my-tab='#register' data-bs-toggle='tab'
+            data-bs-target='#register' role="tab" aria-controls="register" aria-selected="true">註冊</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= login ? `active` : `` %>" href="#" data-my-tab='#login' data-bs-toggle='tab'
+            data-bs-target='#login' role="tab" aria-controls="login" aria-selected="false">登入</a>
+        </li>
+      </ul>
+    </div>
+    <!-- 卡片主體 -->
+    <div class="card-body tab-content">
+      <div class="tab-pane fade <%= register ? `show active` : ``%>" id="register" role="tabpanel"
+        aria-labelledby="register-tab">
+        <form id='form_register' class="row">
+          <div class="col-8 mx-auto">
+            <div class="mb-3">
+              <label for="input_email" class="form-label">信箱</label>
+              <input type="text" class="form-control" name="input_email" data-form-id='#form_register'
+                aria-describedby="email_help" autocomplete="off" required>
+              <div class="d-block">&nbsp;</div>
+            </div>
+            <div class="mb-3">
+              <label for="input_password" class="form-label">密碼</label>
+              <input type="password" class="form-control" name="input_password" data-form-id='#form_register'
+                data-retry='yes' autocomplete="new-password" required>
+              <div class="d-block">&nbsp;</div>
+            </div>
+            <div class="mb-3">
+              <label for="input_check_password" class="form-label">密碼確認</label>
+              <input type="password" class="form-control" name='input_check_password' autocomplete="off" disabled>
+              <div class="d-block">&nbsp;</div>
+            </div>
+            <button type="submit" class="btn btn-primary" disabled>送出</button>
+          </div>
+        </form>
+      </div>
+      <div class="tab-pane fade <%= login ? `show active` : ``%>" id="login" role="tabpanel"
+        aria-labelledby="login-tab">
+        <form id='form_login' class="row">
+          <div class="col-8 mx-auto">
+            <div class="mb-3">
+              <label for="input_email" class="form-label">信箱</label>
+              <input type="text" class="form-control" name="input_email" data-form-id='#form_login' autocomplete="off"
+                required aria-describedby="email_help">
+              <div class="d-block">&nbsp;</div>
+            </div>
+            <div class="mb-3">
+              <label for="input_password" class="form-label">密碼</label>
+              <input type="password" class="form-control" name="input_password" data-form-id='#form_login'
+                autocomplete="new-password">
+              <div class="d-block">&nbsp;</div>
+            </div>
+            <button type="submit" class="btn btn-primary" disabled>送出</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <%- include('wedgets/cdn') %>
+  <%- include('wedgets/utils') %>
 
-      //  手動註冊的 BS5 Tab 列表
-      let BS5_tabs = []
+  <style>
+    .nav-link.active {
+      pointer-events: none
+    }
 
-      //  手動註冊 BS5 Tab 將 Register/Login card_tab 手動註冊為 BS5_Tab
-      $$(`.card a[role='tab']`).forEach( tab => {
-        //  手動註冊 tab
-        const tabTrigger = new bootstrap.Tab(tab)
-        tabTrigger.mark = tab.dataset['myTab']
-        //  card_tab 觸發時，更新 Navbar_tab 的 toggle 樣式
-        tab.addEventListener('show.bs.tab', (e) => {
-          $$(`.nav-item a[data-my-tab]`).forEach( a => {
-            a.classList.remove('active')
-            if(a.dataset['myTab'] === tab.dataset['myTab']){
-              a.classList.add('active')
-            }
-          })
-        })
-        BS5_tabs.push(tabTrigger)
+    .loading {
+      color: blue
+    }
+  </style>
+  <script>
 
-      })
+    //  selector__ 對應 selector
+    const selector__form_register = '#form_register'
+    const selector__form_login = '#form_login'
+    const selector__inp_email = `input[name='input_email']`
+    const selector__inp_password = `input[name='input_password']`
+    const selector__inp_check_password = `input[name='input_check_password']`
+    let selector__feedback_check_password = `${selector__inp_check_password} ~ div`
 
-      //  Navbar 的  toggle 效果
-      $$(`.navbar-nav .nav-link`).forEach( (a, ind, arr) => {
-        a.addEventListener(
-          'click',
-          (e) => {
-            e.preventDefault()
-            const $target = e.target
-            const mark = e.target.dataset['myTab']
-            //  觸發 card_tab 的 toggle 效果
-            BS5_tabs.find( tabTarigger => tabTarigger['mark'] === mark ).show()
+    //  $ 對應 ele
+    const $check_password = $(selector__inp_check_password)
+    const $feedback_check_password = $(selector__feedback_check_password)
 
-            //  改變 觸發 c d_tab 的 Navbar 的 toggle 樣式
-            arr.forEach( a => {
-              a.classList.remove('active')
-              $target.classList.add('active')
-            })
+    /*  BS5 Tab : Register & Login */
+
+    //  手動註冊的 BS5 Tab 列表
+    let BS5_tabs = []
+
+    //  手動註冊 BS5 Tab
+    $$(`.card a[role='tab']`).forEach(tab => {
+      //  手動註冊 tab
+      const tabTrigger = new bootstrap.Tab(tab)
+      tabTrigger.mark = tab.dataset['myTab']
+      //  card_tab 觸發時，更新 Navbar_tab 的 toggle 樣式
+      tab.addEventListener('show.bs.tab', (e) => {
+        $$(`.nav-item a[data-my-tab]`).forEach(a => {
+          a.classList.remove('active')
+          if (a.dataset['myTab'] === tab.dataset['myTab']) {
+            a.classList.add('active')
           }
-        )
+        })
       })
+      BS5_tabs.push(tabTrigger)
 
-      //  GenericFuc: validate UI for form
-      const _form_UI = (selector__form) => (selector, empty, invalid) => {
+    })
+
+    //  Navbar 的  toggle 效果
+    $$(`.navbar-nav .nav-link`).forEach((a, ind, arr) => {
+      a.addEventListener(
+        'click',
+        (e) => {
+          e.preventDefault()
+          const $target = e.target
+          const mark = e.target.dataset['myTab']
+          //  觸發 card_tab 的 toggle 效果
+          BS5_tabs.find(tabTarigger => tabTarigger['mark'] === mark).show()
+
+          //  改變 觸發 c d_tab 的 Navbar 的 toggle 樣式
+          arr.forEach(a => {
+            a.classList.remove('active')
+            $target.classList.add('active')
+          })
+        }
+      )
+    })
+
+    //  GenericFuc: validate UI for form
+    function _form_UI(selector__form) {
+      return (selector, empty, invalid) => {
         const selector__inp = `${selector__form} ${selector}`
         const selector__feedback = `${selector__inp} ~ div`
         const selector__submit = `${selector__form} button[type='submit']`
-        
+
         const $inp = $(selector__inp)
         const $feedback = $(selector__feedback)
         const $submit = $(selector__submit)
@@ -216,9 +201,9 @@
 
         const _submit_UI = () => {
           const can_submit = $$(`${selector__form} .is-valid`).length === $$(`${selector__form} input`).length
-          if(!can_submit){
+          if (!can_submit) {
             $submit.setAttribute('disabled', true)
-          }else{
+          } else {
             $submit.removeAttribute('disabled')
           }
         }
@@ -234,13 +219,13 @@
           $feedback.classList.remove(remove_class_feedback)
           $feedback.classList.add(add_class_feedback)
 
-          if(!_success){
-            if(empty){
+          if (!_success) {
+            if (empty) {
               $feedback.innerHTML = `必填，且必須是數字或大小寫英文字母`
-            }else if(invalid){
+            } else if (invalid) {
               $feedback.innerHTML = `${invalid}`
             }
-          }else{
+          } else {
             $feedback.innerHTML = `ok`
           }
           _submit_UI()
@@ -248,203 +233,204 @@
         }
         _input_UI(success, empty, invalid)
       }
+    }
 
-      //  form_UI_register
-      const form_UI_register = _form_UI(selector__form_register)
+    //  form_UI_register
+    const form_UI_register = _form_UI(selector__form_register)
 
-      //  form_UI_login
-      const form_UI_login = _form_UI(selector__form_login)      
+    //  form_UI_login
+    const form_UI_login = _form_UI(selector__form_login)
 
-      const validate_email = async (e) => {
-        console.log('進入驗證')
-        const $target = e.target
+    const validate_email = async (e) => {
+      console.log('進入驗證')
+      const $target = e.target
 
-        let form_id = $target.dataset['formId']
-        const $feedback = $(`${form_id} ${selector__inp_email} ~ div`)
+      let form_id = $target.dataset['formId']
+      const $feedback = $(`${form_id} ${selector__inp_email} ~ div`)
 
-        //  判斷使用 register || login 的 UI驗證
-        const form_UI = (form_id = form_id === '#form_register') ? form_UI_register : form_UI_login
-        
-        const email = $target.value
-        const regex_email = /^[\w]+@[\w\.]+$/
-        if(!email){
-          //  無值
-          form_UI(selector__inp_email, true)
-          return
-        }else if( !(regex_email.exec(email)) ){
-          //  格式錯誤
-          form_UI(selector__inp_email, false, '必須由數字或英文字母組成')
-          return 
-        }
+      //  判斷使用 register || login 的 UI驗證
+      const form_UI = (form_id = form_id === '#form_register') ? form_UI_register : form_UI_login
 
-        //  格式驗證成功
-        if(form_id){
-          //  若是 register_input_email
-          //  添加 loading 樣式
-          $target.classList.remove('is-valid', 'is-invalid')
-          $feedback.classList.add('loading')
-          $feedback.innerHTML = 'LOADING...'
-
-          //  AJAX
-          let {
-            data: {
-              errno,
-              msg = undefined,
-              data = undefined
-            }
-          } = await axios.post('/api/user', { email })
-
-          //  AJAX結束，移除 loading 樣式
-          $feedback.classList.remove('loading')
-
-          if(errno){
-            //  DB驗證失敗
-            form_UI_register(selector__inp_email, false, msg)
-            return
-          }else{
-            //  DB驗證成功
-            form_UI_register(selector__inp_email)
-            return
-          }
-        }else{
-          //  若是 login_input_email
-          form_UI(selector__inp_email)
-        }
-      }
-      
-
-      // 驗證 register email 是否已存在
-      $$(`${selector__inp_email}`).forEach(
-        inp => inp.addEventListener(
-          'input',
-          validate_email
-        )
-      )
-
-      //  handle 密碼格式
-      const validate_password = (e) => {
-        const $target = e.target
-
-        const password = $target.value
-        let form_id = $target.dataset['formId']
-        
-        let form_UI = (form_id = form_id === '#form_register') ? form_UI_register : form_UI_login
-        let retry = form_id ? $target.dataset['retry'] : 'no'
-
-        if(retry === 'yes'){
-          $target.dataset['retry'] = 'no'
-          $check_password.value = ''
-          $check_password.classList.remove('is-valid', 'is-invalid')
-          $feedback_check_password.innerHTML = '&nbsp;'
-        }
-
-        if(!password){
-          //  無效，密碼為空
-          form_id && $check_password.setAttribute('disabled', true) && console.log(123456)
-          form_UI(selector__inp_password, true)
-          return
-        }else if(!( /^[\w]+$/.exec(password) )){
-          //  無效，密碼格式錯誤
-          form_UI(selector__inp_password, false, '密碼必須由數字或英文字母組成')
-          form_id && $check_password.setAttribute('disabled', true)
-          return
-        }else{
-          //  有效
-          if(form_id){
-            if($check_password.hasAttribute('disabled')){
-              $check_password.removeAttribute('disabled')
-            }
-          }
-          form_UI(selector__inp_password)
-          return
-        }
-      }
-
-      // form_register 與 form_login 的 inp_password 都需綁定
-      $$(`${selector__inp_password}`).forEach( inp => {
-        inp.addEventListener( 'input', validate_password )
-      })
-
-      //  form_register 的 inp_password 更改 password 時，checkout_password 的 UI變化
-      $(`${selector__form_register} ${selector__inp_password}`).addEventListener(
-        'blur',
-        e => {
-          e.target.dataset['retry'] = 'yes'
-      })
-
-      //  handle 密碼二次
-      const handle_checkout_password = (e) => {
-        const $password = $(`${selector__form_register} ${selector__inp_password}`)
-        const password = $password.value
-        const check_password = $check_password.value
-        
-        const valid = password === check_password
-
-        if(!valid){
-          form_UI_register(selector__inp_check_password, false, '請確認兩次密碼都是一樣的')
-        }else{
-          form_UI_register(selector__inp_check_password)
-        }
+      const email = $target.value
+      const regex_email = /^[\w]+@[\w\.]+$/
+      if (!email) {
+        //  無值
+        form_UI(selector__inp_email, true)
+        return
+      } else if (!(regex_email.exec(email))) {
+        //  格式錯誤
+        form_UI(selector__inp_email, false, '必須由數字或英文字母組成')
         return
       }
 
-      $check_password.addEventListener(
-        'input',
-        handle_checkout_password
-      )
+      //  格式驗證成功
+      if (form_id) {
+        //  若是 register_input_email
+        //  添加 loading 樣式
+        $target.classList.remove('is-valid', 'is-invalid')
+        $feedback.classList.add('loading')
+        $feedback.innerHTML = 'LOADING...'
 
-      //  送出註冊資料
-      $(selector__form_register).addEventListener(
-        'submit',
-        async (e) => {
-          e.preventDefault()
-          const email = $(`${selector__form_register} ${selector__inp_email}`).value
-          const password = $(`${selector__form_register} ${selector__inp_password}`).value
-          const {
-            data: {
-              errno,
-              msg = undefined,
-              data = undefined
-            }
-          } = await axios.post('/api/user/register', {
-            email,
-            password
-          })
-          if(errno){
-            alert(msg.message)
-          }else{
-            //window.userCredential = await _firebase.auth.create( email, password )
-            alert('註冊成功，請嘗試登入')
-            location.href = '/login'
-            
+        //  AJAX
+        let {
+          data: {
+            errno,
+            msg = undefined,
+            data = undefined
           }
-      })
-    
-      //  送出登入資料
-      $(selector__form_login).addEventListener(
-        'submit',
-        async (e) => {
-          e.preventDefault()
-          const {
-            data: {
-              errno,
-              msg = undefined,
-              data = undefined
-            }
-          } = await axios.post('/api/user/', {
-            email: $(`${selector__form_login} ${selector__inp_email}`).value,
-            password: $(`${selector__form_login} ${selector__inp_password}`).value
-          })
-          if(errno){
-            alert(msg)
-          }else{
-            alert('登入成功')
-            let from = location.search ? new URLSearchParams(location.search).get('from') : false
-            location.href = from || '/setting'
+        } = await axios.post('/api/user', { email })
+
+        //  AJAX結束，移除 loading 樣式
+        $feedback.classList.remove('loading')
+
+        if (errno) {
+          //  DB驗證失敗
+          form_UI_register(selector__inp_email, false, msg)
+          return
+        } else {
+          //  DB驗證成功
+          form_UI_register(selector__inp_email)
+          return
+        }
+      } else {
+        //  若是 login_input_email
+        form_UI(selector__inp_email)
+      }
+    }
+
+
+    // 驗證 register email 是否已存在
+    $$(`${selector__inp_email}`).forEach(
+      inp => inp.addEventListener(
+        'input',
+        validate_email
+      )
+    )
+
+    //  handle 密碼格式
+    const validate_password = (e) => {
+      const $target = e.target
+
+      const password = $target.value
+      let form_id = $target.dataset['formId']
+
+      let form_UI = (form_id = form_id === '#form_register') ? form_UI_register : form_UI_login
+      let retry = form_id ? $target.dataset['retry'] : 'no'
+
+      if (retry === 'yes') {
+        $target.dataset['retry'] = 'no'
+        $check_password.value = ''
+        $check_password.classList.remove('is-valid', 'is-invalid')
+        $feedback_check_password.innerHTML = '&nbsp;'
+      }
+
+      if (!password) {
+        //  無效，密碼為空
+        form_id && $check_password.setAttribute('disabled', true) && console.log(123456)
+        form_UI(selector__inp_password, true)
+        return
+      } else if (!(/^[\w]+$/.exec(password))) {
+        //  無效，密碼格式錯誤
+        form_UI(selector__inp_password, false, '密碼必須由數字或英文字母組成')
+        form_id && $check_password.setAttribute('disabled', true)
+        return
+      } else {
+        //  有效
+        if (form_id) {
+          if ($check_password.hasAttribute('disabled')) {
+            $check_password.removeAttribute('disabled')
           }
+        }
+        form_UI(selector__inp_password)
+        return
+      }
+    }
+
+    // form_register 與 form_login 的 inp_password 都需綁定
+    $$(`${selector__inp_password}`).forEach(inp => {
+      inp.addEventListener('input', validate_password)
+    })
+
+    //  form_register 的 inp_password 更改 password 時，checkout_password 的 UI變化
+    $(`${selector__form_register} ${selector__inp_password}`).addEventListener(
+      'blur',
+      e => {
+        e.target.dataset['retry'] = 'yes'
       })
-    
-    </script>
+
+    //  handle 密碼二次
+    const handle_checkout_password = (e) => {
+      const $password = $(`${selector__form_register} ${selector__inp_password}`)
+      const password = $password.value
+      const check_password = $check_password.value
+
+      const valid = password === check_password
+
+      if (!valid) {
+        form_UI_register(selector__inp_check_password, false, '請確認兩次密碼都是一樣的')
+      } else {
+        form_UI_register(selector__inp_check_password)
+      }
+      return
+    }
+
+    $check_password.addEventListener(
+      'input',
+      handle_checkout_password
+    )
+
+    //  送出註冊資料
+    $(selector__form_register).addEventListener(
+      'submit',
+      async (e) => {
+        e.preventDefault()
+        const email = $(`${selector__form_register} ${selector__inp_email}`).value
+        const password = $(`${selector__form_register} ${selector__inp_password}`).value
+        const {
+          data: {
+            errno,
+            msg = undefined,
+            data = undefined
+          }
+        } = await axios.post('/api/user/register', {
+          email,
+          password
+        })
+        if (errno) {
+          alert(msg.message)
+        } else {
+          //window.userCredential = await _firebase.auth.create( email, password )
+          alert('註冊成功，請嘗試登入')
+          location.href = '/login'
+
+        }
+      })
+
+    //  送出登入資料
+    $(selector__form_login).addEventListener(
+      'submit',
+      async (e) => {
+        e.preventDefault()
+        const {
+          data: {
+            errno,
+            msg = undefined,
+            data = undefined
+          }
+        } = await axios.post('/api/user/', {
+          email: $(`${selector__form_login} ${selector__inp_email}`).value,
+          password: $(`${selector__form_login} ${selector__inp_password}`).value
+        })
+        if (errno) {
+          alert(msg)
+        } else {
+          alert('登入成功')
+          let from = location.search ? new URLSearchParams(location.search).get('from') : false
+          location.href = from || '/setting'
+        }
+      })
+
+  </script>
 </body>
 
 </html>

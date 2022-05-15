@@ -45,7 +45,7 @@ const User = seq.define('User', {
         type: STRING,
         allowNull: true,
     },
-    avatar_md5Hash: {
+    avatar_hash: {
         type: STRING,
         allowNull: true,
     }

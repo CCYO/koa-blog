@@ -28,13 +28,13 @@ const update = async (newUserInfo ) => {
     if(data.password){
         data.password = hash(data.password)
     }
-    console.log(data)
-    let user = await User.findOne({
+    let [ row ] = await User.update( data, {
         where: { id: data.id }
     })
-    if(!user) return false
-    await user.update(data)
-    return init_4_user(user.dataValues)
+    console.log('@row => ', row)
+    if(!row) return false
+    let { dataValues } = await User.findByPk(data.id)
+    return init_4_user(dataValues)
 }
 
 module.exports = {

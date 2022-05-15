@@ -13,6 +13,8 @@
     "@koa/multer": "^3.0.0",
     "@wangeditor/editor": "^5.0.1",
     "ajv": "^8.10.0",
+    "ajv-errors": "^3.0.0",
+    "ajv-formats": "^2.1.1",
     "axios": "^0.26.1",
     "cross-env": "^7.0.3",
     "debug": "^4.1.1",
