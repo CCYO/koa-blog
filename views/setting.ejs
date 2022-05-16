@@ -73,10 +73,17 @@
 
         $('form').addEventListener('submit', async (e) => {
             e.preventDefault()
+            let api = '/api/user/'
+            if(hash){
+                api += hash
+            }else{
+                api += '0'
+            }
             for (item of e.target) {
                 let { type, name, value } = item
-                if ( type === 'file'){
-                    formData.append('avatar', item.files[0])
+                if ( type === 'file' && item.files[0]){
+                    console.log('@file => ', item.files[0])
+                    //formData.append('avatar', item.files[0])
                 }else if ((type !== 'submit') && value) {
                     value = (type === 'number') ? value * 1 : value
                     formData.append(name, value)
@@ -89,7 +96,7 @@
                     data,
                     msg
                 }
-            } = await axios.patch(`/api/user/${hash}`, formData)
+            } = await axios.patch(api, formData)
 
             if (errno) {
                 if (Array.isArray(msg)) {

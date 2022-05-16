@@ -2,34 +2,30 @@
  * @description validator JSON 4 user
  */
 
-const Ajv = require('ajv')
-const addFormats = require('ajv-formats')
-const ajvErr = require('ajv-errors')
+const Ajv = require("ajv").default
+const ajv = new Ajv({ allErrors: true })
+require("ajv-errors")(ajv /*, {singleError: true} */)
+//const addFormats = require('ajv-formats')
 
-const ajv = new Ajv({allErrors: true})
 
-addFormats(ajv)
-ajvErr(ajv)
+
+
+//addFormats(ajv)
+
 
 const schema_common = {
     type: 'object',
     properties: {
         email: {
             type: 'string',
-            format: 'email',
+            //format: 'email',
             errorMessage: 'email必須是電子信箱格式'
         },
         nickname: {
-            type: 'string',
-            pattern: '^[\\w]+$',
-            minLength: 2,
-            maxLength: 20,
-            errorMessage: {
-                type: '暱稱必須由2~20個英文組成',
-                pattern: '暱稱必須符合pattern',
-                minLength: '暱稱必須>2個英文組成',
-                maxLength: '暱稱必須<20個英文組成',
-            }
+            type: 'number',
+            //pattern: '^[\\w]+$',
+            minLength: 10,
+            maxLength: 20
         },
         password: {
             type: 'string',
@@ -45,24 +41,39 @@ const schema_common = {
         avatar: {
             type: 'string',
             maxLength: 255,
-        }
-    }
+        },
+    },
+    errorMessage: '到底哪裡有問題?',
 }
 
-const schema_register = { ...schema_common, required: ['email', 'password']}
+const schema_register = { ...schema_common, required: ['email', 'password'] }
+
+const validate_user_update = ajv.compile(schema_common)
 
 const validator_user_register = (data) => {
-    if(!ajv.validate(schema_register, data)){
+    if (!ajv.validate(schema_register, data)) {
         return ajv.errors
     }
     return null
 }
 
 const validator_user_update = (data) => {
-    if(!ajv.validate(schema_common, data)){
-        return ajv.errors
+    // console.log('@data => ', data)
+    // if(validate_user_update(data)){
+    //     console.log('@data => ', data) 
+    // }else{
+    //     console.log('@errors => ', validate_user_update.errors)
+    // }
+    let res = validate_user_update(data)
+    console.log('@res => ', res)
+
+    if (!res) {
+        let res = validate_user_update.errors
+        console.log('@validator_user_update => ', validate_user_update)
+        console.log('@validator_user_update.errors => ', res)
+        return res
     }
-    return null
+    return false
 }
 
 module.exports = {

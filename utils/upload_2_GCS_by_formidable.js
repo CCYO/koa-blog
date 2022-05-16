@@ -14,7 +14,7 @@ const upload_blogImg_to_GCS = async (ctx) => {
     let [exist] = await file.exists()
     //  若不存在，執行 upload
     if (!exist) {
-        await upload_jpg_to_GCS(file, ctx)
+        await upload_jpg_to_GCS({ file, ctx })
         let makePublic = await file.makePublic()
         console.log('@makePublic => ', makePublic)
     }
@@ -23,11 +23,18 @@ const upload_blogImg_to_GCS = async (ctx) => {
 }
 
 const upload_avatar_to_GCS = async (ctx) => {
+    let avatar
     const { hash: avatar_hash } = ctx.params
     const { id } = ctx.session.user
-    let filename = `avatar/${id}.jpg`
-    let file = storage.bucket().file(filename)
-    let {fields, files} = await upload_jpg_to_GCS(file, ctx)    
+    let data = { ctx }
+
+    if ((avatar_hash * 1)) {
+        let filename = `avatar/${id}.jpg`
+        let file = storage.bucket().file(filename)
+        data.file = file
+    }
+    let { fields, files } = await upload_jpg_to_GCS(data)
+    //#region
     /**
      * [
      *   {
@@ -43,12 +50,18 @@ const upload_avatar_to_GCS = async (ctx) => {
      *   }
      * ]
      */
-    let makePublic = await file.makePublic()
+    //#endregion
+    if (!avatar_hash) {
+        await file.makePublic()
+        let avatar = file.publicUrl()
+        fields = { ...fields, avatar: file.publicUrl(), avatar_hash }
+    }
+
     ctx.files = files
-    ctx.fields = { ...fields, avatar: file.publicUrl(), avatar_hash }
-    return 
-    
-    
+    ctx.fields = fields
+    return
+
+
     /**
      * [ 
      *   {
@@ -80,18 +93,18 @@ async function _parse(formidableIns, ctx, promise) {
     return new Promise((resolve, reject) => {
         formidableIns.parse(ctx.req, async (err, fields, files) => {
             try {
-                console.log('@OK')
+                console.log('@gce file upload 完成')
                 await promise
             } catch (e) {
-                console.log('@X')
+                console.log('@gce file upload 出問題')
                 reject(e)
                 return
             }
             if (err) {
-                console.log('@XX')
+                console.log('@formidable parse 出問題')
                 reject(err)
             } else {
-                console.log('@OKOK')
+                console.log('@formidable parse 完成')
                 /**
                  * files, fields 是 KV-pairs 類型，
                  * key 由前端 formData(key, file) 的 key 決定
@@ -104,7 +117,12 @@ async function _parse(formidableIns, ctx, promise) {
     })
 }
 
-const _gen_formidable = (file_gcs, promise) => {
+const _gen_formidable = (data) => {
+    let { file, promise } = data
+    if (!data.file) {
+        promise = Promise.resolve()
+        return formidable()
+    }
     return formidable({
         fileWriteStreamHandler(file) {
             /**
@@ -127,7 +145,7 @@ const _gen_formidable = (file_gcs, promise) => {
              */
 
 
-            let ws = file_gcs.createWriteStream({
+            let ws = file.createWriteStream({
                 //  https://cloud.google.com/storage/docs/metadata#caching_data
                 metadata: {
                     contnetType: 'image/jpeg',
@@ -144,10 +162,11 @@ const _gen_formidable = (file_gcs, promise) => {
     })
 }
 
-async function upload_jpg_to_GCS(file_gcs, ctx) {
-    let promise
-    let form = _gen_formidable(file_gcs, promise)
-    return await _parse(form, ctx, promise)
+async function upload_jpg_to_GCS(data, ctx) {
+    let promise = ''
+    let _data = { file: data.file, promise }
+    let form = _gen_formidable(_data)
+    return await _parse(form, data.ctx, promise)
 }
 
 module.exports = {

@@ -48,7 +48,8 @@ router.post('/check_avatar', api_check_login, validate_user_update ,async(ctx, n
 })
 
 //  setting
-router.patch('/:hash',  api_check_login, validate_user_update, async (ctx, next) => {
+router.patch('/:hash',  api_check_login, async (ctx, next) => {
+    console.log('ENTER PATCH!!!!')
     ctx.body = await modifyUserInfo(ctx)
 })
 
