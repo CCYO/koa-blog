@@ -75,20 +75,6 @@ async function getBlog(blog_id) {
     })
 }
 
-async function go() {
-    const user = await createUser({ name: '祐' })
-    const blog = await createBlog({ name: '祐的文章' }, user.id)
-    const blogImg_id1 = await uploadImg(blog.id, 'img1-hash')
-    const update_Imgname1 = await updateImgname(blogImg_id1, { alt: 'img1-alt', href: 'www-img1' })
-    const blogImg_id2 = await uploadImg(blog.id, 'img2-hash')
-    const update_Imgname2 = await updateImgname(blogImg_id2, { alt: 'img2-alt', href: 'www-img2' })
-    let raw_blog = await getBlog(blog.id)
-    console.log(raw_blog['Imgs.hash'])
-    
-
-    console.log('GG')
-}
-
 async function findBlogs(user_id){
     let blogs = await Blog.findAll({
         attributes: ['id', 'title'],
@@ -139,11 +125,21 @@ async function readBlog(blog_id){
     return { id: blog.id, title: blog.title , html: blog.html, imgs: blog.Imgs}
 }
 
+async function go() {
+    const user = await createUser({ email: 'tume20938@gmail.com' , password: '12345678901234567890123456789012'})
+    const blog = await user.createBlog({ title: '祐的文章' })
+    console.log('@blog => ', blog)
+    const { dataValues: { id }} = await Img.create({url: 'xxxx', hash: 'hhhh'})
+    await blog.addImg(id)
+    let res = await blog.hasImgs([id, 55])
+    console.log('@res => ', res)
+    console.log('GG')
+}
+
 (
     async () => {
         try {
-            let blog = await readBlog(20)
-            console.log('@blog => ', blog)
+            go()
         } catch (e) {
             console.log('@ERR => ', e)
         }

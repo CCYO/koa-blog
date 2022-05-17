@@ -34,6 +34,21 @@ async function createImg(data){
     return { id: img.id, url: img.url, hash: img.hash }
 }
 
+async function findImg_And_associate_blog(img_data, blog_id){
+    let img = await Img.findOne(img_data)
+    if(img){
+        let [{ dataValues: { id: blogImg_id }}] = await img.addBlog(blog_id)
+        return { blogImg_id, id: img.id, url: img.url, hash: img.hash }
+    }
+    return false
+}
+
+async function createImg_And_associate_blog(img_data, blog_id){
+    let img = await Img.create(img_data)
+    img.addBlog
+}
+
+
 async function img_associate_blog(img_id, blog_id){
     let img = await Img.findByPk(img_id)
     let [ { dataValues: { id } } ] = await img.addBlog(blog_id)
@@ -55,5 +70,6 @@ module.exports = {
     readImg,
     createImg,
     img_associate_blog,
-    deleteBlogImg
+    deleteBlogImg,
+    findImg_And_associate_blog
 }

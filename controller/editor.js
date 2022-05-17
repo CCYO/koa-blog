@@ -5,7 +5,7 @@ const {
     readImg,
     createImg,
     img_associate_blog,
-    deleteBlogImg
+    deleteBlogImg,
 } = require('../server/editor')
 
 const { upload_blogImg_to_GCS } = require('../utils/upload_2_GCS_by_formidable')
