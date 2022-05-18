@@ -23,17 +23,16 @@ const read = async ({email, password}) => {
     return init_4_user(user.dataValues)
 }
 
-const update = async (newUserInfo ) => {
-    let data = { ...newUserInfo }
-    if(data.password){
-        data.password = hash(data.password)
+const update = async (newUserInfo, id) => {
+    if(newUserInfo.password){
+        newUserInfo.password = hash(newUserInfo.password)
     }
-    let [ row ] = await User.update( data, {
-        where: { id: data.id }
+    let [ row ] = await User.update( newUserInfo, {
+        where: { id }
     })
     console.log('@row => ', row)
     if(!row) return false
-    let { dataValues } = await User.findByPk(data.id)
+    let { dataValues } = await User.findByPk(id)
     return init_4_user(dataValues)
 }
 

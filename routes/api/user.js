@@ -7,7 +7,7 @@ const router = require('koa-router')()
 const { register, findUser, modifyUserInfo, logout } = require('../../controller/user')
 
 const { api_check_login } = require('../../middleware/check_login')
-
+const { parse_user_data } = require('../../middleware/gcs')
 const { validate_user_register, validate_user_update } = require('../../middleware/validate')
 
 router.prefix('/api/user')
@@ -38,19 +38,12 @@ router.post('/', async (ctx, next) => {
     ctx.body = resModel
 })
 
-router.post('/check_avatar', api_check_login, validate_user_update ,async(ctx, next) => {
-    if(ctx.session.user.avatar_md5Hash === ctx.request.body.avatar_md5Hash){
-        ctx.body = { errno: 1, msg: "重複上傳了"}
-    }else{
-        ctx.body = { errno: 0, data: "騷包，這是新的頭像"}
-    }
-    return
-})
-
 //  setting
-router.patch('/:hash',  api_check_login, async (ctx, next) => {
-    console.log('ENTER PATCH!!!!')
-    ctx.body = await modifyUserInfo(ctx)
+router.patch('/:avatar_hash', api_check_login, parse_user_data, validate_user_update ,async(ctx, next) => {
+    resModel = await modifyUserInfo(ctx)
+    ctx.session.user = resModel.data
+    console.log('@ctx.session.user => ', ctx.session.user)
+    ctx.body = resModel
 })
 
 router.post('/blog_img/:hash', async (ctx, next) => {

@@ -6,7 +6,7 @@ const formidable = require('formidable')
 
 const storage = require('../firebase/init')
 
-const { readImg, findImg_And_associate_blog } = require('../server/editor')
+const { findImg_And_associate_blog } = require('../server/editor')
 const { read: readUser } = require('../server/user')
 
 const {
@@ -22,7 +22,7 @@ async function upload_Img_to_GCS(ctx, next) {
 
     //  判斷要處理的圖片是 blog img 還是 avatar
     let { blog_id } = ctx.params
-    let fn = ( !blog_id ) ? upload_avatar_to_GCS : upload_blogImg_to_GCS
+    let fn = (!blog_id) ? upload_avatar_to_GCS : upload_blogImg_to_GCS
 
     await fn(ctx)
 
@@ -33,7 +33,7 @@ async function upload_Img_to_GCS(ctx, next) {
     //  avatar 要判斷有沒有 hash
 
 
-    
+
 
 
     if (img_hash) {
@@ -57,18 +57,16 @@ async function upload_Img_to_GCS(ctx, next) {
 }
 
 const upload_blogImg_to_GCS = async (ctx) => {
-    let file
-    let exist = false
-
-    const { img_hash: hash , blog_id } = ctx.params
+/*
+    const { img_hash: hash, blog_id } = ctx.params
     const { id } = ctx.user
 
     // 判斷SQL有沒有同圖的紀錄
     let res = await findImg_And_associate_blog({ hash }, blog_id)
 
     //  有，SQL OK，GCS OK
-    ctx.field = {...res}
-    
+    ctx.field = { ...res }
+
 
     //  無，判斷 GCS 有沒有同圖圖檔
     let filename = `/blog/${hash}.jpg`
@@ -85,7 +83,7 @@ const upload_blogImg_to_GCS = async (ctx) => {
     let url = file.publicUrl()
 
     //  處理SQL
-    
+
 
 
     ctx.fields = { ...fields, url }
@@ -94,7 +92,7 @@ const upload_blogImg_to_GCS = async (ctx) => {
 
 
     //  SQL 若有同圖，直接與 blog 作關聯
-    
+
     //  SQL 若無同圖，upload to GCS
     if (!res) {
         //  確認 gcs 內有無同圖
@@ -111,68 +109,50 @@ const upload_blogImg_to_GCS = async (ctx) => {
         ctx.fields = { ...fields, url: file.publicUrl() }
     }
     return
+    */
 }
 
-const upload_avatar_to_GCS = async (ctx, file) => {
+async function parse_user_data(ctx, next) {
     let { id } = ctx.session.user
     let { avatar_hash } = ctx.params
-    let { fields, files } = await upload_file_to_GCS(data)
-    //#region
-    /**
-     * [
-     *   {
-     *     kind: 'storage#objectAccessControl',
-     *     object: '2/avatar.jpg',
-     *     generation: '1650967655043642',
-     *     id: 'gfb20220419.appspot.com/2/avatar.jpg/1650967655043642/allUsers',
-     *     selfLink: 'https://www.googleapis.com/storage/v1/b/gfb20220419.appspot.com/o/2%2Favatar.jpg/acl/allUsers',
-     *     bucket: 'gfb20220419.appspot.com',
-     *     entity: 'allUsers',
-     *     role: 'READER',
-     *     etag: 'CLqk9eS9sfcCEAM='
-     *   }
-     * ]
-     */
-    //#endregion
-    if (!avatar_hash) {
-        await file.makePublic()
-        let avatar = file.publicUrl()
-        fields = { ...fields, avatar: file.publicUrl(), avatar_hash }
+    let filename = `avatar/${avatar_hash}.jpg`
+    let file_gcs = storage.bucket().file(filename)
+    let [exist] = await file_gcs.exists()
+    //  正常修改
+    let file =
+        //  avatar不改
+        (avatar_hash == 0) ? null :
+        //  avatar要改，但若GCS已有該檔，直接取用 url
+        (!exist) ? file_gcs : file_gcs.publicUrl()
+
+    ctx._my = 
+        //  若avatar不改 || GCS已有圖檔
+        (typeof file === 'string' || avatar_hash == 0 ) ? {} :
+        //  若avatar有新檔要上傳GCS
+        { file }
+
+    let { fields, files } = await parse(ctx)
+    if(fields.age){
+        fields.age = fields.age * 1
     }
+    
+    delete ctx._my
 
-    ctx.files = files
-    ctx.fields = fields
-    return
+    ctx.request.body = 
+        //  若avatar不改 && GCS 無圖檔
+        ( avatar_hash == 0 && !exist ) ? { ...ctx.request.body, ...fields } :
+        //  
+        (typeof file === 'string' || avatar_hash == 0 ) ? { ...ctx.request.body, ...fields, avatar: file_gcs, avatar_hash } :
+        ( typeof file_gcs === 'string') ? { ...ctx.request.body, ...fields, avatar: file_gcs, avatar_hash } :
+        ( avatar_hash != 0 ) ? { ...ctx.request.body, ...fields, avatar: file_gcs.publicUrl(), avatar_hash } :
+        { ...ctx.request.body, ...fields }
+    
+        console.log('@ctx.request.body => ', ctx.request.body)
 
-
-    /**
-     * [ 
-     *   {
-     *     kind: 'storage#object',
-     *     id: 'gfb20220419.appspot.com/2/avatar.jpg/1650967655043642',
-     *     selfLink: 'https://www.googleapis.com/storage/v1/b/gfb20220419.appspot.com/o/2%2Favatar.jpg',
-     *     mediaLink: 'https://storage.googleapis.com/download/storage/v1/b/gfb20220419.appspot.com/o/2%2Favatar.jpg?generation=1650967655043642&alt=media',
-     *     name: '2/avatar.jpg',
-     *     bucket: 'gfb20220419.appspot.com',
-     *     generation: '1650967655043642',
-     *     metageneration: '2',
-     *     contentType: 'image/jpeg',
-     *     storageClass: 'STANDARD',
-     *     size: '9861',
-     *     md5Hash: 'OjojAbdEsRJSsCrX7/6MCA==',
-     *     crc32c: '82ub8w==',
-     *     etag: 'CLqk9eS9sfcCEAI=',
-     *     timeCreated: '2022-04-26T10:07:35.050Z',
-     *     updated: '2022-04-26T10:07:35.151Z',
-     *     timeStorageClassUpdated: '2022-04-26T10:07:35.050Z'
-     *   },
-     *   PassThrough { xxx }
-     * ]
-     */
-    // const metadata = await file.getMetadata()
+    await next()
 }
 
-async function _parse(ctx, formidableIns, promise) {
+async function _parse(ctx, formidableIns) {
     return new Promise((resolve, reject) => {
         formidableIns.parse(ctx.req, async (err, fields, files) => {
             if (err) {
@@ -180,29 +160,50 @@ async function _parse(ctx, formidableIns, promise) {
                 reject(err)
                 return
             }
-            if (!promise) {
-                console.log('formidable 解析完成')
-                resolve(field)
+            if (!ctx._my.file) {
+                console.log('沒有進行upload GCS')
+                resolve({fields, files})
                 return
             }
             try {
-                let { field } = await promise
+                await ctx._my.promise
+                //#region makePublic RV
+                /**
+                 * [
+                 *   {
+                 *     kind: 'storage#objectAccessControl',
+                 *     object: '2/avatar.jpg',
+                 *     generation: '1650967655043642',
+                 *     id: 'gfb20220419.appspot.com/2/avatar.jpg/1650967655043642/allUsers',
+                 *     selfLink: 'https://www.googleapis.com/storage/v1/b/gfb20220419.appspot.com/o/2%2Favatar.jpg/acl/allUsers',
+                 *     bucket: 'gfb20220419.appspot.com',
+                 *     entity: 'allUsers',
+                 *     role: 'READER',
+                 *     etag: 'CLqk9eS9sfcCEAM='
+                 *   }
+                 * ]
+                 */
+                //#endregion
+                await file.makePublic()
                 console.log('upload file to GCS & formidable 解析完成')
-                resolve(field)
+                resolve({fields, files})
                 return
             } catch (e) {
                 console.log('upload file to GCS 發生錯誤')
                 reject(e)
                 return
             }
+            console.log('正規的 formdable CB--------- over')
         })
     })
 }
 
-const _gen_formidable = (file, promise) => {
-    if (!file) {
+const _gen_formidable = (ctx) => {
+    //  若沒有新圖
+    if (!ctx._my.file) {
         return formidable()
     }
+    
     return formidable({
         /**
          * VolatileFile {
@@ -222,7 +223,8 @@ const _gen_formidable = (file, promise) => {
          *    [Symbol(kCapture)]: false
          * }
          */
-        fileWriteStreamHandler(file) {
+        fileWriteStreamHandler() {
+            let file = ctx._my.file
             let ws = file.createWriteStream({
                 //  https://cloud.google.com/storage/docs/metadata#caching_data
                 metadata: {
@@ -230,9 +232,11 @@ const _gen_formidable = (file, promise) => {
                     cacheControl: 'no-store'
                 }
             })
-            promise = new Promise((resolve, reject) => {
+            //  在 ctx._my.promise 建構一個 promise，
+            //  已便捕獲上傳GCS時的錯誤
+            ctx._my.promise = new Promise((resolve, reject) => {
                 ws
-                    .on('finish', () => resolve(0))
+                    .on('finish', resolve)
                     .on('error', reject)
             })
             return ws
@@ -240,10 +244,10 @@ const _gen_formidable = (file, promise) => {
     })
 }
 
-async function parse(ctx, file) {
-    let promise = null
-    form = _gen_formidable(promise, file)
-    return await _parse(ctx, form, promise)
+async function parse(ctx) {
+    form = _gen_formidable(ctx)
+    console.log('定義了ㄇ?')
+    return await _parse(ctx, form)
 }
 
 
@@ -254,6 +258,6 @@ async function upload_file_to_GCS(ctx, file) {
 }
 
 module.exports = {
-    upload_avatar_to_GCS,
+    parse_user_data,
     upload_blogImg_to_GCS
 }

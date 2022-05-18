@@ -2,7 +2,7 @@
  * @description Controller user相關
  */
 const { create, read, update } = require('../server/user')
-const { upload_avatar_to_GCS } = require('../utils/upload_2_GCS_by_formidable')
+
 const { validator_user_update } = require('../validator')
 const hash = require('../utils/crypto')
 const { ErrModel, SuccModel } = require('../model')
@@ -62,20 +62,14 @@ const register = async (email, password) => {
 
 const modifyUserInfo = async (ctx) => {
     const { id } = ctx.session.user
-    //  將表單內的圖檔上傳 GCS -> ctx.file
-    //  蒐集表單文字資訊，且將 file 的 url 與 hash 一並彙整 -> ctx.fields
-    await upload_avatar_to_GCS(ctx)
-    let newUserInfo = { id, ...ctx.fields }
-    let errors = validator_user_update(newUserInfo)
-    if(errors){
-        return new ErrModel({ ...UPDATE.VALICATE_ERR, msg: errors })
-    }
-    const user = await update(newUserInfo)
+    let newUserInfo = { ...ctx.request.body }
+    console.log('@newUserInfo => ', newUserInfo)
+    const user = await update(newUserInfo, id)
     if (user) {
         ctx.session.user = user
         return new SuccModel(user)
     } else {
-        return new ErrModel({ ...UPDATE.UNEXPECTED, msg: e })
+        return new ErrModel({ ...UPDATE.NO_THIS_ONE })
     }
 }
 

@@ -15,7 +15,8 @@ module.exports = {
     UPDATE: {
         INVALICATE: { errno: 301},
         UNEXPECTED: {errno: 399},
-        VALICATE_ERR: {errno: 302}
+        VALICATE_ERR: {errno: 302},
+        NO_THIS_ONE: {error: 303, msg: '沒有這個人'}
     },
     LOGIN: {
         NOT_LOGIN: {errno: 501, msg: '未登入'}
