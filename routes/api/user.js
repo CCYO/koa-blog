@@ -40,6 +40,7 @@ router.post('/', async (ctx, next) => {
 
 //  setting
 router.patch('/:avatar_hash', api_check_login, parse_user_data, validate_user_update ,async(ctx, next) => {
+    throw new Error('GGGGG!!!')
     resModel = await modifyUserInfo(ctx)
     ctx.session.user = resModel.data
     console.log('@ctx.session.user => ', ctx.session.user)

@@ -115,19 +115,18 @@ const upload_blogImg_to_GCS = async (ctx) => {
 async function parse_user_data(ctx, next) {
     let { id } = ctx.session.user
     let { avatar_hash } = ctx.params
-    let filename = `avatar/${avatar_hash}.jpg`
-    let file_gcs = storage.bucket().file(filename)
-    let [exist] = await file_gcs.exists()
+    let file_gcs = ( avatar_hash != 0 ) ? storage.bucket().file(`avatar/${avatar_hash}.jpg`) : null
+    let [exist] = ( avatar_hash != 0 ) ? await file_gcs.exists() : [false]
     //  正常修改
     let file =
         //  avatar不改
         (avatar_hash == 0) ? null :
-        //  avatar要改，但若GCS已有該檔，直接取用 url
-        (!exist) ? file_gcs : file_gcs.publicUrl()
+        //  avatar要改，判斷GCS是否已有該檔
+        (!exist) ? file_gcs : null
 
     ctx._my = 
         //  若avatar不改 || GCS已有圖檔
-        (typeof file === 'string' || avatar_hash == 0 ) ? {} :
+        ( !file ) ? {} :
         //  若avatar有新檔要上傳GCS
         { file }
 
@@ -135,19 +134,19 @@ async function parse_user_data(ctx, next) {
     if(fields.age){
         fields.age = fields.age * 1
     }
+    if(avatar_hash != 0){
+        fields = {...fields, avatar_hash: file}
+    }
     
     delete ctx._my
 
     ctx.request.body = 
-        //  若avatar不改 && GCS 無圖檔
-        ( avatar_hash == 0 && !exist ) ? { ...ctx.request.body, ...fields } :
-        //  
-        (typeof file === 'string' || avatar_hash == 0 ) ? { ...ctx.request.body, ...fields, avatar: file_gcs, avatar_hash } :
-        ( typeof file_gcs === 'string') ? { ...ctx.request.body, ...fields, avatar: file_gcs, avatar_hash } :
-        ( avatar_hash != 0 ) ? { ...ctx.request.body, ...fields, avatar: file_gcs.publicUrl(), avatar_hash } :
-        { ...ctx.request.body, ...fields }
+        //  若avatar不用改
+        ( avatar_hash == 0 ) ? { ...ctx.request.body, ...fields } :
+        //  若avatar有需要改
+        { ...ctx.request.body, ...fields, avatar: file_gcs.publicUrl(), avatar_hash }
     
-        console.log('@ctx.request.body => ', ctx.request.body)
+    console.log('@ctx.request.body => ', ctx.request.body)
 
     await next()
 }
@@ -184,7 +183,7 @@ async function _parse(ctx, formidableIns) {
                  * ]
                  */
                 //#endregion
-                await file.makePublic()
+                await ctx._my.file.makePublic()
                 console.log('upload file to GCS & formidable 解析完成')
                 resolve({fields, files})
                 return

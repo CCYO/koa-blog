@@ -66,7 +66,6 @@
 
         let hash
         let md5Hash_is_new = false
-        let formData = new FormData()
         //  input[name='avatar'].onchange handle：取得頭像hash
         $('input[name="avatar"]').addEventListener('change', getImgHash)
 
@@ -74,7 +73,7 @@
             e.preventDefault()
             
             let api = '/api/user/'
-            
+            let formData = new FormData()
 
             if(hash){
                 api += hash
@@ -85,7 +84,6 @@
                 let { type, name, value } = item
                 if ( type === 'file' && item.files[0]){
                     formData.append('avatar', item.files[0])
-                    console.log('@file => ', item.files[0])
                 }else if ((type !== 'submit') && value) {
                     formData.append(name, value)
                 }
@@ -100,15 +98,10 @@
             } = await axios.patch(api, formData)
 
             if (errno) {
-                if (Array.isArray(msg)) {
-                    alert(`${msg[0].instancePath} ${msg[0].message}`)
-                    console.log(msg)
-                    return
-                }
-                alert(msg.message)
-                console.error(msg.stack)
+                alert(msg)
             } else {
                 console.log(data)
+                user = data
                 alert('資料更新完成!')
             }
         })

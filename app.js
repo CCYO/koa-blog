@@ -34,26 +34,24 @@ const view__blog = require('./routes/views/blog')
 // error handler
 //onerror(app)
 
+//  custom error handle
+//  負責捕捉意外的錯誤（預期可能發生的邏輯問題，已預先以ErrModel處理）
 app.use( async(ctx, next) => {
   try {
     await next()
-  }catch(err){
-    console.log('handle err => ', err)
-    console.log('custom ErrHandle Fire!!!!')
-    let status = err.status || 500
-    let msg =
-      (err.message) ? err.message :
-      (status === 500) ? 'SERVER ERR' :
-      '我不知道'
-    console.log(`status => ${status}`)
-    console.log(`msg => ${msg}`)
-    ctx.body =
-      (status === 404) ? "404 PAGE" :
-      (status === 500) ? { errno: 1, msg } :      
-      { errno: 1, msg: "我不知道"}
+  }catch(error){
+    console.log('@ctx.url => ', ctx.url)
+    console.log('@ctx.path => ', ctx.path)
+    console.log('@ctx.origin => ', ctx.origin)
+    if(/^\/api\//.test(ctx.path)){
+      ctx.body = { errno: 123, msg: '789'}
+      return
+    }
+    let status = error.status || 500
+    let message = error.message || null
+    
+    ctx.throw(status, message, error.stack)
   }
-  
-  //console.error('server error', err, ctx)
 });
 
 app.keys = ['keys']
@@ -111,11 +109,8 @@ app.use(view__blog.routes(), view__blog.allowedMethods())
 
 // error-handling
 app.on('error', (err, ctx) => {
-  ctx.body =
-  (ctx.status === 500) ? { errno: 1, msg: 'Server錯誤'} : 
-  (ctx.status === 404) ? "404 PAGE" :
-  { errno: 1, msg: "我不知道", err}
-  console.error('server error', err, ctx)
+  console.log('@觸發app.on(error)')
+  console.log('@custom ErrHandle Fire!!!! => ', err)
 });
 
 module.exports = app
