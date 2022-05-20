@@ -40,15 +40,13 @@ app.use( async(ctx, next) => {
   try {
     await next()
   }catch(error){
-    console.log('@ctx.url => ', ctx.url)
-    console.log('@ctx.path => ', ctx.path)
-    console.log('@ctx.origin => ', ctx.origin)
-    if(/^\/api\//.test(ctx.path)){
-      ctx.body = { errno: 123, msg: '789'}
-      return
-    }
     let status = error.status || 500
     let message = error.message || null
+
+    if(/^\/api\//.test(ctx.path)){
+      ctx.body = { errno: status, msg: message}
+      return
+    }    
     
     ctx.throw(status, message, error.stack)
   }

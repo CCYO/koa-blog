@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>他人主頁</title>
+</head>
+
+<body>
+    <button id="be_friend" data-id="<% user.id %> ">發出好友邀請</button>
+    <% if (blogs.length) { %>
+    <ul>
+        <% blogs.forEach(blog => { %>
+        <li><a href="/blog/<%= blog.id %>"><%= blog.title %> </a></li><a href="/blog/edit/<%= blog.id %>">編輯文章</a>
+        <% }) %>
+    </ul>
+    <% } %>
+</body>
+<%- include('wedgets/cdn') %>
+<%- include('wedgets/utils') %>
+<script>
+    $('#be_friend').addEventListener('click', async (e) => {
+        
+    })
+</script>
+</html>

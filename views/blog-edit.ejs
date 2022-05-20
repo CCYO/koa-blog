@@ -49,6 +49,7 @@
     </div>
     <button id="save">存檔</button>
 
+    <!-- AXIOS -->
     <%- include('wedgets/cdn') %>
     <%- include('wedgets/utils') %>
     <!-- 引入 css -->
@@ -128,6 +129,7 @@
         $('#save').addEventListener('click', save)
 
         function UI_check_new_title(e){
+            if(!blog.title) return 
             if(blog.title && title.value && title.value !== blog.title){
                 return sentTitle.hasAttribute('disabled') && sentTitle.removeAttribute('disabled')
             //  title 不變
@@ -170,11 +172,8 @@
                 alert('標題修改完成')
             //  blog創建成功
             } else if (!errno) {
-                blog = data
-                hiddenBox.style.display = 'none'
-                sentTitle.setAttribute('disabled', true)
-                editor.focus(true)
                 alert('BLOG存檔成功')
+                location.href = `/blog/edit/${data.id}`
             // 失敗
             } else {
                 alert(`標題修改失敗 => ${msg}`)
@@ -200,7 +199,7 @@
                 if (!errno) {
                     if (!blog.imgs) blog.imgs = []
                     blog.imgs.push(data)
-                    insertFn(url)
+                    insertFn(data.url)
                 } else {
                     alert(msg)
                 }
@@ -255,24 +254,19 @@
         async function save(e) {
             //  獲取 html
             var html = editor.getHtml()
-            //  獲取 html 內的 image
-            let editor_imgs = [...new Set(editor.getElemsByType('image'))]
-            let blog_imgs = [...new Set(blog.imgs)]
+            //  獲取 editor 內 img.src(重複的話，只取一個)
+            let editor_imgs = [...new Set(editor.getElemsByType('image'))].map(({src}) => src)
+            //  獲取 blog 內 image 的 url 與 blogImg_id
+            let blog_imgs = [...new Set(blog.imgs)].map(({blogImg_id, url}) => ({blogImg_id, url}))
 
-            editor_imgs = editor_imgs.map(({ src }) => src)
-            blog_imgs = blog_imgs.map(({ url, blogImg_id }) => ({ url, blogImg_id }))
-
-            let remove_imgs = blog_imgs.filter(({ url }) => {
-                return !editor_imgs.includes(url)
-            })
-
-            let remove_blogImg_id_arr = remove_imgs.map(({ blogImg_id }) => blogImg_id)
+            let remove_imgs = blog_imgs.filter( img => !editor_imgs.includes(img.url) )
+            remove_imgs = remove_imgs.map( ({blogImg}) => blogImg )
 
             const {
                 data: {
                     errno, data, msg
                 }
-            } = await axios.put(`/api/editor/blog/${blog.id}`, { remove_blogImg_id_arr, html })
+            } = await axios.patch(`/api/editor/blog`, { id: blog.id, remove_imgs, html })
 
             if (!errno) {
                 alert('blog save success!')

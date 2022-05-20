@@ -7,7 +7,7 @@ const { SuccModel, ErrModel } = require('../model')
 const { BLOG } = require('../model/errRes')
 
 async function getBlogList( user_id ){
-    const blogs = await readBlogList(user_id)
+    const { blogs } = await readBlogList(user_id)
     console.log('@blogs => ', blogs)
     return new SuccModel(blogs)
 }

@@ -18,22 +18,19 @@ router.post('/blog', async (ctx, next) => {
     if(!blog_id){
         resModel = await addBlog(title, user_id)
     }else{
-        resModel = await updateBlog({title}, blog_id)
+        resModel = await updateBlog(blog_id, {title})
     }
     return ctx.body = resModel
 })
 
-router.post('/img/:hash/:blog_id', async (ctx, next) => {
-    //  upload img
+router.post('/img/:img_hash/:blog_id', async (ctx, next) => {
     return ctx.body = await uploadImg(ctx)
 })
 
 //  更新 blog html 資料
-router.put('/blog/:blog_id', async(ctx, next) => {
-    const { blog_id } = ctx.params
-    const { user } = ctx.session
-    const { html , remove_blogImg_id_arr: imgs } = ctx.request.body
-    return ctx.body = await updateBlog({ html }, blog_id, imgs)
+router.patch('/blog/', async(ctx, next) => {
+    const { id, html , remove_imgs: imgs } = ctx.request.body
+    return ctx.body = await updateBlog(id, {html}, imgs)
 })
 
 module.exports = router

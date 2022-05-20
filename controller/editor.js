@@ -6,7 +6,11 @@ const {
     createImg,
     img_associate_blog,
     deleteBlogImg,
+    readImg_associateBlog,
+    createImg_associateBlog
 } = require('../server/editor')
+
+const { upload_jpg } = require('../utils/gcs')
 
 const { upload_blogImg_to_GCS } = require('../utils/upload_2_GCS_by_formidable')
 
@@ -35,27 +39,28 @@ async function addBlog(title, userId) {
     }
 }
 
-async function updateBlog(data, blog_id, remove_imgs) {
+async function updateBlog(id, data, remove_imgs) {
     if(data.title){
         data.title = xss(data.title)
     }
     if(data.html){
         data.html = xss(data.html)
-        console.log('@html => ', data.html)
     }
+
+    let row = await updateBlog_S(data, id)
     
-    let row = await updateBlog_S(data, blog_id)
     if(!row){
         return new ErrModel(BLOG.NO_UPDATE)
-    }else if(remove_imgs){
-        res = await deleteBlogImg(remove_imgs)
-        if(row){
-            return new SuccModel()
-        }else{
-            return new ErrModel(BLOG.IMAGE_REMOVE_ERR)
-        }
-    }else{
+    }
+    if(!remove_imgs){
         return new SuccModel()
+    }
+    
+    let res = await deleteBlogImg(remove_imgs)
+    if(res){
+        return new SuccModel()
+    }else{
+        return new ErrModel(BLOG.IMAGE_REMOVE_ERR)
     }
 }
 
@@ -85,24 +90,16 @@ async function findImg(img_hash) {
  * @returns { Number } blogImg.id
  */
 async function uploadImg(ctx) {
-    try {
-        let { hash, blog_id } = ctx.params
-        //  確認 SQL 是否有此圖片的紀錄
-        let img = await readImg({ hash })
-        //  若無值，則 upload to GCE
-        if (!img) {
-            // upload img to GCE
-            let url = await upload_blogImg_to_GCS(ctx)
-            //  Img Table 建檔
-            img = await createImg({ url, hash })
-        }
-        //  無論有無值，都需與 Blog 建立關聯
-        let blogImg_id = await img_associate_blog(img.id, blog_id)
-        return new SuccModel({...img, blogImg_id: blogImg_id})
-    } catch (e) {
-        console.log('UPLOAD BLOG IMG ERR => ', e)
-        return new ErrModel({ ...BLOG.UPLOAD_IMG_ERR, msg: e })
+    let { img_hash: hash, blog_id: id } = ctx.params
+    //  確認 img 的 SQL 紀錄，若有直接與 blog 作關聯
+    let img = await readImg_associateBlog({hash}, id)
+    //  若沒有，則 upload GCS
+    if(!img){
+        img = await upload_jpg(ctx)
+        img = await createImg_associateBlog({...img}, id)
     }
+    console.log('@res => ', img)
+    return new SuccModel(img)
 }
 
 module.exports = {

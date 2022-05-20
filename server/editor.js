@@ -14,9 +14,9 @@ async function createBlog(title, userId){
     return blog
 }
 
-async function updateBlog(data, blog_id){
+async function updateBlog(data, id){
     let [ row ] = await Blog.update( data, {
-        where: { id: blog_id }
+        where: { id }
     })
     return row
 }
@@ -34,13 +34,21 @@ async function createImg(data){
     return { id: img.id, url: img.url, hash: img.hash }
 }
 
-async function findImg_And_associate_blog(img_data, blog_id){
-    let img = await Img.findOne(img_data)
+async function readImg_associateBlog(img_data, blog_id){
+    let img = await Img.findOne({where: {...img_data}})
+    console.log('@img => ', img)
     if(img){
         let [{ dataValues: { id: blogImg_id }}] = await img.addBlog(blog_id)
         return { blogImg_id, id: img.id, url: img.url, hash: img.hash }
     }
-    return false
+    return null
+}
+
+async function createImg_associateBlog(img_data, blog_id){
+    let img = await Img.create({...img_data})
+    let [{ dataValues: { id: blogImg_id }}] = await img.addBlog(blog_id)
+    console.log('@blogImg_id => ', blogImg_id)
+    return { blogImg_id, id: img.id, url: img.url, hash: img.hash }
 }
 
 async function createImg_And_associate_blog(img_data, blog_id){
@@ -71,5 +79,6 @@ module.exports = {
     createImg,
     img_associate_blog,
     deleteBlogImg,
-    findImg_And_associate_blog
+    readImg_associateBlog,
+    createImg_associateBlog
 }

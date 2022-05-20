@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人主頁</title>
+</head>
+
+<body>
+    <a href="/blog/new">撰寫新文章</a>
+    <% if (blogs.length) { %>
+    <ul>
+        <% blogs.forEach(blog => { %>
+        <li><a href="/blog/<%= blog.id %>"><%= blog.title %> </a></li><a href="/blog/edit/<%= blog.id %>">編輯文章</a>
+        <% }) %>
+    </ul>
+    <% } %>
+    <a href="/setting">個人設置</a>
+
+</body>
+
+</html>

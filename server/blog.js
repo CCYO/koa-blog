@@ -8,30 +8,35 @@ async function readBlogList(user_id) {
         where: { '$User.id$': user_id },
         include: {
             model: User,
-            attribute: [],
+            attributes: ['id', 'nickname', 'email', 'age', 'avatar'],
         }
     })
-    if (blogs.length) {
-        blogs = blogs.map(({
-            dataValues: {
-                id, title,
-            } }) => ({ id, title })
-        )
-    }
-    return blogs
+
+    if (!blogs.length) return {}
+
+    let user = blogs[0].dataValues.User.dataValues
+    let blogs = blogs.map(({
+        dataValues: {
+            id, title,
+        } }) => ({ id, title })
+    )
+    return { user, blogs }
 }
 
 async function readBlog(blog_id) {
     let blog = await Blog.findByPk(blog_id, {
         attributes: ['id', 'title', 'html'],
-        include: {
-            model: Img,
-            attributes: ['id', 'url', 'hash'],
-            through: {
-                model: BlogImg,
-                attributes: ['id', 'name']
-            }
-        }
+        include: [
+            {
+                model: Img,
+                attributes: ['id', 'url', 'hash'],
+                through: {
+                    model: BlogImg,
+                    attributes: ['id', 'name']
+                }
+            },
+            User
+        ]
     })
     if (blog) {
         blog.Imgs = blog.Imgs.map(({
@@ -46,9 +51,9 @@ async function readBlog(blog_id) {
         }) => {
             return { img_id, url, hash, blogImg_id, name }
         })
-        blog = { id: blog.id, title: blog.title, html: blog.html, imgs: blog.Imgs }
+        blog = { id: blog.id, title: blog.title, html: blog.html, imgs: blog.Imgs, user: blog.User.dataValues.id }
     }
-    return blog 
+    return blog
 }
 
 module.exports = {
