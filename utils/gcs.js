@@ -4,7 +4,7 @@
 
 const formidable = require('formidable')
 
-const storage = require('../firebase/init')
+const { storage } = require('../firebase/init')
 
 const upload_jpg = async (ctx) => {
     let { img_hash: hash } = ctx.params
@@ -52,7 +52,7 @@ async function _parse(ctx, formidableIns) {
                  * ]
                  */
                 //#endregion
-                await ctx._my.file.makePublic()
+                //await ctx._my.file.makePublic()
                 console.log('upload file to GCS & formidable 解析完成')
                 resolve({ fields, files })
                 return

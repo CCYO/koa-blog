@@ -25,6 +25,8 @@ const upload_to_GCS = require('./routes/api/upload-to-GCS')
 
 const api__user = require('./routes/api/user')
 const api__blog_editor = require('./routes/api/editor')
+const api__GFB = require('./routes/api/GFB')
+
 
 const view__user = require('./routes/views/user')
 const view__blog = require('./routes/views/blog')
@@ -44,6 +46,7 @@ app.use( async(ctx, next) => {
     let message = error.message || null
 
     if(/^\/api\//.test(ctx.path)){
+      ctx.app.emit('error', error, ctx)
       ctx.body = { errno: status, msg: message}
       return
     }    
@@ -101,6 +104,7 @@ app.use(upload_to_GCS.routes(), upload_to_GCS.allowedMethods())
 
 app.use(api__user.routes(), api__user.allowedMethods())
 app.use(api__blog_editor.routes(), api__blog_editor.allowedMethods())
+app.use(api__GFB.routes(), api__GFB.allowedMethods())
 
 app.use(view__user.routes(), view__user.allowedMethods())
 app.use(view__blog.routes(), view__blog.allowedMethods())

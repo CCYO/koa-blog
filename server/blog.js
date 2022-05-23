@@ -15,7 +15,7 @@ async function readBlogList(user_id) {
     if (!blogs.length) return {}
 
     let user = blogs[0].dataValues.User.dataValues
-    let blogs = blogs.map(({
+    blogs = blogs.map(({
         dataValues: {
             id, title,
         } }) => ({ id, title })

@@ -1,11 +1,7 @@
 const fs = require('fs')
-const { resolve } = require('path')
-
-let uploadDir = resolve(__dirname, '..', '..', './myFile')
 
 const router = require('koa-router')()
 
-const storage = require('../../firebase/init')
 const { api_check_login } = require('../../middleware/check_login')
 
 //  Req FormData(File) >>> Formitable >>> GCP

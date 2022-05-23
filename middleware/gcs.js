@@ -2,7 +2,7 @@
  * @description middleware of upload to GCS by Formidable
  */
 
-const storage = require('../firebase/init')
+const { storage } = require('../firebase/init')
 
 const { parse } = require('../utils/gcs')
 
