@@ -9,7 +9,11 @@
 </head>
 
 <body>
-    <button id="be_friend" data-id="<% user.id %> ">發出好友邀請</button>
+    <img src="<%= user.avatar %>" alt="avatar" srcset="">
+    <p><%= user.nickname %> 的頁面</p>
+    <button id="follow" data-id="<%= user.id %>" data-api="<%= !isFollow ? 'follow' : 'cancelFollow' %>">
+        <%= !isFollow ? '追蹤' : '取消追蹤' %>
+    </button>
     <% if (blogs.length) { %>
     <ul>
         <% blogs.forEach(blog => { %>
@@ -17,12 +21,44 @@
         <% }) %>
     </ul>
     <% } %>
+    <div>
+        <p>Fans</p>
+        <% if (fans.length) { %>
+        <ul>
+            <% fans.forEach(fan => { %>
+            <li><%= fan.nickname %></li>
+            <% }) %>
+        </ul>
+        <% } %>
+    </div>
+    <div>
+        <p>idols</p>
+        <% if (idols.length) { %>
+        <ul>
+            <% idols.forEach(idol => { %>
+            <li><%= idol.nickname %></li>
+            <% }) %>
+        </ul>
+        <% } %>
+    </div>
 </body>
 <%- include('wedgets/cdn') %>
 <%- include('wedgets/utils') %>
 <script>
-    $('#be_friend').addEventListener('click', async (e) => {
-        
+    $('#follow').addEventListener('click', async (e) => {
+        const id = e.target.dataset.id
+        const api = e.target.dataset.api
+        const { data: {
+            errno, data, msg
+        } } = await axios.post(`/api/user/${api}`, { id })
+        if (!errno) {
+            let alertMsg = (api === 'follow') ? '已追蹤' : '已取消追蹤'
+            alert(`${alertMsg}`)
+            location.reload()
+        } else {
+            alert(msg)
+        }
     })
 </script>
+
 </html>

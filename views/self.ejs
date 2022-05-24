@@ -9,6 +9,14 @@
 </head>
 
 <body>
+    <div>
+        <ul>
+        <% news.length && news.forEach(new => { %>
+         <li><%= new.msg %> </li>
+        <% }) %>
+    </ul>
+    </div>
+    <img src="<%= user.avatar %>" alt="" srcset="">
     <a href="/blog/new">撰寫新文章</a>
     <% if (blogs.length) { %>
     <ul>
@@ -18,7 +26,26 @@
     </ul>
     <% } %>
     <a href="/setting">個人設置</a>
-
+    <div>
+        <p>Fans</p>
+        <% if (fans.length) { %>
+        <ul>
+            <% fans.forEach(fan => { %>
+            <li><%= fan.nickname %></li>
+            <% }) %>
+        </ul>
+        <% } %>
+    </div>
+    <div>
+        <p>idols</p>
+        <% if (idols.length) { %>
+        <ul>
+            <% idols.forEach(idol => { %>
+            <li><%= idol.nickname %></li>
+            <% }) %>
+        </ul>
+        <% } %>
+    </div>
 </body>
 
 </html>

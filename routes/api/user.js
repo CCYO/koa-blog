@@ -4,7 +4,7 @@
 
 const router = require('koa-router')()
 
-const { register, findUser, modifyUserInfo, logout } = require('../../controller/user')
+const { register, findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout } = require('../../controller/user')
 
 const { api_check_login } = require('../../middleware/check_login')
 const { parse_user_data } = require('../../middleware/gcs')
@@ -38,17 +38,29 @@ router.post('/', async (ctx, next) => {
     ctx.body = resModel
 })
 
+router.post('/follow', async (ctx, next) => {
+    const { id: idol_id } = ctx.request.body
+    const { id: fans_id } = ctx.session.user
+    ctx.body = await followIdol(fans_id, idol_id)
+})
+
+router.post('/cancelFollow', async (ctx, next) => {
+    const { id: idol_id } = ctx.request.body
+    const { id: fans_id } = ctx.session.user
+    ctx.body = await cancelFollowIdol(fans_id, idol_id)
+})
+
+//  logout
+router.get('/logout', api_check_login, async (ctx, next) => {
+    ctx.body = logout(ctx)
+})
+
 //  setting
 router.patch('/:avatar_hash', api_check_login, parse_user_data, validate_user_update ,async(ctx, next) => {
     resModel = await modifyUserInfo(ctx)
     ctx.session.user = resModel.data
     console.log('@ctx.session.user => ', ctx.session.user)
     ctx.body = resModel
-})
-
-//  logout
-router.get('/logout', api_check_login, async (ctx, next) => {
-    ctx.body = logout(ctx)
 })
 
 module.exports = router

@@ -13,13 +13,13 @@ const create = async (data) => {
     return init_4_user(dataValues)
 }
 
-const read = async ({email, password}) => {
-    const data = { email }
+const read = async ({id, email, password}) => {
+    const data = { }
+    if(id) data.id = id
+    if(email) data.email = email
     if(password) data.password = hash(password)
-    console.log('@data => ', data)
     const user = await User.findOne({ where: data})
-    console.log('@user => ', user)
-    if(!user) return false
+    if(!user) return {}
     return init_4_user(user.dataValues)
 }
 
@@ -36,8 +36,70 @@ const update = async (newUserInfo, id) => {
     return init_4_user(dataValues)
 }
 
+async function readFans(idol_id){
+    const idol = await User.findByPk(idol_id)
+    const fans = await idol.getFans({
+        attributes: ['id', 'email', 'nickname', 'avatar', 'avatar_hash']
+    })
+    if(!fans.length) return []
+    return fans.map( ({ dataValues }) => init_4_user( dataValues ) )
+}
+
+async function getNewFans(idol_id){
+    let res = await User.findOne({
+        where: { id: idol_id },
+        include: {
+            model: User,
+            as: 'Fans',
+            through: {
+                where: { comfirm: false },
+                attributes: ['comfirm']
+            }
+        }
+    })
+    console.log('@res => ', res.dataValues.Fans[0])
+}
+
+async function readIdols(fans_id){
+    const fan = await User.findByPk(fans_id)
+    const idols = await fan.getIdol({
+        attributes: ['id', 'email', 'nickname', 'avatar', 'avatar_hash']
+    })
+    if(!idols.length) return []
+    return idols.map( ({ dataValues }) => init_4_user( dataValues ) )
+}
+
+async function hasFans(idol_id, id){
+    const idol = await User.findByPk(idol_id)
+    const res = await idol.hasFans(id)
+    return res
+}
+
+async function addFans(idol_id, fans_id){
+    const idol = await User.findByPk(idol_id)
+    const res = await idol.addFans(fans_id, { through: { comfirm: false}})
+    //  成功 => [ follow, ... ]
+    //  失敗 => undefined
+    if(!res) return false
+    const [ item ] = res.map( ( {dataValues} ) => dataValues )
+    return { id: item.id, fans_id: item.fans_id, idol_id: item.idol_id }
+}
+
+async function deleteFans(idol_id, fans_id){
+    const idol = await User.findByPk(idol_id)
+    const row = await idol.removeFans(fans_id)
+    if(!row) return false
+    return true
+}
+
 module.exports = {
     create,
     read,
-    update
+    update,
+    readFans,
+    hasFans,
+    addFans,
+    deleteFans,
+    readIdols,
+    getNewFans
 }

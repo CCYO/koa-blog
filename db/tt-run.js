@@ -1,7 +1,7 @@
 const { Op } = require('sequelize')
 
 const {
-    User, Blog, Img, BlogImg, seq
+    User, Blog, Img, BlogImg, Follow, seq
 } = require('./model')
 
 /**
@@ -36,8 +36,8 @@ async function createUser(user) {
  * @param {String} img_desc.href
  * @returns {Object} 
  */
-async function updateImgname(blogImg_id, img_desc){
-    let blogImg = await BlogImg.update( img_desc , { where: { id: blogImg_id}})
+async function updateImgname(blogImg_id, img_desc) {
+    let blogImg = await BlogImg.update(img_desc, { where: { id: blogImg_id } })
     return true
 }
 
@@ -47,10 +47,10 @@ async function updateImgname(blogImg_id, img_desc){
  * @param {String} param0.html html
  * @param {Number} param0.blog_id blog id
  */
-async function uploadHtml({html, blog_id: id}){
+async function uploadHtml({ html, blog_id: id }) {
     //  RV 為 arr, arr[0] 為 number, 代表更新幾條 row
     console.log('@ id => ', id)
-    await Blog.update({html}, { where: {id}} )
+    await Blog.update({ html }, { where: { id } })
 }
 
 // 撈取 Blog 內的 img data
@@ -75,29 +75,29 @@ async function getBlog(blog_id) {
     })
 }
 
-async function findBlogs(user_id){
+async function findBlogs(user_id) {
     let blogs = await Blog.findAll({
         attributes: ['id', 'title'],
         where: {
-            '$User.id$' : user_id // {[Op.eq]: user_id }
+            '$User.id$': user_id // {[Op.eq]: user_id }
         },
         include: {
             model: User,
             attribute: ['eamil'],
-            where: { id: user_id}
+            where: { id: user_id }
         }
     })
     console.log('@blogs 未處理 => ', blogs)
-    blogs = blogs.map(({dataValues: { id, title, User}}) => {
+    blogs = blogs.map(({ dataValues: { id, title, User } }) => {
         let blog = { id, title }
-        let { dataValues: { email }} = User
+        let { dataValues: { email } } = User
         let user = { email }
-        return { blog, user} 
+        return { blog, user }
     })
     console.log('@blogs => ', blogs)
 }
 
-async function readBlog(blog_id){
+async function readBlog(blog_id) {
     let blog = await Blog.findByPk(blog_id, {
         attributes: ['id', 'title', 'html'],
         include: {
@@ -110,7 +110,7 @@ async function readBlog(blog_id){
         }
     })
     console.log('@blog 未整理 => ', blog)
-    blog.Imgs = blog.Imgs.map( ({
+    blog.Imgs = blog.Imgs.map(({
         dataValues: {
             id: img_id, url, hash,
             BlogImg: {
@@ -122,18 +122,32 @@ async function readBlog(blog_id){
     }) => {
         return { img_id, hash, blogImg_id, alt, href }
     })
-    return { id: blog.id, title: blog.title , html: blog.html, imgs: blog.Imgs}
+    return { id: blog.id, title: blog.title, html: blog.html, imgs: blog.Imgs }
 }
 
 async function go() {
-    const user = await createUser({ email: 'tume20938@gmail.com' , password: '12345678901234567890123456789012'})
-    const blog = await user.createBlog({ title: '祐的文章' })
-    console.log('@blog => ', blog)
-    const { dataValues: { id }} = await Img.create({url: 'xxxx', hash: 'hhhh'})
-    await blog.addImg(id)
-    let res = await blog.hasImgs([id, 55])
-    console.log('@res => ', res)
-    console.log('GG')
+    // let idol = await createUser({ email: 'ideo@gmail.com', password: '12345678901234567890123456789012' })
+    // const fans1 = await createUser({ email: 'fans1@gmail.com', password: '12345678901234567890123456789012' })
+    // const fans2 = await createUser({ email: 'fans2@gmail.com', password: '12345678901234567890123456789012' })
+
+    // const r = await idol.addFans([fans1, fans2])
+    // console.log('@idol => ', idol)
+    
+    // let fans = await User.findAll({
+    //     where: { id: 1 },
+    //     include: {
+    //         model: User,
+    //         as: 'Fans'
+    //     }
+    // })
+    let idol = await User.findByPk(1)
+    let fans = await idol.countFans()
+    fans = await idol.getFans({
+        where: { id: idol.id }
+    })
+
+    // fans = fans.map(({ dataValues: data }) => ({ ...data }))
+    console.log('@data2 => ', fans)
 }
 
 (

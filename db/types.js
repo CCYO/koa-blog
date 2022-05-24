@@ -7,5 +7,6 @@ const { DataTypes } = require('sequelize')
 module.exports =  {
     STRING: DataTypes.STRING,
     TEXT: DataTypes.TEXT,
-    INTEGER: DataTypes.INTEGER
+    INTEGER: DataTypes.INTEGER,
+    BOO: DataTypes.BOOLEAN
 }

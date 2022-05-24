@@ -2,6 +2,8 @@ const {
     User, Blog, Img, BlogImg
 } = require('../db/model')
 
+const { init_4_user } = require('../utils/init')
+
 async function readBlogList(user_id) {
     let blogs = await Blog.findAll({
         attributes: ['id', 'title'],
@@ -14,13 +16,13 @@ async function readBlogList(user_id) {
 
     if (!blogs.length) return {}
 
-    let user = blogs[0].dataValues.User.dataValues
     blogs = blogs.map(({
         dataValues: {
             id, title,
-        } }) => ({ id, title })
+            User: { dataValues: user_dataValues}
+        } }) => ({ id, title, user: init_4_user(user_dataValues) })
     )
-    return { user, blogs }
+    return blogs
 }
 
 async function readBlog(blog_id) {

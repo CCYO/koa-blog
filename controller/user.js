@@ -1,7 +1,7 @@
 /**
  * @description Controller user相關
  */
-const { create, read, update } = require('../server/user')
+const { create, read, update, readFans, hasFans, addFans, deleteFans, readIdols, getNewFans} = require('../server/user')
 
 const { validator_user_update } = require('../validator')
 const hash = require('../utils/crypto')
@@ -15,7 +15,8 @@ const {
         NO_PASSWORD
     },
     READ,
-    UPDATE
+    UPDATE,
+    FOLLOW
 } = require('../model/errRes')
 
 const findUser = async (email, password) => {
@@ -23,7 +24,7 @@ const findUser = async (email, password) => {
     // 僅檢查帳號是否存在
     if (!password) {
         console.log('僅檢查帳號是否已被註冊')
-        if (!res) {
+        if (!res.id) {
             return new SuccModel('此帳號可用')
         } else {
             return new ErrModel(IS_EXIST)
@@ -31,9 +32,14 @@ const findUser = async (email, password) => {
         // 取得帳號
     } else {
         console.log('取得帳號')
-        if (res) return new SuccModel(res)
+        if (res.id) return new SuccModel(res)
         return new ErrModel(READ.NOT_EXIST)
     }
+}
+
+async function findUserById(id){
+    const user = await read({id})
+    return new SuccModel(user)
 }
 
 const register = async (email, password) => {
@@ -73,6 +79,39 @@ const modifyUserInfo = async (ctx) => {
     }
 }
 
+async function getFansById(idol_id){
+    const fans = await readFans(idol_id)
+    return new SuccModel(fans)
+}
+
+async function getIdolsById(idol_id){
+    const fans = await readIdols(idol_id)
+    return new SuccModel(fans)
+}
+
+async function isFans(id, idol_id){
+    const res = await hasFans(idol_id, id)
+    return new SuccModel(res)
+}
+
+async function followIdol(fans_id, idol_id){
+    const res = await addFans(idol_id, fans_id)
+    if(res) return new SuccModel(res)
+    return new ErrModel(FOLLOW.FOLLOW_ERR)
+}
+
+async function cancelFollowIdol(fans_id, idol_id){
+    const res = await deleteFans(idol_id, fans_id)
+    if(res) return new SuccModel()
+    return new ErrModel(FOLLOW.CANCEL_ERR)
+    
+}
+
+async function getNews(id){
+    const res = await getNewFans(id)
+    return new SuccModel(res)
+}
+
 const logout = (ctx) => {
     ctx.session = null
     return new SuccModel('成功登出')
@@ -82,5 +121,12 @@ module.exports = {
     register,
     findUser,
     modifyUserInfo,
+    getFansById,
+    getIdolsById,
+    isFans,
+    followIdol,
+    cancelFollowIdol,
+    findUserById,
+    getNews,
     logout
 }
