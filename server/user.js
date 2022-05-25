@@ -1,7 +1,7 @@
 /**
  * @description Server User
  */
-const { User } = require('../db/model')
+const { User, Follow } = require('../db/model')
 const hash = require('../utils/crypto')
 const { init_4_user } = require('../utils/init')
 
@@ -52,12 +52,16 @@ async function getNewFans(idol_id){
             model: User,
             as: 'Fans',
             through: {
-                where: { comfirm: false },
-                attributes: ['comfirm']
+                where: { confirm: false },
+                //attributes: ['createdAt']
             }
         }
     })
-    console.log('@res => ', res.dataValues.Fans[0])
+    let fans = res.toJSON().Fans
+    if(fans.length) return fans.map( fan => {
+        return { data: { ...init_4_user(fan), createdAt: fan.Follow.createdAt }, type: 'fans' }
+    })
+    return []
 }
 
 async function readIdols(fans_id){
@@ -92,6 +96,11 @@ async function deleteFans(idol_id, fans_id){
     return true
 }
 
+async function updateFollow(where, data){
+    const [row] = await Follow.update(data, {where})
+    return row
+}
+
 module.exports = {
     create,
     read,
@@ -101,5 +110,6 @@ module.exports = {
     addFans,
     deleteFans,
     readIdols,
-    getNewFans
+    getNewFans,
+    updateFollow
 }

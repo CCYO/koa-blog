@@ -1,7 +1,7 @@
 /**
  * @description Controller user相關
  */
-const { create, read, update, readFans, hasFans, addFans, deleteFans, readIdols, getNewFans} = require('../server/user')
+const { create, read, update, readFans, hasFans, addFans, deleteFans, readIdols, getNewFans, updateFollow} = require('../server/user')
 
 const { validator_user_update } = require('../validator')
 const hash = require('../utils/crypto')
@@ -100,6 +100,12 @@ async function followIdol(fans_id, idol_id){
     return new ErrModel(FOLLOW.FOLLOW_ERR)
 }
 
+async function confirmFollow(fans_id, idol_id){
+    const row = await updateFollow({fans_id, idol_id}, {confirm: true})
+    if(row) return new SuccModel()
+    return new ErrModel(FOLLOW.CONFIRM_ERR)
+}
+
 async function cancelFollowIdol(fans_id, idol_id){
     const res = await deleteFans(idol_id, fans_id)
     if(res) return new SuccModel()
@@ -108,8 +114,12 @@ async function cancelFollowIdol(fans_id, idol_id){
 }
 
 async function getNews(id){
-    const res = await getNewFans(id)
-    return new SuccModel(res)
+    const fans = await getNewFans(id)
+    const news = [...fans].sort( (a, b) => {
+        return a.data.createAt - b.data.createAt
+    })
+    console.log('@news => ', news)
+    return new SuccModel(news)
 }
 
 const logout = (ctx) => {
@@ -125,6 +135,7 @@ module.exports = {
     getIdolsById,
     isFans,
     followIdol,
+    confirmFollow,
     cancelFollowIdol,
     findUserById,
     getNews,

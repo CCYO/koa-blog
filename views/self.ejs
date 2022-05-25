@@ -10,11 +10,15 @@
 
 <body>
     <div>
-        <ul>
-        <% news.length && news.forEach(new => { %>
-         <li><%= new.msg %> </li>
-        <% }) %>
-    </ul>
+        <ul id="newsList">
+            <% news.length && news.forEach(({type, data}) => { %>
+            <% if (type === 'fans') { %>
+            <li><a href="/other/<%= data.id %>?confirm=true"><%= data.nickname %>追蹤你囉！</a>
+            </li>
+            <% } else { %>
+            <% } %>
+            <% }) %>
+        </ul>
     </div>
     <img src="<%= user.avatar %>" alt="" srcset="">
     <a href="/blog/new">撰寫新文章</a>

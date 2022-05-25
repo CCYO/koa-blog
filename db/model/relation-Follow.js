@@ -14,9 +14,9 @@ const Follow = seq.define('Follow', {
         type: INTEGER,
         allowNull: false,
     },
-    comfirm: {
+    confirm: {
         type: BOO,
-        allowNull: false
+        defaultValue: false
     }
 })
 

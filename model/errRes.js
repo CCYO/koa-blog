@@ -31,6 +31,7 @@ module.exports = {
     },
     FOLLOW: {
         FOLLOW_ERR: { errno: 801, msg: '追蹤失敗'},
-        CANCEL_ERR: { errno: 802, msg: '取消追蹤失敗'}
+        CANCEL_ERR: { errno: 802, msg: '取消追蹤失敗'},
+        CONFIRM_ERR: { errno: 803, msg: '確認追蹤消息失敗'}
     }
 }
