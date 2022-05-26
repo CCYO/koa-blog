@@ -6,7 +6,7 @@ const { init_4_user } = require('../utils/init')
 
 async function readBlogList(user_id) {
     let blogs = await Blog.findAll({
-        attributes: ['id', 'title'],
+        attributes: ['id', 'title', 'show'],
         where: { '$User.id$': user_id },
         include: {
             model: User,
@@ -14,13 +14,13 @@ async function readBlogList(user_id) {
         }
     })
 
-    if (!blogs.length) return {}
+    if (!blogs.length) return []
 
     blogs = blogs.map(({
         dataValues: {
-            id, title,
+            id, title, show,
             User: { dataValues: user_dataValues}
-        } }) => ({ id, title, user: init_4_user(user_dataValues) })
+        } }) => ({ id, title, show, user: init_4_user(user_dataValues) })
     )
     return blogs
 }

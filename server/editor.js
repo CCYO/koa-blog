@@ -1,4 +1,4 @@
-const { User, Blog, Img, BlogImg } = require('../db/model')
+const { User, Blog, Img, BlogImg} = require('../db/model')
 
 /**
  * 
@@ -8,18 +8,34 @@ const { User, Blog, Img, BlogImg } = require('../db/model')
  */
 async function createBlog(title, userId){
     let user = await User.findByPk(userId)
-    console.log('@user => ', user)
     let blog = await user.createBlog({title})
-    console.log('@blog => ', blog)
     return blog
 }
 
-async function updateBlog(data, id){
+async function updateBlog(data, blog_id){
+    let blog = await Blog.findByPk(blog_id)
+    let blog_json = blog.toJSON()
+
+    let updateConfirm = false
+    if((!blog_json.show && data.show) || (blog_json && !data.show)){
+        updateConfirm = true
+    }
+
     let [ row ] = await Blog.update( data, {
-        where: { id }
+        where: { id: blog_id }
     })
+
+    //  若文章公開，給粉絲發訊息
+    if(updateConfirm){
+        let idol = await User.findByPk(data.user_id)
+        let fans = await idol.getFans()
+        fans.forEach( async (f) => await f.updateBlogNews(blog_id))
+    }
+
     return row
 }
+
+
 
 async function readImg(data){
     let img = await Img.findOne({ where: data })

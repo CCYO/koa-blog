@@ -47,6 +47,10 @@
         <div id="toolbar-container"></div>
         <div id="editor-container"></div>
     </div>
+    
+        <input type="checkbox" name="" id="show" <%= !blog.show ? "checked" : '' %> >發佈文章 
+    
+    
     <button id="save">存檔</button>
 
     <!-- AXIOS -->
@@ -64,6 +68,7 @@
         let hiddenBox = $('#hiddenBox')
         let title = $('#title')
         let sentTitle = $('#sentTitle')
+        let is_show = $('#show')
 
         if(blog.title) sentTitle.setAttribute('disabled', true)
     </script>
@@ -262,11 +267,13 @@
             let remove_imgs = blog_imgs.filter( img => !editor_imgs.includes(img.url) )
             remove_imgs = remove_imgs.map( ({blogImg}) => blogImg )
 
+            let show = is_show.checked
+
             const {
                 data: {
                     errno, data, msg
                 }
-            } = await axios.patch(`/api/editor/blog`, { id: blog.id, remove_imgs, html })
+            } = await axios.patch(`/api/editor/blog`, { id: blog.id, remove_imgs, html, show})
 
             if (!errno) {
                 alert('blog save success!')

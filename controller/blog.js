@@ -6,8 +6,11 @@ const {
 const { SuccModel, ErrModel } = require('../model')
 const { BLOG } = require('../model/errRes')
 
-async function getBlogList( user_id ){
-    const blogs = await readBlogList(user_id)
+async function getBlogList( user_id , is_self){
+    let blogs = await readBlogList(user_id)
+    if(!is_self){
+        blogs = blogs.filter( blog => blog.show )
+    }
     return new SuccModel(blogs)
 }
 

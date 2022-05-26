@@ -39,7 +39,7 @@ async function addBlog(title, userId) {
     }
 }
 
-async function updateBlog(id, data, remove_imgs) {
+async function updateBlog(blog_id, data, remove_imgs) {
     if(data.title){
         data.title = xss(data.title)
     }
@@ -47,7 +47,7 @@ async function updateBlog(id, data, remove_imgs) {
         data.html = xss(data.html)
     }
 
-    let row = await updateBlog_S(data, id)
+    let row = await updateBlog_S(data, blog_id)
     
     if(!row){
         return new ErrModel(BLOG.NO_UPDATE)

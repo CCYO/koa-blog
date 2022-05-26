@@ -4,6 +4,7 @@ const Blog = require('./Blog')
 const Img = require('./Img')
 const BlogImg = require('./relation-Blog&Img')
 const Follow = require('./relation-Follow')
+const Blog_Fans = require('./Blog_Fans')
 
 //  User : Blog = 1 : N
 Blog.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id'})
@@ -31,7 +32,14 @@ Img.belongsToMany(Blog, { through: BlogImg, foreignKey: 'img_id', targetKey: 'id
 User.belongsToMany(User, { as: 'Idol', through: Follow, foreignKey: 'fans_id', targetKey: 'id'})
 User.belongsToMany(User, { as: 'Fans', through: Follow, foreignKey: 'idol_id', targetKey: 'id'})
 
+// Follow.belongsTo(User, { foreignKey: 'idol_id', targetKey: 'id'})
+// Follow.belongsTo(User, { foreignKey: 'fans_id', targetKey: 'id'})
 
+//  Follow 上的 idol 有很多 blog
+// Follow.hasMany(Blog, { foreignKey: 'user_id', targetKey: 'idol_id'})
+
+Blog.belongsToMany(User, { as: 'Follower', through: Blog_Fans, foreignKey: 'blog_id', targetKey: 'id'})
+User.belongsToMany(Blog, { as: 'BlogNews', through: Blog_Fans, foreignKey: 'fans_id', targetKey: 'id'})
 
 module.exports = {
     User, Blog, Img, BlogImg, Follow, seq

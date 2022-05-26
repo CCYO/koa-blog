@@ -30,7 +30,7 @@ router.get('/login', async (ctx, next) => {
 
 router.get('/self', view_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { data: blogs } = await getBlogList(id)
+    const { data: blogs } = await getBlogList(id, true)
     //  取得 fansList
     const { data: fans } = await getFansById(id)
     //  取得 idolList
@@ -53,10 +53,11 @@ router.get('/other/:user_id', async (ctx, next) => {
     if( target_id == current_id ){
         return ctx.redirect('/self')
     }
+    //  清除Fan追蹤紀錄
     ctx.query.confirm && await confirmFollow(target_id, current_id)
 
     const { data: user } = await findUserById(target_id)
-    const { data: blogs } = await getBlogList(target_id)
+    const { data: blogs } = await getBlogList(target_id, false)
     const { data: isFollow } = await isFans(current_id, target_id)
     const { data: fans } = await getFansById(target_id)
     const { data: idols } = await getIdolsById(target_id)

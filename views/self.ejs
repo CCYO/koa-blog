@@ -13,9 +13,13 @@
         <ul id="newsList">
             <% news.length && news.forEach(({type, data}) => { %>
             <% if (type === 'fans') { %>
-            <li><a href="/other/<%= data.id %>?confirm=true"><%= data.nickname %>追蹤你囉！</a>
+            <li>
+                <a href="/other/<%= data.id %>?confirm=true"><%= data.nickname %>追蹤你囉！</a>
             </li>
-            <% } else { %>
+            <% } else if (type === 'idol_blog') { %>
+            <li>
+                <a href="/blog/<%= data.blog.id %>?confirm=true"><%= data.idol.nickname %>有新文章唷！</a>
+            </li>
             <% } %>
             <% }) %>
         </ul>
@@ -35,7 +39,9 @@
         <% if (fans.length) { %>
         <ul>
             <% fans.forEach(fan => { %>
+            <% if (fan.id !== user.id ) { %>
             <li><%= fan.nickname %></li>
+            <% } %>
             <% }) %>
         </ul>
         <% } %>
@@ -45,7 +51,9 @@
         <% if (idols.length) { %>
         <ul>
             <% idols.forEach(idol => { %>
+            <% if (idol.id !== user.id ) { %>
             <li><%= idol.nickname %></li>
+            <% } %>
             <% }) %>
         </ul>
         <% } %>

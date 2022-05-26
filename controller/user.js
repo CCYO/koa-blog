@@ -1,7 +1,7 @@
 /**
  * @description Controller user相關
  */
-const { create, read, update, readFans, hasFans, addFans, deleteFans, readIdols, getNewFans, updateFollow} = require('../server/user')
+const { create, read, update, readFans, hasFans, addFans, deleteFans, readIdols, readNews, updateFollow} = require('../server/user')
 
 const { validator_user_update } = require('../validator')
 const hash = require('../utils/crypto')
@@ -114,9 +114,10 @@ async function cancelFollowIdol(fans_id, idol_id){
 }
 
 async function getNews(id){
-    const fans = await getNewFans(id)
-    const news = [...fans].sort( (a, b) => {
-        return a.data.createAt - b.data.createAt
+    let news = await readNews(id)
+    console.log('@news => ', news)
+    news = news.sort( (a, b) => {
+        return a.data.createdAt - b.data.createdAt
     })
     console.log('@news => ', news)
     return new SuccModel(news)
