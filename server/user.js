@@ -152,10 +152,6 @@ async function readNews(id) {
                         confirm: false
                     }
                 },
-                include: {
-                    model: Blog,
-                    attributes: ['id', 'title']
-                }
             },
             
             // {
@@ -187,9 +183,10 @@ async function readNews(id) {
 
     let {
         Fans: fans,
-        Idol: idols
+        // Idol: idols
+        BlogNews: blogs
     } = res.toJSON()
-    
+    console.log('@@@@=> ', blogs)
     fans = fans.length ? fans.map( f => ({
         data: {
             ...init_4_user(f),
