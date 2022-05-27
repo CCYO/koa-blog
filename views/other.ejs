@@ -11,8 +11,8 @@
 <body>
     <img src="<%= user.avatar %>" alt="avatar" srcset="">
     <p><%= user.nickname %> 的頁面</p>
-    <button id="follow" data-id="<%= user.id %>" data-api="<%= !isFollow ? 'follow' : 'cancelFollow' %>">
-        <%= !isFollow ? '追蹤' : '取消追蹤' %>
+    <button id="follow" data-id="<%= user.id %>" data-api="<%= isFollow ? 'cancelFollow' : 'follow' %>">
+        <%= isFollow ? '取消追蹤' : '追蹤' %>
     </button>
     <% if (blogs.length) { %>
     <ul>
@@ -21,26 +21,22 @@
         <% }) %>
     </ul>
     <% } %>
-    <div>
+    <div id="container_fans">
         <p>Fans</p>
         <% if (fans.length) { %>
         <ul>
             <% fans.forEach(({id, nickname}) => { %>
-            <% if (user.id !== id) { %>
             <li><%= nickname %></li>
-            <% } %>
             <% }) %>
         </ul>
         <% } %>
     </div>
-    <div>
+    <div id="container_idols">
         <p>idols</p>
         <% if (idols.length) { %>
         <ul>
             <% idols.forEach(({id, nickname}) => { %>
-            <% if (user.id !== id) { %>
-            <li><%= nickname %></li>
-            <% } %>
+            <li data-id='<%= id %>'><a href="/other/<%= id %>"><%= nickname %></a></li>
             <% }) %>
         </ul>
         <% } %>
@@ -49,20 +45,45 @@
 <%- include('wedgets/cdn') %>
 <%- include('wedgets/utils') %>
 <script>
-    $('#follow').addEventListener('click', async (e) => {
+    $('#follow').addEventListener('click', followOrNot)
+
+    //  成為粉絲
+    async function followOrNot(e) {
         const id = e.target.dataset.id
         const api = e.target.dataset.api
+
         const { data: {
             errno, data, msg
         } } = await axios.post(`/api/user/${api}`, { id })
         if (!errno) {
-            let alertMsg = (api === 'follow') ? '已追蹤' : '已取消追蹤'
+            alert('完成')
+            return location.reload()
+
+            let alertMsg = e.target.textContent.trim()
+            const new_placeholder = (api !== 'follow') ? '已追蹤' : '已取消追蹤'
+            api == 'cancelFollow' && 
+                ui_remove_li($$('#container_idols > ul > li')) ||
+                ui_add_li()
+            e.target.textContent = new_placeholder
             alert(`${alertMsg}`)
-            location.reload()
         } else {
             alert(msg)
         }
-    })
+    }
+
+    function ui_remove_li(els) {
+        [...els].some(el => {
+            let exist = el.dataset.id == id
+            if (exist) {
+                el.parentElement.removeChild(el)
+            }
+            return exist
+        })
+    }
+
+    function ui_add_li(container){
+        
+    }
 </script>
 
 </html>

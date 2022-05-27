@@ -2,7 +2,7 @@
  * @description Sequelize Model
  */
  const seq = require('../seq')
- const { STRING , INTEGER, TEXT, BOO} = require('../types')
+ const { STRING , INTEGER, TEXT, BOO, DATE} = require('../types')
  
  
  const Blog = seq.define('Blog', {
@@ -20,6 +20,9 @@
      show: {
          type: BOO,
          defaultValue: false
+     },
+     showAt: {
+         type: DATE
      }
  })
  

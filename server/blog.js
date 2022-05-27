@@ -1,5 +1,5 @@
 const {
-    User, Blog, Img, BlogImg
+    User, Blog, Img, BlogImg, Blog_Fans
 } = require('../db/model')
 
 const { init_4_user } = require('../utils/init')
@@ -19,7 +19,7 @@ async function readBlogList(user_id) {
     blogs = blogs.map(({
         dataValues: {
             id, title, show,
-            User: { dataValues: user_dataValues}
+            User: { dataValues: user_dataValues }
         } }) => ({ id, title, show, user: init_4_user(user_dataValues) })
     )
     return blogs
@@ -58,7 +58,16 @@ async function readBlog(blog_id) {
     return blog
 }
 
+async function updateFollowBlog(where, data) {
+    console.log('@data => ', data)
+    console.log('@where => ', where)
+    const [row] = await Blog_Fans.update(data, { where })
+    console.log('@row => ', row)
+    return row
+}
+
 module.exports = {
     readBlogList,
-    readBlog
+    readBlog,
+    updateFollowBlog
 }

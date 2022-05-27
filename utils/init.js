@@ -4,7 +4,7 @@
 
 const { USER: { AVATAR }} = require('../conf/constant')
 
-const init_4_user = (user) => {
+const _init_4_user = ( user ) => {
     const { email, nickname, avatar } = user
     if(!nickname){
         let regex = /^([\w]+)@/
@@ -14,6 +14,10 @@ const init_4_user = (user) => {
     if(!avatar) user.avatar = AVATAR
     delete user.password
     return user
+}
+
+const init_4_user = (user) => {
+    return (user instanceof Array) ? user.map(_init_4_user) : _init_4_user(user)
 }
 
 module.exports = {

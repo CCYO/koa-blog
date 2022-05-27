@@ -1,7 +1,7 @@
 const { Op } = require('sequelize')
 
 const {
-    User, Blog, Img, BlogImg, Follow, seq
+    User, Blog, Img, BlogImg, Follow ,seq
 } = require('./model')
 
 const { create } = require('../server/user')
@@ -15,10 +15,69 @@ async function go() {
     console.log('@ok')
 }
 
+async function readOther(other_id) {
+    let other = await User.findOne({
+        where: { id: other_id },
+        include: [
+            {
+                model: Blog,
+                attributes: ['id', 'title', 'createdAt', 'updatedAt']
+            },
+            {
+                model: User,
+                as: 'Idol',
+                through: {
+                    where: {
+                        idol_id: {[Op.ne]: other_id}
+                    }
+                }
+            },
+            {
+                model: User,
+                as: 'Fans',
+                through: {
+                    where: {
+                        fans_id: {[Op.ne]: other_id}
+                    }
+                }
+            }
+        ]
+    })
+    let other_json = other.toJSON()
+    console.log('@other => ', other)
+    console.log('@other_json => ', other_json)
+}
+
+async function go2(){
+    let blog = await Blog.create({title: '1 - 1st blog', user_id: 1})
+    blog.update({ html: 'xxxx', show: false})
+}
+
+async function go2(){
+
+    let blog = await Blog.findByPk(1, {
+        include: {
+            model: User,
+            attributes: ['id'],
+            include: {
+                model: User,
+                as: 'Fans',
+                where: {
+                    id: {[Op.ne]: 1}
+                },
+                attributes: ['id']
+            }
+        }
+    })
+    console.log('@blog => ', blog)
+    await blog.removeFollower(2)
+    
+}
+
 (
     async () => {
         try {
-            go()
+            await go()
         } catch (e) {
             console.log('@ERR => ', e)
         }

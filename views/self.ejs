@@ -18,7 +18,7 @@
             </li>
             <% } else if (type === 'idol_blog') { %>
             <li>
-                <a href="/blog/<%= data.blog.id %>?confirm=true"><%= data.idol.nickname %>有新文章唷！</a>
+                <a href="/blog/<%= data.blog.id %>?confirm=true"><%= data.author.nickname %>有新文章唷！</a>
             </li>
             <% } %>
             <% }) %>

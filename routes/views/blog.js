@@ -8,7 +8,8 @@ const { view_check_login } = require('../../middleware/check_login')
 
 const {
     getBlogList,
-    getBlog
+    getBlog,
+    confirmFollowBlog
 } = require('../../controller/blog')
 
 router.get('/blog/new', view_check_login, async (ctx, next) => {
@@ -38,7 +39,11 @@ router.get('/blog/edit/:blog_id', view_check_login, async(ctx, next) => {
 
 router.get('/blog/:blog_id', async (ctx, next) => {
     const { blog_id } = ctx.params
+    const { id: current_id } = ctx.session.user
     const { errno, data: blog , msg } = await getBlog(blog_id)
+
+    ctx.query.confirm && await confirmFollowBlog(blog_id, current_id)
+
     if( errno ){
         return ctx.body = msg
     }else{

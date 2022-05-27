@@ -1,3 +1,5 @@
+const { Op } = require('sequelize')
+
 const { User, Blog, Img, BlogImg} = require('../db/model')
 
 /**
@@ -13,23 +15,50 @@ async function createBlog(title, userId){
 }
 
 async function updateBlog(data, blog_id){
-    let blog = await Blog.findByPk(blog_id)
-    let blog_json = blog.toJSON()
+    let blog = await Blog.findByPk(blog_id, {
+        include: {
+            model: User,
+            attributes: ['id'],
+            include: {
+                model: User,
+                as: 'Fans',
+                where: {
+                    id: {[Op.ne]: data.user_id}
+                },
+                attributes: ['id']
+            }
+        }
+    })
+    let fans = blog.User.Fans
 
-    let updateConfirm = false
-    if((!blog_json.show && data.show) || (blog_json && !data.show)){
-        updateConfirm = true
+    let { show, showAt } = blog.toJSON()
+
+    //  true : 隱藏 → 公開
+    //  false : 公開 → 隱藏
+    //  undefined : 無變動
+    let hiddenOrShow =
+        (!show && data.show) ? true :
+        (show && !data.show) ? false : undefined
+    
+    //  這次更新是否要作 1st show
+    let firstShow = !showAt && hiddenOrShow
+    
+    //  若是 1st show，設定showAt
+    if(firstShow){
+        data.showAt = Date.now()
     }
 
     let [ row ] = await Blog.update( data, {
         where: { id: blog_id }
     })
 
-    //  若文章公開，給粉絲發訊息
-    if(updateConfirm){
-        let idol = await User.findByPk(data.user_id)
-        let fans = await idol.getFans()
-        fans.forEach( async (f) => await f.updateBlogNews(blog_id))
+    //  show 無變動，結束
+    if(hiddenOrShow === undefined) return row
+
+    if(firstShow){  //  1st show，通知 fans
+        await blog.addFollower(fans)
+    }else if(!hiddenOrShow){   //  隱藏
+        await blog.updateFollower({show: false})
     }
 
     return row

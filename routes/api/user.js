@@ -38,18 +38,6 @@ router.post('/', async (ctx, next) => {
     ctx.body = resModel
 })
 
-router.post('/follow', async (ctx, next) => {
-    const { id: idol_id } = ctx.request.body
-    const { id: fans_id } = ctx.session.user
-    ctx.body = await followIdol(fans_id, idol_id)
-})
-
-router.post('/cancelFollow', async (ctx, next) => {
-    const { id: idol_id } = ctx.request.body
-    const { id: fans_id } = ctx.session.user
-    ctx.body = await cancelFollowIdol(fans_id, idol_id)
-})
-
 //  logout
 router.get('/logout', api_check_login, async (ctx, next) => {
     ctx.body = logout(ctx)
@@ -61,6 +49,19 @@ router.patch('/:avatar_hash', api_check_login, parse_user_data, validate_user_up
     ctx.session.user = resModel.data
     console.log('@ctx.session.user => ', ctx.session.user)
     ctx.body = resModel
+})
+
+//---
+router.post('/follow', async (ctx, next) => {
+    const { id: idol_id } = ctx.request.body
+    const { id: fans_id } = ctx.session.user
+    ctx.body = await followIdol(fans_id, idol_id)
+})
+
+router.post('/cancelFollow', async (ctx, next) => {
+    const { id: idol_id } = ctx.request.body
+    const { id: fans_id } = ctx.session.user
+    ctx.body = await cancelFollowIdol(fans_id, idol_id)
 })
 
 module.exports = router

@@ -53,65 +53,7 @@ async function readFans(idol_id) {
     return fans.map(({ dataValues }) => init_4_user(dataValues))
 }
 
-async function readNews(idol_id) {
-    let res = (await User.findOne({
-        where: { id: idol_id },
-        include: [
-            {
-                model: User,
-                as: 'Fans',
-                through: {
-                    where: {
-                        confirm: false,
-                        fans_id: { [Op.ne]: idol_id }
-                    },
-                    attributes: ['createdAt']
-                }
-            }, {
-                model: User,
-                as: 'Idol',
-                attributes: ['email', 'nickname'],
-                through: {
-                    where: {
-                        idol_id: { [Op.ne]: idol_id }
-                    },
-                },
-                include: {
-                    model: Blog,
-                    attributes: ['id', 'title', 'createdAt']
-                }
-            }
-        ]
-    })).toJSON()
-    console.log('@res => ', res)
-    let { Fans, Idol} = res
 
-    let fans = Fans.length ? Fans.map( fans => {
-        return { data: {...init_4_user(fans), createdAt: fans.Follow.createdAt}, type: 'fans' }
-    }) : []
-
-    
-    let idols_blogs = []
-    if(Idol.length && Idol[0].Blogs.length){
-        Idol.map( idol => {
-            idol = init_4_user(idol)
-            idol.Blogs.forEach( ({id, title, createdAt}) => {
-                let res = {
-                    data: {
-                        blog: { id, title },
-                        idol,
-                        createdAt
-                    },
-                    type: 'idol_blog'
-                }
-                idols_blogs.push(res)
-            })
-        })
-    }
-    
-    return [ ...fans, ...idols_blogs]
-    
-}
 
 async function readIdols(fans_id) {
     const fan = await User.findByPk(fans_id)
@@ -122,12 +64,61 @@ async function readIdols(fans_id) {
     return idols.map(({ dataValues }) => init_4_user(dataValues))
 }
 
-async function hasFans(idol_id, id) {
+async function deleteFans(idol_id, fans_id) {
     const idol = await User.findByPk(idol_id)
-    const res = await idol.hasFans(id)
-    return res
+    const row = await idol.removeFans(fans_id)
+    if (!row) return false
+    return true
 }
 
+
+
+
+async function readOther(other_id) {
+    let other = await User.findOne({
+        where: { id: other_id },
+        include: [
+            {
+                model: Blog,
+                attributes: ['id', 'title', 'createdAt', 'updatedAt']
+            },
+            {
+                model: User,
+                as: 'Idol',
+                through: {
+                    where: {
+                        idol_id: {[Op.ne]: other_id}
+                    }
+                }
+            },
+            {
+                model: User,
+                as: 'Fans',
+                through: {
+                    where: {
+                        fans_id: {[Op.ne]: other_id}
+                    }
+                }
+            }
+        ]
+    })
+    let { 
+        Blogs: blogs,
+        Fans: fans,
+        Idol: idols,
+        ...user
+    } = other.toJSON()
+    
+    return {
+        user: init_4_user(user),
+        blogs,
+        fans: init_4_user(fans),
+        idols: init_4_user(idols)
+    }
+}
+
+
+//---
 async function addFans(idol_id, fans_id) {
     const idol = await User.findByPk(idol_id)
     const res = await idol.addFans(fans_id, { through: { comfirm: false } })
@@ -138,11 +129,95 @@ async function addFans(idol_id, fans_id) {
     return { id: item.id, fans_id: item.fans_id, idol_id: item.idol_id }
 }
 
-async function deleteFans(idol_id, fans_id) {
-    const idol = await User.findByPk(idol_id)
-    const row = await idol.removeFans(fans_id)
-    if (!row) return false
-    return true
+async function readNews(id) {
+    let res = await User.findOne({
+        where: { id },
+        attributes: [],
+        include: [
+            {
+                model: User,
+                as: 'Fans',
+                through: {
+                    where: {
+                        confirm: false,
+                        fans_id: { [Op.ne]: id }
+                    },
+                    attributes: ['createdAt']
+                }
+            }, {
+                model: Blog,
+                as: 'BlogNews',
+                through: {
+                    where: {
+                        confirm: false
+                    }
+                },
+                include: {
+                    model: Blog,
+                    attributes: ['id', 'title']
+                }
+            },
+            
+            // {
+            //     model: User,
+            //     as: 'Idol',
+            //     attributes: ['email', 'nickname'],
+            //     through: {
+            //         where: {
+            //             idol_id: { [Op.ne]: id }
+            //         },
+            //     },
+            //     include: {
+            //         model: Blog,
+            //         where: {
+            //             show: true
+            //         },
+            //         attributes: ['id', 'title', 'showAt'],
+            //         includes: {
+            //             model: User,
+            //             as: 'Blog_Fans',
+            //             where: {
+            //                 confirm: false
+            //             }
+            //         }
+            //     }
+            // }
+        ]
+    })
+
+    let {
+        Fans: fans,
+        Idol: idols
+    } = res.toJSON()
+    
+    fans = fans.length ? fans.map( f => ({
+        data: {
+            ...init_4_user(f),
+            showAt: f.Follow.createdAt,
+        },
+        type: 'fans'
+    })) : []
+
+    let idol_blogs = []
+    if (idols.length && idols[0].Blogs.length) {
+        idols.map(idol => {
+            let author = init_4_user(idol)
+            idol.Blogs.forEach(({ id, title, showAt }) => {
+                let res = {
+                    data: {
+                        blog: { id, title },
+                        author,
+                        showAt
+                    },
+                    type: 'idol_blog'
+                }
+                idol_blogs.push(res)
+            })
+        })
+    }
+
+    return [...fans, ...idol_blogs]
+
 }
 
 async function updateFollow(where, data) {
@@ -155,10 +230,11 @@ module.exports = {
     read,
     update,
     readFans,
-    hasFans,
     addFans,
     deleteFans,
     readIdols,
     readNews,
-    updateFollow
+    updateFollow,
+
+    readOther
 }

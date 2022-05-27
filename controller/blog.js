@@ -1,10 +1,11 @@
 const { 
     readBlogList,
-    readBlog
+    readBlog,
+    updateFollowBlog
  } = require('../server/blog')
 
 const { SuccModel, ErrModel } = require('../model')
-const { BLOG } = require('../model/errRes')
+const { BLOG, FOLLOW } = require('../model/errRes')
 
 async function getBlogList( user_id , is_self){
     let blogs = await readBlogList(user_id)
@@ -23,7 +24,14 @@ async function getBlog( blog_id ){
     }
 }
 
+async function confirmFollowBlog(blog_id, fans_id){
+    const row = await updateFollowBlog({blog_id, fans_id}, {confirm: true})
+    if(row) return new SuccModel()
+    return new ErrModel(FOLLOW.CONFIRM_ERR)
+}
+
 module.exports = {
     getBlogList,
-    getBlog
+    getBlog,
+    confirmFollowBlog
 }

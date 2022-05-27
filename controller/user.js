@@ -1,7 +1,12 @@
 /**
  * @description Controller user相關
  */
-const { create, read, update, readFans, hasFans, addFans, deleteFans, readIdols, readNews, updateFollow} = require('../server/user')
+const {
+    create, read, update,
+    readFans, addFans, deleteFans,
+    readIdols, readNews, updateFollow,
+    readOther
+} = require('../server/user')
 
 const { validator_user_update } = require('../validator')
 const hash = require('../utils/crypto')
@@ -89,9 +94,20 @@ async function getIdolsById(idol_id){
     return new SuccModel(fans)
 }
 
-async function isFans(id, idol_id){
-    const res = await hasFans(idol_id, id)
-    return new SuccModel(res)
+async function confirmFollow(fans_id, idol_id){
+    const row = await updateFollow({fans_id, idol_id}, {confirm: true})
+    if(row) return new SuccModel()
+    return new ErrModel(FOLLOW.CONFIRM_ERR)
+}
+
+const logout = (ctx) => {
+    ctx.session = null
+    return new SuccModel('成功登出')
+}
+
+// ----
+async function getOther(other_id){
+    return new SuccModel(await readOther(other_id))
 }
 
 async function followIdol(fans_id, idol_id){
@@ -100,33 +116,22 @@ async function followIdol(fans_id, idol_id){
     return new ErrModel(FOLLOW.FOLLOW_ERR)
 }
 
-async function confirmFollow(fans_id, idol_id){
-    const row = await updateFollow({fans_id, idol_id}, {confirm: true})
-    if(row) return new SuccModel()
-    return new ErrModel(FOLLOW.CONFIRM_ERR)
-}
-
 async function cancelFollowIdol(fans_id, idol_id){
     const res = await deleteFans(idol_id, fans_id)
     if(res) return new SuccModel()
-    return new ErrModel(FOLLOW.CANCEL_ERR)
-    
+    return new ErrModel(FOLLOW.CANCEL_ERR)   
 }
 
 async function getNews(id){
     let news = await readNews(id)
     console.log('@news => ', news)
     news = news.sort( (a, b) => {
-        return a.data.createdAt - b.data.createdAt
+        return a.data.showAt - b.data.showAt
     })
     console.log('@news => ', news)
     return new SuccModel(news)
 }
 
-const logout = (ctx) => {
-    ctx.session = null
-    return new SuccModel('成功登出')
-}
 
 module.exports = {
     register,
@@ -134,11 +139,12 @@ module.exports = {
     modifyUserInfo,
     getFansById,
     getIdolsById,
-    isFans,
     followIdol,
     confirmFollow,
     cancelFollowIdol,
     findUserById,
     getNews,
-    logout
+    logout,
+
+    getOther
 }

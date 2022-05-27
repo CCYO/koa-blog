@@ -8,5 +8,6 @@ module.exports =  {
     STRING: DataTypes.STRING,
     TEXT: DataTypes.TEXT,
     INTEGER: DataTypes.INTEGER,
-    BOO: DataTypes.BOOLEAN
+    BOO: DataTypes.BOOLEAN,
+    DATE: DataTypes.DATE
 }

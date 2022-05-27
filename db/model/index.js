@@ -42,5 +42,5 @@ Blog.belongsToMany(User, { as: 'Follower', through: Blog_Fans, foreignKey: 'blog
 User.belongsToMany(Blog, { as: 'BlogNews', through: Blog_Fans, foreignKey: 'fans_id', targetKey: 'id'})
 
 module.exports = {
-    User, Blog, Img, BlogImg, Follow, seq
+    User, Blog, Img, BlogImg, Follow, Blog_Fans, seq
 }
