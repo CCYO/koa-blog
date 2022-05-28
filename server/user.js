@@ -87,7 +87,7 @@ async function readOther(other_id) {
                 as: 'Idol',
                 through: {
                     where: {
-                        idol_id: {[Op.ne]: other_id}
+                        idol_id: { [Op.ne]: other_id }
                     }
                 }
             },
@@ -96,19 +96,19 @@ async function readOther(other_id) {
                 as: 'Fans',
                 through: {
                     where: {
-                        fans_id: {[Op.ne]: other_id}
+                        fans_id: { [Op.ne]: other_id }
                     }
                 }
             }
         ]
     })
-    let { 
+    let {
         Blogs: blogs,
         Fans: fans,
         Idol: idols,
         ...user
     } = other.toJSON()
-    
+
     return {
         user: init_4_user(user),
         blogs,
@@ -130,90 +130,95 @@ async function addFans(idol_id, fans_id) {
 }
 
 async function readNews(id) {
+    console.log(3)
     let res = await User.findOne({
         where: { id },
-        attributes: [],
         include: [
             {
-                model: User,
-                as: 'Fans',
-                through: {
-                    where: {
-                        confirm: false,
-                        fans_id: { [Op.ne]: id }
-                    },
-                    attributes: ['createdAt']
-                }
-            }, {
                 model: Blog,
-                as: 'BlogNews',
-                through: {
-                    where: {
-                        confirm: false
-                    }
-                },
+                attributes: ['id', 'title', 'show', 'showAt', 'createAt']
             },
-            
             // {
             //     model: User,
-            //     as: 'Idol',
-            //     attributes: ['email', 'nickname'],
+            //     as: 'Fans',
+            //     attributes: ['id', 'email', 'nickname'],
             //     through: {
             //         where: {
-            //             idol_id: { [Op.ne]: id }
+            //             confirm: false,
+            //             fans_id: { [Op.ne]: id }
             //         },
+            //         attributes: ['createdAt']
+            //     }
+            // },
+            // {
+            //     model: Blog,
+            //     as: 'BlogNews',
+            //     through: {
+            //         where: {
+            //             confirm: false
+            //         }
             //     },
             //     include: {
-            //         model: Blog,
-            //         where: {
-            //             show: true
-            //         },
-            //         attributes: ['id', 'title', 'showAt'],
-            //         includes: {
-            //             model: User,
-            //             as: 'Blog_Fans',
-            //             where: {
-            //                 confirm: false
-            //             }
-            //         }
+            //         model: User,
+            //         attributes: ['id', 'nickname', 'email']
             //     }
             // }
         ]
     })
 
-    let {
-        Fans: fans,
-        // Idol: idols
-        BlogNews: blogs
-    } = res.toJSON()
-    console.log('@@@@=> ', blogs)
-    fans = fans.length ? fans.map( f => ({
+    
+
+    // let {
+    //     Blogs,
+    //     Fans: fansNews,
+    //     BlogNews: blogNews,
+    //     ...user
+    // } = res.toJSON()
+
+    let json = res.toJSON()
+
+    console.log('@json => ', json)
+
+    //  處理 blogs
+    let blogs = { show: [], hidden: []}
+
+    Blogs.length && Blogs.forEach( (blog) => {
+        blog.show && blogs.show.push(blog)
+        !blog.show && blogs.hidden.push(blog)
+    })
+
+    //  新追蹤的fans
+    fansNews = fansNews.length ? fansNews.map(fans => ({
         data: {
-            ...init_4_user(f),
-            showAt: f.Follow.createdAt,
+            ...init_4_user(fans),
+            showAt: fans.Follow.createdAt,
         },
         type: 'fans'
     })) : []
 
-    let idol_blogs = []
-    if (idols.length && idols[0].Blogs.length) {
-        idols.map(idol => {
-            let author = init_4_user(idol)
-            idol.Blogs.forEach(({ id, title, showAt }) => {
-                let res = {
+    //  處理 idol 的 blogNews
+    blogNews =
+        (blogNews.length) ?
+            blogNews.map(blog => {
+                let { User: user } = blog
+                let author = init_4_user(user)
+                return {
+                    type: 'blogNews',
                     data: {
-                        blog: { id, title },
-                        author,
-                        showAt
-                    },
-                    type: 'idol_blog'
+                        id, title, showAt, author
+                    }
                 }
-                idol_blogs.push(res)
-            })
-        })
-    }
+            }) :
+            []
 
-    return [...fans, ...idol_blogs]
+    //  處理 user
+    user = init_4_user(user)
+
+    return { 
+        user, 
+        blogNews,
+        news : [ ...blogs, ...fansNews ]
+    }
 
 }
 

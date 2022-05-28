@@ -6,6 +6,28 @@ const {
 
 const { create } = require('../server/user')
 
+let users = []
+let blogs = []
+for(let i = 0; i < 50 ;i++){
+    let user = { email: `${i}@gmail.com`, password: '123456'}
+    let blog = [
+        { title: `${i} - 1st title`, user_id: `${i}`, html: '<p>內文</p>'},
+        { title: `${i} - 2st title`, user_id: `${i}`, html: '<p>內文</p>'},
+        { title: `${i} - 3st title`, user_id: `${i}`, html: '<p>內文</p>'}
+    ]
+    users.push(user)
+    blogs.push(blog)
+}
+
+async function init(users, blogs){
+    await User.bulkCreate(users)
+    await Blog.bulkCreate(blogs)
+}
+
+
+
+user = user.map()
+
 async function go() {
     let user1 = await create({ email: '1@gmail.com', password: '123456' })
     let user2 = await create({ email: '2@gmail.com', password: '123456' })
