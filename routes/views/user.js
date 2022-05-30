@@ -68,10 +68,12 @@ router.get('/self', view_check_login, async (ctx, next) => {
     // const { data: idols } = await getIdolsById(id)
 
     //  
-    const { data: { user, blogs, fans, idols }}  = await getOther(id)
+    // const { data: { user, blogs, fans, idols }}  = await getOther(id)
+    const { data: { fans, idols }}  = await getOther(id)
     //  取得 news
-    const { data: news } = await getNews(id)
+    const { data: { user, blogs, news} } = await getNews(id)
 
+    console.log('blogs ===> => ', blogs)
     await ctx.render('self', {
         user,
         blogs,

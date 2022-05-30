@@ -11,10 +11,12 @@
 <body>
     <img src="" alt="" id="imgg">
     <input type="file" name="image" id="file">
+    <button id="signin">in</button>
+    <button id="signout">out</button>
     <%- include('wedgets/cdn') %>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.8.1/firebase-app.js"
-        import { getAuth, signInWithCustomToken, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.8.1/firebase-auth.js"
+        import { getAuth, signInWithCustomToken, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.8.1/firebase-auth.js"
         import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.8.1/firebase-storage.js"
 
         const firebaseConfig = {
@@ -35,6 +37,9 @@
         console.log('@storage => ', storage)
 
         var file = document.getElementById('file')
+        var signin = document.getElementById('signin')
+        var signout = document.getElementById('signout')
+        let user
 
         file.addEventListener('change', async (e) => {
             try {
@@ -42,7 +47,7 @@
                 let formData = new FormData()
                 formData.append('image', file)
                 console.log('@formData OK')
-                const { data: { errno, data, msg} } = await axios.post('/api/file', formData)
+                const { data: { errno, data, msg } } = await axios.post('/api/file', formData)
                 if (!errno) {
                     let _ref = data.ref
                     console.log('@_ref => ', _ref)
@@ -58,25 +63,26 @@
 
         })
 
-        let user
-        async function tt() {
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log('@user res => ', user)
+            } else {
+                console.log('@user out => ', user)
+            }
+        })
+
+        signout.addEventListener('click', async () => {
+            const res = await signOut(auth)
+            console.log('@signOut res => ', res)
+        })
+
+        signin.addEventListener('click', async () => {
             const token = await axios.post('/api/customToken', { user: 'test' })
             const userCredential = await signInWithCustomToken(auth, token.data)
             user = userCredential.user
-            console.log('@user => ', user)
-        }
+            console.log('@signIn res user => ', user)
+        })
 
-        (
-            async () => {
-                try {
-                    await tt()
-                } catch (e) {
-                    console.log('@e => ', e)
-                    console.log('@e.code => ', e.code)
-                    console.log('@e.msg => ', e.message)
-                }
-            }
-        )()
     </script>
 </body>
 

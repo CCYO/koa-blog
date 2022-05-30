@@ -51,7 +51,7 @@ app.use( async(ctx, next) => {
       return
     }    
     
-    ctx.throw(status, message, error.stack)
+    ctx.throw(status, message, error)
   }
 });
 

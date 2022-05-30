@@ -26,13 +26,16 @@
     </div>
     <img src="<%= user.avatar %>" alt="" srcset="">
     <a href="/blog/new">撰寫新文章</a>
-    <% if (blogs.length) { %>
+    
     <ul>
-        <% blogs.forEach(blog => { %>
-        <li><a href="/blog/<%= blog.id %>"><%= blog.title %> </a></li><a href="/blog/edit/<%= blog.id %>">編輯文章</a>
+        <% blogs.show.forEach(blog => { %>
+            <li>公開的文章<a href="/blog/<%= blogs.id %>"><%= blog.title %> </a></li><a href="/blog/edit/<%= blog.id %>">編輯文章</a> 
+        <% }) %>
+        <% blogs.hidden.forEach(blog => { %>
+            <li>隱藏的文章<a href="/blog/<%= blogs.id %>"><%= blog.title %> </a></li><a href="/blog/edit/<%= blog.id %>">編輯文章</a> 
         <% }) %>
     </ul>
-    <% } %>
+    
     <a href="/setting">個人設置</a>
     <div>
         <p>Fans</p>

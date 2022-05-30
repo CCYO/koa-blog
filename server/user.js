@@ -74,6 +74,22 @@ async function deleteFans(idol_id, fans_id) {
 
 
 
+
+
+
+//---
+async function addFans(idol_id, fans_id) {
+    const idol = await User.findByPk(idol_id)
+    const res = await idol.addFans(fans_id, { through: { comfirm: false } })
+    //  成功 => [ follow, ... ]
+    //  失敗 => undefined
+    if (!res) return false
+    const [item] = res.map(({ dataValues }) => dataValues)
+    return { id: item.id, fans_id: item.fans_id, idol_id: item.idol_id }
+}
+
+
+//  user, blogs
 async function readOther(other_id) {
     let other = await User.findOne({
         where: { id: other_id },
@@ -117,72 +133,171 @@ async function readOther(other_id) {
     }
 }
 
+async function readBlogListAndAuthorByUserId(user_id) {
+    let res = await User.findByPk(
+        user_id,
+        {
+            indclude: {
+                model: 'Blog',
+                attributes: ['id', 'title', 'showAt', 'updatedAt', 'createdAt']
+            }
+        }
+    )
+    let {
+        Blogs: blogs,
+        ...author
+    } = res.json()
+    return { author, blogs }
+}
 
-//---
-async function addFans(idol_id, fans_id) {
-    const idol = await User.findByPk(idol_id)
-    const res = await idol.addFans(fans_id, { through: { comfirm: false } })
-    //  成功 => [ follow, ... ]
-    //  失敗 => undefined
-    if (!res) return false
-    const [item] = res.map(({ dataValues }) => dataValues)
-    return { id: item.id, fans_id: item.fans_id, idol_id: item.idol_id }
+async function readFollowReationByUserId(user_id, onlyNewFans = false) {
+    let through = {
+        attributes: ['confirm']
+    }
+    if (onlyNewFans === true) {
+        through.where = { comfirm: false }
+    }
+    let res = await User.findByPk(
+        userid,
+        {
+            include: [
+                {
+                    model: User,
+                    as: 'Fans',
+                    attributes: ['id', 'email', 'nickname'],
+                    where: {
+                        id: { [Op.ne]: user_id }
+                    },
+                    through
+                },
+                {
+                    model: User,
+                    as: 'Idol',
+                    attributes: ['id', 'email', 'nickname'],
+                    where: {
+                        id: { [Op.ne]: user_id }
+                    }
+                }
+            ]
+        }
+    )
+
+    let {
+        Fans: fans,
+        Idol: idol,
+        ...user
+    } = res.toJSON()
+    
+
+    fans = fans.map( ( _fans ) => {
+        _fans.confirm = _fans.Follow.confirm 
+        delete _fans.Follow
+    })
+
+    return [user, fans, idol].map( init_4_user )
+}
+
+async function readBlogListOfIdeoByUserId(user_id, onlyNewBlogs = true, includeSelfBlogs = false){
+    let through = {
+        attributes: [],
+        where: {
+            confirm: false
+        }
+    }
+
+    if(onlyNewBlogs === false){
+        delete through.where
+    }
+
+    let where = {
+        id: { [Op.ne]: user_id }
+    }
+    
+    if(includeSelfBlogs === true){
+        delete where.id
+    }
+    
+    let res = await findByPk(
+        user_id,
+        {
+            attributes: [],
+            include: {
+                model: 'Blog',
+                as: 'BlogNews',
+                attributes: ['id', 'title', 'showAt'],
+                through,
+                include: {
+                    model: User,
+                    attributes: ['id', 'email', 'nickname'],
+                    where 
+                }
+            }
+        }
+    )
+
+    let { Blogs } = res.toJSON()
+    let blogs = Blogs.map( ({ User: author, ...blog}) => {
+        return {
+            author: init_4_user(author),
+            ...blog
+        }
+    })
 }
 
 async function readNews(id) {
-    console.log(3)
     let res = await User.findOne({
         where: { id },
-        include: [
-            {
-                model: Blog,
-                attributes: ['id', 'title', 'show', 'showAt', 'createAt']
-            },
-            // {
-            //     model: User,
-            //     as: 'Fans',
-            //     attributes: ['id', 'email', 'nickname'],
-            //     through: {
-            //         where: {
-            //             confirm: false,
-            //             fans_id: { [Op.ne]: id }
-            //         },
-            //         attributes: ['createdAt']
-            //     }
-            // },
-            // {
-            //     model: Blog,
-            //     as: 'BlogNews',
-            //     through: {
-            //         where: {
-            //             confirm: false
-            //         }
-            //     },
-            //     include: {
-            //         model: User,
-            //         attributes: ['id', 'nickname', 'email']
-            //     }
-            // }
-        ]
+        include:
+            [
+                {
+                    model: Blog,
+                    attributes: ['id', 'title', 'show', 'showAt', 'createdAt']
+                },
+                {
+                    model: User,
+                    as: 'Fans',
+                    attributes: ['id', 'email', 'nickname'],
+                    through: {
+                        where: {
+                            confirm: false,
+                            fans_id: { [Op.ne]: id }
+                        },
+                        attributes: ['createdAt']
+                    }
+                },
+                {
+                    model: Blog,
+                    as: 'BlogNews',
+                    through: {
+                        where: {
+                            confirm: false
+                        }
+                    },
+                    include: {
+                        model: User,
+                        attributes: ['id', 'nickname', 'email']
+                    }
+                }
+            ]
     })
 
-    
 
-    // let {
-    //     Blogs,
-    //     Fans: fansNews,
-    //     BlogNews: blogNews,
-    //     ...user
-    // } = res.toJSON()
+
+    let {
+        Blogs,
+        Fans: fansNews,
+        BlogNews: blogNews,
+        ...user
+    } = res.toJSON()
 
     let json = res.toJSON()
 
     console.log('@json => ', json)
 
     //  處理 blogs
-    let blogs = { show: [], hidden: []}
+    let blogs = { show: [], hidden: [] }
 
-    Blogs.length && Blogs.forEach( (blog) => {
+    Blogs.length && Blogs.forEach((blog) => {
         blog.show && blogs.show.push(blog)
         !blog.show && blogs.hidden.push(blog)
     })
@@ -214,10 +329,10 @@ async function readNews(id) {
     //  處理 user
     user = init_4_user(user)
 
-    return { 
-        user, 
-        blogNews,
-        news : [ ...blogs, ...fansNews ]
+    return {
+        user,
+        blogs,
+        news: [blogNews, ...fansNews]
     }
 
 }

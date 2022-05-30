@@ -123,14 +123,13 @@ async function cancelFollowIdol(fans_id, idol_id){
 }
 
 async function getNews(id){
-    console.log('2')
     let res = await readNews(id)
     console.log('@res => ', res)
     res.news.sort( (a, b) => {
         return a.data.showAt - b.data.showAt
     })
-    console.log('@res ==> ', res)
-    return new SuccModel(news)
+    console.log('@res ==> ', res.blogs)
+    return new SuccModel(res)
 }
 
 
