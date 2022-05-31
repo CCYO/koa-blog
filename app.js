@@ -16,9 +16,6 @@ const logger = require('koa-logger')
 const store = require('./cache/store')
 const session = require('koa-generic-session')
 
-const index = require('./routes/index')
-const users = require('./routes/users')
-
 const tt_upload = require('./routes/views/tt-upload')
 
 const upload_to_GCS = require('./routes/api/upload-to-GCS')
@@ -95,9 +92,6 @@ app.use(async (ctx, next) => {
 })
 
 // routes
-app.use(index.routes(), index.allowedMethods())
-app.use(users.routes(), users.allowedMethods())
-
 app.use(tt_upload.routes(), tt_upload.allowedMethods())
 
 app.use(upload_to_GCS.routes(), upload_to_GCS.allowedMethods())

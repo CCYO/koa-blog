@@ -5,37 +5,71 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人主頁</title>
+    <title><% user.nickname %>的主頁</title>
 </head>
 
 <body>
-    <div>
+    <div id="news">
+        <% if (news.length) { %>
         <ul id="newsList">
-            <% news.length && news.forEach(({type, data}) => { %>
+            <% news.forEach(({type, data}) => { %>
             <% if (type === 'fans') { %>
             <li>
-                <a href="/other/<%= data.id %>?confirm=true"><%= data.nickname %>追蹤你囉！</a>
+                <a href="/other/<%= data.id %>?confirm=true">
+                    <span><%= data.nickname %>追蹤你囉！</span>
+                    <span><%= data.showAt %> </span>
+                </a>
             </li>
-            <% } else if (type === 'idol_blog') { %>
+            <% } else if (type === 'blog') { %>
             <li>
-                <a href="/blog/<%= data.blog.id %>?confirm=true"><%= data.author.nickname %>有新文章唷！</a>
+                <a href="/blog/<%= data.blog.id %>?confirm=true">
+                    <span><%= data.author.nickname %>有新文章唷！</span>
+                    <span><%= data.showAt %> </span>
+                </a>
             </li>
             <% } %>
             <% }) %>
         </ul>
+        <% } else { %>
+        <p>沒有新通知</p>
+        <% } %>
     </div>
     <img src="<%= user.avatar %>" alt="" srcset="">
     <a href="/blog/new">撰寫新文章</a>
-    
-    <ul>
-        <% blogs.show.forEach(blog => { %>
-            <li>公開的文章<a href="/blog/<%= blogs.id %>"><%= blog.title %> </a></li><a href="/blog/edit/<%= blog.id %>">編輯文章</a> 
-        <% }) %>
-        <% blogs.hidden.forEach(blog => { %>
-            <li>隱藏的文章<a href="/blog/<%= blogs.id %>"><%= blog.title %> </a></li><a href="/blog/edit/<%= blog.id %>">編輯文章</a> 
-        <% }) %>
-    </ul>
-    
+
+    <div id="blogs">
+        <% if (blogs.length) { %>
+        <div id="public-blog">
+            <% if(blogs.show.length){ %>
+            <p>已發布的BLOG</p>
+            <ul>
+                <% blogs.show.forEach(({id, title}) => { %>
+                <li>
+                    <a href="/blog/editor/<%= id %>"><%= title %> </a>
+                </li>
+                <% } %>
+            </ul>
+            <% } else { %>
+            <p>沒有發布的BLOG</p>
+            <% } %>
+        </div>
+        <div id="private-blog"></div>
+        <ul>
+            <% blogs.show.forEach(blog => { %>
+            <li>公開的文章<a href="/blog/<%= blogs.id %>"><%= blog.title %> </a></li><a
+                href="/blog/edit/<%= blog.id %>">編輯文章</a>
+            <% }) %>
+            <% blogs.hidden.forEach(blog => { %>
+            <li>隱藏的文章<a href="/blog/<%= blogs.id %>"><%= blog.title %> </a></li><a
+                href="/blog/edit/<%= blog.id %>">編輯文章</a>
+            <% }) %>
+        </ul>
+        <% } else { %>
+
+        <% } %>
+    </div>
+
+
     <a href="/setting">個人設置</a>
     <div>
         <p>Fans</p>
