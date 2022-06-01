@@ -42,6 +42,8 @@ app.use( async(ctx, next) => {
     let status = error.status || 500
     let message = error.message || null
 
+    console.log('@custom Err handle => ', error)
+
     if(/^\/api\//.test(ctx.path)){
       ctx.app.emit('error', error, ctx)
       ctx.body = { errno: status, msg: message}

@@ -75,6 +75,7 @@ router.get('/self', view_check_login, async (ctx, next) => {
 
     console.log('blogs ===> => ', blogs)
     await ctx.render('self', {
+        login: true,
         user,
         blogs,
         fans,

@@ -6,9 +6,67 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><% user.nickname %>的主頁</title>
+    <!-- BS5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+  integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
 </head>
 
 <body>
+    <!-- 主導覽 -->
+    <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">首頁LOGO</a>
+            <ul class="navbar-nav w-100">
+                <form class="d-flex  ms-auto me-1">
+                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
+                <% if (!login) { %>
+                <li class="nav-item">
+                    <a class="nav-link nav-tab <%= register ? `active` : `` %>" href="#"
+                        data-my-tab="#register">註冊</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-tab <%= login ? `active` : `` %>" href="#" data-my-tab="#login">登入</a>
+                </li>
+                <% } else { %>
+                    
+                    <a class="btn btn-outline-success" href="/api/user/logout">登出</a>
+                
+                <% } %>
+            </ul>
+            <!-- 收合鈕 navbar-toggler -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- 收合內容 navbar-collapse -->
+            <div class="offcanvas offcanvas-start" id="offcanvasNavbar">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                  </div>
+                  
+                <!-- 表單列 -->
+                <div class="offcanvas-body">
+                <ul class="navbar-nav w-100">
+                    <!-- 表單項 -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Pricing</a>
+                    </li>
+                    
+
+                </ul>
+            </div>
+            </div>
+        </div>
+    </nav>
     <div id="news">
         <% if (news.length) { %>
         <ul id="newsList">
@@ -38,7 +96,7 @@
     <a href="/blog/new">撰寫新文章</a>
 
     <div id="blogs">
-        <% if (blogs.length) { %>
+
         <div id="public-blog">
             <% if(blogs.show.length){ %>
             <p>已發布的BLOG</p>
@@ -47,26 +105,26 @@
                 <li>
                     <a href="/blog/editor/<%= id %>"><%= title %> </a>
                 </li>
-                <% } %>
+                <% }) %>
             </ul>
             <% } else { %>
             <p>沒有發布的BLOG</p>
             <% } %>
         </div>
-        <div id="private-blog"></div>
-        <ul>
-            <% blogs.show.forEach(blog => { %>
-            <li>公開的文章<a href="/blog/<%= blogs.id %>"><%= blog.title %> </a></li><a
-                href="/blog/edit/<%= blog.id %>">編輯文章</a>
-            <% }) %>
-            <% blogs.hidden.forEach(blog => { %>
-            <li>隱藏的文章<a href="/blog/<%= blogs.id %>"><%= blog.title %> </a></li><a
-                href="/blog/edit/<%= blog.id %>">編輯文章</a>
-            <% }) %>
-        </ul>
-        <% } else { %>
-
-        <% } %>
+        <div id="private-blog">
+            <% if(blogs.hidden.length){ %>
+            <p>編輯中的BLOG</p>
+            <ul>
+                <% blogs.hidden.forEach(({id, title}) => { %>
+                <li>
+                    <a href="/blog/editor/<%= id %>"><%= title %> </a>
+                </li>
+                <% }) %>
+            </ul>
+            <% } else { %>
+            <p>沒有編輯中的BLOG</p>
+            <% } %>
+        </div>
     </div>
 
 
@@ -95,6 +153,9 @@
         </ul>
         <% } %>
     </div>
+    <%- include('wedgets/cdn') %>
+    <%- include('wedgets/utils') %>
+
 </body>
 
 </html>
