@@ -73,7 +73,8 @@ router.get('/self', view_check_login, async (ctx, next) => {
     //  取得 news
     const { data: { user, blogs, news} } = await getNews(id)
 
-    console.log('blogs ===> => ', blogs)
+    console.log('user ===> => ', user)
+    console.log('news ===> => ', news)
     await ctx.render('self', {
         login: true,
         user,

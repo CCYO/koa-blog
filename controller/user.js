@@ -1,6 +1,8 @@
 /**
  * @description Controller user相關
  */
+const moment = require('moment')
+
 const {
     create, read, update,
     readFans, addFans, deleteFans,
@@ -100,7 +102,7 @@ async function confirmFollow(fans_id, idol_id){
     return new ErrModel(FOLLOW.CONFIRM_ERR)
 }
 
-const logout = (ctx) => {
+const logout = async (ctx) => {
     ctx.session = null
     return new SuccModel('成功登出')
 }
@@ -128,7 +130,13 @@ async function getNews(id){
     res.news.sort( (a, b) => {
         return a.data.showAt - b.data.showAt
     })
-    console.log('@res ==> ', res.blogs)
+    res.news = res.news.map( _news => {
+        _news.data.showAt = moment(_news.data.showAt,"YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+        
+        console.log('@@@=>', _news.data.showAt)
+        return _news
+    })
+    console.log('@res.news ==> ', res.news)
     return new SuccModel(res)
 }
 

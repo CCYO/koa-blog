@@ -426,7 +426,7 @@
         } else {
           alert('登入成功')
           let from = location.search ? new URLSearchParams(location.search).get('from') : false
-          location.href = from || '/setting'
+          location.href = from || '/self'
         }
       })
 

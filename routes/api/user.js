@@ -40,7 +40,8 @@ router.post('/', async (ctx, next) => {
 
 //  logout
 router.get('/logout', api_check_login, async (ctx, next) => {
-    ctx.body = logout(ctx)
+    console.log('@1++')
+    ctx.body = await logout(ctx)
 })
 
 //  setting

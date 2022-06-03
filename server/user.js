@@ -332,7 +332,7 @@ async function readNews(id) {
     return {
         user,
         blogs,
-        news: [blogNews, ...fansNews]
+        news: [...blogNews, ...fansNews]
     }
 
 }
