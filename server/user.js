@@ -133,32 +133,29 @@ async function readOther(other_id) {
     }
 }
 
-async function readBlogListAndAuthorByUserId(user_id) {
+async function readBlogListAndAuthorByUserId(user_id, options) {
+    let where = options ? options : {}
     let res = await User.findByPk(
         user_id,
         {
-            indclude: {
-                model: 'Blog',
-                attributes: ['id', 'title', 'showAt', 'updatedAt', 'createdAt']
+            include: {
+                model: Blog,
+                attributes: ['id', 'title', 'show', 'showAt', 'updatedAt', 'createdAt'],
+                where
             }
         }
     )
+    
     let {
-        Blogs: blogs,
+        Blogs: blogList,
         ...author
-    } = res.json()
-    return { author, blogs }
+    } = res.toJSON()
+    return { author: init_4_user(author), blogList }
 }
 
-async function readFollowReationByUserId(user_id, onlyNewFans = false) {
-    let through = {
-        attributes: ['confirm']
-    }
-    if (onlyNewFans === true) {
-        through.where = { comfirm: false }
-    }
+async function readFollowReationByUserId(user_id) {
     let res = await User.findByPk(
-        userid,
+        user_id,
         {
             include: [
                 {
@@ -168,7 +165,6 @@ async function readFollowReationByUserId(user_id, onlyNewFans = false) {
                     where: {
                         id: { [Op.ne]: user_id }
                     },
-                    through
                 },
                 {
                     model: User,
@@ -184,20 +180,20 @@ async function readFollowReationByUserId(user_id, onlyNewFans = false) {
 
     let {
         Fans: fans,
-        Idol: idol,
+        Idol: idols,
         ...user
     } = res.toJSON()
+
+    fans = init_4_user(fans)
+    idols = init_4_user(idols)
+    user = init_4_user(user)
+    //let aaa = [user, fans, idols].map(init_4_user)
     
+    return { user, fans, idols }
 
-    fans = fans.map( ( _fans ) => {
-        _fans.confirm = _fans.Follow.confirm 
-        delete _fans.Follow
-    })
-
-    return [user, fans, idol].map( init_4_user )
 }
 
-async function readBlogListOfIdeoByUserId(user_id, onlyNewBlogs = true, includeSelfBlogs = false){
+async function readBlogListOfIdeoByUserId(user_id, onlyNewBlogs = true, includeSelfBlogs = false) {
     let through = {
         attributes: [],
         where: {
@@ -205,18 +201,18 @@ async function readBlogListOfIdeoByUserId(user_id, onlyNewBlogs = true, includeS
         }
     }
 
-    if(onlyNewBlogs === false){
+    if (onlyNewBlogs === false) {
         delete through.where
     }
 
     let where = {
         id: { [Op.ne]: user_id }
     }
-    
-    if(includeSelfBlogs === true){
+
+    if (includeSelfBlogs === true) {
         delete where.id
     }
-    
+
     let res = await findByPk(
         user_id,
         {
@@ -229,14 +225,14 @@ async function readBlogListOfIdeoByUserId(user_id, onlyNewBlogs = true, includeS
                 include: {
                     model: User,
                     attributes: ['id', 'email', 'nickname'],
-                    where 
+                    where
                 }
             }
         }
     )
 
     let { Blogs } = res.toJSON()
-    let blogs = Blogs.map( ({ User: author, ...blog}) => {
+    let blogs = Blogs.map(({ User: author, ...blog }) => {
         return {
             author: init_4_user(author),
             ...blog
@@ -249,10 +245,6 @@ async function readNews(id) {
         where: { id },
         include:
             [
-                {
-                    model: Blog,
-                    attributes: ['id', 'title', 'show', 'showAt', 'createdAt']
-                },
                 {
                     model: User,
                     as: 'Fans',
@@ -268,6 +260,7 @@ async function readNews(id) {
                 {
                     model: Blog,
                     as: 'BlogNews',
+                    attributes: ['id', 'title', 'show', 'showAt'],
                     through: {
                         where: {
                             confirm: false
@@ -281,26 +274,13 @@ async function readNews(id) {
             ]
     })
 
-
-
     let {
-        Blogs,
         Fans: fansNews,
         BlogNews: blogNews,
         ...user
     } = res.toJSON()
 
-    let json = res.toJSON()
-
-    console.log('@json => ', json)
-
-    //  處理 blogs
-    let blogs = { show: [], hidden: [] }
-
-    Blogs.length && Blogs.forEach((blog) => {
-        blog.show && blogs.show.push(blog)
-        !blog.show && blogs.hidden.push(blog)
-    })
+    let json = res.toJSON()    
 
     //  新追蹤的fans
     fansNews = fansNews.length ? fansNews.map(fans => ({
@@ -312,26 +292,27 @@ async function readNews(id) {
     })) : []
 
     //  處理 idol 的 blogNews
-    blogNews =
-        (blogNews.length) ?
-            blogNews.map(blog => {
-                let { User: user } = blog
-                let author = init_4_user(user)
-                return {
-                    type: 'blogNews',
-                    data: {
-                        id, title, showAt, author
-                    }
+    
+    blogNews = (blogNews.length) ? blogNews.filter(({ show }) => show) : []
+    
+    blogNews = (blogNews.length) ?
+        blogNews.map(blog => {
+            let { User: user, id, title, showAt } = blog
+            let author = init_4_user(user)
+            return {
+                type: 'blogNews',
+                data: {
+                    id, title, showAt, author
                 }
-            }) :
-            []
-
+            }
+        }) :
+        []
+        console.log('@blogNews => ', blogNews)
     //  處理 user
     user = init_4_user(user)
 
     return {
         user,
-        blogs,
         news: [...blogNews, ...fansNews]
     }
 
@@ -353,5 +334,8 @@ module.exports = {
     readNews,
     updateFollow,
 
-    readOther
+    readOther,
+
+    readBlogListAndAuthorByUserId,
+    readFollowReationByUserId
 }

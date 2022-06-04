@@ -9,6 +9,7 @@
   <!-- BS5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+  <%- include('wedgets/navbar/navbar-css') %>
 </head>
 
 <body>
@@ -49,7 +50,7 @@
       </div>
     </div>
   </nav>
-
+  <%- include('wedgets/navbar/navbar') %>
 
   <!-- 註冊/登入 互動卡片-->
   <div class="card w-50 mx-auto" style='margin-top: 4rem;'>
@@ -119,6 +120,7 @@
   </div>
   <%- include('wedgets/cdn') %>
   <%- include('wedgets/utils') %>
+  <%- include('wedgets/navbar/navbar-js')  %>
 
   <style>
     .nav-link.active {
@@ -129,6 +131,7 @@
       color: blue
     }
   </style>
+
   <script>
 
     //  selector__ 對應 selector
@@ -167,7 +170,8 @@
     })
 
     //  Navbar 的  toggle 效果
-    $$(`.navbar-nav .nav-link`).forEach((a, ind, arr) => {
+    // $$(`.navbar-nav .nav-link`).forEach((a, ind, arr) => {
+    $$(`.navbar .nav-link`).forEach((a, ind, arr) => {
       a.addEventListener(
         'click',
         (e) => {

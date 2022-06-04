@@ -1,3 +1,5 @@
+const moment = require('moment')
+
 const { 
     readBlogList,
     readBlog,
@@ -17,6 +19,9 @@ async function getBlogList( user_id , is_self){
 
 async function getBlog( blog_id ){
     const blog = await readBlog(blog_id)
+    if(blog.show){
+        blog.showAt = moment(blog.showAt, 'YYYY-MM-DD[T]hh-mm-ss').format('LLL')
+    }
     if(blog){
         return new SuccModel(blog)
     }else{

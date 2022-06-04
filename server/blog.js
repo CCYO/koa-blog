@@ -27,7 +27,7 @@ async function readBlogList(user_id) {
 
 async function readBlog(blog_id) {
     let blog = await Blog.findByPk(blog_id, {
-        attributes: ['id', 'title', 'html'],
+        attributes: ['id', 'title', 'html', 'show', 'showAt'],
         include: [
             {
                 model: Img,
@@ -41,6 +41,7 @@ async function readBlog(blog_id) {
         ]
     })
     if (blog) {
+        
         blog.Imgs = blog.Imgs.map(({
             dataValues: {
                 id: img_id, url, hash,
@@ -53,7 +54,15 @@ async function readBlog(blog_id) {
         }) => {
             return { img_id, url, hash, blogImg_id, name }
         })
-        blog = { id: blog.id, title: blog.title, html: blog.html, imgs: blog.Imgs, user: blog.User.dataValues.id }
+        blog = { 
+            id: blog.id,
+            title: blog.title,
+            html: blog.html,
+            show: blog.show,
+            showAt: blog.showAt,
+            imgs: blog.Imgs,
+            user: blog.User.dataValues.id
+        }
     }
     return blog
 }

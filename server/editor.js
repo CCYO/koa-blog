@@ -29,9 +29,13 @@ async function updateBlog(data, blog_id){
             }
         }
     })
-    let fans = blog.User.Fans
+    let fans_id = blog.User.Fans.map( fans => fans.toJSON().id )
 
+    //  更新前，先撈出待確認資料
     let { show, showAt } = blog.toJSON()
+
+    //  曾經公開過，後來隱藏，且現在又要再公開
+    !show && showAt && data.show
 
     //  true : 隱藏 → 公開
     //  false : 公開 → 隱藏
@@ -39,12 +43,12 @@ async function updateBlog(data, blog_id){
     let hiddenOrShow =
         (!show && data.show) ? true :
         (show && !data.show) ? false : undefined
-    
+
     //  這次更新是否要作 1st show
     let firstShow = !showAt && hiddenOrShow
-    
+    let notFirstShow = showAt && hiddenOrShow
     //  若是 1st show，設定showAt
-    if(firstShow){
+    if(firstShow || notFirstShow){
         data.showAt = Date.now()
     }
 
@@ -55,16 +59,27 @@ async function updateBlog(data, blog_id){
     //  show 無變動，結束
     if(hiddenOrShow === undefined) return row
 
-    if(firstShow){  //  1st show，通知 fans
-        await blog.addFollower(fans)
-    }else if(!hiddenOrShow){   //  隱藏
-        await blog.updateFollower({show: false})
+    //  1st show，通知 fans
+    if(firstShow){  
+        await blog.addFollower(fans_id)
+    }
+    
+    //  公開 → 隱藏，直接更新blog的show就可以了
+
+    //  非1st公開    
+    if(notFirstShow){
+        //  blog 固有 fans，且 Follow.confirm: false，若 blog.show 有變動，自然會得到通知
+
+        //  找出是 author 現有粉絲，但未 follow 文章的人
+        let followers = (await blog.getFollower()).map( follower)
+        let followers_id = followers.map( follower => follower.toJSON().id )
+        let newFollowers_id = fans_id.filter( id => followers_id.includes(id) )
+        //  加入 follow
+        await blog.addFollower(followers_id)
     }
 
     return row
 }
-
-
 
 async function readImg(data){
     let img = await Img.findOne({ where: data })

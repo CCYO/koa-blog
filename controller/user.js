@@ -4,6 +4,9 @@
 const moment = require('moment')
 
 const {
+    readBlogListAndAuthorByUserId,
+    readFollowReationByUserId,
+
     create, read, update,
     readFans, addFans, deleteFans,
     readIdols, readNews, updateFollow,
@@ -124,19 +127,30 @@ async function cancelFollowIdol(fans_id, idol_id){
     return new ErrModel(FOLLOW.CANCEL_ERR)   
 }
 
-async function getNews(id){
-    let res = await readNews(id)
-    console.log('@res => ', res)
-    res.news.sort( (a, b) => {
+async function getSelfInfo(id){
+    let { author, blogList } = await readBlogListAndAuthorByUserId(id)
+    let { fans, idols } = await readFollowReationByUserId(id)
+    let { news } = await readNews(id)
+
+    //  處理 blogs
+    let blogs = { show: [], hidden: [] }
+
+    blogList.length && blogList.forEach((blog) => {
+        blog.show && blogs.show.push(blog)
+        !blog.show && blogs.hidden.push(blog)
+    })
+
+    news.sort( (a, b) => {
         return a.data.showAt - b.data.showAt
     })
-    res.news = res.news.map( _news => {
+
+    news = news.map( _news => {
         _news.data.showAt = moment(_news.data.showAt,"YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-        
         console.log('@@@=>', _news.data.showAt)
         return _news
     })
-    console.log('@res.news ==> ', res.news)
+
+    let res = { author, blogs, fans, idols, news }
     return new SuccModel(res)
 }
 
@@ -151,7 +165,7 @@ module.exports = {
     confirmFollow,
     cancelFollowIdol,
     findUserById,
-    getNews,
+    getSelfInfo,
     logout,
 
     getOther

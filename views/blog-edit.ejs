@@ -47,10 +47,15 @@
         <div id="toolbar-container"></div>
         <div id="editor-container"></div>
     </div>
-    
-        <input type="checkbox" name="" id="show" <%= blog.show ? "checked" : '' %> >發佈文章 
-    
-    
+    <% if (blog.show) { %>
+    <input type="checkbox" name="" id="show" checked />公開文章
+    <p>已於 <%= blog.showAt %> 發佈</p>
+    <% } else { %>
+    <input type="checkbox" name="" id="show" />公開文章
+    <% } %>
+
+    <p></p>
+
     <button id="save">存檔</button>
 
     <!-- AXIOS -->
@@ -70,7 +75,7 @@
         let sentTitle = $('#sentTitle')
         let is_show = $('#show')
 
-        if(blog.title) sentTitle.setAttribute('disabled', true)
+        if (blog.title) sentTitle.setAttribute('disabled', true)
     </script>
     <script>
         //  editor 的 繁中設定
@@ -101,7 +106,7 @@
 
             //  自定義 upload imgage
             customUpload,
-            
+
             //  (待補)自定義 upload imgage 失敗
         }
 
@@ -113,7 +118,7 @@
             config: editorConfig,
             mode: 'simple'
         })
-        
+
         // editor 工具欄創建
         const toolbar = createToolbar({
             editor,
@@ -133,18 +138,18 @@
         //  btn#save 綁定 click handle : 存檔
         $('#save').addEventListener('click', save)
 
-        function UI_check_new_title(e){
-            if(!blog.title) return 
-            if(blog.title && title.value && title.value !== blog.title){
+        function UI_check_new_title(e) {
+            if (!blog.title) return
+            if (blog.title && title.value && title.value !== blog.title) {
                 return sentTitle.hasAttribute('disabled') && sentTitle.removeAttribute('disabled')
-            //  title 不變
-            }else{
+                //  title 不變
+            } else {
                 return !sentTitle.hasAttribute('disabled') && sentTitle.setAttribute('disabled', true)
             }
         }
 
-        function UI_recover_title(e){
-            if(blog.title && !title.value){
+        function UI_recover_title(e) {
+            if (blog.title && !title.value) {
                 title.value = blog.title
             }
         }
@@ -156,8 +161,8 @@
                 alert('請填入標題')
                 //  恢復為原標題
                 return title.value = blog.title
-            
-            //  若 title 不變
+
+                //  若 title 不變
             } else if (title.value === blog.title) {
                 return alert('若要更改，請填入新標題')
             }
@@ -175,11 +180,11 @@
                 sentTitle.setAttribute('disabled', true)
                 editor.focus(true)
                 alert('標題修改完成')
-            //  blog創建成功
+                //  blog創建成功
             } else if (!errno) {
                 alert('BLOG存檔成功')
                 location.href = `/blog/edit/${data.id}`
-            // 失敗
+                // 失敗
             } else {
                 alert(`標題修改失敗 => ${msg}`)
             }
@@ -260,12 +265,12 @@
             //  獲取 html
             var html = editor.getHtml()
             //  獲取 editor 內 img.src(重複的話，只取一個)
-            let editor_imgs = [...new Set(editor.getElemsByType('image'))].map(({src}) => src)
+            let editor_imgs = [...new Set(editor.getElemsByType('image'))].map(({ src }) => src)
             //  獲取 blog 內 image 的 url 與 blogImg_id
-            let blog_imgs = [...new Set(blog.imgs)].map(({blogImg_id, url}) => ({blogImg_id, url}))
+            let blog_imgs = [...new Set(blog.imgs)].map(({ blogImg_id, url }) => ({ blogImg_id, url }))
 
-            let remove_imgs = blog_imgs.filter( img => !editor_imgs.includes(img.url) )
-            remove_imgs = remove_imgs.map( ({blogImg}) => blogImg )
+            let remove_imgs = blog_imgs.filter(img => !editor_imgs.includes(img.url))
+            remove_imgs = remove_imgs.map(({ blogImg }) => blogImg)
 
             let show = is_show.checked
 
@@ -273,7 +278,7 @@
                 data: {
                     errno, data, msg
                 }
-            } = await axios.patch(`/api/editor/blog`, { id: blog.id, remove_imgs, html, show})
+            } = await axios.patch(`/api/editor/blog`, { id: blog.id, remove_imgs, html, show })
 
             if (!errno) {
                 alert('blog save success!')
