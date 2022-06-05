@@ -9,7 +9,7 @@ const { view_check_login } = require('../../middleware/check_login')
 const { getBlogList } =  require('../../controller/blog')
 
 const { 
-    findUserById, getFansById, getIdolsById, getSelfInfo, confirmFollow,
+    findUserById, getFansById, getIdolsById, getSelfInfo, getNews, getOtherInfo, confirmFollow,
     getOther,
 } = require('../../controller/user')
 
@@ -34,9 +34,26 @@ router.get('/login', async (ctx, next) => {
 })
 
 //--
+router.get('/self', view_check_login, async (ctx, next) => {
+    const { id } = ctx.session.user
+    const { data: { news } } = await getNews(id) 
+    const { data: { author: user, blogs, fans, idols } } = await getSelfInfo(id)
+
+    await ctx.render('self', {
+        logging: true,
+        self: true,
+        user,
+        blogs,
+        fans,
+        idols,
+        news
+    })
+})
+
 router.get('/other/:user_id', async (ctx, next) => {
     const { user_id: target_id } = ctx.params
-    const { id: current_id } = ctx.session.user
+    const current_id = (ctx.session.user) ? ctx.session.user.id : false
+    let logging = current_id ? true : false
 
     //  若是本人就跳轉
     if( target_id == current_id ){
@@ -45,63 +62,20 @@ router.get('/other/:user_id', async (ctx, next) => {
 
     //  清除Fan追蹤紀錄
     ctx.query.confirm && await confirmFollow(target_id, current_id)
-
-    // const { data: { user, blogs, fans, idols }}  = await getOther(target_id)
-    
-    // let isFollow = fans.some(({id}) => current_id == id)
-    // console.log({ user, blogs, fans, idols , isFollow})
-    // await ctx.render('other', {
-    //     user,
-    //     blogs,
-    //     fans,
-    //     idols,
-    //     isFollow,
-    // })
-    // return
-
-
-    const { data: { fans, idols }}  = await getOther(id)
-    //  取得 news
-    const { data: { user, blogs, news} } = await getNews(id)
-
-    console.log('user ===> => ', user)
-    console.log('news ===> => ', news)
-    await ctx.render('self', {
-        logging: true,
-        self: true,
-        user,
-        blogs,
-        fans,
-        idols,
-        news
-    })
-
-
-
-})
-
-//--
-router.get('/self', view_check_login, async (ctx, next) => {
-    const { id } = ctx.session.user
-    // const { data: blogs } = await getBlogList(id, true)
-    // //  取得 fansList
-    // const { data: fans } = await getFansById(id)
-    // //  取得 idolList
-    // const { data: idols } = await getIdolsById(id)
-
-    //  
-    // const { data: { user, blogs, fans, idols }}  = await getOther(id)
     
     //  取得 news
-    //const { data: { user, blogs, news} } = await getNews(id)
-    //  取得 Follow 關係
-    //const { data: { fans, idols }}  = await getOther(id)
+    let news = []
+    
+    if(current_id){
+        let { data } = await getNews(current_id)
+        news = data.news
+    } 
 
-    const { data: { author: user, blogs, fans, idols, news } } = await getSelfInfo(id)
+    const { data: { author: user, blogs, fans, idols } } = await getOtherInfo(target_id)
 
     await ctx.render('self', {
-        logging: true,
-        self: true,
+        logging,
+        self: false,
         user,
         blogs,
         fans,
@@ -109,13 +83,16 @@ router.get('/self', view_check_login, async (ctx, next) => {
         news
     })
 })
-
 
 
 router.get('/setting', view_check_login, async (ctx, next) => {
-    console.log('@session.user => ', ctx.session.user)
+    const { user } = ctx.session
+    const { data: { news } } = await getNews(user.id) 
+
     await ctx.render('setting', {
-        user: ctx.session.user
+        logging: true,
+        user,
+        news
     })
 })
 

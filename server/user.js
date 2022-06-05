@@ -133,27 +133,28 @@ async function readOther(other_id) {
     }
 }
 
-async function readBlogListAndAuthorByUserId(user_id, options) {
-    let where = options ? options : {}
+async function readBlogListAndAuthorByUserId(user_id) {
     let res = await User.findByPk(
         user_id,
         {
             include: {
                 model: Blog,
-                attributes: ['id', 'title', 'show', 'showAt', 'updatedAt', 'createdAt'],
-                where
+                attributes: ['id', 'title', 'show', 'showAt', 'updatedAt', 'createdAt']
             }
         }
     )
-    
+
     let {
         Blogs: blogList,
         ...author
     } = res.toJSON()
-    return { author: init_4_user(author), blogList }
+
+    author = init_4_user(author)
+
+    return { author, blogList }
 }
 
-async function readFollowReationByUserId(user_id) {
+async function readUserAndFollowReationByUserId(user_id) {
     let res = await User.findByPk(
         user_id,
         {
@@ -179,15 +180,12 @@ async function readFollowReationByUserId(user_id) {
     )
 
     let {
-        Fans: fans,
-        Idol: idols,
-        ...user
+        Fans: _fans,
+        Idol: _idols,
+        ..._user
     } = res.toJSON()
 
-    fans = init_4_user(fans)
-    idols = init_4_user(idols)
-    user = init_4_user(user)
-    //let aaa = [user, fans, idols].map(init_4_user)
+    let [ user, fans, idols ] = [_user, _fans, _idols].map(init_4_user)
     
     return { user, fans, idols }
 
@@ -278,9 +276,7 @@ async function readNews(id) {
         Fans: fansNews,
         BlogNews: blogNews,
         ...user
-    } = res.toJSON()
-
-    let json = res.toJSON()    
+    } = res.toJSON()   
 
     //  新追蹤的fans
     fansNews = fansNews.length ? fansNews.map(fans => ({
@@ -337,5 +333,5 @@ module.exports = {
     readOther,
 
     readBlogListAndAuthorByUserId,
-    readFollowReationByUserId
+    readUserAndFollowReationByUserId
 }

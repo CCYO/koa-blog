@@ -5,7 +5,7 @@ const moment = require('moment')
 
 const {
     readBlogListAndAuthorByUserId,
-    readFollowReationByUserId,
+    readUserAndFollowReationByUserId,
 
     create, read, update,
     readFans, addFans, deleteFans,
@@ -127,31 +127,55 @@ async function cancelFollowIdol(fans_id, idol_id){
     return new ErrModel(FOLLOW.CANCEL_ERR)   
 }
 
+async function getNews(user_id){
+    let { news } = await readNews(user_id)
+
+    //  依時間排列 news item
+    news.sort( (a, b) => {
+        return a.data.showAt - b.data.showAt
+    })
+
+    //  調整news items 的時間格式
+    news = news.map( _news => {
+        _news.data.showAt = moment(_news.data.showAt,"YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+        return _news
+    })
+
+    return new SuccModel({ news })
+}
+
+//  取得 Idol fans 以及自己公開/隱藏的blog
 async function getSelfInfo(id){
     let { author, blogList } = await readBlogListAndAuthorByUserId(id)
-    let { fans, idols } = await readFollowReationByUserId(id)
-    let { news } = await readNews(id)
+    let { fans, idols } = await readUserAndFollowReationByUserId(id)
+    
 
-    //  處理 blogs
+    //  處理 current user 的 blogs
     let blogs = { show: [], hidden: [] }
 
+    //  彙整 公開與隱藏的blog
     blogList.length && blogList.forEach((blog) => {
         blog.show && blogs.show.push(blog)
         !blog.show && blogs.hidden.push(blog)
     })
 
-    news.sort( (a, b) => {
-        return a.data.showAt - b.data.showAt
+    return new SuccModel({ author, blogs, fans, idols })
+}
+
+//  取得 Idol fans 以及該使用者公開的blog
+async function getOtherInfo(id){
+    let { author, blogList } = await readBlogListAndAuthorByUserId(id)
+    let { fans, idols } = await readUserAndFollowReationByUserId(id)
+
+    //  處理 current user 的 blogs
+    let blogs = { show: [] }
+
+    //  彙整 公開的blog
+    blogList.length && blogList.forEach((blog) => {
+        blog.show && blogs.show.push(blog)
     })
 
-    news = news.map( _news => {
-        _news.data.showAt = moment(_news.data.showAt,"YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-        console.log('@@@=>', _news.data.showAt)
-        return _news
-    })
-
-    let res = { author, blogs, fans, idols, news }
-    return new SuccModel(res)
+    return new SuccModel({ author, blogs, fans, idols })
 }
 
 
@@ -165,7 +189,10 @@ module.exports = {
     confirmFollow,
     cancelFollowIdol,
     findUserById,
+
+    getNews,
     getSelfInfo,
+    getOtherInfo,
     logout,
 
     getOther

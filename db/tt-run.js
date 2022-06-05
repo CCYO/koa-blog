@@ -37,18 +37,17 @@ async function go() {
 
 async function go2() {
 
-    let author = await User.findAll({
+    let author = await User.findOne({
         where: { id: 2},
         include: [
             {
                 model: Blog,
-                as: 'BlogNews',
                 where: { show: false}
             },
-            // {
-            //     model: User,
-            //     as: 'Idol'
-            // }
+            {
+                model: User,
+                as: 'Idol'
+            }
         ]
     })
     console.log('@author => ', author)
@@ -61,7 +60,7 @@ async function go2() {
 (
     async () => {
         try {
-            console.log(await readBlogListAndAuthorByUserId(1, {show: true}))
+            console.log(await go2())
         } catch (e) {
             console.log('@ERR => ', e)
         }

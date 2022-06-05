@@ -9,9 +9,11 @@
     <!-- BS5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <%- include('wedgets/navbar/navbar-css') %>
 </head>
 
 <body>
+    <%- include('wedgets/navbar/navbar') %>
     <div class="container">
         <h3>修改個人資訊</h3>
         <form class="row">
@@ -51,12 +53,12 @@
                 <button type="submit" class="btn btn-primary">送出</button>
             </div>
         </form>
-        <button id="logout">登出</button>
         <div id="eval" style="display: none"><%- JSON.stringify(user) %></div>
     </div>
 
     <%- include('wedgets/cdn') %>
     <%- include('wedgets/utils') %>
+    <%- include('wedgets/navbar/navbar-js')  %>
     <!-- 引入 Spark-MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <script>
@@ -71,20 +73,20 @@
 
         $('form').addEventListener('submit', async (e) => {
             e.preventDefault()
-            
+
             let api = '/api/user/'
             let formData = new FormData()
 
-            if(hash){
+            if (hash) {
                 api += hash
-            }else{
+            } else {
                 api += '0'
             }
             for (item of e.target) {
                 let { type, name, value } = item
-                if ( type === 'file' && item.files[0]){
+                if (type === 'file' && item.files[0]) {
                     formData.append('avatar', item.files[0])
-                }else if ((type !== 'submit') && value) {
+                } else if ((type !== 'submit') && value) {
                     formData.append(name, value)
                 }
             }
@@ -106,37 +108,13 @@
             }
         })
 
-        // btn#logout.onclick handle：登出 
-        $('#logout').addEventListener('click', logout)
-
-        // 登出
-        async function logout() {
-            if (!confirm('真的要登出嗎?')) {
-                return alert('對拉，多待一下拉')
-            }
-
-            const {
-                data: {
-                    errno,
-                    data,
-                    msg
-                }
-            } = await axios.get('/api/user/logout')
-
-            if (!errno) {
-                alert(data)
-                location.href = '/register'
-            }
-        }
-
-
-        async function getImgHash(e){
+        async function getImgHash(e) {
             let file = e.target.files[0]
-            
+
             //  user.avatar 若有值，確認當前欲更新的 img md5hash 是否相同
             hash = await getMD5Hash(file)
 
-            if(hash === user.avatar_hash){
+            if (hash === user.avatar_hash) {
                 return alert('目前就是這個頭像唷！')
             }
         }
