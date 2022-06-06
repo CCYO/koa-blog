@@ -41,7 +41,7 @@
             <button class="btn btn-outline-success" type="submit">Search</button>
           </form>
           <li class="nav-item">
-            <a class="nav-link nav-tab <%= register ? `active` : `` %>" href="#" data-my-tab="#register">註冊</a>
+            <a class="nav-link nav-tab <%= !login ? `active` : `` %>" href="#" data-my-tab="#register">註冊</a>
           </li>
           <li class="nav-item">
             <a class="nav-link nav-tab <%= login ? `active` : `` %>" href="#" data-my-tab="#login">登入</a>
@@ -60,7 +60,7 @@
       <ul class="card-header-tabs nav nav-tabs ">
         <!-- 頭部導行項-->
         <li class="nav-item">
-          <a class="nav-link <%= register ? `active` : `` %>" href="#" data-my-tab='#register' data-bs-toggle='tab'
+          <a class="nav-link <%= !login ? `active` : `` %>" href="#" data-my-tab='#register' data-bs-toggle='tab'
             data-bs-target='#register' role="tab" aria-controls="register" aria-selected="true">註冊</a>
         </li>
         <li class="nav-item">
@@ -71,7 +71,7 @@
     </div>
     <!-- 卡片主體 -->
     <div class="card-body tab-content">
-      <div class="tab-pane fade <%= register ? `show active` : ``%>" id="register" role="tabpanel"
+      <div class="tab-pane fade <%= !login ? `show active` : ``%>" id="register" role="tabpanel"
         aria-labelledby="register-tab">
         <form id='form_register' class="row">
           <div class="col-8 mx-auto">
@@ -171,24 +171,24 @@
 
     //  Navbar 的  toggle 效果
     // $$(`.navbar-nav .nav-link`).forEach((a, ind, arr) => {
-    $$(`.navbar .nav-link`).forEach((a, ind, arr) => {
-      a.addEventListener(
-        'click',
-        (e) => {
-          e.preventDefault()
-          const $target = e.target
-          const mark = e.target.dataset['myTab']
-          //  觸發 card_tab 的 toggle 效果
-          BS5_tabs.find(tabTarigger => tabTarigger['mark'] === mark).show()
+    // $$(`.navbar .nav-link`).forEach((a, ind, arr) => {
+    //   a.addEventListener(
+    //     'click',
+    //     (e) => {
+    //       e.preventDefault()
+    //       const $target = e.target
+    //       const mark = e.target.dataset['myTab']
+    //       //  觸發 card_tab 的 toggle 效果
+    //       BS5_tabs.find(tabTarigger => tabTarigger['mark'] === mark).show()
 
-          //  改變 觸發 c d_tab 的 Navbar 的 toggle 樣式
-          arr.forEach(a => {
-            a.classList.remove('active')
-            $target.classList.add('active')
-          })
-        }
-      )
-    })
+    //       //  改變 觸發 c d_tab 的 Navbar 的 toggle 樣式
+    //       arr.forEach(a => {
+    //         a.classList.remove('active')
+    //         $target.classList.add('active')
+    //       })
+    //     }
+    //   )
+    // })
 
     //  GenericFuc: validate UI for form
     function _form_UI(selector__form) {

@@ -123,7 +123,7 @@ async function followIdol(fans_id, idol_id){
 
 async function cancelFollowIdol(fans_id, idol_id){
     const res = await deleteFans(idol_id, fans_id)
-    if(res) return new SuccModel()
+    if(res) return new SuccModel('已取消追蹤')
     return new ErrModel(FOLLOW.CANCEL_ERR)   
 }
 

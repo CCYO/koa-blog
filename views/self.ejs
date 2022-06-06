@@ -10,14 +10,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
     <style>
-        
-
         .avatar-box {
-            width: 20%;
+            width: 100%;
+            display: flex;
+            align-items: center;
         }
 
         .avatar-box>img {
-            width: 100%
+            width: 20%;
+            min-width: 70px;
+            margin-right: 1rem;
         }
     </style>
     <%- include('wedgets/navbar/navbar-css') %>
@@ -33,8 +35,12 @@
                 <div class="userInfo">
                     <div class='avatar-box'>
                         <img src="<%= user.avatar %>" alt="" srcset="">
+                        <% if (!self && myIdol) { %>
+                        <button id="cancelFollow" data-id="<%= user.id %>">取消追蹤</button>
+                        <% } else if (!self && myIdol === false) { %>
+                        <button id="follow" data-id="<%= user.id %>">追蹤</button>
+                        <% } %>
                     </div>
-
                     <p><%= user.email %> </p>
                     <p><%= user.nickname %> </p>
                 </div>
@@ -109,6 +115,29 @@
     <%- include('wedgets/cdn') %>
     <%- include('wedgets/utils') %>
     <%- include('wedgets/navbar/navbar-js')  %>
+    <script>
+        $('#cancelFollow') && $('#cancelFollow').addEventListener('click', aboutFollow(false))
+        $('#follow') && $('#follow').addEventListener('click', aboutFollow())
+
+        function aboutFollow(followRoCancel = true) {
+            let follow = followRoCancel ? true : false
+            let api = follow ? '/api/user/follow' : '/api/user/cancelFollow'
+            return async (e) => {
+                let id = e.target.dataset['id']
+                const {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.post(api, { id })
+                if (!errno) {
+                    alert(data)
+                    location.reload()
+                } else {
+                    alert(msg)
+                }
+            }
+        }
+    </script>
 </body>
 
 </html>

@@ -132,6 +132,11 @@ async function deleteBlogImg(id_arr){
     }
 }
 
+async function deleteBlog(id){
+    const row = await Blog.destroy({where: {id}})
+    return row
+}
+
 module.exports = {
     createBlog,
     updateBlog,
@@ -140,5 +145,6 @@ module.exports = {
     img_associate_blog,
     deleteBlogImg,
     readImg_associateBlog,
-    createImg_associateBlog
+    createImg_associateBlog,
+    deleteBlog
 }

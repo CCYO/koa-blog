@@ -1,15 +1,14 @@
 <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">KOA-BLOG</a>
-
+    <div class="container-fluid flex-nowrap">
+        <a class="navbar-brand" href="/square">KOA-BLOG</a>
 
         <ul class="nav nav-pills ms-auto me-3 order-md-2">
             <% if (!logging) { %>
             <li class="nav-item">
-                <a class="nav-link nav-tab <%= register ? `active` : `` %>" href="#" data-my-tab="#register">註冊</a>
+                <a class="nav-link nav-tab <%= login !== undefined && !login ? `active` : `` %>" href="/register" data-my-tab="#register">註冊</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link nav-tab <%= login ? `active` : `` %>" href="#" data-my-tab="#login">登入</a>
+                <a class="nav-link nav-tab <%= login ? `active` : `` %>" href="/login" data-my-tab="#login">登入</a>
             </li>
             <% } else { %>
             <li class="nav-item dropdown">
@@ -80,7 +79,7 @@
                 <ul class="navbar-nav w-100">
                     <!-- 表單項 -->
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Home</a>
+                        <a class="nav-link" href="/square">Home</a>
                     </li>   
                 </ul>
             </div>

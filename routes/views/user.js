@@ -13,27 +13,44 @@ const {
     getOther,
 } = require('../../controller/user')
 
-router.get('/square', view_check_login, async (ctx, next) => {
+/**
+ * @description router for square
+ */
+ router.get('/square', view_check_login, async (ctx, next) => {
     await ctx.render('square')
 })
 
-router.get('/register', async (ctx, next) => {
-    await ctx.render('register&login', {
-        logging: false,
-        register: true,
-        login: false
-    })
-})
-
+/**
+ * @description router for login
+ */
 router.get('/login', async (ctx, next) => {
+    if(ctx.session.user){
+        return ctx.redirect('/self')
+    }
+
     await ctx.render('register&login', {
         logging: false,
-        register: false,
         login: true
     })
 })
 
-//--
+/**
+ * @description router for register
+ */
+router.get('/register', async (ctx, next) => {
+    if(ctx.session.user){
+        return ctx.redirect('/self')
+    }
+
+    await ctx.render('register&login', {
+        logging: false,
+        login: false
+    })
+})
+
+/**
+ * @description router for self
+ */
 router.get('/self', view_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
     const { data: { news } } = await getNews(id) 
@@ -50,41 +67,54 @@ router.get('/self', view_check_login, async (ctx, next) => {
     })
 })
 
+/**
+ * @description router for other
+ */
 router.get('/other/:user_id', async (ctx, next) => {
     const { user_id: target_id } = ctx.params
-    const current_id = (ctx.session.user) ? ctx.session.user.id : false
-    let logging = current_id ? true : false
+    const current_id = (ctx.session.user) ? ctx.session.user.id : undefined
 
-    //  若是本人就跳轉
+    //  若是本人就跳轉至 /self
     if( target_id == current_id ){
         return ctx.redirect('/self')
     }
 
-    //  清除Fan追蹤紀錄
-    ctx.query.confirm && await confirmFollow(target_id, current_id)
+    //  若 query 有 confirm 參數，則清除Fan追蹤紀錄
+    ctx.query.confirm && current_id && await confirmFollow(target_id, current_id)
     
-    //  取得 news
+    //  整理 news 資料
     let news = []
     
-    if(current_id){
-        let { data } = await getNews(current_id)
-        news = data.news
-    } 
-
     const { data: { author: user, blogs, fans, idols } } = await getOtherInfo(target_id)
 
-    await ctx.render('self', {
-        logging,
+    let options = {
+        logging: current_id ? true : false,
         self: false,
         user,
         blogs,
         fans,
         idols,
-        news
-    })
+        news,
+    }
+
+    if(!options.logging){
+        options.login = undefined
+        options.myIdol = undefined
+    }
+
+    //  若有登入，則前往 db 取得 news 資料
+    if(current_id){
+        let { data } = await getNews(current_id)
+        news = data.news
+        options.myIdol = fans.some(({id}) => id === current_id) ? true : false
+    } 
+
+    await ctx.render('self', options)
 })
 
-
+/**
+ * @ router for setting
+ */
 router.get('/setting', view_check_login, async (ctx, next) => {
     const { user } = ctx.session
     const { data: { news } } = await getNews(user.id) 

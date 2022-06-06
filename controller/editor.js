@@ -7,7 +7,8 @@ const {
     img_associate_blog,
     deleteBlogImg,
     readImg_associateBlog,
-    createImg_associateBlog
+    createImg_associateBlog,
+    deleteBlog
 } = require('../server/editor')
 
 const { upload_jpg } = require('../utils/gcs')
@@ -102,8 +103,15 @@ async function uploadImg(ctx) {
     return new SuccModel(img)
 }
 
+async function removeBlog(id){
+    const res = await deleteBlog(id)
+    if(res) return new SuccModel('BLOG已成功刪除')
+    return new ErrModel(BLOG.BLOG_REMOVE_ERR)
+}
+
 module.exports = {
     addBlog,
     updateBlog,
-    uploadImg
+    uploadImg,
+    removeBlog
 }

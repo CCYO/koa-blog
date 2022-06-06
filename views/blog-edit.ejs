@@ -57,7 +57,7 @@
     <p></p>
 
     <button id="save">存檔</button>
-
+    <button id="remove">刪除此篇文章</button>
     <!-- AXIOS -->
     <%- include('wedgets/cdn') %>
     <%- include('wedgets/utils') %>
@@ -137,6 +137,7 @@
 
         //  btn#save 綁定 click handle : 存檔
         $('#save').addEventListener('click', save)
+        $('#remove').addEventListener('click', remove)
 
         function UI_check_new_title(e) {
             if (!blog.title) return
@@ -286,6 +287,26 @@
                 alert('blog save error!')
             }
         }
+    
+        async function remove(e){
+            if(!confirm('真的要刪掉?') ){
+                return
+            }
+
+            const {
+                data: {
+                    errno, data, msg
+                }
+            } = await axios.delete('/api/editor/blog', { data: { id: blog.id}})
+
+            if(!errno){
+                alert(data)
+                location.href = '/self'
+            }else{
+                alert(msg)
+            }
+        }
+    
     </script>
 </body>
 

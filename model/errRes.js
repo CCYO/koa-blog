@@ -27,7 +27,8 @@ module.exports = {
         NOT_EXIST: { errno: 702, msg: 'BLOG不存在'},
         NO_UPDATE: { errno: 703, msg: 'BLOG資料更新失敗'},
         UPLOAD_IMG_ERR: { errno: 704 },
-        IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg關聯紀錄失敗'}
+        IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg關聯紀錄失敗'},
+        BLOG_REMOVE_ERR: {errno: 706, msg: '刪除Blog失敗'}
     },
     FOLLOW: {
         FOLLOW_ERR: { errno: 801, msg: '追蹤失敗'},

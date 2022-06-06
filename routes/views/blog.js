@@ -13,7 +13,6 @@ const {
 } = require('../../controller/blog')
 
 router.get('/blog/new', view_check_login, async (ctx, next) => {
-    console.log(123)
     await ctx.render('blog-edit', {
         user: ctx.session.user,
         blog: {}
