@@ -10,6 +10,8 @@ const { getStorage } = require('firebase-admin/storage')
 
 const app = initializeApp({
   //  applicationDefault() 會撈取 $GOOGLE_APPLICATION_CREDENTIALS → 服務帳號的密鑰json
+  //  export GOOGLE_APPLICATION_CREDENTIALS="/home/study4/koa-blog/conf/GFB_admin_key.json"
+  //  確認 echo $GOOGLE_APPLICATION_CREDENTIALS
   credential: applicationDefault(),
   storageBucket: "gfb20220419.appspot.com" // 沒辦法寫在 服務帳號的密鑰json 內?
 })
@@ -19,6 +21,7 @@ const app = initializeApp({
 // });
 
 const storage = getStorage(app)
+
 const auth = getAuth(app)
 
 module.exports = {

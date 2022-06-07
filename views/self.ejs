@@ -21,6 +21,24 @@
             min-width: 70px;
             margin-right: 1rem;
         }
+
+        .btn-blog-edit {
+            z-index: 2;
+            background: #fff;
+        }
+
+        .follow-box {
+            width: 70px;
+            background: rgba(255, 255, 255, .1);
+            border: none;
+        }
+        .follow-box:hover {
+            background: rgba(255,255,255,.3);
+        }
+        .follow-box a {
+            text-decoration: none;
+            font-size: 0.25rem
+        }
     </style>
     <%- include('wedgets/navbar/navbar-css') %>
 </head>
@@ -50,10 +68,14 @@
                     <div id="public-blog">
                         <h2>已發布的BLOG</h2>
                         <% if(blogs.show.length){ %>
-                        <ul>
+                        <ul class="list-group list-group-flush">
                             <% blogs.show.forEach(({id, title}) => { %>
-                            <li>
-                                <a href="/blog/edit/<%= id %>"><%= title %> </a>
+                            <li
+                                class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+                                <a href="/blog/<%= id %>" class="stretched-link"><%= title %> </a>
+                                <% if (self) { %>
+                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
+                                <% } %>
                             </li>
                             <% }) %>
                         </ul>
@@ -65,11 +87,18 @@
                     <div id="private-blog">
                         <h2>編輯中的BLOG</h2>
                         <% if(blogs.hidden.length){ %>
-                        <ul>
+                        <ul class="list-group list-group-flush">
                             <% blogs.hidden.forEach(({id, title}) => { %>
-                            <li>
-                                <a href="/blog/edit/<%= id %>"><%= title %> </a>
+                            <li
+                                class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+                                <div>
+                                <a class="stretched-link" href="/blog/<%= id %>"><%= title %> </a>
+                            </div>
+                                <% if (self) { %>
+                                <a class='btn btn-outline-primary btn-sm btn-blog-edit' href="/blog/edit/<%= id %>">編輯</a>
+                                <% } %>
                             </li>
+
                             <% }) %>
                         </ul>
                         <% } else { %>
@@ -84,11 +113,14 @@
                 <div>
                     <p>Fans</p>
                     <% if (fans.length) { %>
-                    <ul>
+                        <ul class="d-flex flex-wrap p-0">
                         <% fans.forEach(fan => { %>
                         <% if (fan.id !== user.id ) { %>
-                        <li>
-                            <a href="/other/<%= fan.id %> "><%= fan.nickname %></a>
+                        <li class="card follow-box m-1">
+                            <img src="<%= fan.avatar %>" class="card-img-top" alt="">
+                            <div class="card-body text-center">
+                                <a href="/other/<%= fan.id %>" class="stretched-link"><%= fan.nickname %></a>
+                            </div>
                         </li>
                         <% } %>
                         <% }) %>
@@ -98,11 +130,14 @@
                 <div>
                     <p>idols</p>
                     <% if (idols.length) { %>
-                    <ul>
+                    <ul class="d-flex flex-wrap p-0">
                         <% idols.forEach(idol => { %>
                         <% if (idol.id !== user.id ) { %>
-                        <li>
-                            <a href="/other/<%= idol.id %> "><%= idol.nickname %></a>
+                        <li class="card follow-box m-1">
+                            <img src="<%= idol.avatar %>" class="card-img-top" alt="">
+                            <div class="card-body text-center">
+                                <a href="/other/<%= idol.id %>" class="stretched-link"><%= idol.nickname %></a>
+                            </div>
                         </li>
                         <% } %>
                         <% }) %>

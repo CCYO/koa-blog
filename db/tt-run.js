@@ -36,31 +36,20 @@ async function go() {
 }
 
 async function go2() {
-
-    let author = await User.findOne({
-        where: { id: 2},
-        include: [
-            {
-                model: Blog,
-                where: { show: false}
-            },
-            {
-                model: User,
-                as: 'Idol'
-            }
-        ]
+    let res = await Blog.findByPk(2, {
+        include: {
+            model: Img,
+            where: { id: 1}
+        }
     })
-    console.log('@author => ', author)
-    author = author.toJSON()
-    console.log('@author => ', author)
-
+    console.log('@res => ', res)
 }
 
 
 (
     async () => {
         try {
-            console.log(await go2())
+            await go2()
         } catch (e) {
             console.log('@ERR => ', e)
         }

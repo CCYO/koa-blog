@@ -17,6 +17,7 @@ const validate_user_register = async(ctx, next) => {
 const validate_user_update = async(ctx, next) => {
     const errors = validator_user_update(ctx.request.body)
     if (errors) {
+        console.log('@validate err => ', errors.name)
         return ctx.body = new ErrModel({...FORMAT_ERR, msg: errors})
     }
     return await next()

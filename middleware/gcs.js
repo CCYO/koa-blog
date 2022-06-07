@@ -24,6 +24,7 @@ async function parse_user_data(ctx, next) {
             { file }
 
     let { fields, files } = await parse(ctx)
+
     if (fields.age) {
         fields.age = fields.age * 1
     }
@@ -38,8 +39,6 @@ async function parse_user_data(ctx, next) {
         (avatar_hash == 0) ? { ...ctx.request.body, ...fields } :
             //  若avatar有需要改
             { ...ctx.request.body, ...fields, avatar: file_gcs.publicUrl(), avatar_hash }
-
-    console.log('@ctx.request.body => ', ctx.request.body)
 
     await next()
 }

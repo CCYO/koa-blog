@@ -36,7 +36,7 @@ const User = seq.define('User', {
         type: STRING,
         allowNull: true,
         validate: {
-            is: /^[\w@.]+$/,
+            is: /^[\u4e00-\u9fa5a-zA-Z]+$/,
             len: [2,30],
             notNull: false,
         }

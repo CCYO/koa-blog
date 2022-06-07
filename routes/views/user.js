@@ -30,7 +30,7 @@ router.get('/login', async (ctx, next) => {
 
     await ctx.render('register&login', {
         logging: false,
-        login: true
+        active: 'login'
     })
 })
 
@@ -44,7 +44,7 @@ router.get('/register', async (ctx, next) => {
 
     await ctx.render('register&login', {
         logging: false,
-        login: false
+        active: 'register'
     })
 })
 
@@ -58,6 +58,7 @@ router.get('/self', view_check_login, async (ctx, next) => {
 
     await ctx.render('self', {
         logging: true,
+        active: undefined,
         self: true,
         user,
         blogs,
@@ -90,6 +91,7 @@ router.get('/other/:user_id', async (ctx, next) => {
     let options = {
         logging: current_id ? true : false,
         self: false,
+        active: undefined,
         user,
         blogs,
         fans,
@@ -98,7 +100,6 @@ router.get('/other/:user_id', async (ctx, next) => {
     }
 
     if(!options.logging){
-        options.login = undefined
         options.myIdol = undefined
     }
 
@@ -121,6 +122,7 @@ router.get('/setting', view_check_login, async (ctx, next) => {
 
     await ctx.render('setting', {
         logging: true,
+        active: 'setting',
         user,
         news
     })

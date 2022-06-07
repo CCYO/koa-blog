@@ -25,8 +25,6 @@ router.get('/blog/edit/:blog_id', view_check_login, async(ctx, next) => {
     const { errno, data: blog = undefined, msg } = await getBlog(blog_id)
     
     if(blog.user != user.id){
-        console.log('blog => ', blog.user_id )
-        console.log('user => ', user.id)
         return ctx.redirect('/setting')
     }
     if( !errno ){

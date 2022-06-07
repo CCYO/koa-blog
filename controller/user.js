@@ -147,9 +147,8 @@ async function getNews(user_id){
 //  取得 Idol fans 以及自己公開/隱藏的blog
 async function getSelfInfo(id){
     let { author, blogList } = await readBlogListAndAuthorByUserId(id)
-    let { fans, idols } = await readUserAndFollowReationByUserId(id)
+    let { user, fans, idols } = await readUserAndFollowReationByUserId(id)
     
-
     //  處理 current user 的 blogs
     let blogs = { show: [], hidden: [] }
 

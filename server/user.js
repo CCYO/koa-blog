@@ -143,11 +143,14 @@ async function readBlogListAndAuthorByUserId(user_id) {
             }
         }
     )
+    
 
     let {
         Blogs: blogList,
         ...author
     } = res.toJSON()
+
+    console.log('@bbbb => ', blogList)
 
     author = init_4_user(author)
 
@@ -155,35 +158,12 @@ async function readBlogListAndAuthorByUserId(user_id) {
 }
 
 async function readUserAndFollowReationByUserId(user_id) {
-    let res = await User.findByPk(
-        user_id,
-        {
-            include: [
-                {
-                    model: User,
-                    as: 'Fans',
-                    attributes: ['id', 'email', 'nickname'],
-                    where: {
-                        id: { [Op.ne]: user_id }
-                    },
-                },
-                {
-                    model: User,
-                    as: 'Idol',
-                    attributes: ['id', 'email', 'nickname'],
-                    where: {
-                        id: { [Op.ne]: user_id }
-                    }
-                }
-            ]
-        }
-    )
-
-    let {
-        Fans: _fans,
-        Idol: _idols,
-        ..._user
-    } = res.toJSON()
+    let _user = await User.findByPk(user_id)
+    let _idols = await _user.getIdol()
+    let _fans = await _user.getFans()
+    
+    _idols = init_4_user(_idols, user_id)
+    _fans = init_4_user(_fans, user_id)
 
     let [ user, fans, idols ] = [_user, _fans, _idols].map(init_4_user)
     
