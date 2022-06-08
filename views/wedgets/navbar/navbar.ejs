@@ -5,10 +5,12 @@
         <ul class="nav nav-pills ms-auto me-3 order-md-2">
             <% if (!logging) { %>
             <li class="nav-item">
-                <a class="nav-link nav-tab <%= active === 'register' ? `active` : `` %>" href="/register" data-my-tab="#register">註冊</a>
+                <a class="nav-link nav-tab <%= active === 'register' ? `active` : `` %>" href="/register"
+                    data-my-tab="#register">註冊</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link nav-tab <%= active === 'login' ? `active` : `` %>" href="/login" data-my-tab="#login">登入</a>
+                <a class="nav-link nav-tab <%= active === 'login' ? `active` : `` %>" href="/login"
+                    data-my-tab="#login">登入</a>
             </li>
             <% } else { %>
             <li class="nav-item dropdown">
@@ -41,6 +43,16 @@
                     </li>
                     <% } %>
                     <% }) %>
+                    <% if(news.more){  %>
+                    <li class="dropdown-item">
+                        <a href="/api/user/more?offset=1">
+                            <span>讀取更多</span>
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <% } %>
                     <% } else { %>
                     <li>
                         <p class="dropdown-item">沒有新通知</p>
@@ -80,7 +92,7 @@
                     <!-- 表單項 -->
                     <li class="nav-item">
                         <a class="nav-link" href="/square">Home</a>
-                    </li>   
+                    </li>
                 </ul>
             </div>
         </div>

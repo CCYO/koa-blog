@@ -31,7 +31,10 @@ Img.belongsToMany(Blog, { through: BlogImg, foreignKey: 'img_id', targetKey: 'id
 //  as 是 TargetModel 的別名，
 User.belongsToMany(User, { as: 'Idol', through: Follow, foreignKey: 'fans_id', targetKey: 'id'})
 User.belongsToMany(User, { as: 'Fans', through: Follow, foreignKey: 'idol_id', targetKey: 'id'})
-
+Follow.belongsTo(User, {as: 'Fans_of_Follow', foreignKey: 'fans_id', targetKey: 'id'})
+Follow.belongsTo(User, {as: 'Idol_of_Follow', foreignKey: 'idol_id', targetKey: 'id'})
+User.hasMany(Follow, {foreignKey: 'fans_id', targetKey: 'id'})
+User.hasMany(Follow, {foreignKey: 'idol_id', targetKey: 'id'})
 // Follow.belongsTo(User, { foreignKey: 'idol_id', targetKey: 'id'})
 // Follow.belongsTo(User, { foreignKey: 'fans_id', targetKey: 'id'})
 
@@ -40,7 +43,10 @@ User.belongsToMany(User, { as: 'Fans', through: Follow, foreignKey: 'idol_id', t
 
 Blog.belongsToMany(User, { as: 'Follower', through: Blog_Fans, foreignKey: 'blog_id', targetKey: 'id'})
 User.belongsToMany(Blog, { as: 'BlogNews', through: Blog_Fans, foreignKey: 'fans_id', targetKey: 'id'})
-
+Blog_Fans.belongsTo(Blog, { foreignKey: 'blog_id', targetKey: 'id'})
+Blog_Fans.belongsTo(User, { foreignKey: 'fans_id', targetKey: 'id'})
+Blog.hasMany(Blog_Fans, { foreignKey: 'blog_id', targetKey: 'id'})
+User.hasMany(Blog_Fans, { foreignKey: 'fans_id', targetKey: 'id'})
 module.exports = {
     User, Blog, Img, BlogImg, Follow, Blog_Fans, seq
 }

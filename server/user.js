@@ -3,7 +3,9 @@
  */
 const { Op } = require('sequelize')
 
-const { User, Follow, Blog } = require('../db/model')
+const { NEWS } = require('../conf/constant')
+
+const { User, Follow, Blog, Blog_Fans } = require('../db/model')
 const hash = require('../utils/crypto')
 const { init_4_user } = require('../utils/init')
 
@@ -143,7 +145,7 @@ async function readBlogListAndAuthorByUserId(user_id) {
             }
         }
     )
-    
+
 
     let {
         Blogs: blogList,
@@ -161,12 +163,12 @@ async function readUserAndFollowReationByUserId(user_id) {
     let _user = await User.findByPk(user_id)
     let _idols = await _user.getIdol()
     let _fans = await _user.getFans()
-    
+
     _idols = init_4_user(_idols, user_id)
     _fans = init_4_user(_fans, user_id)
 
-    let [ user, fans, idols ] = [_user, _fans, _idols].map(init_4_user)
-    
+    let [user, fans, idols] = [_user, _fans, _idols].map(init_4_user)
+
     return { user, fans, idols }
 
 }
@@ -218,79 +220,70 @@ async function readBlogListOfIdeoByUserId(user_id, onlyNewBlogs = true, includeS
     })
 }
 
-async function readNews(id) {
-    let res = await User.findOne({
-        where: { id },
-        include:
-            [
-                {
-                    model: User,
-                    as: 'Fans',
-                    attributes: ['id', 'email', 'nickname'],
-                    through: {
-                        where: {
-                            confirm: false,
-                            fans_id: { [Op.ne]: id }
-                        },
-                        attributes: ['createdAt']
-                    }
-                },
-                {
-                    model: Blog,
-                    as: 'BlogNews',
-                    attributes: ['id', 'title', 'show', 'showAt'],
-                    through: {
-                        where: {
-                            confirm: false
-                        }
-                    },
-                    include: {
-                        model: User,
-                        attributes: ['id', 'nickname', 'email']
-                    }
-                }
-            ]
+async function readNews(id, ind) {
+    let offset = ind * NEWS.LIMIT
+    let blogList = await Blog_Fans.findAndCountAll({
+        where: { fans_id: id, confirm: false },
+        attributes: [],
+        include: {
+            model: Blog,
+            attributes: ['id', 'title', 'showAt'],
+            where: { show: true },
+            include: {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            }
+        },
+        limit: NEWS.LIMIT,
+        offset
     })
 
-    let {
-        Fans: fansNews,
-        BlogNews: blogNews,
-        ...user
-    } = res.toJSON()   
-
-    //  新追蹤的fans
-    fansNews = fansNews.length ? fansNews.map(fans => ({
-        data: {
-            ...init_4_user(fans),
-            showAt: fans.Follow.createdAt,
-        },
-        type: 'fans'
-    })) : []
-
-    //  處理 idol 的 blogNews
-    
-    blogNews = (blogNews.length) ? blogNews.filter(({ show }) => show) : []
-    
-    blogNews = (blogNews.length) ?
-        blogNews.map(blog => {
-            let { User: user, id, title, showAt } = blog
-            let author = init_4_user(user)
-            return {
-                type: 'blogNews',
-                data: {
-                    id, title, showAt, author
-                }
+    let blogNews = []
+    blogList.rows.forEach(({ Blog: { id, title, showAt, User: author } }) => {
+        blogNews.push({
+            type: 'blogNews',
+            data: {
+                id,
+                title,
+                showAt,
+                author: init_4_user(author.toJSON())
             }
-        }) :
-        []
-        console.log('@blogNews => ', blogNews)
-    //  處理 user
-    user = init_4_user(user)
+        })
+    })
 
-    return {
-        user,
-        news: [...blogNews, ...fansNews]
-    }
+    let fansList = await Follow.findAndCountAll({
+        where: { 
+            idol_id: id,
+            fans_id: { [Op.ne]: id },
+            confirm: false
+        },
+        attributes: ['createdAt'],
+        include: {
+            model: User,
+            as: 'Fans_of_Follow',
+            attributes: ['id', 'email', 'nickname']
+        },
+        limit: NEWS.LIMIT,
+        offset
+    })
+
+    let fansNews = []
+    fansList.rows.forEach(fans => {
+        let { createdAt: showAt, Fans_of_Follow: user } = fans.toJSON()
+        let { id, nickname } = init_4_user(user)
+        console.log('@user => ', fans.toJSON())
+        fansNews.push({
+            type: 'fans',
+            data: { showAt, id, nickname }
+        })
+    })
+
+    let more = 
+        (ind === 0 && blogList.count % NEWS.LIMIT || fansList.count % NEWS.LIMIT) ? true :
+        (ind > 0 && blogList.count % offset || fansList.count % offset) ? true : false
+
+
+    return { news: [...blogNews, ...fansNews], more }
 
 }
 

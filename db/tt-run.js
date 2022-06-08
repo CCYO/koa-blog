@@ -36,13 +36,9 @@ async function go() {
 }
 
 async function go2() {
-    let res = await Blog.findByPk(2, {
-        include: {
-            model: Img,
-            where: { id: 1}
-        }
-    })
-    console.log('@res => ', res)
+    let blog = await Blog.findByPk(5)
+    let user = await blog.getUser()
+    console.log('@user => ', user)
 }
 
 

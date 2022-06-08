@@ -22,14 +22,16 @@ async function updateBlog(data, blog_id){
             include: {
                 model: User,
                 as: 'Fans',
-                where: {
-                    id: {[Op.ne]: data.user_id}
-                },
-                attributes: ['id']
+                attributes: ['id'],
+                through: {
+                    where: { fans_id: {[Op.ne]: data.user_id}}
+                }
             }
         }
     })
-    let fans_id = blog.User.Fans.map( fans => fans.toJSON().id )
+    console.log('@@@ => ', blog)
+
+    let fans_id = blog.User.Fans.map( fans => fans.dataValues.id )
 
     //  更新前，先撈出待確認資料
     let { show, showAt } = blog.toJSON()
@@ -71,11 +73,13 @@ async function updateBlog(data, blog_id){
         //  blog 固有 fans，且 Follow.confirm: false，若 blog.show 有變動，自然會得到通知
 
         //  找出是 author 現有粉絲，但未 follow 文章的人
-        let followers = (await blog.getFollower()).map( follower)
-        let followers_id = followers.map( follower => follower.toJSON().id )
-        let newFollowers_id = fans_id.filter( id => followers_id.includes(id) )
+        let followers_id = (await blog.getFollower()).map( follower => follower.dataValues.id )
+        console.log('@fans_id => ', fans_id)
+        console.log('@followers_id => ', followers_id)
+        let newFollowers_id = fans_id.filter( id => !followers_id.includes(id) )
+        console.log('@@newFollowers ==> ', newFollowers_id)
         //  加入 follow
-        await blog.addFollower(followers_id)
+        await blog.addFollower(newFollowers_id)
     }
 
     return row

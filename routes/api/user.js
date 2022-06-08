@@ -4,7 +4,7 @@
 
 const router = require('koa-router')()
 
-const { register, findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout } = require('../../controller/user')
+const { register, findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout, getNews } = require('../../controller/user')
 
 const { api_check_login } = require('../../middleware/check_login')
 const { parse_user_data } = require('../../middleware/gcs')
@@ -56,6 +56,13 @@ router.post('/cancelFollow', async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await cancelFollowIdol(fans_id, idol_id)
+})
+
+router.get('/moreNews' , api_check_login, async(ctx, next) => {
+    const { id } = ctx.session.user
+    const { offset } = ctx.query
+    const { data } = await getNews(id, offset)
+    ctx.body = data
 })
 
 module.exports = router

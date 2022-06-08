@@ -127,8 +127,8 @@ async function cancelFollowIdol(fans_id, idol_id){
     return new ErrModel(FOLLOW.CANCEL_ERR)   
 }
 
-async function getNews(user_id){
-    let { news } = await readNews(user_id)
+async function getNews(user_id, offset = 0){
+    let { news } = await readNews(user_id, offset)
 
     //  依時間排列 news item
     news.sort( (a, b) => {
