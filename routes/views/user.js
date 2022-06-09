@@ -53,9 +53,9 @@ router.get('/register', async (ctx, next) => {
  */
 router.get('/self', view_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { data: { news, more, index } } = await getNews(id) 
+    const { data: { news, more, index, count } } = await getNews(id) 
     const { data: { author: user, blogs, fans, idols } } = await getSelfInfo(id)
-
+    console.log('@count => ', count)
     await ctx.render('self', {
         logging: true,
         active: undefined,
@@ -66,7 +66,8 @@ router.get('/self', view_check_login, async (ctx, next) => {
         idols,
         news,
         more,
-        index
+        index,
+        count
     })
 })
 
@@ -97,8 +98,7 @@ router.get('/other/:user_id', async (ctx, next) => {
         user,
         blogs,
         fans,
-        idols,
-        news,
+        idols
     }
 
     if(!options.logging){
@@ -107,8 +107,8 @@ router.get('/other/:user_id', async (ctx, next) => {
 
     //  若有登入，則前往 db 取得 news 資料
     if(current_id){
-        let { data } = await getNews(current_id)
-        news = data.news
+        let { data: {news, more, index} } = await getNews(current_id)
+        options = { ...options, news, more, index } 
         options.myIdol = fans.some(({id}) => id === current_id) ? true : false
     } 
 

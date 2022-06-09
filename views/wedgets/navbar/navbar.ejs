@@ -15,8 +15,13 @@
             <% } else { %>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
-                    aria-expanded="false">
+                    data-bs-auto-close="outside" aria-expanded="false">
                     通知
+                    <% if (count) { %>
+                    <span class="position-absolute translate-middle badge rounded-pill bg-danger news-count">
+                        <%= count %>
+                    </span>
+                    <% } %>
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="newList">
                     <% if (news.length) { %>
@@ -35,6 +40,7 @@
                     <li class="dropdown-item">
                         <a href="/blog/<%= data.id %>?confirm=true">
                             <span><%= data.author.nickname %> 有新文章唷！</span><br>
+                            <span>- <%= data.title %> -</span><br>
                             <span><%= data.showAt %> </span>
                         </a>
                     </li>
@@ -44,11 +50,11 @@
                     <% } %>
                     <% }) %>
                     <li>
-                        <button class="dropdown-item link-primary <%= more ? 'd-block' : 'd-none' %>" type="button" id="more_news"
-                            data-api="/api/user/moreNews?index=<%= index %>">
+                        <button class="dropdown-item link-primary" style="display: <%= !more ? 'none' : 'block'%>"
+                            type="button" id="more_news" data-api="/api/user/moreNews?index=<%= index %>">
                             讀取更多</button>
                     </li>
-                    <li class="dropdown-item <%= !more ? 'd-block' : 'd-none' %> nonews">
+                    <li class="dropdown-item" style="display: <%= more ? 'none' : 'block'%>" id="nonews">
                         <span>沒有新通知</span>
                     </li>
                     <li>

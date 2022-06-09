@@ -130,11 +130,11 @@ async function cancelFollowIdol(fans_id, idol_id) {
 }
 
 async function getNews(user_id, index = 0, api = false) {
-    let { news, more } = await readNews(user_id, index)
+    let { news, more, count } = await readNews(user_id, index)
 
     //  依時間排列 news item
     news.sort((a, b) => {
-        return a.data.showAt - b.data.showAt
+        return b.data.showAt - a.data.showAt
     })
 
     //  調整news items 的時間格式
@@ -143,7 +143,7 @@ async function getNews(user_id, index = 0, api = false) {
         return _news
     })
 
-    let data = { news, more }
+    let data = { news, more, count }
 
     if (more) {
         data.index = index*1 + 1
@@ -167,7 +167,7 @@ async function getNews(user_id, index = 0, api = false) {
         let str = await _renderFile(fileName, {news})
         console.log('@more => ', more)
         console.log('@index => ', index)
-        return new SuccModel({str, more, index})
+        return new SuccModel({str, more, index, count})
     }
 
     return new SuccModel(data)
