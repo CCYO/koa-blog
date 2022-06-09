@@ -107,8 +107,8 @@ router.get('/other/:user_id', async (ctx, next) => {
 
     //  若有登入，則前往 db 取得 news 資料
     if(current_id){
-        let { data: {news, more, index} } = await getNews(current_id)
-        options = { ...options, news, more, index } 
+        let { data: {news, more, index, count} } = await getNews(current_id)
+        options = { ...options, news, more, index, count } 
         options.myIdol = fans.some(({id}) => id === current_id) ? true : false
     } 
 

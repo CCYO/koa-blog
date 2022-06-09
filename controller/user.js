@@ -133,9 +133,9 @@ async function getNews(user_id, index = 0, api = false) {
     let { news, more, count } = await readNews(user_id, index)
 
     //  依時間排列 news item
-    news.sort((a, b) => {
-        return b.data.showAt - a.data.showAt
-    })
+    // news.sort((a, b) => {
+    //     return b.data.showAt - a.data.showAt
+    // })
 
     //  調整news items 的時間格式
     news = news.map(_news => {
@@ -146,7 +146,7 @@ async function getNews(user_id, index = 0, api = false) {
     let data = { news, more, count }
 
     if (more) {
-        data.index = index*1 + 1
+        data.index = index * 1 + 1
     }
 
     function _renderFile(fileName, data) {
@@ -165,8 +165,6 @@ async function getNews(user_id, index = 0, api = false) {
         let { news, more, index } = data
         let fileName = resolve(__dirname, '../views/wedgets/navbar/news.ejs')
         let str = await _renderFile(fileName, {news})
-        console.log('@more => ', more)
-        console.log('@index => ', index)
         return new SuccModel({str, more, index, count})
     }
 

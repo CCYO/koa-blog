@@ -6,6 +6,7 @@ const { Op } = require('sequelize')
 const { NEWS } = require('../conf/constant')
 
 const { User, Follow, Blog, Blog_Fans } = require('../db/model')
+const { BLOG } = require('../model/errRes')
 const hash = require('../utils/crypto')
 const { init_4_user } = require('../utils/init')
 
@@ -234,6 +235,7 @@ async function readNews(id, index) {
                 attributes: ['id', 'email', 'nickname']
             }
         },
+        order: [[Blog, 'showAt', 'DESC']],
         limit: NEWS.LIMIT,
         offset
     })
@@ -263,6 +265,7 @@ async function readNews(id, index) {
             as: 'Fans_of_Follow',
             attributes: ['id', 'email', 'nickname']
         },
+        order: [ ['createdAt', 'DESC']],
         limit: NEWS.LIMIT,
         offset
     })
