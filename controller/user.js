@@ -132,10 +132,16 @@ async function cancelFollowIdol(fans_id, idol_id) {
 async function getNews(user_id, index = 0, api = false) {
     let { news, more, count } = await readNews(user_id, index)
 
-    //  依時間排列 news item
-    // news.sort((a, b) => {
-    //     return b.data.showAt - a.data.showAt
-    // })
+    //  找出最新的一條news
+    news.sort((a, b) => {
+        return b.data.showAt - a.data.showAt
+    })
+
+    let data = {}
+
+    if (index === 0) {
+        data.comfirm_time = news[0].data.showAt.getTime()
+    }
 
     //  調整news items 的時間格式
     news = news.map(_news => {
@@ -143,7 +149,7 @@ async function getNews(user_id, index = 0, api = false) {
         return _news
     })
 
-    let data = { news, more, count }
+    data = { ...data, news, more, count }
 
     if (more) {
         data.index = index * 1 + 1
@@ -164,8 +170,8 @@ async function getNews(user_id, index = 0, api = false) {
     if (api) {
         let { news, more, index } = data
         let fileName = resolve(__dirname, '../views/wedgets/navbar/news.ejs')
-        let str = await _renderFile(fileName, {news})
-        return new SuccModel({str, more, index, count})
+        let str = await _renderFile(fileName, { news })
+        return new SuccModel({ str, more, index, count })
     }
 
     return new SuccModel(data)
@@ -204,6 +210,7 @@ async function getOtherInfo(id) {
     return new SuccModel({ author, blogs, fans, idols })
 }
 
+async function confirmNews()
 
 module.exports = {
     register,
@@ -221,5 +228,6 @@ module.exports = {
     getOtherInfo,
     logout,
 
-    getOther
+    getOther,
+    confirmNews
 }

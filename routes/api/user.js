@@ -4,7 +4,7 @@
 
 const router = require('koa-router')()
 
-const { register, findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout, getNews } = require('../../controller/user')
+const { register, findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout, getNews, confirmNews } = require('../../controller/user')
 
 const { api_check_login } = require('../../middleware/check_login')
 const { parse_user_data } = require('../../middleware/gcs')
@@ -63,6 +63,12 @@ router.get('/moreNews' , api_check_login, async(ctx, next) => {
     const { index } = ctx.query
 
     ctx.body = await getNews(id, index, true)
+})
+
+router.get('/news_confirm', api_check_login, async(ctx, next) => {
+    const { comfirm_time } = ctx.query
+    await confirmNews(comfirm_time*1)
+    ctx.body = { errno: 0, data: 'okokok'}
 })
 
 module.exports = router

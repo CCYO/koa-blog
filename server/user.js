@@ -280,17 +280,11 @@ async function readNews(id, index) {
             data: { showAt, id, nickname }
         })
     })
-
-    console.log('@index => ', index)
-    console.log('@blogList.count => ', blogList.count)
-    console.log('@fansList.count => ', fansList.count)
-    console.log('@offset => ', offset)
-
+    
     let more =
         index === 0 && (blogList.count > NEWS.LIMIT || fansList.count > NEWS.LIMIT) ? true :
         index > 0 && (blogList.count - NEWS.LIMIT > offset || fansList.count - NEWS.LIMIT > offset) ? true : false
 
-    console.log('@more => ', more)
     return { news: [...blogNews, ...fansNews], more, count: blogList.count + fansList.count }
 
 }

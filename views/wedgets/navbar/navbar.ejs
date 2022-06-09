@@ -15,7 +15,8 @@
             <% } else { %>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside" aria-expanded="false">
+                    data-bs-auto-close="outside" aria-expanded="false" id="news_confirm" data-comfirm_time="<%= comfirm_time %>"
+                    >
                     通知
                     <% if (count) { %>
                     <span class="position-absolute translate-middle badge rounded-pill bg-danger news-count">
