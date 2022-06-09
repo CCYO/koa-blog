@@ -60,9 +60,9 @@ router.post('/cancelFollow', async (ctx, next) => {
 
 router.get('/moreNews' , api_check_login, async(ctx, next) => {
     const { id } = ctx.session.user
-    const { offset } = ctx.query
-    const { data } = await getNews(id, offset)
-    ctx.body = data
+    const { index } = ctx.query
+
+    ctx.body = await getNews(id, index, true)
 })
 
 module.exports = router

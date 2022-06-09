@@ -2,6 +2,8 @@
  * @description Controller user相關
  */
 const moment = require('moment')
+const ejs = require('ejs')
+const { resolve } = require('path')
 
 const {
     readBlogListAndAuthorByUserId,
@@ -47,8 +49,8 @@ const findUser = async (email, password) => {
     }
 }
 
-async function findUserById(id){
-    const user = await read({id})
+async function findUserById(id) {
+    const user = await read({ id })
     return new SuccModel(user)
 }
 
@@ -89,19 +91,19 @@ const modifyUserInfo = async (ctx) => {
     }
 }
 
-async function getFansById(idol_id){
+async function getFansById(idol_id) {
     const fans = await readFans(idol_id)
     return new SuccModel(fans)
 }
 
-async function getIdolsById(idol_id){
+async function getIdolsById(idol_id) {
     const fans = await readIdols(idol_id)
     return new SuccModel(fans)
 }
 
-async function confirmFollow(fans_id, idol_id){
-    const row = await updateFollow({fans_id, idol_id}, {confirm: true})
-    if(row) return new SuccModel()
+async function confirmFollow(fans_id, idol_id) {
+    const row = await updateFollow({ fans_id, idol_id }, { confirm: true })
+    if (row) return new SuccModel()
     return new ErrModel(FOLLOW.CONFIRM_ERR)
 }
 
@@ -111,44 +113,71 @@ const logout = async (ctx) => {
 }
 
 // ----
-async function getOther(other_id){
+async function getOther(other_id) {
     return new SuccModel(await readOther(other_id))
 }
 
-async function followIdol(fans_id, idol_id){
+async function followIdol(fans_id, idol_id) {
     const res = await addFans(idol_id, fans_id)
-    if(res) return new SuccModel(res)
+    if (res) return new SuccModel(res)
     return new ErrModel(FOLLOW.FOLLOW_ERR)
 }
 
-async function cancelFollowIdol(fans_id, idol_id){
+async function cancelFollowIdol(fans_id, idol_id) {
     const res = await deleteFans(idol_id, fans_id)
-    if(res) return new SuccModel('已取消追蹤')
-    return new ErrModel(FOLLOW.CANCEL_ERR)   
+    if (res) return new SuccModel('已取消追蹤')
+    return new ErrModel(FOLLOW.CANCEL_ERR)
 }
 
-async function getNews(user_id, offset = 0){
-    let { news } = await readNews(user_id, offset)
+async function getNews(user_id, index = 0, api = false) {
+    let { news, more } = await readNews(user_id, index)
 
     //  依時間排列 news item
-    news.sort( (a, b) => {
+    news.sort((a, b) => {
         return a.data.showAt - b.data.showAt
     })
 
     //  調整news items 的時間格式
-    news = news.map( _news => {
-        _news.data.showAt = moment(_news.data.showAt,"YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+    news = news.map(_news => {
+        _news.data.showAt = moment(_news.data.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
         return _news
     })
 
-    return new SuccModel({ news })
+    let data = { news, more }
+
+    if (more) {
+        data.index = index*1 + 1
+    }
+
+    function _renderFile(fileName, data) {
+        return new Promise((resolve, reject) => {
+            ejs.renderFile(fileName, data, function (e, str) {
+                if (e) {
+                    console.log('@e => ', e)
+                    return reject(e)
+                }
+                resolve(str)
+            })
+        })
+    }
+
+    if (api) {
+        let { news, more, index } = data
+        let fileName = resolve(__dirname, '../views/wedgets/navbar/news.ejs')
+        let str = await _renderFile(fileName, {news})
+        console.log('@more => ', more)
+        console.log('@index => ', index)
+        return new SuccModel({str, more, index})
+    }
+
+    return new SuccModel(data)
 }
 
 //  取得 Idol fans 以及自己公開/隱藏的blog
-async function getSelfInfo(id){
+async function getSelfInfo(id) {
     let { author, blogList } = await readBlogListAndAuthorByUserId(id)
     let { user, fans, idols } = await readUserAndFollowReationByUserId(id)
-    
+
     //  處理 current user 的 blogs
     let blogs = { show: [], hidden: [] }
 
@@ -162,7 +191,7 @@ async function getSelfInfo(id){
 }
 
 //  取得 Idol fans 以及該使用者公開的blog
-async function getOtherInfo(id){
+async function getOtherInfo(id) {
     let { author, blogList } = await readBlogListAndAuthorByUserId(id)
     let { fans, idols } = await readUserAndFollowReationByUserId(id)
 

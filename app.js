@@ -56,6 +56,11 @@ app.use( async(ctx, next) => {
 
 app.keys = ['keys']
 
+app.use(views(__dirname + '/views', {
+  extension: 'ejs'
+}))
+
+
 // middlewares
 app.use(session({
   key: 'blog.sid', //cookie name前綴
@@ -80,10 +85,6 @@ app.use(bodyparser({
 app.use(json())
 app.use(logger())
 app.use(require('koa-static')(__dirname + '/public'))
-
-app.use(views(__dirname + '/views', {
-  extension: 'ejs'
-}))
 
 // logger
 app.use(async (ctx, next) => {

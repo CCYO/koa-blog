@@ -18,7 +18,7 @@
                     aria-expanded="false">
                     通知
                 </a>
-                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="newList">
                     <% if (news.length) { %>
                     <% news.forEach(({type, data}) => { %>
                     <% if (type === 'fans') { %>
@@ -43,25 +43,18 @@
                     </li>
                     <% } %>
                     <% }) %>
-                    <% if(news.more){  %>
-                    <li class="dropdown-item">
-                        <a href="/api/user/more?offset=1">
-                            <span>讀取更多</span>
-                        </a>
+                    <li>
+                        <button class="dropdown-item link-primary <%= more ? 'd-block' : 'd-none' %>" type="button" id="more_news"
+                            data-api="/api/user/moreNews?index=<%= index %>">
+                            讀取更多</button>
+                    </li>
+                    <li class="dropdown-item <%= !more ? 'd-block' : 'd-none' %> nonews">
+                        <span>沒有新通知</span>
                     </li>
                     <li>
                         <hr class="dropdown-divider">
                     </li>
                     <% } %>
-                    <% } else { %>
-                    <li>
-                        <p class="dropdown-item">沒有新通知</p>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <% } %>
-
                 </ul>
             </li>
             <li class="nav-item">

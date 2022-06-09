@@ -1,0 +1,30 @@
+<script>
+    $(function () {
+        console.log('news JS 2')
+        $('#more_news').click(async (e) => {
+            e.preventDefault()
+            let api = e.target.dataset.api
+            const {
+                data: {
+                    errno, data, msg
+                }
+            } = await axios.get(api)
+            if (!errno) {
+                let { str, more, index } = data
+                let news_arr = $('#newList').children('li.dropdown-item')
+                let target = news_arr[news_arr.length - 2]
+                $(target).after(str)
+                if(more){
+                    $('#more_news').attr('data-api', `/api/user/moreNews?index=${index}`)
+                }else{
+                    $('#more_news').toggle()
+                    $('#nonews').toggle()
+                }
+                alert('ok')
+            } else {
+                alert(msg)
+            }
+        })
+    })
+console.log('news JS 1')
+</script>

@@ -220,8 +220,8 @@ async function readBlogListOfIdeoByUserId(user_id, onlyNewBlogs = true, includeS
     })
 }
 
-async function readNews(id, ind) {
-    let offset = ind * NEWS.LIMIT
+async function readNews(id, index) {
+    let offset = index * NEWS.LIMIT
     let blogList = await Blog_Fans.findAndCountAll({
         where: { fans_id: id, confirm: false },
         attributes: [],
@@ -252,7 +252,7 @@ async function readNews(id, ind) {
     })
 
     let fansList = await Follow.findAndCountAll({
-        where: { 
+        where: {
             idol_id: id,
             fans_id: { [Op.ne]: id },
             confirm: false
@@ -278,11 +278,16 @@ async function readNews(id, ind) {
         })
     })
 
-    let more = 
-        (ind === 0 && blogList.count % NEWS.LIMIT || fansList.count % NEWS.LIMIT) ? true :
-        (ind > 0 && blogList.count % offset || fansList.count % offset) ? true : false
+    console.log('@index => ', index)
+    console.log('@blogList.count => ', blogList.count)
+    console.log('@fansList.count => ', fansList.count)
+    console.log('@offset => ', offset)
 
+    let more =
+        (index === 0 && blogList.count > NEWS.LIMIT || fansList.count > NEWS.LIMIT) ? true :
+            (index > 0 && (blogList.count % offset || fansList.count % offset)) ? true : false
 
+    console.log('@more => ', more)
     return { news: [...blogNews, ...fansNews], more }
 
 }

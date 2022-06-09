@@ -1,0 +1,21 @@
+<% news.forEach(({type, data}) => { %>
+<% if (type === 'fans') { %>
+<li class="dropdown-item">
+    <a href="/other/<%= data.id %>?confirm=true">
+        <span><%= data.nickname %>追蹤你囉！</span><br>
+        <span><%= data.showAt %> </span>
+    </a>
+</li>
+<li>
+    <hr class="dropdown-divider">
+</li>
+<% } else if (type === 'blogNews') { %>
+<li class="dropdown-item">
+    <a href="/blog/<%= data.id %>?confirm=true">
+        <span><%= data.author.nickname %> 有新文章唷！</span><br>
+        <span><%= data.showAt %> </span>
+    </a>
+</li>
+
+<% } %>
+<% }) %>

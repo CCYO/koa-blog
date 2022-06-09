@@ -53,7 +53,7 @@ router.get('/register', async (ctx, next) => {
  */
 router.get('/self', view_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { data: { news } } = await getNews(id) 
+    const { data: { news, more, index } } = await getNews(id) 
     const { data: { author: user, blogs, fans, idols } } = await getSelfInfo(id)
 
     await ctx.render('self', {
@@ -64,7 +64,9 @@ router.get('/self', view_check_login, async (ctx, next) => {
         blogs,
         fans,
         idols,
-        news
+        news,
+        more,
+        index
     })
 })
 

@@ -148,11 +148,11 @@
         </div>
     </div>
     <%- include('wedgets/cdn') %>
-    <%- include('wedgets/utils') %>
     <%- include('wedgets/navbar/navbar-js')  %>
+    <%- include('wedgets/navbar/news-js') %> 
     <script>
-        $('#cancelFollow') && $('#cancelFollow').addEventListener('click', aboutFollow(false))
-        $('#follow') && $('#follow').addEventListener('click', aboutFollow())
+        $('#cancelFollow') && $('#cancelFollow').click(aboutFollow(false))
+        $('#follow') && $('#follow').click(aboutFollow())
 
         function aboutFollow(followRoCancel = true) {
             let follow = followRoCancel ? true : false
