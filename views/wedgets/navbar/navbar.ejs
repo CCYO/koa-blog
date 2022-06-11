@@ -15,8 +15,8 @@
             <% } else { %>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside" aria-expanded="false" id="news_confirm" data-comfirm_time="<%= comfirm_time %>"
-                    >
+                    data-bs-auto-close="outside" aria-expanded="false" id="news_confirm"
+                    data-comfirm_time="<%= comfirm_time %>">
                     通知
                     <% if (count) { %>
                     <span class="position-absolute translate-middle badge rounded-pill bg-danger news-count">
@@ -58,10 +58,15 @@
                     <li class="dropdown-item" style="display: <%= more ? 'none' : 'block'%>" id="nonews">
                         <span>沒有新通知</span>
                     </li>
+                    
+                    <% } else { %>
+                        <li class="dropdown-item" style="display: <%= more ? 'none' : 'block'%>" id="nonews">
+                            <span>沒有新通知</span>
+                        </li>
+                    <% } %>
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                    <% } %>
                 </ul>
             </li>
             <li class="nav-item">

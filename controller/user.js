@@ -12,7 +12,8 @@ const {
     create, read, update,
     readFans, addFans, deleteFans,
     readIdols, readNews, updateFollow,
-    readOther
+    readOther,
+    confirmNews
 } = require('../server/user')
 
 const { validator_user_update } = require('../validator')
@@ -132,6 +133,10 @@ async function cancelFollowIdol(fans_id, idol_id) {
 async function getNews(user_id, index = 0, api = false) {
     let { news, more, count } = await readNews(user_id, index)
 
+    if(!count){
+        return new SuccModel({ news, more, count })
+    } 
+
     //  找出最新的一條news
     news.sort((a, b) => {
         return b.data.showAt - a.data.showAt
@@ -210,7 +215,10 @@ async function getOtherInfo(id) {
     return new SuccModel({ author, blogs, fans, idols })
 }
 
-async function confirmNews()
+async function confirmUserNews(user_id, time) {
+    const res = await confirmNews(user_id, time)
+    return new SuccModel()
+}
 
 module.exports = {
     register,
@@ -222,6 +230,7 @@ module.exports = {
     confirmFollow,
     cancelFollowIdol,
     findUserById,
+    confirmUserNews,
 
     getNews,
     getSelfInfo,
@@ -229,5 +238,5 @@ module.exports = {
     logout,
 
     getOther,
-    confirmNews
+    confirmUserNews
 }

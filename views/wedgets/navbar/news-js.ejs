@@ -27,20 +27,24 @@
             }
         })
 
-        $('#navbarDropdown').click(async (e) => {
+        $('#navbarDropdown').one('click' , (async (e) => {
             e.preventDefault()
             if($('.news-count')){
                 let comfirm_time = $('#navbarDropdown').attr('data-comfirm_time')
-                console.log('@@= >', comfirm_time)
+                
                 const {
                     data: {
                         errno, data, msg
                     }
                 } = await axios.get(`/api/user/news_confirm?comfirm_time=${comfirm_time}`)
-                !errno && console.log('ok')
+
+                if(!errno){
+                    console.log('ok')
+                    $('.news-count').remove()
+                }
                 errno && console.log('noooo')
             } 
-        })
+        }))
     })
 console.log('news JS 1')
 </script>

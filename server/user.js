@@ -265,7 +265,7 @@ async function readNews(id, index) {
             as: 'Fans_of_Follow',
             attributes: ['id', 'email', 'nickname']
         },
-        order: [ ['createdAt', 'DESC']],
+        order: [['createdAt', 'DESC']],
         limit: NEWS.LIMIT,
         offset
     })
@@ -280,10 +280,10 @@ async function readNews(id, index) {
             data: { showAt, id, nickname }
         })
     })
-    
+
     let more =
         index === 0 && (blogList.count > NEWS.LIMIT || fansList.count > NEWS.LIMIT) ? true :
-        index > 0 && (blogList.count - NEWS.LIMIT > offset || fansList.count - NEWS.LIMIT > offset) ? true : false
+            index > 0 && (blogList.count - NEWS.LIMIT > offset || fansList.count - NEWS.LIMIT > offset) ? true : false
 
     return { news: [...blogNews, ...fansNews], more, count: blogList.count + fansList.count }
 
@@ -292,6 +292,44 @@ async function readNews(id, index) {
 async function updateFollow(where, data) {
     const [row] = await Follow.update(data, { where })
     return row
+}
+
+async function confirmNews(user_id, time) {
+    let blog_fans = await Blog_Fans.findAll({
+        attributes: ['id'],
+        where: {
+            confirm: false,
+            fans_id: user_id,
+            createdAt: { [Op.lte]: new Date(time) },
+        },
+        include: {
+            model: Blog,
+            where: {
+                show: true
+            },
+            attributes: []
+        }
+    })
+    blog_fans = blog_fans.map(item => item.toJSON().id)
+    
+    await Blog_Fans.update(
+        {
+            confirm: true
+        },
+        {
+            where: { id: blog_fans }
+        }
+    )
+    
+    await Follow.update({ confirm: true }, {
+        where: {
+            idol_id: user_id,
+            fans_id: { [Op.ne]: user_id },
+            confirm: false
+        },
+        attributes: ['fans_id']
+    })
+    return true
 }
 
 module.exports = {
@@ -308,5 +346,6 @@ module.exports = {
     readOther,
 
     readBlogListAndAuthorByUserId,
-    readUserAndFollowReationByUserId
+    readUserAndFollowReationByUserId,
+    confirmNews
 }
