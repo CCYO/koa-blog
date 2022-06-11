@@ -133,10 +133,6 @@ async function cancelFollowIdol(fans_id, idol_id) {
 async function getNews(user_id, index = 0, api = false) {
     let { news, more, count } = await readNews(user_id, index)
 
-    if(!count){
-        return new SuccModel({ news, more, count })
-    } 
-
     //  找出最新的一條news
     news.sort((a, b) => {
         return b.data.showAt - a.data.showAt
@@ -157,7 +153,7 @@ async function getNews(user_id, index = 0, api = false) {
     data = { ...data, news, more, count }
 
     if (more) {
-        data.index = index * 1 + 1
+        data.index = index + 1
     }
 
     function _renderFile(fileName, data) {

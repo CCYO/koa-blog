@@ -223,9 +223,10 @@ async function readBlogListOfIdeoByUserId(user_id, onlyNewBlogs = true, includeS
 
 async function readNews(id, index) {
     let offset = index * NEWS.LIMIT
+    let count = 0
+
     let blogList = await Blog_Fans.findAndCountAll({
-        where: { fans_id: id, confirm: false },
-        attributes: [],
+        where: { fans_id: id},
         include: {
             model: Blog,
             attributes: ['id', 'title', 'showAt'],
@@ -238,6 +239,17 @@ async function readNews(id, index) {
         order: [[Blog, 'showAt', 'DESC']],
         limit: NEWS.LIMIT,
         offset
+    })
+
+    count += await Blog_Fans.count({
+        where: {
+            confirm: false,
+            fans_id: id
+        },
+        include: {
+            model: Blog,
+            where: { show: true }
+        }
     })
 
     let blogNews = []
@@ -257,9 +269,8 @@ async function readNews(id, index) {
         where: {
             idol_id: id,
             fans_id: { [Op.ne]: id },
-            confirm: false
         },
-        attributes: ['createdAt'],
+        attributes: ['createdAt', 'confirm'],
         include: {
             model: User,
             as: 'Fans_of_Follow',
@@ -274,18 +285,26 @@ async function readNews(id, index) {
     fansList.rows.forEach(fans => {
         let { createdAt: showAt, Fans_of_Follow: user } = fans.toJSON()
         let { id, nickname } = init_4_user(user)
-        console.log('@user => ', fans.toJSON())
+
         fansNews.push({
             type: 'fans',
             data: { showAt, id, nickname }
         })
     })
 
+    count += await Follow.count({
+        where: {
+            confirm: false,
+            idol_id: id,
+            fans_id: { [Op.ne]: id }
+        }
+    })
+
     let more =
         index === 0 && (blogList.count > NEWS.LIMIT || fansList.count > NEWS.LIMIT) ? true :
             index > 0 && (blogList.count - NEWS.LIMIT > offset || fansList.count - NEWS.LIMIT > offset) ? true : false
 
-    return { news: [...blogNews, ...fansNews], more, count: blogList.count + fansList.count }
+    return { news: [...blogNews, ...fansNews], more, count }
 
 }
 
