@@ -1,9 +1,9 @@
 <script>
     $(function () {
         console.log('news JS 2')
-        $('#more_news').click(async (e) => {
+        $('#more_news > button').click(async (e) => {
             e.preventDefault()
-            
+            let confirm_time = $('#navbarDropdown').attr('data-confirm_time')
             let api = e.target.dataset.api
             const {
                 data: {
@@ -11,14 +11,18 @@
                 }
             } = await axios.get(api)
             if (!errno) {
-                let { str, more, index } = data
-                let news_arr = $('#newList').children('li')
-                let target = news_arr[news_arr.length - 4]
-                $(target).after(str)
+                let { str: { confirm, unconfirm }, more, index, count } = data
+                if(count){
+                    $('.new-count').text(count)
+                    $('.new-count').addClass('my-show')
+                }
+                let new_news_hrs = $('[data-my-tag="new-news-hr"]')
+                let target = new_news_hrs[new_news_hrs.length - 1]
+                $(target).after(unconfirm)
                 if(more){
-                    $('#more_news').attr('data-api', `/api/user/moreNews?index=${index}`)
+                    $('#more_news').attr('data-api', `/api/user/moreNews?index=${index}&confirm_time=${confirm_time}`)
                 }else{
-                    $('#more_news').parent().toggle()
+                    $('#more_news').toggle()
                     $('#nonews').toggle()
                 }
                 console.log('ok')
@@ -30,13 +34,13 @@
         $('#navbarDropdown').one('click' , (async (e) => {
             e.preventDefault()
             if($('.news-count')){
-                let comfirm_time = $('#navbarDropdown').attr('data-comfirm_time')
+                let confirm_time = $('#navbarDropdown').attr('data-confirm_time')
                 
                 const {
                     data: {
                         errno, data, msg
                     }
-                } = await axios.get(`/api/user/news_confirm?comfirm_time=${comfirm_time}`)
+                } = await axios.get(`/api/user/news_confirm?confirm_time=${confirm_time}`)
 
                 if(!errno){
                     console.log('ok')

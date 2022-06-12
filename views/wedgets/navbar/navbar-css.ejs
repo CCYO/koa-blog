@@ -13,10 +13,34 @@
         max-height: 50vh;
         overflow-y: scroll;
     }
+
+    .news-item {
+        padding: 0;
+    }
+
+    .news-item a {
+        background: rgba(200,200,200,.5);
+        display: block;
+        padding: 0.25rem 1rem;
+    }
+
+    .news-item a:visited {
+        background: #fff;
+    }
+
     .news-count {
         top: 15%;
         left: 10%;
     }
+
+    .my-show {
+        display:  block
+    }
+
+    .my-noshow {
+        display: none
+    }
+
     .nav {
         flex-wrap: nowrap;
     }
@@ -24,8 +48,8 @@
     .nav-link {
         white-space: nowrap;
     }
-    
+
     .nav-link.active {
-      pointer-events: none
+        pointer-events: none
     }
 </style>

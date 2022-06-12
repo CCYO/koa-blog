@@ -13,8 +13,14 @@ const {
     readFans, addFans, deleteFans,
     readIdols, readNews, updateFollow,
     readOther,
-    confirmNews
+    confirmNews,
+    UnconfirmNewsCount
 } = require('../server/user')
+
+const {
+    updateBlogFansComfirm,
+    updateFollowComfirm
+} = require('../server/news')
 
 const { validator_user_update } = require('../validator')
 const hash = require('../utils/crypto')
@@ -130,19 +136,22 @@ async function cancelFollowIdol(fans_id, idol_id) {
     return new ErrModel(FOLLOW.CANCEL_ERR)
 }
 
-async function getNews(user_id, index = 0, api = false) {
-    let { news, more, count } = await readNews(user_id, index)
+// get NewsList for VIEW of user navbar 
+async function getNews(user_id) {
+    let data = {}
+
+    let { news, more, count } = await readNews(user_id)
 
     //  找出最新的一條news
     news.sort((a, b) => {
         return b.data.showAt - a.data.showAt
     })
 
-    let data = {}
+    // if (index === 0) {
+    //     data.comfirm_time = news[0].data.showAt.getTime()
+    // }
 
-    if (index === 0) {
-        data.comfirm_time = news[0].data.showAt.getTime()
-    }
+    data.comfirm_time = news[0].data.showAt.getTime()
 
     //  調整news items 的時間格式
     news = news.map(_news => {
@@ -150,12 +159,52 @@ async function getNews(user_id, index = 0, api = false) {
         return _news
     })
 
-    data = { ...data, news, more, count }
+    data = {
+        ...data,
+        news,
+        more,
+        index: (more) ? 1 : 0,
+        count
+    }
 
+
+    // if (more) {
+    //     data.index = index + 1
+    // }
+
+    return new SuccModel(data)
+}
+
+async function readmore(user_id, index, time) {
+    const { blogNews, fansNews, more, count } = await getMoreNews(user_id, index, time)
+    let data = { more, count }
     if (more) {
         data.index = index + 1
     }
+    let toConfirmList = { fans: [], blogs: [] }
 
+    blogNews.unconfirm.forEach(({ data: { news_id } }) => toConfirmList.blogs.push(news_id))
+    fansNews.unconfirm.forEach(({ data: { news_id } }) => toConfirmList.fans.push(news_id))
+
+    await updateBlogFansComfirm(toConfirmList.blogs)
+    await updateFollowComfirm(toConfirmList.fans)
+
+    let confirmList = [...blogNews.confirm, ...fansNews.confirm]
+    let unconfirmList = [...blogNews.unconfirm, ...fansNews.unconfirm]
+
+    function sort(list) {
+        list.sort((a, b) => {
+            let res = b.data.showAt - a.data.showAt
+            a.data.showAt = moment(_news.data.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+            b.data.showAt = moment(_news.data.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+            return res
+        })
+    }
+
+    sort(confirmList)
+    sort(unconfirmList)
+
+    // let data = {news, more, count}
     function _renderFile(fileName, data) {
         return new Promise((resolve, reject) => {
             ejs.renderFile(fileName, data, function (e, str) {
@@ -168,15 +217,23 @@ async function getNews(user_id, index = 0, api = false) {
         })
     }
 
-    if (api) {
-        let { news, more, index } = data
-        let fileName = resolve(__dirname, '../views/wedgets/navbar/news.ejs')
-        let str = await _renderFile(fileName, { news })
-        return new SuccModel({ str, more, index, count })
+    let fileName = resolve(__dirname, '../views/wedgets/navbar/news.ejs')
+    let str = {}
+    if (confirmList.length) {
+        str.confirm = await _renderFile(fileName, { confirmList })
+    }
+    if (unconfirmList.length) {
+        str.unconfirm = await _renderFile(fileName, { unconfirmList })
     }
 
-    return new SuccModel(data)
+    return new SuccModel({
+        str, more,
+        index,
+        count
+    })
+
 }
+
 
 //  取得 Idol fans 以及自己公開/隱藏的blog
 async function getSelfInfo(id) {
@@ -234,5 +291,6 @@ module.exports = {
     logout,
 
     getOther,
-    confirmUserNews
+    confirmUserNews,
+    readmore,
 }

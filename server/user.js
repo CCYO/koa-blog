@@ -221,12 +221,13 @@ async function readBlogListOfIdeoByUserId(user_id, onlyNewBlogs = true, includeS
     })
 }
 
-async function readNews(id, index) {
+async function readNews(id, index = 0) {
     let offset = index * NEWS.LIMIT
     let count = 0
 
     let blogList = await Blog_Fans.findAndCountAll({
         where: { fans_id: id},
+        attributes: ['confirm'],
         include: {
             model: Blog,
             attributes: ['id', 'title', 'showAt'],
@@ -253,11 +254,12 @@ async function readNews(id, index) {
     })
 
     let blogNews = []
-    blogList.rows.forEach(({ Blog: { id, title, showAt, User: author } }) => {
+    blogList.rows.forEach(({ confirm, Blog: { id, title, showAt, User: author } }) => {
         blogNews.push({
             type: 'blogNews',
             data: {
                 id,
+                confirm,
                 title,
                 showAt,
                 author: init_4_user(author.toJSON())
@@ -283,12 +285,12 @@ async function readNews(id, index) {
 
     let fansNews = []
     fansList.rows.forEach(fans => {
-        let { createdAt: showAt, Fans_of_Follow: user } = fans.toJSON()
+        let { confirm, createdAt: showAt, Fans_of_Follow: user } = fans.toJSON()
         let { id, nickname } = init_4_user(user)
 
         fansNews.push({
             type: 'fans',
-            data: { showAt, id, nickname }
+            data: { showAt, id, nickname, confirm }
         })
     })
 
@@ -305,6 +307,108 @@ async function readNews(id, index) {
             index > 0 && (blogList.count - NEWS.LIMIT > offset || fansList.count - NEWS.LIMIT > offset) ? true : false
 
     return { news: [...blogNews, ...fansNews], more, count }
+
+}
+
+async function getMoreNews(id, index = 0, time) {
+    let offset = index * NEWS.LIMIT
+    let showTime = new Date(time)
+    let count = 0
+
+    let blogList = await Blog_Fans.findAndCountAll({
+        where: { fans_id: id},
+        attributes: ['confirm', 'id'],
+        include: {
+            model: Blog,
+            attributes: ['id', 'title', 'showAt'],
+            where: { 
+                show: true,
+                showAt: {
+                    [Op.lte]: showTime
+                }
+             },
+            include: {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            }
+        },
+        order: [[Blog, 'showAt', 'DESC']],
+        limit: NEWS.LIMIT,
+        offset
+    })
+
+    count += await Blog_Fans.count({
+        where: {
+            confirm: false,
+            fans_id: id
+        },
+        include: {
+            model: Blog,
+            where: { 
+                show: true,
+                showAt: {
+                    [Op.gt]: showTime
+                }
+            }
+        }
+    })
+
+    let blogNews = { confirm: [], unconfirm: []}
+    blogList.rows.forEach(({ id: news_id, confirm, Blog: { id, title, showAt, User: author } }) => {
+        let data = {
+            news_id, id, title, showAt, author: init_4_user(author.toJSON())
+        }
+        if(confirm){
+            blogNews.confirm.push({ type: 'blogNews', data})
+        }else{
+            blogNews.unconfirm.push({ type: 'blogNews', data})
+        }
+    })
+
+    let fansList = await Follow.findAndCountAll({
+        where: {
+            idol_id: id,
+            fans_id: { [Op.ne]: id },
+            createdAt: {
+                [Op.lte]: showTime
+            }
+        },
+        attributes: ['id', 'createdAt', 'confirm'],
+        include: {
+            model: User,
+            as: 'Fans_of_Follow',
+            attributes: ['id', 'email', 'nickname']
+        },
+        order: [['createdAt', 'DESC']],
+        limit: NEWS.LIMIT,
+        offset
+    })
+
+    let fansNews = { confirm: [], unconfirm: []}
+    fansList.rows.forEach(fans => {
+        let { id: news_id, confirm, createdAt: showAt, Fans_of_Follow: user } = fans.toJSON()
+        let { id, nickname } = init_4_user(user)
+        let data = { news_id, showAt, id, nickname }
+        if(confirm){
+            fansNews.confirm.push({ type: 'fans', data})
+        }else{
+            fansNews.unconfirm.push({ type: 'fans', data})
+        }
+    })
+
+    count += await Follow.count({
+        where: {
+            confirm: false,
+            idol_id: id,
+            fans_id: { [Op.ne]: id }
+        }
+    })
+
+    let more =
+        index === 0 && (blogList.count > NEWS.LIMIT || fansList.count > NEWS.LIMIT) ? true :
+            index > 0 && (blogList.count - NEWS.LIMIT > offset || fansList.count - NEWS.LIMIT > offset) ? true : false
+
+    return { blogNews, fansNews, more, count }
 
 }
 
@@ -351,6 +455,36 @@ async function confirmNews(user_id, time) {
     return true
 }
 
+async function UnconfirmNewsCount (id, time) {
+    let showTime = new Date(time)
+    let blogNews = await Blog_Fans.findAndCountAll({
+        where: {
+            fans_id: id,
+            confirm: false,
+            attribute: []
+        },
+        include: {
+            model: Blog,
+            where: {
+                show: true,
+                showAt: {[Op.gt]: showTime}
+            },
+            attributes: []
+        }
+    })
+    let fansNews = await Follow.findAndCountAll({
+        where: {
+            idol_id: id,
+            confirm: false,
+            createdAt: {[Op.gt]: showTime},
+            fans_id: { [Op.ne]: id}
+        },
+        attributes: []
+    })
+    
+    return blogNews.count + fansNews.count
+}
+
 module.exports = {
     create,
     read,
@@ -366,5 +500,7 @@ module.exports = {
 
     readBlogListAndAuthorByUserId,
     readUserAndFollowReationByUserId,
-    confirmNews
+    confirmNews,
+    UnconfirmNewsCount,
+    getMoreNews
 }
