@@ -11,16 +11,16 @@
             } = await axios.get(api)
             if (!errno) {
                 let { str: { confirm, unconfirm }, more, index, count } = data
-                if(count){
+                if (count) {
                     $('.new-count').text(count)
                     $('.new-count').addClass('my-show')
                 }
                 let new_news_hrs = $('[data-my-tag="new-news-hr"]')
                 let target = new_news_hrs[new_news_hrs.length - 1]
                 $(target).after(unconfirm)
-                if(more){
+                if (more) {
                     $('#more_news').attr('data-api', `/api/user/moreNews?index=${index}&confirm_time=${confirm_time}`)
-                }else{
+                } else {
                     $('#more_news').toggle()
                     $('#nonews').toggle()
                 }
@@ -30,18 +30,18 @@
             }
         })
 
-        $('#navbarDropdown').one('click' , (async (e) => {
+        $('#navbarDropdown').click(async (e) => {
             e.preventDefault()
             //  若初次渲染的view，confirm 當前顯示的新通知
-            if($(e.target).attr('data-my-first-render')){
-                let payload = { fans: [], blogs: []}
+            if ($(e.target).attr('data-my-first-render')) {
+                let payload = { fans: [], blogs: [] }
                 //  蒐集fans、blog消息的 news_id
-                $('li[data-my-news-type]').each( (ind, item) => {
-                    if( $(item).attr('data-my-news-type') === 'fans'){
-                        fans.push( $(item).attr('data-my-news-id') )
+                $('li[data-my-news-type]').each((ind, item) => {
+                    if ($(item).attr('data-my-news-type') === 'fans') {
+                        fans.push($(item).attr('data-my-news-id'))
                     }
-                    if( $(item).attr('data-my-news-type') === 'blog'){
-                        blogs.push( $(item).attr('data-my-news-id') )
+                    if ($(item).attr('data-my-news-type') === 'blog') {
+                        blogs.push($(item).attr('data-my-news-id'))
                     }
                 })
 
@@ -50,34 +50,53 @@
                     data: { errno, data, msg }
                 } = await axios.post('/api/news/confirm', payload)
 
-                if(!errno){
+                if (!errno) {
                     //  成功，重設、移除相關 data-set
                     console.log('已完成confirm')
                     $(e.target).attr('data-my-first-render', false)
-                    $('li[data-my-news-type]').each( (ind, item) => {
+                    $('li[data-my-news-type]').each((ind, item) => {
                         $(item).removeAttr(['data-my-news-type', 'data-my-news-id'])
                     })
-                }else{
+                } else {
                     console.log('confirm失敗 => ', msg)
                 }
             }
-            
-            if($('.news-count')){
+
+            //  若 window.news 有值，則以JQ直接插入，並confirm news
+            if (news) {
+                let { htmlStr, news_id: payload, checkTime, conut, more } = news
+                //  let payload = { fans: [], blogs: [] }
+                if (more) {
+                    //  若 more 為 true，htmlStr 會是整筆 newList，直接替換掉即可
+                    $('.navbar .dropdown').html(htmlStr)
+                    //  幫$('#navbarDropdown').click 綁定現在這個 handle
+                    //  幫$('#more_news > button').click 綁定上面那個 handle
+                } else {
+                    //  若 more 為 false，htmlStr 會是僅是 新通知的片段html，添入 #new-news-title 即可
+                    $('#new-news-title').toggle(true).after(htmlStr)
+                    //  confirm news
+                    let {
+                        data: { errno, data, msg }
+                    } = await axios.post('/api/news/confirm', payload)
+                }
+
+            }
+
+            if ($('.news-count')) {
                 let confirm_time = $('#navbarDropdown').attr('data-confirm_time')
-                
+
                 const {
                     data: {
                         errno, data, msg
                     }
                 } = await axios.get(`/api/user/news_confirm?confirm_time=${confirm_time}`)
 
-                if(!errno){
+                if (!errno) {
                     console.log('ok')
                     $('.news-count').remove()
                 }
                 errno && console.log('noooo')
-            } 
-        }))
+            }
+        })
     })
-console.log('news JS 1')
 </script>

@@ -14,7 +14,7 @@
     <% if (news.length) { %>
     <% if (count) { %>
     <!-- 新通知標題 -->
-    <li class="dropdown-item">新通知</li>
+    <li class="dropdown-item <%= count ? 'my-show' : 'my-noshow' %>" id="new-news-title">新通知</li>
     <% } %>
     <% news.forEach(({type, data}) => { %>
     <!-- 新通知 of fans -->
