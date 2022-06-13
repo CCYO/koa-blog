@@ -256,7 +256,7 @@ async function readNews(id, index = 0) {
     let blogNews = []
     blogList.rows.forEach(({ confirm, Blog: { id, title, showAt, User: author } }) => {
         blogNews.push({
-            type: 'blogNews',
+            type: 'blog',
             data: {
                 id,
                 confirm,
@@ -359,9 +359,9 @@ async function getMoreNews(id, index = 0, time) {
             news_id, id, title, showAt, author: init_4_user(author.toJSON())
         }
         if(confirm){
-            blogNews.confirm.push({ type: 'blogNews', data})
+            blogNews.confirm.push({ type: 'blog', data})
         }else{
-            blogNews.unconfirm.push({ type: 'blogNews', data})
+            blogNews.unconfirm.push({ type: 'blog', data})
         }
     })
 

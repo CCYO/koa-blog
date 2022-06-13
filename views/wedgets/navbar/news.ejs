@@ -1,21 +1,98 @@
-<% news.forEach(({type, data}) => { %>
-<% if (type === 'fans') { %>
-<li class="dropdown-item">
-    <a href="/other/<%= data.id %>?confirm=true">
-        <span><%= data.nickname %>追蹤你囉！</span><br>
-        <span><%= data.showAt %> </span>
-    </a>
-</li>
-<% } else if (type === 'blogNews') { %>
-<li class="dropdown-item">
-    <a href="/blog/<%= data.id %>?confirm=true">
-        <span><%= data.author.nickname %> 有新文章唷！</span><br>
-        <span><%= data.title %> </span><br>
-        <span><%= data.showAt %> </span>
-    </a>
-</li>
-<% } %>
-<li>
-    <hr class="dropdown-divider">
-</li>
-<% }) %>
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+    role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
+    data-my-first-render='<%= firstRender %>'
+    data-my-check-time="<%= checkTime %>"
+    data-my-exist-news="<% existNews %>">
+    通知
+    <span
+        class="position-absolute translate-middle badge rounded-pill bg-danger news-count <%= count ? 'my-show' : 'my-noshow' %> ">
+        <%= count %>
+    </span>
+</a>
+<!-- 通知列表 -->
+<ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="newList">
+    <% if (news.length) { %>
+    <% if (count) { %>
+    <!-- 新通知標題 -->
+    <li class="dropdown-item">新通知</li>
+    <% } %>
+    <% news.forEach(({type, data}) => { %>
+    <!-- 新通知 of fans -->
+    <% if (!data.confirm && type === 'fans') { %>
+    <li class="dropdown-item position-relative news-item" data-my-news-type="<%= data.type %>" data-my-news-id="<%= data.news_id %>">
+        <a href="/other/<%= data.id %>" class="stretched-link">
+            <div>
+                <span><%= data.nickname %>追蹤你囉！</span><br>
+                <span><%= data.showAt %> </span>
+            </div>
+        </a>
+    </li>
+    <li data-my-tag="new-news-hr">
+        <hr class="dropdown-divider">
+    </li>
+    <!-- 新通知 of blogs -->
+    <% } else if (!data.confirm && type === 'blogNews') { %>
+    <li class="dropdown-item  position-relative news-item"  data-my-news-type="<%= data.type %>" data-my-news-id="<%= data.news_id %>">
+        <a href="/blog/<%= data.id %>" class="stretched-link">
+            <div>
+                <span><%= data.author.nickname %> 有新文章唷！</span><br>
+                <span>- <%= data.title %> -</span><br>
+                <span><%= data.showAt %> </span>
+            </div>
+        </a>
+    </li>
+    <li data-my-tag="new-news-hr">
+        <hr class="dropdown-divider">
+    </li>
+    <% } %>
+    <% }) %>
+    <li class="dropdown-item">先前的通知</li>
+    <!-- 舊的通知 -->
+    <% news.forEach(({type, data}) => { %>
+    <!-- 舊通知 of fans -->
+    <% if (data.confirm && type === 'fans') { %>
+    <li class="dropdown-item position-relative news-item">
+        <a href="/other/<%= data.id %>" class="stretched-link">
+            <div>
+                <span><%= data.nickname %>追蹤你囉！</span><br>
+                <span><%= data.showAt %> </span>
+            </div>
+        </a>
+    </li>
+    <li>
+        <hr class="dropdown-divider" data-my-tag="new-news-hr">
+    </li>
+    <!-- 舊通知 of blogs -->
+    <% } else if (data.confirm && type === 'blogNews') { %>
+    <li class="dropdown-item  position-relative news-item">
+        <a href="/blog/<%= data.id %>" class="stretched-link">
+            <div>
+                <span><%= data.author.nickname %> 有新文章唷！</span><br>
+                <span>- <%= data.title %> -</span><br>
+                <span><%= data.showAt %> </span>
+            </div>
+        </a>
+    </li>
+    <li>
+        <hr class="dropdown-divider" data-my-tag="new-news-hr">
+    </li>
+    <% } %>
+    <% }) %>
+    <!-- 讀取更多 -->
+    <li class="<%= more ? 'my-show' : 'my-noshow' %>" id="more_news">
+        <button class="dropdown-item link-primary" type="button" data-api="/api/user/moreNews?index=<%= index %>">
+            讀取更多</button>
+    </li>
+    <!-- 沒有任何通知-->
+    <li class="dropdown-item <%= !more ? 'my-show' : 'my-noshow' %>" id="nonews">
+        <span>沒有更多了</span>
+    </li>
+    <% } else { %>
+    <li class="dropdown-item">
+        <span>沒有新通知</span>
+    </li>
+    <% } %>
+    <li>
+        <hr class="dropdown-divider">
+    </li>
+</ul>

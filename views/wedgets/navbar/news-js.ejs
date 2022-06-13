@@ -1,6 +1,5 @@
 <script>
     $(function () {
-        console.log('news JS 2')
         $('#more_news > button').click(async (e) => {
             e.preventDefault()
             let confirm_time = $('#navbarDropdown').attr('data-confirm_time')
@@ -33,6 +32,36 @@
 
         $('#navbarDropdown').one('click' , (async (e) => {
             e.preventDefault()
+            //  若初次渲染的view，confirm 當前顯示的新通知
+            if($(e.target).attr('data-my-first-render')){
+                let payload = { fans: [], blogs: []}
+                //  蒐集fans、blog消息的 news_id
+                $('li[data-my-news-type]').each( (ind, item) => {
+                    if( $(item).attr('data-my-news-type') === 'fans'){
+                        fans.push( $(item).attr('data-my-news-id') )
+                    }
+                    if( $(item).attr('data-my-news-type') === 'blog'){
+                        blogs.push( $(item).attr('data-my-news-id') )
+                    }
+                })
+
+                //  confirm 當前 news
+                let {
+                    data: { errno, data, msg }
+                } = await axios.post('/api/news/confirm', payload)
+
+                if(!errno){
+                    //  成功，重設、移除相關 data-set
+                    console.log('已完成confirm')
+                    $(e.target).attr('data-my-first-render', false)
+                    $('li[data-my-news-type]').each( (ind, item) => {
+                        $(item).removeAttr(['data-my-news-type', 'data-my-news-id'])
+                    })
+                }else{
+                    console.log('confirm失敗 => ', msg)
+                }
+            }
+            
             if($('.news-count')){
                 let confirm_time = $('#navbarDropdown').attr('data-confirm_time')
                 
