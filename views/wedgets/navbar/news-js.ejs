@@ -13,7 +13,7 @@
                 data: {
                     errno, data, msg
                 }
-            } = await axios.post('', { checkTime, index })
+            } = await axios.post('/api/user/readMore', { checkTime, index })
 
             if (!errno) {
                 let { htmlStr: { confirm, unconfirm }, more, index, count } = data
