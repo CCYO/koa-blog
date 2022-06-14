@@ -226,8 +226,8 @@ async function readNews(id, index = 0) {
     let count = 0
 
     let blogList = await Blog_Fans.findAndCountAll({
-        where: { fans_id: id},
-        attributes: ['confirm'],
+        where: { fans_id: id },
+        attributes: ['confirm', 'id'],
         include: {
             model: Blog,
             attributes: ['id', 'title', 'showAt'],
@@ -253,18 +253,22 @@ async function readNews(id, index = 0) {
         }
     })
 
-    let blogNews = []
-    blogList.rows.forEach(({ confirm, Blog: { id, title, showAt, User: author } }) => {
-        blogNews.push({
-            type: 'blog',
-            data: {
-                id,
-                confirm,
-                title,
-                showAt,
-                author: init_4_user(author.toJSON())
-            }
-        })
+    let news = { confirm: [], unconfirm: [] }
+
+    blogList.rows.forEach(({ id: news_id, confirm, Blog: { id: blog_id, title, showAt, User: author } }) => {
+        let data = {
+            news_id,
+            confirm,
+            showAt,
+            blog_id,
+            title,
+            author: init_4_user(author.toJSON())
+        }
+        if (confirm) {
+            news.confirm.push(data)
+        } else {
+            news.unconfirm.push(data)
+        }
     })
 
     let fansList = await Follow.findAndCountAll({
@@ -272,7 +276,7 @@ async function readNews(id, index = 0) {
             idol_id: id,
             fans_id: { [Op.ne]: id },
         },
-        attributes: ['createdAt', 'confirm'],
+        attributes: ['id', 'createdAt', 'confirm'],
         include: {
             model: User,
             as: 'Fans_of_Follow',
@@ -283,15 +287,21 @@ async function readNews(id, index = 0) {
         offset
     })
 
-    let fansNews = []
     fansList.rows.forEach(fans => {
-        let { confirm, createdAt: showAt, Fans_of_Follow: user } = fans.toJSON()
-        let { id, nickname } = init_4_user(user)
-
-        fansNews.push({
-            type: 'fans',
-            data: { showAt, id, nickname, confirm }
-        })
+        let { id: news_id, confirm, createdAt: showAt, Fans_of_Follow: user } = fans.toJSON()
+        let { id: fans_id, nickname } = init_4_user(user)
+        let data = {
+            news_id,
+            confirm,
+            showAt,
+            fans_id,
+            nickname
+        }
+        if (confirm) {
+            news.confirm.push(data)
+        } else {
+            news.unconfirm.push(data)
+        }
     })
 
     count += await Follow.count({
@@ -306,27 +316,33 @@ async function readNews(id, index = 0) {
         index === 0 && (blogList.count > NEWS.LIMIT || fansList.count > NEWS.LIMIT) ? true :
             index > 0 && (blogList.count - NEWS.LIMIT > offset || fansList.count - NEWS.LIMIT > offset) ? true : false
 
-    return { news: [...blogNews, ...fansNews], more, count }
+    return {
+        news,
+        count,
+        more
+    }
 
 }
 
-async function getMoreNews(id, index = 0, time) {
+async function readMoreNewsAndConfirm(id, index = 0, _checkTime) {
     let offset = index * NEWS.LIMIT
-    let showTime = new Date(time)
-    let count = 0
+    let checkTime = new Date(_checkTime)
 
-    let blogList = await Blog_Fans.findAndCountAll({
-        where: { fans_id: id},
+    /* 查詢 早於checkTime 的 部分news */
+
+    //  早於 checkTime 的 blog news
+    let blogs = await Blog_Fans.findAndCountAll({
+        where: { fans_id: id },
         attributes: ['confirm', 'id'],
         include: {
             model: Blog,
             attributes: ['id', 'title', 'showAt'],
-            where: { 
+            where: {
                 show: true,
                 showAt: {
-                    [Op.lte]: showTime
+                    [Op.lte]: checkTime
                 }
-             },
+            },
             include: {
                 model: User,
                 attributes: ['id', 'email', 'nickname']
@@ -337,40 +353,13 @@ async function getMoreNews(id, index = 0, time) {
         offset
     })
 
-    count += await Blog_Fans.count({
-        where: {
-            confirm: false,
-            fans_id: id
-        },
-        include: {
-            model: Blog,
-            where: { 
-                show: true,
-                showAt: {
-                    [Op.gt]: showTime
-                }
-            }
-        }
-    })
-
-    let blogNews = { confirm: [], unconfirm: []}
-    blogList.rows.forEach(({ id: news_id, confirm, Blog: { id, title, showAt, User: author } }) => {
-        let data = {
-            news_id, id, title, showAt, author: init_4_user(author.toJSON())
-        }
-        if(confirm){
-            blogNews.confirm.push({ type: 'blog', data})
-        }else{
-            blogNews.unconfirm.push({ type: 'blog', data})
-        }
-    })
-
-    let fansList = await Follow.findAndCountAll({
+    //  早於 checkTime 的 fans news
+    let fans = await Follow.findAndCountAll({
         where: {
             idol_id: id,
             fans_id: { [Op.ne]: id },
             createdAt: {
-                [Op.lte]: showTime
+                [Op.lte]: checkTime
             }
         },
         attributes: ['id', 'createdAt', 'confirm'],
@@ -384,32 +373,163 @@ async function getMoreNews(id, index = 0, time) {
         offset
     })
 
-    let fansNews = { confirm: [], unconfirm: []}
-    fansList.rows.forEach(fans => {
-        let { id: news_id, confirm, createdAt: showAt, Fans_of_Follow: user } = fans.toJSON()
+
+    /* 整理 撈取到的news*/
+    let news = { confirm: [], unconfirm: [] }
+
+    blogs.rows.forEach( async (blog) => {
+        let {
+            id: news_id,
+            confirm,
+            Blog: {
+                id: blog_id,
+                title,
+                showAt,
+                User: {
+                    id, nickname
+                }
+            }
+        } = blog
+
         let { id, nickname } = init_4_user(user)
-        let data = { news_id, showAt, id, nickname }
-        if(confirm){
-            fansNews.confirm.push({ type: 'fans', data})
-        }else{
-            fansNews.unconfirm.push({ type: 'fans', data})
+
+        let data = {
+            news_id, confirm, showAt, blog_id, title, author: { id, nickname }
+        }
+
+        if (confirm) {
+            news.confirm.push(data)
+        } else {
+            news.unconfirm.push(data)
+            await blog.update({ confirm: true})
         }
     })
 
-    count += await Follow.count({
-        where: {
-            confirm: false,
-            idol_id: id,
-            fans_id: { [Op.ne]: id }
+    fans.rows.forEach( async(item) => {
+        let {
+            id: news_id,
+            confirm,
+            createdAt: showAt,
+            Fans_of_Follow: user
+        } = item.toJSON()
+
+        let { id: fans_id, nickname } = init_4_user(user)
+
+        let data = { news_id, confirm, showAt, fans_id, nickname }
+
+        if (confirm) {
+            news.confirm.push(data)
+        } else {
+            news.unconfirm.push(data)
+            await item.update({ confirm: true})
         }
     })
 
+    //  還能不能 readMore
     let more =
         index === 0 && (blogList.count > NEWS.LIMIT || fansList.count > NEWS.LIMIT) ? true :
-            index > 0 && (blogList.count - NEWS.LIMIT > offset || fansList.count - NEWS.LIMIT > offset) ? true : false
+        index > 0 && (blogList.count - NEWS.LIMIT > offset || fansList.count - NEWS.LIMIT > offset) ? true : false
 
-    return { blogNews, fansNews, more, count }
+    /* 查詢 晚於checkTime 的 news */
+    let blogNews = await Blog_Fans.findAndCountAll({
+        where: {
+            fans_id: id,
+            confirm: false
+        },
+        attributes: ['id'],
+        include: {
+            model: Blog,
+            attributes: ['id', 'title', 'showAt'],
+            where: {
+                show: true,
+                showAt: {
+                    [Op.gt]: checkTime
+                }
+            },
+            include: {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            }
+        },
+        order: [[Blog, 'showAt', 'DESC']],
+        limit: NEWS.LIMIT,
+        offset: 0
+    })
 
+    let fansNews = await Follow.findAndCountAll({
+        where: {
+            idol_id: id,
+            confirm: false,
+            fans_id: { [Op.ne]: id },
+            createAt: {
+                [Op.gt]: checkTime
+            }
+        },
+        attributes: ['id', 'createdAt'],
+        include: {
+            model: User,
+            as: 'Fans_of_Follow',
+            attributes: ['id', 'email', 'nickname']
+        },
+        order: [['createdAt', 'DESC']],
+        limit: NEWS.LIMIT,
+        offset: 0
+    })
+
+    let new_news = { news: [] }
+
+    blogNews.rows.forEach(blog => {
+        let {
+            id: news_id,
+            confirm,
+            Blog: {
+                id: blog_id,
+                title,
+                showAt,
+                User: {
+                    id, nickname
+                }
+            }
+        } = blog
+
+        let { id, nickname } = init_4_user(user)
+
+        let data = {
+            news_id, confirm, showAt, blog_id, title, author: { id, nickname }
+        }
+
+        if (confirm) {
+            new_news.news.push(data)
+        } else {
+            new_news.news.push(data)
+        }
+    })
+
+    fansNews.rows.forEach(fans => {
+        let {
+            id: news_id,
+            confirm,
+            createdAt: showAt,
+            Fans_of_Follow: user
+        } = fans.toJSON()
+
+        let { id: fans_id, nickname } = init_4_user(user)
+
+        let data = { news_id, confirm, showAt, fans_id, nickname }
+
+        if (confirm) {
+            new_news.news.push(data)
+        } else {
+            new_news.news.push(data)
+        }
+    })
+
+    if(new_news.news.length){
+        new_news.count = blogNews.count + fansNews.count
+        new_news.more = new_news_count > new_news.news.length
+    }
+
+    return { news, more, count, new_news }
 }
 
 async function updateFollow(where, data) {
@@ -434,7 +554,7 @@ async function confirmNews(user_id, time) {
         }
     })
     blog_fans = blog_fans.map(item => item.toJSON().id)
-    
+
     await Blog_Fans.update(
         {
             confirm: true
@@ -443,7 +563,7 @@ async function confirmNews(user_id, time) {
             where: { id: blog_fans }
         }
     )
-    
+
     await Follow.update({ confirm: true }, {
         where: {
             idol_id: user_id,
@@ -455,8 +575,8 @@ async function confirmNews(user_id, time) {
     return true
 }
 
-async function UnconfirmNewsCount (id, time) {
-    let showTime = new Date(time)
+async function UnconfirmNewsCount(id, time) {
+    let checkTime = new Date(time)
     let blogNews = await Blog_Fans.findAndCountAll({
         where: {
             fans_id: id,
@@ -467,7 +587,7 @@ async function UnconfirmNewsCount (id, time) {
             model: Blog,
             where: {
                 show: true,
-                showAt: {[Op.gt]: showTime}
+                showAt: { [Op.gt]: checkTime }
             },
             attributes: []
         }
@@ -476,12 +596,12 @@ async function UnconfirmNewsCount (id, time) {
         where: {
             idol_id: id,
             confirm: false,
-            createdAt: {[Op.gt]: showTime},
-            fans_id: { [Op.ne]: id}
+            createdAt: { [Op.gt]: checkTime },
+            fans_id: { [Op.ne]: id }
         },
         attributes: []
     })
-    
+
     return blogNews.count + fansNews.count
 }
 
@@ -502,5 +622,5 @@ module.exports = {
     readUserAndFollowReationByUserId,
     confirmNews,
     UnconfirmNewsCount,
-    getMoreNews
+    readMoreNewsAndConfirm
 }

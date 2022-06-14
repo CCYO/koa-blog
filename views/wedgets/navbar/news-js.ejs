@@ -1,49 +1,62 @@
 <script>
     $(function () {
-        $('#more_news > button').click(async (e) => {
+        $('#more_news > button').click(readMore)
+
+        $('#navbarDropdown').click(showNewsList)
+
+        async function readMore(e) {
             e.preventDefault()
-            let confirm_time = $('#navbarDropdown').attr('data-confirm_time')
-            let api = e.target.dataset.api
+            let checkTime = $('#navbarDropdown').attr('data-my-check-time')
+            let index = $('#navbarDropdown').attr('data-my-index')
+
             const {
                 data: {
                     errno, data, msg
                 }
-            } = await axios.get(api)
-            if (!errno) {
-                let { str: { confirm, unconfirm }, more, index, count } = data
-                if (count) {
-                    $('.new-count').text(count)
-                    $('.new-count').addClass('my-show')
-                }
-                let new_news_hrs = $('[data-my-tag="new-news-hr"]')
-                let target = new_news_hrs[new_news_hrs.length - 1]
-                $(target).after(unconfirm)
-                if (more) {
-                    $('#more_news').attr('data-api', `/api/user/moreNews?index=${index}&confirm_time=${confirm_time}`)
-                } else {
-                    $('#more_news').toggle()
-                    $('#nonews').toggle()
-                }
-                console.log('ok')
-            } else {
-                alert(msg)
-            }
-        })
+            } = await axios.post('', { checkTime, index })
 
-        $('#navbarDropdown').click(async (e) => {
+            if (!errno) {
+                let { htmlStr: { confirm, unconfirm }, more, index, count } = data
+
+                if (count) {
+                    /* checkTime 之後，若有新通知進來 */
+                    //  重設「新通知提醒」UI
+                    $('.new-count').text(count).toggle(true)
+                }
+
+                /* 處理響應資料(checkTime前的news) */
+                //  處理unconfirm的數據
+                if (unconfirm.length) {
+                    let new_news_hrs = $('[data-my-tag="unconfirm-news-hr"]')
+                    let target = new_news_hrs[new_news_hrs.length - 1]
+                    $(target).after(unconfirm)
+                }
+                //  處理unconfirm的數據
+                if (confirm.length) {
+                    let new_news_hrs = $('[data-my-tag="confirm-news-hr"]')
+                    let target = new_news_hrs[new_news_hrs.length - 1]
+                    $(target).after(confirm)
+                }
+
+                if (more) {
+                    /* 重設 readMore btn 相關標示 */
+                    $('#more_news').attr('data-api', `/api/user/moreNews?index=${index}&checkTime=${checkTime}`)
+                } else {
+                    $('#more_news').toggle(false)
+                    $('#nonews').toggle(true)
+                }
+            } else {
+                console.log('readMore 發生錯誤 => ', msg)
+            }
+        }
+
+        async function showNewsList(e) {
             e.preventDefault()
             //  若初次渲染的view，confirm 當前顯示的新通知
             if ($(e.target).attr('data-my-first-render')) {
-                let payload = { fans: [], blogs: [] }
                 //  蒐集fans、blog消息的 news_id
-                $('li[data-my-news-type]').each((ind, item) => {
-                    if ($(item).attr('data-my-news-type') === 'fans') {
-                        fans.push($(item).attr('data-my-news-id'))
-                    }
-                    if ($(item).attr('data-my-news-type') === 'blog') {
-                        blogs.push($(item).attr('data-my-news-id'))
-                    }
-                })
+                //  payload = { fans: [], blogs: [] } 
+                let payload = _getNoConfirmNews()
 
                 //  confirm 當前 news
                 let {
@@ -53,13 +66,18 @@
                 if (!errno) {
                     //  成功，重設、移除相關 data-set
                     console.log('已完成confirm')
+                    //  移除「新通知數量」UI
+                    $('.news-count').toggle(false)
+                    //  修改「1st render views」的標示
                     $(e.target).attr('data-my-first-render', false)
+                    //  移除「必須 confirm 的 news」的標示
                     $('li[data-my-news-type]').each((ind, item) => {
                         $(item).removeAttr(['data-my-news-type', 'data-my-news-id'])
                     })
                 } else {
                     console.log('confirm失敗 => ', msg)
                 }
+                return
             }
 
             //  若 window.news 有值，則以JQ直接插入，並confirm news
@@ -70,7 +88,9 @@
                     //  若 more 為 true，htmlStr 會是整筆 newList，直接替換掉即可
                     $('.navbar .dropdown').html(htmlStr)
                     //  幫$('#navbarDropdown').click 綁定現在這個 handle
+                    $('#navbarDropdown').click(showNewsList)
                     //  幫$('#more_news > button').click 綁定上面那個 handle
+                    $('#more_news > button').click(readMore)
                 } else {
                     //  若 more 為 false，htmlStr 會是僅是 新通知的片段html，添入 #new-news-title 即可
                     $('#new-news-title').toggle(true).after(htmlStr)
@@ -78,25 +98,33 @@
                     let {
                         data: { errno, data, msg }
                     } = await axios.post('/api/news/confirm', payload)
-                }
-
-            }
-
-            if ($('.news-count')) {
-                let confirm_time = $('#navbarDropdown').attr('data-confirm_time')
-
-                const {
-                    data: {
-                        errno, data, msg
+                    if (!errno) {
+                        //  成功
+                        console.log('已完成confirm')
+                        //  隱藏 count
+                        $('.news-count').toggle(false)
+                        delete window.news
+                    } else {
+                        console.log('confirm失敗 => ', msg)
                     }
-                } = await axios.get(`/api/user/news_confirm?confirm_time=${confirm_time}`)
-
-                if (!errno) {
-                    console.log('ok')
-                    $('.news-count').remove()
                 }
-                errno && console.log('noooo')
+                return
+
             }
-        })
+        }
+
+        function _getNoConfirmNews() {
+            let payload = { fans: [], blogs: [] }
+            //  蒐集fans、blog消息的 news_id
+            $('li[data-my-news-type]').each((ind, item) => {
+                if ($(item).attr('data-my-news-type') === 'fans') {
+                    fans.push($(item).attr('data-my-news-id'))
+                }
+                if ($(item).attr('data-my-news-type') === 'blog') {
+                    blogs.push($(item).attr('data-my-news-id'))
+                }
+            })
+            return payload
+        }
     })
 </script>

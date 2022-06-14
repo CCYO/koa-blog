@@ -6,6 +6,12 @@ const { INTEGER, BOO } = require('../types')
 
 
 const Follow = seq.define('Follow', {
+    id: {
+        type: INTEGER,
+        primaryKey: true,
+        allowNull: false,
+        autoIncrement: true
+    },
     idol_id: {
         type: INTEGER,
         allowNull: false,

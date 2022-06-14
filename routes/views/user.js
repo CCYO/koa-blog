@@ -53,22 +53,59 @@ router.get('/register', async (ctx, next) => {
  */
 router.get('/self', view_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { data: { news, more, index, count, confirm_time } } = await getNews(id) 
+    const { data: { news, more, count, checkTime, index } } = await getNews(id) 
     const { data: { author: user, blogs, fans, idols } } = await getSelfInfo(id)
     
+    /**
+     * self.ejs
+     ** user
+     **** avatar: url
+     **** email: str
+     **** nickname: str
+     ** blogs
+     **** show: [{id, title}, ...]
+     **** hidden: [{id, title}, ...]
+     ** idols
+     **** id: num
+     **** avatar: url
+     ** fans
+     **** id: num
+     **** avatar: url
+     ** self: boo
+     ** myIdol: boo
+
+     * navbar.ejs
+     ** logging: boo
+     ** active : 'register' || 'login' || 'setting' || undefined
+     ** news.ejs
+     **** firstRender: boo v
+     **** checkTime: num v
+     **** count: num v
+     **** news: { unconfirm: arr, confirm: arr }
+     **** news.un?confirm.item: { news_id, confirm, showAt, fans_id, nickname }
+     **** news.un?confirm.item: { news_id, confirm, showAt, blog_id, title, author }
+     **** more: boo v
+     **** index: num v
+     * 
+     */
+    //, { firstRender, checkTime, existNews, count, news, more }
     await ctx.render('self', {
-        logging: true,
-        active: undefined,
-        self: true,
         user,
         blogs,
         fans,
         idols,
+        self: true,
+        //  myIdol 在 self:true 不需要
+
+        logging: true,
+        active: undefined,
+        
+        firstRender: true,
+        checkTime,
+        count,
         news,
         more,
-        index,
-        count,
-        confirm_time
+        index  
     })
 })
 

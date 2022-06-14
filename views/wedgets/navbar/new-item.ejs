@@ -1,0 +1,34 @@
+<% if (fans_id) { %>
+
+    <!-- 新通知 of fans -->
+    <li class="dropdown-item position-relative news-item" <% if (firstRender) { %> data-my-news-type="fans"
+        data-my-news-id="<%= news_id %>" <% } %>>
+        <a href="/other/<%= fans_id %>" class="stretched-link">
+            <div>
+                <span><%= nickname %>追蹤你囉！</span><br>
+                <span><%= showAt %> </span>
+            </div>
+        </a>
+    </li>
+    
+    <% } else if (blog_id) { %>
+
+        <!-- 新通知 of blog -->
+    <li class="dropdown-item  position-relative news-item" <% if (firstRender) { %> data-my-news-type="blog"
+        data-my-news-id="<%= news_id %>" <% } %>>
+        <a href="/blog/<%= blog_id %>" class="stretched-link">
+            <div>
+                <span><%= author.nickname %> 有新文章唷！</span><br>
+                <span>- <%= title %> -</span><br>
+                <span><%= showAt %> </span>
+            </div>
+        </a>
+    </li>
+
+    <% } %>
+
+    <li data-my-tag="unconfirm-news-hr">
+        <hr class="dropdown-divider">
+    </li>
+
+    <% }) %>

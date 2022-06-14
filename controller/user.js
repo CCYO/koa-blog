@@ -14,7 +14,8 @@ const {
     readIdols, readNews, updateFollow,
     readOther,
     confirmNews,
-    UnconfirmNewsCount
+    UnconfirmNewsCount,
+    readMoreNewsAndConfirm
 } = require('../server/user')
 
 const {
@@ -138,71 +139,63 @@ async function cancelFollowIdol(fans_id, idol_id) {
 
 // get NewsList for VIEW of user navbar 
 async function getNews(user_id) {
-    let data = {}
 
     let { news, more, count } = await readNews(user_id)
 
-    //  找出最新的一條news
-    news.sort((a, b) => {
-        return b.data.showAt - a.data.showAt
-    })
+    let checkTime
 
-    // if (index === 0) {
-    //     data.comfirm_time = news[0].data.showAt.getTime()
-    // }
+    for(prop in news){
+        //  調整順序
+        news[prop].sort((a, b) => {
+            return b.showAt - a.showAt
+        })
 
-    data.comfirm_time = news[0].data.showAt.getTime()
+        //  找出最新的一條news
+        if(prop === 'unconfirm'){
+            checkTime = news[prop][0].showAt.getTime()
+        }
 
-    //  調整news items 的時間格式
-    news = news.map(_news => {
-        _news.data.showAt = moment(_news.data.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-        return _news
-    })
-
-    data = {
-        ...data,
-        news,
-        more,
-        index: (more) ? 1 : 0,
-        count
+        //  調整news items 的時間格式
+        news[prop] = news[prop].map( item => {
+            item.showAt = moment( item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+            return item
+        })
     }
 
-
-    // if (more) {
-    //     data.index = index + 1
-    // }
+    let data = {
+        news,
+        more,
+        count,
+        checkTime,
+        index: (more) ? 1 : 0
+    }
 
     return new SuccModel(data)
 }
 
-async function readmore(user_id, index, time) {
-    const { blogNews, fansNews, more, count } = await getMoreNews(user_id, index, time)
+async function readMore(user_id, index, checkTime) {
+    const { news, more, count, new_news } = await readMoreNewsAndConfirm(user_id, index, checkTime)
+    
     let data = { more, count }
+    
     if (more) {
         data.index = index + 1
     }
-    let toConfirmList = { fans: [], blogs: [] }
 
-    blogNews.unconfirm.forEach(({ data: { news_id } }) => toConfirmList.blogs.push(news_id))
-    fansNews.unconfirm.forEach(({ data: { news_id } }) => toConfirmList.fans.push(news_id))
+    for(prop in news){
+        //  調整順序
+        news[prop].sort((a, b) => {
+            return b.showAt - a.showAt
+        })
 
-    await updateBlogFansComfirm(toConfirmList.blogs)
-    await updateFollowComfirm(toConfirmList.fans)
-
-    let confirmList = [...blogNews.confirm, ...fansNews.confirm]
-    let unconfirmList = [...blogNews.unconfirm, ...fansNews.unconfirm]
-
-    function sort(list) {
-        list.sort((a, b) => {
-            let res = b.data.showAt - a.data.showAt
-            a.data.showAt = moment(_news.data.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-            b.data.showAt = moment(_news.data.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-            return res
+        //  調整news items 的時間格式
+        news[prop] = news[prop].map( item => {
+            item.showAt = moment( item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+            return item
         })
     }
 
-    sort(confirmList)
-    sort(unconfirmList)
+    // 從這裡開始
 
     // let data = {news, more, count}
     function _renderFile(fileName, data) {
@@ -218,6 +211,7 @@ async function readmore(user_id, index, time) {
     }
 
     let fileName = resolve(__dirname, '../views/wedgets/navbar/news.ejs')
+    
     let str = {}
     if (confirmList.length) {
         str.confirm = await _renderFile(fileName, { confirmList })
@@ -292,5 +286,5 @@ module.exports = {
 
     getOther,
     confirmUserNews,
-    readmore,
+    readMore,
 }

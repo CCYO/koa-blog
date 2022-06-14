@@ -14,7 +14,7 @@
             </li>
             <% } else { %>
             <li class="nav-item dropdown">
-                
+                <%- include('./news')  %> 
             </li>
             <li class="nav-item">
                 <a class="nav-link me-3 <%= active === 'setting' ? `active` : `` %>" href="/setting">個人設置</a>
