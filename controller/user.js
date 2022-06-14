@@ -27,6 +27,7 @@ const { validator_user_update } = require('../validator')
 const hash = require('../utils/crypto')
 const { ErrModel, SuccModel } = require('../model')
 
+
 const {
     REGISTER: {
         UNEXPECTED,
@@ -142,22 +143,25 @@ async function getNews(user_id) {
 
     let { news, more, count } = await readNews(user_id)
 
-    let checkTime
+    let checkTime = {}
 
-    for(prop in news){
+    for (prop in news) {
         //  調整順序
         news[prop].sort((a, b) => {
             return b.showAt - a.showAt
         })
 
         //  找出最新的一條news
-        if(prop === 'unconfirm'){
-            checkTime = news[prop][0].showAt.getTime()
+        if (prop === 'unconfirm') {
+            let { news_id, blog_id, fans_id, showAt } = news[prop][0]
+            checkTime.type = (blog_id) ? 'blog' : 'fans'
+            checkTime.id = news_id
+            checkTime.time = showAt.getTime()
         }
 
         //  調整news items 的時間格式
-        news[prop] = news[prop].map( item => {
-            item.showAt = moment( item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+        news[prop] = news[prop].map(item => {
+            item.showAt = moment(item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
             return item
         })
     }
@@ -173,31 +177,66 @@ async function getNews(user_id) {
     return new SuccModel(data)
 }
 
-async function readMore(user_id, index, checkTime) {
-    const { news, more, count, new_news } = await readMoreNewsAndConfirm(user_id, index, checkTime)
-    
-    let data = { more, count }
-    
+async function readMore(user_id, index, checkTime, window_news_count = 0) {
+    const { news, more, new_news } = await readMoreNewsAndConfirm(user_id, index, checkTime, window_news_count)
+    let ejs_newsForEach = resolve(__dirname, '../views/wedgets/navbar/news-forEach.ejs')
+
+    let data = {
+        more, index,
+        htmlStr: { unconfirm: undefined, confirm: undefined },
+        news: { count: new_news.count, htmlStr: undefined, checkTime: {} }
+    }
+
     if (more) {
         data.index = index + 1
     }
 
-    for(prop in news){
+    for (prop in news) {
+        if (news[prop].length) {
+            //  調整順序
+            news[prop].sort((a, b) => {
+                return b.showAt - a.showAt
+            })
+
+            //  調整news items 的時間格式
+            news[prop] = news[prop].map(item => {
+                item.showAt = moment(item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+                return item
+            })
+
+            //  取得news的htmlStr
+            data.htmlStr[prop] = await _renderFile(ejs_newsForEach, { list: news[prop], firstRender: false })
+        }
+    }
+
+    /* 整理 new_news */
+    //  new_news = { news: arr, count }
+
+    if (new_news.news.length) {
+
         //  調整順序
-        news[prop].sort((a, b) => {
+        new_news.news.sort((a, b) => {
             return b.showAt - a.showAt
         })
 
+        //  找出最新的一條news
+
+        let target = new_news.news[new_news.news.length - 1]
+        data.news.checkTime = {
+            time: target.showAt.getTime(),
+            type: (target.blog_id) ? 'blog' : 'fans',
+            id: target.new_id
+        }
+
         //  調整news items 的時間格式
-        news[prop] = news[prop].map( item => {
-            item.showAt = moment( item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+        new_news.news = new_news.news.map(item => {
+            item.showAt = moment(item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
             return item
         })
+
+        data.news.htmlStr = await _renderFile(ejs_newsForEach, { list: new_news.news, firstRender: true })
     }
 
-    // 從這裡開始
-
-    // let data = {news, more, count}
     function _renderFile(fileName, data) {
         return new Promise((resolve, reject) => {
             ejs.renderFile(fileName, data, function (e, str) {
@@ -210,22 +249,7 @@ async function readMore(user_id, index, checkTime) {
         })
     }
 
-    let fileName = resolve(__dirname, '../views/wedgets/navbar/news.ejs')
-    
-    let str = {}
-    if (confirmList.length) {
-        str.confirm = await _renderFile(fileName, { confirmList })
-    }
-    if (unconfirmList.length) {
-        str.unconfirm = await _renderFile(fileName, { unconfirmList })
-    }
-
-    return new SuccModel({
-        str, more,
-        index,
-        count
-    })
-
+    return new SuccModel(data)
 }
 
 

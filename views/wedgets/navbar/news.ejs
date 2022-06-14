@@ -1,6 +1,6 @@
 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
     data-bs-auto-close="outside" aria-expanded="false" data-my-first-render='<%= firstRender %>'
-    data-my-check-time="<%= checkTime %>" data-my-check-time="<%= checkTime %>" data-my-index="<%= index %> ">
+    data-my-check-time="<%= checkTime.time %>" data-my-check-type="<%= checkTime.type %>" data-my-check-id="<%= checkTime.id %>" data-my-index="<%= index %> ">
     通知
     <span
         class="position-absolute translate-middle badge rounded-pill bg-danger news-count <%= count ? 'my-show' : 'my-noshow' %> ">
@@ -10,21 +10,21 @@
 <!-- 通知列表 -->
 <ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="newList">
 
+    <!-- 新通知標題 -->
+    <li class="dropdown-item <%= news.unconfirm.length ? 'my-show' : 'my-noshow' %>" id="new-news-title">新通知</li>
+
     <% if (news.unconfirm.length) { %>
 
-    <!-- 新通知標題 -->
-    <li class="dropdown-item <%= count ? 'my-show' : 'my-noshow' %>" id="new-news-title">新通知</li>
+    <%- include('./new-forEach', { list: news.unconfirm })  %> 
 
-    <% news.unconfirm.forEach(({news_id, showAt, fans_id, nickname, blog_id, title, author}) => { %>
-
-    <%- include('./news-item') %>
-
-    <% } else if (news.confirm.length) { %>
+    <% } %>
 
     <!-- 先前通知的標頭 -->
-    <li class="dropdown-item">先前的通知</li>
+    <li class="dropdown-item <%= news.confirm.length ? 'my-show' : 'my-noshow' %>" id="old-news-title"></li>">先前的通知</li>
 
-    <%- include('./news-item') %>
+    <% if (news.confirm.length) { %>
+
+    <%- include('./new-forEach', { list: news.confirm })  %> 
 
     <% } %>
     
@@ -37,17 +37,9 @@
 
     <!-- 沒有任何通知-->
     <li class="dropdown-item <%= !more ? 'my-show' : 'my-noshow' %>" id="nonews">
-        <span>沒有更多了</span>
-    </li>
-
-
-
-
-    <% } else { %>
-    <li class="dropdown-item">
         <span>沒有新通知</span>
     </li>
-    <% } %>
+
     <li>
         <hr class="dropdown-divider">
     </li>

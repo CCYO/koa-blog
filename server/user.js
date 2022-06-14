@@ -56,8 +56,6 @@ async function readFans(idol_id) {
     return fans.map(({ dataValues }) => init_4_user(dataValues))
 }
 
-
-
 async function readIdols(fans_id) {
     const fan = await User.findByPk(fans_id)
     const idols = await fan.getIdol({
@@ -74,12 +72,6 @@ async function deleteFans(idol_id, fans_id) {
     return true
 }
 
-
-
-
-
-
-
 //---
 async function addFans(idol_id, fans_id) {
     const idol = await User.findByPk(idol_id)
@@ -90,7 +82,6 @@ async function addFans(idol_id, fans_id) {
     const [item] = res.map(({ dataValues }) => dataValues)
     return { id: item.id, fans_id: item.fans_id, idol_id: item.idol_id }
 }
-
 
 //  user, blogs
 async function readOther(other_id) {
@@ -324,15 +315,31 @@ async function readNews(id, index = 0) {
 
 }
 
-async function readMoreNewsAndConfirm(id, index = 0, _checkTime) {
+async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_count) {
     let offset = index * NEWS.LIMIT
-    let checkTime = new Date(_checkTime)
-
+    let checkTime = new Date(_checkTime.time)
+    let whereOps_blog = { fans_id: id }
+    let whereOps_fans = {
+        idol_id: id,
+        fans_id: { [Op.ne]: id },
+        createdAt: {
+            [Op.lte]: checkTime
+        }
+    }
+    if(_checkTime.type === 'blog'){
+        whereOps_blog.id = {
+            [Op.ne]: _checkTime.id
+        }
+    }else if(_checkTime.type === 'fans'){
+        whereOps_fans.id = {
+            [Op.ne]: _checkTime.id
+        }
+    }
     /* 查詢 早於checkTime 的 部分news */
 
     //  早於 checkTime 的 blog news
     let blogs = await Blog_Fans.findAndCountAll({
-        where: { fans_id: id },
+        where: whereOps_blog,
         attributes: ['confirm', 'id'],
         include: {
             model: Blog,
@@ -355,13 +362,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime) {
 
     //  早於 checkTime 的 fans news
     let fans = await Follow.findAndCountAll({
-        where: {
-            idol_id: id,
-            fans_id: { [Op.ne]: id },
-            createdAt: {
-                [Op.lte]: checkTime
-            }
-        },
+        where: whereOps_fans,
         attributes: ['id', 'createdAt', 'confirm'],
         include: {
             model: User,
@@ -373,10 +374,10 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime) {
         offset
     })
 
-
     /* 整理 撈取到的news*/
     let news = { confirm: [], unconfirm: [] }
 
+    //  整理 blog news，且一併 confirm 未確認過的
     blogs.rows.forEach( async (blog) => {
         let {
             id: news_id,
@@ -385,9 +386,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime) {
                 id: blog_id,
                 title,
                 showAt,
-                User: {
-                    id, nickname
-                }
+                User: user
             }
         } = blog
 
@@ -405,6 +404,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime) {
         }
     })
 
+    //  整理 fans news，且一併 confirm 未確認過的
     fans.rows.forEach( async(item) => {
         let {
             id: news_id,
@@ -476,7 +476,12 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime) {
         offset: 0
     })
 
-    let new_news = { news: [] }
+    let new_news = { news: [], count: blogNews.count + fansNews.count }
+
+    //  假如無 晚於checkTime 的 news，或是與前端傳來的 new_news_count 同數目，則不用繼續處理
+    if( !news_news.count || news_news.count == window_news_count){
+        return { news, more, new_news }
+    }
 
     blogNews.rows.forEach(blog => {
         let {
@@ -486,9 +491,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime) {
                 id: blog_id,
                 title,
                 showAt,
-                User: {
-                    id, nickname
-                }
+                User: user
             }
         } = blog
 
@@ -526,10 +529,9 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime) {
 
     if(new_news.news.length){
         new_news.count = blogNews.count + fansNews.count
-        new_news.more = new_news_count > new_news.news.length
     }
 
-    return { news, more, count, new_news }
+    return { news, more, new_news }
 }
 
 async function updateFollow(where, data) {

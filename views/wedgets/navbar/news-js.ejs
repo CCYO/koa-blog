@@ -5,42 +5,49 @@
         $('#navbarDropdown').click(showNewsList)
 
         async function readMore(e) {
-            e.preventDefault()
-            let checkTime = $('#navbarDropdown').attr('data-my-check-time')
+            e && e.preventDefault()
+            let checkTime = {
+                time: $('#navbarDropdown').attr('data-my-check-time'),
+                type: $('#navbarDropdown').attr('data-my-check-type'),
+                id: $('#navbarDropdown').attr('data-my-check-id')
+            }
             let index = $('#navbarDropdown').attr('data-my-index')
-
+            let window_news_count = (window.news) ? window.news.count : 0
             const {
                 data: {
                     errno, data, msg
                 }
-            } = await axios.post('/api/user/readMore', { checkTime, index })
+            } = await axios.post('/api/user/readMore', { checkTime, index, window_news_count })
 
             if (!errno) {
-                let { htmlStr: { confirm, unconfirm }, more, index, count } = data
-
-                if (count) {
-                    /* checkTime 之後，若有新通知進來 */
-                    //  重設「新通知提醒」UI
-                    $('.new-count').text(count).toggle(true)
-                }
+                let {
+                    htmlStr, //{ unconfirm, confirm }
+                    more,
+                    index,
+                    news // { count, htmlStr, checkTime }
+                } = data
 
                 /* 處理響應資料(checkTime前的news) */
-                //  處理unconfirm的數據
-                if (unconfirm.length) {
-                    let new_news_hrs = $('[data-my-tag="unconfirm-news-hr"]')
-                    let target = new_news_hrs[new_news_hrs.length - 1]
-                    $(target).after(unconfirm)
+                for (prop in htmlStr) {
+                    if (htmlStr[prop]) {
+                        let title = (prop === 'unconfirm') ? $('#new-news-title') : $('#old-news-title')
+                        title.toggle(true)
+                        let news_hrs = $(`[data-my-hr="${prop}-news-hr"]`)
+                        let target = news_hrs.length ? $(news_hrs[news_hrs.length - 1]) : title
+                        target.after(htmlStr[prop])
+                    }
                 }
-                //  處理unconfirm的數據
-                if (confirm.length) {
-                    let new_news_hrs = $('[data-my-tag="confirm-news-hr"]')
-                    let target = new_news_hrs[new_news_hrs.length - 1]
-                    $(target).after(confirm)
+
+                if (news.count) {
+                    /* checkTime 之後，若有新通知進來 */
+                    //  重設「新通知提醒」UI
+                    $('.new-count').text(news.count).toggle(true)
+                    window.news = news
                 }
 
                 if (more) {
                     /* 重設 readMore btn 相關標示 */
-                    $('#more_news').attr('data-api', `/api/user/moreNews?index=${index}&checkTime=${checkTime}`)
+                    $("#navbarDropdown").attr('data-my-index', index)
                 } else {
                     $('#more_news').toggle(false)
                     $('#nonews').toggle(true)
@@ -81,35 +88,30 @@
             }
 
             //  若 window.news 有值，則以JQ直接插入，並confirm news
-            if (news) {
-                let { htmlStr, news_id: payload, checkTime, conut, more } = news
+            if (window.news && window.news.count) {
+                //  news = { count, htmlStr, checkTime }
+                let { conut, htmlStr, checkTime } = window.news
                 //  let payload = { fans: [], blogs: [] }
-                if (more) {
-                    //  若 more 為 true，htmlStr 會是整筆 newList，直接替換掉即可
-                    $('.navbar .dropdown').html(htmlStr)
-                    //  幫$('#navbarDropdown').click 綁定現在這個 handle
-                    $('#navbarDropdown').click(showNewsList)
-                    //  幫$('#more_news > button').click 綁定上面那個 handle
-                    $('#more_news > button').click(readMore)
-                } else {
-                    //  若 more 為 false，htmlStr 會是僅是 新通知的片段html，添入 #new-news-title 即可
-                    $('#new-news-title').toggle(true).after(htmlStr)
-                    //  confirm news
-                    let {
-                        data: { errno, data, msg }
-                    } = await axios.post('/api/news/confirm', payload)
-                    if (!errno) {
-                        //  成功
-                        console.log('已完成confirm')
-                        //  隱藏 count
-                        $('.news-count').toggle(false)
-                        delete window.news
-                    } else {
-                        console.log('confirm失敗 => ', msg)
-                    }
-                }
-                return
 
+                $("#navbarDropdown")
+                    .attr('data-my-first-render', true)
+                    .attr('data-my-index', 0)
+                    .attr('data-my-check-time', checkTime.time)
+                    .attr('data-my-check-type', checkTime.type)
+                    .attr('data-my-check-id', checkTime.id)
+                $("#old-news-title").toggle(true)
+                $("li[data-my-confirm]").remove()
+                $("li[data-my-hr]").remove()
+                $("#new-news-title").toggle(true).after(htmlStr)
+
+                $('#more_news').toggle(true)
+                $('#nonews').toggle(false)
+                return
+            }
+
+            if ($('#more_news').css('display') === 'none') {
+                await readMore()
+                return
             }
         }
 

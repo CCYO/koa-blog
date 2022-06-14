@@ -1,34 +1,36 @@
 <% if (fans_id) { %>
 
-    <!-- 新通知 of fans -->
-    <li class="dropdown-item position-relative news-item" <% if (firstRender) { %> data-my-news-type="fans"
-        data-my-news-id="<%= news_id %>" <% } %>>
-        <a href="/other/<%= fans_id %>" class="stretched-link">
-            <div>
-                <span><%= nickname %>追蹤你囉！</span><br>
-                <span><%= showAt %> </span>
-            </div>
-        </a>
-    </li>
-    
-    <% } else if (blog_id) { %>
+<!-- 新通知 of fans -->
+<li class="dropdown-item position-relative news-item" data-my-confirm="<%= confirm ? true : false %>"
+    <% if (firstRender) { %> data-my-news-type="fans" data-my-news-id="<%= news_id %>" <% } %>>
+    <a href="/other/<%= fans_id %>" class="stretched-link">
+        <div>
+            <span><%= nickname %>追蹤你囉！</span><br>
+            <span><%= showAt %> </span>
+        </div>
+    </a>
+</li>
 
-        <!-- 新通知 of blog -->
-    <li class="dropdown-item  position-relative news-item" <% if (firstRender) { %> data-my-news-type="blog"
-        data-my-news-id="<%= news_id %>" <% } %>>
-        <a href="/blog/<%= blog_id %>" class="stretched-link">
-            <div>
-                <span><%= author.nickname %> 有新文章唷！</span><br>
-                <span>- <%= title %> -</span><br>
-                <span><%= showAt %> </span>
-            </div>
-        </a>
-    </li>
+<% } else if (blog_id) { %>
 
+<!-- 新通知 of blog -->
+<li class="dropdown-item  position-relative news-item" data-my-confirm="<%= confirm ? true : false %>"
+    <% if (firstRender) { %> data-my-news-type="blog" data-my-news-id="<%= news_id %>" <% } %>>
+    <a href="/blog/<%= blog_id %>" class="stretched-link">
+        <div>
+            <span><%= author.nickname %> 有新文章唷！</span><br>
+            <span>- <%= title %> -</span><br>
+            <span><%= showAt %> </span>
+        </div>
+    </a>
+</li>
+
+<% } %>
+
+<% if (!confirm) { %>
+<li data-my-hr="unconfirm-news-hr">
+    <% } else { %>
+<li data-my-hr="confirm-news-hr">
     <% } %>
-
-    <li data-my-tag="unconfirm-news-hr">
-        <hr class="dropdown-divider">
-    </li>
-
-    <% }) %>
+    <hr class="dropdown-divider">
+</li>
