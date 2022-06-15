@@ -34,5 +34,9 @@ module.exports = {
         FOLLOW_ERR: { errno: 801, msg: '追蹤失敗'},
         CANCEL_ERR: { errno: 802, msg: '取消追蹤失敗'},
         CONFIRM_ERR: { errno: 803, msg: '確認追蹤消息失敗'}
+    },
+    NEWS: {
+        FOLLOW_CONFIRM_ERR: { errno: 901, msg: 'Follow.confirm 更新失敗'},
+        BLOG_FANS_CONFIRM_ERR: { errno: 902, msg: 'Blog_Fans.confirm 更新失敗'}
     }
 }

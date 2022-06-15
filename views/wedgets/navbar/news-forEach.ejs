@@ -1,5 +1,5 @@
 <% list.forEach(({news_id, confirm, showAt, fans_id, nickname, blog_id, title, author}) => { %>
 
-<%- include('./news-item') %>
+<%- include('./news-item', {news_id, confirm, showAt, fans_id, nickname, blog_id, title, author}) %>
 
 <% }) %>

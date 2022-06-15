@@ -5,19 +5,22 @@
         $('#navbarDropdown').click(showNewsList)
 
         async function readMore(e) {
+            console.log('READMORE')
             e && e.preventDefault()
             let checkTime = {
                 time: $('#navbarDropdown').attr('data-my-check-time'),
                 type: $('#navbarDropdown').attr('data-my-check-type'),
                 id: $('#navbarDropdown').attr('data-my-check-id')
             }
+
             let index = $('#navbarDropdown').attr('data-my-index')
+
             let window_news_count = (window.news) ? window.news.count : 0
             const {
                 data: {
                     errno, data, msg
                 }
-            } = await axios.post('/api/user/readMore', { checkTime, index, window_news_count })
+            } = await axios.post('/api/user/readMore', { checkTime, index: index * 1 , window_news_count })
 
             if (!errno) {
                 let {
@@ -68,19 +71,21 @@
                 //  confirm 當前 news
                 let {
                     data: { errno, data, msg }
-                } = await axios.post('/api/news/confirm', payload)
+                } = await axios.post('/api/news/confirm', { payload })
 
                 if (!errno) {
                     //  成功，重設、移除相關 data-set
-                    console.log('已完成confirm')
+                    console.log('Server已完成confirm')
                     //  移除「新通知數量」UI
                     $('.news-count').toggle(false)
                     //  修改「1st render views」的標示
                     $(e.target).attr('data-my-first-render', false)
                     //  移除「必須 confirm 的 news」的標示
                     $('li[data-my-news-type]').each((ind, item) => {
-                        $(item).removeAttr(['data-my-news-type', 'data-my-news-id'])
+                        $(item).removeAttr('data-my-news-id')
+                        $(item).removeAttr('data-my-news-type')
                     })
+                    console.log('前端完成confirm UI 配製')
                 } else {
                     console.log('confirm失敗 => ', msg)
                 }
@@ -120,10 +125,10 @@
             //  蒐集fans、blog消息的 news_id
             $('li[data-my-news-type]').each((ind, item) => {
                 if ($(item).attr('data-my-news-type') === 'fans') {
-                    fans.push($(item).attr('data-my-news-id'))
+                    payload.fans.push($(item).attr('data-my-news-id'))
                 }
                 if ($(item).attr('data-my-news-type') === 'blog') {
-                    blogs.push($(item).attr('data-my-news-id'))
+                    payload.blogs.push($(item).attr('data-my-news-id'))
                 }
             })
             return payload

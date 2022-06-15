@@ -1,6 +1,6 @@
 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
     data-bs-auto-close="outside" aria-expanded="false" data-my-first-render='<%= firstRender %>'
-    data-my-check-time="<%= checkTime.time %>" data-my-check-type="<%= checkTime.type %>" data-my-check-id="<%= checkTime.id %>" data-my-index="<%= index %> ">
+    data-my-check-time="<%= checkTime.time %>" data-my-check-type="<%= checkTime.type %>" data-my-check-id="<%= checkTime.id %>" data-my-index="<%= index %>">
     通知
     <span
         class="position-absolute translate-middle badge rounded-pill bg-danger news-count <%= count ? 'my-show' : 'my-noshow' %> ">
@@ -15,16 +15,16 @@
 
     <% if (news.unconfirm.length) { %>
 
-    <%- include('./new-forEach', { list: news.unconfirm })  %> 
+    <%- include('./news-forEach', { list: news.unconfirm })  %> 
 
     <% } %>
 
     <!-- 先前通知的標頭 -->
-    <li class="dropdown-item <%= news.confirm.length ? 'my-show' : 'my-noshow' %>" id="old-news-title"></li>">先前的通知</li>
+    <li class="dropdown-item <%= news.confirm.length ? 'my-show' : 'my-noshow' %>" id="old-news-title">先前的通知</li>
 
     <% if (news.confirm.length) { %>
 
-    <%- include('./new-forEach', { list: news.confirm })  %> 
+    <%- include('./news-forEach', { list: news.confirm })  %> 
 
     <% } %>
     

@@ -143,27 +143,31 @@ async function getNews(user_id) {
 
     let { news, more, count } = await readNews(user_id)
 
-    let checkTime = {}
+    let checkTime = { type: undefined, id: undefined, time: undefined }
 
     for (prop in news) {
-        //  調整順序
-        news[prop].sort((a, b) => {
-            return b.showAt - a.showAt
-        })
 
-        //  找出最新的一條news
-        if (prop === 'unconfirm') {
-            let { news_id, blog_id, fans_id, showAt } = news[prop][0]
-            checkTime.type = (blog_id) ? 'blog' : 'fans'
-            checkTime.id = news_id
-            checkTime.time = showAt.getTime()
+        if (news[prop].length) {
+
+            //  調整順序
+            news[prop].sort((a, b) => {
+                return b.showAt - a.showAt
+            })
+
+            //  找出最新的一條news
+            if (prop === 'unconfirm') {
+                let { news_id, blog_id, fans_id, showAt } = news[prop][0]
+                checkTime.type = (blog_id) ? 'blog' : 'fans'
+                checkTime.id = news_id
+                checkTime.time = showAt.getTime()
+            }
+
+            //  調整news items 的時間格式
+            news[prop] = news[prop].map(item => {
+                item.showAt = moment(item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+                return item
+            })
         }
-
-        //  調整news items 的時間格式
-        news[prop] = news[prop].map(item => {
-            item.showAt = moment(item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-            return item
-        })
     }
 
     let data = {

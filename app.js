@@ -23,6 +23,7 @@ const upload_to_GCS = require('./routes/api/upload-to-GCS')
 const api__user = require('./routes/api/user')
 const api__blog_editor = require('./routes/api/editor')
 const api__GFB = require('./routes/api/GFB')
+const api__news = require('./routes/api/news')
 
 
 const view__user = require('./routes/views/user')
@@ -102,6 +103,8 @@ app.use(upload_to_GCS.routes(), upload_to_GCS.allowedMethods())
 app.use(api__user.routes(), api__user.allowedMethods())
 app.use(api__blog_editor.routes(), api__blog_editor.allowedMethods())
 app.use(api__GFB.routes(), api__GFB.allowedMethods())
+app.use(api__news.routes(), api__news.allowedMethods())
+
 
 app.use(view__user.routes(), view__user.allowedMethods())
 app.use(view__blog.routes(), view__blog.allowedMethods())

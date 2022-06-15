@@ -427,8 +427,8 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
 
     //  還能不能 readMore
     let more =
-        index === 0 && (blogList.count > NEWS.LIMIT || fansList.count > NEWS.LIMIT) ? true :
-        index > 0 && (blogList.count - NEWS.LIMIT > offset || fansList.count - NEWS.LIMIT > offset) ? true : false
+        index === 0 && (blogs.count > NEWS.LIMIT || fans.count > NEWS.LIMIT) ? true :
+        index > 0 && (blogs.count - NEWS.LIMIT > offset || fans.count - NEWS.LIMIT > offset) ? true : false
 
     /* 查詢 晚於checkTime 的 news */
     let blogNews = await Blog_Fans.findAndCountAll({
@@ -461,7 +461,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
             idol_id: id,
             confirm: false,
             fans_id: { [Op.ne]: id },
-            createAt: {
+            createdAt: {
                 [Op.gt]: checkTime
             }
         },
@@ -479,7 +479,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
     let new_news = { news: [], count: blogNews.count + fansNews.count }
 
     //  假如無 晚於checkTime 的 news，或是與前端傳來的 new_news_count 同數目，則不用繼續處理
-    if( !news_news.count || news_news.count == window_news_count){
+    if( !new_news.news.count || new_news.news.count == window_news_count){
         return { news, more, new_news }
     }
 

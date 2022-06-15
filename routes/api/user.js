@@ -62,7 +62,7 @@ router.post('/readMore' , api_check_login, async(ctx, next) => {
     const { id } = ctx.session.user
     const { checkTime, index, window_news_count } = ctx.request.body
 
-    ctx.body = await readMore(id, index, checkTime, window_news_count)
+    ctx.body = await readMore(id, index * 1, checkTime, window_news_count)
 })
 
 router.get('/news_confirm', api_check_login, async(ctx, next) => {
