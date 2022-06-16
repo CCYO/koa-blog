@@ -6,10 +6,12 @@ const ejs = require('ejs')
 const { resolve } = require('path')
 
 const {
+    createUser, readUser,
+    
     readBlogListAndAuthorByUserId,
     readUserAndFollowReationByUserId,
 
-    create, read, update,
+     update,
     readFans, addFans, deleteFans,
     readIdols, readNews, updateFollow,
     readOther,
@@ -58,6 +60,10 @@ const findUser = async (email, password) => {
     }
 }
 
+async function isUserExist(email){
+    const res = await readUser({email})
+}
+
 async function findUserById(id) {
     const user = await read({ id })
     return new SuccModel(user)
@@ -65,23 +71,21 @@ async function findUserById(id) {
 
 const register = async (email, password) => {
     if (!password) {
-        console.error(`@@@創建user時，${NO_PASSWORD.msg}`)
         return new ErrModel(NO_PASSWORD)
     }
+
     const { errno } = await findUser(email)
+
     if (errno) {
-        console.error(`@@@創建user時，${IS_EXIST.msg}`)
         return new ErrModel(IS_EXIST)
     } else {
         try {
-            const user = await create({
+            const user = await createUser({
                 email,
                 password
             })
-            console.log('@@@成功創建user ===> ', user)
             return new SuccModel(user)
         } catch (e) {
-            console.error('@@@創建user時，發生預期外錯誤 ===> ', e)
             return new ErrModel({ ...UNEXPECTED, msg: e })
         }
     }

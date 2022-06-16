@@ -5,33 +5,45 @@ const { Op } = require('sequelize')
 
 const { NEWS } = require('../conf/constant')
 
-const { User, Follow, Blog, Blog_Fans } = require('../db/model')
+const { User, User_Follow, Blog, Blog_Fans } = require('../db/model')
 const { BLOG } = require('../model/errRes')
 const hash = require('../utils/crypto')
 const { init_4_user } = require('../utils/init')
 
-const create = async (data) => {
-    let { password } = data
-    password = hash(password)
-    var data = { ...data, password }
-    //  user: User Ins
-    const user = await User.create({ ...data, password })
-    //console.log('@user => ', user)
-    //  follow_self : [ Follow Ins ]
-    const follow_self = await user.addIdol(user)
-    //console.log('@follow_self => ', follow_self)
-    return user
-    return init_4_user(user.dataValues)
-}
-
-const read = async ({ id, email, password }) => {
+/**
+ * 
+ * @param {object} param0 
+ * @param {number} param0.id user id
+ * @param {string} param0.email user email
+ * @param {string} param0.password user 未加密的密碼
+ * @returns {object} 除了 password 以外的 user 資料
+ */
+const readUser = async ({ id, email, password }) => {
     const data = {}
     if (id) data.id = id
     if (email) data.email = email
     if (password) data.password = hash(password)
+
     const user = await User.findOne({ where: data })
-    if (!user) return {}
-    return init_4_user(user.dataValues)
+
+    if (!user) return null
+
+    return init_4_user(user)
+}
+
+/**
+ * 
+ * @param {string} param0.email user email
+ * @param {string} param0.password user 未加密的密碼
+ * @returns {object} 除了 password 以外的 user 資料
+ */
+const createUser = async ({ password, ...data }) => {
+    password = hash(password)
+    data = { ...data, password }
+
+    const user = await User.create(data)
+
+    return init_4_user(user)
 }
 
 const update = async (newUserInfo, id) => {
@@ -326,11 +338,11 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
             [Op.lte]: checkTime
         }
     }
-    if(_checkTime.type === 'blog'){
+    if (_checkTime.type === 'blog') {
         whereOps_blog.id = {
             [Op.ne]: _checkTime.id
         }
-    }else if(_checkTime.type === 'fans'){
+    } else if (_checkTime.type === 'fans') {
         whereOps_fans.id = {
             [Op.ne]: _checkTime.id
         }
@@ -378,7 +390,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
     let news = { confirm: [], unconfirm: [] }
 
     //  整理 blog news，且一併 confirm 未確認過的
-    blogs.rows.forEach( async (blog) => {
+    blogs.rows.forEach(async (blog) => {
         let {
             id: news_id,
             confirm,
@@ -400,12 +412,12 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
             news.confirm.push(data)
         } else {
             news.unconfirm.push(data)
-            await blog.update({ confirm: true})
+            await blog.update({ confirm: true })
         }
     })
 
     //  整理 fans news，且一併 confirm 未確認過的
-    fans.rows.forEach( async(item) => {
+    fans.rows.forEach(async (item) => {
         let {
             id: news_id,
             confirm,
@@ -421,14 +433,14 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
             news.confirm.push(data)
         } else {
             news.unconfirm.push(data)
-            await item.update({ confirm: true})
+            await item.update({ confirm: true })
         }
     })
 
     //  還能不能 readMore
     let more =
         index === 0 && (blogs.count > NEWS.LIMIT || fans.count > NEWS.LIMIT) ? true :
-        index > 0 && (blogs.count - NEWS.LIMIT > offset || fans.count - NEWS.LIMIT > offset) ? true : false
+            index > 0 && (blogs.count - NEWS.LIMIT > offset || fans.count - NEWS.LIMIT > offset) ? true : false
 
     /* 查詢 晚於checkTime 的 news */
     let blogNews = await Blog_Fans.findAndCountAll({
@@ -479,7 +491,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
     let new_news = { news: [], count: blogNews.count + fansNews.count }
 
     //  假如無 晚於checkTime 的 news，或是與前端傳來的 new_news_count 同數目，則不用繼續處理
-    if( !new_news.news.count || new_news.news.count == window_news_count){
+    if (!new_news.news.count || new_news.news.count == window_news_count) {
         return { news, more, new_news }
     }
 
@@ -527,7 +539,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
         }
     })
 
-    if(new_news.news.length){
+    if (new_news.news.length) {
         new_news.count = blogNews.count + fansNews.count
     }
 
@@ -608,8 +620,9 @@ async function UnconfirmNewsCount(id, time) {
 }
 
 module.exports = {
-    create,
-    read,
+    createUser,
+    readUser,
+
     update,
     readFans,
     addFans,

@@ -51,8 +51,9 @@ const schema_common = {
 
 const schema_register = { ...schema_common, required: ['email', 'password'] }
 
-const validate_user_update = ajv.compile(schema_common)
 const validate_user_register = ajv.compile(schema_register)
+const validate_user_update = ajv.compile(schema_common)
+
 
 const validator_user_register = (data) => {
     let res = validate_user_register(data)
