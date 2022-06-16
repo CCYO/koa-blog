@@ -2,9 +2,10 @@
  * @description middleware validate
  */
 
-const { validator_user_update, validator_register, validator_user } = require('../validator')
+const { validator_user } = require('../validator')
 const { ErrModel } = require('../model')
 const { FORMAT_ERR } = require('../model/errRes')
+
 
 const validate_user = async (ctx, next) => {
     let errors
@@ -16,6 +17,10 @@ const validate_user = async (ctx, next) => {
             break;
         case '/api/user/register':
             action = '註冊'
+            errors = validator_user('register', ctx.request.body)
+            break;
+        case '/api/user/':
+            action = '登入'
             errors = validator_user('register', ctx.request.body)
             break;
         case '/api/user/update':

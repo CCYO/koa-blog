@@ -13,10 +13,10 @@ const { init_4_user } = require('../utils/init')
 /**
  * 查找 User Instance
  * @param {object} param0 
- * @param {number} param0.id user id
- * @param {string} param0.email user email
- * @param {string} param0.password user 未加密的密碼
- * @returns {object} 除了 password 以外的 user 資料
+ * @param {number} param0.id - user id
+ * @param {string} param0.email - user email
+ * @param {string} param0.password - user 未加密的密碼
+ * @return {(object | null)} object | null 除了 password 以外的 user 資料
  */
 const readUser = async ({ id, email, password }) => {
     const data = {}
@@ -34,9 +34,9 @@ const readUser = async ({ id, email, password }) => {
 /**
  * 創建 User Instance
  * @param {object} param0
- * @param {string} param0.email user email
- * @param {string} param0.password user 未加密的密碼
- * @returns {object} 除了 password 以外的 user 資料
+ * @param {string} param0.email - user email
+ * @param {string} param0.password - user 未加密的密碼
+ * @returns {object} object 除了 password 以外的 user 資料
  */
 const createUser = async ({ password, ...data }) => {
     password = hash(password)

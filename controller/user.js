@@ -6,7 +6,8 @@ const ejs = require('ejs')
 const { resolve } = require('path')
 
 const {
-    createUser, readUser,
+    createUser,
+    readUser,
 
     readBlogListAndAuthorByUserId,
     readUserAndFollowReationByUserId,
@@ -59,16 +60,16 @@ async function isEmailExist(email) {
 
 /**
  * 註冊
- * @param {string} email user 的信箱
- * @param {string} password user 未加密的密碼
- * @returns SuccessMode || ErrModel Instance
+ * @param {string} email - user 的信箱
+ * @param {string} password - user 未加密的密碼
+ * @returns {object} SuccessMode || ErrModel Instance
  */
 const register = async (email, password) => {
     if (!password) {
         return new ErrModel(NO_PASSWORD)
     }
 
-    const { errno } = await isUserExist(email)
+    const { errno } = await isEmailExist(email)
 
     if (!errno) {
         const user = await createUser({email,password})
@@ -79,23 +80,16 @@ const register = async (email, password) => {
     }
 }
 
-
+/**
+ * 查找 user 資料
+ * @param {string} email user 的信箱
+ * @param {string} password user 的未加密密碼
+ * @returns SuccessModel | ErrModel Instance，內部為 user 除了 password 以外的資料
+ */
 const findUser = async (email, password) => {
     const res = await readUser({ email, password })
-    // 僅檢查帳號是否存在
-    if (!password) {
-        console.log('僅檢查帳號是否已被註冊')
-        if (!res.id) {
-            return new SuccModel()
-        } else {
-            return new ErrModel(IS_EXIST)
-        }
-        // 取得帳號
-    } else {
-        console.log('取得帳號')
-        if (res.id) return new SuccModel(res)
+        if (res) return new SuccModel(res)
         return new ErrModel(READ.NOT_EXIST)
-    }
 }
 
 /**

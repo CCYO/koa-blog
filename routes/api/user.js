@@ -4,8 +4,12 @@
 
 const router = require('koa-router')()
 
-const { register, findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout, getNews, confirmUserNews, readMore,
-    isEmailExist
+const { 
+    isEmailExist,
+    register, 
+
+    findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout, getNews, confirmUserNews, readMore,
+    
 } = require('../../controller/user')
 
 const { api_check_login } = require('../../middleware/check_login')
@@ -27,14 +31,14 @@ router.post('/register', validate_user, async (ctx, next) => {
 })
 
 //  login
-router.post('/', async (ctx, next) => {
+router.post('/', validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
     const resModel = await findUser(email, password)
 
-    if( !resModel.errno && password && ctx.session.user == null ){
+    if(!resModel.errno && !ctx.session.user){
         ctx.session.user = resModel.data
-    }
-
+    } 
+    
     ctx.body = resModel
 })
 
