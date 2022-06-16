@@ -7,11 +7,11 @@ const { resolve } = require('path')
 
 const {
     createUser, readUser,
-    
+
     readBlogListAndAuthorByUserId,
     readUserAndFollowReationByUserId,
 
-     update,
+    update,
     readFans, addFans, deleteFans,
     readIdols, readNews, updateFollow,
     readOther,
@@ -25,7 +25,7 @@ const {
     updateFollowComfirm
 } = require('../server/news')
 
-const { validator_user_update } = require('../validator')
+const { validate_register } = require('../validator')
 const hash = require('../utils/crypto')
 const { ErrModel, SuccModel } = require('../model')
 
@@ -42,13 +42,51 @@ const {
     FOLLOW
 } = require('../model/errRes')
 
+/**
+ * 確認信箱是否已被註冊
+ * @param {string} email user 的信箱 
+ * @returns {object} SuccessMode || ErrModel Instance
+ */
+async function isEmailExist(email) {
+    const res = await readUser({ email })
+
+    if (!res) {
+        return new SuccModel('此帳號仍未被使用，歡迎註冊')
+    } else {
+        return new ErrModel(IS_EXIST)
+    }
+}
+
+/**
+ * 註冊
+ * @param {string} email user 的信箱
+ * @param {string} password user 未加密的密碼
+ * @returns SuccessMode || ErrModel Instance
+ */
+const register = async (email, password) => {
+    if (!password) {
+        return new ErrModel(NO_PASSWORD)
+    }
+
+    const { errno } = await isUserExist(email)
+
+    if (!errno) {
+        const user = await createUser({email,password})
+        return new SuccModel(user)
+
+    } else {
+        return new ErrModel(IS_EXIST)
+    }
+}
+
+
 const findUser = async (email, password) => {
-    const res = await read({ email, password })
+    const res = await readUser({ email, password })
     // 僅檢查帳號是否存在
     if (!password) {
         console.log('僅檢查帳號是否已被註冊')
         if (!res.id) {
-            return new SuccModel('此帳號可用')
+            return new SuccModel()
         } else {
             return new ErrModel(IS_EXIST)
         }
@@ -60,35 +98,14 @@ const findUser = async (email, password) => {
     }
 }
 
-async function isUserExist(email){
-    const res = await readUser({email})
-}
-
+/**
+ * 
+ * @param {*} id 
+ * @returns 
+ */
 async function findUserById(id) {
     const user = await read({ id })
     return new SuccModel(user)
-}
-
-const register = async (email, password) => {
-    if (!password) {
-        return new ErrModel(NO_PASSWORD)
-    }
-
-    const { errno } = await findUser(email)
-
-    if (errno) {
-        return new ErrModel(IS_EXIST)
-    } else {
-        try {
-            const user = await createUser({
-                email,
-                password
-            })
-            return new SuccModel(user)
-        } catch (e) {
-            return new ErrModel({ ...UNEXPECTED, msg: e })
-        }
-    }
 }
 
 const modifyUserInfo = async (ctx) => {
@@ -300,8 +317,10 @@ async function confirmUserNews(user_id, time) {
 }
 
 module.exports = {
-    register,
+    isEmailExist,
     findUser,
+    register,
+
     modifyUserInfo,
     getFansById,
     getIdolsById,

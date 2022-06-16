@@ -277,7 +277,7 @@
             msg = undefined,
             data = undefined
           }
-        } = await axios.post('/api/user', { email })
+        } = await axios.post('/api/user/isEmailExist', { email })
 
         //  AJAX結束，移除 loading 樣式
         $feedback.classList.remove('loading')

@@ -11,7 +11,7 @@ const hash = require('../utils/crypto')
 const { init_4_user } = require('../utils/init')
 
 /**
- * 
+ * 查找 User Instance
  * @param {object} param0 
  * @param {number} param0.id user id
  * @param {string} param0.email user email
@@ -32,7 +32,8 @@ const readUser = async ({ id, email, password }) => {
 }
 
 /**
- * 
+ * 創建 User Instance
+ * @param {object} param0
  * @param {string} param0.email user email
  * @param {string} param0.password user 未加密的密碼
  * @returns {object} 除了 password 以外的 user 資料

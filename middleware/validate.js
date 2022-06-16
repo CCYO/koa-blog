@@ -2,28 +2,35 @@
  * @description middleware validate
  */
 
-const { validator_user_register, validator_user_update } = require('../validator')
+const { validator_user_update, validator_register, validator_user } = require('../validator')
 const { ErrModel } = require('../model')
 const { FORMAT_ERR } = require('../model/errRes')
 
-const validate_user_register = async(ctx, next) => {
-    const errors = validator_user_register(ctx.request.body)
-    if(errors){
-        return ctx.body = new ErrModel({...FORMAT_ERR, msg: errors})
+const validate_user = async (ctx, next) => {
+    let errors
+    let action
+    switch (ctx.path) {
+        case '/api/user/isEmailExist':
+            action = '信箱確認'
+            errors = validator_user('email', ctx.request.body)
+            break;
+        case '/api/user/register':
+            action = '註冊'
+            errors = validator_user('register', ctx.request.body)
+            break;
+        case '/api/user/update':
+            action = '更新'
+            errors = validator_user('update', ctx.request.body)
+            break;
     }
-    return await next()
-}
 
-const validate_user_update = async(ctx, next) => {
-    const errors = validator_user_update(ctx.request.body)
     if (errors) {
-        console.log('@validate err => ', errors.name)
-        return ctx.body = new ErrModel({...FORMAT_ERR, msg: errors})
+        ctx.app.emit('error', new Error(`${action}失敗，因為${errors[0].message}`), ctx)
+        return ctx.body = new ErrModel({ ...FORMAT_ERR, msg: errors })
     }
     return await next()
 }
 
 module.exports = {
-    validate_user_register,
-    validate_user_update
+    validate_user
 }

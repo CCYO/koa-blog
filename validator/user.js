@@ -49,39 +49,44 @@ const schema_common = {
     }
 }
 
-const schema_register = { ...schema_common, required: ['email', 'password'] }
-
-const validate_user_register = ajv.compile(schema_register)
-const validate_user_update = ajv.compile(schema_common)
-
-
-const validator_user_register = (data) => {
-    let res = validate_user_register(data)
-    console.log('@res => ', res)
-
-    if (!res) {
-        let errors = validate_user_update.errors
-        console.log('@validator_user_update => ', validator_user_update)
-        console.log('@validator_user_update.errors => ', errors)
-        return errors
+const schema_isEmailExist = {
+    ...schema_common,
+    required: ['email'],
+    errorMessage: {
+        required: 'email 都必須有值'
     }
-    return false
 }
 
-const validator_user_update = (data) => {
-    let res = validate_user_update(data)
-    console.log('@res => ', res)
-
-    if (!res) {
-        let errors = validate_user_update.errors
-        console.log('@validator_user_update => ', validator_user_update)
-        console.log('@validator_user_update.errors => ', errors)
-        return errors
+const schema_register = {
+    ...schema_common,
+    required: ['email', 'password'],
+    errorMessage: {
+        required: 'email 與 password 都必須有值'
     }
-    return false
 }
 
-module.exports = {
-    validator_user_register,
-    validator_user_update
+const validate_email = ajv.compile(schema_isEmailExist)
+const validate_register = ajv.compile(schema_register)
+const validate_update = ajv.compile(schema_common)
+
+function validator_user(type, data) {
+    let validator
+    switch (type) {
+        case 'email':
+            validator = validate_email
+            break;
+        case 'register':
+            validator = validate_register
+            break;
+        case 'update':
+            validator = validate_update
+            break;
+    }
+    
+    if (!validator(data)) {
+        return validator.errors
+    }
+    return null
 }
+
+module.exports = validator_user

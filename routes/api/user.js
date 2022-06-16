@@ -4,19 +4,26 @@
 
 const router = require('koa-router')()
 
-const { register, findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout, getNews, confirmUserNews, readMore } = require('../../controller/user')
+const { register, findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout, getNews, confirmUserNews, readMore,
+    isEmailExist
+} = require('../../controller/user')
 
 const { api_check_login } = require('../../middleware/check_login')
 const { parse_user_data } = require('../../middleware/gcs')
-const { validate_user_register, validate_user_update } = require('../../middleware/validate')
+const { validate_user } = require('../../middleware/validate')
 
 router.prefix('/api/user')
 
+//  驗證信箱是否已被註冊
+router.post('/isEmailExist', validate_user, async (ctx, next) => {
+    const { email } = ctx.request.body
+    ctx.body = await isEmailExist(email)
+})
+
 //  register
-router.post('/register', validate_user_register, async (ctx, next) => {
+router.post('/register', validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
-    const res = await register(email, password)
-    ctx.body = res
+    ctx.body = await register(email, password)
 })
 
 //  login
@@ -38,7 +45,7 @@ router.get('/logout', api_check_login, async (ctx, next) => {
 })
 
 //  setting
-router.patch('/:avatar_hash', api_check_login, parse_user_data, validate_user_update ,async(ctx, next) => {
+router.patch('/:avatar_hash', api_check_login, parse_user_data, validate_user ,async(ctx, next) => {
     let resModel = await modifyUserInfo(ctx)
     ctx.session.user = resModel.data
 
