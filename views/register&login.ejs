@@ -128,51 +128,62 @@
         BS5_tabs.push(tabTrigger)
       })
 
-      $(`#register-box [name='email']`).on('change', async (e) => {
-        let target = $(e.target)
-        let email = target.val()
-        let feedback = target.next()
+      form_valid_UI('#form-register')
 
-        if (!email) {
-          console.log('空')
-          UI(false, '請填入信箱資訊')
-          return
-        }
+      function form_valid_UI(form_selector) {
+          let api_isEmailExist = '/api/user/isEmailExist'
+          let patten_email = /^[^\s@]+@[^\s@]+\.[^\s@]+[^\\.]$/
 
-
-        let { data: { errno, data, msg } } = await axios.post('/api/user/isEmailExist', { email })
-
-        if (!errno) {
-          console.log('成功')
-          UI(true, data)
-        } else {
-          console.log('失敗')
-          msg = Array.isArray(msg) ? msg[0].message : msg
-          UI(false, msg)
-        }
-
-        function UI(valid, data) {
-          if (valid) {
-            target.removeClass('is-invalid').addClass('is-valid')
-            feedback.removeClass('invalid-feedback').addClass('valid-feedback').text(data)
-          } else {
-            target.removeClass('is-valid').addClass('is-invalid')
-            feedback.removeClass('valid-feedback').addClass('invalid-feedback').text(data)
-          }
-          return
-        }
-
-        function UI_submit() {
-
-        }
-
-        function form_valid_UI(form) {
-          function email_UI() {
-            $(`[name='email']`).each((index, inp) => {
-              let email = inp.val()
-
+          //  email 的 blur 綁定一次性 handle
+          //  handle 內執行
+          //  (1) valicate
+          //  (2) 綁定 input handle，內僅作 valicate
+          $(`${form_selector} input[name='email']`).one('blur', (e) => {
+            email_valicate_front(e, email_valicate_back)
+            e.target.addEventListener('input', (e) => {
+              email_valicate_front(e, email_valicate_back)
             })
+          })
+
+
+
+          //  email valicate UI
+          async function email_valicate_front(e, cb) {
+            //  change event
+            let target = e.target
+            let email = $(e.target).val()
+
+            //  前端驗證
+            if (!email) {
+              console.log('空')
+              feedback_UI(target, false, '請填入信箱資訊')
+              return
+            } else if (!regex_test(email, patten_email, true)) {
+              console.log('不符合email格式')
+              feedback_UI(target, false, '不符合email格式')
+              return
+            }
+
+            if(cb){
+              await cb(target, email)
+            }
+            return
           }
+
+          async function email_valicate_back(inp, val) {
+            let { data: { errno, data, msg } } = await axios.post(api_isEmailExist, { email: val })
+            //  後端驗證
+            if (!errno) {
+              console.log('後端確認email是否可用，成功')
+              feedback_UI(inp, true, data)
+            } else {
+              console.log('後端確認email是否可用，失敗')
+              msg = Array.isArray(msg) ? msg[0].message : msg
+              feedback_UI(inp, false, msg)
+            }
+            return
+          }
+
           function require_UI(val) {
             if (val === '') {
 
@@ -180,17 +191,29 @@
           }
           function feedback_UI(inp, valid, msg) {
             if (valid) {
-              inp.removeClass('is-invalid').addClass('is-valid')
-              $(inp).next().removeClass('invalid-feedback').addClass('valid-feedback').text(data)
+              $(inp).removeClass('is-invalid').addClass('is-valid')
+              $(inp).next().removeClass('invalid-feedback').addClass('valid-feedback').text(msg)
             } else {
-              inp.removeClass('is-valid').addClass('is-invalid')
-              $(inp).next().removeClass('valid-feedback').addClass('invalid-feedback').text(data)
+              $(inp).removeClass('is-valid').addClass('is-invalid')
+              $(inp).next().removeClass('valid-feedback').addClass('invalid-feedback').text(msg)
             }
+          }
+          function _lowercaseAndTrim(str) {
+            return str.trim().toLocaleLowerCase()
+          }
+          function regex_test(str, pattern, toLowercase) {
+            if (toLowercase) {
+              str = _lowercaseAndTrim(str)
+            }
+            return pattern.test(str)
           }
         }
       })
 
-
+      function tt(){
+        let target = $(e.target)
+        let email = target.val()
+        let feedback = target.next()
 
       //  GenericFuc: validate UI for form
       // function _form_UI(selector__form) {
@@ -435,7 +458,7 @@
       //       location.href = from || '/self'
       //     }
       //   })
-    })
+    }
   </script>
 </body>
 
