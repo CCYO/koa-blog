@@ -161,29 +161,36 @@
           }
           return
         }
+
+        function UI_submit() {
+
+        }
+
+        function form_valid_UI(form) {
+          function email_UI() {
+            $(`[name='email']`).each((index, inp) => {
+              let email = inp.val()
+
+            })
+          }
+          function require_UI(val) {
+            if (val === '') {
+
+            }
+          }
+          function feedback_UI(inp, valid, msg) {
+            if (valid) {
+              inp.removeClass('is-invalid').addClass('is-valid')
+              $(inp).next().removeClass('invalid-feedback').addClass('valid-feedback').text(data)
+            } else {
+              inp.removeClass('is-valid').addClass('is-invalid')
+              $(inp).next().removeClass('valid-feedback').addClass('invalid-feedback').text(data)
+            }
+          }
+        }
       })
 
 
-      //  Navbar 的  toggle 效果
-      // $$(`.navbar-nav .nav-link`).forEach((a, ind, arr) => {
-      // $$(`.navbar .nav-link`).forEach((a, ind, arr) => {
-      //   a.addEventListener(
-      //     'click',
-      //     (e) => {
-      //       e.preventDefault()
-      //       const $target = e.target
-      //       const mark = e.target.dataset['myTab']
-      //       //  觸發 card_tab 的 toggle 效果
-      //       BS5_tabs.find(tabTarigger => tabTarigger['mark'] === mark).show()
-
-      //       //  改變 觸發 c d_tab 的 Navbar 的 toggle 樣式
-      //       arr.forEach(a => {
-      //         a.classList.remove('active')
-      //         $target.classList.add('active')
-      //       })
-      //     }
-      //   )
-      // })
 
       //  GenericFuc: validate UI for form
       // function _form_UI(selector__form) {
