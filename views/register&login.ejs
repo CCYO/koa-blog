@@ -130,6 +130,37 @@
 
       form_valid_UI('#form-register')
 
+      let regex_password = /[0-9a-zA-Z_]+{6}/
+function valicator_password(selector){
+    return () => {
+        let form = $(selector)
+        let inp_password = $(`${selector} input[type='password']`)
+        let password = inp_password.val().trim()
+        if(!!!password){
+            UI(inp_password[0], '密碼必填，不能為空')
+        }else if(!regex_password.test(password)){
+            UI(inp_password[0], '密碼僅能由數字、大小寫英文、底線組成')
+        }
+        
+    }
+}
+
+function valicator_submit(selector){
+    let form = $(selector)
+    let sumbit = $(`${selectot} button[type='submit']`)
+    let inps = $(`${selector} input.is-valit`)
+    let length = inps.length
+    let num = 0
+    inps.each((index, item) => {
+        $(item).hasClass('is-valit') && num++
+    })
+    let canSubmit = num === length
+    if(canSubmit){
+        submit.prop('disable', false)
+    }else{
+        submit.prop('disable', true)
+    }
+}
       function form_valid_UI(form_selector) {
           let api_isEmailExist = '/api/user/isEmailExist'
           let patten_email = /^[^\s@]+@[^\s@]+\.[^\s@]+[^\\.]$/
