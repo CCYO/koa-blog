@@ -49,7 +49,7 @@
           <div class="col-8 mx-auto">
             <div class="mb-3">
               <label for="email" class="form-label">信箱</label>
-              <input type="text" class="form-control" name="email" aria-describedby="email_help" autocomplete="off"
+              <input type="email" class="form-control" name="email" aria-describedby="email_help" autocomplete="off"
                 required>
               <div class="d-block">&nbsp;</div>
             </div>
@@ -128,123 +128,204 @@
         BS5_tabs.push(tabTrigger)
       })
 
-      form_valid_UI('#form-register')
+      valicate_register('#form-register')
 
-      let regex_password = /[0-9a-zA-Z_]+{6}/
-function valicator_password(selector){
-    return () => {
+      let regex_password = /^[0-9a-zA-Z_]{6,}$/
+      let patten_email = /^[^\s@]+@[^\s@]+\.[^\s@]+[^\\.]$/
+      let api_isEmailExist = '/api/user/isEmailExist'
+
+      function valicate_register(selector_form) {
+        let valicate_email_front = valicator_email_front(selector_form)
+        let valicate_email_server = valicator_email_server(selector_form)
+        let valicate_password = valicator_password(selector_form)
+        let valicate_password_again = valicator_password_again(selector_form)
+        let valicate_submit = valicator_submit(selector_form)
+
+        let Debouncing_email = Debouncing(valicate_email)
+
+        async function valicate_email() {
+          valicate_email_front() && await valicate_email_server()
+          valicate_submit()
+        }
+
+        $(`${selector_form} input[type='email']`).one('change', (e) => {
+          Debouncing_email()
+          $(e.target).on('input', Debouncing_email)
+        })
+
+        $(`${selector_form} input[type='password']`).first().on('change', (e) => {
+          let is_valid = valicate_password()
+          valicate_submit()
+          setDisabled($(`${selector_form} input[type='password']`).last(), is_valid)
+        })
+
+        $(`${selector_form} input[type='password']`).last().on('change', (e) => {
+          let is_valid = valicate_password_again()
+          valicate_submit()
+        })
+
+
+      }
+
+      function valicator_password_again(form_selector) {
+        let inp_pwd1 = $(`${form_selector} input[type='password']`).first()
+        let inp_pwd2 = $(`${form_selector} input[type='password']`).last()
+
+        return () => {
+          let pwd2 = inp_pwd2.val()
+
+          if (!!!pwd2) {
+            feedback_UI(inp_pwd2, false, '請再填一次密碼')
+            return false
+          }
+
+          let pwd1 = inp_pwd1.val()
+
+          let is_valid = pwd1 === pwd2
+
+          if (!is_valid) {
+            feedback_UI(inp_pwd2, false, '必須與密碼相同')
+            return false
+          } else {
+            feedback_UI(inp_pwd2, true, 'ok')
+            return true
+          }
+        }
+      }
+
+      function valicator_password(selector) {
         let form = $(selector)
-        let inp_password = $(`${selector} input[type='password']`)
-        let password = inp_password.val().trim()
-        if(!!!password){
-            UI(inp_password[0], '密碼必填，不能為空')
-        }else if(!regex_password.test(password)){
-            UI(inp_password[0], '密碼僅能由數字、大小寫英文、底線組成')
+        let inp = $(`${selector} input[type='password']`).first()
+
+        return () => {
+          feedback_UI(inp, 'load')
+          let password = inp.val().trim()
+
+          if (!!!password) {
+            feedback_UI(inp, false, '密碼必填，不能為空')
+            return false
+          } else if (!regex_password.test(password)) {
+            feedback_UI(inp, false, '密碼僅能由數字、大小寫英文、底線組成')
+            return false
+          } else {
+            feedback_UI(inp, true, 'ok')
+            return true
+          }
         }
-        
-    }
-}
+      }
 
-function valicator_submit(selector){
-    let form = $(selector)
-    let sumbit = $(`${selectot} button[type='submit']`)
-    let inps = $(`${selector} input.is-valit`)
-    let length = inps.length
-    let num = 0
-    inps.each((index, item) => {
-        $(item).hasClass('is-valit') && num++
-    })
-    let canSubmit = num === length
-    if(canSubmit){
-        submit.prop('disable', false)
-    }else{
-        submit.prop('disable', true)
-    }
-}
-      function form_valid_UI(form_selector) {
-          let api_isEmailExist = '/api/user/isEmailExist'
-          let patten_email = /^[^\s@]+@[^\s@]+\.[^\s@]+[^\\.]$/
+      function valicator_email_front(selector_form) {
+        let inp = $(`${selector_form} input[type='email']`)
 
-          //  email 的 blur 綁定一次性 handle
-          //  handle 內執行
-          //  (1) valicate
-          //  (2) 綁定 input handle，內僅作 valicate
-          $(`${form_selector} input[name='email']`).one('blur', (e) => {
-            email_valicate_front(e, email_valicate_back)
-            e.target.addEventListener('input', (e) => {
-              email_valicate_front(e, email_valicate_back)
-            })
+        return () => {
+          feedback_UI(inp, 'load')
+
+          let email = inp.val()
+
+          if (!!!email) {
+            console.log('空')
+            feedback_UI(inp, false, '請填入信箱資訊')
+            return false
+          } else if (!regex_test(email, patten_email, true)) {
+            console.log('不符合email格式')
+            feedback_UI(inp, false, '不符合email格式')
+            return false
+          } else {
+            return true
+          }
+        }
+      }
+
+      function valicator_email_server(selector_form) {
+        let inp = $(`${selector_form} input[type='email']`)
+
+        return async () => {
+
+          feedback_UI(inp, 'load')
+
+          let email = inp.val()
+
+          let { data: { errno, data, msg } } = await axios.post(api_isEmailExist, { email })
+
+          //  後端驗證
+          if (!errno) {
+            console.log('後端確認email是否可用，成功')
+            feedback_UI(inp, true, data)
+          } else {
+            console.log('後端確認email是否可用，失敗')
+            msg = Array.isArray(msg) ? msg[0].message : msg
+            feedback_UI(inp, false, msg)
+          }
+        }
+      }
+
+      function valicator_submit(selector_form) {
+        let form = $(selector_form)
+        let submit = $(`${selector_form} button[type='submit']`)
+        let inps = $(`${selector_form} input`)
+        let length = inps.length
+
+        return () => {
+          let num = 0
+          inps.each((index, item) => {
+            $(item).hasClass('is-valid') && num++
           })
-
-
-
-          //  email valicate UI
-          async function email_valicate_front(e, cb) {
-            //  change event
-            let target = e.target
-            let email = $(e.target).val()
-
-            //  前端驗證
-            if (!email) {
-              console.log('空')
-              feedback_UI(target, false, '請填入信箱資訊')
-              return
-            } else if (!regex_test(email, patten_email, true)) {
-              console.log('不符合email格式')
-              feedback_UI(target, false, '不符合email格式')
-              return
-            }
-
-            if(cb){
-              await cb(target, email)
-            }
-            return
-          }
-
-          async function email_valicate_back(inp, val) {
-            let { data: { errno, data, msg } } = await axios.post(api_isEmailExist, { email: val })
-            //  後端驗證
-            if (!errno) {
-              console.log('後端確認email是否可用，成功')
-              feedback_UI(inp, true, data)
-            } else {
-              console.log('後端確認email是否可用，失敗')
-              msg = Array.isArray(msg) ? msg[0].message : msg
-              feedback_UI(inp, false, msg)
-            }
-            return
-          }
-
-          function require_UI(val) {
-            if (val === '') {
-
-            }
-          }
-          function feedback_UI(inp, valid, msg) {
-            if (valid) {
-              $(inp).removeClass('is-invalid').addClass('is-valid')
-              $(inp).next().removeClass('invalid-feedback').addClass('valid-feedback').text(msg)
-            } else {
-              $(inp).removeClass('is-valid').addClass('is-invalid')
-              $(inp).next().removeClass('valid-feedback').addClass('invalid-feedback').text(msg)
-            }
-          }
-          function _lowercaseAndTrim(str) {
-            return str.trim().toLocaleLowerCase()
-          }
-          function regex_test(str, pattern, toLowercase) {
-            if (toLowercase) {
-              str = _lowercaseAndTrim(str)
-            }
-            return pattern.test(str)
-          }
+          let canSubmit = num === length
+          console.log(num, length, canSubmit)
+          setDisabled(submit, canSubmit)
         }
-      })
+      }
 
-      function tt(){
-        let target = $(e.target)
-        let email = target.val()
-        let feedback = target.next()
+
+      function setDisabled(jqObj, boo) {
+        jqObj.attr('disabled', (index, val) => {
+          if (boo) {
+            return false
+          } else {
+            return 'disabled'
+          }
+        })
+      }
+
+
+      function feedback_UI(inp, valid, msg) {
+        if (valid === 'load') {
+          $(inp).next().toggleClass('my-show', true).text('loading...')
+        } else if (valid) {
+          $(inp).removeClass('is-invalid').addClass('is-valid')
+          $(inp).next().removeClass('invalid-feedback myshow').addClass('valid-feedback').text(msg)
+        } else {
+          $(inp).removeClass('is-valid').addClass('is-invalid')
+          $(inp).next().removeClass('valid-feedback myshow').addClass('invalid-feedback').text(msg)
+        }
+      }
+
+      function _lowercaseAndTrim(str) {
+        return str.trim().toLocaleLowerCase()
+      }
+
+      function regex_test(str, pattern, toLowercase) {
+        if (toLowercase) {
+          str = _lowercaseAndTrim(str)
+        }
+
+        return pattern.test(str)
+      }
+
+      function Debouncing(func, ms = 250) {
+        let n
+        return () => {
+          console.log('test', `@n => ${n}`)
+          n && clearTimeout(n)
+          n = setTimeout(func, ms)
+        }
+      }
+    })
+
+    function tt() {
+      let target = $(e.target)
+      let email = target.val()
+      let feedback = target.next()
 
       //  GenericFuc: validate UI for form
       // function _form_UI(selector__form) {
