@@ -55,13 +55,13 @@
             </div>
             <div class="mb-3">
               <label for="input_password" class="form-label">密碼</label>
-              <input type="password" class="form-control" name="input_password" data-retry='yes'
-                autocomplete="new-password" required>
+              <input type="password" class="form-control" name="password" data-retry='yes' autocomplete="new-password"
+                required>
               <div class="d-block">&nbsp;</div>
             </div>
             <div class="mb-3">
               <label for="input_check_password" class="form-label">密碼確認</label>
-              <input type="password" class="form-control" name='input_check_password' autocomplete="off" disabled>
+              <input type="password" class="form-control" name='password_again' autocomplete="off" disabled>
               <div class="d-block">&nbsp;</div>
             </div>
             <button type="submit" class="btn btn-primary" disabled>送出</button>
@@ -73,14 +73,14 @@
         <form id='form_login' class="row">
           <div class="col-8 mx-auto">
             <div class="mb-3">
-              <label for="input_email" class="form-label">信箱</label>
-              <input type="text" class="form-control" name="input_email" data-form-id='#form_login' autocomplete="off"
+              <label for="email" class="form-label">信箱</label>
+              <input type="email" class="form-control" name="email" data-form-id='#form_login' autocomplete="off"
                 required aria-describedby="email_help">
               <div class="d-block">&nbsp;</div>
             </div>
             <div class="mb-3">
-              <label for="input_password" class="form-label">密碼</label>
-              <input type="password" class="form-control" name="input_password" data-form-id='#form_login'
+              <label for="password" class="form-label">密碼</label>
+              <input type="password" class="form-control" name="password" data-form-id='#form_login'
                 autocomplete="new-password">
               <div class="d-block">&nbsp;</div>
             </div>
@@ -95,20 +95,15 @@
 
   <script>
     $(function () {
-      // //  selector__ 對應 selector
-      // const selector__form_register = '#form_register'
-      // const selector__form_login = '#form_login'
-      // const selector__inp_email = `input[name='input_email']`
-      // const selector__inp_password = `input[name='input_password']`
-      // const selector__inp_check_password = `input[name='input_check_password']`
-      // let selector__feedback_check_password = `${selector__inp_check_password} ~ div`
 
-      // //  $ 對應 ele
-      // const $check_password = $(selector__inp_check_password)
-      // const $feedback_check_password = $(selector__feedback_check_password)
+      let password_length = 6
+      let regex_password = /^[0-9a-zA-Z_]{6,}$/
+      let patten_email = /^[^\s@]+@[^\s@]+\.[^\s@]+[^\\.]$/
+      let api_isEmailExist = '/api/user/isEmailExist'
+      let api_register = '/api/user/register'
+      let api_login = '/api/user/'
 
       /*  BS5 Tab : Register & Login */
-
       //  手動註冊的 BS5 Tab 列表
       let BS5_tabs = []
 
@@ -128,50 +123,151 @@
         BS5_tabs.push(tabTrigger)
       })
 
+      valicate_login('#form_login')
       valicate_register('#form-register')
 
-      let regex_password = /^[0-9a-zA-Z_]{6,}$/
-      let patten_email = /^[^\s@]+@[^\s@]+\.[^\s@]+[^\\.]$/
-      let api_isEmailExist = '/api/user/isEmailExist'
-
-      function valicate_register(selector_form) {
+      //  針對 登入表單 定義需要用到的 valicate
+      function valicate_login(selector_form) {
+        /*  生成 login from 內會用到的各種 valicate */
         let valicate_email_front = valicator_email_front(selector_form)
+        let valicate_password = valicator_password(selector_form)
+        let valicate_submit = valicator_submit(selector_form)
+
+        //  防抖動的 valicate for email
+        let Debouncing_email = Debouncing(valicate_email)
+
+        //  綁定 form 的 submit
+        $(`${selector_form}`).submit(handle_submit)
+
+        //  綁定 email 的 handle
+        $(`${selector_form} input[type='email']`).on('input', Debouncing_email)
+
+        //  綁定 password 的 handle
+        $(`${selector_form} input[type='password']`).on('input', handle_password)
+
+        //  handle for input of password
+        function handle_password(e) {
+          valicate_password()
+          valicate_submit()
+        }
+
+        //  valicate for email
+        async function valicate_email() {
+          valicate_email_front() 
+          valicate_submit()
+        }
+
+        //  handle for submit of submit
+        async function handle_submit(e) {
+          e.preventDefault()
+
+          let email = $(`${selector_form} input[name='email']`).val()
+          let password = $(`${selector_form} input[name='password']`).val()
+
+          let {
+            data: { errno, data, msg }
+          } = await axios.post(api_login, { email, password })
+
+          if (!errno) {
+            alert('登入成功')
+            let from = location.search ? new URLSearchParams(location.search).get('from') : false
+            location.pathname = from ? from : '/self'
+          } else {
+            alert(msg)
+          }
+        }
+      }
+
+      //  針對 註冊表單 定義需要用到的 valicate
+      function valicate_register(selector_form) {
+        /*  生成 register from 內會用到的各種 valicate */
+        let valicate_email_front = valicator_email_front(selector_form, true)
         let valicate_email_server = valicator_email_server(selector_form)
         let valicate_password = valicator_password(selector_form)
         let valicate_password_again = valicator_password_again(selector_form)
         let valicate_submit = valicator_submit(selector_form)
 
+        //  防抖動的 valicate for email
         let Debouncing_email = Debouncing(valicate_email)
 
-        async function valicate_email() {
-          valicate_email_front() && await valicate_email_server()
-          valicate_submit()
-        }
+        //  綁定 form 的 submit
+        $(`${selector_form}`).submit(handle_submit)
 
+        //  綁定 email 的 handle
         $(`${selector_form} input[type='email']`).one('change', (e) => {
           Debouncing_email()
           $(e.target).on('input', Debouncing_email)
         })
 
-        $(`${selector_form} input[type='password']`).first().on('change', (e) => {
+        $(`${selector_form} input[type='password']`).on('change', (e) => {
+          if($(e.target).val().length < password_length){
+            feedback_UI(e.target, false, '密碼必須至少6個字符')
+          }
+        })
+
+        //  綁定 password 的 handle
+        $(`${selector_form} input[type='password']`).first().on('input', handle_password)
+
+        //  綁定 password_again 的 handle
+        $(`${selector_form} input[type='password']`).last().on('input', handle_password_again)
+
+        //  handle for input of password_again
+        function handle_password_again(e) {
+          valicate_password_again()
+          valicate_submit()
+        }
+
+        //  handle for input of password
+        function handle_password(e) {
           let is_valid = valicate_password()
+          
           valicate_submit()
-          setDisabled($(`${selector_form} input[type='password']`).last(), is_valid)
-        })
+          
+          setDisabled(
+            $(`${selector_form} input[type='password']`).last(),
+            is_valid
+          )
 
-        $(`${selector_form} input[type='password']`).last().on('change', (e) => {
-          let is_valid = valicate_password_again()
+          //  若 password_again 有值，則對 password_again 進行驗證
+          $(`${selector_form} input[type='password']`).last().val() && handle_password_again()
+        }
+
+        //  handle for submit of submit
+        async function handle_submit(e) {
+          e.preventDefault()
+
+          let email = $(`${selector_form} input[name='email']`).val()
+          let password = $(`${selector_form} input[name='password']`).val()
+
+          let {
+            data: { errno, data, msg }
+          } = await axios.post(api_register, { email, password })
+
+          if (!errno) {
+            alert('註冊成功，請嘗試登入')
+            location.pathname = '/login'
+          } else {
+            alert(msg)
+          }
+        }
+
+        //  valicate for email
+        async function valicate_email() {
+          valicate_email_front() && await valicate_email_server()
           valicate_submit()
-        })
-
-
+        }
       }
 
+      //  valicator for password_again 前端驗證
       function valicator_password_again(form_selector) {
         let inp_pwd1 = $(`${form_selector} input[type='password']`).first()
         let inp_pwd2 = $(`${form_selector} input[type='password']`).last()
 
         return () => {
+          if (inp_pwd2.val().length < password_length) {
+            return false
+          }
+
           let pwd2 = inp_pwd2.val()
 
           if (!!!pwd2) {
@@ -193,11 +289,16 @@
         }
       }
 
+      //  valicator for password 前端驗證
       function valicator_password(selector) {
         let form = $(selector)
         let inp = $(`${selector} input[type='password']`).first()
 
         return () => {
+          if (inp.val().length < password_length) {
+            return false
+          }
+
           feedback_UI(inp, 'load')
           let password = inp.val().trim()
 
@@ -214,7 +315,8 @@
         }
       }
 
-      function valicator_email_front(selector_form) {
+      //  valicator for email 前端驗證
+      function valicator_email_front(selector_form, checkBack = false) {
         let inp = $(`${selector_form} input[type='email']`)
 
         return () => {
@@ -223,24 +325,25 @@
           let email = inp.val()
 
           if (!!!email) {
-            console.log('空')
             feedback_UI(inp, false, '請填入信箱資訊')
             return false
           } else if (!regex_test(email, patten_email, true)) {
-            console.log('不符合email格式')
             feedback_UI(inp, false, '不符合email格式')
             return false
-          } else {
-            return true
           }
+
+          if (!checkBack) {
+            feedback_UI(inp, true, 'ok')
+          }
+          return true
         }
       }
 
+      //  valicator for email 後端驗證
       function valicator_email_server(selector_form) {
         let inp = $(`${selector_form} input[type='email']`)
 
         return async () => {
-
           feedback_UI(inp, 'load')
 
           let email = inp.val()
@@ -249,16 +352,18 @@
 
           //  後端驗證
           if (!errno) {
-            console.log('後端確認email是否可用，成功')
             feedback_UI(inp, true, data)
+            return true
           } else {
-            console.log('後端確認email是否可用，失敗')
             msg = Array.isArray(msg) ? msg[0].message : msg
+
             feedback_UI(inp, false, msg)
+            return false
           }
         }
       }
 
+      //  valicator for submit button 的 disabled
       function valicator_submit(selector_form) {
         let form = $(selector_form)
         let submit = $(`${selector_form} button[type='submit']`)
@@ -267,16 +372,34 @@
 
         return () => {
           let num = 0
+
           inps.each((index, item) => {
             $(item).hasClass('is-valid') && num++
           })
+
           let canSubmit = num === length
-          console.log(num, length, canSubmit)
+
           setDisabled(submit, canSubmit)
         }
       }
 
+      //  input 的 valicate UI
+      function feedback_UI(inp, valid, msg) {
+        if (valid === 'load') {
+          //  驗證中
+          $(inp).next().toggleClass('my-show', true).text('loading...')
+        } else if (valid) {
+          //  驗證成功
+          $(inp).removeClass('is-invalid').addClass('is-valid')
+          $(inp).next().removeClass('invalid-feedback myshow').addClass('valid-feedback').text(msg)
+        } else {
+          //  驗證失敗
+          $(inp).removeClass('is-valid').addClass('is-invalid')
+          $(inp).next().removeClass('valid-feedback myshow').addClass('invalid-feedback').text(msg)
+        }
+      }
 
+      //  針對 jqObj 的 input 設置 attr: disabled
       function setDisabled(jqObj, boo) {
         jqObj.attr('disabled', (index, val) => {
           if (boo) {
@@ -287,24 +410,8 @@
         })
       }
 
-
-      function feedback_UI(inp, valid, msg) {
-        if (valid === 'load') {
-          $(inp).next().toggleClass('my-show', true).text('loading...')
-        } else if (valid) {
-          $(inp).removeClass('is-invalid').addClass('is-valid')
-          $(inp).next().removeClass('invalid-feedback myshow').addClass('valid-feedback').text(msg)
-        } else {
-          $(inp).removeClass('is-valid').addClass('is-invalid')
-          $(inp).next().removeClass('valid-feedback myshow').addClass('invalid-feedback').text(msg)
-        }
-      }
-
-      function _lowercaseAndTrim(str) {
-        return str.trim().toLocaleLowerCase()
-      }
-
-      function regex_test(str, pattern, toLowercase) {
+      //  驗證字符資料
+      function regex_test(str, pattern, toLowercase = true) {
         if (toLowercase) {
           str = _lowercaseAndTrim(str)
         }
@@ -312,265 +419,21 @@
         return pattern.test(str)
       }
 
+      //  格式化字符串資料
+      function _lowercaseAndTrim(str) {
+        return str.trim().toLocaleLowerCase()
+      }
+
+      //  防抖動
       function Debouncing(func, ms = 250) {
         let n
         return () => {
-          console.log('test', `@n => ${n}`)
           n && clearTimeout(n)
           n = setTimeout(func, ms)
         }
       }
     })
 
-    function tt() {
-      let target = $(e.target)
-      let email = target.val()
-      let feedback = target.next()
-
-      //  GenericFuc: validate UI for form
-      // function _form_UI(selector__form) {
-      //   return (selector, empty, invalid) => {
-      //     const selector__inp = `${selector__form} ${selector}`
-      //     const selector__feedback = `${selector__inp} ~ div`
-      //     const selector__submit = `${selector__form} button[type='submit']`
-
-      //     const $inp = $(selector__inp)
-      //     const $feedback = $(selector__feedback)
-      //     const $submit = $(selector__submit)
-
-      //     const success = !empty && !invalid
-
-      //     const _submit_UI = () => {
-      //       const can_submit = $$(`${selector__form} .is-valid`).length === $$(`${selector__form} input`).length
-      //       if (!can_submit) {
-      //         $submit.setAttribute('disabled', true)
-      //       } else {
-      //         $submit.removeAttribute('disabled')
-      //       }
-      //     }
-
-      //     const _input_UI = (_success, empty, invalid) => {
-      //       let remove_class_input = !success ? 'is-valid' : 'is-invalid'
-      //       let add_class_ = success ? 'is-valid' : 'is-invalid'
-      //       let remove_class_feedback = !success ? 'valid-feedback' : 'invalid-feedback'
-      //       let add_class_feedback = success ? 'valid-feedback' : 'invalid-feedback'
-
-      //       $inp.classList.remove(`${remove_class_input}`)
-      //       $inp.classList.add(`${add_class_}`)
-      //       $feedback.classList.remove(remove_class_feedback)
-      //       $feedback.classList.add(add_class_feedback)
-
-      //       if (!_success) {
-      //         if (empty) {
-      //           $feedback.innerHTML = `必填，且必須是數字或大小寫英文字母`
-      //         } else if (invalid) {
-      //           $feedback.innerHTML = `${invalid}`
-      //         }
-      //       } else {
-      //         $feedback.innerHTML = `ok`
-      //       }
-      //       _submit_UI()
-      //       return
-      //     }
-      //     _input_UI(success, empty, invalid)
-      //   }
-      // }
-
-      // //  form_UI_register
-      // const form_UI_register = _form_UI(selector__form_register)
-
-      // //  form_UI_login
-      // const form_UI_login = _form_UI(selector__form_login)
-
-      // const validate_email = async (e) => {
-      //   console.log('進入驗證')
-      //   const $target = e.target
-
-      //   let form_id = $target.dataset['formId']
-      //   const $feedback = $(`${form_id} ${selector__inp_email} ~ div`)
-
-      //   //  判斷使用 register || login 的 UI驗證
-      //   const form_UI = (form_id = form_id === '#form_register') ? form_UI_register : form_UI_login
-
-      //   const email = $target.value
-      //   const regex_email = /^[\w]+@[\w\.]+$/
-      //   if (!email) {
-      //     //  無值
-      //     form_UI(selector__inp_email, true)
-      //     return
-      //   } else if (!(regex_email.exec(email))) {
-      //     //  格式錯誤
-      //     form_UI(selector__inp_email, false, '必須由數字或英文字母組成')
-      //     return
-      //   }
-
-      //   //  格式驗證成功
-      //   if (form_id) {
-      //     //  若是 register_input_email
-      //     //  添加 loading 樣式
-      //     $target.classList.remove('is-valid', 'is-invalid')
-      //     $feedback.classList.add('loading')
-      //     $feedback.innerHTML = 'LOADING...'
-
-      //     //  AJAX
-      //     let {
-      //       data: {
-      //         errno,
-      //         msg = undefined,
-      //         data = undefined
-      //       }
-      //     } = await axios.post('/api/user/isEmailExist', { email })
-
-      //     //  AJAX結束，移除 loading 樣式
-      //     $feedback.classList.remove('loading')
-
-      //     if (errno) {
-      //       //  DB驗證失敗
-      //       form_UI_register(selector__inp_email, false, msg)
-      //       return
-      //     } else {
-      //       //  DB驗證成功
-      //       form_UI_register(selector__inp_email)
-      //       return
-      //     }
-      //   } else {
-      //     //  若是 login_input_email
-      //     form_UI(selector__inp_email)
-      //   }
-      // }
-
-
-      // // 驗證 register email 是否已存在
-      // $$(`${selector__inp_email}`).forEach(
-      //   inp => inp.addEventListener(
-      //     'input',
-      //     validate_email
-      //   )
-      // )
-
-      // //  handle 密碼格式
-      // const validate_password = (e) => {
-      //   const $target = e.target
-
-      //   const password = $target.value
-      //   let form_id = $target.dataset['formId']
-
-      //   let form_UI = (form_id = form_id === '#form_register') ? form_UI_register : form_UI_login
-      //   let retry = form_id ? $target.dataset['retry'] : 'no'
-
-      //   if (retry === 'yes') {
-      //     $target.dataset['retry'] = 'no'
-      //     $check_password.value = ''
-      //     $check_password.classList.remove('is-valid', 'is-invalid')
-      //     $feedback_check_password.innerHTML = '&nbsp;'
-      //   }
-
-      //   if (!password) {
-      //     //  無效，密碼為空
-      //     form_id && $check_password.setAttribute('disabled', true) && console.log(123456)
-      //     form_UI(selector__inp_password, true)
-      //     return
-      //   } else if (!(/^[\w]+$/.exec(password))) {
-      //     //  無效，密碼格式錯誤
-      //     form_UI(selector__inp_password, false, '密碼必須由數字或英文字母組成')
-      //     form_id && $check_password.setAttribute('disabled', true)
-      //     return
-      //   } else {
-      //     //  有效
-      //     if (form_id) {
-      //       if ($check_password.hasAttribute('disabled')) {
-      //         $check_password.removeAttribute('disabled')
-      //       }
-      //     }
-      //     form_UI(selector__inp_password)
-      //     return
-      //   }
-      // }
-
-      // // form_register 與 form_login 的 inp_password 都需綁定
-      // $$(`${selector__inp_password}`).forEach(inp => {
-      //   inp.addEventListener('input', validate_password)
-      // })
-
-      // //  form_register 的 inp_password 更改 password 時，checkout_password 的 UI變化
-      // $(`${selector__form_register} ${selector__inp_password}`).addEventListener(
-      //   'blur',
-      //   e => {
-      //     e.target.dataset['retry'] = 'yes'
-      //   })
-
-      // //  handle 密碼二次
-      // const handle_checkout_password = (e) => {
-      //   const $password = $(`${selector__form_register} ${selector__inp_password}`)
-      //   const password = $password.value
-      //   const check_password = $check_password.value
-
-      //   const valid = password === check_password
-
-      //   if (!valid) {
-      //     form_UI_register(selector__inp_check_password, false, '請確認兩次密碼都是一樣的')
-      //   } else {
-      //     form_UI_register(selector__inp_check_password)
-      //   }
-      //   return
-      // }
-
-      // $check_password.addEventListener(
-      //   'input',
-      //   handle_checkout_password
-      // )
-
-      // //  送出註冊資料
-      // $(selector__form_register).addEventListener(
-      //   'submit',
-      //   async (e) => {
-      //     e.preventDefault()
-      //     const email = $(`${selector__form_register} ${selector__inp_email}`).value
-      //     const password = $(`${selector__form_register} ${selector__inp_password}`).value
-      //     const {
-      //       data: {
-      //         errno,
-      //         msg = undefined,
-      //         data = undefined
-      //       }
-      //     } = await axios.post('/api/user/register', {
-      //       email,
-      //       password
-      //     })
-      //     if (errno) {
-      //       alert(msg.message)
-      //     } else {
-      //       //window.userCredential = await _firebase.auth.create( email, password )
-      //       alert('註冊成功，請嘗試登入')
-      //       location.href = '/login'
-
-      //     }
-      //   })
-
-      // //  送出登入資料
-      // $(selector__form_login).addEventListener(
-      //   'submit',
-      //   async (e) => {
-      //     e.preventDefault()
-      //     const {
-      //       data: {
-      //         errno,
-      //         msg = undefined,
-      //         data = undefined
-      //       }
-      //     } = await axios.post('/api/user/', {
-      //       email: $(`${selector__form_login} ${selector__inp_email}`).value,
-      //       password: $(`${selector__form_login} ${selector__inp_password}`).value
-      //     })
-      //     if (errno) {
-      //       alert(msg)
-      //     } else {
-      //       alert('登入成功')
-      //       let from = location.search ? new URLSearchParams(location.search).get('from') : false
-      //       location.href = from || '/self'
-      //     }
-      //   })
-    }
   </script>
 </body>
 

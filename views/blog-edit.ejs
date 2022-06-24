@@ -25,6 +25,7 @@
             background: rgba(200, 200, 200, 0.5);
         }
     </style>
+    <%- include('wedgets/common/index-css') %> 
 </head>
 
 <body>
@@ -35,13 +36,12 @@
     <% } %>
     <div id="showBox">
         <input type="text" id="title" value="<%= blog.title %>">
-        <button id="sentTitle">
-            <% if (blog.title) { %>
-            修改標題
-            <% } else { %>
-            創建BLOG
-            <% } %>
-        </button>
+            
+                <button id="updateTitle" class="<%= blog.title ? 'my-show' : 'my-noshow' %>">修改標題</button>
+            
+                <button id="createBlog"  class="<%= blog.title ? 'my-noshow' : 'my-show' %>">創建BLOG</button>
+        
+        
     </div>
     <div>
         <div id="toolbar-container"></div>
@@ -58,16 +58,17 @@
 
     <button id="save">存檔</button>
     <button id="remove">刪除此篇文章</button>
-    <!-- AXIOS -->
+    
     <%- include('wedgets/cdn') %>
-    <%- include('wedgets/utils') %>
-    <!-- 引入 css -->
+    <!-- 引入 editor css -->
     <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
-    <!-- 引入 js -->
+    <!-- 引入 editor js -->
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
     <!-- 引入 Spark-MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <script>
+
+
         let user = <%- JSON.stringify(user) %>
         let blog = <%- JSON.stringify(blog) %>
         let hiddenBox = $('#hiddenBox')
@@ -127,7 +128,7 @@
         })
 
         //  btn#sentTitle.click 綁定 handle，創建Blog or 更新Title
-        sentTitle.addEventListener('click', addBlog_or_updateTitle)
+        $('#createBlog').click(handle_createBlog)
 
         //  inp#title.input 綁定 handle，若有標題才准點擊 btn#sentTitle
         title.addEventListener('input', UI_check_new_title)
@@ -155,7 +156,32 @@
             }
         }
 
-        //  創建 Blog || 修改 title
+        //  創建 Blog 
+        async function handle_createBlog(e) {
+            let inp = $('#title')
+            let title = inp.val()
+            //  若 title 為空
+            if (!title) {
+                alert('請填入標題')
+                return
+            }
+            
+            const {
+                data: {
+                    errno, msg
+                }
+            } = await axios.post('/api/editor', { title })
+
+            if(!errno){
+                alert('BLOG創立完成')
+                $('#updateTitle').toggle(true)
+                $('#createBlog').toggle(false)
+            }else{
+                alert('BLOG創立失敗 => ', msg)
+            }
+        }
+        //  修改 title
+
         async function addBlog_or_updateTitle(e) {
             //  若 title 為空
             if (!title.value) {
@@ -167,8 +193,10 @@
             } else if (title.value === blog.title) {
                 return alert('若要更改，請填入新標題')
             }
+
             let payload = { title: title.value }
             if (blog.id) payload.id = blog.id
+            
             const {
                 data: {
                     errno, data, msg

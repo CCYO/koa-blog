@@ -2,7 +2,7 @@
  * @description Sequelize Model
  */
 const seq = require('../seq')
-const { STRING, INTEGER, BOO, DATE } = require('../types')
+const { STRING, INTEGER, BOO } = require('../types')
 
 
 const News = seq.define('News', {
@@ -12,7 +12,7 @@ const News = seq.define('News', {
         allowNull: false,
         autoIncrement: true
     },
-    type: {
+    news_type: {
         //  1: User_Follow
         //  2: Blog_Follow
         type: INTEGER,
@@ -25,9 +25,6 @@ const News = seq.define('News', {
     confirm: {
         type: BOO,
         defaultValue: false,
-    },
-    showAt: {
-        type: DATE
     }
 })
 

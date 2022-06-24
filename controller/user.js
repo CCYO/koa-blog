@@ -8,18 +8,24 @@ const { resolve } = require('path')
 const {
     createUser,
     readUser,
+    readFansByUserId,
+    readIdolsByUserId,
 
     readBlogListAndAuthorByUserId,
     readUserAndFollowReationByUserId,
 
     update,
-    readFans, addFans, deleteFans,
-    readIdols, readNews, updateFollow,
+    addFans, deleteFans,
+    readNews, updateFollow,
     readOther,
     confirmNews,
     UnconfirmNewsCount,
     readMoreNewsAndConfirm
 } = require('../server/user')
+
+const {
+    readBlogsByUserId
+} = require('../server/blog')
 
 const {
     updateBlogFansComfirm,
@@ -90,6 +96,24 @@ const findUser = async (email, password) => {
     const res = await readUser({ email, password })
         if (res) return new SuccModel(res)
         return new ErrModel(READ.NOT_EXIST)
+}
+
+//  取得 Idol fans 以及自己公開/隱藏的blog
+async function getSelfInfo(id) {
+    let blogList = await readBlogsByUserId(id)
+    let fansList = await readFansByUserId(id)
+    let idolsList = await readIdolsByUserId(id)
+
+    let blogs = { show: [], hidden: [] }
+    //  處理 blogs
+    if(blogList.length){
+        blogList.forEach( item => {
+            let {blog: {show}} = item
+            show && blogs.show.push(item) || blogs.hidden.push(item)
+        })
+    }
+
+    return new SuccModel({ blogList: blogs, fansList, idolsList})
 }
 
 /**
@@ -272,22 +296,6 @@ async function readMore(user_id, index, checkTime, window_news_count = 0) {
 }
 
 
-//  取得 Idol fans 以及自己公開/隱藏的blog
-async function getSelfInfo(id) {
-    let { author, blogList } = await readBlogListAndAuthorByUserId(id)
-    let { user, fans, idols } = await readUserAndFollowReationByUserId(id)
-
-    //  處理 current user 的 blogs
-    let blogs = { show: [], hidden: [] }
-
-    //  彙整 公開與隱藏的blog
-    blogList.length && blogList.forEach((blog) => {
-        blog.show && blogs.show.push(blog)
-        !blog.show && blogs.hidden.push(blog)
-    })
-
-    return new SuccModel({ author, blogs, fans, idols })
-}
 
 //  取得 Idol fans 以及該使用者公開的blog
 async function getOtherInfo(id) {

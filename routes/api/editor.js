@@ -4,23 +4,19 @@
 
 const router = require('koa-router')()
 
-const { addBlog, updateBlog, uploadImg, removeBlog } = require('../../controller/editor')
+const { addBlog } = require('../../controller/blog')
+
+const { updateBlog, uploadImg, removeBlog } = require('../../controller/editor')
 const { api_check_login } = require('../../middleware/check_login')
 
 router.prefix('/api/editor')
 
 //  建立blog
-router.post('/blog', async (ctx, next) => {
+router.post('/', async (ctx, next) => {
     const { id: user_id } = ctx.session.user
-    const { title, id: blog_id } = ctx.request.body
-    //  響應 blog.id
-    let resModel
-    if(!blog_id){
-        resModel = await addBlog(title, user_id)
-    }else{
-        resModel = await updateBlog(blog_id, {title})
-    }
-    return ctx.body = resModel
+    const { title } = ctx.request.body
+    
+    return ctx.body = await addBlog(title, user_id)
 })
 
 router.post('/img/:img_hash/:blog_id', async (ctx, next) => {

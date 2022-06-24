@@ -23,22 +23,7 @@ const {
 //  使用時機：進入富文本編輯器 & 填完標題
 //  請求data：{ name: 標題名稱 } & session.user.id
 //  響應data：{ id: blogIns.id }
-/**
- * @description 初次建立 blog & 與 user 建立連結
- * @param { String } title 標題
- * @param { Number } userId 使用者ID  
- * @returns
- *  SuccModel for { data: { id: blog.id }} || ErrModel
- */
-async function addBlog(title, userId) {
-    try {
-        const blog = await createBlog(xss(title), userId)
-        return new SuccModel({ id: blog.id })
-    } catch (e) {
-        console.log('@創建Blog時發生錯誤 => ', e)
-        return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
-    }
-}
+
 
 async function updateBlog(blog_id, data, remove_imgs) {
     if(data.title){
@@ -110,7 +95,7 @@ async function removeBlog(id){
 }
 
 module.exports = {
-    addBlog,
+
     updateBlog,
     uploadImg,
     removeBlog

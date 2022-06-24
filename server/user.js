@@ -47,6 +47,38 @@ const createUser = async ({ password, ...data }) => {
     return init_4_user(user)
 }
 
+/**
+ * 查找 Fans，藉由 user_id
+ * @param {string} idol_id 
+ * @returns {array} arrItem 代表 fans，若數組為空，表示沒粉絲
+ */
+async function readFansByUserId(idol_id) {
+    const idol = await User.findByPk(idol_id)
+
+    const fansList = await idol.getFans({
+        attributes: ['id', 'email', 'age', 'nickname', 'avatar', 'avatar_hash']
+    })
+
+    if (!fansList.length) return []
+    return init_4_user(fans)
+}
+
+/**
+ * 查找 Idols，藉由 user_id
+ * @param {string} fans_id 
+ * @returns {array} arrItem 代表 idol，若數組為空，表示沒偶像
+ */
+async function readIdolsByUserId(fans_id) {
+    const fans = await User.findByPk(fans_id)
+
+    const idolList = await fans.getIdol({
+        attributes: ['id', 'email', 'age', 'nickname', 'avatar', 'avatar_hash']
+    })
+
+    if (!idolList.length) return []
+    return init_4_user(idolList)
+}
+
 const update = async (newUserInfo, id) => {
     if (newUserInfo.password) {
         newUserInfo.password = hash(newUserInfo.password)
@@ -60,23 +92,6 @@ const update = async (newUserInfo, id) => {
     return init_4_user(dataValues)
 }
 
-async function readFans(idol_id) {
-    const idol = await User.findByPk(idol_id)
-    const fans = await idol.getFans({
-        attributes: ['id', 'email', 'nickname', 'avatar', 'avatar_hash']
-    })
-    if (!fans.length) return []
-    return fans.map(({ dataValues }) => init_4_user(dataValues))
-}
-
-async function readIdols(fans_id) {
-    const fan = await User.findByPk(fans_id)
-    const idols = await fan.getIdol({
-        attributes: ['id', 'email', 'nickname', 'avatar', 'avatar_hash']
-    })
-    if (!idols.length) return []
-    return idols.map(({ dataValues }) => init_4_user(dataValues))
-}
 
 async function deleteFans(idol_id, fans_id) {
     const idol = await User.findByPk(idol_id)
@@ -623,12 +638,13 @@ async function UnconfirmNewsCount(id, time) {
 module.exports = {
     createUser,
     readUser,
+    readFansByUserId,
+    readIdolsByUserId,
 
     update,
-    readFans,
+    
     addFans,
     deleteFans,
-    readIdols,
     readNews,
     updateFollow,
 

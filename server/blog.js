@@ -4,25 +4,43 @@ const {
 
 const { init_4_user } = require('../utils/init')
 
-async function readBlogList(user_id) {
-    let blogs = await Blog.findAll({
-        attributes: ['id', 'title', 'show'],
+async function createBlog(title, user_id){
+    const author = await User.findByPk(user_id)
+    let blog = ( await author.createBlog({ title, user_id}) ).toJSON()
+    return blog
+}
+
+
+async function readBlogsByUserId(user_id) {
+    let blogList = await Blog.findAll({
+        attributes: ['id', 'title', 'show', 'showAt'],
         where: { '$User.id$': user_id },
         include: {
             model: User,
-            attributes: ['id', 'nickname', 'email', 'age', 'avatar'],
+            attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash']
         }
     })
 
-    if (!blogs.length) return []
+    if (!blogList.length) return []
 
-    blogs = blogs.map(({
-        dataValues: {
-            id, title, show,
-            User: { dataValues: user_dataValues }
-        } }) => ({ id, title, show, user: init_4_user(user_dataValues) })
-    )
-    return blogs
+    blogList = blogList.map( item => {
+        item = item.toJSON()
+        let { User: author, ...blog } = item
+        author = init_4_user(author)
+        console.log('@author => ', author)
+        console.log('@blog => ', blog)
+        return { blog, author }
+    })
+
+    console.log('@blogList => ', blogList)
+    return blogList
+    //     ({
+    //     dataValues: {
+    //         id, title, show,
+    //         User: { dataValues: user_dataValues }
+    //     } }) => ({ id, title, show, user: init_4_user(user_dataValues) })
+    // )
+    // return blogs
 }
 
 async function readBlog(blog_id) {
@@ -76,7 +94,9 @@ async function updateFollowBlog(where, data) {
 }
 
 module.exports = {
-    readBlogList,
+    createBlog,
+
+    readBlogsByUserId,
     readBlog,
     updateFollowBlog
 }
