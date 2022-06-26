@@ -10,8 +10,8 @@ const { init_4_user } = require('../utils/init')
  * @param {number} user_id 作者id
  * @returns {object} blog 資訊 { id, title, html, show, showAt, createdAt, updatedAt }
  */
-async function createBlogAndAssociateWidthUser(title, user_id){
-    let blog = await Blog.create({ title, user_id})
+async function createBlogAndAssociateWidthUser(title, user_id) {
+    let blog = await Blog.create({ title, user_id })
     await blog.setUser(user_id)
     return blog
 }
@@ -22,7 +22,7 @@ async function createBlogAndAssociateWidthUser(title, user_id){
  * @param {object} blog_data 要更新的資料
  * @returns {number} 1代表更新成功，0代表失敗
  */
-async function updateBlog(blog_id, blog_data){
+async function updateBlog(blog_id, blog_data) {
     let [row] = await Blog.update(blog_data, {
         where: { id: blog_id }
     })
@@ -35,7 +35,7 @@ async function updateBlog(blog_id, blog_data){
  * @param {[number]} blogImgs [blogImg_id, ....]
  * @returns {number} 0 代表失敗，1+ 代表成功
  */
-async function cancelAssociateWidthImg(blogImgs){
+async function cancelAssociateWidthImg(blogImgs) {
     let row = await BlogImg.destroy({
         where: { id: blogImgs }
     })
@@ -43,6 +43,59 @@ async function cancelAssociateWidthImg(blogImgs){
     return row
 }
 
+/**
+ * 
+ * @param {number} blog_id 
+ * @returns {object|null} 
+ *      若有找到 blog，RV {
+ *          id, title, html, show, showAt,
+ *          imgs: [ { blogImg_id, name, id, url, hash }, ... ],
+ *          author: { id, email, nickname, age, avatar, avatar_hash }
+ *      }, 若找不到則 null
+ */
+async function readBlogById(blog_id) {
+    let res = await Blog.findByPk(blog_id, {
+        attributes: ['id', 'title', 'html', 'show', 'showAt'],
+        include: [
+            {
+                model: Img,
+                attributes: ['id', 'url', 'hash'],
+                through: {
+                    model: BlogImg,
+                    attributes: ['id', 'name']
+                }
+            },
+            User
+        ]
+    })
+
+    if (!res) {
+        return null
+    }
+
+    let {
+        Img: imgList,
+        User: author,
+        ...blog
+    } = res.toJSON()
+
+    let data = { ...blog, imgs: [], author: {} }
+
+    if (imgList && imgList.length) {
+        imgList.forEach(
+            ({
+                BlogImg: {
+                    id: blogImg_id, name
+                },
+                ...img
+            }) => { data.imgs.push({ ...img, blogImg_id, name })}
+        )
+    }
+
+    data.author = init_4_user(author)
+
+    return data
+}
 
 async function readBlogsByUserId(user_id) {
     let blogList = await Blog.findAll({
@@ -56,7 +109,7 @@ async function readBlogsByUserId(user_id) {
 
     if (!blogList.length) return []
 
-    blogList = blogList.map( item => {
+    blogList = blogList.map(item => {
         item = item.toJSON()
         let { User: author, ...blog } = item
         author = init_4_user(author)
@@ -76,48 +129,6 @@ async function readBlogsByUserId(user_id) {
     // return blogs
 }
 
-async function readBlog(blog_id) {
-    let blog = await Blog.findByPk(blog_id, {
-        attributes: ['id', 'title', 'html', 'show', 'showAt'],
-        include: [
-            {
-                model: Img,
-                attributes: ['id', 'url', 'hash'],
-                through: {
-                    model: BlogImg,
-                    attributes: ['id', 'name']
-                }
-            },
-            User
-        ]
-    })
-    if (blog) {
-        
-        blog.Imgs = blog.Imgs.map(({
-            dataValues: {
-                id: img_id, url, hash,
-                BlogImg: {
-                    dataValues: {
-                        id: blogImg_id, name
-                    }
-                }
-            }
-        }) => {
-            return { img_id, url, hash, blogImg_id, name }
-        })
-        blog = { 
-            id: blog.id,
-            title: blog.title,
-            html: blog.html,
-            show: blog.show,
-            showAt: blog.showAt,
-            imgs: blog.Imgs,
-            user: blog.User.dataValues.id
-        }
-    }
-    return blog
-}
-
 async function updateFollowBlog(where, data) {
     console.log('@data => ', data)
     console.log('@where => ', where)
@@ -130,8 +141,9 @@ module.exports = {
     createBlogAndAssociateWidthUser,
     updateBlog,
     cancelAssociateWidthImg,
+    readBlogById,
+
 
     readBlogsByUserId,
-    readBlog,
     updateFollowBlog
 }

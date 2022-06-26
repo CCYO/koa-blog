@@ -5,17 +5,16 @@ const {
     createBlogAndAssociateWidthUser,
     updateBlog,
     cancelAssociateWidthImg,
+    readBlogById,
 
-    readBlog,
     updateFollowBlog
  } = require('../server/blog')
 
 const { SuccModel, ErrModel } = require('../model')
 const { BLOG, FOLLOW } = require('../model/errRes')
-const { Blog, BlogImg } = require('../db/model')
 
 /**
- * @description 建立 blog
+ * 建立 blog
  * @param { string } title 標題
  * @param { number } userId 使用者ID  
  * @returns SuccModel for { data: { id, title, html, show, showAt, createdAt, updatedAt }} || ErrModel
@@ -31,13 +30,12 @@ const { Blog, BlogImg } = require('../db/model')
 }
 
 /**
- * 
+ * 更新 blog
  * @param {number} blog_id blog id
  * @param {object} blog_data 要更新的資料
- * @param {*} remove_imgs 
- * @returns {object} SuccModel {data: '更新完成'} || ErrModel
+ * @returns {object} SuccModel || ErrModel
  */
-async function modifyBlog(blog_id, blog_data, remove_imgs) {
+async function modifyBlog(blog_id, blog_data) {
     let { title, removeImgs, html, show } = blog_data
     let data = {}
 
@@ -47,6 +45,7 @@ async function modifyBlog(blog_id, blog_data, remove_imgs) {
 
     if(html){
         data.html = xss(html)
+        console.log('@xss html => ', data.html)
     }
 
     if(show !== undefined){
@@ -59,10 +58,8 @@ async function modifyBlog(blog_id, blog_data, remove_imgs) {
         if(!row){
             return new ErrModel(BLOG.IMAGE_REMOVE_ERR)
         }
-        console.log('@刪除圖片關聯成功')
     }
 
-    console.log('@data => ', data)
     let row = await updateBlog(blog_id, data)
     
     if(!row){
@@ -70,19 +67,35 @@ async function modifyBlog(blog_id, blog_data, remove_imgs) {
     }
 
     return new SuccModel()
-
-    // if(!remove_imgs){
-    //     return new SuccModel()
-    // }
-    
-    // let res = await deleteBlogImg(remove_imgs)
-    // if(res){
-    //     return new SuccModel()
-    // }else{
-    //     return new ErrModel(BLOG.IMAGE_REMOVE_ERR)
-    // }
 }
 
+/**
+ * 刪除 blog
+ * @param {number} blog_id 
+ * @returns {object} SuccModel || ErrModel
+ */
+async function removeBlog(blog_id){
+    const res = await deleteBlog(blog_id)
+    if(res) return new SuccModel()
+    return new ErrModel(BLOG.BLOG_REMOVE_ERR)
+}
+
+/**
+ * 取得 blog 紀錄
+ * @param {number} blog_id blog id
+ * @returns 
+ */
+async function getBlog( blog_id ){
+    const blog = await readBlogById(blog_id)
+    // if(blog.show){
+    //     blog.showAt = moment(blog.showAt, 'YYYY-MM-DD[T]hh-mm-ss').format('LLL')
+    // }
+    if(blog){
+        return new SuccModel(blog)
+    }else{
+        return new ErrModel(BLOG.NOT_EXIST)
+    }
+}
 
 
 async function getBlogList( user_id , is_self){
@@ -93,17 +106,7 @@ async function getBlogList( user_id , is_self){
     return new SuccModel(blogs)
 }
 
-async function getBlog( blog_id ){
-    const blog = await readBlog(blog_id)
-    if(blog.show){
-        blog.showAt = moment(blog.showAt, 'YYYY-MM-DD[T]hh-mm-ss').format('LLL')
-    }
-    if(blog){
-        return new SuccModel(blog)
-    }else{
-        return new ErrModel(BLOG.NOT_EXIST)
-    }
-}
+
 
 async function confirmFollowBlog(blog_id, fans_id){
     const row = await updateFollowBlog({blog_id, fans_id}, {confirm: true})
@@ -114,8 +117,9 @@ async function confirmFollowBlog(blog_id, fans_id){
 module.exports = {
     addBlog,
     modifyBlog,
+    removeBlog,
+    getBlog,
 
     getBlogList,
-    getBlog,
     confirmFollowBlog
 }

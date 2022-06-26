@@ -29,35 +29,32 @@
 </head>
 
 <body>
-    <% if (blog.title) { %>
-    <div id="hiddenBox" style="display: none"></div>
-    <% } else { %>
-    <div id="hiddenBox"></div>
-    <% } %>
+    <div id='hiddenBox' class="<%= blog.title ? 'my-noshow' : 'my-show' %>"></div>
     <div id="showBox">
         <input type="text" id="title" value="<%= blog.title %>">
-
         <button id="updateTitle" class="<%= blog.title ? 'my-show' : 'my-noshow' %>">修改標題</button>
-
         <button id="createBlog" class="<%= blog.title ? 'my-noshow' : 'my-show' %>">創建BLOG</button>
-
-
     </div>
     <div>
         <div id="toolbar-container"></div>
         <div id="editor-container"></div>
     </div>
+    <input type="checkbox" name="" id="show" <%= blog.show ? 'checked' : '' %> />公開文章
     <% if (blog.show) { %>
-    <input type="checkbox" name="" id="show" checked />公開文章
     <p>已於 <%= blog.showAt %> 發佈</p>
-    <% } else { %>
-    <input type="checkbox" name="" id="show" />公開文章
     <% } %>
-
-    <p></p>
 
     <button id="save">存檔</button>
     <button id="remove">刪除此篇文章</button>
+    <!-- 
+        取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
+        如 { html: `<p>56871139</p>`}
+            無轉譯 => { "html":"<p>56871139</p>") 會造成<p>直接渲染至頁面
+            轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
+    -->
+    <div id="data_blog" style="display: none">
+        <%= JSON.stringify(locals.blog) %>
+    </div>
 
     <%- include('wedgets/cdn') %>
     <!-- 引入 editor css -->
@@ -67,19 +64,10 @@
     <!-- 引入 Spark-MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <script>
-
-
-        // let user = <% - JSON.stringify(user) %>
-        //     let blog = <% - JSON.stringify(blog) %>
-        
-
-        // if (blog.title) sentTitle.setAttribute('disabled', true)
-    </script>
-    <script>
         $(function () {
-
-            /* window.blog 結構 */
-            blog = {
+            /* window.blog 默認結構 */
+            window.blog = {
+                author: undefined,
                 id: undefined,
                 title: undefined,
                 html: undefined,
@@ -92,50 +80,83 @@
                 imgs: [] // item { blogImg_id, id, name, url, hash }
             }
 
+            //  取得 Server 插入的 blog 資料
+            let data_blog = $('#data_blog').text()
+            //  轉回 obj
+            data_blog = JSON.parse(data_blog)
 
+            //  更新 window.blog
+            window.blog = { ...window.blog, ...data_blog }
+
+
+            //  定義 JQobj
             let $btn_updateTitle = $('#updateTitle')
             let $btn_createBlog = $('#createBlog')
             let $hiddenBox = $('#hiddenBox')
             let $title = $('#title')
-            let sentTitle = $('#sentTitle')
             let $checkbox_show = $('#show')
             let $save = $('#save')
-            
+            let $remove = $('#remove')
+
             let editor = init_editor()
 
-            //  填寫title若blur的handle
+            //  input#title 綁定 blur handle => 驗證新標題
             $title.on('blur', handle_valicate_title)
-            //  btn#sentTitle.click 綁定 創建Blog 的 handle
+
+            //  btn#createBlog 綁定 click handle => 創建 blog
             $btn_createBlog.click(handle_createBlog)
-            //  btn#sentTitle.click 綁定 更新Blog 的 handle
+
+            //  btn#updateTitle 綁定 click handle => 修改 blog title
             $btn_updateTitle.click(handle_updateTitle)
-            
-            $checkbox_show.on('change', (e) => {
-                window.blog.show = e.target.checked
-            })
 
-            //  btn#save 綁定 click handle : 存檔
-            $save.on('click', save)
-            // $('#remove').on('click', remove)
+            //  input#show 綁定 change handle => 修改 blog show 狀態
+            $checkbox_show.on('change', handle_isShowBlog)
 
-            
-            async function save(e) {
+            //  btn#save 綁定 click handle => 存檔 blog
+            $save.on('click', handle_saveBlog)
+
+            //  btn#remove 綁定 click handle => 刪除 blog
+            $remove.on('click', handle_removeBlog)
+
+            //  handle => 刪除 blog
+            async function handle_removeBlog(e) {
+                if (!confirm('真的要刪掉?')) {
+                    return
+                }
+
+                let { id, api_blog } = window.blog
+
+                const {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.delete(api_blog, { data: { id } })
+
+                if (!errno) {
+                    alert('已成功刪除此篇文章')
+                    location.href = '/self'
+                } else {
+                    alert(msg)
+                }
+            }
+
+            //  handle => 儲存 blog
+            async function handle_saveBlog(e) {
                 //  獲取 html
                 let html = editor.getHtml()
                 let { imgs, id, show, api_blog } = window.blog
 
-                let editorImgs = editor.getElemsByType('image').map(({src}) => src)
+                let editorImgs = editor.getElemsByType('image').map(({ src }) => src)
                 editorImgs = [...new Set(editorImgs)]
 
-                let removeImgs = imgs.filter( item => {
+                let removeImgs = imgs.filter(item => {
                     let { blogImg_id, url } = item
                     return !editorImgs.includes(url)
                 })
 
-                removeImgs = removeImgs.map( ({blogImg_id}) => blogImg_id )
+                removeImgs = removeImgs.map(({ blogImg_id }) => blogImg_id)
 
                 let payload = { removeImgs, id, html, show }
-                console.log('@payload => ', payload)
 
                 const {
                     data: {
@@ -144,12 +165,11 @@
                 } = await axios.patch(api_blog, payload)
 
                 if (!errno) {
-                    if(removeImgs){
-                        window.blog.imgs = imgs.filter( ({blogImg_id}) => {
+                    if (removeImgs) {
+                        window.blog.imgs = imgs.filter(({ blogImg_id }) => {
                             return !removeImgs.includes(blogImg_id)
                         })
                     }
-                    
 
                     alert('blog save success!')
                 } else {
@@ -157,53 +177,29 @@
                 }
             }
 
-            async function remove(e) {
-                if (!confirm('真的要刪掉?')) {
-                    return
-                }
-
-                const {
-                    data: {
-                        errno, data, msg
-                    }
-                } = await axios.delete('/api/editor/blog', { data: { id: blog.id } })
-
-                if (!errno) {
-                    alert(data)
-                    location.href = '/self'
-                } else {
-                    alert(msg)
-                }
+            //  handle => 修改 blog show 狀態
+            function handle_isShowBlog(e) {
+                window.blog.show = e.target.checked
             }
 
-            //  修改 title
+            //  handle => 修改 title
             async function handle_updateTitle(e) {
                 let newTitle = $title.val().trim()
-                let { title: oldTitle, api_blog } = window.blog
+                let { title: oldTitle, api_blog, id } = window.blog
 
-                if(newTitle === oldTitle){
-                    /* 若標題沒變 */
-                    alert('若要更改，請填入新標題')
-                    return
-                }else if (!newTitle) {
-                    /* 若標題為空 */
-                    alert('若要更改，請填入新標題')
-                    //  恢復為原標題
-                    $title.val(oldTitle)
-                    return
-                }
+                let payload = { title: newTitle, id }
 
                 const {
                     data: {
                         errno, data, msg
                     }
-                } = await axios.patch(api_blog, { title: newTitle })
+                } = await axios.patch(api_blog, payload)
 
                 if (!errno) {
                     /* title修改成功 */
                     window.blog.title = newTitle
 
-                    $btn_updateTitle.prop('disabled', false)
+                    $btn_updateTitle.prop('disabled', true)
                     editor.focus(true)
 
                     alert('標題修改完成')
@@ -214,16 +210,10 @@
                 return
             }
 
-            //  創建 Blog，若創建成功則替 input#title 綁定 input handle，用來驗證新標題是否有效
+            //  handle => 創建 blog，成功後，為 input#title 綁定 input handle => 驗證新標題
             async function handle_createBlog(e) {
                 let { api_blog } = window.blog
                 let title = $title.val().trim()
-
-                if (!title) {
-                    /* 若 title 為空 */
-                    alert('請填入標題')
-                    return
-                }
 
                 const {
                     data: {
@@ -233,16 +223,16 @@
 
                 if (!errno) {
                     alert('BLOG創立完成')
-                    
+
                     window.blog = {
                         ...window.blog,
                         ...data    //  { id, title, html, show, showAt, createdAt, updatedAt }
-                     }
-                    
+                    }
+
                     $title.on('input', handle_valicate_title)
 
-                    $btn_updateTitle.toggle(true)
-                    $btn_createBlog.toggle(false)
+                    $btn_createBlog.toggleClass(['my-show', 'my-noshow'])
+                    $btn_updateTitle.toggleClass(['my-show', 'my-noshow']).prop('disabled', true)
                     $hiddenBox.toggle(false)
 
                     editor.focus(true)
@@ -253,30 +243,30 @@
                     console.log(msg.stack)
                 }
             }
-            
-            // 驗證新標題是否有效，限制「更新標題按鈕」的點擊功能
-            function handle_valicate_title(e){
 
+            // handle => 驗證新標題
+            function handle_valicate_title(e) {
                 let newTitle = $title.val().trim()
-                if(!window.blog.id && !newTitle){
-                    /* blog 未建立，且沒有標題值 */
-                    alert('請先寫入標題')
-                    return
-                }
-
                 let { title: oldTitle } = window.blog
-                
-                if(!newTitle || newTitle === oldTitle){
-                    /* 標題為空 或 標題沒變 */
-                    $btn_updateTitle.prop('disabled', true)
 
-                    if(e.type === 'blur'){
+                if (e.type === 'blur') {
+                    /* blur 時的標題驗證 */
+                    if (!oldTitle && !newTitle) {
+                        //  未建立blog 且 標題又為空
+                        alert('請先寫入標題')
+                    } else if (oldTitle && !newTitle) {
+                        //  已建立blog 且 標題為空
                         $title.val(oldTitle)
                     }
-
-                    return
+                } else if (e.type === 'input') {
+                    /* input 時的標題驗證，且 input handle 是在 oldTitle 有值後才綁定的*/
+                    if (!!newTitle && oldTitle !== newTitle) {
+                        //  標題有值 且 新舊標題不相同
+                        $btn_updateTitle.prop('disabled', false)
+                    } else {
+                        $btn_updateTitle.prop('disabled', true)
+                    }
                 }
-                $btn_updateTitle.prop('disabled', false)
                 return
             }
 
@@ -317,7 +307,7 @@
                 // editor 創建
                 const editor = createEditor({
                     //  插入後端取得的 html
-                    html: window.blog && window.blog.html || '',
+                    html: window.blog.html || '',
                     selector: '#editor-container',
                     config: editorConfig,
                     mode: 'simple'
@@ -356,7 +346,7 @@
 
                     if (!errno) {
                         /* 上傳成功 */
-                        
+
                         //  data { blogImg_id, id, name, url, hash }
                         blog.imgs.push(data)
                         //  將圖片插入 editor
@@ -411,7 +401,6 @@
                     fr.readAsArrayBuffer(file)
                 })
             }
-
         })    
     </script>
 </body>

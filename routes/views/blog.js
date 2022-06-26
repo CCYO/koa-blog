@@ -7,43 +7,47 @@ const router = require('koa-router')()
 const { view_check_login } = require('../../middleware/check_login')
 
 const {
-    getBlogList,
     getBlog,
+
+    getBlogList,
     confirmFollowBlog
 } = require('../../controller/blog')
 
 router.get('/blog/new', view_check_login, async (ctx, next) => {
+    const { createdAt, updatedAt, ...user } = ctx.session.user
     await ctx.render('blog-edit', {
         user: ctx.session.user,
-        blog: {}
+        blog: { author: { ...user } }
     })
 })
 
-router.get('/blog/edit/:blog_id', view_check_login, async(ctx, next) => {
+router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
     const { blog_id } = ctx.params
-    const { user } = ctx.session
-    const { errno, data: blog = undefined, msg } = await getBlog(blog_id)
-    
-    if(blog.user != user.id){
+    const { id } = ctx.session.user
+    const { errno, data: blog = undefined, msg } = await getBlog(blog_id * 1)
+
+    if (errno) {
+        return ctx.throw({ errno, msg })
+    }
+
+    if (blog.author.id != id) {
         return ctx.redirect('/setting')
     }
-    if( !errno ){
-        return await ctx.render('blog-edit', { user, blog })
-    }else{
-        return ctx.throw({ errno, msg})
-    }
+
+
+    return await ctx.render('blog-edit', { blog })
 })
 
 router.get('/blog/:blog_id', async (ctx, next) => {
     const { blog_id } = ctx.params
     const { id: current_id } = ctx.session.user
-    const { errno, data: blog , msg } = await getBlog(blog_id)
+    const { errno, data: blog, msg } = await getBlog(blog_id)
 
     ctx.query.confirm && await confirmFollowBlog(blog_id, current_id)
 
-    if( errno ){
+    if (errno) {
         return ctx.body = msg
-    }else{
+    } else {
         console.log('@blog => ', blog)
         return await ctx.render('blog', { blog })
     }

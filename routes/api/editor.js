@@ -4,19 +4,16 @@
 
 const router = require('koa-router')()
 
-const {
-    addBlog,
-    modifyBlog
-} = require('../../controller/blog')
+const { addBlog, modifyBlog, removeBlog } = require('../../controller/blog')
+
 const { uploadImg } = require('../../controller/img')
 
-const { updateBlog, removeBlog } = require('../../controller/editor')
 const { api_check_login } = require('../../middleware/check_login')
 
 router.prefix('/api/editor')
 
 //  建立blog
-router.post('/', async (ctx, next) => {
+router.post('/', api_check_login, async (ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { title } = ctx.request.body
     
@@ -24,7 +21,7 @@ router.post('/', async (ctx, next) => {
 })
 
 //  更新 blog 資料
-router.patch('/', async(ctx, next) => {
+router.patch('/', api_check_login, async(ctx, next) => {
     const { id: user_id } = ctx.session.user
     // const { removeImgs, id, html, show } = ctx.request.body
     const { id: blog_id, ...data_blog } = ctx.request.body
@@ -32,11 +29,12 @@ router.patch('/', async(ctx, next) => {
 })
 
 //  上傳圖片
-router.post('/img', async (ctx, next) => {
+router.post('/img', api_check_login, async (ctx, next) => {
     return ctx.body = await uploadImg(ctx)
 })
 
-router.delete('/blog', api_check_login ,async (ctx, next) => {
+//  刪除 blog
+router.delete('/', api_check_login, async (ctx, next) => {
     const { id } = ctx.request.body
     ctx.body = await removeBlog(id)
 })

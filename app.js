@@ -25,11 +25,8 @@ const api__blog_editor = require('./routes/api/editor')
 const api__GFB = require('./routes/api/GFB')
 const api__news = require('./routes/api/news')
 
-
 const view__user = require('./routes/views/user')
 const view__blog = require('./routes/views/blog')
-
-
 
 // error handler
 //onerror(app)
