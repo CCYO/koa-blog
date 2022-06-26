@@ -4,10 +4,43 @@ const {
 
 const { init_4_user } = require('../utils/init')
 
-async function createBlog(title, user_id){
-    const author = await User.findByPk(user_id)
-    let blog = ( await author.createBlog({ title, user_id}) ).toJSON()
+/**
+ * 創建Blog，並與User作關聯
+ * @param {string} title 文章表提
+ * @param {number} user_id 作者id
+ * @returns {object} blog 資訊 { id, title, html, show, showAt, createdAt, updatedAt }
+ */
+async function createBlogAndAssociateWidthUser(title, user_id){
+    let blog = await Blog.create({ title, user_id})
+    await blog.setUser(user_id)
     return blog
+}
+
+/**
+ * 更新blog
+ * @param {number} blog_id blog id
+ * @param {object} blog_data 要更新的資料
+ * @returns {number} 1代表更新成功，0代表失敗
+ */
+async function updateBlog(blog_id, blog_data){
+    let [row] = await Blog.update(blog_data, {
+        where: { id: blog_id }
+    })
+
+    return row
+}
+
+/**
+ * 刪除 BlogImg 關聯
+ * @param {[number]} blogImgs [blogImg_id, ....]
+ * @returns {number} 0 代表失敗，1+ 代表成功
+ */
+async function cancelAssociateWidthImg(blogImgs){
+    let row = await BlogImg.destroy({
+        where: { id: blogImgs }
+    })
+    console.log('@row => ', row)
+    return row
 }
 
 
@@ -94,7 +127,9 @@ async function updateFollowBlog(where, data) {
 }
 
 module.exports = {
-    createBlog,
+    createBlogAndAssociateWidthUser,
+    updateBlog,
+    cancelAssociateWidthImg,
 
     readBlogsByUserId,
     readBlog,

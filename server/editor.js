@@ -85,27 +85,9 @@ async function updateBlog(data, blog_id){
     return row
 }
 
-async function readImg(data){
-    let img = await Img.findOne({ where: data })
-    if(!img){
-        return null
-    }
-    return { id: img.id, url: img.url, hash: img.hash }
-}
-
 async function createImg(data){
     let img = await Img.create(data)
     return { id: img.id, url: img.url, hash: img.hash }
-}
-
-async function readImg_associateBlog(img_data, blog_id){
-    let img = await Img.findOne({where: {...img_data}})
-    console.log('@img => ', img)
-    if(img){
-        let [{ dataValues: { id: blogImg_id }}] = await img.addBlog(blog_id)
-        return { blogImg_id, id: img.id, url: img.url, hash: img.hash }
-    }
-    return null
 }
 
 async function createImg_associateBlog(img_data, blog_id){
@@ -144,11 +126,11 @@ async function deleteBlog(id){
 module.exports = {
     createBlog,
     updateBlog,
-    readImg,
+    
     createImg,
     img_associate_blog,
     deleteBlogImg,
-    readImg_associateBlog,
+    
     createImg_associateBlog,
     deleteBlog
 }

@@ -25,7 +25,7 @@
             background: rgba(200, 200, 200, 0.5);
         }
     </style>
-    <%- include('wedgets/common/index-css') %> 
+    <%- include('wedgets/common/index-css') %>
 </head>
 
 <body>
@@ -36,12 +36,12 @@
     <% } %>
     <div id="showBox">
         <input type="text" id="title" value="<%= blog.title %>">
-            
-                <button id="updateTitle" class="<%= blog.title ? 'my-show' : 'my-noshow' %>">修改標題</button>
-            
-                <button id="createBlog"  class="<%= blog.title ? 'my-noshow' : 'my-show' %>">創建BLOG</button>
-        
-        
+
+        <button id="updateTitle" class="<%= blog.title ? 'my-show' : 'my-noshow' %>">修改標題</button>
+
+        <button id="createBlog" class="<%= blog.title ? 'my-noshow' : 'my-show' %>">創建BLOG</button>
+
+
     </div>
     <div>
         <div id="toolbar-container"></div>
@@ -58,7 +58,7 @@
 
     <button id="save">存檔</button>
     <button id="remove">刪除此篇文章</button>
-    
+
     <%- include('wedgets/cdn') %>
     <!-- 引入 editor css -->
     <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
@@ -69,272 +69,350 @@
     <script>
 
 
-        let user = <%- JSON.stringify(user) %>
-        let blog = <%- JSON.stringify(blog) %>
-        let hiddenBox = $('#hiddenBox')
-        let title = $('#title')
-        let sentTitle = $('#sentTitle')
-        let is_show = $('#show')
+        // let user = <% - JSON.stringify(user) %>
+        //     let blog = <% - JSON.stringify(blog) %>
+        
 
-        if (blog.title) sentTitle.setAttribute('disabled', true)
+        // if (blog.title) sentTitle.setAttribute('disabled', true)
     </script>
     <script>
-        //  editor 的 繁中設定
-        wangEditor.i18nAddResources('tw', {
-            // 标题
-            header: {
-                title: '標題',
-                text: '文字',
-            },
-            blockQuote: {
-                title: '圖標'
-            },
+        $(function () {
 
-            // ... 其他语言词汇，下文说明 ...
-        })
-        wangEditor.i18nChangeLanguage('tw')
-
-        //  editor config
-        const { createEditor, createToolbar } = window.wangEditor
-        const editorConfig = { MENU_CONF: {} }
-
-        //  editor config : placeholder
-        editorConfig.placeholder = '请输入内容'
-
-        //  editor config : image upload
-        editorConfig.MENU_CONF['uploadImage'] = {
-            // 上传图片的配置
-
-            //  自定義 upload imgage
-            customUpload,
-
-            //  (待補)自定義 upload imgage 失敗
-        }
-
-        // editor 創建
-        const editor = createEditor({
-            //  插入後端取得的 html
-            html: blog.html || '',
-            selector: '#editor-container',
-            config: editorConfig,
-            mode: 'simple'
-        })
-
-        // editor 工具欄創建
-        const toolbar = createToolbar({
-            editor,
-            selector: '#toolbar-container',
-            mode: 'simple'
-        })
-
-        //  btn#sentTitle.click 綁定 handle，創建Blog or 更新Title
-        $('#createBlog').click(handle_createBlog)
-
-        //  inp#title.input 綁定 handle，若有標題才准點擊 btn#sentTitle
-        title.addEventListener('input', UI_check_new_title)
-
-        //  inpt#title.blur 綁定 handle，若title無值卻離開，則恢復原值
-        title.addEventListener('blur', UI_recover_title)
-
-        //  btn#save 綁定 click handle : 存檔
-        $('#save').addEventListener('click', save)
-        $('#remove').addEventListener('click', remove)
-
-        function UI_check_new_title(e) {
-            if (!blog.title) return
-            if (blog.title && title.value && title.value !== blog.title) {
-                return sentTitle.hasAttribute('disabled') && sentTitle.removeAttribute('disabled')
-                //  title 不變
-            } else {
-                return !sentTitle.hasAttribute('disabled') && sentTitle.setAttribute('disabled', true)
+            /* window.blog 結構 */
+            blog = {
+                id: undefined,
+                title: undefined,
+                html: undefined,
+                show: false,
+                showAt: undefined,
+                createdAt: undefined,
+                updatedAt: undefined,
+                api_blog: '/api/editor',
+                api_uploadImg: '/api/editor/img',
+                imgs: [] // item { blogImg_id, id, name, url, hash }
             }
-        }
 
-        function UI_recover_title(e) {
-            if (blog.title && !title.value) {
-                title.value = blog.title
-            }
-        }
 
-        //  創建 Blog 
-        async function handle_createBlog(e) {
-            let inp = $('#title')
-            let title = inp.val()
-            //  若 title 為空
-            if (!title) {
-                alert('請填入標題')
-                return
-            }
+            let $btn_updateTitle = $('#updateTitle')
+            let $btn_createBlog = $('#createBlog')
+            let $hiddenBox = $('#hiddenBox')
+            let $title = $('#title')
+            let sentTitle = $('#sentTitle')
+            let $checkbox_show = $('#show')
+            let $save = $('#save')
             
-            const {
-                data: {
-                    errno, msg
-                }
-            } = await axios.post('/api/editor', { title })
+            let editor = init_editor()
 
-            if(!errno){
-                alert('BLOG創立完成')
-                $('#updateTitle').toggle(true)
-                $('#createBlog').toggle(false)
-            }else{
-                alert('BLOG創立失敗 => ', msg)
-            }
-        }
-        //  修改 title
-
-        async function addBlog_or_updateTitle(e) {
-            //  若 title 為空
-            if (!title.value) {
-                alert('請填入標題')
-                //  恢復為原標題
-                return title.value = blog.title
-
-                //  若 title 不變
-            } else if (title.value === blog.title) {
-                return alert('若要更改，請填入新標題')
-            }
-
-            let payload = { title: title.value }
-            if (blog.id) payload.id = blog.id
+            //  填寫title若blur的handle
+            $title.on('blur', handle_valicate_title)
+            //  btn#sentTitle.click 綁定 創建Blog 的 handle
+            $btn_createBlog.click(handle_createBlog)
+            //  btn#sentTitle.click 綁定 更新Blog 的 handle
+            $btn_updateTitle.click(handle_updateTitle)
             
-            const {
-                data: {
-                    errno, data, msg
-                }
-            } = await axios.post('/api/editor/blog', payload)
+            $checkbox_show.on('change', (e) => {
+                window.blog.show = e.target.checked
+            })
 
-            //  title修改成功
-            if (!errno && !data) {
-                blog.title = title.value
-                sentTitle.setAttribute('disabled', true)
-                editor.focus(true)
-                alert('標題修改完成')
-                //  blog創建成功
-            } else if (!errno) {
-                alert('BLOG存檔成功')
-                location.href = `/blog/edit/${data.id}`
-                // 失敗
-            } else {
-                alert(`標題修改失敗 => ${msg}`)
-            }
-            return
-        }
+            //  btn#save 綁定 click handle : 存檔
+            $save.on('click', save)
+            // $('#remove').on('click', remove)
 
-        async function customUpload(img, insertFn) {
-            //  生成 img 的 hash(hex格式)
-            let { url, hash } = await getImgHash(img)
-            //  url無值，代表 blog.imgs 內無此圖
-            if (!url) {
-                //  upload img
-                let formdata = new FormData()
-                formdata.append('imgage', img)
+            
+            async function save(e) {
+                //  獲取 html
+                let html = editor.getHtml()
+                let { imgs, id, show, api_blog } = window.blog
 
-                let {
+                let editorImgs = editor.getElemsByType('image').map(({src}) => src)
+                editorImgs = [...new Set(editorImgs)]
+
+                let removeImgs = imgs.filter( item => {
+                    let { blogImg_id, url } = item
+                    return !editorImgs.includes(url)
+                })
+
+                removeImgs = removeImgs.map( ({blogImg_id}) => blogImg_id )
+
+                let payload = { removeImgs, id, html, show }
+                console.log('@payload => ', payload)
+
+                const {
                     data: {
                         errno, data, msg
                     }
-                } = await axios.post(`/api/editor/img/${hash}/${blog.id}`, formdata)
+                } = await axios.patch(api_blog, payload)
 
                 if (!errno) {
-                    if (!blog.imgs) blog.imgs = []
-                    blog.imgs.push(data)
-                    insertFn(data.url)
+                    if(removeImgs){
+                        window.blog.imgs = imgs.filter( ({blogImg_id}) => {
+                            return !removeImgs.includes(blogImg_id)
+                        })
+                    }
+                    
+
+                    alert('blog save success!')
+                } else {
+                    alert('blog save error!')
+                }
+            }
+
+            async function remove(e) {
+                if (!confirm('真的要刪掉?')) {
+                    return
+                }
+
+                const {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.delete('/api/editor/blog', { data: { id: blog.id } })
+
+                if (!errno) {
+                    alert(data)
+                    location.href = '/self'
                 } else {
                     alert(msg)
                 }
-                //  url 有值，代表 blog.imgs 已有此圖
-            } else {
-                //  直接插入圖片
-                insertFn(url)
             }
-        }
 
-        async function getImgHash(img) {
-            //  計算出 img 的 md5Hash(hex格式)
-            let md5hash = await getMD5Hash(img)
-            let res = { hash: md5hash }
-            //  若blog.imgs有檔案
-            if (blog && blog.imgs) {
-                //  利用 md5Hash 比對 blog 內是否已有該 img
-                let exist = blog.imgs.some((img) => {
-                    let { hash } = img
-                    //  同hash，代表同img
-                    if (md5hash === hash) {
-                        //  返回 blog.imgs 內相同的img資料
-                        res = img
-                        return true
-                    }
-                })
-                //  blog.imgs 內沒有該img，返回計算出的 md5hash
-                console.log('@res => ', res)
-            }
-            return res
-        }
+            //  修改 title
+            async function handle_updateTitle(e) {
+                let newTitle = $title.val().trim()
+                let { title: oldTitle, api_blog } = window.blog
 
-        //  返回 file 的 FileReader.result
-        function getMD5Hash(file) {
-            return new Promise((resolve, reject) => {
-                let fr = new FileReader()
-                fr.addEventListener('load', (evt) => {
-                    if (fr.readyState === FileReader.DONE) {
-                        let hash = SparkMD5.ArrayBuffer.hash(fr.result)
-                        console.log('計算出的hash => ', hash)
-                        resolve(hash)
-                    }
-                })
-                fr.addEventListener('error', (error) => {
-                    console.log('fr load 發生錯誤 => ', error)
-                    reject(error)
-                })
-                fr.readAsArrayBuffer(file)
-            })
-        }
-
-        async function save(e) {
-            //  獲取 html
-            var html = editor.getHtml()
-            //  獲取 editor 內 img.src(重複的話，只取一個)
-            let editor_imgs = [...new Set(editor.getElemsByType('image'))].map(({ src }) => src)
-            //  獲取 blog 內 image 的 url 與 blogImg_id
-            let blog_imgs = [...new Set(blog.imgs)].map(({ blogImg_id, url }) => ({ blogImg_id, url }))
-
-            let remove_imgs = blog_imgs.filter(img => !editor_imgs.includes(img.url))
-            remove_imgs = remove_imgs.map(({ blogImg }) => blogImg)
-
-            let show = is_show.checked
-
-            const {
-                data: {
-                    errno, data, msg
+                if(newTitle === oldTitle){
+                    /* 若標題沒變 */
+                    alert('若要更改，請填入新標題')
+                    return
+                }else if (!newTitle) {
+                    /* 若標題為空 */
+                    alert('若要更改，請填入新標題')
+                    //  恢復為原標題
+                    $title.val(oldTitle)
+                    return
                 }
-            } = await axios.patch(`/api/editor/blog`, { id: blog.id, remove_imgs, html, show })
 
-            if (!errno) {
-                alert('blog save success!')
-            } else {
-                alert('blog save error!')
-            }
-        }
-    
-        async function remove(e){
-            if(!confirm('真的要刪掉?') ){
+                const {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.patch(api_blog, { title: newTitle })
+
+                if (!errno) {
+                    /* title修改成功 */
+                    window.blog.title = newTitle
+
+                    $btn_updateTitle.prop('disabled', false)
+                    editor.focus(true)
+
+                    alert('標題修改完成')
+                } else {
+                    /* title修改失敗 */
+                    alert(`標題修改失敗 => ${msg.message}`)
+                }
                 return
             }
 
-            const {
-                data: {
-                    errno, data, msg
-                }
-            } = await axios.delete('/api/editor/blog', { data: { id: blog.id}})
+            //  創建 Blog，若創建成功則替 input#title 綁定 input handle，用來驗證新標題是否有效
+            async function handle_createBlog(e) {
+                let { api_blog } = window.blog
+                let title = $title.val().trim()
 
-            if(!errno){
-                alert(data)
-                location.href = '/self'
-            }else{
-                alert(msg)
+                if (!title) {
+                    /* 若 title 為空 */
+                    alert('請填入標題')
+                    return
+                }
+
+                const {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.post(api_blog, { title })
+
+                if (!errno) {
+                    alert('BLOG創立完成')
+                    
+                    window.blog = {
+                        ...window.blog,
+                        ...data    //  { id, title, html, show, showAt, createdAt, updatedAt }
+                     }
+                    
+                    $title.on('input', handle_valicate_title)
+
+                    $btn_updateTitle.toggle(true)
+                    $btn_createBlog.toggle(false)
+                    $hiddenBox.toggle(false)
+
+                    editor.focus(true)
+
+                    // location.href = `/blog/edit/${data.id}`
+                } else {
+                    alert(`BLOG創立失敗 => ${msg.message}`)
+                    console.log(msg.stack)
+                }
             }
-        }
-    
+            
+            // 驗證新標題是否有效，限制「更新標題按鈕」的點擊功能
+            function handle_valicate_title(e){
+
+                let newTitle = $title.val().trim()
+                if(!window.blog.id && !newTitle){
+                    /* blog 未建立，且沒有標題值 */
+                    alert('請先寫入標題')
+                    return
+                }
+
+                let { title: oldTitle } = window.blog
+                
+                if(!newTitle || newTitle === oldTitle){
+                    /* 標題為空 或 標題沒變 */
+                    $btn_updateTitle.prop('disabled', true)
+
+                    if(e.type === 'blur'){
+                        $title.val(oldTitle)
+                    }
+
+                    return
+                }
+                $btn_updateTitle.prop('disabled', false)
+                return
+            }
+
+            //  初始化 editor
+            function init_editor() {
+                //  editor 的 繁中設定
+                wangEditor.i18nAddResources('tw', {
+                    // 标题
+                    header: {
+                        title: '標題',
+                        text: '文字',
+                    },
+                    blockQuote: {
+                        title: '圖標'
+                    },
+
+                    // ... 其他语言词汇，下文说明 ...
+                })
+                wangEditor.i18nChangeLanguage('tw')
+
+                //  editor config
+                const { createEditor, createToolbar } = window.wangEditor
+                const editorConfig = { MENU_CONF: {} }
+
+                //  editor config : placeholder
+                editorConfig.placeholder = '请输入内容'
+
+                //  editor config : image upload
+                editorConfig.MENU_CONF['uploadImage'] = {
+                    // 上传图片的配置
+
+                    //  自定義 upload imgage
+                    customUpload,
+
+                    //  (待補)自定義 upload imgage 失敗
+                }
+
+                // editor 創建
+                const editor = createEditor({
+                    //  插入後端取得的 html
+                    html: window.blog && window.blog.html || '',
+                    selector: '#editor-container',
+                    config: editorConfig,
+                    mode: 'simple'
+                })
+
+                // editor 工具欄創建
+                const toolbar = createToolbar({
+                    editor,
+                    selector: '#toolbar-container',
+                    mode: 'simple'
+                })
+
+                return editor
+            }
+
+            //  editor的 自定義上傳圖片方法
+            async function customUpload(img, insertFn) {
+                //  生成 img 的 hash(hex格式)
+                let { url, hash } = await _getImgHash(img)
+
+                if (!url) {
+                    /*  url無值，代表 window.blog.imgs 內無此圖 */
+
+                    let { id, api_uploadImg } = window.blog
+                    let api = `${api_uploadImg}?blog_id=${id}&hash=${hash}`
+                    //  upload img
+                    let formdata = new FormData()
+                    formdata.append('blogImg', img)
+
+                    //  發送ajax，由後端將圖片上傳給GCS
+                    let {
+                        data: {
+                            errno, data, msg
+                        }
+                    } = await axios.post(api, formdata)
+
+                    if (!errno) {
+                        /* 上傳成功 */
+                        
+                        //  data { blogImg_id, id, name, url, hash }
+                        blog.imgs.push(data)
+                        //  將圖片插入 editor
+                        insertFn(data.url)
+                    } else {
+                        //  上傳失敗
+                        alert(msg)
+                    }
+                } else {
+                    /*  url 有值，代表 blog.imgs 已有此圖 */
+
+                    //  直接插入圖片
+                    insertFn(url)
+                }
+            }
+
+            //  取得圖片的 hash
+            async function _getImgHash(img) {
+                //  計算出 img 的 md5Hash(hex格式)
+                let md5hash = await _getMD5Hash(img)
+                let res = { hash: md5hash }
+                //  若blog.imgs有檔案
+                if (window.blog.imgs) {
+                    //  利用 md5Hash 比對 blog 內是否已有該 img
+                    let exist = blog.imgs.some((img) => {
+                        let { hash } = img
+                        //  同hash，代表同img
+                        if (md5hash === hash) {
+                            //  返回 blog.imgs 內相同的img資料
+                            return res = img
+                        }
+                    })
+                }
+                return res
+            }
+
+            //  返回 file 的 FileReader.result
+            function _getMD5Hash(file) {
+                return new Promise((resolve, reject) => {
+                    let fr = new FileReader()
+                    fr.addEventListener('load', (evt) => {
+                        if (fr.readyState === FileReader.DONE) {
+                            let hash = SparkMD5.ArrayBuffer.hash(fr.result)
+                            console.log('計算出的hash => ', hash)
+                            resolve(hash)
+                        }
+                    })
+                    fr.addEventListener('error', (error) => {
+                        console.log('fr load 發生錯誤 => ', error)
+                        reject(error)
+                    })
+                    fr.readAsArrayBuffer(file)
+                })
+            }
+
+        })    
     </script>
 </body>
 

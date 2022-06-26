@@ -6,21 +6,36 @@ const formidable = require('formidable')
 
 const { storage } = require('../firebase/init')
 
-const upload_jpg = async (ctx) => {
-    let { img_hash: hash } = ctx.params
+/**
+ * 將jpg圖檔上傳GCS
+ * @param {object} ctx 含代表「JPG圖檔hash」的 ctx.params.hash
+ * @returns {string} 完成此次JPG圖檔上傳GCS後，該圖檔的公開url
+ */
+async function upload_jpg (ctx){
+    let { hash } = ctx.query
+    //  建立GCS ref
     let file_ref = storage.bucket().file(`blog/${hash}.jpg`)
+    //  確認GCS是否有該圖檔
     let [exist] = await file_ref.exists()
-    console.log('@exist => ', exist)
-    //  正常修改
-    ctx._my = (!exist) ? { file: file_ref } : null
-    ctx._my && await parse(ctx)
-
-    delete ctx._my
-    console.log('@完成上傳 => ', file_ref.publicUrl(), hash)
-    return { url: file_ref.publicUrl(), hash }
+    //  若GCS無該JPG圖，進行GCS上傳
+    if(!exist){
+        await parse(ctx, file_ref)
+    }
+    //  返回圖檔資訊
+    let url = file_ref.publicUrl()
+    
+    return url
 }
 
-async function _parse(ctx, formidableIns) {
+/**
+ * 利用 formidable 進行 JPG圖檔上傳GCS
+ * @param {object} ctx ctx
+ * @param {object} bar 過渡用的，結構為{ ref: 代表GCS_file_ref, promise: 代表 formidable 作GCS上傳時，確認狀態的 promise }
+ * @param {*} formidableIns formidable Ins
+ * @returns {promise} 成功為null，失敗則為error
+ */
+async function _parse(ctx, bar, formidableIns) {
+    let {ref, promise} = bar
     return new Promise((resolve, reject) => {
         formidableIns.parse(ctx.req, async (err, fields, files) => {
             if (err) {
@@ -28,14 +43,10 @@ async function _parse(ctx, formidableIns) {
                 reject(err)
                 return
             }
-            if (!ctx._my.file) {
-                console.log('沒有進行upload GCS')
-                resolve({ fields, files })
-                return
-            }
+
             try {
-                await ctx._my.promise
-                //#region makePublic RV
+                await promise
+                //#region makePublic RV的組成
                 /**
                  * [
                  *   {
@@ -52,9 +63,10 @@ async function _parse(ctx, formidableIns) {
                  * ]
                  */
                 //#endregion
-                await ctx._my.file.makePublic()
+                await ref.makePublic()
                 console.log('upload file to GCS & formidable 解析完成')
-                resolve({ fields, files })
+                // resolve({ fields, files })
+                resolve()
                 return
             } catch (e) {
                 console.log('upload file to GCS 發生錯誤')
@@ -65,14 +77,16 @@ async function _parse(ctx, formidableIns) {
     })
 }
 
-const _gen_formidable = (ctx) => {
-    //  若沒有新圖
-    if (!ctx._my.file) {
-        return formidable()
-    }
+/**
+ * 生成 formidable Ins
+ * @param {object} bar 此物件負責提供建立 formidable Ins 之 fileWriteStreamHandler 方法的 file_ref 參數，且為了能撈取 fileWriteStreamHandler 運行 GCS上傳發生的錯誤，_gen_formidable 內部會在 bar 新增 promise 屬性
+ * @returns {object} writeableStream 可寫流
+ */
+const _gen_formidable = (bar) => {
+    let file = bar.ref
 
     return formidable({
-        /**
+        /** fileWriteStream 第一個參數的組成
          * VolatileFile {
          *    _events: [Object: null prototype] { error: [Function (anonymous)] },
          *    _eventsCount: 1,
@@ -90,18 +104,16 @@ const _gen_formidable = (ctx) => {
          *    [Symbol(kCapture)]: false
          * }
          */
-        fileWriteStreamHandler() {
-            let file = ctx._my.file
+        fileWriteStreamHandler() {        
             let ws = file.createWriteStream({
-                //  https://cloud.google.com/storage/docs/metadata#caching_data
+                //  圖檔設定不作緩存，參考資料：https://cloud.google.com/storage/docs/metadata#caching_data
                 metadata: {
                     contnetType: 'image/jpeg',
                     cacheControl: 'no-store'
                 }
             })
-            //  在 ctx._my.promise 建構一個 promise，
-            //  已便捕獲上傳GCS時的錯誤
-            ctx._my.promise = new Promise((resolve, reject) => {
+            //  為 bar.promise 綁定 GCS 上傳的promise，以便捕撈錯誤
+            bar.promise = new Promise((resolve, reject) => {
                 ws
                     .on('finish', resolve)
                     .on('error', reject)
@@ -111,9 +123,16 @@ const _gen_formidable = (ctx) => {
     })
 }
 
-async function parse(ctx) {
-    form = _gen_formidable(ctx)
-    return await _parse(ctx, form)
+/**
+ * 上傳檔案至GCS
+ * @param {object} ctx ctx.req 內含要上傳GCS的檔案
+ * @param {string} ref GCS_file_ref
+ * @returns 
+ */
+async function parse(ctx, ref) {
+    let bar = { ref, promise: undefined }
+    form = _gen_formidable(bar)
+    return await _parse(ctx, bar, form)
 }
 
 module.exports = {

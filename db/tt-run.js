@@ -5,6 +5,8 @@ const {
 } = require('./model')
 
 const { create } = require('../server/user')
+const { readImgAndAssociateWidthBlog} = require('../server/img')
+const { createBlogAndAssociateWidthUser } = require('../server/blog')
 
 async function init() {
     let associateToNews = []
@@ -60,18 +62,23 @@ async function init() {
 }
 
 async function go2(user_id, time) {
-    const blogList = await Blog.findAll()
-    blogList = blogList.map( blog => blog.toJSON() )
-    blogList[blogList.length]
+    const { id: img_id } = (await Img.create({
+        url: '123456',
+        hash: '789000',
+    })).toJSON()
+
+    const { id: blog_id } = (await createBlogAndAssociateWidthUser('test', 1)).toJSON()
+    await readImgAndAssociateWidthBlog({ id: img_id }, blog_id)
+    console.log('ok')
 }
 
 
 (
     async () => {
         try {
-            await init()
-            // await go2()
-            console.log('ok')
+            // await init()
+            await go2()
+            
         } catch (e) {
             console.log('@ERR => ', e)
         }

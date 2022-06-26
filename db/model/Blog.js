@@ -7,7 +7,7 @@ const { STRING, INTEGER, TEXT, BOO, DATE } = require('../types')
 
 const Blog = seq.define('Blog', {
     title: {
-        type: STRING(),
+        type: STRING,
         allowNull: false
     },
     user_id: {
