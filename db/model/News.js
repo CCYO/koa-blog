@@ -15,12 +15,17 @@ const News = seq.define('News', {
     news_type: {
         //  1: User_Follow
         //  2: Blog_Follow
+        //  3: Comment_Follow
         type: INTEGER,
         allowNull: false,
     },
     news_id: {
         type: INTEGER,
         allowNull: false,
+    },
+    follower_id: {
+        type: INTEGER,
+        allowNull: false
     },
     confirm: {
         type: BOO,

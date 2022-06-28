@@ -1,4 +1,22 @@
-const { Follow, Blog_Fans } = require('../db/model')
+const { 
+    Blog_Follow,
+    News,
+
+    Follow, Blog_Fans
+} = require('../db/model')
+
+
+//  未完成
+async function softDeleteNewsOfBlog(blog_id){
+    await Blog_Follow.findAll({
+        where: { blog_id },
+        
+        include: {
+            model: News,
+            where: { confirm: false}
+        }
+    })
+}
 
 async function updateFollowComfirm(list, data = { confirm: true }) {
     let [row] = await Follow.update(data, {

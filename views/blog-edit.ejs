@@ -67,18 +67,21 @@
         $(function () {
             /* window.blog 默認結構 */
             window.blog = {
-                author: undefined,
-                id: undefined,
-                title: undefined,
-                html: undefined,
+                author: null,
+                id: null,
+                title: null,
+                html: null,
                 show: false,
-                showAt: undefined,
-                createdAt: undefined,
-                updatedAt: undefined,
+                showAt: null,
+                createdAt: null,
+                updatedAt: null,
                 api_blog: '/api/editor',
                 api_uploadImg: '/api/editor/img',
                 imgs: [] // item { blogImg_id, id, name, url, hash }
             }
+
+            //  提供給後端更改前，用來驗證的資料
+            let patchData = {}
 
             //  取得 Server 插入的 blog 資料
             let data_blog = $('#data_blog').text()
@@ -142,21 +145,59 @@
 
             //  handle => 儲存 blog
             async function handle_saveBlog(e) {
+                let { id, imgs, show, showAt, html, api_blog } = window.blog
+                //  要傳給後端更新的資料
+                let payload = { }
                 //  獲取 html
-                let html = editor.getHtml()
-                let { imgs, id, show, api_blog } = window.blog
+                let html_editor = editor.getHtml().trim()
 
+                if( html !== html_editor ){
+                    console.log('@html => ', html)
+                    console.log('@html_editor => ', html_editor)
+                    //  若 editor 的 html 若有變化，提供給後端
+                    payload.html = html_editor
+                    console.log('html 是新植')
+                }
+
+                //  撈出 editor 內的圖片url
                 let editorImgs = editor.getElemsByType('image').map(({ src }) => src)
                 editorImgs = [...new Set(editorImgs)]
 
+                //  篩出要取消關聯的 img
                 let removeImgs = imgs.filter(item => {
                     let { blogImg_id, url } = item
                     return !editorImgs.includes(url)
                 })
 
-                removeImgs = removeImgs.map(({ blogImg_id }) => blogImg_id)
+                if(removeImgs.length){
+                    removeImgs = removeImgs.map(({ blogImg_id }) => blogImg_id)
+                    payload.removeImgs = removeImgs
+                }
+                
+                //  整理要提供給後端的 show 值
+                if(show !== patchData.show){
+                    /* 設定的show 與 當前blog.show 不同 */
 
-                let payload = { removeImgs, id, html, show }
+                    if(showAt === null && patchData.show ){
+                        //  初次發佈
+                        payload.show = 1                        
+                    }else if(showAt && !patchData.show){
+                        //  發後隱藏
+                        payload.show = 2
+                    }else if(showAt && patchData.show){
+                        //  發後隱藏，隱後再發
+                        payload.show = 3
+                    }
+                }
+
+                console.log(payload)
+
+                if(!payload.show && !payload.html){
+                    alert('沒變動，別亂好嗎?')
+                    return
+                }
+
+                payload.id = id
 
                 const {
                     data: {
@@ -170,7 +211,8 @@
                             return !removeImgs.includes(blogImg_id)
                         })
                     }
-
+                    window.blog = { ...window.blog, ...data}
+                    payload = {}
                     alert('blog save success!')
                 } else {
                     alert('blog save error!')
@@ -179,7 +221,7 @@
 
             //  handle => 修改 blog show 狀態
             function handle_isShowBlog(e) {
-                window.blog.show = e.target.checked
+                patchData.show = e.target.checked
             }
 
             //  handle => 修改 title

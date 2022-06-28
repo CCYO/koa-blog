@@ -26,7 +26,6 @@ async function updateBlog(blog_id, blog_data) {
     let [row] = await Blog.update(blog_data, {
         where: { id: blog_id }
     })
-
     return row
 }
 
@@ -41,6 +40,16 @@ async function cancelAssociateWidthImg(blogImgs) {
     })
     console.log('@row => ', row)
     return row
+}
+
+/**
+ * 刪除 blog
+ * @param {number} blog_id 
+ * @returns {number} 0 代表失敗，1 代表成功
+ */
+async function deleteBlog(blog_id){
+    return await Blog.destroy({ where: { id: blog_id }})
+    
 }
 
 /**
@@ -97,6 +106,8 @@ async function readBlogById(blog_id) {
     return data
 }
 
+
+
 async function readBlogsByUserId(user_id) {
     let blogList = await Blog.findAll({
         attributes: ['id', 'title', 'show', 'showAt'],
@@ -141,6 +152,7 @@ module.exports = {
     createBlogAndAssociateWidthUser,
     updateBlog,
     cancelAssociateWidthImg,
+    deleteBlog,
     readBlogById,
 
 

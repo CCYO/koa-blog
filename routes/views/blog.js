@@ -13,6 +13,8 @@ const {
     confirmFollowBlog
 } = require('../../controller/blog')
 
+
+//  撰寫新文章
 router.get('/blog/new', view_check_login, async (ctx, next) => {
     const { createdAt, updatedAt, ...user } = ctx.session.user
     await ctx.render('blog-edit', {
@@ -21,6 +23,7 @@ router.get('/blog/new', view_check_login, async (ctx, next) => {
     })
 })
 
+//  修改文章
 router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
     const { blog_id } = ctx.params
     const { id } = ctx.session.user
