@@ -36,7 +36,7 @@ const { BLOG, FOLLOW } = require('../model/errRes')
  * @returns {object} SuccModel || ErrModel
  */
 async function modifyBlog(blog_id, blog_data) {
-    let { title, removeImgs, html, show } = blog_data
+    let { title, removeImgs, html, show, showAt } = blog_data
     let data = {}
 
     if(title){
@@ -50,6 +50,21 @@ async function modifyBlog(blog_id, blog_data) {
 
     if(show !== undefined){
         data.show = show
+
+        //  第一次公開
+        if(show && !data.showAt){
+            //  建立 showAt
+        }
+        //  公開過又隱藏
+        if(!show && data.showAt){
+
+        }
+
+        //  不是第一次公開
+        if(show && data.showAt){
+
+        }
+
     }
 
     if(removeImgs && removeImgs.length){
