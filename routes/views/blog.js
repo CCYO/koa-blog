@@ -37,7 +37,6 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
         return ctx.redirect('/setting')
     }
 
-
     return await ctx.render('blog-edit', { blog })
 })
 

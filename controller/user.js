@@ -116,6 +116,25 @@ async function getSelfInfo(id) {
     return new SuccModel({ blogList: blogs, fansList, idolsList})
 }
 
+async function getPeopleById(user_id){
+    let currentUser = await readUser({ id: user_id })
+    let fansList = await readFansByUserId(user_id)
+    let idolList = await readIdolsByUserId(user_id)
+    return new SuccModel({ currentUser, fansList, idolList})
+}
+
+async function getFansById(idol_id) {
+    const fans = await readFans(idol_id)
+    return new SuccModel(fans)
+}
+
+async function getIdolsById(idol_id) {
+    const fans = await readIdols(idol_id)
+    return new SuccModel(fans)
+}
+
+
+
 /**
  * 
  * @param {*} id 
@@ -137,16 +156,6 @@ const modifyUserInfo = async (ctx) => {
     } else {
         return new ErrModel({ ...UPDATE.NO_THIS_ONE })
     }
-}
-
-async function getFansById(idol_id) {
-    const fans = await readFans(idol_id)
-    return new SuccModel(fans)
-}
-
-async function getIdolsById(idol_id) {
-    const fans = await readIdols(idol_id)
-    return new SuccModel(fans)
 }
 
 async function confirmFollow(fans_id, idol_id) {
@@ -320,8 +329,11 @@ async function confirmUserNews(user_id, time) {
 
 module.exports = {
     isEmailExist,
-    findUser,
     register,
+    findUser,
+    getSelfInfo,
+
+    getPeopleById,
 
     modifyUserInfo,
     getFansById,
@@ -333,7 +345,7 @@ module.exports = {
     confirmUserNews,
 
     getNews,
-    getSelfInfo,
+    
     getOtherInfo,
     logout,
 

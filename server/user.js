@@ -60,7 +60,7 @@ async function readFansByUserId(idol_id) {
     })
 
     if (!fansList.length) return []
-    return init_4_user(fans)
+    return init_4_user(fansList)
 }
 
 /**

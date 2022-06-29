@@ -58,7 +58,7 @@ router.patch('/:avatar_hash', api_check_login, parse_user_data, validate_user ,a
 
 //---
 router.post('/follow', async (ctx, next) => {
-    const { id: idol_id } = ctx.request.body
+    const { id: idol_id, follow } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await followIdol(fans_id, idol_id)
 })

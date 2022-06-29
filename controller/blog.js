@@ -1,6 +1,5 @@
 const moment = require('moment')
-const {xss, xxs_html} = require('../utils/xss')
-
+const my_xxs = require('../utils/xss')
 
 const {
     createBlogAndAssociateWidthUser,
@@ -23,7 +22,7 @@ const { BLOG, FOLLOW } = require('../model/errRes')
  */
 async function addBlog(title, userId) {
     try {
-        title = xss(title)
+        title = my_xxs(title)
         const blog = await createBlogAndAssociateWidthUser(title, userId)
         return new SuccModel(blog)
     } catch (e) {
@@ -42,13 +41,11 @@ async function modifyBlog(blog_id, blog_data) {
     let data = {}
 
     if (title) {
-        data.title = xss(title)
+        data.title = my_xxs(title)
     }
 
     if (html) {
-        console.log('@html => ', html)
-        data.html = xxs_html(html)
-        console.log('@html => ', data.html)
+        data.html = my_xxs(html)
     }
 
     if (show > 0) {

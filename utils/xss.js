@@ -1,6 +1,6 @@
 const xss = require('xss')
 
-function xxs_html(html){
+function my_xxs(html){
     return xss(html, {
         onIgnoreTagAttr: function (tag, name, value, isWhiteAttr) {
             let attr = name.substr(0, 5)
@@ -12,7 +12,4 @@ function xxs_html(html){
     })
 }
 
-module.exports = {
-    xss,
-    xxs_html
-}
+module.exports = my_xxs

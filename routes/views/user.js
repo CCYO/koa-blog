@@ -6,17 +6,36 @@ const router = require('koa-router')()
 
 const { view_check_login } = require('../../middleware/check_login')
 
-const { getBlogList } =  require('../../controller/blog')
+const { getBlogList } = require('../../controller/blog')
 
-const { 
-    findUserById, getFansById, getIdolsById, getSelfInfo, getNews, getOtherInfo, confirmFollow,
+const {
+    getSelfInfo,
+
+    getPeopleById,
+
+    findUserById, getFansById, getIdolsById, getNews, getOtherInfo, confirmFollow,
     getOther,
 } = require('../../controller/user')
+
+
+router.get('/person', async (ctx, next) => {
+    console.log('@s => ', ctx.session)
+    let { id } = ctx.session.user
+    let { id: person_id } = ctx.query
+    let { data: { currentUser, fansList, idolList} } = await getPeopleById(person_id)
+    
+    await ctx.render('person', {
+        isMyIdol: fansList.some((fans) => fans.id === id),
+        currentUser,
+        fansList,
+        idolList
+    })
+})
 
 /**
  * @description router for square
  */
- router.get('/square', view_check_login, async (ctx, next) => {
+router.get('/square', view_check_login, async (ctx, next) => {
     await ctx.render('square')
 })
 
@@ -24,7 +43,7 @@ const {
  * @description router for login
  */
 router.get('/login', async (ctx, next) => {
-    if(ctx.session.user){
+    if (ctx.session.user) {
         return ctx.redirect('/self')
     }
 
@@ -38,7 +57,7 @@ router.get('/login', async (ctx, next) => {
  * @description router for register
  */
 router.get('/register', async (ctx, next) => {
-    if(ctx.session.user){
+    if (ctx.session.user) {
         return ctx.redirect('/self')
     }
 
@@ -100,13 +119,13 @@ router.get('/self', view_check_login, async (ctx, next) => {
 
         logging: true,
         active: undefined,
-        
+
         firstRender: true,
         checkTime,
         count,
         news,
         more,
-        index  
+        index
     })
 })
 
@@ -118,16 +137,16 @@ router.get('/other/:user_id', async (ctx, next) => {
     const current_id = (ctx.session.user) ? ctx.session.user.id : undefined
 
     //  若是本人就跳轉至 /self
-    if( target_id == current_id ){
+    if (target_id == current_id) {
         return ctx.redirect('/self')
     }
 
     //  若 query 有 confirm 參數，則清除Fan追蹤紀錄
     ctx.query.confirm && current_id && await confirmFollow(target_id, current_id)
-    
+
     //  整理 news 資料
     let news = []
-    
+
     const { data: { author: user, blogs, fans, idols } } = await getOtherInfo(target_id)
 
     let options = {
@@ -140,16 +159,16 @@ router.get('/other/:user_id', async (ctx, next) => {
         idols
     }
 
-    if(!options.logging){
+    if (!options.logging) {
         options.myIdol = undefined
     }
 
     //  若有登入，則前往 db 取得 news 資料
-    if(current_id){
-        let { data: {news, more, index, count} } = await getNews(current_id)
-        options = { ...options, news, more, index, count } 
-        options.myIdol = fans.some(({id}) => id === current_id) ? true : false
-    } 
+    if (current_id) {
+        let { data: { news, more, index, count } } = await getNews(current_id)
+        options = { ...options, news, more, index, count }
+        options.myIdol = fans.some(({ id }) => id === current_id) ? true : false
+    }
 
     await ctx.render('self', options)
 })
@@ -159,7 +178,7 @@ router.get('/other/:user_id', async (ctx, next) => {
  */
 router.get('/setting', view_check_login, async (ctx, next) => {
     const { user } = ctx.session
-    const { data: { news } } = await getNews(user.id) 
+    const { data: { news } } = await getNews(user.id)
 
     await ctx.render('setting', {
         logging: true,

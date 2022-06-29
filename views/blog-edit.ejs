@@ -63,6 +63,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
     <!-- 引入 Spark-MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+
+    <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
     <script>
         $(function () {
             /* window.blog 默認結構 */
@@ -145,54 +147,56 @@
 
             //  handle => 儲存 blog
             async function handle_saveBlog(e) {
-                let { id, imgs, show, showAt, html, api_blog } = window.blog
+                let { id, title, imgs, show, showAt, html, api_blog } = window.blog
                 //  要傳給後端更新的資料
-                let payload = { }
-                //  獲取 html
-                let html_editor = editor.getHtml().trim()
+                let payload = {}
 
-                if( html !== html_editor ){
-                    console.log('@html => ', html)
-                    console.log('@html_editor => ', html_editor)
+                //  若title有新值，且未更新
+                let newTitle = my_xss($title.val().trim())
+                if(title !== newTitle){
+                    payload.title = newTitle
+                }
+
+                //  獲取 html
+                let html_editor = my_xss( editor.getHtml().trim() )
+
+                if (html !== html_editor) {
                     //  若 editor 的 html 若有變化，提供給後端
                     payload.html = html_editor
-                    console.log('html 是新植')
                 }
 
                 //  撈出 editor 內的圖片url
                 let editorImgs = editor.getElemsByType('image').map(({ src }) => src)
                 editorImgs = [...new Set(editorImgs)]
 
-                //  篩出要取消關聯的 img
+                /*  篩出要取消關聯的 img  */
                 let removeImgs = imgs.filter(item => {
                     let { blogImg_id, url } = item
                     return !editorImgs.includes(url)
                 })
 
-                if(removeImgs.length){
+                if (removeImgs.length) {
                     removeImgs = removeImgs.map(({ blogImg_id }) => blogImg_id)
                     payload.removeImgs = removeImgs
                 }
-                
+
                 //  整理要提供給後端的 show 值
-                if(show !== patchData.show){
+                if (show !== patchData.show) {
                     /* 設定的show 與 當前blog.show 不同 */
 
-                    if(showAt === null && patchData.show ){
+                    if (showAt === null && patchData.show) {
                         //  初次發佈
-                        payload.show = 1                        
-                    }else if(showAt && !patchData.show){
+                        payload.show = 1
+                    } else if (showAt && !patchData.show) {
                         //  發後隱藏
                         payload.show = 2
-                    }else if(showAt && patchData.show){
+                    } else if (showAt && patchData.show) {
                         //  發後隱藏，隱後再發
                         payload.show = 3
                     }
                 }
 
-                console.log(payload)
-
-                if(!payload.show && !payload.html){
+                if (!payload.show && !payload.html && !payload.title) {
                     alert('沒變動，別亂好嗎?')
                     return
                 }
@@ -207,12 +211,24 @@
 
                 if (!errno) {
                     if (removeImgs) {
+                        //  同步 window.blog.imgs 與 editor.image
                         window.blog.imgs = imgs.filter(({ blogImg_id }) => {
                             return !removeImgs.includes(blogImg_id)
                         })
                     }
-                    window.blog = { ...window.blog, ...data}
+
+                    if (data.title){
+                        //  同步 window.blog.title 與 資料庫title
+                        $title.val(data.title)
+                        $btn_updateTitle.prop('disabled', true)
+                    }
+
+                    //  同步 window.blog 與 資料庫
+                    window.blog = { ...window.blog, ...data }
+
+                    //  清空 payload
                     payload = {}
+                    
                     alert('blog save success!')
                 } else {
                     alert('blog save error!')
@@ -441,6 +457,18 @@
                         reject(error)
                     })
                     fr.readAsArrayBuffer(file)
+                })
+            }
+
+            function my_xss(html){
+                return filterXSS(html, {
+                    onIgnoreTagAttr: function (tag, name, value, isWhiteAttr) {
+                        let attr = name.substr(0, 5)
+                        if (attr === "data-" || attr === 'style') {
+                            // 通过内置的escapeAttrValue函数来对属性值进行转义
+                            return `${name}="${filterXSS.escapeAttrValue(value)}"`;
+                        }
+                    }
                 })
             }
         })    
