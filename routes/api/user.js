@@ -42,6 +42,22 @@ router.post('/', validate_user, async (ctx, next) => {
     ctx.body = resModel
 })
 
+//  追蹤
+router.post('/follow', async (ctx, next) => {
+    const { id: idol_id } = ctx.request.body
+    const { id: fans_id } = ctx.session.user
+    ctx.body = await followIdol(fans_id, idol_id)
+})
+
+//  取消追蹤
+router.post('/cancelFollow', async (ctx, next) => {
+    const { id: idol_id } = ctx.request.body
+    const { id: fans_id } = ctx.session.user
+    ctx.body = await cancelFollowIdol(fans_id, idol_id)
+})
+
+
+
 //  logout
 router.get('/logout', api_check_login, async (ctx, next) => {
     console.log('@1++')
@@ -57,17 +73,7 @@ router.patch('/:avatar_hash', api_check_login, parse_user_data, validate_user ,a
 })
 
 //---
-router.post('/follow', async (ctx, next) => {
-    const { id: idol_id, follow } = ctx.request.body
-    const { id: fans_id } = ctx.session.user
-    ctx.body = await followIdol(fans_id, idol_id)
-})
 
-router.post('/cancelFollow', async (ctx, next) => {
-    const { id: idol_id } = ctx.request.body
-    const { id: fans_id } = ctx.session.user
-    ctx.body = await cancelFollowIdol(fans_id, idol_id)
-})
 
 router.post('/readMore' , api_check_login, async(ctx, next) => {
     const { id } = ctx.session.user

@@ -72,12 +72,11 @@ async function go2(user_id, time) {
     console.log('ok')
 }
 
-
 (
     async () => {
         try {
             // await init()
-            await go2()
+            // await User.destroy({where: { id: [1,2]}})
             
         } catch (e) {
             console.log('@ERR => ', e)

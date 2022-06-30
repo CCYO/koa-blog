@@ -5,7 +5,12 @@ const { Op } = require('sequelize')
 
 const { NEWS } = require('../conf/constant')
 
-const { User, User_Follow, Blog, Blog_Fans } = require('../db/model')
+const {
+    User,
+    Blog,
+    Follow_People,
+
+    Blog_Fans } = require('../db/model')
 const { BLOG } = require('../model/errRes')
 const hash = require('../utils/crypto')
 const { init_4_user } = require('../utils/init')
@@ -79,6 +84,48 @@ async function readIdolsByUserId(fans_id) {
     return init_4_user(idolList)
 }
 
+/**
+ * 新增 Follow_People 紀錄
+ * @param {number} idol_id idol id
+ * @param {number} fans_id fans id
+ * @returns {object|false} 成功 {id, fans_id, idol_id}，失敗 false
+ */
+async function addFans(idol_id, fans_id) {
+    const idol = await User.findByPk(idol_id)
+    const res = await idol.addFans(fans_id)
+    //  成功 => [ follow, ... ]
+    //  失敗 => undefined
+    if (!res) return false
+    const [item] = res.map(({ dataValues }) => dataValues)
+
+    return {
+        id: item.id,
+        fans_id: item.fans_id,
+        idol_id: item.idol_id
+    }
+}
+
+/**
+ * 刪除 Follow_People 紀錄
+ * @param {number} idol_id idol id
+ * @param {number} fans_id fans id
+ * @returns {boolean} 成功 true，失敗 false
+ */
+async function deleteFans(idol_id, fans_id) {
+    const idol = await User.findByPk(idol_id)
+    const row = await idol.removeFans(fans_id)
+    if (!row) return false
+    return true
+}
+
+
+
+
+
+
+
+
+
 const update = async (newUserInfo, id) => {
     if (newUserInfo.password) {
         newUserInfo.password = hash(newUserInfo.password)
@@ -93,23 +140,10 @@ const update = async (newUserInfo, id) => {
 }
 
 
-async function deleteFans(idol_id, fans_id) {
-    const idol = await User.findByPk(idol_id)
-    const row = await idol.removeFans(fans_id)
-    if (!row) return false
-    return true
-}
+
 
 //---
-async function addFans(idol_id, fans_id) {
-    const idol = await User.findByPk(idol_id)
-    const res = await idol.addFans(fans_id, { through: { comfirm: false } })
-    //  成功 => [ follow, ... ]
-    //  失敗 => undefined
-    if (!res) return false
-    const [item] = res.map(({ dataValues }) => dataValues)
-    return { id: item.id, fans_id: item.fans_id, idol_id: item.idol_id }
-}
+
 
 //  user, blogs
 async function readOther(other_id) {
@@ -642,7 +676,7 @@ module.exports = {
     readIdolsByUserId,
 
     update,
-    
+
     addFans,
     deleteFans,
     readNews,

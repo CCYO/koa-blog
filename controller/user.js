@@ -116,12 +116,47 @@ async function getSelfInfo(id) {
     return new SuccModel({ blogList: blogs, fansList, idolsList})
 }
 
+/**
+ * 取得 user id 自己的資料，以及 偶像、粉絲 資料
+ * @param {number} user_id 
+ * @returns {object}
+ * {
+ *  currentUser,
+ *  fansList: [ user, ...],
+ *  idolList: [ user, ...]
+ * }
+ */
 async function getPeopleById(user_id){
     let currentUser = await readUser({ id: user_id })
     let fansList = await readFansByUserId(user_id)
     let idolList = await readIdolsByUserId(user_id)
     return new SuccModel({ currentUser, fansList, idolList})
 }
+
+/**
+ * 追蹤
+ * @param {number} fans_id 
+ * @param {number} idol_id 
+ * @returns {object} SuccessModel { Follow_People Ins { id, idol_id, fans_id }} | ErrorModel
+ */
+async function followIdol(fans_id, idol_id) {
+    const res = await addFans(idol_id, fans_id)
+    if (res) return new SuccModel(res)
+    return new ErrModel(FOLLOW.FOLLOW_ERR)
+}
+
+/**
+ * 取消追蹤
+ * @param {number} fans_id 
+ * @param {number} idol_id 
+ * @returns {object} SuccessModel | ErrorModel
+ */
+async function cancelFollowIdol(fans_id, idol_id) {
+    const res = await deleteFans(idol_id, fans_id)
+    if (res) return new SuccModel()
+    return new ErrModel(FOLLOW.CANCEL_ERR)
+}
+
 
 async function getFansById(idol_id) {
     const fans = await readFans(idol_id)
@@ -174,17 +209,7 @@ async function getOther(other_id) {
     return new SuccModel(await readOther(other_id))
 }
 
-async function followIdol(fans_id, idol_id) {
-    const res = await addFans(idol_id, fans_id)
-    if (res) return new SuccModel(res)
-    return new ErrModel(FOLLOW.FOLLOW_ERR)
-}
 
-async function cancelFollowIdol(fans_id, idol_id) {
-    const res = await deleteFans(idol_id, fans_id)
-    if (res) return new SuccModel('已取消追蹤')
-    return new ErrModel(FOLLOW.CANCEL_ERR)
-}
 
 // get NewsList for VIEW of user navbar 
 async function getNews(user_id) {

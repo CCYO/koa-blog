@@ -59,7 +59,7 @@
                     <div class='avatar-box'>
                         <img src="<%= currentUser.avatar %>" alt="" srcset="">
                         <button id="cancelFollow" class="<%= isMyIdol ? 'my-show' : 'my-noshow' %> ">取消追蹤</button>
-                        <button id="toFollow" class="<%= !isMyIdol ? 'my-show' : 'my-noshow' %> ">追蹤</button>
+                        <button id="follow" class="<%= !isMyIdol ? 'my-show' : 'my-noshow' %> ">追蹤</button>
                     </div>
                     <p><%= currentUser.email %> </p>
                     <p><%= currentUser.nickname %> </p>
@@ -112,18 +112,42 @@
     <%- include('wedgets/cdn') %>
     <script>
         $(function () {
+            //  { id, email, nickname, age, avatar, avatar_hash }
             let currentUser = JSON.parse($('#data').text())
+            let btn_follow = $('#follow')
+            let btn_cancelFollow = $('#cancelFollow')
+            let api_follow = '/api/user/follow'
+            let api_cancelFollow = '/api/user/cancelFollow'
+
+            $('#data').remove()
             
-            $('#toFollow').click(() => handle_toFollow(true))
-            // $('#cancelFollow')
-            async function handle_toFollow(follow){
-                let {errno, data, msg} = await axios.post('/api/user/follow', { follow, id: currentUser.id })
+            btn_follow.click(handle_follow)
+            btn_cancelFollow.click(handle_cancelFollow)
+
+            async function handle_cancelFollow(){
+                let {errno} = await axios.post(api_cancelFollow, { id: currentUser.id })
+
                 if(!errno){
-                    alert('成功')
+                    alert('已取消追蹤')
+                    btn_follow.toggle()
+                    btn_cancelFollow.toggle()
                 }else{
                     alert('失敗')
                 }
             }
+
+            async function handle_follow(){
+                let {errno} = await axios.post(api_follow, { id: currentUser.id })
+
+                if(!errno){
+                    alert('追蹤成功')
+                    btn_follow.toggle()
+                    btn_cancelFollow.toggle()
+                }else{
+                    alert('失敗')
+                }
+            }
+
         })
     </script>
 </body>
