@@ -6,7 +6,9 @@ const router = require('koa-router')()
 
 const { view_check_login } = require('../../middleware/check_login')
 
-const { getBlogList } = require('../../controller/blog')
+const { getBlogListByUserId } = require('../../controller/blog')
+
+const { getNewsByUserId } = require('../controller/news')
 
 const {
     getSelfInfo,
@@ -19,16 +21,41 @@ const {
 
 
 router.get('/person', async (ctx, next) => {
-    console.log('@s => ', ctx.session)
     let { id } = ctx.session.user
     let { id: person_id } = ctx.query
+    person_id = person_id * 1
+
+    if(id === person_id){
+        return ctx.redirect('/self')
+    }
+
     let { data: { currentUser, fansList, idolList} } = await getPeopleById(person_id)
+    let { data: blogList } = await getBlogListByUserId(person_id)
+
+    let {} = await getNewsByUserId(person_id)
     
     await ctx.render('person', {
         isMyIdol: fansList.some((fans) => fans.id === id),
         currentUser,
         fansList,
-        idolList
+        idolList,
+
+        blogList
+    })
+})
+
+router.get('/self', async (ctx, next) => {
+    let { id } = ctx.session.user
+    let { data: { currentUser, fansList, idolList} } = await getPeopleById(id)
+    let { data: blogList } = await getBlogListByUserId(id, true)
+
+    await ctx.render('person', {
+        isMyIdol: undefined,
+        currentUser,
+        fansList,
+        idolList,
+
+        blogList
     })
 })
 

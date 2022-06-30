@@ -4,7 +4,7 @@
 const seq = require('../seq')
 const { INTEGER, BOO } = require('../types')
 
-const Blog_Follow = seq.define('Blog_Follow', {
+const Follow_Blog = seq.define('Follow_Blog', {
     id: {
         type: INTEGER,
         primaryKey: true,
@@ -14,7 +14,7 @@ const Blog_Follow = seq.define('Blog_Follow', {
     blog_id: {
         type: INTEGER
     },
-    fans_id: {
+    follower_id: {
         type: INTEGER
     },
     confirm: {
@@ -23,4 +23,4 @@ const Blog_Follow = seq.define('Blog_Follow', {
     }
 })
 
-module.exports = Blog_Follow
+module.exports = Follow_Blog

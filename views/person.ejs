@@ -58,13 +58,38 @@
                 <div class="userInfo">
                     <div class='avatar-box'>
                         <img src="<%= currentUser.avatar %>" alt="" srcset="">
+                        <% if (isMyIdol !== undefined) { %>
                         <button id="cancelFollow" class="<%= isMyIdol ? 'my-show' : 'my-noshow' %> ">取消追蹤</button>
                         <button id="follow" class="<%= !isMyIdol ? 'my-show' : 'my-noshow' %> ">追蹤</button>
+                        <% } %>
                     </div>
                     <p><%= currentUser.email %> </p>
                     <p><%= currentUser.nickname %> </p>
                 </div>
                 <hr>
+
+                <div id="blogs">
+                    <div id="public-blog">
+                        <h2>BLOG列表</h2>
+                        <% if(blogList.show.length){ %>
+                        <ul class="list-group list-group-flush">
+                            <% blogList.show.forEach(({id, title}) => { %>
+                            <li
+                                class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+                                <a href="/blog/<%= id %>" class="stretched-link"><%= title %> </a>
+                            </li>
+                            <% }) %>
+                        </ul>
+                        <% } else { %>
+                        <p>沒有發布的BLOG</p>
+                        <% } %>
+                    </div>
+
+
+
+                </div>
+
+
             </div>
 
             <div class="col-4" style="background: rgba(255, 185, 100, .9);">
@@ -106,7 +131,7 @@
             </div>
         </div>
         <div id="data" class="my-noshow">
-            <%= JSON.stringify(currentUser) %> 
+            <%= JSON.stringify(currentUser) %>
         </div>
     </div>
     <%- include('wedgets/cdn') %>
@@ -120,30 +145,30 @@
             let api_cancelFollow = '/api/user/cancelFollow'
 
             $('#data').remove()
-            
+
             btn_follow.click(handle_follow)
             btn_cancelFollow.click(handle_cancelFollow)
 
-            async function handle_cancelFollow(){
-                let {errno} = await axios.post(api_cancelFollow, { id: currentUser.id })
+            async function handle_cancelFollow() {
+                let { errno } = await axios.post(api_cancelFollow, { id: currentUser.id })
 
-                if(!errno){
+                if (!errno) {
                     alert('已取消追蹤')
                     btn_follow.toggle()
                     btn_cancelFollow.toggle()
-                }else{
+                } else {
                     alert('失敗')
                 }
             }
 
-            async function handle_follow(){
-                let {errno} = await axios.post(api_follow, { id: currentUser.id })
+            async function handle_follow() {
+                let { errno } = await axios.post(api_follow, { id: currentUser.id })
 
-                if(!errno){
+                if (!errno) {
                     alert('追蹤成功')
                     btn_follow.toggle()
                     btn_cancelFollow.toggle()
-                }else{
+                } else {
                     alert('失敗')
                 }
             }

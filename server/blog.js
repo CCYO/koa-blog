@@ -47,20 +47,22 @@ async function cancelAssociateWidthImg(blogImgs) {
  * @param {number} blog_id 
  * @returns {number} 0 代表失敗，1 代表成功
  */
-async function deleteBlog(blog_id){
-    return await Blog.destroy({ where: { id: blog_id }})
-    
+async function deleteBlog(blog_id) {
+    return await Blog.destroy({ where: { id: blog_id } })
+
 }
 
 /**
- * 
+ * 查找 blog 紀錄
  * @param {number} blog_id 
  * @returns {object|null} 
- *      若有找到 blog，RV {
+ *  若有找到
+ *      blog {
  *          id, title, html, show, showAt,
  *          imgs: [ { blogImg_id, name, id, url, hash }, ... ],
  *          author: { id, email, nickname, age, avatar, avatar_hash }
- *      }, 若找不到則 null
+ *      }
+ *  ，若找不到則 null
  */
 async function readBlogById(blog_id) {
     let res = await Blog.findByPk(blog_id, {
@@ -97,7 +99,7 @@ async function readBlogById(blog_id) {
                     id: blogImg_id, name
                 },
                 ...img
-            }) => { data.imgs.push({ ...img, blogImg_id, name })}
+            }) => { data.imgs.push({ ...img, blogImg_id, name }) }
         )
     }
 
@@ -106,38 +108,45 @@ async function readBlogById(blog_id) {
     return data
 }
 
+/**
+ * 
+ * @param {object} param0 查詢 blogs 紀錄所需的參數
+ * @param {number} param0.user_id user id
+ * @param {boolean} param0.getAll 是否無視 blog 公開/隱藏，false 僅拿公開，true 全拿
+ * @returns {object} 
+ *  [blog: {
+ *      id, title, show, showAt,
+ *      author: { id, email, nickname, age, avatar, avatar_hash }
+ *  }]
+ * 
+ 
+ */
+async function readBlogList({ user_id, getAll = false}) {
+    let where = { user_id}
 
+    if(!getAll){
+        where.show = true    
+    }
 
-async function readBlogsByUserId(user_id) {
     let blogList = await Blog.findAll({
         attributes: ['id', 'title', 'show', 'showAt'],
-        where: { '$User.id$': user_id },
+        where,
         include: {
             model: User,
             attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash']
         }
     })
 
+    let data = {show: [], hidden: []}
+
     if (!blogList.length) return []
 
     blogList = blogList.map(item => {
-        item = item.toJSON()
-        let { User: author, ...blog } = item
-        author = init_4_user(author)
-        console.log('@author => ', author)
-        console.log('@blog => ', blog)
-        return { blog, author }
-    })
+        let { User: author, ...blog } = item.toJSON()
+        return { ...blog, author: init_4_user(author) }
+    } )
 
-    console.log('@blogList => ', blogList)
     return blogList
-    //     ({
-    //     dataValues: {
-    //         id, title, show,
-    //         User: { dataValues: user_dataValues }
-    //     } }) => ({ id, title, show, user: init_4_user(user_dataValues) })
-    // )
-    // return blogs
 }
 
 async function updateFollowBlog(where, data) {
@@ -154,8 +163,8 @@ module.exports = {
     cancelAssociateWidthImg,
     deleteBlog,
     readBlogById,
+    readBlogList,
 
-
-    readBlogsByUserId,
+    
     updateFollowBlog
 }

@@ -7,8 +7,10 @@ const {
     cancelAssociateWidthImg,
     deleteBlog,
     readBlogById,
+    readBlogList,
 
-    updateFollowBlog
+    updateFollowBlog,
+    readBlogListByUserId
 } = require('../server/blog')
 
 const { SuccModel, ErrModel } = require('../model')
@@ -112,13 +114,42 @@ async function getBlog(blog_id) {
     }
 }
 
+/**
+ * 藉 userId 取得 blogList
+ * @param {number} user_id user id
+ * @param {boolean} is_author 是否作者本人
+ * @returns {object} SuccessModel
+ * { 
+ *  blogList { 
+ *      show: [ 
+ *          blog {
+ *              id, title, showAt, 
+ *              author: { id, email, nickname, age, avatar, avatar_hash }
+ *          }, ...
+ *      ],
+ *      hidden: [ blog, ... ]
+ *  } 
+ * }
+ */
+async function getBlogListByUserId(user_id, is_author = false) {
+    let param = { user_id }
 
-async function getBlogList(user_id, is_self) {
-    let blogs = await readBlogList(user_id)
-    if (!is_self) {
-        blogs = blogs.filter(blog => blog.show)
+    if (is_author) {
+        param.getAll = true
     }
-    return new SuccModel(blogs)
+
+    let blogList = await readBlogList(param)
+
+    let data = { show: [], hidden: []}
+
+    blogList.forEach( item => {
+        let { show } = item
+        delete item.show
+        show && data.show.push(item)
+        data.hidden.push(item)
+    })
+
+    return new SuccModel(data)
 }
 
 
@@ -134,7 +165,8 @@ module.exports = {
     modifyBlog,
     removeBlog,
     getBlog,
+    getBlogListByUserId,
+    
 
-    getBlogList,
     confirmFollowBlog
 }

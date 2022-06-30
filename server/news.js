@@ -1,10 +1,22 @@
 const { 
+    seq,
+
+
     Blog_Follow,
-    News,
 
     Follow, Blog_Fans
 } = require('../db/model')
 
+
+async function readNews({userId}){
+    let query = 
+    `
+    SELECT 
+    FROM Follow_People P LEFT JOIN Follow_Blog
+
+    `
+    await seq.query()
+}
 
 //  未完成
 async function softDeleteNewsOfBlog(blog_id){
@@ -47,6 +59,8 @@ async function updateNews({ blogs, fans }) {
 }
 
 module.exports = {
+    readNews,
+
     updateFollowComfirm,
     updateBlogFansComfirm,
     updateNews

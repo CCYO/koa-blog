@@ -23,6 +23,14 @@ const {
     NEWS
 } = require('../model/errRes')
 
+const { readNews } = require('../server/news')
+
+async function getNewsByUserId(userId){
+    await readNews({userId})
+}
+
+
+
 async function confirmNews(payload) {
     let { blogs, fans } = payload
     const { blogRow, fansRow } = await updateNews(payload)
@@ -39,5 +47,7 @@ async function confirmNews(payload) {
 }
 
 module.exports = {
+    getNewsByUserId,
+
     confirmNews
 }
