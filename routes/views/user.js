@@ -8,7 +8,7 @@ const { view_check_login } = require('../../middleware/check_login')
 
 const { getBlogListByUserId } = require('../../controller/blog')
 
-const { getNewsByUserId } = require('../controller/news')
+const { getNewsByUserId } = require('../../controller/news')
 
 const {
     getSelfInfo,

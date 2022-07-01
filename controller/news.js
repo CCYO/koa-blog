@@ -25,6 +25,9 @@ const {
 
 const { readNews } = require('../server/news')
 
+
+
+
 async function getNewsByUserId(userId){
     await readNews({userId})
 }

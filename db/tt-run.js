@@ -4,9 +4,17 @@ const {
     User, Blog, Img, BlogImg, User_Follow, Blog_Follow, News, seq
 } = require('./model')
 
-const { create } = require('../server/user')
-const { readImgAndAssociateWidthBlog} = require('../server/img')
+const {
+    createUser,
+    addFans
+} = require('../server/user')
+const { readImgAndAssociateWidthBlog } = require('../server/img')
 const { createBlogAndAssociateWidthUser } = require('../server/blog')
+
+const { 
+    FollowBlog,
+    readNews
+} = require('../server/news')
 
 async function init() {
     let associateToNews = []
@@ -20,14 +28,14 @@ async function init() {
     let user_follow_3 = await user3.addFan([user1, user2, user4])
     let user_follow_4 = await user4.addFan([user1, user2, user3])
 
-    let b1 = await Blog.create({user_id: 1, title: '1st of 1', show: true})
-    let b2 = await Blog.create({user_id: 1, title: '2st of 1', show: true})
-    let b3 = await Blog.create({user_id: 2, title: '1st of 2', show: true})
-    let b4 = await Blog.create({user_id: 2, title: '2st of 2', show: true})
-    let b5 = await Blog.create({user_id: 3, title: '1st of 3', show: true})
-    let b6 = await Blog.create({user_id: 3, title: '2st of 3', show: true})
-    let b7 = await Blog.create({user_id: 4, title: '1st of 4', show: true})
-    let b8 = await Blog.create({user_id: 4, title: '2st of 4', show: true})
+    let b1 = await Blog.create({ user_id: 1, title: '1st of 1', show: true })
+    let b2 = await Blog.create({ user_id: 1, title: '2st of 1', show: true })
+    let b3 = await Blog.create({ user_id: 2, title: '1st of 2', show: true })
+    let b4 = await Blog.create({ user_id: 2, title: '2st of 2', show: true })
+    let b5 = await Blog.create({ user_id: 3, title: '1st of 3', show: true })
+    let b6 = await Blog.create({ user_id: 3, title: '2st of 3', show: true })
+    let b7 = await Blog.create({ user_id: 4, title: '1st of 4', show: true })
+    let b8 = await Blog.create({ user_id: 4, title: '2st of 4', show: true })
 
     let blog_follow_1 = await b1.addBlog_of_Blog_Follow([user2, user3, user4])
     let blog_follow_2 = await b2.addBlog_of_Blog_Follow([user2, user3, user4])
@@ -39,11 +47,11 @@ async function init() {
     let blog_follow_8 = await b8.addBlog_of_Blog_Follow([user1, user2, user3])
 
     associateToNews.push(...user_follow_1, ...user_follow_2, ...user_follow_3, ...user_follow_4)
-    associateToNews.forEach( async item => await item.createNews({type: 1, showAt: new Date()}))
+    associateToNews.forEach(async item => await item.createNews({ type: 1, showAt: new Date() }))
 
     associateToNews = []
     associateToNews.push(...blog_follow_1, ...blog_follow_2, ...blog_follow_3, ...blog_follow_4, ...blog_follow_5, ...blog_follow_6, ...blog_follow_7, ...blog_follow_8)
-    associateToNews.forEach( async item => await item.createNews({type: 2, showAt: new Date()}))
+    associateToNews.forEach(async item => await item.createNews({ type: 2, showAt: new Date() }))
     // let new1 = await user_follow_1.createNews({ type: 1, showAt: new Date()})
     // let new2 = await user_follow_2.createNews({ type: 1, showAt: new Date()})
     // let new3 = await user_follow_3.createNews({ type: 1, showAt: new Date()})
@@ -57,7 +65,7 @@ async function init() {
     // let new10 = await blog_follow_10.forEach( follow.createNews({ type: 2, showAt: new Date()}))
     // let new11 = await blog_follow_11.forEach( follow.createNews({ type: 2, showAt: new Date()}))
     // let new12 = await blog_follow_12.forEach( follow.createNews({ type: 2, showAt: new Date()}))
-    
+
     console.log('@ok')
 }
 
@@ -75,9 +83,18 @@ async function go2(user_id, time) {
 (
     async () => {
         try {
-            // await init()
+            await seq.sync({ force: true })
             // await User.destroy({where: { id: [1,2]}})
-            
+            let { id: id1 } = await createUser({ email: '1@gmail.com', password: '123456' })
+            let { id: id2 } = await createUser({ email: '2@gmail.com', password: '123456' })
+            await addFans(id1, id2)
+            await addFans(id2, id1)
+            let { id: blog2 } = (await Blog.create({user_id: 2, title: 'BLOG2'})).toJSON()
+            await FollowBlog.createFollowers({blog_id: blog2, followerList_id: [id1]})
+            await FollowBlog.hiddenBlog({blog_id: blog2})
+            await FollowBlog.restoreBlog({blog_id: blog2})
+            let res = await readNews({ userId: id1 })
+            console.log('@res => ', res)
         } catch (e) {
             console.log('@ERR => ', e)
         }

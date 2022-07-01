@@ -4,9 +4,9 @@ const Blog = require('./Blog')
 const Img = require('./Img')
 const BlogImg = require('./relation-Blog&Img')
 
-const Follow_People = require('./Follow_People')
+const FollowPeople = require('./FollowPeople')
 
-const Follow_Blog = require('./Follow_Blog')
+const FollowBlog = require('./FollowBlog')
 const News = require('./News')
 
 /**
@@ -30,8 +30,8 @@ Img.belongsToMany(Blog, { through: BlogImg, foreignKey: 'img_id', targetKey: 'id
 
 //  SourceModel 作為 foreignKey 的來源，
 //  as 是 TargetModel 的別名，
-User.belongsToMany(User, { as: 'Follow_People_I', through: Follow_People, foreignKey: 'fans_id', targetKey: 'id'})
-User.belongsToMany(User, { as: 'Follow_People_F', through: Follow_People, foreignKey: 'idol_id', targetKey: 'id'})
+User.belongsToMany(User, { as: 'FollowPeople_I', through: FollowPeople, foreignKey: 'fans_id', targetKey: 'id'})
+User.belongsToMany(User, { as: 'FollowPeople_F', through: FollowPeople, foreignKey: 'idol_id', targetKey: 'id'})
 // Follow_People.belongsTo(User, {as: 'People_Fans', foreignKey: 'fans_id', targetKey: 'id'})
 // Follow_People.belongsTo(User, {as: 'People_Idol', foreignKey: 'idol_id', targetKey: 'id'})
 // User.hasMany(User_Follow, {foreignKey: 'fans_id', targetKey: 'id'})
@@ -40,8 +40,8 @@ User.belongsToMany(User, { as: 'Follow_People_F', through: Follow_People, foreig
 // Follow 上的 idol 有很多 blog
 // Follow.hasMany(Blog, { foreignKey: 'user_id', targetKey: 'idol_id'})
 
-Blog.belongsToMany(User, { as: 'Follow_Blog_B', through: Follow_Blog, foreignKey: 'blog_id', targetKey: 'id'})
-User.belongsToMany(Blog, { as: 'Follow_Blog_F', through: Follow_Blog, foreignKey: 'follow_id', targetKey: 'id'})
+Blog.belongsToMany(User, { as: 'FollowBlog_F', through: FollowBlog, foreignKey: 'blog_id', targetKey: 'id'})
+User.belongsToMany(Blog, { as: 'FollowBlog_B', through: FollowBlog, foreignKey: 'follower_id', targetKey: 'id'})
 // Blog_Follow.belongsTo(Blog, { foreignKey: 'blog_id', targetKey: 'id'})
 // Blog_Follow.belongsTo(User, { foreignKey: 'fans_id', targetKey: 'id'})
 // Blog.hasMany(Blog_Follow, { foreignKey: 'blog_id', targetKey: 'id'})
@@ -54,7 +54,9 @@ User.belongsToMany(Blog, { as: 'Follow_Blog_F', through: Follow_Blog, foreignKey
 
 module.exports = {
     User, Blog, Img, BlogImg, 
-    Follow_People,
     
-    Follow_Blog, News, seq
+    FollowPeople,
+    FollowBlog,
+    
+    News, seq
 }

@@ -2,6 +2,14 @@ const moment = require('moment')
 const my_xxs = require('../utils/xss')
 
 const {
+    FollowPeople, Blog
+} = require('../db/model')
+
+const {
+    readFansByUserId
+} = require('../server/user')
+
+const {
     createBlogAndAssociateWidthUser,
     updateBlog,
     cancelAssociateWidthImg,
@@ -12,6 +20,10 @@ const {
     updateFollowBlog,
     readBlogListByUserId
 } = require('../server/blog')
+
+const {
+    FollowBlog
+} = require('../server/news')
 
 const { SuccModel, ErrModel } = require('../model')
 const { BLOG, FOLLOW } = require('../model/errRes')
@@ -38,7 +50,7 @@ async function addBlog(title, userId) {
  * @param {object} blog_data 要更新的資料
  * @returns {object} SuccModel || ErrModel
  */
-async function modifyBlog(blog_id, blog_data) {
+async function modifyBlog(blog_id, blog_data, author_id) {
     let { title, removeImgs, html, show } = blog_data
     let data = {}
 
@@ -52,20 +64,36 @@ async function modifyBlog(blog_id, blog_data) {
 
     if (show > 0) {
         if (show === 1) {
-            // 初次公開
+            /* 初次公開，將文章與粉絲作關聯 */
             data.show = true
-            data.showAt = new Date()
-            //  待處理 => news 新增 通知粉絲
 
+            //  取得粉絲群
+            let followerList = await readFansByUserId(author_id)
+            if(!followerList.length){
+                return
+            }
+
+            //  取得粉絲群的id
+            let followerList_id = followerList.map( ({id}) => id)
+            //  將粉絲與文章作關聯
+            await FollowBlog.createFollowers({blog_id, followerList_id})
+
+            //  建立文章公開數據
+            data.showAt = new Date()
+            
         } else if (show === 2) {
-            //  公開過又隱藏
+            /*  公開過又隱藏 */
             data.show = false
-            //  待處理 => news 軟刪除 未確認的通知
-            //  await softDeleteNewsOfBlog(blog_id)
+
+            //  FollowBlog 軟刪除 confirm: false 的 粉絲
+            await FollowBlog.hiddenBlog({blog_id})
+
         } else if (show === 3) {
             //  不是第一次公開
             data.show = true
-            //  待處理 => news 恢復軟刪除，通知新粉絲
+
+            //  FollowBlog 恢復軟刪除的 舊粉絲，通知新粉絲
+            
         }
     }
 

@@ -8,9 +8,10 @@ const { NEWS } = require('../conf/constant')
 const {
     User,
     Blog,
-    Follow_People,
 
-    Blog_Fans } = require('../db/model')
+    FollowPeople,
+    FollowBlog
+} = require('../db/model')
 const { BLOG } = require('../model/errRes')
 const hash = require('../utils/crypto')
 const { init_4_user } = require('../utils/init')
@@ -60,7 +61,7 @@ const createUser = async ({ password, ...data }) => {
 async function readFansByUserId(idol_id) {
     const idol = await User.findByPk(idol_id)
 
-    const fansList = await idol.getFans({
+    const fansList = await idol.getFollowPeople_F({
         attributes: ['id', 'email', 'age', 'nickname', 'avatar', 'avatar_hash']
     })
 
@@ -76,7 +77,7 @@ async function readFansByUserId(idol_id) {
 async function readIdolsByUserId(fans_id) {
     const fans = await User.findByPk(fans_id)
 
-    const idolList = await fans.getIdol({
+    const idolList = await fans.getFollowPeople_I({
         attributes: ['id', 'email', 'age', 'nickname', 'avatar', 'avatar_hash']
     })
 
@@ -92,7 +93,7 @@ async function readIdolsByUserId(fans_id) {
  */
 async function addFans(idol_id, fans_id) {
     const idol = await User.findByPk(idol_id)
-    const res = await idol.addFans(fans_id)
+    const res = await idol.addFollowPeople_F(fans_id)
     //  成功 => [ follow, ... ]
     //  失敗 => undefined
     if (!res) return false
@@ -113,7 +114,7 @@ async function addFans(idol_id, fans_id) {
  */
 async function deleteFans(idol_id, fans_id) {
     const idol = await User.findByPk(idol_id)
-    const row = await idol.removeFans(fans_id)
+    const row = await idol.removeFollowPeople_F(fans_id)
     if (!row) return false
     return true
 }
