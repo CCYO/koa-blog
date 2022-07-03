@@ -11,6 +11,20 @@ const {
 const { readImgAndAssociateWidthBlog } = require('../server/img')
 const { createBlogAndAssociateWidthUser } = require('../server/blog')
 
+const {
+    getFansById
+} = require('../controller/user')
+
+const {
+    addBlog,
+    modifyBlog,
+    removeBlog
+} = require('../controller/blog')
+
+const {
+    getNewsByUserId
+} = require('../controller/news')
+
 const { 
     FollowBlog,
     readNews
@@ -83,18 +97,42 @@ async function go2(user_id, time) {
 (
     async () => {
         try {
-            await seq.sync({ force: true })
+            // await seq.sync({ force: true })
             // await User.destroy({where: { id: [1,2]}})
-            let { id: id1 } = await createUser({ email: '1@gmail.com', password: '123456' })
-            let { id: id2 } = await createUser({ email: '2@gmail.com', password: '123456' })
-            await addFans(id1, id2)
-            await addFans(id2, id1)
-            let { id: blog2 } = (await Blog.create({user_id: 2, title: 'BLOG2'})).toJSON()
-            await FollowBlog.createFollowers({blog_id: blog2, followerList_id: [id1]})
-            await FollowBlog.hiddenBlog({blog_id: blog2})
-            await FollowBlog.restoreBlog({blog_id: blog2})
-            let res = await readNews({ userId: id1 })
-            console.log('@res => ', res)
+            // let { id: user_id1 } = await createUser({ email: '1@gmail.com', password: '123456' })
+            // let { id: user_id2 } = await createUser({ email: '2@gmail.com', password: '123456' })
+            // let { id: user_id3 } = await createUser({ email: '3@gmail.com', password: '123456' })
+            
+            // await followIdol(user_id2, user_id1)
+            
+            // let { data: {id: blog_id }} = await addBlog('BLOG1', user_id1)
+
+            // await modifyBlog(blog_id, { show: 1 }, user_id1)
+            // let res1 = await readNews({ userId: user_id2 })
+            // let res2 = await readNews({ userId: user_id3 })
+            // console.log('@res1 => ', res1)
+            // console.log('@res2 => ', res2)
+            
+            // await modifyBlog(blog_id, { show: 2 }, user_id1)
+            // let res3 = await readNews({ userId: user_id2 })
+            // let res4 = await readNews({ userId: user_id3 })
+            
+
+            // await cancelFollowIdol(user_id2, user_id1)
+            // await followIdol(user_id3, user_id1)
+
+            // await modifyBlog(blog_id, { show: 3 }, user_id1)
+            // let res5 = await readNews({ userId: user_id2 })
+            // let res6 = await readNews({ userId: user_id3 })
+            // console.log('@res5 => ', res5)
+            // console.log('@res6 => ', res6)
+            
+            // let res = await FollowBlog.readFollowers({blog_id: blog2})
+            
+            
+            // await removeBlog(blog_id)
+            let res = await getNewsByUserId(1)
+            console.log('@res => ', res.data)
         } catch (e) {
             console.log('@ERR => ', e)
         }

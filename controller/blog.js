@@ -69,31 +69,48 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
             //  取得粉絲群
             let followerList = await readFansByUserId(author_id)
-            if(!followerList.length){
-                return
+            if (followerList.length) {
+                //  取得粉絲群的id
+                let followerList_id = followerList.map(({ id }) => id)
+                //  將粉絲與文章作關聯
+                await FollowBlog.createFollowers({ blog_id, followerList_id })
             }
-
-            //  取得粉絲群的id
-            let followerList_id = followerList.map( ({id}) => id)
-            //  將粉絲與文章作關聯
-            await FollowBlog.createFollowers({blog_id, followerList_id})
-
             //  建立文章公開數據
             data.showAt = new Date()
-            
+
         } else if (show === 2) {
             /*  公開過又隱藏 */
             data.show = false
 
             //  FollowBlog 軟刪除 confirm: false 的 粉絲
-            await FollowBlog.hiddenBlog({blog_id})
+            await FollowBlog.hiddenBlog({ blog_id })
 
         } else if (show === 3) {
             //  不是第一次公開
             data.show = true
 
+            let fansList_id = []
             //  FollowBlog 恢復軟刪除的 舊粉絲，通知新粉絲
-            
+
+            //  先篩出距離上次公開，這期間新增的粉絲
+
+            //  restory 此 blog 的 FollowBlog.follower，且將這些follower取出
+            await FollowBlog.restoreBlog({ blog_id })
+            let followerList_id = await FollowBlog.readFollowers({ blog_id })
+
+            //  找出目前FollowPeople.fans
+            let fansList = await readFansByUserId(author_id)
+            if (fansList.length) {
+                fansList.forEach(({ id }) => fansList_id.push(id))
+            }
+
+            //  篩去兩者重複的id
+            let newFollowerList_Id = fansList_id.filter(fans_id => {
+                return !followerList_id.includes(fans_id)
+            })
+
+            //  新增FollowBlog.follower
+            await FollowBlog.createFollowers({ blog_id, followerList_id: newFollowerList_Id })
         }
     }
 
@@ -168,13 +185,13 @@ async function getBlogListByUserId(user_id, is_author = false) {
 
     let blogList = await readBlogList(param)
 
-    let data = { show: [], hidden: []}
+    let data = { show: [], hidden: [] }
 
-    blogList.forEach( item => {
+    blogList.forEach(item => {
         let { show } = item
         delete item.show
         show && data.show.push(item)
-        data.hidden.push(item)
+        !show && data.hidden.push(item)
     })
 
     return new SuccModel(data)
@@ -194,7 +211,7 @@ module.exports = {
     removeBlog,
     getBlog,
     getBlogListByUserId,
-    
+
 
     confirmFollowBlog
 }

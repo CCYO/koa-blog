@@ -24,10 +24,16 @@ const {
 } = require('../server/user')
 
 const {
-    readBlogsByUserId
+    readBlogList,
+
+    
+    readBlogsByUserId,
+    
 } = require('../server/blog')
 
 const {
+    FollowBlog,
+
     updateBlogFansComfirm,
     updateFollowComfirm
 } = require('../server/news')
@@ -153,6 +159,16 @@ async function followIdol(fans_id, idol_id) {
  */
 async function cancelFollowIdol(fans_id, idol_id) {
     const res = await deleteFans(idol_id, fans_id)
+    //  也要將FollowBlog紀錄刪除
+
+    //  先找出 idol 的文章
+    let blogList = await readBlogList({user_id: idol_id, getAll: true})
+    let blogList_id = []
+    if(blogList.length){
+        blogList.forEach(({id}) => blogList_id.push(id))
+    }
+    //  刪除關聯
+    await FollowBlog.deleteBlog({blogList_id, follower_id: fans_id})
     if (res) return new SuccModel()
     return new ErrModel(FOLLOW.CANCEL_ERR)
 }

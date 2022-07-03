@@ -26,6 +26,7 @@ async function updateBlog(blog_id, blog_data) {
     let [row] = await Blog.update(blog_data, {
         where: { id: blog_id }
     })
+
     return row
 }
 

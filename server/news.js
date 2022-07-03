@@ -1,4 +1,4 @@
-const { QueryTypes } = require('sequelize')
+const { Op, QueryTypes } = require('sequelize')
 
 const { 
     seq,
@@ -10,6 +10,7 @@ const {
 async function createFollowers({blog_id, followerList_id}){
     let data = followerList_id.map( follower_id => ({ blog_id, follower_id }) )
     let res = await FB.bulkCreate((data))
+    console.log('res')
     return res
 }
 
@@ -23,31 +24,53 @@ async function restoreBlog({blog_id}){
     console.log('@res=> ', res)
 }
 
+async function readFollowers({blog_id, onlyId = true}){
+    let res = await FB.findAll({
+        attributes: ['follower_id'],
+        where: {blog_id},
+    })
+    
+    if(!res.length){
+        return []
+    }
+
+    let followerList = res.map( item => {
+        let { follower_id } = item.toJSON()
+
+        return follower_id
+    })
+    
+    return followerList
+}
+
+async function deleteBlog({blogList_id, follower_id}){
+    let res = await seq.getQueryInterface().bulkDelete('FollowBlogs', {
+        follower_id,
+        blog_id: {[Op.in]: blogList_id}    
+    })
+    // return row
+}
+
 async function readNews({userId}){
     let query = 
     `
-    SELECT idol_id, fans_id, blog_id, follower_id, deletedAt
+    SELECT id, idol_id, fans_id, blog_id, follower_id, confirm, time
     FROM (
-        SELECT P.idol_id, P.fans_id, B.blog_id, B.follower_id, B.deletedAt
+        SELECT P.id as id, P.idol_id, P.fans_id, B.blog_id, B.follower_id, P.confirm as confirm, P.createdAt as time
         FROM FollowPeople P LEFT JOIN FollowBlogs B
         ON B.id = null      
         WHERE P.idol_id=${userId}
         UNION
-        SELECT P.idol_id, P.fans_id, B.blog_id, B.follower_id, B.deletedAt
+        SELECT B.id as id, P.idol_id, P.fans_id, B.blog_id, B.follower_id, B.confirm as confirm, B.createdAt as time
         FROM FollowPeople P RIGHT JOIN FollowBlogs B
         ON P.id = null
-        WHERE B.follower_id=${userId} 
+        WHERE B.follower_id=${userId} AND B.deletedAt IS NULL
     ) AS A
-    WHERE A.deletedAt!=null
+    ORDER BY time DESC
+    
     `
     let newsList = await seq.query(query, { type: QueryTypes.SELECT })
-    newsList = newsList.map( item => {
-        for(prop in item){
 
-            prop!= 'deletedAt' && !item[prop] && delete item[prop]
-        }
-        return item
-    })
     return newsList
 }
 
@@ -94,12 +117,15 @@ async function updateNews({ blogs, fans }) {
 let FollowBlog = {
     createFollowers,
     hiddenBlog,
-    restoreBlog
+    restoreBlog,
+    readFollowers,
+    deleteBlog
 }
 
 module.exports = {
     FollowBlog,
     readNews,
+    
 
     updateFollowComfirm,
     updateBlogFansComfirm,

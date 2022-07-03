@@ -56,11 +56,8 @@ router.post('/cancelFollow', async (ctx, next) => {
     ctx.body = await cancelFollowIdol(fans_id, idol_id)
 })
 
-
-
 //  logout
 router.get('/logout', api_check_login, async (ctx, next) => {
-    console.log('@1++')
     ctx.body = await logout(ctx)
 })
 

@@ -32,7 +32,7 @@ router.get('/person', async (ctx, next) => {
     let { data: { currentUser, fansList, idolList} } = await getPeopleById(person_id)
     let { data: blogList } = await getBlogListByUserId(person_id)
 
-    let {} = await getNewsByUserId(person_id)
+    // let {} = await getNewsByUserId(person_id)
     
     await ctx.render('person', {
         isMyIdol: fansList.some((fans) => fans.id === id),
@@ -48,14 +48,22 @@ router.get('/self', async (ctx, next) => {
     let { id } = ctx.session.user
     let { data: { currentUser, fansList, idolList} } = await getPeopleById(id)
     let { data: blogList } = await getBlogListByUserId(id, true)
-
-    await ctx.render('person', {
+    let { data: newsList } = await getNewsByUserId(id)
+    await ctx.render('_self', {
         isMyIdol: undefined,
         currentUser,
         fansList,
         idolList,
 
-        blogList
+        blogList,
+
+        newsList,
+
+        logging: true,
+        active: undefined,
+
+        more: false
+
     })
 })
 

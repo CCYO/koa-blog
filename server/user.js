@@ -24,16 +24,16 @@ const { init_4_user } = require('../utils/init')
  * @param {string} param0.password - user 未加密的密碼
  * @return {(object | null)} object | null 除了 password 以外的 user 資料
  */
-const readUser = async ({ id, email, password }) => {
+async function readUser({ id, email, password }){
     const data = {}
     if (id) data.id = id
     if (email) data.email = email
     if (password) data.password = hash(password)
 
     const user = await User.findOne({ where: data })
-
+    
     if (!user) return null
-
+    
     return init_4_user(user)
 }
 

@@ -24,8 +24,9 @@ router.post('/', api_check_login, async (ctx, next) => {
 router.patch('/', api_check_login, async(ctx, next) => {
     const { id: user_id } = ctx.session.user
     // const { removeImgs, id, html, show } = ctx.request.body
-    const { id: blog_id, ...data_blog } = ctx.request.body
-    return ctx.body = await modifyBlog(blog_id * 1, data_blog)
+    const { id: blog_id, ...blog_data } = ctx.request.body
+
+    return ctx.body = await modifyBlog(blog_id * 1, blog_data, user_id)
 })
 
 //  上傳圖片

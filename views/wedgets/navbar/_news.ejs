@@ -28,14 +28,14 @@
     <% } %>
     
     <!-- 讀取更多 -->
-    <li class="<%= more ? 'my-show' : 'my-noshow' %>" id="more_news">
+    <li class="<%= true ? 'my-show' : 'my-noshow' %>" id="more_news">
         <button class="dropdown-item link-primary" type="button">
             讀取更多
         </button>
     </li>
 
     <!-- 沒有任何通知-->
-    <li class="dropdown-item <%= !more ? 'my-show' : 'my-noshow' %>" id="nonews">
+    <li class="dropdown-item <%= !true ? 'my-show' : 'my-noshow' %>" id="nonews">
         <span>沒有新通知</span>
     </li>
 

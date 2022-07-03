@@ -1,7 +1,7 @@
 <% if (type === 1) { %>
 
 <!-- 新通知 of fans -->
-<li class="dropdown-item position-relative news-item">
+<li class="dropdown-item position-relative news-item" data-my-news-id="<%= id %>">
     <a href="/other/<%= data.fans_id %>" class="stretched-link">
         <div>
             <span><%= data.nickname %>追蹤你囉！</span><br>
@@ -13,7 +13,7 @@
 <% } else if (type === 2) { %>
 
 <!-- 新通知 of blog -->
-<li class="dropdown-item  position-relative news-item">
+<li class="dropdown-item  position-relative news-item" data-my-news-id="<%= id %>">
     <a href="/blog/<%= data.blog_id %>" class="stretched-link">
         <div>
             <span><%= data.nickname %> 有新文章唷！</span><br>
@@ -24,11 +24,3 @@
 </li>
 
 <% } %>
-
-<% if (!data.confirm) { %>
-<li data-my-hr="unconfirm-news-hr">
-    <% } else { %>
-<li data-my-hr="confirm-news-hr">
-    <% } %>
-    <hr class="dropdown-divider">
-</li>

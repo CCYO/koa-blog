@@ -3,10 +3,20 @@
  */
 
 const {
+    readNews,
+
     updateNews,
     updateBlogFansComfirm,
     updateFollowComfirm
 } = require('../server/news')
+
+const {
+    readUser
+} = require('../server/user')
+
+const {
+    readBlogById
+} = require('../server/blog')
 
 const { ErrModel, SuccModel } = require('../model')
 
@@ -23,13 +33,38 @@ const {
     NEWS
 } = require('../model/errRes')
 
-const { readNews } = require('../server/news')
-
 
 
 
 async function getNewsByUserId(userId){
-    await readNews({userId})
+    let newsList = await readNews({userId})
+    if(!newsList.length){
+        return []
+    }
+    
+    let news = newsList.map(async (item) => {
+        let { id, fans_id, blog_id, confirm, time } = item
+
+        if(fans_id){
+            let { nickname } = await readUser({id: fans_id})
+            return { type: 1, id, fans_id, nickname, confirm, time }
+        }else if(blog_id){
+            let { title, author: {id: author_id, nickname }} = await readBlogById(blog_id)
+            return ({ type: 2, id, blog_id, title, author_id , nickname, confirm, time })
+        }
+    })
+
+    news = await Promise.all(news)
+
+    _news = { unconfirm: [], confirm: [], count: news.length }
+
+    news.forEach(item => {
+        let { confirm } = item
+        confirm && _news.confirm.push(item)
+        !confirm && _news.unconfirm.push(item)
+    })
+
+    return new SuccModel(_news)
 }
 
 
