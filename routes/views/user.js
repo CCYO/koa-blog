@@ -20,27 +20,35 @@ const {
 } = require('../../controller/user')
 
 
-router.get('/person', async (ctx, next) => {
-    let { id } = ctx.session.user
-    let { id: person_id } = ctx.query
-    person_id = person_id * 1
+router.get('/other/:user_id', async (ctx, next) => {
+    let me = ctx.session.user
+    let { user_id } = ctx.params
+    user_id = user_id * 1
 
-    if(id === person_id){
+    if(me.id === user_id){
         return ctx.redirect('/self')
     }
 
-    let { data: { currentUser, fansList, idolList} } = await getPeopleById(person_id)
-    let { data: blogList } = await getBlogListByUserId(person_id)
+    let { data: { currentUser, fansList, idolList} } = await getPeopleById(user_id)
+    let { data: blogList } = await getBlogListByUserId(user_id)
+    let { data: newsList } = await getNewsByUserId(me.id)
 
     // let {} = await getNewsByUserId(person_id)
     
-    await ctx.render('person', {
-        isMyIdol: fansList.some((fans) => fans.id === id),
+    await ctx.render('_self', {
+        isMyIdol: fansList.some((fans) => fans.id === me.id),
+        logging: true,
+        active: undefined,
+        more: newsList.total > newsList.count,
+        me,
+
         currentUser,
         fansList,
         idolList,
 
-        blogList
+        blogList,
+
+        newsList
     })
 })
 
@@ -48,22 +56,22 @@ router.get('/self', async (ctx, next) => {
     let { id } = ctx.session.user
     let { data: { currentUser, fansList, idolList} } = await getPeopleById(id)
     let { data: blogList } = await getBlogListByUserId(id, true)
-    let { data: newsList } = await getNewsByUserId(id)
+    let { data: newsList} = await getNewsByUserId(id)
+
     await ctx.render('_self', {
         isMyIdol: undefined,
+        logging: true,
+        active: undefined,
+        more: newsList.total > newsList.count,
+        me: currentUser,
+
         currentUser,
         fansList,
         idolList,
 
         blogList,
 
-        newsList,
-
-        logging: true,
-        active: undefined,
-
-        more: false
-
+        newsList
     })
 })
 

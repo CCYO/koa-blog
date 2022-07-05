@@ -32,9 +32,11 @@
             background: rgba(255, 255, 255, .1);
             border: none;
         }
+
         .follow-box:hover {
-            background: rgba(255,255,255,.3);
+            background: rgba(255, 255, 255, .3);
         }
+
         .follow-box a {
             text-decoration: none;
             font-size: 0.25rem
@@ -46,7 +48,7 @@
 <body>
     <!-- 主導覽 -->
     <!-- <%- include('wedgets/navbar/navbar') %> -->
-    
+
     <div class="container">
         <div class="row">
             <div class="col-8" style="background: rgba(255, 125, 220, .9);">
@@ -75,7 +77,8 @@
                                 class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                                 <a href="/blog/<%= id %>" class="stretched-link"><%= title %> </a>
                                 <% if (self) { %>
-                                <a class='btn btn-outline-primary btn-sm btn-blog-edit' href="/blog/edit/<%= id %>">編輯</a>
+                                <a class='btn btn-outline-primary btn-sm btn-blog-edit'
+                                    href="/blog/edit/<%= id %>">編輯</a>
                                 <% } %>
                             </li>
                             <% }) %>
@@ -93,10 +96,11 @@
                             <li
                                 class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                                 <div>
-                                <a class="stretched-link" href="/blog/<%= id %>"><%= title %> </a>
-                            </div>
+                                    <a class="stretched-link" href="/blog/<%= id %>"><%= title %> </a>
+                                </div>
                                 <% if (self) { %>
-                                <a class='btn btn-outline-primary btn-sm btn-blog-edit' href="/blog/edit/<%= id %>">編輯</a>
+                                <a class='btn btn-outline-primary btn-sm btn-blog-edit'
+                                    href="/blog/edit/<%= id %>">編輯</a>
                                 <% } %>
                             </li>
 
@@ -114,7 +118,7 @@
                 <div>
                     <p>Fans</p>
                     <% if (fans.length) { %>
-                        <ul class="d-flex flex-wrap p-0">
+                    <ul class="d-flex flex-wrap p-0">
                         <% fans.forEach(fan => { %>
                         <% if (fan.id !== user.id ) { %>
                         <li class="card follow-box m-1">
@@ -148,31 +152,38 @@
             </div>
         </div>
     </div>
+    <div id="data">
+        <%= JSON.stringify(newsList) %>
+    </div>
     <%- include('wedgets/cdn') %>
     <%- include('wedgets/navbar/navbar-js')  %>
-    <%- include('wedgets/navbar/news-js') %> 
+    <%- include('wedgets/navbar/news-js') %>
     <script>
-        $('#cancelFollow') && $('#cancelFollow').click(aboutFollow(false))
-        $('#follow') && $('#follow').click(aboutFollow())
+        $(function () {
+            window.data = JSON.parse($('#data').text())
+            $('#cancelFollow') && $('#cancelFollow').click(aboutFollow(false))
+            $('#follow') && $('#follow').click(aboutFollow())
 
-        function aboutFollow(followRoCancel = true) {
-            let follow = followRoCancel ? true : false
-            let api = follow ? '/api/user/follow' : '/api/user/cancelFollow'
-            return async (e) => {
-                let id = e.target.dataset['id']
-                const {
-                    data: {
-                        errno, data, msg
+            function aboutFollow(followRoCancel = true) {
+                let follow = followRoCancel ? true : false
+                let api = follow ? '/api/user/follow' : '/api/user/cancelFollow'
+                return async (e) => {
+                    let id = e.target.dataset['id']
+                    const {
+                        data: {
+                            errno, data, msg
+                        }
+                    } = await axios.post(api, { id })
+                    if (!errno) {
+                        alert(data)
+                        location.reload()
+                    } else {
+                        alert(msg)
                     }
-                } = await axios.post(api, { id })
-                if (!errno) {
-                    alert(data)
-                    location.reload()
-                } else {
-                    alert(msg)
                 }
             }
-        }
+        })
+
     </script>
 </body>
 

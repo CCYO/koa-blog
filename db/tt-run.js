@@ -1,7 +1,7 @@
 const { Op } = require('sequelize')
 
 const {
-    User, Blog, Img, BlogImg, User_Follow, Blog_Follow, News, seq
+    User, Blog, Img, BlogImg, FollowPeople, Blog_Follow, News, seq
 } = require('./model')
 
 const {

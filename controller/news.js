@@ -37,34 +37,36 @@ const {
 
 
 async function getNewsByUserId(userId){
-    let newsList = await readNews({userId})
-    if(!newsList.length){
-        return []
-    }
+    let res = await readNews({userId})
     
-    let news = newsList.map(async (item) => {
-        let { id, fans_id, blog_id, confirm, time } = item
+    if(!res.newsList.length){
+        return res
+    }
 
-        if(fans_id){
-            let { nickname } = await readUser({id: fans_id})
-            return { type: 1, id, fans_id, nickname, confirm, time }
-        }else if(blog_id){
-            let { title, author: {id: author_id, nickname }} = await readBlogById(blog_id)
-            return ({ type: 2, id, blog_id, title, author_id , nickname, confirm, time })
+    let promiseList = res.newsList.map(async (item) => {
+        let { id, type, target_id, follow_id, confirm, time } = item
+
+        if(type === 1){
+            let { id: fans_id, nickname } = await readUser({id: follow_id})
+            return { type, id, fans_id, nickname, confirm, time }
+        }else if(type === 2){
+            let { id: blog_id, title, author: {id: author_id, nickname }} = await readBlogById(target_id)
+            return ({ type, id, blog_id, title, author_id , nickname, confirm, time })
         }
     })
 
-    news = await Promise.all(news)
+    let _newsList = await Promise.all(promiseList)
 
-    _news = { unconfirm: [], confirm: [], count: news.length }
-
-    news.forEach(item => {
+    let newsList = _newsList.reduce((init, item) => {
         let { confirm } = item
-        confirm && _news.confirm.push(item)
-        !confirm && _news.unconfirm.push(item)
-    })
+        confirm && init.confirm.push(item)
+        !confirm && init.unconfirm.push(item)
+        return init
+    }, { unconfirm: [], confirm: [] } )
 
-    return new SuccModel(_news)
+    let data = { ...newsList, count: res.newsList.length, total: res.total }
+
+    return new SuccModel(data)
 }
 
 
