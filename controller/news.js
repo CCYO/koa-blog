@@ -5,6 +5,7 @@
 const {
     readNews,
 
+
     updateNews,
     updateBlogFansComfirm,
     updateFollowComfirm
@@ -33,9 +34,6 @@ const {
     NEWS
 } = require('../model/errRes')
 
-
-
-
 async function getNewsByUserId(userId){
     let res = await readNews({userId})
     
@@ -57,18 +55,24 @@ async function getNewsByUserId(userId){
 
     let _newsList = await Promise.all(promiseList)
 
-    let newsList = _newsList.reduce((init, item) => {
-        let { confirm } = item
+    let newsList = _newsList.reduce((init, item, index) => {
+        let { confirm, time } = item
+        if(_newsList.length - 1 === index){
+            init.lastTime = time
+        }
         confirm && init.confirm.push(item)
         !confirm && init.unconfirm.push(item)
         return init
-    }, { unconfirm: [], confirm: [] } )
+    }, { unconfirm: [], confirm: [] , lastTime: undefined})
 
     let data = { ...newsList, count: res.newsList.length, total: res.total }
 
     return new SuccModel(data)
 }
 
+async function readMoreByUserIdAndTime(userId, time){
+    await readNews({userId, time})
+}
 
 
 async function confirmNews(payload) {
@@ -88,6 +92,7 @@ async function confirmNews(payload) {
 
 module.exports = {
     getNewsByUserId,
+    readMoreByUserIdAndTime,
 
     confirmNews
 }

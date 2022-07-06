@@ -1,8 +1,33 @@
 <script>
     $(function () {
-        $('#more_news > button').click(readMore)
+        let { newsList } =  window.data
+        
+        let $newsDropdown = $('#newsDropdown')
+        let $readMore = $('#readMore')
+        let api_readMore = '/api/news/readMore'
 
-        $('#navbarDropdown').click(showNewsList)
+        $newsDropdown.click(handle_confirmNews)
+        $readMore.click(handle_readMore)
+
+        async function handle_readMore(){
+            let { lastTime } = newsList
+            let { errno, data, msg } = await axios.post(api_readMore, { lastTime })
+
+            if(!errno){
+                console.log('@data => ', data)
+            }else{
+                console.log('@msg => ', msg)
+            }
+        }
+
+        function handle_confirmNews(){
+            let newsList_id = newsList.unconfirm.reduce( (init, curVal, index) => {
+                let {type, id} = curVal
+                type === 1 && init.people.push(id)
+                type === 2 && init.blogs.push(id)
+                return init
+            }, {people: [], blogs: []})
+        }
 
         async function readMore(e) {
             console.log('READMORE')
