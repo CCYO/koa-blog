@@ -5,7 +5,7 @@
 const router = require('koa-router')()
 
 const {
-    readMore,
+    readMoreByUserId,
     confirmNews
 } = require('../../controller/news')
 
@@ -15,9 +15,11 @@ router.prefix('/api/news')
 
 router.post('/readMore', api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { lastTime } = ctx.request.body
-    await readMore(id, lastTime)
-    ctx.body = lastTime
+    const { now } = ctx.request.body
+    
+    let res = await readMoreByUserId(id, now)
+    console.log('@api res => ', res)
+    ctx.body = res
 })
 
 router.post('/confirm', api_check_login, async (ctx, next) => {

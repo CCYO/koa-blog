@@ -53,12 +53,11 @@ async function deleteBlog({blogList_id, follower_id}){
     // return row
 }
 
-async function readNews({userId, offset = 0, time}){
-    let q_news = sqlQuery.news(userId, offset)
-    let q_count = sqlQuery.newsTotal(userId)
+async function readNews({userId, now = undefined, offset = 0}){
+    let q_news = await sqlQuery.news({userId, now, offset})
+    let q_count = await sqlQuery.newsTotal({userId, now})
     let newsList = await seq.query(q_news, { type: QueryTypes.SELECT })
     let [{total}] = await seq.query(q_count, { type: QueryTypes.SELECT })
-    
     return { newsList, total }
 }
 
