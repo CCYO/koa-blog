@@ -36,14 +36,15 @@ const {
 
 async function getNewsByUserId(userId){
     let res = await readNews({userId})
-    console.log('@sql res => ', res)
+    console.log('@readNews res => ', res)
     if(!res.newsList.length){
-        return res
+        delete res.newsList
+        let data = { confirm: [], unconfirm: [], count: 0, ...res }
+        return new SuccModel(data)
     }
 
     let promiseList = res.newsList.map(async (item) => {
         let { id, type, target_id, follow_id, confirm, time } = item
-        console.log('@整理前 id => ', id)
         if(type === 1){
             let { id: fans_id, nickname } = await readUser({id: follow_id})
             return { type, id, fans_id, nickname, confirm, time }
@@ -56,25 +57,19 @@ async function getNewsByUserId(userId){
     let _newsList = await Promise.all(promiseList)
 
     let newsList = _newsList.reduce((init, item, index) => {
-        let { type, id, confirm, time } = item
-        console.log('@ index , id, time => ', index, id, time)
-        if(_newsList.length - 1 === index){
-            console.log('@ achor index ,id => ', index, id)
-            init.achor = { type, id, time }
-        }
+        let { confirm } = item
         confirm && init.confirm.push(item)
         !confirm && init.unconfirm.push(item)
         return init
-    }, { unconfirm: [], confirm: [] , achor: undefined})
+    }, { unconfirm: [], confirm: [] })
 
-    let data = { ...newsList, count: res.newsList.length, total: res.total , now: new Date()}
+    let data = { ...newsList, count: res.newsList.length, total: res.total , markTime: res.markTime, offset: res.offset }
 
     return new SuccModel(data)
 }
 
-async function readMoreByUserId(userId, now){
-    console.log('@now => ', now)
-    let res = await readNews({userId, now})
+async function readMoreByUserId(userId, markTime, offset){
+    let res = await readNews({userId, markTime, offset})
     return res
 }
 

@@ -10,8 +10,8 @@
         $readMore.click(handle_readMore)
 
         async function handle_readMore(){
-            let { now } = newsList
-            let { errno, data, msg } = await axios.post(api_readMore, { now })
+            let { markTime, offset } = newsList
+            let { errno, data, msg } = await axios.post(api_readMore, { markTime, offset })
 
             if(!errno){
                 console.log('@data => ', data)

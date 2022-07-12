@@ -13,7 +13,8 @@ const app = initializeApp({
   //  export GOOGLE_APPLICATION_CREDENTIALS="/home/study4/koa-blog/conf/GFB_admin_key.json"
   //  確認 echo $GOOGLE_APPLICATION_CREDENTIALS
   credential: applicationDefault(),
-  storageBucket: "gfb20220419.appspot.com" // 沒辦法寫在 服務帳號的密鑰json 內?
+  // storageBucket: "gfb20220419.appspot.com" 沒辦法寫在 服務帳號的密鑰json 內?gs://
+  storageBucket: "koa-blog-a003ccy.appspot.com"
 })
 
 // const app = admin.initializeApp({
