@@ -270,82 +270,6 @@ async function getNews(user_id) {
     return new SuccModel(data)
 }
 
-async function readMore(user_id, index, checkTime, window_news_count = 0) {
-    const { news, more, new_news } = await readMoreNewsAndConfirm(user_id, index, checkTime, window_news_count)
-    let ejs_newsForEach = resolve(__dirname, '../views/wedgets/navbar/news-forEach.ejs')
-
-    let data = {
-        more, index,
-        htmlStr: { unconfirm: undefined, confirm: undefined },
-        news: { count: new_news.count, htmlStr: undefined, checkTime: {} }
-    }
-
-    if (more) {
-        data.index = index + 1
-    }
-
-    for (prop in news) {
-        if (news[prop].length) {
-            //  調整順序
-            news[prop].sort((a, b) => {
-                return b.showAt - a.showAt
-            })
-
-            //  調整news items 的時間格式
-            news[prop] = news[prop].map(item => {
-                item.showAt = moment(item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-                return item
-            })
-
-            //  取得news的htmlStr
-            data.htmlStr[prop] = await _renderFile(ejs_newsForEach, { list: news[prop], firstRender: false })
-        }
-    }
-
-    /* 整理 new_news */
-    //  new_news = { news: arr, count }
-
-    if (new_news.news.length) {
-
-        //  調整順序
-        new_news.news.sort((a, b) => {
-            return b.showAt - a.showAt
-        })
-
-        //  找出最新的一條news
-
-        let target = new_news.news[new_news.news.length - 1]
-        data.news.checkTime = {
-            time: target.showAt.getTime(),
-            type: (target.blog_id) ? 'blog' : 'fans',
-            id: target.new_id
-        }
-
-        //  調整news items 的時間格式
-        new_news.news = new_news.news.map(item => {
-            item.showAt = moment(item.showAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-            return item
-        })
-
-        data.news.htmlStr = await _renderFile(ejs_newsForEach, { list: new_news.news, firstRender: true })
-    }
-
-    function _renderFile(fileName, data) {
-        return new Promise((resolve, reject) => {
-            ejs.renderFile(fileName, data, function (e, str) {
-                if (e) {
-                    console.log('@e => ', e)
-                    return reject(e)
-                }
-                resolve(str)
-            })
-        })
-    }
-
-    return new SuccModel(data)
-}
-
-
 
 //  取得 Idol fans 以及該使用者公開的blog
 async function getOtherInfo(id) {
@@ -392,5 +316,5 @@ module.exports = {
 
     getOther,
     confirmUserNews,
-    readMore,
+    
 }

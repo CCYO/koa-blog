@@ -7,7 +7,7 @@ const {
     Follow, Blog_Fans, Blog
 } = require('../db/model')
 
-const sqlQuery = require('../db/query')
+const createQuery = require('../db/query')
 
 async function createFollowers({blog_id, followerList_id}){
     let data = followerList_id.map( follower_id => ({ blog_id, follower_id }) )
@@ -53,14 +53,19 @@ async function deleteBlog({blogList_id, follower_id}){
     // return row
 }
 
-async function readNews({userId, markTime = new Date(), offset = 0}){
+async function readNews({userId, markTime = new Date(), page = 0}){
     markTime = new Date(markTime).toISOString()
 
-    let q_news = await sqlQuery.news({userId, markTime, offset})
-    let q_count = await sqlQuery.newsTotal({userId, markTime})
-    let newsList = await seq.query(q_news, { type: QueryTypes.SELECT })
-    let [{total}] = await seq.query(q_count, { type: QueryTypes.SELECT })
-    return { newsList, total, markTime, offset }
+    let queryNewsList = await createQuery.newsList({userId, markTime, page})
+    let queryTotal = await createQuery.newsTotal({userId, markTime})
+    let newsList = await seq.query(queryNewsList, { type: QueryTypes.SELECT })
+    let [{total}] = await seq.query(queryTotal, { type: QueryTypes.SELECT })
+
+    
+
+
+
+    return { newsList, total, markTime, page }
 }
 
 //  未完成

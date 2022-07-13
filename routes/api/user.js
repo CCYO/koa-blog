@@ -8,7 +8,7 @@ const {
     isEmailExist,
     register, 
 
-    findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout, getNews, confirmUserNews, readMore,
+    findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout, getNews, confirmUserNews, 
     
 } = require('../../controller/user')
 
@@ -71,13 +71,6 @@ router.patch('/:avatar_hash', api_check_login, parse_user_data, validate_user ,a
 
 //---
 
-
-router.post('/readMore' , api_check_login, async(ctx, next) => {
-    const { id } = ctx.session.user
-    const { checkTime, index, window_news_count } = ctx.request.body
-
-    ctx.body = await readMore(id, index * 1, checkTime, window_news_count)
-})
 
 router.get('/news_confirm', api_check_login, async(ctx, next) => {
     const { confirm_time } = ctx.query

@@ -3,7 +3,7 @@ const {
     NEWS
 } = require('../conf/constant')
 
-async function news({ userId, markTime, offset, limit = NEWS.LIMIT }) {
+async function newsList({ userId, markTime, page, limit = NEWS.LIMIT }) {
 
     let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') > DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
 
@@ -22,7 +22,7 @@ async function news({ userId, markTime, offset, limit = NEWS.LIMIT }) {
         WHERE follower_id=${userId} AND deletedAt IS NULL AND ${where_time}
     ) AS X
     ORDER BY confirm=1, time DESC
-    LIMIT ${limit} OFFSET ${offset * limit}
+    LIMIT ${limit} OFFSET ${page * limit}
     `
     return query
 }
@@ -50,6 +50,6 @@ async function newsTotal({ userId, markTime}) {
 }
 
 module.exports = {
-    news,
+    newsList,
     newsTotal
 }

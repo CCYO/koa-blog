@@ -15,9 +15,10 @@ router.prefix('/api/news')
 
 router.post('/readMore', api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { markTime, offset } = ctx.request.body
+    const { markTime, page } = ctx.request.body
     
-    let res = await readMoreByUserId(id, markTime, offset)
+    let res = await readMoreByUserId(id, markTime, page)
+
     console.log('@api res => ', res)
     ctx.body = res
 })
