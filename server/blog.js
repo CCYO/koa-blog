@@ -2,7 +2,7 @@ const {
     User, Blog, Img, BlogImg, Blog_Fans
 } = require('../db/model')
 
-const { init_4_user } = require('../utils/init')
+const { init_4_user} = require('../utils/init/user')
 
 /**
  * 創建Blog，並與User作關聯

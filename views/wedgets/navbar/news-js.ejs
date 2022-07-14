@@ -14,7 +14,17 @@
             let { errno, data, msg } = await axios.post(api_readMore, { markTime, page: page + 1 })
 
             if(!errno){
-                console.log('@data => ', data)
+                console.log('@data => ', data.confirm)
+                let { htmlStr: { confirm, unconfirm }} = data
+                for( prop in htmlStr){
+                    let html = htmlStr[prop]
+                    if(!html){
+                        continue
+                    } 
+                    let $hrs =  $(`[data-my-hr='${prop}-news-hr']`)
+                    $hrs.length && $hrs.last().after(html) || $(`#${prop}_news_title`).toggle(true).after(html)
+                }
+
             }else{
                 console.log('@msg => ', msg)
             }
@@ -30,22 +40,8 @@
         }
 
         async function readMore(e) {
-            console.log('READMORE')
-            e && e.preventDefault()
-            let checkTime = {
-                time: $('#navbarDropdown').attr('data-my-check-time'),
-                type: $('#navbarDropdown').attr('data-my-check-type'),
-                id: $('#navbarDropdown').attr('data-my-check-id')
-            }
-
-            let index = $('#navbarDropdown').attr('data-my-index')
-
             let window_news_count = (window.news) ? window.news.count : 0
-            const {
-                data: {
-                    errno, data, msg
-                }
-            } = await axios.post('/api/user/readMore', { checkTime, index: index * 1 , window_news_count })
+            
 
             if (!errno) {
                 let {

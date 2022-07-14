@@ -14,7 +14,7 @@ const {
 } = require('../db/model')
 const { BLOG } = require('../model/errRes')
 const hash = require('../utils/crypto')
-const { init_4_user } = require('../utils/init')
+const { init_4_user } = require('../utils/init/user')
 
 /**
  * 查找 User Instance

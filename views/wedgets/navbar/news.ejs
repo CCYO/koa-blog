@@ -10,7 +10,7 @@
 <ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="newList">
 
     <!-- 新通知標題 -->
-    <li class="dropdown-item <%= newsList.unconfirm.length ? 'my-show' : 'my-noshow' %>" id="new-news-title">新通知</li>
+    <li class="dropdown-item <%= newsList.unconfirm.length ? 'my-show' : 'my-noshow' %>" id="unconfirm-news-title">新通知</li>
 
     <% if (newsList.unconfirm.length) { %>
 
@@ -19,7 +19,7 @@
     <% } %>
 
     <!-- 先前通知的標頭 -->
-    <li class="dropdown-item <%= newsList.confirm.length ? 'my-show' : 'my-noshow' %>" id="old-news-title">先前的通知</li>
+    <li class="dropdown-item <%= newsList.confirm.length ? 'my-show' : 'my-noshow' %>" id="confirm-news-title">先前的通知</li>
 
     <% if (newsList.confirm.length) { %>
 
