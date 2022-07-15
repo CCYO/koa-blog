@@ -2,8 +2,8 @@
     data-bs-auto-close="outside" aria-expanded="false">
     通知
     <span
-        class="position-absolute translate-middle badge rounded-pill bg-danger news-count <%= newsList.count ? 'my-show' : 'my-noshow' %> ">
-        <%= newsList.count %>
+        class="position-absolute translate-middle badge rounded-pill bg-danger news-count <%= newsList.numOfUnconfirm ? 'my-show' : 'my-noshow' %> ">
+        <%= newsList.numOfUnconfirm %>
     </span>
 </a>
 <!-- 通知列表 -->
@@ -35,7 +35,7 @@
     </li>
 
     <!-- 沒有任何通知-->
-    <li class="dropdown-item <%= !more ? 'my-show' : 'my-noshow' %>" id="nonews">
+    <li class="dropdown-item <%= !more ? 'my-show' : 'my-noshow' %>" id="noNews">
         <span>沒有新通知</span>
     </li>
 

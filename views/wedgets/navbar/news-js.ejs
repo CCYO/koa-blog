@@ -4,6 +4,7 @@
         
         let $newsDropdown = $('#newsDropdown')
         let $readMore = $('#readMore')
+        let $noNews = $('#noNews')
         let api_readMore = '/api/news/readMore'
 
         $newsDropdown.click(handle_confirmNews)
@@ -11,19 +12,20 @@
 
         async function handle_readMore(){
             let { markTime, page } = newsList
-            let { errno, data, msg } = await axios.post(api_readMore, { markTime, page: page + 1 })
+            let { data: {errno, data, msg} } = await axios.post(api_readMore, { markTime, page: page + 1 })
 
             if(!errno){
-                console.log('@data => ', data.confirm)
-                let { htmlStr: { confirm, unconfirm }} = data
+                let { more, ...htmlStr} = data
                 for( prop in htmlStr){
                     let html = htmlStr[prop]
                     if(!html){
                         continue
-                    } 
-                    let $hrs =  $(`[data-my-hr='${prop}-news-hr']`)
+                    }
+                    let $hrs = $(`[data-my-hr='${prop}-news-hr']`)
                     $hrs.length && $hrs.last().after(html) || $(`#${prop}_news_title`).toggle(true).after(html)
                 }
+                window.data.newsList = { ...window.data.newsList, page: page += 1, more }
+                !more && $readMore.toggle(false) && $noNews.toggle(true)
 
             }else{
                 console.log('@msg => ', msg)

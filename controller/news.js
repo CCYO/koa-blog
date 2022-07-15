@@ -45,20 +45,22 @@ async function getNewsByUserId(userId) {
 
 async function readMoreByUserId(userId, markTime, page) {
     let data = await readNews({ userId, markTime, page })
-    console.log('@data => ', data)
+    
     let res = await init_4_newsList(data)
     
     let ejs_newsForEach = resolve(__dirname, '../views/wedgets/navbar/news-forEach.ejs')
     // res = { confirm: [], unconfirm: [], count: newsList.length, total, markTime, page }
 
-    let more = res.total > (res.page * LIMIT)
+    let more = res.total > (res.page + 1) * LIMIT
 
-    let htmlStr = { confirm: undefined, unconfirm: undefined, more }
+    let htmlStr = { confirm: undefined, unconfirm: undefined }
 
     htmlStr.confirm = res.confirm.length && await myRenderFile(ejs_newsForEach, { list: res.confirm }) || undefined
     htmlStr.unconfirm = res.unconfirm.length && await myRenderFile(ejs_newsForEach, { list: res.unconfirm }) || undefined
-    console.log('@htmlStr => ', htmlStr)
-    return new SuccModel(htmlStr)
+
+    res = { ...res, ...htmlStr }
+    
+    return new SuccModel(res)
 }
 
 

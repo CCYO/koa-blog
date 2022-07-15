@@ -3,9 +3,10 @@ const {
     NEWS
 } = require('../conf/constant')
 
-async function newsList({ userId, markTime, page, limit = NEWS.LIMIT }) {
+async function newsList({ userId, markTime, page, checkNewsAfterMarkTime, limit = NEWS.LIMIT }) {
 
-    let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') > DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
+    let mark = checkNewsAfterMarkTime ? '<' : '>'
+    let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') ${mark} DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
 
 
     let query = `
@@ -27,24 +28,29 @@ async function newsList({ userId, markTime, page, limit = NEWS.LIMIT }) {
     return query
 }
 
-async function newsTotal({ userId, markTime}) {
+async function newsTotal({ userId, markTime, checkNewsAfterMarkTime}) {
     
-    let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') > DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
-    
+    // let mark = checkNewsAfterMarkTime ? '<' : '>'
+    // let where_time = checkNewsAfterMarkTime ? `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T')` : 1
+    let select = 
+        !checkNewsAfterMarkTime ?
+        `SELECT COUNT(if(confirm < 1, true, null)) as numOfUnconfirm, COUNT(*) as total ` :
+        `SELECT COUNT(if(DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T'), true, null)) as numOfUnconfirm, COUNT(*) as total `
 
     let query = `
-    SELECT COUNT(*) as total
+    ${select}
     FROM (
-        SELECT id
+        SELECT 1 as type, id, confirm, createdAt
         FROM FollowPeople
-        WHERE idol_id=${userId} AND ${where_time}
+        WHERE idol_id=${userId} 
 
         UNION
 
-        SELECT id
+        SELECT 2 as type, id, confirm, createdAt
         FROM FollowBlogs
-        WHERE follower_id=${userId} AND deletedAt IS NULL AND ${where_time}
+        WHERE follower_id=${userId} AND deletedAt IS NULL 
     ) AS X
+    
     `
     return query
 }

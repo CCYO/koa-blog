@@ -15,8 +15,8 @@ const {
 console.log('@ readBlogById ===>', readBlogById)
 
 async function init_4_newsList(data) {
-    let { newsList, total, markTime, page } = data
-    let res = { confirm: [], unconfirm: [], count: newsList.length, total, markTime, page }
+    let { newsList, numOfUnconfirm, total, markTime, page } = data
+    let res = { confirm: [], unconfirm: [], count: newsList.length, numOfUnconfirm, total, markTime, page }
 
     if (!res.count) {
         return res
