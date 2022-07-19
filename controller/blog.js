@@ -1,3 +1,4 @@
+const { Op } = require('sequelize')
 const moment = require('moment')
 const my_xxs = require('../utils/xss')
 
@@ -22,7 +23,7 @@ const {
 } = require('../server/blog')
 
 const {
-    FollowBlog
+    FollowBlog: FB
 } = require('../server/news')
 
 const { SuccModel, ErrModel } = require('../model')
@@ -73,7 +74,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
                 //  取得粉絲群的id
                 let followerList_id = followerList.map(({ id }) => id)
                 //  將粉絲與文章作關聯
-                await FollowBlog.createFollowers({ blog_id, followerList_id })
+                await FB.createFollowers({ blog_id, followerList_id })
             }
             //  建立文章公開數據
             data.showAt = new Date()
@@ -83,7 +84,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             data.show = false
 
             //  FollowBlog 軟刪除 confirm: false 的 粉絲
-            await FollowBlog.hiddenBlog({ blog_id })
+            await FB.hiddenBlog({ blog_id })
 
         } else if (show === 3) {
             //  不是第一次公開
@@ -95,8 +96,14 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             //  先篩出距離上次公開，這期間新增的粉絲
 
             //  restory 此 blog 的 FollowBlog.follower，且將這些follower取出
-            await FollowBlog.restoreBlog({ blog_id })
-            let followerList_id = await FollowBlog.readFollowers({ blog_id })
+            // await FollowBlog.restoreBlog({ blog_id })
+            let r = await FB.updateFB({ deletedAt: null, createdAt: new Date() }, {
+                where: { blog_id, deletedAt: {[Op.not]: null}  }
+            })
+            console.log('@r => ', r)
+            // await FollowBlog.update()
+
+            let followerList_id = await FB.readFollowers({ blog_id })
 
             //  找出目前FollowPeople.fans
             let fansList = await readFansByUserId(author_id)
@@ -108,9 +115,12 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             let newFollowerList_Id = fansList_id.filter(fans_id => {
                 return !followerList_id.includes(fans_id)
             })
+            console.log('@newFollowerList_Id.length => ', newFollowerList_Id.length)
+            if (newFollowerList_Id.length) {
+                //  新增FollowBlog.follower
+                await FB.createFollowers({ blog_id, followerList_id: newFollowerList_Id })
+            }
 
-            //  新增FollowBlog.follower
-            await FollowBlog.createFollowers({ blog_id, followerList_id: newFollowerList_Id })
         }
     }
 

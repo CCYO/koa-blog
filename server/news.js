@@ -1,11 +1,14 @@
 const { Op, QueryTypes } = require('sequelize')
 
+const { NEWS: { LIMIT }} = require('../conf/constant')
 const {
     seq,
     FollowBlog: FB,
 
     Follow, Blog_Fans, Blog
 } = require('../db/model')
+
+const { init_4_newsList } = require('../utils/init/news')
 
 const createQuery = require('../db/query')
 
@@ -61,19 +64,37 @@ async function readNews({ userId, markTime = new Date(), page = 0 }) {
     let queryNewsList = await createQuery.newsList({ userId, markTime, page })
     let newsList = await seq.query(queryNewsList, { type: QueryTypes.SELECT })
 
-    let res = { newsList, markTime, page }
+    //  newsList = [ { type, id, target_id, follow_id, confirm, time }, ... ]
+    //  res = { mark, newsList }
+    newsList = await init_4_newsList(newsList)
+
+    let res = { newsList, markTime, page: page += 1}
 
     if (!checkNewsAfterMarkTime) {
         let queryTotal = await createQuery.newsTotal({ userId, markTime })
         let [{ numOfUnconfirm, total }] = await seq.query(queryTotal, { type: QueryTypes.SELECT })
 
-        return { ...res, numOfUnconfirm, total }
+        //  { total, numOfUnconfirm }
+
+        //  { mark, newsList, total, numOfUnconfirm }
+        
+        let more = total > res.page * LIMIT
+
+        return { ...res, numOfUnconfirm, total, more }
     }
 
     let queryAfterTimeMarkTotal = await createQuery.newsTotal({ userId, markTime, checkNewsAfterMarkTime })
-    let [{ numOfUnconfirm, total }] = await seq.query(queryAfterTimeMarkTotal, { type: QueryTypes.SELECT })
+    let [{ numOfAfterMark, total }] = await seq.query(queryAfterTimeMarkTotal, { type: QueryTypes.SELECT })
 
-    return { ...res, numOfUnconfirm, total}
+    let more = total > res.page * LIMIT
+    //  { mark, newsList, total, numOfAfterMark }
+    return { ...res, numOfAfterMark, total, more}
+}
+
+async function updateFB(data, options){
+    options = { ...options, paranoid: false }
+    const [row] = await FB.update(data, options)
+    return row
 }
 
 //  未完成
@@ -121,7 +142,8 @@ let FollowBlog = {
     hiddenBlog,
     restoreBlog,
     readFollowers,
-    deleteBlog
+    deleteBlog,
+    updateFB
 }
 
 module.exports = {

@@ -35,7 +35,7 @@ async function newsTotal({ userId, markTime, checkNewsAfterMarkTime}) {
     let select = 
         !checkNewsAfterMarkTime ?
         `SELECT COUNT(if(confirm < 1, true, null)) as numOfUnconfirm, COUNT(*) as total ` :
-        `SELECT COUNT(if(DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T'), true, null)) as numOfUnconfirm, COUNT(*) as total `
+        `SELECT COUNT(if(DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T'), true, null)) as numOfAfterMark, COUNT(*) as total `
 
     let query = `
     ${select}

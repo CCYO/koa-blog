@@ -1,49 +1,92 @@
 <script>
     $(function () {
-        let { newsList } =  window.data
-        
         let $newsDropdown = $('#newsDropdown')
+        let $newsCount = $('.news-count')
         let $readMore = $('#readMore')
         let $noNews = $('#noNews')
         let api_readMore = '/api/news/readMore'
 
+        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+        var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl)
+        })
+
         $newsDropdown.click(handle_confirmNews)
         $readMore.click(handle_readMore)
 
-        async function handle_readMore(){
-            let { markTime, page } = newsList
-            let { data: {errno, data, msg} } = await axios.post(api_readMore, { markTime, page: page + 1 })
+        async function handle_readMore() {
+            let { markTime, page } = window.data.newsList
+            let { data: { errno, data, msg } } = await axios.post(api_readMore, { markTime, page })
 
-            if(!errno){
-                let { more, ...htmlStr} = data
-                for( prop in htmlStr){
+            if (!errno) {
+                let { total, more, numOfAfterMark, page, ...htmlStr } = data
+                for (prop in htmlStr) {
                     let html = htmlStr[prop]
-                    if(!html){
+                    if (!html) {
                         continue
                     }
                     let $hrs = $(`[data-my-hr='${prop}-news-hr']`)
                     $hrs.length && $hrs.last().after(html) || $(`#${prop}_news_title`).toggle(true).after(html)
                 }
-                window.data.newsList = { ...window.data.newsList, page: page += 1, more }
+                window.data.newsList = { ...window.data.newsList, page, more, numOfAfterMark }
                 !more && $readMore.toggle(false) && $noNews.toggle(true)
 
-            }else{
+                if (numOfAfterMark > 0) {
+                    $newsCount.toggle(true).text(numOfAfterMark)
+                }
+
+            } else {
                 console.log('@msg => ', msg)
             }
         }
 
-        function handle_confirmNews(){
-            let newsList_id = newsList.unconfirm.reduce( (init, curVal, index) => {
-                let {type, id} = curVal
+        async function handle_confirmNews() {
+            
+            let { unconfirm, numOfAfterMark } = window.data.newsList
+            let newsList_id = unconfirm.reduce((init, curVal, index) => {
+                let { type, id } = curVal
                 type === 1 && init.people.push(id)
                 type === 2 && init.blogs.push(id)
                 return init
-            }, {people: [], blogs: []})
+            }, { people: [], blogs: [] })
+
+            $newsCount.toggle(false)
+
+            if (numOfAfterMark) {
+                let date = new Date()
+                let { data: { errno, data, msg } } = await axios.post(api_readMore, { markTime: date.toISOString(), page: undefined })
+                if (!errno) {
+                    let { total, more, numOfAfterMark, page, ...htmlStr } = data
+                    $(`.news-item`).remove()
+                    $(`[data-my-hr]`).remove()
+                    for (prop in htmlStr) {
+                        let html = htmlStr[prop]
+                        if (!html) {
+                            continue
+                        }
+                        let $title = $(`#${prop}-news-title`)
+                        $title.toggle(true).after(html)
+                    }
+                    window.data.newsList = data
+                    $readMore.toggle(more) && $noNews.toggle(!more)
+
+                    if (numOfAfterMark > 0) {
+                        $newsCount.toggle(true).text(numOfAfterMark)
+                    }
+                    bootstrap.Dropdown.getInstance($newsDropdown[0]).show()
+
+                } else {
+                    console.log('@msg => ', msg)
+                }
+            }
+
+
+
         }
 
         async function readMore(e) {
             let window_news_count = (window.news) ? window.news.count : 0
-            
+
 
             if (!errno) {
                 let {

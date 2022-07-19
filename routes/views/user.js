@@ -32,7 +32,6 @@ router.get('/other/:user_id', async (ctx, next) => {
     let { data: { currentUser, fansList, idolList} } = await getPeopleById(user_id)
     let { data: blogList } = await getBlogListByUserId(user_id)
     let { data: newsList } = await getNewsByUserId(me.id)
-
     // let {} = await getNewsByUserId(person_id)
     
     await ctx.render('_self', {
@@ -57,12 +56,12 @@ router.get('/self', async (ctx, next) => {
     let { data: { currentUser, fansList, idolList} } = await getPeopleById(id)
     let { data: blogList } = await getBlogListByUserId(id, true)
     let { data: newsList} = await getNewsByUserId(id)
-
+    console.log('@newsList => ', newsList)
     await ctx.render('_self', {
         isMyIdol: undefined,
         logging: true,
         active: undefined,
-        more: newsList.total > newsList.count,
+        
         me: currentUser,
 
         currentUser,

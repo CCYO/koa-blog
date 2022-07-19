@@ -4,8 +4,6 @@
 
 const { resolve } = require('path')
 
-const moment = require('moment')
-
 const myRenderFile = require('../utils/renderFile')
 const { init_4_newsList } = require('../utils/init/news')
 
@@ -37,28 +35,31 @@ const {
 } = require('../model/errRes')
 
 async function getNewsByUserId(userId) {
-    let data = await readNews({ userId })
-    let res = await init_4_newsList(data)
+    let { markTime, newsList, total, numOfUnconfirm , more, page} = await readNews({ userId })
+    let res = { ...newsList, markTime, total, numOfUnconfirm, more, page }
     return new SuccModel(res)
     
 }
 
 async function readMoreByUserId(userId, markTime, page) {
+    if(page === 0){
+        page = 1
+    }else if(page === undefined ){
+        page = 0
+    }
     let data = await readNews({ userId, markTime, page })
     
-    let res = await init_4_newsList(data)
-    
+    let { newsList: {confirm, unconfirm }, total, numOfAfterMark, more } = data
+    console.log('@numOfAfterMark => ', numOfAfterMark)
     let ejs_newsForEach = resolve(__dirname, '../views/wedgets/navbar/news-forEach.ejs')
     // res = { confirm: [], unconfirm: [], count: newsList.length, total, markTime, page }
-
-    let more = res.total > (res.page + 1) * LIMIT
-
+    
     let htmlStr = { confirm: undefined, unconfirm: undefined }
 
-    htmlStr.confirm = res.confirm.length && await myRenderFile(ejs_newsForEach, { list: res.confirm }) || undefined
-    htmlStr.unconfirm = res.unconfirm.length && await myRenderFile(ejs_newsForEach, { list: res.unconfirm }) || undefined
+    htmlStr.confirm = confirm.length && await myRenderFile(ejs_newsForEach, { list: confirm }) || undefined
+    htmlStr.unconfirm = unconfirm.length && await myRenderFile(ejs_newsForEach, { list: unconfirm }) || undefined
 
-    res = { ...res, ...htmlStr }
+    res = { ...htmlStr, total, more, numOfAfterMark, page: data.page }
     
     return new SuccModel(res)
 }
