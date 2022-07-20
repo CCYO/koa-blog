@@ -13,6 +13,13 @@ const { api_check_login } = require('../../middleware/check_login')
 
 router.prefix('/api/news')
 
+router.patch('/', api_check_login, async (ctx, next) => {
+    const { id } = ctx.session.user
+    const { newsList } = ctx.request.body
+    //  { people: [id, ...], blogs: [id, ...]}
+    ctx.body = await confirmNews(newsList)
+})
+
 router.post('/readMore', api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
     const { markTime, page } = ctx.request.body

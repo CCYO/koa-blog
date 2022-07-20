@@ -22,13 +22,15 @@ const {
 } = require('../controller/blog')
 
 const {
+    confirmNews,
+
     getNewsByUserId,
     readMoreByUserIdAndTime
 } = require('../controller/news')
 
 const { 
     FollowBlog,
-    readNews
+    readNews,
 } = require('../server/news')
 
 async function init() {
@@ -132,12 +134,12 @@ async function go2(user_id, time) {
             
             
             // await removeBlog(blog_id)
-            let { errno, data } = await getNewsByUserId(1)
+            const { errno, data, msg } = await confirmNews({ people: [5,7], blogs: [3,5,9,11,13]})
             if(errno){
-                console.log('@gg')
+                console.log('@msg => ', msg)
+                return
             }
-            let res = await readMoreByUserIdAndTime(1, data.lastTime)
-            console.log('@@res => ', res)
+            console.log('@@data => ', data)
         } catch (e) {
             console.log('@ERR => ', e)
         }

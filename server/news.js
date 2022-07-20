@@ -4,8 +4,9 @@ const { NEWS: { LIMIT }} = require('../conf/constant')
 const {
     seq,
     FollowBlog: FB,
+    FollowPeople,
 
-    Follow, Blog_Fans, Blog
+    Follow, Blog
 } = require('../db/model')
 
 const { init_4_newsList } = require('../utils/init/news')
@@ -123,16 +124,24 @@ async function updateBlogFansComfirm(list, data = { confirm: true }) {
     return row
 }
 
-async function updateNews({ blogs, fans }) {
+async function updateNews({ people, blogs }) {
     let data = {}
-    if (blogs.length) {
-        let [blogRow] = await Blog_Fans.update({ confirm: true }, { where: { id: blogs } })
-        data.blogRow = blogRow
+    if (people.length) {
+        let [peopleRow] = await FollowPeople.update({ confirm: true }, { where: { id: people } })
+        data.peopleRow = peopleRow
+    }else{
+        data.peopleRow = 0
     }
+
     if (blogs.length) {
-        let [fansRow] = await Follow.update({ confirm: true }, { where: { id: fans } })
-        data.fansRow = fansRow
+        let [blogsRow] = await FB.update({ confirm: true }, { where: { id: blogs } })
+        data.blogsRow = blogsRow
+    }else{
+        data.blogsRow = 0
     }
+
+    console.log('@data Row => ', data)
+    
     return data
 
 }
