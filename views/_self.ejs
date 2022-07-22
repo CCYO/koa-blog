@@ -199,15 +199,15 @@
 
             $btn_follow.click(handle_follow(true))
             $btn_cancelFollow.click(handle_follow(false))
-            
+
             //  handle for follow or cancel follow
             function handle_follow(toFollow = true) {
                 let api = toFollow ? api_follow : api_cancelFollow
-                
+
                 let { fansList, me } = window.data
-                
+
                 let feedback_func = () => {
-                    if(toFollow){
+                    if (toFollow) {
                         alert('已追蹤')
                         _btnFollowToggle()
                         fansList.unshift(me)
@@ -220,16 +220,16 @@
                         </li>
                         `
                         $(`ul#fansList`).prepend(html_li)
-                        
-                    }else{
+
+                    } else {
                         alert('已退追')
                         _btnFollowToggle()
                         fansList.splice(fansList.indexOf(me.id), 1)
                         $(`li[data-fans-id='${me.id}']`).remove()
                     }
-                    
+
                 }
-                
+
                 return async (e) => {
                     let $target = $(e.target)
                     let id = $target.data('user-id')
@@ -247,8 +247,8 @@
                     }
                 }
             }
-            
-            function _btnFollowToggle(){
+
+            function _btnFollowToggle() {
                 $btn_follow.toggle()
                 $btn_cancelFollow.toggle()
             }
@@ -261,10 +261,18 @@
                     window.data[prop] = JSON.parse($el.text())
                 })
                 $('#data').remove()
+                let newsList = window.data.newsList
+                let { unconfirm, confirm, total, numOfUnconfirm, more, markTime } = newsList
+                if (!numOfUnconfirm && confirm) {
+                    newsList.offset = confirm.length
+                } else if (numOfUnconfirm) {
+                    newsList.offset = numOfUnconfirm * (-1)
+                }
+                delete newsList.numOfUnconfirm
             }
         })
     </script>
-    <%- include('wedgets/navbar/news-js') %> 
+    <%- include('wedgets/navbar/news-js') %>
 </body>
 
 </html>

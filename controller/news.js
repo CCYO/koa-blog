@@ -33,22 +33,19 @@ const {
 
 
 async function getNewsByUserId(userId) {
-    let { markTime, newsList, total, numOfUnconfirm, more, page } = await readNews({ userId })
-    let res = { ...newsList, markTime, total, numOfUnconfirm, more, page }
+    let { newsList, markTime, total, numOfUnconfirm} = await readNews({ userId })
+    let res = { ...newsList, markTime, total, numOfUnconfirm}
     return new SuccModel(res)
 
 }
 
-async function readMoreByUserId(userId, markTime, page) {
-    // if(page === 0){
-    //     page = 1
-    // }else if(page === undefined ){
-    //     page = 0
-    // }
-    let data = await readNews({ userId, markTime, page })
+async function readMoreByUserId(userId, markTime, offset) {
+    
+    let data = await readNews({ userId, markTime, offset })
 
-    let { newsList: { confirm, unconfirm }, total, numOfAfterMark, more } = data
-    console.log('@numOfAfterMark => ', numOfAfterMark)
+    
+    let { newsList: { confirm, unconfirm }, numOfAfterMark, total, numOfUnconfirm } = data
+    
     let ejs_newsForEach = resolve(__dirname, '../views/wedgets/navbar/news-forEach.ejs')
     // res = { confirm: [], unconfirm: [], count: newsList.length, total, markTime, page }
 
@@ -72,13 +69,18 @@ async function readMoreByUserId(userId, markTime, page) {
         if(resModel.errno){
             return resModel
         }
+    }    
+
+    if(offset === undefined){
+        let res = {
+            htmlStr,
+            offset: (numOfUnconfirm * -1) + unconfirm.length + confirm.length,
+            total: total - unconfirm.length
+        }
+        return new SuccModel(res)
     }
-    
-    
-
-    res = { ...htmlStr, total, more, numOfAfterMark, page: data.page }
-
-    return new SuccModel(res)
+    let count = { confirm: confirm.length, unconfirm: unconfirm.length}
+    return new SuccModel({ htmlStr, numOfAfterMark, count })
 }
 
 async function confirmNews(payload) {
@@ -92,7 +94,8 @@ async function confirmNews(payload) {
     } else if (people.length !== peopleRow) {
         return new ErrModel(NEWS.FOLLOW_CONFIRM_ERR)
     }
-    return new SuccModel()
+    let res = { rowOfUpdate: blogsRow + peopleRow }
+    return new SuccModel(res)
 }
 
 module.exports = {

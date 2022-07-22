@@ -15,23 +15,27 @@ router.prefix('/api/news')
 
 router.patch('/', api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { newsList } = ctx.request.body
+    const { payload } = ctx.request.body
     //  { people: [id, ...], blogs: [id, ...]}
-    ctx.body = await confirmNews(newsList)
+    ctx.body = await confirmNews(payload)
 })
 
 router.post('/readMore', api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { markTime, page } = ctx.request.body
+    const { markTime, offset } = ctx.request.body
     
-    let res = await readMoreByUserId(id, markTime, page)
+    //  res = { ...htmlStr, numOfAfterMark, count: { confirm: confirm.length, unconfirm: unconfirm.length}}    
+    let res = await readMoreByUserId(id, markTime, offset)
 
     console.log('@api res => ', res)
     ctx.body = res
 })
 
 router.post('/confirm', api_check_login, async (ctx, next) => {
+    console.log('@body => ', ctx.request.body )
     const { payload } = ctx.request.body
+    
+    console.log('@payload => ', payload)
     let res = await confirmNews(payload)
     ctx.body = res
 })

@@ -57,19 +57,19 @@ async function deleteBlog({ blogList_id, follower_id }) {
     // return row
 }
 
-async function readNews({ userId, markTime = new Date(), page = 0 }) {
-    let checkNewsAfterMarkTime = (page > 0) ? true : false
-
+async function readNews({ userId, markTime = new Date(), offset = undefined }) {
+    let checkNewsAfterMarkTime = (offset !== undefined) ? true : false
+    offset = (offset === undefined) ? 0 : offset
     markTime = new Date(markTime).toISOString()
 
-    let queryNewsList = await createQuery.newsList({ userId, markTime, page })
+    let queryNewsList = await createQuery.newsList({ userId, markTime, offset })
     let newsList = await seq.query(queryNewsList, { type: QueryTypes.SELECT })
 
     //  newsList = [ { type, id, target_id, follow_id, confirm, time }, ... ]
     //  res = { mark, newsList }
     newsList = await init_4_newsList(newsList)
 
-    let res = { newsList, markTime, page: page += 1}
+    let res = { newsList, markTime }
 
     if (!checkNewsAfterMarkTime) {
         let queryTotal = await createQuery.newsTotal({ userId, markTime })
@@ -79,17 +79,17 @@ async function readNews({ userId, markTime = new Date(), page = 0 }) {
 
         //  { mark, newsList, total, numOfUnconfirm }
         
-        let more = total > res.page * LIMIT
+        // let more = total > res.page * LIMIT
 
-        return { ...res, numOfUnconfirm, total, more }
+        return { ...res, numOfUnconfirm, total}
     }
 
     let queryAfterTimeMarkTotal = await createQuery.newsTotal({ userId, markTime, checkNewsAfterMarkTime })
     let [{ numOfAfterMark, total }] = await seq.query(queryAfterTimeMarkTotal, { type: QueryTypes.SELECT })
 
-    let more = total > res.page * LIMIT
+    // let more = total > res.page * LIMIT
     //  { mark, newsList, total, numOfAfterMark }
-    return { ...res, numOfAfterMark, total, more}
+    return { ...res, numOfAfterMark, total}
 }
 
 async function updateFB(data, options){

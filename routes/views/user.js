@@ -4,6 +4,8 @@
 
 const router = require('koa-router')()
 
+const { NEWS: { LIMIT }} = require('../../conf/constant')
+
 const { view_check_login } = require('../../middleware/check_login')
 
 const { getBlogListByUserId } = require('../../controller/blog')
@@ -70,7 +72,7 @@ router.get('/self', async (ctx, next) => {
 
         blogList,
 
-        newsList
+        newsList: { ...newsList, limit: LIMIT}
     })
 })
 

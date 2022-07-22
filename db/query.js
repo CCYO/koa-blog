@@ -1,9 +1,11 @@
 
 const {
-    NEWS
+    NEWS: {
+        LIMIT
+    }
 } = require('../conf/constant')
 
-async function newsList({ userId, markTime, page, checkNewsAfterMarkTime, limit = NEWS.LIMIT }) {
+async function newsList({ userId, markTime, offset, checkNewsAfterMarkTime }) {
 
     let mark = checkNewsAfterMarkTime ? '<' : '>'
     let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') ${mark} DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
@@ -23,7 +25,7 @@ async function newsList({ userId, markTime, page, checkNewsAfterMarkTime, limit 
         WHERE follower_id=${userId} AND deletedAt IS NULL AND ${where_time}
     ) AS X
     ORDER BY confirm=1, time DESC
-    LIMIT ${limit} OFFSET ${page * limit}
+    LIMIT ${LIMIT} OFFSET ${offset}
     `
     return query
 }

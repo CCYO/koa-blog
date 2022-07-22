@@ -16,19 +16,26 @@
         $newsDropdown.click(handle_showNews)
         $readMore.click(handle_readMore)
 
-        async function moreNews(payload = { markTime: (new Date()).toISOString(), page: undefined }) {
+        async function moreNews(payload = { markTime: (new Date()).toISOString(), offset: undefined }) {
+            let newsList = window.data.newsList
+            let limit = newsList.limit
+            console.log('@@@ => ', payload.markTime)
             let { data: { errno, data, msg } } = await axios.post(api_readMore, payload)
             if (errno) {
                 alert('發生錯誤')
                 console.log('@msg => ', msg)
                 return
             }
-            // let { more, numOfAfterMark, page, ...htmlStr } = data
-            let { more, numOfAfterMark, page, total, ...htmlStr } = data
-            $readMore.toggle(more) && $noNews.toggle(!more)
-            numOfAfterMark && $newsCount.toggle(true).text(numOfAfterMark)
+            
             //  若為undefined，則dropDown發起
-            if (payload.page === undefined) {
+            if (payload.offset === undefined) {
+                
+                let { htmlStr, offset, total } = data
+                
+                let more = (total - offset ) >= 0
+                $readMore.toggle(more) && $noNews.toggle(!more)
+                markTime = payload.markTime
+
                 $(`.news-item`).remove()
                 $(`[data-my-hr]`).remove()
                 for (prop in htmlStr) {
@@ -39,10 +46,19 @@
                     let $title = $(`#${prop}-news-title`)
                     $title.toggle(true).after(html)
                 }
-                window.data.newsList = { markTime: payload.markTime, page, more, numOfAfterMark }
-                
+                window.data.newsList = { markTime, offset, total, limit }
                 bootstrap.Dropdown.getInstance($newsDropdown[0]).show()
             } else {
+                let { total, offset, limit, markTime } = newsList
+                let { htmlStr, numOfAfterMark, count: { confirm, unconfirm } } = data
+                offset = offset + confirm + unconfirm
+                if (unconfirm) {
+                    total -= unconfirm
+                }
+                let more = (total - offset ) >= 0
+                $readMore.toggle(more) && $noNews.toggle(!more)
+                numOfAfterMark && $newsCount.toggle(true).text(numOfAfterMark)
+                markTime = payload.markTime
                 for (prop in htmlStr) {
                     let html = htmlStr[prop]
                     if (!html) {
@@ -50,15 +66,24 @@
                     }
                     let $hrs = $(`[data-my-hr='${prop}-news-hr']`)
                     console.log('@prop => ', prop)
-                    $hrs.length && $hrs.last().after(html) || $(`#${prop}_news_title`).toggle(true).after(html)
+                    $hrs.length && $hrs.last().after(html) || $(`#${prop}-news-title`).toggle(true).after(html)
                 }
-                window.data.newsList = { ...window.data.newsList, page, more, numOfAfterMark }   
+                window.data.newsList = { total, offset, markTime, limit, numOfAfterMark }
+                console.log('@newsList => ', newsList)
             }
         }
 
 
         async function handle_readMore() {
-            let { markTime, page } = window.data.newsList
+            let newsList = window.data.newsList
+            let { markTime, total, offset, limit } = newsList
+            let more =  offset < 0 || total - limit >= 0
+            offset = offset < 0 ? 0 : offset
+            if (more) {
+                await moreNews({ markTime, offset })
+            } else {
+                alert('沒資料了')
+            }
             // let { data: { errno, data, msg } } = await axios.post(api_readMore, { markTime, page })
 
             // if (!errno) {
@@ -81,28 +106,34 @@
             // } else {
             //     console.log('@msg => ', msg)
             // }
-            await moreNews({ markTime, page })
+
         }
 
         async function handle_showNews() {
-            let { unconfirm, numOfAfterMark } = window.data.newsList
+            let newsList = window.data.newsList
+            let { unconfirm, numOfAfterMark } = newsList
             $newsCount.toggle(false)
             if (unconfirm && !unconfirm.length && !numOfAfterMark) {
                 return
+            } else if (numOfAfterMark) {
+                await moreNews({markTime: (new Date()).toISOString()})
             } else if (unconfirm && unconfirm.length) {
-                let newsList = unconfirm.reduce((init, curVal, index) => {
+                let payload = unconfirm.reduce((init, curVal, index) => {
                     let { type, id } = curVal
                     type === 1 && init.people.push(id)
                     type === 2 && init.blogs.push(id)
                     return init
                 }, { people: [], blogs: [] })
-                const { errno } = await axios.patch(api_news, { newsList })
+                const { data: { errno, data, msg } } = await axios.patch(api_news, { payload })
 
-                if (!errno) {
-                    window.data.newsList.unconfirm = []
+                if (errno) {
+                    alert('confirm失敗')
+                    console.log('@msg => ', msg)
                 }
-            } else if (numOfAfterMark) {
-                await moreNews({})
+                console.log('@data => ', data)
+                newsList.unconfirm = []
+                newsList.total -= data.rowOfUpdate
+                newsList.offset += data.rowOfUpdate
             }
         }
 
