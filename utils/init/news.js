@@ -14,7 +14,20 @@ const {
 
 console.log('@ readBlogById ===>', readBlogById)
 
-async function init_4_newsList(newsList) {
+function initNewsList_4_front(newsList){
+    let res = { people: [], blogs: []}
+    if(!newsList.length){
+        return res
+    }
+    
+    return newsList.reduce( (initVal, {type, id}) => {
+        type === 1 && initVal.people.push(id)
+        type === 2 && initVal.blogs.push(id)
+        return initVal
+    }, res)
+}
+
+async function initNewsList_4_ejs(newsList) {
     if (!newsList.length) {
         return []
     }
@@ -46,5 +59,6 @@ async function _init(item) {
 }
 
 module.exports = {
-    init_4_newsList
+    initNewsList_4_ejs,
+    initNewsList_4_front
 }

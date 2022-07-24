@@ -22,10 +22,10 @@ router.patch('/', api_check_login, async (ctx, next) => {
 
 router.post('/readMore', api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { markTime, offset } = ctx.request.body
-    
+    const { markTime, confirmNews } = ctx.request.body
+    let fromFront = true
     //  res = { ...htmlStr, numOfAfterMark, count: { confirm: confirm.length, unconfirm: unconfirm.length}}    
-    let res = await readMoreByUserId(id, markTime, offset)
+    let res = await readMoreByUserId(id, markTime, confirmNews, fromFront)
 
     console.log('@api res => ', res)
     ctx.body = res

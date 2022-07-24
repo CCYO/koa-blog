@@ -9,7 +9,7 @@ const {
     Follow, Blog
 } = require('../db/model')
 
-const { init_4_newsList } = require('../utils/init/news')
+const { initNewsList_4_ejs } = require('../utils/init/news')
 
 const createQuery = require('../db/query')
 
@@ -57,29 +57,36 @@ async function deleteBlog({ blogList_id, follower_id }) {
     // return row
 }
 
-async function readNews({ userId, markTime = new Date(), offset = undefined }) {
-    let checkNewsAfterMarkTime = (offset !== undefined) ? true : false
-    offset = (offset === undefined) ? 0 : offset
-    markTime = new Date(markTime).toISOString()
+/** 查找 newsList
+ * @param {{ 
+ *  userId: number,
+ *  markTime: string,
+ *  listOfexceptNewsId: object,
+ *  fromFront: boolean,
+ *  offset: number
+ * }} param0 - 查詢 newsList 需要的參數物件
+ *  
+ * @param {number} param0.userId - userId
+ * @param {string} param0.markTime yyyy-mm-ddTHH:MM:sssZ 的 時間格式
+ * @param {object} param0.listOfexceptNewsId 需撇除的 newsList
+ * @param {boolean} param0.fromFront 此查詢是否來自前端
+ * @return {object} 若 formFront 則 { newsList, markTime, total, numOfAfterMark}，若 !formFront 則 { newsList, markTime, total, numOfUnconfirm}
+ */
+async function readNews({ userId, markTime = new Date().toISOString(), listOfexceptNewsId = { people: [], blogs: []} , fromFront = false, offset = undefined }) {
 
-    let queryNewsList = await createQuery.newsList({ userId, markTime, offset })
+    let checkNewsAfterMarkTime = fromFront ? true : false
+    let whereOps = {markTime, listOfexceptNewsId}
+    let queryNewsList = await createQuery.newsList({ userId, offset, whereOps, checkNewsAfterMarkTime })
     let newsList = await seq.query(queryNewsList, { type: QueryTypes.SELECT })
-
-    //  newsList = [ { type, id, target_id, follow_id, confirm, time }, ... ]
-    //  res = { mark, newsList }
-    newsList = await init_4_newsList(newsList)
+    
+    newsList = await initNewsList_4_ejs(newsList)
 
     let res = { newsList, markTime }
 
     if (!checkNewsAfterMarkTime) {
+        //  若是由後端自行提出的查詢，不需要查詢 markTime 之後 且 未查看的 news
         let queryTotal = await createQuery.newsTotal({ userId, markTime })
         let [{ numOfUnconfirm, total }] = await seq.query(queryTotal, { type: QueryTypes.SELECT })
-
-        //  { total, numOfUnconfirm }
-
-        //  { mark, newsList, total, numOfUnconfirm }
-        
-        // let more = total > res.page * LIMIT
 
         return { ...res, numOfUnconfirm, total}
     }

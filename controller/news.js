@@ -5,7 +5,7 @@
 const { resolve } = require('path')
 
 const myRenderFile = require('../utils/renderFile')
-const { init_4_newsList } = require('../utils/init/news')
+const { initNewsList_4_front } = require('../utils/init/news')
 
 const { NEWS: { LIMIT } } = require('../conf/constant')
 const {
@@ -33,58 +33,43 @@ const {
 
 
 async function getNewsByUserId(userId) {
-    let { newsList, markTime, total, numOfUnconfirm} = await readNews({ userId })
-    let res = { ...newsList, markTime, total, numOfUnconfirm}
+    let { newsList, markTime, total, numOfUnconfirm } = await readNews({ userId })
+    let res = { ...newsList, markTime, total, numOfUnconfirm }
     return new SuccModel(res)
 
 }
 
-async function readMoreByUserId(userId, markTime, offset) {
-    
-    let data = await readNews({ userId, markTime, offset })
+async function readMoreByUserId(userId, markTime, idListOfconfirmNews, fromFront = false, offset) {
 
-    
-    let { newsList: { confirm, unconfirm }, numOfAfterMark, total, numOfUnconfirm } = data
-    
+    let data = await readNews({ userId, markTime, listOfexceptNewsId: idListOfconfirmNews, fromFront })
+
+    let { newsList: { confirm, unconfirm }, numOfAfterMark, total } = data
+
     let ejs_newsForEach = resolve(__dirname, '../views/wedgets/navbar/news-forEach.ejs')
-    // res = { confirm: [], unconfirm: [], count: newsList.length, total, markTime, page }
 
     let htmlStr = { confirm: undefined, unconfirm: undefined }
 
     htmlStr.confirm = confirm.length && await myRenderFile(ejs_newsForEach, { list: confirm }) || undefined
     htmlStr.unconfirm = unconfirm.length && await myRenderFile(ejs_newsForEach, { list: unconfirm }) || undefined
 
+    let ListOfConfirmNewsId = initNewsList_4_front(confirm)
+    let ListOfUnconfirmNewsId = initNewsList_4_front(unconfirm)
+
     //  直接先作 confirm
-    if(unconfirm.length){
-        let payload = unconfirm.reduce((init, curVal) => {
-            let { type, id } = curVal
-            type === 1 && init.people.push(id)
-            type === 2 && init.blogs.push(id)
-            return init
-        }, { people: [], blogs: [] })
-    
-        console.log('@payload => ', payload)
-        let resModel = await confirmNews(payload)
-        console.log('@resMoedl => ', resModel)
-        if(resModel.errno){
+    if (unconfirm.length) {
+        let resModel = await confirmNews(ListOfUnconfirmNewsId)
+        if (resModel.errno) {
             return resModel
         }
-    }    
-
-    if(offset === undefined){
-        let res = {
-            htmlStr,
-            offset: (numOfUnconfirm * -1) + unconfirm.length + confirm.length,
-            total: total - unconfirm.length
-        }
-        return new SuccModel(res)
     }
-    let count = { confirm: confirm.length, unconfirm: unconfirm.length}
-    return new SuccModel({ htmlStr, numOfAfterMark, count })
+    ListOfConfirmNewsId.people = [...ListOfConfirmNewsId.people, ...ListOfUnconfirmNewsId.people]
+    ListOfConfirmNewsId.blogs = [...ListOfConfirmNewsId.blogs, ...ListOfUnconfirmNewsId.blogs]
+
+    return new SuccModel({ htmlStr, ListOfConfirmNewsId, numOfAfterMark, total, count: confirm.length + unconfirm.length })
 }
 
 async function confirmNews(payload) {
-
+    
     let { people, blogs } = payload
 
     const { blogsRow, peopleRow } = await updateNews(payload)
@@ -94,7 +79,7 @@ async function confirmNews(payload) {
     } else if (people.length !== peopleRow) {
         return new ErrModel(NEWS.FOLLOW_CONFIRM_ERR)
     }
-    let res = { rowOfUpdate: blogsRow + peopleRow }
+    let res = { ListOfConfirmNewsId: payload, count: blogsRow + peopleRow }
     return new SuccModel(res)
 }
 

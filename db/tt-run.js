@@ -23,8 +23,8 @@ const {
 
 const {
     confirmNews,
-
     getNewsByUserId,
+
     readMoreByUserIdAndTime
 } = require('../controller/news')
 
@@ -101,40 +101,9 @@ async function go2(user_id, time) {
     async () => {
         try {
             // await seq.sync({ force: true })
-            // await User.destroy({where: { id: [1,2]}})
-            // let { id: user_id1 } = await createUser({ email: '1@gmail.com', password: '123456' })
-            // let { id: user_id2 } = await createUser({ email: '2@gmail.com', password: '123456' })
-            // let { id: user_id3 } = await createUser({ email: '3@gmail.com', password: '123456' })
             
-            // await followIdol(user_id2, user_id1)
+             const { errno, data, msg } = await confirmNews({ people: [5,7], blogs: [3,5,9,11,13]})
             
-            // let { data: {id: blog_id }} = await addBlog('BLOG1', user_id1)
-
-            // await modifyBlog(blog_id, { show: 1 }, user_id1)
-            // let res1 = await readNews({ userId: user_id2 })
-            // let res2 = await readNews({ userId: user_id3 })
-            // console.log('@res1 => ', res1)
-            // console.log('@res2 => ', res2)
-            
-            // await modifyBlog(blog_id, { show: 2 }, user_id1)
-            // let res3 = await readNews({ userId: user_id2 })
-            // let res4 = await readNews({ userId: user_id3 })
-            
-
-            // await cancelFollowIdol(user_id2, user_id1)
-            // await followIdol(user_id3, user_id1)
-
-            // await modifyBlog(blog_id, { show: 3 }, user_id1)
-            // let res5 = await readNews({ userId: user_id2 })
-            // let res6 = await readNews({ userId: user_id3 })
-            // console.log('@res5 => ', res5)
-            // console.log('@res6 => ', res6)
-            
-            // let res = await FollowBlog.readFollowers({blog_id: blog2})
-            
-            
-            // await removeBlog(blog_id)
-            const { errno, data, msg } = await confirmNews({ people: [5,7], blogs: [3,5,9,11,13]})
             if(errno){
                 console.log('@msg => ', msg)
                 return

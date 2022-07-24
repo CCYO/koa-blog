@@ -262,13 +262,24 @@
                 })
                 $('#data').remove()
                 let newsList = window.data.newsList
-                let { unconfirm, confirm, total, numOfUnconfirm, more, markTime } = newsList
-                if (!numOfUnconfirm && confirm) {
-                    newsList.offset = confirm.length
-                } else if (numOfUnconfirm) {
-                    newsList.offset = numOfUnconfirm * (-1)
-                }
+                let { unconfirm, confirm, total, markTime } = newsList
+                newsList.count = unconfirm.length + confirm.length
+                newsList.unconfirm = unconfirm.length && init_news(unconfirm) || undefined
+                newsList.confirm = confirm.length && init_news(confirm) || undefined
                 delete newsList.numOfUnconfirm
+            }
+
+            function init_news(newsList){
+                let res = { people: [], blogs: []}
+                if(!newsList.length){
+                    return res
+                }
+                
+                return newsList.reduce( (initVal, {type, id}) => {
+                    type === 1 && initVal.people.push(id)
+                    type === 2 && initVal.blogs.push(id)
+                    return initVal
+                }, res)
             }
         })
     </script>

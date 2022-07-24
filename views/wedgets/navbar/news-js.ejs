@@ -16,25 +16,30 @@
         $newsDropdown.click(handle_showNews)
         $readMore.click(handle_readMore)
 
-        async function moreNews(payload = { markTime: (new Date()).toISOString(), offset: undefined }) {
-            let newsList = window.data.newsList
-            let limit = newsList.limit
-            console.log('@@@ => ', payload.markTime)
-            let { data: { errno, data, msg } } = await axios.post(api_readMore, payload)
+        async function moreNews({ markTime = (new Date()).toISOString(), confirmNews = { people: [], blogs: [] }, reset = false }) {
+
+            let { newsList } = window.data
+            let { data: { errno, data, msg } } = await axios.post(api_readMore, { markTime, confirmNews })
+
             if (errno) {
                 alert('發生錯誤')
                 console.log('@msg => ', msg)
                 return
             }
-            
-            //  若為undefined，則dropDown發起
-            if (payload.offset === undefined) {
-                
-                let { htmlStr, offset, total } = data
-                
-                let more = (total - offset ) >= 0
-                $readMore.toggle(more) && $noNews.toggle(!more)
-                markTime = payload.markTime
+            let { numOfAfterMark, total, count, htmlStr, ListOfConfirmNewsId: { people, blogs } } = data
+
+            numOfAfterMark > 0 && $newsCount.toggle(true).text(numOfAfterMark)
+            newsList.numOfAfterMark = numOfAfterMark
+
+
+            //  由 dropList 發出
+            if (reset) {
+                newsList.total = total
+                newsList.count = count
+                newsList.confirm.people = people
+                newsList.confirm.blogs = blogs
+
+                newsList.markTime = markTime
 
                 $(`.news-item`).remove()
                 $(`[data-my-hr]`).remove()
@@ -46,19 +51,14 @@
                     let $title = $(`#${prop}-news-title`)
                     $title.toggle(true).after(html)
                 }
-                window.data.newsList = { markTime, offset, total, limit }
+
                 bootstrap.Dropdown.getInstance($newsDropdown[0]).show()
             } else {
-                let { total, offset, limit, markTime } = newsList
-                let { htmlStr, numOfAfterMark, count: { confirm, unconfirm } } = data
-                offset = offset + confirm + unconfirm
-                if (unconfirm) {
-                    total -= unconfirm
-                }
-                let more = (total - offset ) >= 0
-                $readMore.toggle(more) && $noNews.toggle(!more)
-                numOfAfterMark && $newsCount.toggle(true).text(numOfAfterMark)
-                markTime = payload.markTime
+                newsList.count += count
+
+                newsList.confirm.people = [...newsList.confirm.people, ...people]
+                newsList.confirm.blogs = [...newsList.confirm.blogs, ...blogs]
+
                 for (prop in htmlStr) {
                     let html = htmlStr[prop]
                     if (!html) {
@@ -68,19 +68,18 @@
                     console.log('@prop => ', prop)
                     $hrs.length && $hrs.last().after(html) || $(`#${prop}-news-title`).toggle(true).after(html)
                 }
-                window.data.newsList = { total, offset, markTime, limit, numOfAfterMark }
-                console.log('@newsList => ', newsList)
             }
+            let more = newsList.total - newsList.count > 0
+            console.log('@more => ', more)
+            $readMore.toggle(more) && $noNews.toggle(!more)
         }
 
 
         async function handle_readMore() {
-            let newsList = window.data.newsList
-            let { markTime, total, offset, limit } = newsList
-            let more =  offset < 0 || total - limit >= 0
-            offset = offset < 0 ? 0 : offset
+            let { total, count, markTime, confirm } = window.data.newsList
+            let more = total - count >= 0
             if (more) {
-                await moreNews({ markTime, offset })
+                await moreNews({ markTime, confirmNews: confirm })
             } else {
                 alert('沒資料了')
             }
@@ -110,20 +109,14 @@
         }
 
         async function handle_showNews() {
-            let newsList = window.data.newsList
-            let { unconfirm, numOfAfterMark } = newsList
+            let { unconfirm, numOfAfterMark } = window.data.newsList
             $newsCount.toggle(false)
-            if (unconfirm && !unconfirm.length && !numOfAfterMark) {
+            if (!unconfirm && !numOfAfterMark) {
                 return
             } else if (numOfAfterMark) {
-                await moreNews({markTime: (new Date()).toISOString()})
-            } else if (unconfirm && unconfirm.length) {
-                let payload = unconfirm.reduce((init, curVal, index) => {
-                    let { type, id } = curVal
-                    type === 1 && init.people.push(id)
-                    type === 2 && init.blogs.push(id)
-                    return init
-                }, { people: [], blogs: [] })
+                await moreNews({ reset: true })
+            } else if (unconfirm) {
+                let payload = { ...unconfirm }
                 const { data: { errno, data, msg } } = await axios.patch(api_news, { payload })
 
                 if (errno) {
@@ -131,9 +124,12 @@
                     console.log('@msg => ', msg)
                 }
                 console.log('@data => ', data)
-                newsList.unconfirm = []
-                newsList.total -= data.rowOfUpdate
-                newsList.offset += data.rowOfUpdate
+                let { ListOfConfirmNewsId: { people, blogs }, count } = data
+                window.data.newsList.unconfirm = undefined
+                window.data.newsList.confirm = window.data.newsList.confirm ? window.data.newsList.confirm : { people: [], blogs: [] }
+                window.data.newsList.confirm.people = [...window.data.newsList.confirm.people, ...people]
+                window.data.newsList.confirm.blogs = [...window.data.newsList.confirm.blogs, ...blogs]
+
             }
         }
 
