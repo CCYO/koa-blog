@@ -1,252 +1,179 @@
 <script>
     $(function () {
+        //  下拉選單鈕、通知鈕
         let $newsDropdown = $('#newsDropdown')
+        //  通知比數span
         let $newsCount = $('.news-count')
+        //  下拉選單內 的 readMore鈕
         let $readMore = $('#readMore')
+        //  下拉選單內 的 沒有更多提醒
         let $noNews = $('#noNews')
+
         let api_news = '/api/news'
         let api_readMore = '/api/news/readMore'
 
-
+        //  手動註冊 BS5 下拉選單
         var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
         var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
             return new bootstrap.Dropdown(dropdownToggleEl)
         })
 
-        $newsDropdown.click(handle_showNews)
-        $readMore.click(handle_readMore)
+        //  綁定 下拉選單鈕 的 click handle
+        $newsDropdown.click(handle_dropDown)
+        //  綁定 readMore鈕 的 click handle
+        $readMore.click(moreNewsForReadMore)
 
-        async function moreNews({ markTime = (new Date()).toISOString(), confirmNews = { people: [], blogs: [] }, reset = false }) {
+        async function moreNewsForReadMore() {
+            let newsList = window.data
+            let markTime = newsList.markTime
+            let listOfNewsId = newsList.listOfConfirmNewsId
+            let payload = { markTime, listOfNewsId }
 
-            let { newsList } = window.data
-            let { data: { errno, data, msg } } = await axios.post(api_readMore, { markTime, confirmNews })
+            let { data: { errno, data, msg } } = await axios.post(api_readMore, payload)
+            if (errno) {
+                alert('發生錯誤')
+                console.log('@msg => ', msg)
+                return
+            }
+
+            /*
+             * numOfUnconfirm - 晚於 markTime 的 unconfirmNews 總數
+             * total - userId 的通知總數
+             * count - 此次 response 的 通知數量
+             * htmlStr - { confirm: string, unconfirm: string } html字符格式的通知數據
+             * ListOfConfirmNewsId - 此次 response 包含的 newsList 之 id 列表
+            */
+            let { numOfUnconfirm, total, count, htmlStr, listOfConfirmNewsId: { people, blogs } } = data
+
+            //  若 numOfUnconfirm 有值，則
+            if (numOfUnconfirm > 0) {
+                //  通知鈕顯示筆數
+                $newsCount.toggle(true).text(numOfUnconfirm)
+                //  window.newsList.numOfUnconfirm 更新
+                newsList.numOfUnconfirm = numOfUnconfirm
+            }else{
+                newsList.numOfUnconfirm = 0
+            }
+
+            //  window.newsList.count 更新
+            newsList.count += count
+            //  window.newsList.listOfConfirmNewsId 更新
+            newsList.listOfConfirmNewsId.people = [...newsList.listOfConfirmNewsId.people, ...people]
+            newsList.listOfConfirmNewsId.blogs = [...newsList.listOfConfirmNewsId.blogs, ...blogs]
+            //  根據 response 添加通知內容
+            for (prop in htmlStr) {
+                let html = htmlStr[prop]
+                if (!html) {
+                    continue
+                }
+                let $hrs = $(`[data-my-hr='${prop}-news-hr']`)
+                $hrs.length && $hrs.last().after(html) || $(`#${prop}-news-title`).toggle(true).after(html)
+            }
+
+            //  判斷下拉選單內的 readMore鈕 是否該顯示
+            $readMore.toggle(more) && $noNews.toggle(!more)
+        }
+
+        async function moreNewsForDropDown() {
+            let newsList = window.data
+            let markTime = (new Date()).toISOString()
+            let listOfNewsId = newsList.listOfConfirmNewsId
+            let payload = { markTime, listOfNewsId }
+
+            //  ajax 取得通知數據
+            let { data: { errno, data, msg } } = await axios.post(api_readMore, payload)
 
             if (errno) {
                 alert('發生錯誤')
                 console.log('@msg => ', msg)
                 return
             }
-            let { numOfAfterMark, total, count, htmlStr, ListOfConfirmNewsId: { people, blogs } } = data
 
-            numOfAfterMark > 0 && $newsCount.toggle(true).text(numOfAfterMark)
-            newsList.numOfAfterMark = numOfAfterMark
+            /*
+             * numOfUnconfirm - 晚於 markTime 的 unconfirmNews 總數
+             * total - userId 的通知總數
+             * count - 此次 response 的 通知數量
+             * htmlStr - { confirm: string, unconfirm: string } html字符格式的通知數據
+             * ListOfConfirmNewsId - 此次 response 包含的 newsList 之 id 列表
+            */
+            let { numOfunconfirm, total, count, htmlStr, listOfConfirmNewsId: { people, blogs } } = data
 
-
-            //  由 dropList 發出
-            if (reset) {
-                newsList.total = total
-                newsList.count = count
-                newsList.confirm.people = people
-                newsList.confirm.blogs = blogs
-
-                newsList.markTime = markTime
-
-                $(`.news-item`).remove()
-                $(`[data-my-hr]`).remove()
-                for (prop in htmlStr) {
-                    let html = htmlStr[prop]
-                    if (!html) {
-                        continue
-                    }
-                    let $title = $(`#${prop}-news-title`)
-                    $title.toggle(true).after(html)
-                }
-
-                bootstrap.Dropdown.getInstance($newsDropdown[0]).show()
-            } else {
-                newsList.count += count
-
-                newsList.confirm.people = [...newsList.confirm.people, ...people]
-                newsList.confirm.blogs = [...newsList.confirm.blogs, ...blogs]
-
-                for (prop in htmlStr) {
-                    let html = htmlStr[prop]
-                    if (!html) {
-                        continue
-                    }
-                    let $hrs = $(`[data-my-hr='${prop}-news-hr']`)
-                    console.log('@prop => ', prop)
-                    $hrs.length && $hrs.last().after(html) || $(`#${prop}-news-title`).toggle(true).after(html)
-                }
+            //  若 numOfUnconfirm 有值，則
+            if (numOfUnconfirm > 0) {
+                //  通知鈕顯示筆數
+                $newsCount.toggle(true).text(numOfUnconfirm)
+                //  window.newsList.numOfUnconfirm 更新
+                newsList.numOfUnconfirm = numOfUnconfirm
+            }else{
+                newsList.numOfUnconfirm = 0
             }
+
+
+            //  window.newsList.total 更新
+            newsList.total = total
+            //  window.newsList.count 更新
+            newsList.count = count
+            //  window.newsList.listOfConfirmNewsId 更新
+            newsList.listOfConfirmNewsId.people = people
+            newsList.listOfConfirmNewsId.blogs = blogs
+
+            //  window.newsList.markTime 更新
+            newsList.markTime = markTime
+
+            //  移除現有通知列成員
+            $(`.news-item`).remove()
+            $(`[data-my-hr]`).remove()
+            //  根據 response 添加通知內容
+            for (prop in htmlStr) {
+                let html = htmlStr[prop]
+                if (!html) {
+                    continue
+                }
+                let $title = $(`#${prop}-news-title`)
+                $title.toggle(true).after(html)
+            }
+
             let more = newsList.total - newsList.count > 0
-            console.log('@more => ', more)
+            //  判斷下拉選單內的 readMore鈕 是否該顯示
             $readMore.toggle(more) && $noNews.toggle(!more)
+
+            //  顯示 BS5 下拉選單
+            bootstrap.Dropdown.getInstance($newsDropdown[0]).show()
         }
 
-
-        async function handle_readMore() {
-            let { total, count, markTime, confirm } = window.data.newsList
-            let more = total - count >= 0
-            if (more) {
-                await moreNews({ markTime, confirmNews: confirm })
-            } else {
-                alert('沒資料了')
+        async function confirmNews() {
+            let newsList = window.data
+            let { listOfUnconfirmNewsId } = newsList
+            let { data: { errno, data, msg } } = await axios.patch(api_news, { listOfNewsId: listOfUnConfirmNewsId })
+            if (errno) {
+                alert('confirm失敗')
+                console.log('@msg => ', msg)
             }
-            // let { data: { errno, data, msg } } = await axios.post(api_readMore, { markTime, page })
-
-            // if (!errno) {
-            //     // let { more, numOfAfterMark, page, ...htmlStr } = data
-            //     for (prop in htmlStr) {
-            //         let html = htmlStr[prop]
-            //         if (!html) {
-            //             continue
-            //         }
-            //         let $hrs = $(`[data-my-hr='${prop}-news-hr']`)
-            //         $hrs.length && $hrs.last().after(html) || $(`#${prop}_news_title`).toggle(true).after(html)
-            //     }
-            //     window.data.newsList = { ...window.data.newsList, page, more, numOfAfterMark }
-            //     !more && $readMore.toggle(false) && $noNews.toggle(true)
-
-            //     if (numOfAfterMark > 0) {
-            //         $newsCount.toggle(true).text(numOfAfterMark)
-            //     }
-
-            // } else {
-            //     console.log('@msg => ', msg)
-            // }
-
+            //  完成 confirm 的通知數據
+            let { ListOfConfirmNewsId: { people, blogs }, count } = data
+            newsList.listOfUnconfirmNewsId = undefined
+            if (!newsList.listOfConfirmNewsId) {
+                newsList.listOfConfirmNewsId = { people: [], blogs: [] }
+            }
+            newsList.listOfConfirmNewsId = {
+                people: [...newsList.listOfConfirmNewsId.people, ...people],
+                blogs: [...newsList.listOfConfirmNewsId.blogs, ...blogs]
+            }
         }
-
-        async function handle_showNews() {
-            let { unconfirm, numOfAfterMark } = window.data.newsList
+        //  handle 顯示下拉選單
+        async function handle_dropDown() {
             $newsCount.toggle(false)
-            if (!unconfirm && !numOfAfterMark) {
-                return
-            } else if (numOfAfterMark) {
-                await moreNews({ reset: true })
-            } else if (unconfirm) {
-                let payload = { ...unconfirm }
-                const { data: { errno, data, msg } } = await axios.patch(api_news, { payload })
-
-                if (errno) {
-                    alert('confirm失敗')
-                    console.log('@msg => ', msg)
-                }
-                console.log('@data => ', data)
-                let { ListOfConfirmNewsId: { people, blogs }, count } = data
-                window.data.newsList.unconfirm = undefined
-                window.data.newsList.confirm = window.data.newsList.confirm ? window.data.newsList.confirm : { people: [], blogs: [] }
-                window.data.newsList.confirm.people = [...window.data.newsList.confirm.people, ...people]
-                window.data.newsList.confirm.blogs = [...window.data.newsList.confirm.blogs, ...blogs]
-
-            }
-        }
-
-        async function readMore(e) {
-            let window_news_count = (window.news) ? window.news.count : 0
-
-
-            if (!errno) {
-                let {
-                    htmlStr, //{ unconfirm, confirm }
-                    more,
-                    index,
-                    news // { count, htmlStr, checkTime }
-                } = data
-
-                /* 處理響應資料(checkTime前的news) */
-                for (prop in htmlStr) {
-                    if (htmlStr[prop]) {
-                        let title = (prop === 'unconfirm') ? $('#new-news-title') : $('#old-news-title')
-                        title.toggle(true)
-                        let news_hrs = $(`[data-my-hr="${prop}-news-hr"]`)
-                        let target = news_hrs.length ? $(news_hrs[news_hrs.length - 1]) : title
-                        target.after(htmlStr[prop])
-                    }
-                }
-
-                if (news.count) {
-                    /* checkTime 之後，若有新通知進來 */
-                    //  重設「新通知提醒」UI
-                    $('.new-count').text(news.count).toggle(true)
-                    window.news = news
-                }
-
-                if (more) {
-                    /* 重設 readMore btn 相關標示 */
-                    $("#navbarDropdown").attr('data-my-index', index)
-                } else {
-                    $('#more_news').toggle(false)
-                    $('#nonews').toggle(true)
-                }
-            } else {
-                console.log('readMore 發生錯誤 => ', msg)
-            }
-        }
-
-        async function showNewsList(e) {
-            e.preventDefault()
-            //  若初次渲染的view，confirm 當前顯示的新通知
-            if ($(e.target).attr('data-my-first-render')) {
-                //  蒐集fans、blog消息的 news_id
-                //  payload = { fans: [], blogs: [] } 
-                let payload = _getNoConfirmNews()
-
-                //  confirm 當前 news
-                let {
-                    data: { errno, data, msg }
-                } = await axios.post('/api/news/confirm', { payload })
-
-                if (!errno) {
-                    //  成功，重設、移除相關 data-set
-                    console.log('Server已完成confirm')
-                    //  移除「新通知數量」UI
-                    $('.news-count').toggle(false)
-                    //  修改「1st render views」的標示
-                    $(e.target).attr('data-my-first-render', false)
-                    //  移除「必須 confirm 的 news」的標示
-                    $('li[data-my-news-type]').each((ind, item) => {
-                        $(item).removeAttr('data-my-news-id')
-                        $(item).removeAttr('data-my-news-type')
-                    })
-                    console.log('前端完成confirm UI 配製')
-                } else {
-                    console.log('confirm失敗 => ', msg)
-                }
-                return
+            let newsList = window.data
+            let { listOfUnconfirmNewsId, numOfUnconfirm } = window.data.newsList
+            
+            if (listOfUnconfirmNewsId) {
+                //進到這邊，代表目前是頁面第一次點擊下拉選單鈕
+                await confirmNews()
+            }else if(numOfUnconfirm){
+                await moreNewsForDropDown()
             }
 
-            //  若 window.news 有值，則以JQ直接插入，並confirm news
-            if (window.news && window.news.count) {
-                //  news = { count, htmlStr, checkTime }
-                let { conut, htmlStr, checkTime } = window.news
-                //  let payload = { fans: [], blogs: [] }
-
-                $("#navbarDropdown")
-                    .attr('data-my-first-render', true)
-                    .attr('data-my-index', 0)
-                    .attr('data-my-check-time', checkTime.time)
-                    .attr('data-my-check-type', checkTime.type)
-                    .attr('data-my-check-id', checkTime.id)
-                $("#old-news-title").toggle(true)
-                $("li[data-my-confirm]").remove()
-                $("li[data-my-hr]").remove()
-                $("#new-news-title").toggle(true).after(htmlStr)
-
-                $('#more_news').toggle(true)
-                $('#nonews').toggle(false)
-                return
-            }
-
-            if ($('#more_news').css('display') === 'none') {
-                await readMore()
-                return
-            }
-        }
-
-        function _getNoConfirmNews() {
-            let payload = { fans: [], blogs: [] }
-            //  蒐集fans、blog消息的 news_id
-            $('li[data-my-news-type]').each((ind, item) => {
-                if ($(item).attr('data-my-news-type') === 'fans') {
-                    payload.fans.push($(item).attr('data-my-news-id'))
-                }
-                if ($(item).attr('data-my-news-type') === 'blog') {
-                    payload.blogs.push($(item).attr('data-my-news-id'))
-                }
-            })
-            return payload
+            return
         }
     })
 </script>

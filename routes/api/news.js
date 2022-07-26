@@ -15,17 +15,17 @@ router.prefix('/api/news')
 
 router.patch('/', api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { payload } = ctx.request.body
+    const { listOfNewsId } = ctx.request.body
     //  { people: [id, ...], blogs: [id, ...]}
-    ctx.body = await confirmNews(payload)
+    ctx.body = await confirmNews(listOfNewsId)
 })
 
 router.post('/readMore', api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
-    const { markTime, confirmNews } = ctx.request.body
+    const { markTime, listOfNewsId } = ctx.request.body
     let fromFront = true
-    //  res = { ...htmlStr, numOfAfterMark, count: { confirm: confirm.length, unconfirm: unconfirm.length}}    
-    let res = await readMoreByUserId(id, markTime, confirmNews, fromFront)
+    // { numOfunconfirm, total, count, htmlStr, ListOfConfirmNewsId: { people, blogs } } = res
+    let res = await readMoreByUserId(id, markTime, listOfNewsId, fromFront)
 
     console.log('@api res => ', res)
     ctx.body = res

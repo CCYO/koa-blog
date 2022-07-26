@@ -264,9 +264,11 @@
                 let newsList = window.data.newsList
                 let { unconfirm, confirm, total, markTime } = newsList
                 newsList.count = unconfirm.length + confirm.length
-                newsList.unconfirm = unconfirm.length && init_news(unconfirm) || undefined
-                newsList.confirm = confirm.length && init_news(confirm) || undefined
-                delete newsList.numOfUnconfirm
+                newsList.listOfUnconfirmNewsId = unconfirm.length && init_news(unconfirm) || undefined
+                newsList.listOfConfirmNewsId = confirm.length && init_news(confirm) || undefined
+                newsList.numOfUnconfirm = 0
+                delete newsList.confirm
+                delete newsList.unconfirm
             }
 
             function init_news(newsList){

@@ -6,14 +6,15 @@ const {
 } = require('../conf/constant')
 
 async function newsList({ userId, offset = 0, whereOps, checkNewsAfterMarkTime}) {
-    let { markTime, exceptNewsList } = whereOps
-    let exceptNewsList_4_people = exceptNewsList.people.length && exceptNewsList.people.join(',') || undefined
-    let exceptNewsList_4_blogs = exceptNewsList.blogs.length && exceptNewsList.blogs.join(',') || undefined
-
+    let { markTime, listOfexceptNewsId } = whereOps
+    console.log('@whereOps => ', whereOps)
+    let listOfexceptNewsId_4_people = listOfexceptNewsId.people.join(',') || undefined
+    let listOfexceptNewsId_4_blogs = listOfexceptNewsId.blogs.join(',') || undefined
+    
     // let mark = checkNewsAfterMarkTime ? '<' : '>'
     let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') > DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
-    let where_exceptNewsListOfPeople = exceptNewsList_4_people && ` AND id NOT IN (${exceptNewsList_4_people})` || ''
-    let where_exceptNewsListOfBlogs = exceptNewsList_4_blogs && ` AND id NOT IN (${exceptNewsList_4_blogs})` || ''
+    let where_exceptNewsListOfPeople = listOfexceptNewsId_4_people && ` AND id NOT IN (${listOfexceptNewsId_4_people})` || ''
+    let where_exceptNewsListOfBlogs = listOfexceptNewsId_4_blogs && ` AND id NOT IN (${listOfexceptNewsId_4_blogs})` || ''
 
     let query = `
     SELECT type, id, target_id, follow_id, confirm, time
@@ -40,11 +41,11 @@ async function newsTotal({ userId, markTime, checkNewsAfterMarkTime}) {
     // let where_time = checkNewsAfterMarkTime ? `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T')` : 1
     let select = 
         !checkNewsAfterMarkTime ?
-        `SELECT COUNT(if(confirm < 1, true, null)) as numOfUnconfirm, COUNT(*) as total ` :
-        `SELECT COUNT(if(DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T'), true, null)) as numOfAfterMark, COUNT(*) as total `
+        `SELECT COUNT(if(confirm < 1, true, null))`  :
+        `SELECT COUNT(if(DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T'), true, null)) `
 
     let query = `
-    ${select}
+    ${select} as numOfUnconfirm, COUNT(*) as total
     FROM (
         SELECT 1 as type, id, confirm, createdAt
         FROM FollowPeople

@@ -39,11 +39,11 @@ async function getNewsByUserId(userId) {
 
 }
 
-async function readMoreByUserId(userId, markTime, idListOfconfirmNews, fromFront = false, offset) {
+async function readMoreByUserId(userId, markTime, listOfNewsId, fromFront = false, offset) {
 
-    let data = await readNews({ userId, markTime, listOfexceptNewsId: idListOfconfirmNews, fromFront })
+    let data = await readNews({ userId, markTime, listOfexceptNewsId: listOfNewsId, fromFront })
 
-    let { newsList: { confirm, unconfirm }, numOfAfterMark, total } = data
+    let { newsList: { confirm, unconfirm }, numOfUnconfirm, total } = data
 
     let ejs_newsForEach = resolve(__dirname, '../views/wedgets/navbar/news-forEach.ejs')
 
@@ -52,20 +52,20 @@ async function readMoreByUserId(userId, markTime, idListOfconfirmNews, fromFront
     htmlStr.confirm = confirm.length && await myRenderFile(ejs_newsForEach, { list: confirm }) || undefined
     htmlStr.unconfirm = unconfirm.length && await myRenderFile(ejs_newsForEach, { list: unconfirm }) || undefined
 
-    let ListOfConfirmNewsId = initNewsList_4_front(confirm)
-    let ListOfUnconfirmNewsId = initNewsList_4_front(unconfirm)
+    let listOfConfirmNewsId = initNewsList_4_front(confirm)
+    let listOfUnconfirmNewsId = initNewsList_4_front(unconfirm)
 
     //  直接先作 confirm
     if (unconfirm.length) {
-        let resModel = await confirmNews(ListOfUnconfirmNewsId)
+        let resModel = await confirmNews(listOfUnconfirmNewsId)
         if (resModel.errno) {
             return resModel
         }
     }
-    ListOfConfirmNewsId.people = [...ListOfConfirmNewsId.people, ...ListOfUnconfirmNewsId.people]
-    ListOfConfirmNewsId.blogs = [...ListOfConfirmNewsId.blogs, ...ListOfUnconfirmNewsId.blogs]
+    listOfConfirmNewsId.people = [...listOfConfirmNewsId.people, ...listOfUnconfirmNewsId.people]
+    listOfConfirmNewsId.blogs = [...listOfConfirmNewsId.blogs, ...listOfUnconfirmNewsId.blogs]
 
-    return new SuccModel({ htmlStr, ListOfConfirmNewsId, numOfAfterMark, total, count: confirm.length + unconfirm.length })
+    return new SuccModel({ htmlStr, listOfConfirmNewsId, numOfUnconfirm, total, count: confirm.length + unconfirm.length })
 }
 
 async function confirmNews(payload) {

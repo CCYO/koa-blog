@@ -57,11 +57,15 @@ async function deleteBlog({ blogList_id, follower_id }) {
     // return row
 }
 
+/**
+ 
+ */
+
 /** 查找 newsList
  * @param {{ 
  *  userId: number,
  *  markTime: string,
- *  listOfexceptNewsId: object,
+ *  listOfexceptNewsId: { object: { people: array, blogs: array}},
  *  fromFront: boolean,
  *  offset: number
  * }} param0 - 查詢 newsList 需要的參數物件
@@ -70,33 +74,22 @@ async function deleteBlog({ blogList_id, follower_id }) {
  * @param {string} param0.markTime yyyy-mm-ddTHH:MM:sssZ 的 時間格式
  * @param {object} param0.listOfexceptNewsId 需撇除的 newsList
  * @param {boolean} param0.fromFront 此查詢是否來自前端
- * @return {object} 若 formFront 則 { newsList, markTime, total, numOfAfterMark}，若 !formFront 則 { newsList, markTime, total, numOfUnconfirm}
+ * @returns { { newsList: array, markTime: string, total: number, numOfUnconfirm: number, numOfAfterMark: number } }  newsList 通知的數據 / markTime 時間標記 \n total 通知總數 / numOfUnconfirm 若!param0.fromFront，則會有此值，代表 RV.markTime 前的 unconfirmNews 數量 / numOfAfterMark 若param0.fromFront，則會有此值，代表 RV.markTime 後的 unconfirmNews 數量
  */
 async function readNews({ userId, markTime = new Date().toISOString(), listOfexceptNewsId = { people: [], blogs: []} , fromFront = false, offset = undefined }) {
 
     let checkNewsAfterMarkTime = fromFront ? true : false
     let whereOps = {markTime, listOfexceptNewsId}
+    console.log('@whereOps => ', whereOps)
     let queryNewsList = await createQuery.newsList({ userId, offset, whereOps, checkNewsAfterMarkTime })
     let newsList = await seq.query(queryNewsList, { type: QueryTypes.SELECT })
     
     newsList = await initNewsList_4_ejs(newsList)
 
-    let res = { newsList, markTime }
-
-    if (!checkNewsAfterMarkTime) {
-        //  若是由後端自行提出的查詢，不需要查詢 markTime 之後 且 未查看的 news
-        let queryTotal = await createQuery.newsTotal({ userId, markTime })
-        let [{ numOfUnconfirm, total }] = await seq.query(queryTotal, { type: QueryTypes.SELECT })
-
-        return { ...res, numOfUnconfirm, total}
-    }
-
     let queryAfterTimeMarkTotal = await createQuery.newsTotal({ userId, markTime, checkNewsAfterMarkTime })
-    let [{ numOfAfterMark, total }] = await seq.query(queryAfterTimeMarkTotal, { type: QueryTypes.SELECT })
+    let [{ numOfUnconfirm, total }] = await seq.query(queryAfterTimeMarkTotal, { type: QueryTypes.SELECT })
 
-    // let more = total > res.page * LIMIT
-    //  { mark, newsList, total, numOfAfterMark }
-    return { ...res, numOfAfterMark, total}
+    return { newsList, markTime, numOfUnconfirm, total}
 }
 
 async function updateFB(data, options){
