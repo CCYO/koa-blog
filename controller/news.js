@@ -5,7 +5,7 @@
 const { resolve } = require('path')
 
 const myRenderFile = require('../utils/renderFile')
-const { initNewsList_4_front } = require('../utils/init/news')
+const { init_listOfNewsId } = require('../utils/init/news')
 
 const { NEWS: { LIMIT } } = require('../conf/constant')
 const {
@@ -39,9 +39,9 @@ async function getNewsByUserId(userId) {
 
 }
 
-async function readMoreByUserId(userId, markTime, listOfNewsId, fromFront = false, offset) {
+async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront = false, offset) {
 
-    let data = await readNews({ userId, markTime, listOfexceptNewsId: listOfNewsId, fromFront })
+    let data = await readNews({ userId, markTime, listOfexceptNewsId, fromFront })
 
     let { newsList: { confirm, unconfirm }, numOfUnconfirm, total } = data
 
@@ -52,34 +52,36 @@ async function readMoreByUserId(userId, markTime, listOfNewsId, fromFront = fals
     htmlStr.confirm = confirm.length && await myRenderFile(ejs_newsForEach, { list: confirm }) || undefined
     htmlStr.unconfirm = unconfirm.length && await myRenderFile(ejs_newsForEach, { list: unconfirm }) || undefined
 
-    let listOfConfirmNewsId = initNewsList_4_front(confirm)
-    let listOfUnconfirmNewsId = initNewsList_4_front(unconfirm)
+    let listOfNewsId = { confirm: init_listOfNewsId(confirm), unconfirm: init_listOfNewsId(unconfirm) }
 
     //  直接先作 confirm
     if (unconfirm.length) {
-        let resModel = await confirmNews(listOfUnconfirmNewsId)
+        let resModel = await confirmNews(listOfNewsId.unconfirm)
         if (resModel.errno) {
             return resModel
         }
     }
-    listOfConfirmNewsId.people = [...listOfConfirmNewsId.people, ...listOfUnconfirmNewsId.people]
-    listOfConfirmNewsId.blogs = [...listOfConfirmNewsId.blogs, ...listOfUnconfirmNewsId.blogs]
 
-    return new SuccModel({ htmlStr, listOfConfirmNewsId, numOfUnconfirm, total, count: confirm.length + unconfirm.length })
+    listOfNewsId.confirm = {
+        people: [...listOfNewsId.confirm.people, ...listOfNewsId.unconfirm.people],
+        blogs: [...listOfNewsId.confirm.blogs, ...listOfNewsId.unconfirm.blogs]
+    }
+
+    return new SuccModel({ htmlStr, listOfNewsId: listOfNewsId.confirm, numOfUnconfirm, total, count: confirm.length + unconfirm.length })
 }
 
-async function confirmNews(payload) {
+async function confirmNews(listOfNewsId) {
     
-    let { people, blogs } = payload
+    let { people, blogs } = listOfNewsId
 
-    const { blogsRow, peopleRow } = await updateNews(payload)
+    const { rowOfBlogs, rowOfPeople } = await updateNews(listOfNewsId)
 
-    if (blogs.length !== blogsRow) {
+    if (blogs.length !== rowOfBlogs) {
         return new ErrModel(NEWS.BLOG_FANS_CONFIRM_ERR)
-    } else if (people.length !== peopleRow) {
+    } else if (people.length !== rowOfPeople) {
         return new ErrModel(NEWS.FOLLOW_CONFIRM_ERR)
     }
-    let res = { ListOfConfirmNewsId: payload, count: blogsRow + peopleRow }
+    let res = { listOfNewsId, count: blogsRow + peopleRow }
     return new SuccModel(res)
 }
 

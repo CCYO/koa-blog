@@ -6,28 +6,31 @@ const {
 } = require('../conf/constant')
 
 async function newsList({ userId, offset = 0, whereOps, checkNewsAfterMarkTime}) {
-    let { markTime, listOfexceptNewsId } = whereOps
+    let { markTime, listOfexceptNewsId: {people, blogs} } = whereOps
     console.log('@whereOps => ', whereOps)
-    let listOfexceptNewsId_4_people = listOfexceptNewsId.people.join(',') || undefined
-    let listOfexceptNewsId_4_blogs = listOfexceptNewsId.blogs.join(',') || undefined
+    let listOfPeopleId = people.join(',') || undefined
+    let listOfBlogsId = blogs.join(',') || undefined
     
     // let mark = checkNewsAfterMarkTime ? '<' : '>'
     let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') > DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
-    let where_exceptNewsListOfPeople = listOfexceptNewsId_4_people && ` AND id NOT IN (${listOfexceptNewsId_4_people})` || ''
-    let where_exceptNewsListOfBlogs = listOfexceptNewsId_4_blogs && ` AND id NOT IN (${listOfexceptNewsId_4_blogs})` || ''
 
     let query = `
     SELECT type, id, target_id, follow_id, confirm, time
     FROM (
         SELECT 1 as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt as time
         FROM FollowPeople P 
-        WHERE idol_id=${userId} AND ${where_time}  ${where_exceptNewsListOfPeople}
+        WHERE idol_id=${userId}
+            AND ${where_time}
+            ${listOfPeopleId && ` AND id NOT IN (${listOfPeopleId})` || ''}
 
         UNION
 
         SELECT 2 as type, id, blog_id as target_id, follower_id as follow_id, confirm, createdAt as time
         FROM FollowBlogs B
-        WHERE follower_id=${userId} AND deletedAt IS NULL AND ${where_time} ${where_exceptNewsListOfBlogs}
+        WHERE follower_id=${userId}
+            AND deletedAt IS NULL
+            AND ${where_time}
+            ${listOfBlogsId && ` AND id NOT IN (${listOfBlogsId})` || ''}
     ) AS X
     ORDER BY confirm=1, time DESC
     LIMIT ${LIMIT} OFFSET ${offset}

@@ -19,15 +19,15 @@
         })
 
         //  綁定 下拉選單鈕 的 click handle
-        $newsDropdown.click(handle_dropDown)
+        $newsDropdown.click(showDropdown)
         //  綁定 readMore鈕 的 click handle
         $readMore.click(moreNewsForReadMore)
 
         async function moreNewsForReadMore() {
-            let newsList = window.data
-            let markTime = newsList.markTime
-            let listOfNewsId = newsList.listOfConfirmNewsId
-            let payload = { markTime, listOfNewsId }
+            let newsList = window.data.newsList
+            let { markTime } = newsList
+            let confirm = newsList.listOfNewsId.confirm
+            let payload = { markTime, listOfNewsId: confirm }
 
             let { data: { errno, data, msg } } = await axios.post(api_readMore, payload)
             if (errno) {
@@ -41,9 +41,9 @@
              * total - userId 的通知總數
              * count - 此次 response 的 通知數量
              * htmlStr - { confirm: string, unconfirm: string } html字符格式的通知數據
-             * ListOfConfirmNewsId - 此次 response 包含的 newsList 之 id 列表
+             * ListOfNewsId - 此次 response 包含的 newsList 之 id 列表
             */
-            let { numOfUnconfirm, total, count, htmlStr, listOfConfirmNewsId: { people, blogs } } = data
+            let { numOfUnconfirm, total, count, htmlStr, listOfNewsId: { people, blogs } } = data
 
             //  若 numOfUnconfirm 有值，則
             if (numOfUnconfirm > 0) {
@@ -57,9 +57,9 @@
 
             //  window.newsList.count 更新
             newsList.count += count
-            //  window.newsList.listOfConfirmNewsId 更新
-            newsList.listOfConfirmNewsId.people = [...newsList.listOfConfirmNewsId.people, ...people]
-            newsList.listOfConfirmNewsId.blogs = [...newsList.listOfConfirmNewsId.blogs, ...blogs]
+            //  window.newsList.confirm 更新
+            confirm.people = [...confirm.people, ...people]
+            confirm.blogs = [...confirm.blogs, ...blogs]
             //  根據 response 添加通知內容
             for (prop in htmlStr) {
                 let html = htmlStr[prop]
@@ -70,15 +70,15 @@
                 $hrs.length && $hrs.last().after(html) || $(`#${prop}-news-title`).toggle(true).after(html)
             }
 
+            let more = newsList.total - newsList.count > 0
             //  判斷下拉選單內的 readMore鈕 是否該顯示
             $readMore.toggle(more) && $noNews.toggle(!more)
         }
 
-        async function moreNewsForDropDown() {
-            let newsList = window.data
+        async function moreNewsForDropdown() {
+            let newsList = window.data.newsList
             let markTime = (new Date()).toISOString()
-            let listOfNewsId = newsList.listOfConfirmNewsId
-            let payload = { markTime, listOfNewsId }
+            let payload = { markTime }
 
             //  ajax 取得通知數據
             let { data: { errno, data, msg } } = await axios.post(api_readMore, payload)
@@ -96,7 +96,7 @@
              * htmlStr - { confirm: string, unconfirm: string } html字符格式的通知數據
              * ListOfConfirmNewsId - 此次 response 包含的 newsList 之 id 列表
             */
-            let { numOfunconfirm, total, count, htmlStr, listOfConfirmNewsId: { people, blogs } } = data
+            let { numOfunconfirm, total, count, htmlStr, listOfNewsId: { people, blogs } } = data
 
             //  若 numOfUnconfirm 有值，則
             if (numOfUnconfirm > 0) {
@@ -114,8 +114,9 @@
             //  window.newsList.count 更新
             newsList.count = count
             //  window.newsList.listOfConfirmNewsId 更新
-            newsList.listOfConfirmNewsId.people = people
-            newsList.listOfConfirmNewsId.blogs = blogs
+            let confirm = newsList.listOfNewsId.confirm
+            confirm.people = [...confirm.people, ...people]
+            confirm.blogs = [...confirm.blogs, ...blogs]
 
             //  window.newsList.markTime 更新
             newsList.markTime = markTime
@@ -141,35 +142,40 @@
             bootstrap.Dropdown.getInstance($newsDropdown[0]).show()
         }
 
+        //  confirm 當前下拉選單內的 unconfirmNews
         async function confirmNews() {
-            let newsList = window.data
-            let { listOfUnconfirmNewsId } = newsList
-            let { data: { errno, data, msg } } = await axios.patch(api_news, { listOfNewsId: listOfUnConfirmNewsId })
+            let newsList = window.data.newsList
+            let unconfirm = newsList.listOfNewsId.unconfirm
+            let { data: { errno, data, msg } } = await axios.patch(api_news, { listOfNewsId: unconfirm })
             if (errno) {
                 alert('confirm失敗')
                 console.log('@msg => ', msg)
             }
             //  完成 confirm 的通知數據
-            let { ListOfConfirmNewsId: { people, blogs }, count } = data
-            newsList.listOfUnconfirmNewsId = undefined
-            if (!newsList.listOfConfirmNewsId) {
-                newsList.listOfConfirmNewsId = { people: [], blogs: [] }
+            let { listOfNewsId: { people, blogs }, count } = data
+            unconfirm = undefined
+            let confirm = newsList.listOfNewsId.confirm
+            if (!confirm) {
+                confirm = { people: [], blogs: [] }
             }
-            newsList.listOfConfirmNewsId = {
-                people: [...newsList.listOfConfirmNewsId.people, ...people],
-                blogs: [...newsList.listOfConfirmNewsId.blogs, ...blogs]
+            confirm = {
+                people: [...confirm.people, ...people],
+                blogs: [...confirm.blogs, ...blogs]
             }
         }
         //  handle 顯示下拉選單
-        async function handle_dropDown() {
+        async function showDropdown() {
+            //  隱藏通知筆數
             $newsCount.toggle(false)
-            let newsList = window.data
-            let { listOfUnconfirmNewsId, numOfUnconfirm } = window.data.newsList
-            
-            if (listOfUnconfirmNewsId) {
-                //進到這邊，代表目前是頁面第一次點擊下拉選單鈕
+
+            let newsList = window.data.newsList
+            let { listOfNewsId, numOfUnconfirm, total, count } = newsList
+            if (listOfNewsId.unconfirm) {
+                //  進到這邊，代表下拉選單列表內有unconfirmNews，且目前是頁面第一次點擊下拉選單鈕
                 await confirmNews()
+                newsList.numOfUnconfirm = 0
             }else if(numOfUnconfirm){
+                //  非初次點擊下拉選單紐，且後端有 晚於 window.data.newsList.markTime 的 unconfirmNews
                 await moreNewsForDropDown()
             }
 

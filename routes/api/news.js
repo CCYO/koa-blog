@@ -24,11 +24,9 @@ router.post('/readMore', api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
     const { markTime, listOfNewsId } = ctx.request.body
     let fromFront = true
+    console.log('@listOfNewsId => ', listOfNewsId)
     // { numOfunconfirm, total, count, htmlStr, ListOfConfirmNewsId: { people, blogs } } = res
-    let res = await readMoreByUserId(id, markTime, listOfNewsId, fromFront)
-
-    console.log('@api res => ', res)
-    ctx.body = res
+    ctx.body = await readMoreByUserId(id, markTime, listOfNewsId, fromFront)
 })
 
 router.post('/confirm', api_check_login, async (ctx, next) => {

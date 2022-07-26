@@ -14,7 +14,12 @@ const {
 
 console.log('@ readBlogById ===>', readBlogById)
 
-function initNewsList_4_front(newsList){
+/**
+ * 
+ * @param { { confirm: [], unconfirm: []}} newsList 
+ * @returns 
+ */
+function init_listOfNewsId(newsList){
     let res = { people: [], blogs: []}
     if(!newsList.length){
         return res
@@ -60,5 +65,5 @@ async function _init(item) {
 
 module.exports = {
     initNewsList_4_ejs,
-    initNewsList_4_front
+    init_listOfNewsId
 }
