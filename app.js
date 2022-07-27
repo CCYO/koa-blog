@@ -24,6 +24,7 @@ const api__user = require('./routes/api/user')
 const api__blog_editor = require('./routes/api/editor')
 const api__GFB = require('./routes/api/GFB')
 const api__news = require('./routes/api/news')
+const api__comment = require('./routes/api/comment')
 
 const view__user = require('./routes/views/user')
 const view__blog = require('./routes/views/blog')
@@ -99,7 +100,7 @@ app.use(api__user.routes(), api__user.allowedMethods())
 app.use(api__blog_editor.routes(), api__blog_editor.allowedMethods())
 app.use(api__GFB.routes(), api__GFB.allowedMethods())
 app.use(api__news.routes(), api__news.allowedMethods())
-
+app.use(api__comment.routes(), api__comment.allowedMethods())
 
 app.use(view__user.routes(), view__user.allowedMethods())
 app.use(view__blog.routes(), view__blog.allowedMethods())

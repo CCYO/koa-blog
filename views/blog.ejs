@@ -26,7 +26,6 @@
         #editor-container {
             border: 1px solid rgba(200, 200, 200, .8);
         }
-        
     </style>
 </head>
 
@@ -46,6 +45,9 @@
     <div data-my-data="blog">
         <%= JSON.stringify(blog) %>
     </div>
+    <div data-my-data="me">
+        <%= JSON.stringify(me) %>
+    </div>
     <%- include('wedgets/cdn') %>
     <!-- 引入 editor css -->
     <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
@@ -53,6 +55,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
     <script>
         $(function () {
+            let api_comment = '/api/comment'
+
             init_data()
 
             init_editor()
@@ -75,20 +79,32 @@
 
                 let $el = $('#editor-container')
                 $el.on('keyup', handle_keyup)
+                $el.on('click', handle_click)
+                function handle_click() {
+                    if (window.data.me) {
+                        return
+                    }
+                    if (confirm('請先登入')) {
+                        location.href = `/login?from=${location.pathname}`
+                    }
+                    return
+                }
+                async function handle_keyup(e) {
 
-                function handle_keyup(e){
-                    if(e.key !== 'Enter'){
+
+                    if (e.key !== 'Enter') {
                         return
                     }
 
-                    if(e.key === 'Enter' && !e.shiftKey){
+                    if (e.key === 'Enter' && !e.shiftKey) {
                         let html = editor.getHtml()
                         console.log(html)
                         let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
                         html = html.replace(reg, '')
-                        console.log(html)
+                        let { data } = await axios.post(api_comment, { html })
+                        console.log(data)
                     }
-                    
+
                 }
             }
 
@@ -98,9 +114,12 @@
                 window.data = {}
                 $('[data-my-data]').each((index, el) => {
                     let $el = $(el)
-                    console.log($el.text())
                     let prop = $el.data('my-data')
-                    window.data[prop] = JSON.parse($el.text())
+                    try {
+                        window.data[prop] = JSON.parse($el.text())
+                    } catch (e) {
+                        window.data[prop] = undefined
+                    }
                     $el.remove()
                 })
             }

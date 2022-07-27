@@ -43,11 +43,12 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
 router.get('/blog/:blog_id', async (ctx, next) => {
     const { blog_id } = ctx.params
     const { errno, data: blog, msg } = await getBlog(blog_id)
-
+    let { user: me } = ctx.session
+    
     if (errno) {
         return ctx.body = msg
     } else {
-        return await ctx.render('blog', { blog })
+        return await ctx.render('blog', { blog, me })
     }
 })
 
