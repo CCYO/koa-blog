@@ -19,29 +19,30 @@
 
         .editor-content-view {
             background-color: rgba(255, 200, 200, .5);
+            padding: 1rem;
+            margin-bottom: 1rem;
         }
-        .form-floating>.form-control:focus~label,
-        .form-floating>.form-control:not(:placeholder-shown)~label{
-            opacity: 0 !important
+
+        #editor-container {
+            border: 1px solid rgba(200, 200, 200, .8);
         }
+        
     </style>
 </head>
 
 <body>
     <div class="container">
-    <div style="font-family: 'Noto Sans TC', 'consolas';">
-        <h1> <%= blog.title %> </h1>
-        <div class="editor-content-view">
-            <%- blog.html %>
+        <div style="font-family: 'Noto Sans TC', 'consolas';">
+            <h1> <%= blog.title %> </h1>
+            <div class="editor-content-view">
+                <%- blog.html %>
+            </div>
         </div>
+        <div id="comment">
+            <div id="editor-container"></div>
+        </div>
+
     </div>
-    <div id="comment">
-        <div class="form-floating">
-            <div class="form-control" placeholder="Leave a comment here" id="editor-container" ></div>div>
-            <label for="floatingTextarea">我有話要說</label>
-          </div>
-    </div>
-</div>
     <div data-my-data="blog">
         <%= JSON.stringify(blog) %>
     </div>
@@ -59,14 +60,36 @@
                 //  editor config
                 const { createEditor } = window.wangEditor
 
+                const editorConfig = { MENU_CONF: {} }
+
+                //  editor config : placeholder
+                editorConfig.placeholder = '我有話要說'
                 // editor 創建
                 const editor = createEditor({
-                    //  插入後端取得的 html
+                    config: editorConfig,
                     selector: '#editor-container',
                     mode: 'simple'
                 })
 
                 window.editor = editor
+
+                let $el = $('#editor-container')
+                $el.on('keyup', handle_keyup)
+
+                function handle_keyup(e){
+                    if(e.key !== 'Enter'){
+                        return
+                    }
+
+                    if(e.key === 'Enter' && !e.shiftKey){
+                        let html = editor.getHtml()
+                        console.log(html)
+                        let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
+                        html = html.replace(reg, '')
+                        console.log(html)
+                    }
+                    
+                }
             }
 
 
