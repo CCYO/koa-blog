@@ -39,7 +39,7 @@ async function cancelAssociateWidthImg(blogImgs) {
     let row = await BlogImg.destroy({
         where: { id: blogImgs }
     })
-    console.log('@row => ', row)
+    
     return row
 }
 
@@ -150,22 +150,11 @@ async function readBlogList({ user_id, getAll = false}) {
     return blogList
 }
 
-async function updateFollowBlog(where, data) {
-    console.log('@data => ', data)
-    console.log('@where => ', where)
-    const [row] = await Blog_Fans.update(data, { where })
-    console.log('@row => ', row)
-    return row
-}
-
 module.exports = {
     createBlogAndAssociateWidthUser,
     updateBlog,
     cancelAssociateWidthImg,
     deleteBlog,
     readBlogById,
-    readBlogList,
-
-    
-    updateFollowBlog
+    readBlogList
 }

@@ -26,8 +26,8 @@
         async function moreNewsForReadMore() {
             let newsList = window.data.newsList
             let { markTime } = newsList
-            let confirm = newsList.listOfNewsId.confirm
-            let payload = { markTime, listOfNewsId: confirm }
+            let listOfNewsId = newsList.listOfNewsId
+            let payload = { markTime, listOfNewsId: listOfNewsId.confirm }
 
             let { data: { errno, data, msg } } = await axios.post(api_readMore, payload)
             if (errno) {
@@ -58,8 +58,10 @@
             //  window.newsList.count 更新
             newsList.count += count
             //  window.newsList.confirm 更新
+            let confirm = listOfNewsId.confirm
             confirm.people = [...confirm.people, ...people]
             confirm.blogs = [...confirm.blogs, ...blogs]
+            
             //  根據 response 添加通知內容
             for (prop in htmlStr) {
                 let html = htmlStr[prop]
@@ -96,7 +98,7 @@
              * htmlStr - { confirm: string, unconfirm: string } html字符格式的通知數據
              * ListOfConfirmNewsId - 此次 response 包含的 newsList 之 id 列表
             */
-            let { numOfunconfirm, total, count, htmlStr, listOfNewsId: { people, blogs } } = data
+            let { numOfUnconfirm, total, count, htmlStr, listOfNewsId: { people, blogs } } = data
 
             //  若 numOfUnconfirm 有值，則
             if (numOfUnconfirm > 0) {
@@ -114,9 +116,7 @@
             //  window.newsList.count 更新
             newsList.count = count
             //  window.newsList.listOfConfirmNewsId 更新
-            let confirm = newsList.listOfNewsId.confirm
-            confirm.people = [...confirm.people, ...people]
-            confirm.blogs = [...confirm.blogs, ...blogs]
+            newsList.listOfNewsId.confirm = { people, blogs}
 
             //  window.newsList.markTime 更新
             newsList.markTime = markTime
@@ -145,23 +145,20 @@
         //  confirm 當前下拉選單內的 unconfirmNews
         async function confirmNews() {
             let newsList = window.data.newsList
-            let unconfirm = newsList.listOfNewsId.unconfirm
-            let { data: { errno, data, msg } } = await axios.patch(api_news, { listOfNewsId: unconfirm })
+            let listOfNewsId = newsList.listOfNewsId
+            let { data: { errno, data, msg } } = await axios.patch(api_news, { listOfNewsId: listOfNewsId.unconfirm })
             if (errno) {
                 alert('confirm失敗')
                 console.log('@msg => ', msg)
             }
             //  完成 confirm 的通知數據
             let { listOfNewsId: { people, blogs }, count } = data
-            unconfirm = undefined
+            //  更新 data.newsList.listOfNewsId.unconfirm
+            listOfNewsId.unconfirm = undefined
+            //  更新 data.newsList.listOfNewsId.confirm
             let confirm = newsList.listOfNewsId.confirm
-            if (!confirm) {
-                confirm = { people: [], blogs: [] }
-            }
-            confirm = {
-                people: [...confirm.people, ...people],
-                blogs: [...confirm.blogs, ...blogs]
-            }
+            confirm.people = [...confirm.people, ...people]
+            confirm.blogs = [...confirm.blogs, ...blogs]
         }
         //  handle 顯示下拉選單
         async function showDropdown() {
@@ -176,7 +173,7 @@
                 newsList.numOfUnconfirm = 0
             }else if(numOfUnconfirm){
                 //  非初次點擊下拉選單紐，且後端有 晚於 window.data.newsList.markTime 的 unconfirmNews
-                await moreNewsForDropDown()
+                await moreNewsForDropdown()
             }
 
             return

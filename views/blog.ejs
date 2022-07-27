@@ -1,14 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: rgba(255, 255, 200, .5);
+        }
+
+        .editor-content-view {
+            background-color: rgba(255, 200, 200, .5);
+        }
+        .form-floating>.form-control:focus~label,
+        .form-floating>.form-control:not(:placeholder-shown)~label{
+            opacity: 0 !important
+        }
+    </style>
 </head>
+
 <body>
-    <div>
-        <%- blog.html %> 
+    <div class="container">
+    <div style="font-family: 'Noto Sans TC', 'consolas';">
+        <h1> <%= blog.title %> </h1>
+        <div class="editor-content-view">
+            <%- blog.html %>
+        </div>
     </div>
+    <div id="comment">
+        <div class="form-floating">
+            <div class="form-control" placeholder="Leave a comment here" id="editor-container" ></div>div>
+            <label for="floatingTextarea">我有話要說</label>
+          </div>
+    </div>
+</div>
+    <div data-my-data="blog">
+        <%= JSON.stringify(blog) %>
+    </div>
+    <%- include('wedgets/cdn') %>
+    <!-- 引入 editor css -->
+    <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
+    <!-- 引入 editor js -->
+    <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
+    <script>
+        $(function () {
+            init_data()
+
+            init_editor()
+            function init_editor() {
+                //  editor config
+                const { createEditor } = window.wangEditor
+
+                // editor 創建
+                const editor = createEditor({
+                    //  插入後端取得的 html
+                    selector: '#editor-container',
+                    mode: 'simple'
+                })
+
+                window.editor = editor
+            }
+
+
+
+            function init_data() {
+                window.data = {}
+                $('[data-my-data]').each((index, el) => {
+                    let $el = $(el)
+                    console.log($el.text())
+                    let prop = $el.data('my-data')
+                    window.data[prop] = JSON.parse($el.text())
+                    $el.remove()
+                })
+            }
+        })
+    </script>
 </body>
+
 </html>

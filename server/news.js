@@ -9,25 +9,24 @@ const {
     Follow, Blog
 } = require('../db/model')
 
-const { initNewsList_4_ejs } = require('../utils/init/news')
+const { init_newsList } = require('../utils/init/news')
 
 const createQuery = require('../db/query')
 
 async function createFollowers({ blog_id, followerList_id }) {
     let data = followerList_id.map(follower_id => ({ blog_id, follower_id }))
     let res = await FB.bulkCreate((data))
-    console.log('res')
+    
     return res
 }
 
 async function hiddenBlog({ blog_id }) {
     let row = await FB.destroy({ where: { blog_id, confirm: false } })
-    console.log('@row=> ', row)
 }
 
 async function restoreBlog({ blog_id }) {
     let res = await FB.restore({ where: { blog_id } })
-    console.log('@res=> ', res)
+
 }
 
 async function readFollowers({ blog_id, onlyId = true }) {
@@ -80,12 +79,12 @@ async function readNews({ userId, markTime = new Date().toISOString(), listOfexc
 
     let checkNewsAfterMarkTime = fromFront ? true : false
     let whereOps = {markTime, listOfexceptNewsId}
-    console.log('@whereOps => ', whereOps)
+    
     let queryNewsList = await createQuery.newsList({ userId, offset, whereOps, checkNewsAfterMarkTime })
     let newsList = await seq.query(queryNewsList, { type: QueryTypes.SELECT })
     
-    newsList = await initNewsList_4_ejs(newsList)
-
+    newsList = await init_newsList(newsList)
+    
     let queryAfterTimeMarkTotal = await createQuery.newsTotal({ userId, markTime, checkNewsAfterMarkTime })
     let [{ numOfUnconfirm, total }] = await seq.query(queryAfterTimeMarkTotal, { type: QueryTypes.SELECT })
 
@@ -127,23 +126,20 @@ async function updateBlogFansComfirm(list, data = { confirm: true }) {
 async function updateNews({ people, blogs }) {
     let data = {}
     if (people.length) {
-        let [peopleRow] = await FollowPeople.update({ confirm: true }, { where: { id: people } })
-        data.peopleRow = peopleRow
+        let [rowOfPeople] = await FollowPeople.update({ confirm: true }, { where: { id: people } })
+        data.rowOfPeople = rowOfPeople
     }else{
-        data.peopleRow = 0
+        data.rowOfPeople = 0
     }
 
     if (blogs.length) {
-        let [blogsRow] = await FB.update({ confirm: true }, { where: { id: blogs } })
-        data.blogsRow = blogsRow
+        let [rowOfBlogs] = await FB.update({ confirm: true }, { where: { id: blogs } })
+        data.rowOfBlogs = rowOfBlogs
     }else{
-        data.blogsRow = 0
+        data.rowOfBlogs = 0
     }
-
-    console.log('@data Row => ', data)
     
     return data
-
 }
 
 let FollowBlog = {

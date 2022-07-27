@@ -100,8 +100,6 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             let r = await FB.updateFB({ deletedAt: null, createdAt: new Date() }, {
                 where: { blog_id, deletedAt: {[Op.not]: null}  }
             })
-            console.log('@r => ', r)
-            // await FollowBlog.update()
 
             let followerList_id = await FB.readFollowers({ blog_id })
 
@@ -115,7 +113,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             let newFollowerList_Id = fansList_id.filter(fans_id => {
                 return !followerList_id.includes(fans_id)
             })
-            console.log('@newFollowerList_Id.length => ', newFollowerList_Id.length)
+            
             if (newFollowerList_Id.length) {
                 //  新增FollowBlog.follower
                 await FB.createFollowers({ blog_id, followerList_id: newFollowerList_Id })
@@ -207,21 +205,10 @@ async function getBlogListByUserId(user_id, is_author = false) {
     return new SuccModel(data)
 }
 
-
-
-async function confirmFollowBlog(blog_id, fans_id) {
-    const row = await updateFollowBlog({ blog_id, fans_id }, { confirm: true })
-    if (row) return new SuccModel()
-    return new ErrModel(FOLLOW.CONFIRM_ERR)
-}
-
 module.exports = {
     addBlog,
     modifyBlog,
     removeBlog,
     getBlog,
-    getBlogListByUserId,
-
-
-    confirmFollowBlog
+    getBlogListByUserId
 }

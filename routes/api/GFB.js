@@ -14,7 +14,6 @@ const uid = 'uid1'
 router.post('/api/customToken', async (ctx, next) => {
     const token = await auth.createCustomToken(uid)
     const {user} = ctx.request.body
-    console.log('@use => ', user)
     ctx.body = token
 })
 
@@ -23,7 +22,6 @@ router.get('/view/token', async (ctx, next) => {
 })
 
 router.post('/api/file' , async (ctx, next) => {
-    console.log('@確實進來了')
     const ref = `GFB/999.jpg`
     let file_ref = storage.bucket().file(ref)
     ctx._my = {}

@@ -134,7 +134,7 @@ const update = async (newUserInfo, id) => {
     let [row] = await User.update(newUserInfo, {
         where: { id }
     })
-    console.log('@row => ', row)
+    
     if (!row) return false
     let { dataValues } = await User.findByPk(id)
     return init_4_user(dataValues)
@@ -207,7 +207,7 @@ async function readBlogListAndAuthorByUserId(user_id) {
         ...author
     } = res.toJSON()
 
-    console.log('@bbbb => ', blogList)
+    
 
     author = init_4_user(author)
 

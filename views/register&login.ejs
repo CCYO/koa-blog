@@ -171,7 +171,7 @@
           if (!errno) {
             alert('登入成功')
             let from = location.search ? new URLSearchParams(location.search).get('from') : false
-            location.pathname = from ? from : '/self'
+            location.href = from ? from : '/self'
           } else {
             alert(msg)
           }

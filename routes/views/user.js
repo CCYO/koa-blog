@@ -27,20 +27,24 @@ router.get('/other/:user_id', async (ctx, next) => {
     let { user_id } = ctx.params
     user_id = user_id * 1
 
-    if(me.id === user_id){
+    if(me && me.id === user_id){
         return ctx.redirect('/self')
     }
 
     let { data: { currentUser, fansList, idolList} } = await getPeopleById(user_id)
     let { data: blogList } = await getBlogListByUserId(user_id)
-    let { data: newsList } = await getNewsByUserId(me.id)
-    // let {} = await getNewsByUserId(person_id)
+
+    let newsList = undefined
+    if(me){
+        let res = await getNewsByUserId(me.id)
+        newsList = res.data
+    }
     
-    await ctx.render('_self', {
-        isMyIdol: fansList.some((fans) => fans.id === me.id),
-        logging: true,
+    await ctx.render('self', {
+        isMyIdol: !me ? false : fansList.some((fans) => fans.id === me.id),
+        logging: me ? true : false,
         active: undefined,
-        more: newsList.total > newsList.count,
+        
         me,
 
         currentUser,
@@ -53,13 +57,13 @@ router.get('/other/:user_id', async (ctx, next) => {
     })
 })
 
-router.get('/self', async (ctx, next) => {
+router.get('/self', view_check_login, async (ctx, next) => {
     let { id } = ctx.session.user
     let { data: { currentUser, fansList, idolList} } = await getPeopleById(id)
     let { data: blogList } = await getBlogListByUserId(id, true)
     let { data: newsList} = await getNewsByUserId(id)
-    console.log('@newsList => ', newsList)
-    await ctx.render('_self', {
+
+    await ctx.render('self', {
         isMyIdol: undefined,
         logging: true,
         active: undefined,

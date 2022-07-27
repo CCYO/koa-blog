@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><% user.nickname %>的主頁</title>
+    <title><% currentUser.nickname %>的主頁</title>
     <!-- BS5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
@@ -39,7 +39,7 @@
 
         .follow-box a {
             text-decoration: none;
-            font-size: 0.25rem
+            font-size: 0.25rem;
         }
     </style>
     <%- include('wedgets/navbar/navbar-css') %>
@@ -47,7 +47,7 @@
 
 <body>
     <!-- 主導覽 -->
-    <!-- <%- include('wedgets/navbar/navbar') %> -->
+    <%- include('wedgets/navbar/navbar') %>
 
     <div class="container">
         <div class="row">
@@ -55,50 +55,68 @@
                 <h1>主要資料</h1>
                 <div class="userInfo">
                     <div class='avatar-box'>
-                        <img src="<%= user.avatar %>" alt="" srcset="">
-                        <% if (!self && myIdol) { %>
-                        <button id="cancelFollow" data-id="<%= user.id %>">取消追蹤</button>
-                        <% } else if (!self && myIdol === false) { %>
-                        <button id="follow" data-id="<%= user.id %>">追蹤</button>
+                        <img src="<%= currentUser.avatar %>" alt="" srcset="">
+
+                        <% if (isMyIdol !== undefined) { %>
+                        <button id="cancelFollow" data-user-id="<%= currentUser.id %>"
+                            class="<%= isMyIdol ? 'my-show' : 'my-noshow' %>">取消追蹤</button>
+                        <button id="follow" data-user-id="<%= currentUser.id %>"
+                            class="<%= !isMyIdol ? 'my-show' : 'my-noshow' %>">追蹤</button>
                         <% } %>
+
                     </div>
-                    <p><%= user.email %> </p>
-                    <p><%= user.nickname %> </p>
+                    <p><%= currentUser.email %> </p>
+                    <p><%= currentUser.nickname %> </p>
                 </div>
                 <hr>
                 <div id="blogs">
-                    <a href="/blog/new">撰寫新文章</a>
-                    <div id="public-blog">
+                    <div>
+                        <% if (isMyIdol === undefined) { %>
+                        <a href="/blog/new">撰寫新文章</a>
+                        <% } %>
+                    </div>
+                    <div id="public-blog" class="pb-3">
                         <h2>已發布的BLOG</h2>
-                        <% if(blogs.show.length){ %>
+
+                        <% if(blogList.show.length){ %>
+
                         <ul class="list-group list-group-flush">
-                            <% blogs.show.forEach(({id, title}) => { %>
+                            <% blogList.show.forEach(({id, title}) => { %>
                             <li
                                 class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                                 <a href="/blog/<%= id %>" class="stretched-link"><%= title %> </a>
-                                <% if (self) { %>
+
+                                <% if (isMyIdol === undefined) { %>
                                 <a class='btn btn-outline-primary btn-sm btn-blog-edit'
                                     href="/blog/edit/<%= id %>">編輯</a>
                                 <% } %>
+
                             </li>
                             <% }) %>
                         </ul>
+
                         <% } else { %>
+
                         <p>沒有發布的BLOG</p>
+
                         <% } %>
                     </div>
-                    <% if (self) { %>
-                    <div id="private-blog">
+
+                    <% if (isMyIdol === undefined) { %>
+
+                    <div id="private-blog" class="pb-3">
                         <h2>編輯中的BLOG</h2>
-                        <% if(blogs.hidden.length){ %>
+
+                        <% if(blogList.hidden.length){ %>
                         <ul class="list-group list-group-flush">
-                            <% blogs.hidden.forEach(({id, title}) => { %>
+                            <% blogList.hidden.forEach(({id, title}) => { %>
                             <li
                                 class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                                 <div>
                                     <a class="stretched-link" href="/blog/<%= id %>"><%= title %> </a>
                                 </div>
-                                <% if (self) { %>
+
+                                <% if (isMyIdol === undefined) { %>
                                 <a class='btn btn-outline-primary btn-sm btn-blog-edit'
                                     href="/blog/edit/<%= id %>">編輯</a>
                                 <% } %>
@@ -113,38 +131,38 @@
                     <% } %>
                 </div>
             </div>
-            <div class="col-4" style="background: rgba(255, 185, 100, .9);">
+            <div class="col-4" style="background: rgba(255, 185, 100, .9)">
                 <h1>次要資料</h1>
                 <div>
                     <p>Fans</p>
-                    <% if (fans.length) { %>
-                    <ul class="d-flex flex-wrap p-0">
-                        <% fans.forEach(fan => { %>
-                        <% if (fan.id !== user.id ) { %>
-                        <li class="card follow-box m-1">
-                            <img src="<%= fan.avatar %>" class="card-img-top" alt="">
+                    <% if (fansList.length) { %>
+                    <ul id="fansList" class="d-flex flex-wrap p-0">
+                        <% fansList.forEach(fans => { %>
+
+                        <li class="card follow-box m-1" data-fans-id="<%= fans.id %>">
+                            <img src="<%= fans.avatar %>" class="card-img-top" alt="">
                             <div class="card-body text-center">
-                                <a href="/other/<%= fan.id %>" class="stretched-link"><%= fan.nickname %></a>
+                                <a href="/other/<%= fans.id %>" class="stretched-link"><%= fans.nickname %></a>
                             </div>
                         </li>
-                        <% } %>
+
                         <% }) %>
                     </ul>
                     <% } %>
                 </div>
                 <div>
                     <p>idols</p>
-                    <% if (idols.length) { %>
+                    <% if (idolList.length) { %>
                     <ul class="d-flex flex-wrap p-0">
-                        <% idols.forEach(idol => { %>
-                        <% if (idol.id !== user.id ) { %>
+                        <% idolList.forEach(idol => { %>
+
                         <li class="card follow-box m-1">
                             <img src="<%= idol.avatar %>" class="card-img-top" alt="">
                             <div class="card-body text-center">
                                 <a href="/other/<%= idol.id %>" class="stretched-link"><%= idol.nickname %></a>
                             </div>
                         </li>
-                        <% } %>
+
                         <% }) %>
                     </ul>
                     <% } %>
@@ -152,39 +170,148 @@
             </div>
         </div>
     </div>
-    <div id="data">
-        <%= JSON.stringify(newsList) %>
+    <div class="my-noshow" id="data">
+        <div data-my-data="me">
+            <%= JSON.stringify(me) %>
+        </div>
+        <div data-my-data="newsList">
+            <%= JSON.stringify(newsList) %>
+        </div>
+        <div data-my-data="currentUser">
+            <%= JSON.stringify(currentUser) %>
+        </div>
+        <div data-my-data="idolList">
+            <%= JSON.stringify(idolList) %>
+        </div>
+        <div data-my-data="fansList">
+            <%= JSON.stringify(fansList) %>
+        </div>
     </div>
     <%- include('wedgets/cdn') %>
-    <%- include('wedgets/navbar/navbar-js')  %>
-    <%- include('wedgets/navbar/news-js') %>
     <script>
         $(function () {
-            window.data = JSON.parse($('#data').text())
-            $('#cancelFollow') && $('#cancelFollow').click(aboutFollow(false))
-            $('#follow') && $('#follow').click(aboutFollow())
 
-            function aboutFollow(followRoCancel = true) {
-                let follow = followRoCancel ? true : false
-                let api = follow ? '/api/user/follow' : '/api/user/cancelFollow'
+            let $btn_follow = $('#follow')
+            let $btn_cancelFollow = $('#cancelFollow')
+            let api_follow = '/api/user/follow'
+            let api_cancelFollow = '/api/user/cancelFollow'
+
+            window.data = {}
+
+            //  初始化數據
+            init_data()
+
+            $btn_follow.click(handle_follow(true))
+            $btn_cancelFollow.click(handle_follow(false))
+
+            //  handle for follow or cancel follow
+            function handle_follow(toFollow = true) {
+                let api = toFollow ? api_follow : api_cancelFollow
+
+                let { fansList, me } = window.data
+                if(!me){
+                    return () => {
+                        alert('請先登入')
+                        location.href = `/login?from=${location.pathname}`
+                    }
+                }
+
+                let feedback_func = () => {
+                    if (toFollow) {
+                        alert('已追蹤')
+                        _btnFollowToggle()
+                        fansList.unshift(me)
+                        let html_li = `
+                        <li class="card follow-box m-1" data-fans-id="${me.id}">
+                            <img src="${me.avatar}" class="card-img-top" alt="">
+                            <div class="card-body text-center">
+                                <a href="/other/${me.id}" class="stretched-link">${me.nickname}</a>
+                            </div>
+                        </li>
+                        `
+                        $(`ul#fansList`).prepend(html_li)
+
+                    } else {
+                        alert('已退追')
+                        _btnFollowToggle()
+                        fansList.splice(fansList.indexOf(me.id), 1)
+                        $(`li[data-fans-id='${me.id}']`).remove()
+                    }
+
+                }
+
                 return async (e) => {
-                    let id = e.target.dataset['id']
+                    let $target = $(e.target)
+                    let id = $target.data('user-id')
                     const {
                         data: {
                             errno, data, msg
                         }
                     } = await axios.post(api, { id })
+
                     if (!errno) {
-                        alert(data)
-                        location.reload()
+                        feedback_func()
                     } else {
-                        alert(msg)
+                        alert('操作發生錯誤')
+                        console.log(msg)
                     }
                 }
             }
-        })
 
+            function _btnFollowToggle() {
+                $btn_follow.toggle()
+                $btn_cancelFollow.toggle()
+            }
+
+            //  初始化數據
+            function init_data() {
+                $(`[data-my-data]`).each((index, el) => {
+                    let $el = $(el)
+                    let prop = $el.data('my-data')
+                    try{
+                        window.data[prop] = JSON.parse($el.text())
+                    }catch(e){
+                        window.data[prop] = undefined
+                    }
+                })
+                $('#data').remove()
+                
+                _init_newsList()
+                
+            }
+
+            function _init_newsList(){
+                let newsList = window.data.newsList
+                if(!newsList){
+                    window.data.newsList = { people: [], blogs: []}
+                    return
+                }
+
+                let { unconfirm, confirm, total, markTime } = newsList
+                newsList.count = unconfirm.length + confirm.length
+                newsList.listOfNewsId = {
+                    unconfirm: unconfirm.length && _init_news(unconfirm) || undefined,
+                    confirm: confirm.length && _init_news(confirm) || { people: [], blogs: [] }
+                }
+                delete newsList.confirm
+                delete newsList.unconfirm
+            }
+
+
+            function _init_news(newsList) {
+                let res = { people: [], blogs: [] }
+                if (!newsList.length) {
+                    return res
+                }
+                return newsList.reduce((initVal, { type, id }) => {
+                    type === 1 && initVal.people.push(id)
+                    type === 2 && initVal.blogs.push(id)
+                    return initVal
+                }, res)
+            }
+        })
     </script>
+    <%- include('wedgets/navbar/news-js') %>
 </body>
 
 </html>

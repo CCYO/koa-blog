@@ -12,8 +12,6 @@ const {
     readBlogById
 } = require('../../server/blog')
 
-console.log('@ readBlogById ===>', readBlogById)
-
 /**
  * 
  * @param { { confirm: [], unconfirm: []}} newsList 
@@ -32,23 +30,23 @@ function init_listOfNewsId(newsList){
     }, res)
 }
 
-async function initNewsList_4_ejs(newsList) {
+async function init_newsList(newsList) {
     if (!newsList.length) {
         return []
     }
 
-    let promiseList = newsList.map(_init)
+    let listOfPromise = newsList.map(_init)
 
-    let init_newsList = await Promise.all(promiseList)
+    listOfPromise = await Promise.all(listOfPromise)
 
-    init_newsList = init_newsList.reduce((initVal, currVal, index) => {
+    let res = listOfPromise.reduce((initVal, currVal, index) => {
         let { confirm } = currVal
         confirm && initVal.confirm.push(currVal)
         !confirm && initVal.unconfirm.push(currVal)
         return initVal
     }, { unconfirm: [], confirm: [] })
 
-    return init_newsList
+    return res
 }
 
 async function _init(item) {
@@ -64,6 +62,6 @@ async function _init(item) {
 }
 
 module.exports = {
-    initNewsList_4_ejs,
+    init_newsList,
     init_listOfNewsId
 }

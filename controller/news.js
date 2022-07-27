@@ -75,13 +75,12 @@ async function confirmNews(listOfNewsId) {
     let { people, blogs } = listOfNewsId
 
     const { rowOfBlogs, rowOfPeople } = await updateNews(listOfNewsId)
-
     if (blogs.length !== rowOfBlogs) {
         return new ErrModel(NEWS.BLOG_FANS_CONFIRM_ERR)
     } else if (people.length !== rowOfPeople) {
         return new ErrModel(NEWS.FOLLOW_CONFIRM_ERR)
     }
-    let res = { listOfNewsId, count: blogsRow + peopleRow }
+    let res = { listOfNewsId, count: rowOfBlogs + rowOfPeople }
     return new SuccModel(res)
 }
 

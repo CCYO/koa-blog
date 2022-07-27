@@ -199,7 +199,7 @@ async function findUserById(id) {
 const modifyUserInfo = async (ctx) => {
     const { id } = ctx.session.user
     let newUserInfo = { ...ctx.request.body }
-    console.log('@newUserInfo => ', newUserInfo)
+
     const user = await update(newUserInfo, id)
     if (user) {
         ctx.session.user = user
