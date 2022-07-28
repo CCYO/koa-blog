@@ -1,0 +1,38 @@
+<% list.forEach(({type, nickname, time, confirm, fans_id, blog_id, title}) => { %>
+
+<% if (type === 1) { %>
+
+<!-- 新通知 of fans -->
+<li class="dropdown-item position-relative news-item">
+    <a href="/other/<%= fans_id %>" class="stretched-link">
+        <div>
+            <span><%= nickname %>追蹤你囉！</span><br>
+            <span><%= time %> </span>
+        </div>
+    </a>
+</li>
+
+<% } else if (type === 2) { %>
+
+<!-- 新通知 of blog -->
+<li class="dropdown-item  position-relative news-item">
+    <a href="/blog/<%= blog_id %>" class="stretched-link">
+        <div>
+            <span><%= nickname %> 有新文章唷！</span><br>
+            <span>- <%= title %> -</span><br>
+            <span><%= time %> </span>
+        </div>
+    </a>
+</li>
+
+<% } %>
+
+<% if (!confirm) { %>
+<li data-my-hr="unconfirm-news-hr">
+    <% } else { %>
+<li data-my-hr="confirm-news-hr">
+    <% } %>
+    <hr class="dropdown-divider">
+</li>
+
+<% }) %>

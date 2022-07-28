@@ -13,6 +13,10 @@ const {
     confirmFollowBlog
 } = require('../../controller/blog')
 
+const {
+    getNewsByUserId
+} = require('../../controller/news')
+
 
 //  撰寫新文章
 router.get('/blog/new', view_check_login, async (ctx, next) => {
@@ -40,15 +44,29 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
     return await ctx.render('blog-edit', { blog })
 })
 
+//  查看文章
 router.get('/blog/:blog_id', async (ctx, next) => {
+    let { user: me } = ctx.session
     const { blog_id } = ctx.params
     const { errno, data: blog, msg } = await getBlog(blog_id)
-    let { user: me } = ctx.session
-    
+
+    //  導覽列數據
+    let newsList = undefined
+    if (me) {
+        let res = await getNewsByUserId(me.id)
+        newsList = res.data
+    }
+
     if (errno) {
         return ctx.body = msg
     } else {
-        return await ctx.render('blog', { blog, me })
+        return await ctx.render('blog', {
+            logging: me ? true : false,
+            active: undefined,
+            newsList,
+
+            blog, me
+        })
     }
 })
 

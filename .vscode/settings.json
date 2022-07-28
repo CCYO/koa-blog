@@ -12,6 +12,19 @@
             "database": "koa_blog",
             "username": "ccyHome",
             "password": "tt309091238"
+        },
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "koa-blog",
+            "database": "koa_blog",
+            "username": "study4",
+            "password": "tt309091238"
         }
     ]
 }

@@ -1,7 +1,7 @@
 const { Op } = require('sequelize')
 
 const {
-    User, Blog, Img, BlogImg, FollowPeople, Blog_Follow, News, seq
+    User, Blog, Img, BlogImg, FollowPeople, Blog_Follow, Comment, News, seq
 } = require('./model')
 
 const {
@@ -102,8 +102,10 @@ async function go2(user_id, time) {
         try {
             // await seq.sync({ force: true })
             
-             const { errno, data, msg } = await confirmNews({ people: [5,7], blogs: [3,5,9,11,13]})
-            
+            //  const { errno, data, msg } = await confirmNews({ people: [5,7], blogs: [3,5,9,11,13]})
+
+            await Comment.truncate()
+
             if(errno){
                 console.log('@msg => ', msg)
                 return

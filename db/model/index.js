@@ -2,6 +2,7 @@ const seq = require('../seq')
 const User = require('./User')
 const Blog = require('./Blog')
 const Img = require('./Img')
+const Comment = require('./Commnet')
 const BlogImg = require('./relation-Blog&Img')
 
 const FollowPeople = require('./FollowPeople')
@@ -28,6 +29,14 @@ User.hasMany(Blog, { foreignKey: 'user_id', sourceKey: 'id'})
 Blog.belongsToMany(Img, { through: BlogImg, foreignKey: 'blog_id', targetKey: 'id' })
 Img.belongsToMany(Blog, { through: BlogImg, foreignKey: 'img_id', targetKey: 'id' })
 
+//  Blog : Comment = 1 : N
+Comment.belongsTo(Blog, { foreignKey: 'blog_id', targetKey: 'id'})
+Blog.hasMany(Comment, { foreignKey: 'blog_id', sourceKey: 'id'})
+
+//  User : Comment = 1 : N
+Comment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id'})
+User.hasMany(Comment, { foreignKey: 'user_id', sourceKey: 'id'})
+
 //  SourceModel 作為 foreignKey 的來源，
 //  as 是 TargetModel 的別名，
 User.belongsToMany(User, { as: 'FollowPeople_I', through: FollowPeople, foreignKey: 'fans_id', targetKey: 'id'})
@@ -53,7 +62,8 @@ User.belongsToMany(Blog, { as: 'FollowBlog_B', through: FollowBlog, foreignKey: 
 // News.belongsTo(User_Follow, { foreignKey: 'news_id', targetKey: 'id'})
 
 module.exports = {
-    User, Blog, Img, BlogImg, 
+    User, Blog, Img, Comment,
+    BlogImg, 
     
     FollowPeople,
     FollowBlog,

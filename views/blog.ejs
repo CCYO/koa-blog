@@ -27,10 +27,12 @@
             border: 1px solid rgba(200, 200, 200, .8);
         }
     </style>
+    
 </head>
 
 <body>
-    <div class="container">
+    <%- include('wedgets/navbar/navbar') %>
+    <div class="container pt-2 pb-2">
         <div style="font-family: 'Noto Sans TC', 'consolas';">
             <h1> <%= blog.title %> </h1>
             <div class="editor-content-view">
@@ -39,13 +41,15 @@
         </div>
         <div id="comment">
             <div id="editor-container"></div>
+            <div id="list">
+                
+            </div>
         </div>
-
     </div>
-    <div data-my-data="blog">
+    <div data-my-data="blog" class="my-noshow">
         <%= JSON.stringify(blog) %>
     </div>
-    <div data-my-data="me">
+    <div data-my-data="me" class="my-noshow">
         <%= JSON.stringify(me) %>
     </div>
     <%- include('wedgets/cdn') %>
@@ -97,12 +101,19 @@
                     }
 
                     if (e.key === 'Enter' && !e.shiftKey) {
+                        console.log(1111)
                         let html = editor.getHtml()
-                        console.log(html)
                         let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
                         html = html.replace(reg, '')
-                        let { data } = await axios.post(api_comment, { html })
-                        console.log(data)
+                        if(!html.trim()) return
+                        let { data: { errno, data, msg } } = await axios.post(api_comment, { html, blog_id: window.data.blog.id })
+                        if(errno){
+                            alert('留言失敗')
+                            console.log('msg')
+                        }
+                        editor.setHtml()
+                        $('#list').append(`<div>${data.html}</div>`)
+
                     }
 
                 }
@@ -125,6 +136,7 @@
             }
         })
     </script>
+    <%- include('wedgets/navbar/js/index') %>
 </body>
 
 </html>

@@ -14,7 +14,7 @@
 
     <% if (newsList.unconfirm.length) { %>
 
-    <%- include('./news-forEach', { list: newsList.unconfirm })  %> 
+    <%- include('./news-list', { list: newsList.unconfirm })  %> 
 
     <% } %>
 
@@ -23,7 +23,7 @@
 
     <% if (newsList.confirm.length) { %>
 
-    <%- include('./news-forEach', { list: newsList.confirm })  %> 
+    <%- include('./news-list', { list: newsList.confirm })  %> 
 
     <% } %>
     
@@ -36,7 +36,7 @@
 
     <!-- 沒有任何通知-->
     <li class="dropdown-item <%=  newsList.total - newsList.limit < 0 ? 'my-show' : 'my-noshow' %>" id="noNews">
-        <span>沒有新通知</span>
+        <span>沒有更多了</span>
     </li>
 
     <li>

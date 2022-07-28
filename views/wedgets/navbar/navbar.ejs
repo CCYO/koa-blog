@@ -1,3 +1,4 @@
+<%- include('./navbar-css') %>
 <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
     <div class="container-fluid flex-nowrap">
         <a class="navbar-brand" href="/square">KOA-BLOG</a>
@@ -14,7 +15,7 @@
             </li>
             <% } else { %>
                 <li class="nav-item dropdown">
-                    <%- include('./news')  %> 
+                    <%- include('./news/index')  %> 
                 </li>
                 <li class="nav-item">
                     <a class="nav-link me-3 <%= active === 'setting' ? `active` : `` %>" href="/setting">個人設置</a>
