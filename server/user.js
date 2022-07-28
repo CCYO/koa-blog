@@ -131,6 +131,7 @@ const update = async (newUserInfo, id) => {
     if (newUserInfo.password) {
         newUserInfo.password = hash(newUserInfo.password)
     }
+    console.log('@newUserInfo => ', newUserInfo)
     let [row] = await User.update(newUserInfo, {
         where: { id }
     })

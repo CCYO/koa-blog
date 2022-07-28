@@ -11,19 +11,19 @@ const { storage } = require('../firebase/init')
  * @param {object} ctx 含代表「JPG圖檔hash」的 ctx.params.hash
  * @returns {string} 完成此次JPG圖檔上傳GCS後，該圖檔的公開url
  */
-async function upload_jpg (ctx){
+async function upload_jpg(ctx) {
     let { hash } = ctx.query
     //  建立GCS ref
     let file_ref = storage.bucket().file(`blog/${hash}.jpg`)
     //  確認GCS是否有該圖檔
     let [exist] = await file_ref.exists()
     //  若GCS無該JPG圖，進行GCS上傳
-    if(!exist){
+    if (!exist) {
         await parse(ctx, file_ref)
     }
     //  返回圖檔資訊
     let url = file_ref.publicUrl()
-    
+
     return url
 }
 
@@ -35,12 +35,17 @@ async function upload_jpg (ctx){
  * @returns {promise} 成功為null，失敗則為error
  */
 async function _parse(ctx, bar, formidableIns) {
-    let {ref, promise} = bar
+    let { ref, promise } = bar
     return new Promise((resolve, reject) => {
         formidableIns.parse(ctx.req, async (err, fields, files) => {
             if (err) {
                 console.log('formidable 解析發生錯誤')
                 reject(err)
+                return
+            }
+            if (!promise){
+                console.log('@fields =====> ', fields)
+                resolve({ fields })
                 return
             }
 
@@ -66,7 +71,7 @@ async function _parse(ctx, bar, formidableIns) {
                 await ref.makePublic()
                 console.log('upload file to GCS & formidable 解析完成')
                 // resolve({ fields, files })
-                resolve()
+                resolve({ fields })
                 return
             } catch (e) {
                 console.log('upload file to GCS 發生錯誤')
@@ -84,8 +89,9 @@ async function _parse(ctx, bar, formidableIns) {
  */
 const _gen_formidable = (bar) => {
     let file = bar.ref
+    let Ops = {}
 
-    return formidable({
+    if (file) {
         /** fileWriteStream 第一個參數的組成
          * VolatileFile {
          *    _events: [Object: null prototype] { error: [Function (anonymous)] },
@@ -104,7 +110,7 @@ const _gen_formidable = (bar) => {
          *    [Symbol(kCapture)]: false
          * }
          */
-        fileWriteStreamHandler() {        
+        Ops.fileWriteStreamHandler = function() {
             let ws = file.createWriteStream({
                 //  圖檔設定不作緩存，參考資料：https://cloud.google.com/storage/docs/metadata#caching_data
                 metadata: {
@@ -120,7 +126,8 @@ const _gen_formidable = (bar) => {
             })
             return ws
         }
-    })
+    }
+    return formidable(Ops)
 }
 
 /**

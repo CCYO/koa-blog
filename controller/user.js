@@ -199,10 +199,10 @@ async function findUserById(id) {
 const modifyUserInfo = async (ctx) => {
     const { id } = ctx.session.user
     let newUserInfo = { ...ctx.request.body }
-
+    console.log('@@@ => ', { ...ctx.request.body })
+    
     const user = await update(newUserInfo, id)
     if (user) {
-        ctx.session.user = user
         return new SuccModel(user)
     } else {
         return new ErrModel({ ...UPDATE.NO_THIS_ONE })

@@ -45,96 +45,113 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label w-100">頭像
-                        <input type="file" class="form-control" name="avatar" autocomplete="off">
+                        <input type="file" id="avatar" class="form-control" name="avatar" autocomplete="off">
                         <div class="d-block">&nbsp;</div>
                     </label>
                 </div>
                 <button type="submit" class="btn btn-primary">送出</button>
             </div>
         </form>
-        <div id="eval" style="display: none"><%- JSON.stringify(user) %></div>
     </div>
+    <div data-my-data='user' class="my-noshow"><%= JSON.stringify(user) %></div>
 
     <%- include('wedgets/cdn') %>
     <!-- 引入 Spark-MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <script>
-        let go = document.getElementById('eval')
-        let user
-        eval('user = ' + go.innerText)
+        $(function () {
+            window.data = {}
+            window.payload = { hash: undefined, data: {} }
 
-        let hash
-        let md5Hash_is_new = false
-        //  input[name='avatar'].onchange handle：取得頭像hash
-        $('input[name="avatar"]').addEventListener('change', getImgHash)
+            init_data()
 
-        $('form').addEventListener('submit', async (e) => {
-            e.preventDefault()
+            let $avatar = $('#avatar')
+            let $form = $('form').first()
 
-            let api = '/api/user/'
-            let formData = new FormData()
+            //  input[name='avatar'].onchange handle：取得頭像hash
+            $avatar.on('change', getImgHash)
 
-            if (hash) {
-                api += hash
-            } else {
-                api += '0'
-            }
-            for (item of e.target) {
-                let { type, name, value } = item
-                if (type === 'file' && item.files[0]) {
-                    formData.append('avatar', item.files[0])
-                } else if ((type !== 'submit') && value) {
-                    formData.append(name, value)
+            $form.on('submit', async (e) => {
+                e.preventDefault()
+                let { hash } = window.payload
+                let formData = new FormData()
+
+                let api_user = '/api/user/'
+                if (hash) {
+                    api_user += hash
+                } else {
+                    api_user += '0'
                 }
+
+                for (item of e.target) {
+                    let { type, name, value } = item
+                    if (type === 'file' && item.files[0]) {
+                        formData.append('avatar', item.files[0])
+                    } else if (type !== 'submit' && value) {
+                        formData.append(name, value)
+                    }
+                }
+
+                let {
+                    data: {
+                        errno,
+                        data,
+                        msg
+                    }
+                } = await axios.patch(api_user, formData)
+
+                if (errno) {
+                    alert(msg)
+                } else {
+                    console.log(data)
+                    user = data
+                    alert('資料更新完成!')
+                }
+            })
+
+            async function getImgHash(e) {
+                let file = e.target.files[0]
+
+                //  user.avatar 若有值，確認當前欲更新的 img md5hash 是否相同
+                hash = await getMD5Hash(file)
+
+                if (hash === user.avatar_hash) {
+                    return alert('目前就是這個頭像唷！')
+                    return
+                }
+
+                window.payload.hash = hash
+                return
             }
 
-            let {
-                data: {
-                    errno,
-                    data,
-                    msg
-                }
-            } = await axios.patch(api, formData)
+            //  返回 file 的 FileReader.result
+            function getMD5Hash(file) {
+                return new Promise((resolve, reject) => {
+                    let fr = new FileReader()
+                    fr.addEventListener('load', (evt) => {
+                        if (fr.readyState === FileReader.DONE) {
+                            let hash = SparkMD5.ArrayBuffer.hash(fr.result)
+                            console.log('計算出的hash => ', hash)
+                            resolve(hash)
+                        }
+                    })
+                    fr.addEventListener('error', (error) => {
+                        console.log('fr load 發生錯誤 => ', error)
+                        reject(error)
+                    })
+                    fr.readAsArrayBuffer(file)
+                })
+            }
 
-            if (errno) {
-                alert(msg)
-            } else {
-                console.log(data)
-                user = data
-                alert('資料更新完成!')
+            function init_data(){
+                $(`[data-my-data]`).each((index, el) => {
+                    let $el = $(el)
+                    let prop = $el.data('my-data')
+                    window.data[prop] = JSON.parse($el.text())
+                    $el.remove()
+                })
             }
         })
-
-        async function getImgHash(e) {
-            let file = e.target.files[0]
-
-            //  user.avatar 若有值，確認當前欲更新的 img md5hash 是否相同
-            hash = await getMD5Hash(file)
-
-            if (hash === user.avatar_hash) {
-                return alert('目前就是這個頭像唷！')
-            }
-        }
-
-        //  返回 file 的 FileReader.result
-        function getMD5Hash(file) {
-            return new Promise((resolve, reject) => {
-                let fr = new FileReader()
-                fr.addEventListener('load', (evt) => {
-                    if (fr.readyState === FileReader.DONE) {
-                        let hash = SparkMD5.ArrayBuffer.hash(fr.result)
-                        console.log('計算出的hash => ', hash)
-                        resolve(hash)
-                    }
-                })
-                fr.addEventListener('error', (error) => {
-                    console.log('fr load 發生錯誤 => ', error)
-                    reject(error)
-                })
-                fr.readAsArrayBuffer(file)
-            })
-        }
-
     </script>
     <%- include('wedgets/navbar/js/index')  %>
 </body>
