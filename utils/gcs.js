@@ -44,7 +44,6 @@ async function _parse(ctx, bar, formidableIns) {
                 return
             }
             if (!promise){
-                console.log('@fields =====> ', fields)
                 resolve({ fields })
                 return
             }

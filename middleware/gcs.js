@@ -9,7 +9,6 @@ const { parse } = require('../utils/gcs')
 async function parse_user_data(ctx, next) {
     //  avatar_hash = 0 代表沒有 avatar 圖檔，反之則有
     let { avatar_hash } = ctx.params
-    console.log('@avatar_hash => ', avatar_hash)
     let file_gcs = (avatar_hash != 0) ? storage.bucket().file(`avatar/${avatar_hash}.jpg`) : null
     let [exist] = (avatar_hash != 0) ? await file_gcs.exists() : [false]
     //  正常修改
@@ -26,9 +25,6 @@ async function parse_user_data(ctx, next) {
         { file }
 
     let { fields, files } = await parse(ctx, file)
-    console.log('@file => ', file)
-    console.log('@2fields => ', fields)
-    console.log('@bbbb => ', {...ctx.request.body})
     if (fields.age) {
         fields.age = fields.age * 1
     }
@@ -38,7 +34,6 @@ async function parse_user_data(ctx, next) {
 
     delete ctx._my
 
-    console.log('@@body => ', { ...ctx.request.body, ...fields })
     ctx.request.body =
         //  若avatar不用改
         (avatar_hash == 0) ? { ...ctx.request.body, ...fields } :

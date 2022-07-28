@@ -63,10 +63,11 @@ router.get('/logout', api_check_login, async (ctx, next) => {
 
 //  setting //validate_user ,
 router.patch('/:avatar_hash', api_check_login, parse_user_data, async(ctx, next) => {
-    let resModel = await modifyUserInfo(ctx)
-    ctx.session.user = resModel.data
+    let res = await modifyUserInfo(ctx)
+    console.log('@data => ', res.data)
+    ctx.session.user = res.data
 
-    ctx.body = resModel
+    ctx.body = res
 })
 
 //---

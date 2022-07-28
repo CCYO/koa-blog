@@ -131,14 +131,14 @@ const update = async (newUserInfo, id) => {
     if (newUserInfo.password) {
         newUserInfo.password = hash(newUserInfo.password)
     }
-    console.log('@newUserInfo => ', newUserInfo)
+
     let [row] = await User.update(newUserInfo, {
         where: { id }
     })
     
     if (!row) return false
-    let { dataValues } = await User.findByPk(id)
-    return init_4_user(dataValues)
+    let user = (await User.findByPk(id)).toJSON()
+    return init_4_user(user)
 }
 
 
