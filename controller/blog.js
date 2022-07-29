@@ -23,6 +23,10 @@ const {
 } = require('../server/blog')
 
 const {
+    readComment
+} = require('../server/comment')
+
+const {
     FollowBlog: FB
 } = require('../server/news')
 
@@ -155,11 +159,11 @@ async function removeBlog(blog_id) {
  * @param {number} blog_id blog id
  * @returns 
  */
-async function getBlog(blog_id) {
+async function getBlog(blog_id, needComment = false) {
     const blog = await readBlogById(blog_id)
-    // if(blog.show){
-    //     blog.showAt = moment(blog.showAt, 'YYYY-MM-DD[T]hh-mm-ss').format('LLL')
-    // }
+    if(needComment){
+        blog.comment = await readComment({blog_id})
+    }
     if (blog) {
         return new SuccModel(blog)
     } else {
