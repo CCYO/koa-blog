@@ -105,8 +105,8 @@ async function go2(user_id, time) {
             
             //  const { errno, data, msg } = await confirmNews({ people: [5,7], blogs: [3,5,9,11,13]})
 
-            let { errno, data, msg} = await getBlog(2, true)
-
+            await Comment.truncate()
+            // let { errno, data, msg} = await getBlog(2, true)
 
             if(errno){
                 console.log('@msg => ', msg)

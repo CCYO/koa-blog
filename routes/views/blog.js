@@ -4,6 +4,7 @@
 
 const router = require('koa-router')()
 
+const { NEWS: { LIMIT}} = require('../../conf/constant')
 const { view_check_login } = require('../../middleware/check_login')
 
 const {
@@ -48,13 +49,13 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
 router.get('/blog/:blog_id', async (ctx, next) => {
     let { user: me } = ctx.session
     const { blog_id } = ctx.params
-    const { errno, data: blog, msg } = await getBlog(blog_id)
+    const { errno, data: blog, msg } = await getBlog(blog_id, true)
 
     //  導覽列數據
     let newsList = undefined
     if (me) {
         let res = await getNewsByUserId(me.id)
-        newsList = res.data
+        newsList = { ...res.data, limit: LIMIT}
     }
 
     if (errno) {

@@ -2,7 +2,7 @@ const seq = require('../seq')
 const User = require('./User')
 const Blog = require('./Blog')
 const Img = require('./Img')
-const Comment = require('./Commnet')
+const Comment = require('./Comment')
 const BlogImg = require('./relation-Blog&Img')
 
 const FollowPeople = require('./FollowPeople')

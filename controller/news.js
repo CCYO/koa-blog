@@ -45,7 +45,7 @@ async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront 
 
     let { newsList: { confirm, unconfirm }, numOfUnconfirm, total } = data
 
-    let ejs_newsForEach = resolve(__dirname, '../views/wedgets/navbar/news-forEach.ejs')
+    let ejs_newsForEach = resolve(__dirname, '../views/wedgets/navbar/news/news-list.ejs')
 
     let htmlStr = { confirm: undefined, unconfirm: undefined }
 

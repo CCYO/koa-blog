@@ -1,8 +1,14 @@
 const {
-    User, Blog, Img, BlogImg, Blog_Fans
+    User, Blog, Img, Comment, BlogImg, Blog_Fans
 } = require('../db/model')
 
-const { init_4_user} = require('../utils/init/user')
+const { 
+    init_4_user,
+} = require('../utils/init/user')
+
+const {
+    init_blog
+} = require('../utils/init/blog')
 
 /**
  * 創建Blog，並與User作關聯
@@ -39,7 +45,7 @@ async function cancelAssociateWidthImg(blogImgs) {
     let row = await BlogImg.destroy({
         where: { id: blogImgs }
     })
-    
+
     return row
 }
 
@@ -65,48 +71,38 @@ async function deleteBlog(blog_id) {
  *      }
  *  ，若找不到則 null
  */
-async function readBlogById(blog_id) {
+async function readBlogById(blog_id, needComment) {
+    let include = [
+        User,
+        {
+            model: Img,
+            attributes: ['id', 'url', 'hash'],
+            through: {
+                model: BlogImg,
+                attributes: ['id', 'name']
+            }
+        }
+    ]
+    if(needComment){
+        include.push({
+            model: Comment,
+            attributes: ['html', 'updatedAt'],
+            include: {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            }
+        })
+    }
     let res = await Blog.findByPk(blog_id, {
         attributes: ['id', 'title', 'html', 'show', 'showAt'],
-        include: [
-            {
-                model: Img,
-                attributes: ['id', 'url', 'hash'],
-                through: {
-                    model: BlogImg,
-                    attributes: ['id', 'name']
-                }
-            },
-            User
-        ]
+        include
     })
 
     if (!res) {
         return null
     }
-
-    let {
-        Img: imgList,
-        User: author,
-        ...blog
-    } = res.toJSON()
-
-    let data = { ...blog, imgs: [], author: {} }
-
-    if (imgList && imgList.length) {
-        imgList.forEach(
-            ({
-                BlogImg: {
-                    id: blogImg_id, name
-                },
-                ...img
-            }) => { data.imgs.push({ ...img, blogImg_id, name }) }
-        )
-    }
-
-    data.author = init_4_user(author)
-
-    return data
+    
+    return init_blog(res)
 }
 
 /**
@@ -122,11 +118,11 @@ async function readBlogById(blog_id) {
  * 
  
  */
-async function readBlogList({ user_id, getAll = false}) {
-    let where = { user_id}
+async function readBlogList({ user_id, getAll = false }) {
+    let where = { user_id }
 
-    if(!getAll){
-        where.show = true    
+    if (!getAll) {
+        where.show = true
     }
 
     let blogList = await Blog.findAll({
@@ -138,14 +134,14 @@ async function readBlogList({ user_id, getAll = false}) {
         }
     })
 
-    let data = {show: [], hidden: []}
+    let data = { show: [], hidden: [] }
 
     if (!blogList.length) return []
 
     blogList = blogList.map(item => {
         let { User: author, ...blog } = item.toJSON()
         return { ...blog, author: init_4_user(author) }
-    } )
+    })
 
     return blogList
 }

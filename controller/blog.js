@@ -160,10 +160,8 @@ async function removeBlog(blog_id) {
  * @returns 
  */
 async function getBlog(blog_id, needComment = false) {
-    const blog = await readBlogById(blog_id)
-    if(needComment){
-        blog.comment = await readComment({blog_id})
-    }
+    const blog = await readBlogById(blog_id, needComment)
+    
     if (blog) {
         return new SuccModel(blog)
     } else {

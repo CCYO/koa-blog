@@ -4,7 +4,7 @@ const {
     INTEGER
 } = require('../types')
 
-let Comment = seq.define('Commnet', {
+let Comment = seq.define('Comment', {
     html: {
         type: STRING,
         allowNull: false
