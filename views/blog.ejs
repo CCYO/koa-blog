@@ -81,12 +81,19 @@
             init_data()
 
             init_editor()
+            
             function init_editor() {
                 //  editor config
                 const { createEditor } = window.wangEditor
 
+                const customPaste = function(editor, event){
+                    event.preventDefault()
+                    const text = event.clipboardData.getData('text/plain')
+                    editor.insertText(text)
+                }
                 const editorConfig = {
                     MENU_CONF: {},
+                    customPaste
                 }
                 //  editor config : placeholder
                 editorConfig.placeholder = '我有話要說'
@@ -98,21 +105,11 @@
                 })
 
                 window.editor = editor
-                let n = 0
-                $('#editor-container').on('dragover', (e) => {
-                    console.log(e.target.id)
-                    n++
-                    console.log(n)
-                    e.preventDefault;
-                    e.stopPropagation()
-                    console.log('gg');
-                    return false
-                })
-                $('#editor-container').on('drop', (e) => { return false})
 
                 let $el = $('#editor-container')
                 $el.on('keyup', handle_keyup)
                 $el.on('click', handle_click)
+
                 function handle_click() {
                     if (window.data.me) {
                         return
@@ -157,29 +154,37 @@
                 }
             }
 
+            let $comment = $('#comment')
+
+            $comment[0].addEventListener('drop', (e) => {
+                e.preventDefault()
+                e.stopImmediatePropagation()
+                console.log(123)
+                return false
+            }, true)
 
 
-                //  初始化數據
-                function init_data() {
+            //  初始化數據
+            function init_data() {
                 $(`[data-my-data]`).each((index, el) => {
                     let $el = $(el)
                     let prop = $el.data('my-data')
-                    try{
+                    try {
                         window.data[prop] = JSON.parse($el.text())
-                    }catch(e){
+                    } catch (e) {
                         window.data[prop] = undefined
                     }
                 })
                 $('#data').remove()
-                
+
                 _init_newsList()
-                
+
             }
 
-            function _init_newsList(){
+            function _init_newsList() {
                 let newsList = window.data.newsList
-                if(!newsList){
-                    window.data.newsList = { people: [], blogs: []}
+                if (!newsList) {
+                    window.data.newsList = { people: [], blogs: [] }
                     return
                 }
 
@@ -205,7 +210,7 @@
                     return initVal
                 }, res)
             }
-        
+
         })
     </script>
     <%- include('wedgets/navbar/js/index') %>
