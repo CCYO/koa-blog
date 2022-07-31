@@ -1,6 +1,6 @@
 const moment = require('moment')
 
-const { init_4_user } = require('./user')
+const { init_user } = require('./user')
 
 function init_comment(comment) {
     if (comment instanceof Array) {
@@ -21,7 +21,7 @@ function _init_comment(comment) {
     let {User: user, html, updatedAt: time} = json
     time = moment(time).format('YYYY-MM-DD HH:mm')
     if(user){
-        user = init_4_user(user)
+        user = init_user(user)
         delete user.email
     }
     let res = { html, time, user}

@@ -1,6 +1,6 @@
 const xss = require('xss')
 const { Comment, User } = require('../db/model')
-const { init_comment } = require('../utils/init/comment')
+const { init_comment } = require('../utils/init')
 
 async function addComment({ blog_id, html, user_id }){
     html = xss(html)

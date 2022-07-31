@@ -14,7 +14,8 @@ const {
 } = require('../db/model')
 const { BLOG } = require('../model/errRes')
 const hash = require('../utils/crypto')
-const { init_4_user } = require('../utils/init/user')
+
+const { init_user } = require('../utils/init')
 
 /**
  * 查找 User Instance
@@ -34,7 +35,7 @@ async function readUser({ id, email, password }){
     
     if (!user) return null
     
-    return init_4_user(user)
+    return init_user(user)
 }
 
 /**
@@ -50,7 +51,7 @@ const createUser = async ({ password, ...data }) => {
 
     const user = await User.create(data)
 
-    return init_4_user(user)
+    return init_user(user)
 }
 
 /**
@@ -66,7 +67,7 @@ async function readFansByUserId(idol_id) {
     })
 
     if (!fansList.length) return []
-    return init_4_user(fansList)
+    return init_user(fansList)
 }
 
 /**
@@ -82,7 +83,7 @@ async function readIdolsByUserId(fans_id) {
     })
 
     if (!idolList.length) return []
-    return init_4_user(idolList)
+    return init_user(idolList)
 }
 
 /**
@@ -138,7 +139,7 @@ const update = async (newUserInfo, id) => {
     
     if (!row) return false
     let user = (await User.findByPk(id)).toJSON()
-    return init_4_user(user)
+    return init_user(user)
 }
 
 
@@ -184,10 +185,10 @@ async function readOther(other_id) {
     } = other.toJSON()
 
     return {
-        user: init_4_user(user),
+        user: init_user(user),
         blogs,
-        fans: init_4_user(fans),
-        idols: init_4_user(idols)
+        fans: init_user(fans),
+        idols: init_user(idols)
     }
 }
 
@@ -210,7 +211,7 @@ async function readBlogListAndAuthorByUserId(user_id) {
 
     
 
-    author = init_4_user(author)
+    author = init_user(author)
 
     return { author, blogList }
 }
@@ -220,10 +221,10 @@ async function readUserAndFollowReationByUserId(user_id) {
     let _idols = await _user.getIdol()
     let _fans = await _user.getFans()
 
-    _idols = init_4_user(_idols, user_id)
-    _fans = init_4_user(_fans, user_id)
+    _idols = init_user(_idols, user_id)
+    _fans = init_user(_fans, user_id)
 
-    let [user, fans, idols] = [_user, _fans, _idols].map(init_4_user)
+    let [user, fans, idols] = [_user, _fans, _idols].map(init_user)
 
     return { user, fans, idols }
 
@@ -270,7 +271,7 @@ async function readBlogListOfIdeoByUserId(user_id, onlyNewBlogs = true, includeS
     let { Blogs } = res.toJSON()
     let blogs = Blogs.map(({ User: author, ...blog }) => {
         return {
-            author: init_4_user(author),
+            author: init_user(author),
             ...blog
         }
     })
@@ -317,7 +318,7 @@ async function readNews(id, index = 0) {
             showAt,
             blog_id,
             title,
-            author: init_4_user(author.toJSON())
+            author: init_user(author.toJSON())
         }
         if (confirm) {
             news.confirm.push(data)
@@ -344,7 +345,7 @@ async function readNews(id, index = 0) {
 
     fansList.rows.forEach(fans => {
         let { id: news_id, confirm, createdAt: showAt, Fans_of_Follow: user } = fans.toJSON()
-        let { id: fans_id, nickname } = init_4_user(user)
+        let { id: fans_id, nickname } = init_user(user)
         let data = {
             news_id,
             confirm,
@@ -454,7 +455,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
             }
         } = blog
 
-        let { id, nickname } = init_4_user(user)
+        let { id, nickname } = init_user(user)
 
         let data = {
             news_id, confirm, showAt, blog_id, title, author: { id, nickname }
@@ -477,7 +478,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
             Fans_of_Follow: user
         } = item.toJSON()
 
-        let { id: fans_id, nickname } = init_4_user(user)
+        let { id: fans_id, nickname } = init_user(user)
 
         let data = { news_id, confirm, showAt, fans_id, nickname }
 
@@ -559,7 +560,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
             }
         } = blog
 
-        let { id, nickname } = init_4_user(user)
+        let { id, nickname } = init_user(user)
 
         let data = {
             news_id, confirm, showAt, blog_id, title, author: { id, nickname }
@@ -580,7 +581,7 @@ async function readMoreNewsAndConfirm(id, index = 0, _checkTime, window_news_cou
             Fans_of_Follow: user
         } = fans.toJSON()
 
-        let { id: fans_id, nickname } = init_4_user(user)
+        let { id: fans_id, nickname } = init_user(user)
 
         let data = { news_id, confirm, showAt, fans_id, nickname }
 

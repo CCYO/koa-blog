@@ -15,7 +15,14 @@
             </li>
             <% } else { %>
                 <li class="nav-item dropdown">
-                    <%- include('./news/index')  %> 
+                    <%- include('./news/index', {
+                        numOfUnconfirm: newsList.numOfUnconfirm,
+                        confirm: newsList.newsList.confirm,
+                        unconfirm: newsList.newsList.unconfirm,
+                        limit: newsList.limit,
+                        total: newsList.total
+                        })  %> 
+                    
                 </li>
                 <li class="nav-item">
                     <a class="nav-link me-3 <%= active === 'setting' ? `active` : `` %>" href="/setting">個人設置</a>

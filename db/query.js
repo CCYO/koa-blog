@@ -1,3 +1,5 @@
+const { QueryTypes } = require('sequelize')
+const moment = require('moment')
 
 const {
     NEWS: {
@@ -5,13 +7,16 @@ const {
     }
 } = require('../conf/constant')
 
-async function newsList({ userId, offset = 0, whereOps, checkNewsAfterMarkTime}) {
+const { seq } = require('./model')
+
+const { readUser } = require('../server/user')
+const { readBlogById } = require('../server/blog')
+
+async function readNews({ userId, offset = 0, whereOps, fromFront}) {
     let { markTime, listOfexceptNewsId: {people, blogs} } = whereOps
-    console.log('@whereOps => ', whereOps)
     let listOfPeopleId = people.join(',') || undefined
     let listOfBlogsId = blogs.join(',') || undefined
     
-    // let mark = checkNewsAfterMarkTime ? '<' : '>'
     let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') > DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
 
     let query = `
@@ -35,15 +40,17 @@ async function newsList({ userId, offset = 0, whereOps, checkNewsAfterMarkTime})
     ORDER BY confirm=1, time DESC
     LIMIT ${LIMIT} OFFSET ${offset}
     `
-    return query
+    let newsList = await seq.query(query, { type: QueryTypes.SELECT })
+    
+    return await _init_newsOfComfirmRoNot(newsList, fromFront)
 }
 
-async function newsTotal({ userId, markTime, checkNewsAfterMarkTime}) {
+async function countNewsTotalAndUnconfirm({ userId, markTime, fromFront}) {
     
-    // let mark = checkNewsAfterMarkTime ? '<' : '>'
-    // let where_time = checkNewsAfterMarkTime ? `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T')` : 1
+    // let mark = fromFront ? '<' : '>'
+    // let where_time = fromFront ? `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T')` : 1
     let select = 
-        !checkNewsAfterMarkTime ?
+        !fromFront ?
         `SELECT COUNT(if(confirm < 1, true, null))`  :
         `SELECT COUNT(if(DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T'), true, null)) `
 
@@ -60,12 +67,46 @@ async function newsTotal({ userId, markTime, checkNewsAfterMarkTime}) {
         FROM FollowBlogs
         WHERE follower_id=${userId} AND deletedAt IS NULL 
     ) AS X
-    
     `
-    return query
+    let [{ numOfUnconfirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })
+
+    return { numOfUnconfirm, total }
+}
+
+async function _init_newsOfComfirmRoNot(newsList) {
+    let res = { unconfirm: [], confirm: [] }
+
+    if (!newsList.length) {
+        return res
+    }
+
+    let listOfPromise = newsList.map(_init_newsItemOfComfirmRoNot)
+
+    listOfPromise = await Promise.all(listOfPromise)
+
+    res = listOfPromise.reduce((initVal, currVal, index) => {
+        let { confirm } = currVal
+        confirm && initVal.confirm.push(currVal)
+        !confirm && initVal.unconfirm.push(currVal)
+        return initVal
+    }, res)
+
+    return res
+}
+
+async function _init_newsItemOfComfirmRoNot(item) {
+    let { type, id, target_id, follow_id, confirm, time } = item
+    let timestamp = moment(time, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+    if (type === 1) {
+        let { id: fans_id, nickname } = await readUser({ id: follow_id })
+        return { type, id, fans_id, nickname, confirm, timestamp }
+    } else if (type === 2) {
+        let { id: blog_id, title, author: { id: author_id, nickname } } = await readBlogById(target_id)
+        return ({ type, id, blog_id, title, author_id, nickname, confirm, timestamp })
+    }
 }
 
 module.exports = {
-    newsList,
-    newsTotal
+    readNews,
+    countNewsTotalAndUnconfirm
 }

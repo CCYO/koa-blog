@@ -208,7 +208,7 @@
                 let api = toFollow ? api_follow : api_cancelFollow
 
                 let { fansList, me } = window.data
-                if(!me){
+                if (!me) {
                     return () => {
                         alert('請先登入')
                         location.href = `/login?from=${location.pathname}`
@@ -267,33 +267,41 @@
                 $(`[data-my-data]`).each((index, el) => {
                     let $el = $(el)
                     let prop = $el.data('my-data')
-                    try{
+                    try {
                         window.data[prop] = JSON.parse($el.text())
-                    }catch(e){
+                    } catch (e) {
                         window.data[prop] = undefined
                     }
                 })
                 $('#data').remove()
-                
+
                 _init_newsList()
-                
+
             }
 
-            function _init_newsList(){
-                let newsList = window.data.newsList
-                if(!newsList){
-                    window.data.newsList = { people: [], blogs: []}
+            function _init_newsList() {
+                let news = window.data.newsList
+
+                let { newsList: { confirm, unconfirm }, total, markTime, limit } = news
+                window.data._newsList = { limit, total, markTime, count: confirm.length + unconfirm.length }
+
+                let _newsList = window.data._newsList
+
+                if (!_newsList.count) {
+                    _newsList.listOfNewsId = { confirm: { people: [], blogs: [] }, unconfirm: undefined }
+                    window.data.newsList = { ..._newsList }
+                    delete window.data._newsList
                     return
                 }
 
-                let { unconfirm, confirm, total, markTime } = newsList
-                newsList.count = unconfirm.length + confirm.length
-                newsList.listOfNewsId = {
+                _newsList.listOfNewsId = {
                     unconfirm: unconfirm.length && _init_news(unconfirm) || undefined,
                     confirm: confirm.length && _init_news(confirm) || { people: [], blogs: [] }
                 }
-                delete newsList.confirm
-                delete newsList.unconfirm
+
+                window.data.newsList = { ..._newsList }
+                delete window.data._newsList
+                return
             }
 
 
@@ -308,7 +316,7 @@
                     return initVal
                 }, res)
             }
-        
+
         })
     </script>
     <%- include('wedgets/navbar/js/index') %>

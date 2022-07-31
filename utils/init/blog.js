@@ -1,6 +1,4 @@
-
-
-const { init_4_user } = require('./user')
+const { init_user } = require('./user')
 const { init_comment } = require('./comment')
 
 function init_blog(blog) {
@@ -21,7 +19,7 @@ function _init_blog(blog) {
     let json = blog.toJSON ? blog.toJSON() : blog
     //  { Img, User, Comment, ...blog}
     let { Imgs: imgList, User: author, Comments: comments, ...data } = json
-    author = init_4_user(author)
+    author = init_user(author)
 
     let imgs = imgList && imgList.length && imgList.reduce((initVal, curVal, index) => {
         let { BlogImg: { id: blogImg_id, name }, ...img } = curVal

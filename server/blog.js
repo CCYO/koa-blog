@@ -3,12 +3,9 @@ const {
 } = require('../db/model')
 
 const { 
-    init_4_user,
-} = require('../utils/init/user')
-
-const {
+    init_user,
     init_blog
-} = require('../utils/init/blog')
+} = require('../utils/init')
 
 /**
  * 創建Blog，並與User作關聯
@@ -73,7 +70,10 @@ async function deleteBlog(blog_id) {
  */
 async function readBlogById(blog_id, needComment) {
     let include = [
-        User,
+        {
+            model: User,
+            attributes: ['id', 'email', 'nickname']
+        },
         {
             model: Img,
             attributes: ['id', 'url', 'hash'],
@@ -140,7 +140,7 @@ async function readBlogList({ user_id, getAll = false }) {
 
     blogList = blogList.map(item => {
         let { User: author, ...blog } = item.toJSON()
-        return { ...blog, author: init_4_user(author) }
+        return { ...blog, author: init_user(author) }
     })
 
     return blogList

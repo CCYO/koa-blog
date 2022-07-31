@@ -4,7 +4,7 @@
 
 const { USER: { AVATAR } } = require('../../conf/constant')
 
-function _init_4_user(user) {
+function _init_user(user) {
     let peoson = user.toJSON ? user.toJSON() : user
 
     const { email, nickname, avatar } = peoson
@@ -20,21 +20,20 @@ function _init_4_user(user) {
     return peoson
 }
 
-function init_4_user(user) {
+function init_user(user) {
     if (user instanceof Array) {
         let res = []
 
         user.forEach(item => {
-            res.push(_init_4_user(item))
+            res.push(_init_user(item))
         })
 
         return res
     }
 
-    return _init_4_user(user)
+    return _init_user(user)
 }
 
 module.exports = {
-    init_4_user,
-
+    init_user
 }

@@ -1,0 +1,11 @@
+const { init_user } = require('./user')
+const { init_comment } = require('./comment')
+const { init_blog } = require('./blog')
+const { init_newsOfFollowId } = require('./news')
+
+module.exports = {
+    init_user,
+    init_comment,
+    init_blog,
+    init_newsOfFollowId
+}

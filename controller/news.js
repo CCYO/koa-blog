@@ -2,10 +2,8 @@
  * @description Controller news相關
  */
 
-const { resolve } = require('path')
-
-const myRenderFile = require('../utils/renderFile')
-const { init_listOfNewsId } = require('../utils/init/news')
+const { htmlStr_newsList } = require('../utils/ejs-render')
+const { init_newsOfFollowId } = require('../utils/init')
 
 const { NEWS: { LIMIT } } = require('../conf/constant')
 const {
@@ -33,45 +31,51 @@ const {
 
 
 async function getNewsByUserId(userId) {
-    let { newsList, markTime, total, numOfUnconfirm } = await readNews({ userId })
-    let res = { ...newsList, markTime, total, numOfUnconfirm }
+    // let { newsList, markTime, total, numOfUnconfirm } = await readNews({ userId })
+    // let res = { ...newsList, markTime, total, numOfUnconfirm }
+    let res = await readNews({ userId })
     return new SuccModel(res)
 
 }
 
 async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront = false, offset) {
 
-    let data = await readNews({ userId, markTime, listOfexceptNewsId, fromFront })
+    let { newsList, numOfUnconfirm, total } = await readNews({ userId, markTime, listOfexceptNewsId, fromFront })
 
-    let { newsList: { confirm, unconfirm }, numOfUnconfirm, total } = data
+    console.log('@@@ => { newsList, numOfUnconfirm, total } => ', { newsList, numOfUnconfirm, total })
+    let count = newsList.confirm.length + newsList.unconfirm.length
+    let htmlStr = await htmlStr_newsList(newsList)
 
-    let ejs_newsForEach = resolve(__dirname, '../views/wedgets/navbar/news/news-list.ejs')
+    let { confirm, unconfirm } = init_newsOfFollowId(newsList)
 
-    let htmlStr = { confirm: undefined, unconfirm: undefined }
-
-    htmlStr.confirm = confirm.length && await myRenderFile(ejs_newsForEach, { list: confirm }) || undefined
-    htmlStr.unconfirm = unconfirm.length && await myRenderFile(ejs_newsForEach, { list: unconfirm }) || undefined
-
-    let listOfNewsId = { confirm: init_listOfNewsId(confirm), unconfirm: init_listOfNewsId(unconfirm) }
-
-    //  直接先作 confirm
-    if (unconfirm.length) {
-        let resModel = await confirmNews(listOfNewsId.unconfirm)
-        if (resModel.errno) {
-            return resModel
-        }
+    let res = {
+        numOfUnconfirm,
+        total,
+        count,
+        htmlStr,
+        listOfNewsId: confirm
     }
 
-    listOfNewsId.confirm = {
-        people: [...listOfNewsId.confirm.people, ...listOfNewsId.unconfirm.people],
-        blogs: [...listOfNewsId.confirm.blogs, ...listOfNewsId.unconfirm.blogs]
+    if (!newsList.unconfirm.length) {
+        return new SuccModel(res)
     }
 
-    return new SuccModel({ htmlStr, listOfNewsId: listOfNewsId.confirm, numOfUnconfirm, total, count: confirm.length + unconfirm.length })
+    //  若有 unconfirm 則直接作 confirm
+    let resModel = await confirmNews(unconfirm)
+    if (resModel.errno) {
+        return resModel
+    }
+
+    res.listOfNewsId = {
+        people: [...confirm.people, ...unconfirm.people],
+        blogs: [...confirm.blogs, ...unconfirm.blogs]
+    }
+
+    return new SuccModel(res)
 }
 
 async function confirmNews(listOfNewsId) {
-    
+
     let { people, blogs } = listOfNewsId
 
     const { rowOfBlogs, rowOfPeople } = await updateNews(listOfNewsId)
