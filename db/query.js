@@ -41,7 +41,7 @@ async function readNews({ userId, offset = 0, whereOps, fromFront}) {
     LIMIT ${LIMIT} OFFSET ${offset}
     `
     let newsList = await seq.query(query, { type: QueryTypes.SELECT })
-    
+    console.log('@query查詢結果 => ', newsList)
     return await _init_newsOfComfirmRoNot(newsList, fromFront)
 }
 

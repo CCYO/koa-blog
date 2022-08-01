@@ -12,6 +12,9 @@
         let api_news = '/api/news'
         let api_readMore = '/api/news/readMore'
 
+        //  初始化 newsList數據
+        init_newsList()
+
         //  手動註冊 BS5 下拉選單
         var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
         var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
@@ -51,7 +54,7 @@
                 $newsCount.toggle(true).text(numOfUnconfirm)
                 //  window.newsList.numOfUnconfirm 更新
                 newsList.numOfUnconfirm = numOfUnconfirm
-            }else{
+            } else {
                 newsList.numOfUnconfirm = 0
             }
 
@@ -61,7 +64,7 @@
             let confirm = listOfNewsId.confirm
             confirm.people = [...confirm.people, ...people]
             confirm.blogs = [...confirm.blogs, ...blogs]
-            
+
             //  根據 response 添加通知內容
             for (prop in htmlStr) {
                 let html = htmlStr[prop]
@@ -106,7 +109,7 @@
                 $newsCount.toggle(true).text(numOfUnconfirm)
                 //  window.newsList.numOfUnconfirm 更新
                 newsList.numOfUnconfirm = numOfUnconfirm
-            }else{
+            } else {
                 newsList.numOfUnconfirm = 0
             }
 
@@ -116,7 +119,7 @@
             //  window.newsList.count 更新
             newsList.count = count
             //  window.newsList.listOfConfirmNewsId 更新
-            newsList.listOfNewsId.confirm = { people, blogs}
+            newsList.listOfNewsId.confirm = { people, blogs }
 
             //  window.newsList.markTime 更新
             newsList.markTime = markTime
@@ -171,12 +174,52 @@
                 //  進到這邊，代表下拉選單列表內有unconfirmNews，且目前是頁面第一次點擊下拉選單鈕
                 await confirmNews()
                 newsList.numOfUnconfirm = 0
-            }else if(numOfUnconfirm){
+            } else if (numOfUnconfirm) {
                 //  非初次點擊下拉選單紐，且後端有 晚於 window.data.newsList.markTime 的 unconfirmNews
                 await moreNewsForDropdown()
             }
 
             return
+        }
+
+        function init_newsList() {
+            let news = window.data.newsList
+            if (!news.limit) {
+                return
+            }
+            let { newsList: { confirm, unconfirm }, total, markTime, limit } = news
+            window.data._newsList = { limit, total, markTime, count: confirm.length + unconfirm.length }
+
+            let _newsList = window.data._newsList
+
+            if (!_newsList.count) {
+                _newsList.listOfNewsId = { confirm: { people: [], blogs: [] }, unconfirm: undefined }
+                window.data.newsList = { ..._newsList }
+                delete window.data._newsList
+                return
+            }
+
+            _newsList.listOfNewsId = {
+                unconfirm: unconfirm.length && _init_news(unconfirm) || undefined,
+                confirm: confirm.length && _init_news(confirm) || { people: [], blogs: [] }
+            }
+
+            window.data.newsList = { ..._newsList }
+            delete window.data._newsList
+            return
+        }
+
+
+        function _init_news(newsList) {
+            let res = { people: [], blogs: [] }
+            if (!newsList.length) {
+                return res
+            }
+            return newsList.reduce((initVal, { type, id }) => {
+                type === 1 && initVal.people.push(id)
+                type === 2 && initVal.blogs.push(id)
+                return initVal
+            }, res)
         }
     })
 </script>

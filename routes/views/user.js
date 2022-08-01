@@ -60,10 +60,12 @@ router.get('/other/:user_id', async (ctx, next) => {
         return ctx.redirect('/self')
     }
 
-    let newsList = undefined
+    let newsList = {}
     if(me){
         let { data } = await getNewsByUserId(me.id)
         newsList = data
+    }else{
+        me = {}
     }
 
     let { data: { currentUser, fansList, idolList } } = await getPeopleById(user_id)
@@ -71,9 +73,9 @@ router.get('/other/:user_id', async (ctx, next) => {
     
     await ctx.render('self', {
         //  導覽列數據
-        logging: me ? true : false,
+        logging: me.id ? true : false,
         active: undefined,
-        newsList: { ...newsList, limit: LIMIT}, //  window.data 數據
+        newsList, //  window.data 數據
 
         //  主要資訊數據
         currentUser, //  window.data 數據
