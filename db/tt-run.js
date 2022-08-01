@@ -1,7 +1,7 @@
 const { Op } = require('sequelize')
 
 const {
-    User, Blog, Img, BlogImg, FollowPeople, Blog_Follow, Comment, News, seq
+    User, Blog, Img, BlogImg, FollowPeople, Blog_Follow, FollowComment, Comment, News, seq
 } = require('./model')
 
 const {
@@ -10,6 +10,7 @@ const {
 } = require('../server/user')
 const { readImgAndAssociateWidthBlog } = require('../server/img')
 const { createBlogAndAssociateWidthUser } = require('../server/blog')
+const { addComment } = require('../server/comment')
 
 const {
     getFansById
@@ -29,7 +30,7 @@ const {
     readMoreByUserIdAndTime
 } = require('../controller/news')
 
-const { 
+const {
     FollowBlog,
     readNews,
 } = require('../server/news')
@@ -102,13 +103,19 @@ async function go2(user_id, time) {
     async () => {
         try {
             // await seq.sync({ force: true })
-            
-             const { errno, data, msg } = await confirmNews({ people: [5,7], blogs: [3,5,9,11,13]})
 
-            // await Comment.truncate()
+            //  const { errno, data, msg } = await confirmNews({ people: [5,7], blogs: [3,5,9,11,13]})
+
+            await Comment.destroy({ where: {}, force: true})
+            // await Comment.destroy({ truncate: true })
+            // await User.sync()
+            // await FollowComment.sync()
+            // console.log('@=> ' , Comment.createUser)
+
             // let { errno, data, msg} = await getBlog(2, true)
+            // await addComment({blog_id: 1, user_id: 2, html: '<p>456789</p>'})
 
-            if(errno){
+            if (errno) {
                 console.log('@msg => ', msg)
                 return
             }

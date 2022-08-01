@@ -16,6 +16,10 @@ let Comment = seq.define('Comment', {
     blog_id: {
         type: INTEGER,
         allowNull: false
+    },
+    p_id: {
+        type: INTEGER,
+        allowNull: true
     }
 })
 

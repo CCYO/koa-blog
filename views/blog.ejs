@@ -127,12 +127,11 @@
                     }
 
                     if (e.key === 'Enter' && !e.shiftKey) {
-                        console.log(1111)
                         let comment = editor.getHtml()
                         let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
                         comment = comment.replace(reg, '')
                         if (!comment.trim()) return
-                        let { data: { errno, data, msg } } = await axios.post(api_comment, { comment, blog_id: window.data.blog.id })
+                        let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id })
                         if (errno) {
                             alert('留言失敗')
                             console.log('msg')
@@ -182,20 +181,28 @@
             }
 
             function _init_newsList() {
-                let newsList = window.data.newsList
-                if (!newsList) {
-                    window.data.newsList = { people: [], blogs: [] }
+                let news = window.data.newsList
+
+                let { newsList: { confirm, unconfirm }, total, markTime, limit } = news
+                window.data._newsList = { limit, total, markTime, count: confirm.length + unconfirm.length }
+
+                let _newsList = window.data._newsList
+
+                if (!_newsList.count) {
+                    _newsList.listOfNewsId = { confirm: { people: [], blogs: [] }, unconfirm: undefined }
+                    window.data.newsList = { ..._newsList }
+                    delete window.data._newsList
                     return
                 }
 
-                let { unconfirm, confirm, total, markTime } = newsList
-                newsList.count = unconfirm.length + confirm.length
-                newsList.listOfNewsId = {
+                _newsList.listOfNewsId = {
                     unconfirm: unconfirm.length && _init_news(unconfirm) || undefined,
                     confirm: confirm.length && _init_news(confirm) || { people: [], blogs: [] }
                 }
-                delete newsList.confirm
-                delete newsList.unconfirm
+
+                window.data.newsList = { ..._newsList }
+                delete window.data._newsList
+                return
             }
 
 
@@ -210,6 +217,7 @@
                     return initVal
                 }, res)
             }
+
 
         })
     </script>

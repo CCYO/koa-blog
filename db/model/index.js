@@ -6,8 +6,9 @@ const Comment = require('./Comment')
 const BlogImg = require('./relation-Blog&Img')
 
 const FollowPeople = require('./FollowPeople')
-
 const FollowBlog = require('./FollowBlog')
+const FollowComment = require('./FollowComment')
+
 const News = require('./News')
 
 /**
@@ -61,12 +62,16 @@ User.belongsToMany(Blog, { as: 'FollowBlog_B', through: FollowBlog, foreignKey: 
 // News.belongsTo(Blog_Follow, { foreignKey: 'news_id', targetKey: 'id'})
 // News.belongsTo(User_Follow, { foreignKey: 'news_id', targetKey: 'id'})
 
+User.belongsToMany(Comment, { as: 'FollowComment_T', through: FollowComment, foreignKey: 'follower_id',targetKey: 'id'})
+Comment.belongsToMany(User, { as: 'FollowComment_F', through: FollowComment, foreignKey: 'comment_id',targetKey: 'id'})
+
 module.exports = {
     User, Blog, Img, Comment,
     BlogImg, 
     
     FollowPeople,
     FollowBlog,
+    FollowComment,
     
     News, seq
 }
