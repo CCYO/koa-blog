@@ -79,7 +79,7 @@ router.get('/other/:user_id', async (ctx, next) => {
 
         //  主要資訊數據
         currentUser, //  window.data 數據
-        isMyIdol: !me ? false : fansList.some((fans) => fans.id === me.id),
+        isMyIdol: !me.id ? false : fansList.some((fans) => fans.id === me.id),
         blogList, //  window.data 數據
 
         //  次要資訊數據

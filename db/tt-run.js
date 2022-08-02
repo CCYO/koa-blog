@@ -106,7 +106,7 @@ async function go2(user_id, time) {
 
             //  const { errno, data, msg } = await confirmNews({ people: [5,7], blogs: [3,5,9,11,13]})
 
-            await Comment.destroy({ where: {}, force: true})
+            // await Comment.destroy({ where: {}, force: true})
             // await Comment.destroy({ truncate: true })
             // await User.sync()
             // await FollowComment.sync()
@@ -115,11 +115,8 @@ async function go2(user_id, time) {
             // let { errno, data, msg} = await getBlog(2, true)
             // await addComment({blog_id: 1, user_id: 2, html: '<p>456789</p>'})
 
-            if (errno) {
-                console.log('@msg => ', msg)
-                return
-            }
-            console.log('@@data => ', data)
+            // await Comment.sync({alter: true})
+            
         } catch (e) {
             console.log('@ERR => ', e)
         }

@@ -1,5 +1,5 @@
 const {
-    User, Blog, Img, Comment, BlogImg, Blog_Fans
+    User, Blog, Img, Comment, BlogImg, Blog_Fans, FollowComment
 } = require('../db/model')
 
 const { 
@@ -8,14 +8,20 @@ const {
 } = require('../utils/init')
 
 /**
- * 創建Blog，並與User作關聯
+ * 創建Blog，其中會與作者作關聯，且建立一份作者自己的留言
  * @param {string} title 文章表提
  * @param {number} user_id 作者id
  * @returns {object} blog 資訊 { id, title, html, show, showAt, createdAt, updatedAt }
  */
-async function createBlogAndAssociateWidthUser(title, user_id) {
+async function createBlog({title, user_id}) {
     let blog = await Blog.create({ title, user_id })
-    await blog.setUser(user_id)
+    
+    //  為 blog 創建一個 作者的留言，且 id = pid
+    let comment = await blog.createComment({user_id})
+    comment = await comment.update({p_id: comment.id})
+    
+    //  讓作者追蹤這份(↑)自己的留言，且標示為 comfirm
+    await comment.addFollowComment_F(user_id, {through: {comfirm: true}})
     return blog
 }
 
@@ -147,7 +153,7 @@ async function readBlogList({ user_id, getAll = false }) {
 }
 
 module.exports = {
-    createBlogAndAssociateWidthUser,
+    createBlog,
     updateBlog,
     cancelAssociateWidthImg,
     deleteBlog,

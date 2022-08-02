@@ -37,6 +37,7 @@ module.exports = {
     },
     NEWS: {
         FOLLOW_CONFIRM_ERR: { errno: 901, msg: 'Follow.confirm 更新失敗'},
-        BLOG_FANS_CONFIRM_ERR: { errno: 902, msg: 'Blog_Fans.confirm 更新失敗'}
+        BLOG_FANS_CONFIRM_ERR: { errno: 902, msg: 'Blog_Fans.confirm 更新失敗'},
+        FOLLOW_COMMENT_CONFIRM_ERR: { errno: 903, msg: 'Blog_Fans.confirm 更新失敗'}
     }
 }

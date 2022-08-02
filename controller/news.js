@@ -35,7 +35,6 @@ async function getNewsByUserId(userId) {
     // let res = { ...newsList, markTime, total, numOfUnconfirm }
     let res = await readNews({ userId })
     return new SuccModel(res)
-
 }
 
 async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront = false, offset) {
@@ -68,7 +67,8 @@ async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront 
 
     res.listOfNewsId = {
         people: [...confirm.people, ...unconfirm.people],
-        blogs: [...confirm.blogs, ...unconfirm.blogs]
+        blogs: [...confirm.blogs, ...unconfirm.blogs],
+        comments: [...confirm.comments, ...unconfirm.comments]
     }
 
     return new SuccModel(res)
@@ -76,13 +76,15 @@ async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront 
 
 async function confirmNews(listOfNewsId) {
 
-    let { people, blogs } = listOfNewsId
+    let { people, blogs, comments } = listOfNewsId
 
-    const { rowOfBlogs, rowOfPeople } = await updateNews(listOfNewsId)
+    const { rowOfBlogs, rowOfPeople, rowOfComments } = await updateNews(listOfNewsId)
     if (blogs.length !== rowOfBlogs) {
         return new ErrModel(NEWS.BLOG_FANS_CONFIRM_ERR)
     } else if (people.length !== rowOfPeople) {
         return new ErrModel(NEWS.FOLLOW_CONFIRM_ERR)
+    } else if (comments.length !== rowOfComments){
+        return new ErrModel(NEWS.FOLLOW_COMMENT_CONFIRM_ERR)
     }
     let res = { listOfNewsId, count: rowOfBlogs + rowOfPeople }
     return new SuccModel(res)

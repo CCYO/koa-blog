@@ -1,13 +1,13 @@
-<% list.forEach(({type, nickname, time, confirm, fans_id, blog_id, title}) => { %>
+<% list.forEach(({type, fans, blog, comment, timestamp, confirm }) => { %>
 
 <% if (type === 1) { %>
 
 <!-- 新通知 of fans -->
 <li class="dropdown-item position-relative news-item">
-    <a href="/other/<%= fans_id %>" class="stretched-link">
+    <a href="/other/<%= fans.id %>" class="stretched-link">
         <div>
-            <span><%= nickname %>追蹤你囉！</span><br>
-            <span><%= time %> </span>
+            <span><%= fans.nickname %>追蹤你囉！</span><br>
+            <span><%= timestamp %> </span>
         </div>
     </a>
 </li>
@@ -16,11 +16,23 @@
 
 <!-- 新通知 of blog -->
 <li class="dropdown-item  position-relative news-item">
-    <a href="/blog/<%= blog_id %>" class="stretched-link">
+    <a href="/blog/<%= blog.id %>" class="stretched-link">
         <div>
-            <span><%= nickname %> 有新文章唷！</span><br>
-            <span>- <%= title %> -</span><br>
-            <span><%= time %> </span>
+            <span><%= blog.author.nickname %> 有新文章唷！</span><br>
+            <span>- <%= blog.title %> -</span><br>
+            <span><%= timestamp %> </span>
+        </div>
+    </a>
+</li>
+
+<% } else if (type === 3) { %>
+
+<!-- 新通知 of blog -->
+<li class="dropdown-item  position-relative news-item">
+    <a href="/blog/<%= comment.blog.id %>#comment_<%= comment.id %>" class="stretched-link">
+        <div>
+            <span><%= comment.user.nickname %> 在 <%= comment.blog.title %> 留言囉！</span><br>
+            <span><%= timestamp %> </span>
         </div>
     </a>
 </li>

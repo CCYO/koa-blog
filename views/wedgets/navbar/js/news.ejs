@@ -46,7 +46,7 @@
              * htmlStr - { confirm: string, unconfirm: string } html字符格式的通知數據
              * ListOfNewsId - 此次 response 包含的 newsList 之 id 列表
             */
-            let { numOfUnconfirm, total, count, htmlStr, listOfNewsId: { people, blogs } } = data
+            let { numOfUnconfirm, total, count, htmlStr, listOfNewsId: { people, blogs, comments } } = data
 
             //  若 numOfUnconfirm 有值，則
             if (numOfUnconfirm > 0) {
@@ -64,6 +64,7 @@
             let confirm = listOfNewsId.confirm
             confirm.people = [...confirm.people, ...people]
             confirm.blogs = [...confirm.blogs, ...blogs]
+            confirm.comments = [...confirm.comments, ...comments]
 
             //  根據 response 添加通知內容
             for (prop in htmlStr) {
@@ -101,7 +102,7 @@
              * htmlStr - { confirm: string, unconfirm: string } html字符格式的通知數據
              * ListOfConfirmNewsId - 此次 response 包含的 newsList 之 id 列表
             */
-            let { numOfUnconfirm, total, count, htmlStr, listOfNewsId: { people, blogs } } = data
+            let { numOfUnconfirm, total, count, htmlStr, listOfNewsId: { people, blogs, comments } } = data
 
             //  若 numOfUnconfirm 有值，則
             if (numOfUnconfirm > 0) {
@@ -119,7 +120,7 @@
             //  window.newsList.count 更新
             newsList.count = count
             //  window.newsList.listOfConfirmNewsId 更新
-            newsList.listOfNewsId.confirm = { people, blogs }
+            newsList.listOfNewsId.confirm = { people, blogs, comments }
 
             //  window.newsList.markTime 更新
             newsList.markTime = markTime
@@ -155,13 +156,14 @@
                 console.log('@msg => ', msg)
             }
             //  完成 confirm 的通知數據
-            let { listOfNewsId: { people, blogs }, count } = data
+            let { listOfNewsId: { people, blogs, comments }, count } = data
             //  更新 data.newsList.listOfNewsId.unconfirm
             listOfNewsId.unconfirm = undefined
             //  更新 data.newsList.listOfNewsId.confirm
             let confirm = newsList.listOfNewsId.confirm
             confirm.people = [...confirm.people, ...people]
             confirm.blogs = [...confirm.blogs, ...blogs]
+            confirm.comments = [...confirm.comments, ...comments]
         }
         //  handle 顯示下拉選單
         async function showDropdown() {
@@ -201,7 +203,7 @@
 
             _newsList.listOfNewsId = {
                 unconfirm: unconfirm.length && _init_news(unconfirm) || undefined,
-                confirm: confirm.length && _init_news(confirm) || { people: [], blogs: [] }
+                confirm: confirm.length && _init_news(confirm) || { people: [], blogs: [], comments: [] }
             }
 
             window.data.newsList = { ..._newsList }
@@ -211,13 +213,14 @@
 
 
         function _init_news(newsList) {
-            let res = { people: [], blogs: [] }
+            let res = { people: [], blogs: [], comments: [] }
             if (!newsList.length) {
                 return res
             }
             return newsList.reduce((initVal, { type, id }) => {
                 type === 1 && initVal.people.push(id)
                 type === 2 && initVal.blogs.push(id)
+                type === 3 && initVal.comments.push(id)
                 return initVal
             }, res)
         }

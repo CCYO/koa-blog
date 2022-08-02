@@ -7,7 +7,7 @@ const {
 let Comment = seq.define('Comment', {
     html: {
         type: STRING,
-        allowNull: false
+        defaultValue: ''
     },
     user_id: {
         type: INTEGER,

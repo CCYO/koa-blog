@@ -15,8 +15,8 @@ router.prefix('/api/comment')
 //  創建comment
 router.post('/', api_check_login, async (ctx, next) => {
     const { id: user_id } = ctx.session.user
-    const { blog_id, author_id, html } = ctx.request.body
-    ctx.body = await createComment({blog_id, author_id, html, user_id})
+    const { blog_id, html } = ctx.request.body
+    ctx.body = await createComment({blog_id, html, user_id})
 })
 
 module.exports = router

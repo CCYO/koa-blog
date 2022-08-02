@@ -11,7 +11,7 @@ const {
 } = require('../server/user')
 
 const {
-    createBlogAndAssociateWidthUser,
+    createBlog,
     updateBlog,
     cancelAssociateWidthImg,
     deleteBlog,
@@ -42,7 +42,7 @@ const { BLOG, FOLLOW } = require('../model/errRes')
 async function addBlog(title, userId) {
     try {
         title = my_xxs(title)
-        const blog = await createBlogAndAssociateWidthUser(title, userId)
+        const blog = await createBlog({title, userId})
         return new SuccModel(blog)
     } catch (e) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })

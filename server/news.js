@@ -5,6 +5,7 @@ const {
     seq,
     FollowBlog: FB,
     FollowPeople,
+    FollowComment,
 
     Follow, Blog
 } = require('../db/model')
@@ -90,7 +91,7 @@ async function updateBlogFansComfirm(list, data = { confirm: true }) {
     return row
 }
 
-async function updateNews({ people, blogs }) {
+async function updateNews({ people, blogs, comments }) {
     let data = {}
     if (people.length) {
         let [rowOfPeople] = await FollowPeople.update({ confirm: true }, { where: { id: people } })
@@ -104,6 +105,13 @@ async function updateNews({ people, blogs }) {
         data.rowOfBlogs = rowOfBlogs
     } else {
         data.rowOfBlogs = 0
+    }
+
+    if (comments.length) {
+        let [rowOfcomments] = await FollowComment.update({ confirm: true }, { where: { id: comments } })
+        data.rowOfcomments = rowOfcomments
+    } else {
+        data.rowOfcomments = 0
     }
 
     return data
@@ -124,14 +132,15 @@ async function updateNews({ people, blogs }) {
  * @param {boolean} param0.fromFront 此查詢是否來自前端
  * @returns { { newsList: array, markTime: string, total: number, numOfUnconfirm: number, numOfAfterMark: number } }  newsList 通知的數據 / markTime 時間標記 \n total 通知總數 / numOfUnconfirm 若!param0.fromFront，則會有此值，代表 RV.markTime 前的 unconfirmNews 數量 / numOfAfterMark 若param0.fromFront，則會有此值，代表 RV.markTime 後的 unconfirmNews 數量
  */
-async function readNews({ userId, markTime = new Date().toISOString(), listOfexceptNewsId = { people: [], blogs: [] }, fromFront = false, offset = undefined }) {
+async function readNews({ userId, markTime = new Date().toISOString(), listOfexceptNewsId = { people: [], blogs: [], comments: [] }, fromFront = false, offset = undefined }) {
     let whereOps = { markTime, listOfexceptNewsId }
 
     let newsList = await rawQuery.readNews({ userId, offset, whereOps, fromFront })
 
     let { numOfUnconfirm, total } = await rawQuery.countNewsTotalAndUnconfirm({ userId, markTime, fromFront })
 
-    return { newsList, markTime, numOfUnconfirm, total, limit: LIMIT }
+    //  markTime 與 limit 僅用在 頁面初次的 ejs render
+    return { newsList, numOfUnconfirm, total, markTime, limit: LIMIT }
 }
 
 let FollowBlog = {

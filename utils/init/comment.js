@@ -18,13 +18,13 @@ function init_comment(comment) {
 
 function _init_comment(comment) {
     let json = comment.toJSON ? comment.toJSON() : comment
-    let {id, User: user, html, updatedAt: time} = json
+    let { id, html, updatedAt: time, User: user, Blog: blog } = json
     time = moment(time).format('YYYY-MM-DD HH:mm')
-    if(user){
-        user = init_user(user)
-        delete user.email
-    }
-    let res = { id, html, time, user}
+
+    user = init_user(user)
+    delete user.email
+
+    let res = { id, html, time, user, blog }
 
     return res
 }

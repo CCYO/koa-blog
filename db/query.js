@@ -11,11 +11,13 @@ const { seq } = require('./model')
 
 const { readUser } = require('../server/user')
 const { readBlogById } = require('../server/blog')
+const { readComment } = require('../server/comment')
 
 async function readNews({ userId, offset = 0, whereOps, fromFront}) {
-    let { markTime, listOfexceptNewsId: {people, blogs} } = whereOps
+    let { markTime, listOfexceptNewsId: {people, blogs, comments} } = whereOps
     let listOfPeopleId = people.join(',') || undefined
     let listOfBlogsId = blogs.join(',') || undefined
+    let listOfCommentsId = comments.join(',')
     
     let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') > DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
 
@@ -23,7 +25,7 @@ async function readNews({ userId, offset = 0, whereOps, fromFront}) {
     SELECT type, id, target_id, follow_id, confirm, time
     FROM (
         SELECT 1 as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt as time
-        FROM FollowPeople P 
+        FROM FollowPeople
         WHERE idol_id=${userId}
             AND ${where_time}
             ${listOfPeopleId && ` AND id NOT IN (${listOfPeopleId})` || ''}
@@ -31,11 +33,20 @@ async function readNews({ userId, offset = 0, whereOps, fromFront}) {
         UNION
 
         SELECT 2 as type, id, blog_id as target_id, follower_id as follow_id, confirm, createdAt as time
-        FROM FollowBlogs B
+        FROM FollowBlogs
         WHERE follower_id=${userId}
             AND deletedAt IS NULL
             AND ${where_time}
             ${listOfBlogsId && ` AND id NOT IN (${listOfBlogsId})` || ''}
+
+        UNION
+
+        SELECT 3 as type, id, comment_id as target_id, follower_id as follow_id, confirm, updatedAt as time
+        FROM FollowComment
+        WHERE follower_id=${userId}
+            AND ${where_time}
+            ${listOfCommentsId && ` AND id NOT IN (${listOfCommentsId})` || ''}
+
     ) AS X
     ORDER BY confirm=1, time DESC
     LIMIT ${LIMIT} OFFSET ${offset}
@@ -59,13 +70,23 @@ async function countNewsTotalAndUnconfirm({ userId, markTime, fromFront}) {
     FROM (
         SELECT 1 as type, id, confirm, createdAt
         FROM FollowPeople
-        WHERE idol_id=${userId} 
+        WHERE
+            idol_id=${userId} 
 
         UNION
 
         SELECT 2 as type, id, confirm, createdAt
         FROM FollowBlogs
-        WHERE follower_id=${userId} AND deletedAt IS NULL 
+        WHERE 
+            follower_id=${userId}
+            AND deletedAt IS NULL 
+
+        UNION
+
+        SELECT 3 as type, id, confirm, updatedAt
+        FROM FollowBlogs
+        WHERE
+            follower_id=${userId}
     ) AS X
     `
     let [{ numOfUnconfirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })
@@ -97,12 +118,16 @@ async function _init_newsOfComfirmRoNot(newsList) {
 async function _init_newsItemOfComfirmRoNot(item) {
     let { type, id, target_id, follow_id, confirm, time } = item
     let timestamp = moment(time, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+    let res = { type, id, timestamp, confirm }
     if (type === 1) {
         let { id: fans_id, nickname } = await readUser({ id: follow_id })
-        return { type, id, fans_id, nickname, confirm, timestamp }
+        return { ...res, fans: { id: fans_id, nickname } }
     } else if (type === 2) {
-        let { id: blog_id, title, author: { id: author_id, nickname } } = await readBlogById(target_id)
-        return ({ type, id, blog_id, title, author_id, nickname, confirm, timestamp })
+        let { id: blog_id, title, author } = await readBlogById(target_id)
+        return { ...res, blog: { id: blog_id, title, author: { id: author.id, nickname: author.nickname }}}
+    }else if (type === 3) {
+        let { id: comment_id, user, blog } = await readComment({id: target_id})
+        return ({ ...res, comment: { id: comment_id, user, blog }})
     }
 }
 
