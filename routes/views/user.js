@@ -99,6 +99,7 @@ router.get('/self', view_check_login, async (ctx, next) => {
     //  導覽列數據
     let { data: newsList} = await getNewsByUserId(id)
     console.log('@ newsList => ', newsList)
+    console.log('@ newsList.newsList.unconfirm => ', newsList.newsList.unconfirm)
 
     await ctx.render('self', {
         //  導覽列數據

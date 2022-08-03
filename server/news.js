@@ -108,10 +108,10 @@ async function updateNews({ people, blogs, comments }) {
     }
 
     if (comments.length) {
-        let [rowOfcomments] = await FollowComment.update({ confirm: true }, { where: { id: comments } })
-        data.rowOfcomments = rowOfcomments
+        let [rowOfComments] = await FollowComment.update({ confirm: true }, { where: { id: comments } })
+        data.rowOfComments = rowOfComments
     } else {
-        data.rowOfcomments = 0
+        data.rowOfComments = 0
     }
 
     return data

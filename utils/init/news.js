@@ -15,8 +15,8 @@ const moment = require('moment')
 
 function init_newsOfFollowId(newsList) {
     let res = {
-        confirm: { people: [], blogs: [] },
-        unconfirm: { people: [], blogs: [] }
+        confirm: { people: [], blogs: [] , comments: []},
+        unconfirm: { people: [], blogs: [] , comments: []}
     }
 
     for (confirmRoNot in newsList) {
@@ -28,6 +28,7 @@ function init_newsOfFollowId(newsList) {
         list.forEach(({ type, id }) => {
             type === 1 && target.people.push(id)
             type === 2 && target.blogs.push(id)
+            type === 3 && target.comments.push(id)
         })
     }
 

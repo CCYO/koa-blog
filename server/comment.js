@@ -46,7 +46,7 @@ async function readComment({ id, blog_id }) {
         whereOps.id = id
     }
     let res = await Comment.findAll({
-        attributes: ['html', 'updatedAt'],
+        attributes: ['id', 'html', 'updatedAt'],
         where: whereOps,
         include: [
             {
@@ -61,7 +61,7 @@ async function readComment({ id, blog_id }) {
     })
     res = init_comment(res)
     console.log('@res =====> ', res)
-    return
+    return res
 }
 
 module.exports = {

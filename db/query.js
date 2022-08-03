@@ -42,7 +42,7 @@ async function readNews({ userId, offset = 0, whereOps, fromFront}) {
         UNION
 
         SELECT 3 as type, id, comment_id as target_id, follower_id as follow_id, confirm, updatedAt as time
-        FROM FollowComment
+        FROM FollowComments
         WHERE follower_id=${userId}
             AND ${where_time}
             ${listOfCommentsId && ` AND id NOT IN (${listOfCommentsId})` || ''}
@@ -84,7 +84,7 @@ async function countNewsTotalAndUnconfirm({ userId, markTime, fromFront}) {
         UNION
 
         SELECT 3 as type, id, confirm, updatedAt
-        FROM FollowBlogs
+        FROM FollowComments
         WHERE
             follower_id=${userId}
     ) AS X
@@ -126,8 +126,12 @@ async function _init_newsItemOfComfirmRoNot(item) {
         let { id: blog_id, title, author } = await readBlogById(target_id)
         return { ...res, blog: { id: blog_id, title, author: { id: author.id, nickname: author.nickname }}}
     }else if (type === 3) {
-        let { id: comment_id, user, blog } = await readComment({id: target_id})
-        return ({ ...res, comment: { id: comment_id, user, blog }})
+        
+        let [ comment ] = await readComment({id: target_id})
+        console.log('@comment123 => ', comment)
+        console.log('@item => ', item)
+        let { id: comment_id, user, blog } = comment
+        return { ...res, comment: { id: comment_id, user, blog }}
     }
 }
 

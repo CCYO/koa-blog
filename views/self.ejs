@@ -169,33 +169,14 @@
             </div>
         </div>
     </div>
-    <div class="my-noshow" id="data">
-        <div data-my-data="me">
-            <%= JSON.stringify(me) %>
-        </div>
-        <div data-my-data="newsList">
-            <%= JSON.stringify(newsList) %>
-        </div>
-        <div data-my-data="currentUser">
-            <%= JSON.stringify(currentUser) %>
-        </div>
-        <div data-my-data="idolList">
-            <%= JSON.stringify(idolList) %>
-        </div>
-        <div data-my-data="fansList">
-            <%= JSON.stringify(fansList) %>
-        </div>
-    </div>
     <%- include('wedgets/cdn') %>
+    <%- include('wedgets/common/init-data') %>
     <script>
         $(function () {
-
             let $btn_follow = $('#follow')
             let $btn_cancelFollow = $('#cancelFollow')
             let api_follow = '/api/user/follow'
             let api_cancelFollow = '/api/user/cancelFollow'
-
-            window.data = {}
 
             $btn_follow.click(handle_follow(true))
             $btn_cancelFollow.click(handle_follow(false))
@@ -259,28 +240,9 @@
                 $btn_cancelFollow.toggle()
             }
 
-            //  初始化數據
-            init_data()
 
-            //  初始化數據
-            function init_data() {
-                $(`[data-my-data]`).each((index, el) => {
-                    let $el = $(el)
-                    let prop = $el.data('my-data')
-                    try {
-                        window.data[prop] = JSON.parse($el.text())
-                    } catch (e) {
-                        window.data[prop] = undefined
-                    }
-                })
-                $('#data').remove()
-            }
         })
     </script>
-    
-    <% if (logging) { %>
-        <%- include('wedgets/navbar/js/index') %>
-    <% } %>
 </body>
 
 </html>

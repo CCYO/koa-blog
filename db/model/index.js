@@ -16,6 +16,10 @@ const News = require('./News')
  * onDelete: 'SET NULL'
  * onUpdate: 'CASCADE'
  * 
+ * 1: N
+ * onDelete: 'NO ACTION' → 我觀察到的，網路資料卻都說是 SET NULL
+ * onUpdate: 'CASCADE'
+ * 
  * N:M
  * onDelete: 'CASCADE'
  * onUpdate: 'CASCADE'
@@ -23,7 +27,7 @@ const News = require('./News')
 
 
 //  User : Blog = 1 : N
-Blog.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id'})
+Blog.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id', onDelete: 'CASCADE' })
 User.hasMany(Blog, { foreignKey: 'user_id', sourceKey: 'id'})
 
 //  Blog : Img = M : N
@@ -31,11 +35,11 @@ Blog.belongsToMany(Img, { through: BlogImg, foreignKey: 'blog_id', targetKey: 'i
 Img.belongsToMany(Blog, { through: BlogImg, foreignKey: 'img_id', targetKey: 'id' })
 
 //  Blog : Comment = 1 : N
-Comment.belongsTo(Blog, { foreignKey: 'blog_id', targetKey: 'id'})
+Comment.belongsTo(Blog, { foreignKey: 'blog_id', targetKey: 'id', onDelete: 'CASCADE'})
 Blog.hasMany(Comment, { foreignKey: 'blog_id', sourceKey: 'id'})
 
 //  User : Comment = 1 : N
-Comment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id'})
+Comment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id', onDelete: 'CASCADE' })
 User.hasMany(Comment, { foreignKey: 'user_id', sourceKey: 'id'})
 
 //  SourceModel 作為 foreignKey 的來源，

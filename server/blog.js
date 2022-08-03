@@ -21,7 +21,8 @@ async function createBlog({title, user_id}) {
     comment = await comment.update({p_id: comment.id})
     
     //  讓作者追蹤這份(↑)自己的留言，且標示為 comfirm
-    await comment.addFollowComment_F(user_id, {through: {comfirm: true}})
+    let follow = await comment.addFollowComment_F(user_id, {through: {confirm: true}})
+    console.log('@followJSON => ', follow)
     return blog
 }
 

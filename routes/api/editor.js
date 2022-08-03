@@ -16,7 +16,7 @@ router.prefix('/api/editor')
 router.post('/', api_check_login, async (ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { title } = ctx.request.body
-    
+    console.log('@user_id =====> ', user_id)
     return ctx.body = await addBlog(title, user_id)
 })
 

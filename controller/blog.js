@@ -39,10 +39,10 @@ const { BLOG, FOLLOW } = require('../model/errRes')
  * @param { number } userId 使用者ID  
  * @returns SuccModel for { data: { id, title, html, show, showAt, createdAt, updatedAt }} || ErrModel
  */
-async function addBlog(title, userId) {
+async function addBlog(title, user_id) {
     try {
         title = my_xxs(title)
-        const blog = await createBlog({title, userId})
+        const blog = await createBlog({title, user_id})
         return new SuccModel(blog)
     } catch (e) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })

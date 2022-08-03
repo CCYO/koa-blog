@@ -115,7 +115,7 @@ async function go2(user_id, time) {
             // let { errno, data, msg} = await getBlog(2, true)
             // await addComment({blog_id: 1, user_id: 2, html: '<p>456789</p>'})
 
-            // await Comment.sync({alter: true})
+            await Blog.sync({alter: true})
             
         } catch (e) {
             console.log('@ERR => ', e)

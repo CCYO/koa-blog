@@ -58,3 +58,24 @@
         </div>
     </div>
 </nav>
+<div class="my-noshow" id="data">
+    <% if (logging) { %>
+    <div data-my-data="me">
+        <%= JSON.stringify(me) %>
+    </div>
+    <div data-my-data="newsList">
+        <%= JSON.stringify(newsList) %>
+    </div>
+    <%- include('../navbar/js/index')%>
+    <% } %>
+    <div data-my-data="currentUser">
+        <%= JSON.stringify(currentUser) %>
+    </div>
+    <div data-my-data="idolList">
+        <%= JSON.stringify(idolList) %>
+    </div>
+    <div data-my-data="fansList">
+        <%= JSON.stringify(fansList) %>
+    </div>
+    
+</div>
