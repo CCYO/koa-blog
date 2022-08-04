@@ -108,7 +108,7 @@ app.use(api__comment.routes(), api__comment.allowedMethods())
 app.use(view__user.routes(), view__user.allowedMethods())
 app.use(view__blog.routes(), view__blog.allowedMethods())
 
-app.use(static(resolve(__dirname, '/static')))
+app.use(static(resolve(__dirname, '/public')))
 
 // error-handling
 app.on('error', (err, ctx) => {

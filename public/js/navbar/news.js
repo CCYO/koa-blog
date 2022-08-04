@@ -1,28 +1,30 @@
 console.log('@news')
-    //  下拉選單鈕、通知鈕
+//  下拉選單鈕、通知鈕
 let $newsDropdown = $('#newsDropdown')
-    //  通知比數span
+//  通知比數span
 let $newsCount = $('.news-count')
-    //  下拉選單內 的 readMore鈕
+//  下拉選單內 的 readMore鈕
 let $readMore = $('#readMore')
-    //  下拉選單內 的 沒有更多提醒
+//  下拉選單內 的 沒有更多提醒
 let $noNews = $('#noNews')
 
 let api_news = '/api/news'
 let api_readMore = '/api/news/readMore'
 
-//  初始化 newsList數據
-init_newsList()
+window.data = {}
+//  初始化數據
+init_data()
+
 
 //  手動註冊 BS5 下拉選單
 var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
-var dropdownList = dropdownElementList.map(function(dropdownToggleEl) {
+var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
     return new bootstrap.Dropdown(dropdownToggleEl)
 })
 
 //  綁定 下拉選單鈕 的 click handle
 $newsDropdown.click(showDropdown)
-    //  綁定 readMore鈕 的 click handle
+//  綁定 readMore鈕 的 click handle
 $readMore.click(moreNewsForReadMore)
 
 async function moreNewsForReadMore() {
@@ -51,7 +53,7 @@ async function moreNewsForReadMore() {
     if (numOfUnconfirm > 0) {
         //  通知鈕顯示筆數
         $newsCount.toggle(true).text(numOfUnconfirm)
-            //  window.newsList.numOfUnconfirm 更新
+        //  window.newsList.numOfUnconfirm 更新
         newsList.numOfUnconfirm = numOfUnconfirm
     } else {
         newsList.numOfUnconfirm = 0
@@ -59,7 +61,7 @@ async function moreNewsForReadMore() {
 
     //  window.newsList.count 更新
     newsList.count += count
-        //  window.newsList.confirm 更新
+    //  window.newsList.confirm 更新
     let confirm = listOfNewsId.confirm
     confirm.people = [...confirm.people, ...people]
     confirm.blogs = [...confirm.blogs, ...blogs]
@@ -76,7 +78,7 @@ async function moreNewsForReadMore() {
     }
 
     let more = newsList.total - newsList.count > 0
-        //  判斷下拉選單內的 readMore鈕 是否該顯示
+    //  判斷下拉選單內的 readMore鈕 是否該顯示
     $readMore.toggle(more) && $noNews.toggle(!more)
 }
 
@@ -107,7 +109,7 @@ async function moreNewsForDropdown() {
     if (numOfUnconfirm > 0) {
         //  通知鈕顯示筆數
         $newsCount.toggle(true).text(numOfUnconfirm)
-            //  window.newsList.numOfUnconfirm 更新
+        //  window.newsList.numOfUnconfirm 更新
         newsList.numOfUnconfirm = numOfUnconfirm
     } else {
         newsList.numOfUnconfirm = 0
@@ -116,9 +118,9 @@ async function moreNewsForDropdown() {
 
     //  window.newsList.total 更新
     newsList.total = total
-        //  window.newsList.count 更新
+    //  window.newsList.count 更新
     newsList.count = count
-        //  window.newsList.listOfConfirmNewsId 更新
+    //  window.newsList.listOfConfirmNewsId 更新
     newsList.listOfNewsId.confirm = { people, blogs, comments }
 
     //  window.newsList.markTime 更新
@@ -127,7 +129,7 @@ async function moreNewsForDropdown() {
     //  移除現有通知列成員
     $(`.news-item`).remove()
     $(`[data-my-hr]`).remove()
-        //  根據 response 添加通知內容
+    //  根據 response 添加通知內容
     for (prop in htmlStr) {
         let html = htmlStr[prop]
         if (!html) {
@@ -138,7 +140,7 @@ async function moreNewsForDropdown() {
     }
 
     let more = newsList.total - newsList.count > 0
-        //  判斷下拉選單內的 readMore鈕 是否該顯示
+    //  判斷下拉選單內的 readMore鈕 是否該顯示
     $readMore.toggle(more) && $noNews.toggle(!more)
 
     //  顯示 BS5 下拉選單
@@ -158,7 +160,7 @@ async function confirmNews() {
     let { listOfNewsId: { people, blogs, comments }, count } = data
     //  更新 data.newsList.listOfNewsId.unconfirm
     listOfNewsId.unconfirm = undefined
-        //  更新 data.newsList.listOfNewsId.confirm
+    //  更新 data.newsList.listOfNewsId.confirm
     let confirm = newsList.listOfNewsId.confirm
     confirm.people = [...confirm.people, ...people]
     confirm.blogs = [...confirm.blogs, ...blogs]
@@ -183,7 +185,23 @@ async function showDropdown() {
     return
 }
 
-function init_newsList() {
+//  初始化數據
+function init_data() {
+    $(`[data-my-data]`).each((index, el) => {
+        let $el = $(el)
+        let prop = $el.data('my-data')
+        try {
+            window.data[prop] = JSON.parse($el.text())
+        } catch (e) {
+            window.data[prop] = undefined
+        }
+    })
+    //  初始化 newsList數據
+    _init_newsList()
+    $('#data').remove()
+}
+
+function _init_newsList() {
     let news = window.data.newsList
     if (!news.limit) {
         return
@@ -195,7 +213,7 @@ function init_newsList() {
 
     if (!_newsList.count) {
         _newsList.listOfNewsId = { confirm: { people: [], blogs: [] }, unconfirm: undefined }
-        window.data.newsList = {..._newsList }
+        window.data.newsList = { ..._newsList }
         delete window.data._newsList
         return
     }
@@ -205,7 +223,7 @@ function init_newsList() {
         confirm: confirm.length && _init_news(confirm) || { people: [], blogs: [], comments: [] }
     }
 
-    window.data.newsList = {..._newsList }
+    window.data.newsList = { ..._newsList }
     delete window.data._newsList
     return
 }

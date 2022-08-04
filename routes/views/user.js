@@ -22,7 +22,7 @@ const {
 /**
  * @description router for login
  */
- router.get('/login', async (ctx, next) => {
+router.get('/login', async (ctx, next) => {
     if (ctx.session.user) {
         return ctx.redirect('/self')
     }
@@ -56,25 +56,25 @@ router.get('/other/:user_id', async (ctx, next) => {
     let me = ctx.session.user
     let user_id = ctx.params.user_id * 1
 
-    if(me && me.id === user_id){
+    if (me && me.id === user_id) {
         return ctx.redirect('/self')
     }
 
     let newsList = {}
-    if(me){
+    if (me) {
         let { data } = await getNewsByUserId(me.id)
         newsList = data
-    }else{
+    } else {
         me = {}
     }
 
     let { data: { currentUser, fansList, idolList } } = await getPeopleById(user_id)
     let { data: blogList } = await getBlogListByUserId(user_id)
-    
+
     await ctx.render('self', {
         //  導覽列數據
         logging: me.id ? true : false,
-        active: ctx.request.path,
+        active: 'other',
         newsList, //  window.data 數據
 
         //  主要資訊數據
@@ -93,19 +93,20 @@ router.get('/other/:user_id', async (ctx, next) => {
 
 //  個人資訊
 router.get('/self', view_check_login, async (ctx, next) => {
-    console.log('@path => ', ctx.request.path)
+    console.log('@path => ', ctx.request.href)
     let { id } = ctx.session.user
-    let { data: { currentUser, fansList, idolList} } = await getPeopleById(id)
+    let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
     let { data: blogList } = await getBlogListByUserId(id, true)
     //  導覽列數據
-    let { data: newsList} = await getNewsByUserId(id)
+    let { data: newsList } = await getNewsByUserId(id)
     console.log('@ newsList => ', newsList)
     console.log('@ newsList.newsList.unconfirm => ', newsList.newsList.unconfirm)
+
 
     await ctx.render('self', {
         //  導覽列數據
         logging: true,
-        active: ctx.request.path,
+        active: 'self',
         newsList, //  window.data 數據
 
         //  主要資訊數據
@@ -129,7 +130,7 @@ router.get('/setting', view_check_login, async (ctx, next) => {
     const { user } = ctx.session
 
     //  導覽列數據
-    let { data: newsList} = await getNewsByUserId(user.id)
+    let { data: newsList } = await getNewsByUserId(user.id)
 
     await ctx.render('setting', {
         //  導覽列數據
@@ -145,8 +146,16 @@ router.get('/setting', view_check_login, async (ctx, next) => {
 /**
  * @description router for square
  */
- router.get('/square', view_check_login, async (ctx, next) => {
+router.get('/square', view_check_login, async (ctx, next) => {
     await ctx.render('square')
 })
+
+function getPathname(path) {
+    let url = new URL(path)
+    let reg = /\/(.+?)\//
+    let res = reg.exec(path)
+    return res[1]
+}
+
 
 module.exports = router

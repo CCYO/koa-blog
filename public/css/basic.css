@@ -1,0 +1,17 @@
+body {
+    background: rgb(216, 62, 15);
+}
+
+.container {
+    background: #FFF;
+    position: relative;
+    top: 4rem;
+}
+
+.my-show {
+    display: block
+}
+
+.my-noshow {
+    display: none
+}

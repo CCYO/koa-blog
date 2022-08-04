@@ -1,19 +1,22 @@
-<link rel="stylesheet" href="/public/css/navbar.css">
+<link rel="stylesheet" href="/css/basic.css">
+<link rel="stylesheet" href="/css/navbar.css">
 <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
     <div class="container-fluid flex-nowrap">
         <a class="navbar-brand" href="/square">KOA-BLOG</a>
 
         <ul class="nav nav-pills ms-auto me-3 order-md-2" id="my-navbar-header-register">
             <% if (!logging) { %>
-                <li class="nav-item">
-                    <a class="nav-link nav-tab <%= active === 'register' ? `active` : `` %>" href="/register" data-my-tab="#register">註冊</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link nav-tab <%= active === 'login' ? `active` : `` %>" href="/login" data-my-tab="#login">登入</a>
-                </li>
-                <% } else { %>
-                    <li class="nav-item dropdown">
-                        <%- include('./news/index', {
+            <li class="nav-item">
+                <a class="nav-link nav-tab <%= active === 'register' ? `active` : `` %>" href="/register"
+                    data-my-tab="#register">註冊</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link nav-tab <%= active === 'login' ? `active` : `` %>" href="/login"
+                    data-my-tab="#login">登入</a>
+            </li>
+            <% } else { %>
+            <li class="nav-item dropdown">
+                <%- include('./news/index', {
                         numOfUnconfirm: newsList.numOfUnconfirm,
                         confirm: newsList.newsList.confirm,
                         unconfirm: newsList.newsList.unconfirm,
@@ -21,24 +24,26 @@
                         total: newsList.total
                         })  %>
 
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link me-3 <%= active === 'setting' ? `active` : `` %>" href="/setting">個人設置</a>
-                    </li>
-                    <li class="nav-item">
-                        <a id='logout' class="btn btn-outline-success text-nowrap" href="/api/user/logout">登出</a>
-                    </li>
-                    <% } %>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link me-3 <%= active === 'setting' ? `active` : `` %>" href="/setting">個人設置</a>
+            </li>
+            <li class="nav-item">
+                <a id='logout' class="btn btn-outline-success text-nowrap" href="/api/user/logout">登出</a>
+            </li>
+            <% } %>
         </ul>
         <!-- 收合鈕 navbar-toggler -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <!-- 收合內容 navbar-collapse -->
         <div class="offcanvas offcanvas-start order-md-1" id="offcanvasNavbar">
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
-                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                    aria-label="Close"></button>
             </div>
 
             <!-- 表單列 -->
@@ -54,14 +59,29 @@
         </div>
     </div>
 </nav>
+
 <div class="my-noshow" id="data">
+    <% if (active === 'login' || active === 'register') { %>
+        <script> document.getElementById('data').remove()</script>
+    <% } else if ( active === 'self' || active === 'other') { %>
+
+    <div data-my-data="currentUser">
+        <%= JSON.stringify(currentUser) %>
+    </div>
+    <div data-my-data="idolList">
+        <%= JSON.stringify(idolList) %>
+    </div>
+    <div data-my-data="fansList">
+        <%= JSON.stringify(fansList) %>
+    </div>
+
     <% if (logging) { %>
-        <div data-my-data="me">
-            <%= JSON.stringify(me) %>
-        </div>
-        <div data-my-data="newsList">
-            <%= JSON.stringify(newsList) %>
-        </div>
-        <%- include('/js/index') %>
-            <% } %>
+    <%- include('./initData-logging') %>
+    <% } else { %>
+    <script defer src="/js/navbar/initData-basic.js"></script>
+    <% } %>
+
+    <% } else if (active === 'setting') { %>
+    <%- include('./initData-logging') %>
+    <% } %>
 </div>
