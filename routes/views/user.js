@@ -74,7 +74,7 @@ router.get('/other/:user_id', async (ctx, next) => {
     await ctx.render('self', {
         //  導覽列數據
         logging: me.id ? true : false,
-        active: undefined,
+        active: ctx.request.path,
         newsList, //  window.data 數據
 
         //  主要資訊數據
@@ -93,6 +93,7 @@ router.get('/other/:user_id', async (ctx, next) => {
 
 //  個人資訊
 router.get('/self', view_check_login, async (ctx, next) => {
+    console.log('@path => ', ctx.request.path)
     let { id } = ctx.session.user
     let { data: { currentUser, fansList, idolList} } = await getPeopleById(id)
     let { data: blogList } = await getBlogListByUserId(id, true)
@@ -104,7 +105,7 @@ router.get('/self', view_check_login, async (ctx, next) => {
     await ctx.render('self', {
         //  導覽列數據
         logging: true,
-        active: undefined,
+        active: ctx.request.path,
         newsList, //  window.data 數據
 
         //  主要資訊數據

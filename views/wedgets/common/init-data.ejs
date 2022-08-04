@@ -1,4 +1,14 @@
-
+<% if(/^\/self|^\/other/.test(active)){ %>
+<div data-my-data="currentUser">
+    <%= JSON.stringify(currentUser) %>
+</div>
+<div data-my-data="idolList">
+    <%= JSON.stringify(idolList) %>
+</div>
+<div data-my-data="fansList">
+    <%= JSON.stringify(fansList) %>
+</div>
+<% } %>
 <script>
     window.data = {}
     //  初始化數據

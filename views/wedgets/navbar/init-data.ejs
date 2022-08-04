@@ -1,0 +1,11 @@
+<div class="my-noshow" id="data">
+    <% if (logging) { %>
+    <div data-my-data="me">
+        <%= JSON.stringify(me) %>
+    </div>
+    <div data-my-data="newsList">
+        <%= JSON.stringify(newsList) %>
+    </div>
+    <%- include('/js/index') %>
+    <% } %>
+</div>
