@@ -6,6 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <!-- BS5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
     <style>
         body {
             padding: 0;
@@ -25,27 +28,30 @@
             background: rgba(200, 200, 200, 0.5);
         }
     </style>
-    <%- include('wedgets/common/index-css') %>
 </head>
 
 <body>
-    <div id='hiddenBox' class="<%= blog.title ? 'my-noshow' : 'my-show' %>"></div>
-    <div id="showBox">
-        <input type="text" id="title" value="<%= blog.title %>">
-        <button id="updateTitle" class="<%= blog.title ? 'my-show' : 'my-noshow' %>">修改標題</button>
-        <button id="createBlog" class="<%= blog.title ? 'my-noshow' : 'my-show' %>">創建BLOG</button>
-    </div>
-    <div>
-        <div id="toolbar-container"></div>
-        <div id="editor-container"></div>
-    </div>
-    <input type="checkbox" name="" id="show" <%= blog.show ? 'checked' : '' %> />公開文章
-    <% if (blog.show) { %>
-    <p>已於 <%= blog.showAt %> 發佈</p>
-    <% } %>
+    <%- include('wedgets/navbar/index') %>
+    <div class="container">
+        <div id='hiddenBox' class="<%= blog.title ? 'my-noshow' : 'my-show' %>"></div>
+        <div id="showBox">
+            <input type="text" id="title" value="<%= blog.title %>">
+            <button id="updateTitle" class="<%= blog.title ? 'my-show' : 'my-noshow' %>">修改標題</button>
+            <button id="createBlog" class="<%= blog.title ? 'my-noshow' : 'my-show' %>">創建BLOG</button>
+        </div>
+        <div>
+            <div id="toolbar-container"></div>
+            <div id="editor-container"></div>
+        </div>
+        <input type="checkbox" name="" id="show" <%= blog.show ? 'checked' : '' %> />公開文章
+        <% if (blog.show) { %>
+        <p>已於 <%= blog.showAt %> 發佈</p>
+        <% } %>
 
-    <button id="save">存檔</button>
-    <button id="remove">刪除此篇文章</button>
+        <button id="save">存檔</button>
+        <button id="remove">刪除此篇文章</button>
+    </div>
+
     <!-- 
         取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
         如 { html: `<p>56871139</p>`}
@@ -85,14 +91,13 @@
             //  提供給後端更改前，用來驗證的資料
             let patchData = {}
 
-            //  取得 Server 插入的 blog 資料
-            let data_blog = $('#data_blog').text()
-            //  轉回 obj
-            data_blog = JSON.parse(data_blog)
+            // //  取得 Server 插入的 blog 資料
+            // let data_blog = $('#data_blog').text()
+            // //  轉回 obj
+            // data_blog = JSON.parse(data_blog)
 
-            //  更新 window.blog
-            window.blog = { ...window.blog, ...data_blog }
-
+            // //  更新 window.blog
+            // window.blog = { ...window.blog, ...data_blog }
 
             //  定義 JQobj
             let $btn_updateTitle = $('#updateTitle')
@@ -153,12 +158,12 @@
 
                 //  若title有新值，且未更新
                 let newTitle = my_xss($title.val().trim())
-                if(title !== newTitle){
+                if (title !== newTitle) {
                     payload.title = newTitle
                 }
 
                 //  獲取 html
-                let html_editor = my_xss( editor.getHtml().trim() )
+                let html_editor = my_xss(editor.getHtml().trim())
 
                 if (html !== html_editor) {
                     //  若 editor 的 html 若有變化，提供給後端
@@ -217,7 +222,7 @@
                         })
                     }
 
-                    if (data.title){
+                    if (data.title) {
                         //  同步 window.blog.title 與 資料庫title
                         $title.val(data.title)
                         $btn_updateTitle.prop('disabled', true)
@@ -228,7 +233,7 @@
 
                     //  清空 payload
                     payload = {}
-                    
+
                     alert('blog save success!')
                 } else {
                     alert('blog save error!')
@@ -460,7 +465,7 @@
                 })
             }
 
-            function my_xss(html){
+            function my_xss(html) {
                 return filterXSS(html, {
                     onIgnoreTagAttr: function (tag, name, value, isWhiteAttr) {
                         let attr = name.substr(0, 5)

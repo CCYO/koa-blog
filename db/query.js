@@ -52,7 +52,7 @@ async function readNews({ userId, offset = 0, whereOps, fromFront}) {
     LIMIT ${LIMIT} OFFSET ${offset}
     `
     let newsList = await seq.query(query, { type: QueryTypes.SELECT })
-    console.log('@query查詢結果 => ', newsList)
+
     return await _init_newsOfComfirmRoNot(newsList, fromFront)
 }
 
@@ -106,6 +106,9 @@ async function _init_newsOfComfirmRoNot(newsList) {
     listOfPromise = await Promise.all(listOfPromise)
 
     res = listOfPromise.reduce((initVal, currVal, index) => {
+        if(!currVal){
+            return initVal
+        }
         let { confirm } = currVal
         confirm && initVal.confirm.push(currVal)
         !confirm && initVal.unconfirm.push(currVal)
@@ -128,8 +131,10 @@ async function _init_newsItemOfComfirmRoNot(item) {
     }else if (type === 3) {
         
         let [ comment ] = await readComment({id: target_id})
-        console.log('@comment123 => ', comment)
-        console.log('@item => ', item)
+        
+        if(!comment){
+            return null
+        }
         let { id: comment_id, user, blog } = comment
         return { ...res, comment: { id: comment_id, user, blog }}
     }

@@ -4,7 +4,7 @@
 
 const router = require('koa-router')()
 
-const { NEWS: { LIMIT}} = require('../../conf/constant')
+const { NEWS: { LIMIT } } = require('../../conf/constant')
 const { view_check_login } = require('../../middleware/check_login')
 
 const {
@@ -21,54 +21,69 @@ const {
 
 //  撰寫新文章
 router.get('/blog/new', view_check_login, async (ctx, next) => {
-    const { createdAt, updatedAt, ...user } = ctx.session.user
+    const { createdAt, updatedAt, ...me } = ctx.session.user
+    const { data: newsList } = await getNewsByUserId(me.id)
+
     await ctx.render('blog-edit', {
-        user: ctx.session.user,
-        blog: { author: { ...user } }
+        //  導覽列數據
+        logging: true,
+        active: 'editor',
+        newsList, //  window.data 數據
+
+        //  主要資訊數據
+        blog: { author: { ...me } },
+        me      //  window.data 數據
     })
 })
 
 //  修改文章
 router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
+    const { createdAt, updatedAt, ...me } = ctx.session.user
     const { blog_id } = ctx.params
-    const { id } = ctx.session.user
-    const { errno, data: blog = undefined, msg } = await getBlog(blog_id * 1)
 
-    if (errno) {
-        return ctx.throw({ errno, msg })
-    }
+    const { data: newsList } = await getNewsByUserId(me.id)    
+    const { data: blog } = await getBlog(blog_id * 1)
 
-    if (blog.author.id != id) {
+    if (blog.author.id != me.id) {
         return ctx.redirect('/setting')
     }
 
-    return await ctx.render('blog-edit', { blog })
+    return await ctx.render('blog-edit', { 
+        //  導覽列數據
+        logging: true,
+        active: 'editor',
+        newsList, //  window.data 數據
+
+        //  主要資訊數據
+        blog,   //  window.data 數據
+        me      //  window.data 數據
+    })
 })
 
 //  查看文章
 router.get('/blog/:blog_id', async (ctx, next) => {
     let { user: me } = ctx.session
     const { blog_id } = ctx.params
-    const { errno, data: blog, msg } = await getBlog(blog_id, true)
+    const { data: blog } = await getBlog(blog_id, true)
 
     //  導覽列數據
-    let newsList = undefined
+    let newsList = {}
     if (me) {
-        let res = await getNewsByUserId(me.id)
-        newsList = { ...res.data, limit: LIMIT}
-    }
-
-    if (errno) {
-        return ctx.body = msg
+        let { data } = await getNewsByUserId(me.id)
+        newsList = data
     } else {
-        return await ctx.render('blog', {
-            logging: me ? true : false,
-            active: undefined,
-            newsList,
-
-            blog, me
-        })
+        me = {}
     }
+    
+    return await ctx.render('blog', {
+        //  導覽列數據
+        logging: me ? true : false,
+        active: 'blog',
+        newsList, //  window.data 數據
+
+        blog, me
+    })
+
 })
 
 router.get('/blog-list', async (ctx, next) => {

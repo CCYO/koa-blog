@@ -31,8 +31,6 @@ const {
 
 
 async function getNewsByUserId(userId) {
-    // let { newsList, markTime, total, numOfUnconfirm } = await readNews({ userId })
-    // let res = { ...newsList, markTime, total, numOfUnconfirm }
     let res = await readNews({ userId })
     return new SuccModel(res)
 }
@@ -41,7 +39,6 @@ async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront 
 
     let { newsList, numOfUnconfirm, total } = await readNews({ userId, markTime, listOfexceptNewsId, fromFront })
 
-    console.log('@@@ => { newsList, numOfUnconfirm, total } => ', { newsList, numOfUnconfirm, total })
     let count = newsList.confirm.length + newsList.unconfirm.length
     let htmlStr = await htmlStr_newsList(newsList)
 

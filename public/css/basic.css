@@ -4,8 +4,8 @@ body {
 
 .container {
     background: #FFF;
-    position: relative;
-    top: 4rem;
+    position  : relative;
+    top       : 4rem;
 }
 
 .my-show {

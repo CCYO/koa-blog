@@ -12,7 +12,7 @@
 </head>
 
 <body>
-    <%- include('wedgets/navbar/navbar') %>
+    <%- include('wedgets/navbar/index') %>
     <div class="container">
         <h3>修改個人資訊</h3>
         <form class="row">
@@ -53,17 +53,13 @@
             </div>
         </form>
     </div>
-    <div data-my-data='user' class="my-noshow"><%= JSON.stringify(user) %></div>
 
     <%- include('wedgets/cdn') %>
     <!-- 引入 Spark-MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <script>
         $(function () {
-            window.data = {}
             window.payload = { hash: undefined, data: {} }
-
-            init_data()
 
             let $avatar = $('#avatar')
             let $form = $('form').first()
@@ -142,18 +138,8 @@
                     fr.readAsArrayBuffer(file)
                 })
             }
-
-            function init_data(){
-                $(`[data-my-data]`).each((index, el) => {
-                    let $el = $(el)
-                    let prop = $el.data('my-data')
-                    window.data[prop] = JSON.parse($el.text())
-                    $el.remove()
-                })
-            }
         })
     </script>
-    <%- include('wedgets/navbar/js/index')  %>
 </body>
 
 </html>

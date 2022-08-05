@@ -127,10 +127,10 @@ router.get('/self', view_check_login, async (ctx, next) => {
  * @ router for setting
  */
 router.get('/setting', view_check_login, async (ctx, next) => {
-    const { user } = ctx.session
+    const { user: me } = ctx.session
 
     //  導覽列數據
-    let { data: newsList } = await getNewsByUserId(user.id)
+    let { data: newsList } = await getNewsByUserId(me.id)
 
     await ctx.render('setting', {
         //  導覽列數據
@@ -138,8 +138,8 @@ router.get('/setting', view_check_login, async (ctx, next) => {
         logging: true,
         active: 'setting',
 
-        //  個人資料數據
-        user
+        //  window.data 數據
+        me
     })
 })
 
@@ -149,13 +149,5 @@ router.get('/setting', view_check_login, async (ctx, next) => {
 router.get('/square', view_check_login, async (ctx, next) => {
     await ctx.render('square')
 })
-
-function getPathname(path) {
-    let url = new URL(path)
-    let reg = /\/(.+?)\//
-    let res = reg.exec(path)
-    return res[1]
-}
-
 
 module.exports = router

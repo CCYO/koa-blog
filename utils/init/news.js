@@ -2,8 +2,6 @@
  * @description 數據格式化
  */
 
-const moment = require('moment')
-
 /**
  * 
  * @typedef {{ id: number, nickname: string }} author

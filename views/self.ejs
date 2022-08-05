@@ -8,35 +8,36 @@
     <title>
         <% currentUser.nickname %>的主頁</title>
     <!-- BS5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
     <style>
         .avatar-box {
             width: 100%;
             display: flex;
             align-items: center;
         }
-        
+
         .avatar-box>img {
             width: 20%;
             min-width: 70px;
             margin-right: 1rem;
         }
-        
+
         .btn-blog-edit {
             z-index: 2;
             background: #fff;
         }
-        
+
         .follow-box {
             width: 70px;
             background: rgba(255, 255, 255, .1);
             border: none;
         }
-        
+
         .follow-box:hover {
             background: rgba(255, 255, 255, .3);
         }
-        
+
         .follow-box a {
             text-decoration: none;
             font-size: 0.25rem;
@@ -48,135 +49,142 @@
     <!-- 主導覽 -->
     <%- include('wedgets/navbar/index') %>
 
-        <div class="container">
-            <div class="row">
-                <div class="col-8" style="background: rgba(255, 125, 220, .9);">
-                    <h1>主要資料</h1>
-                    <div class="userInfo">
-                        <div class='avatar-box'>
-                            <img src="<%= currentUser.avatar %>" alt="" srcset="">
+    <div class="container">
+        <div class="row">
+            <div class="col-8" style="background: rgba(255, 125, 220, .9);">
+                <h1>主要資料</h1>
+                <div class="userInfo">
+                    <div class='avatar-box'>
+                        <img src="<%= currentUser.avatar %>" alt="" srcset="">
 
-                            <% if (isMyIdol !== undefined) { %>
-                                <button id="cancelFollow" data-user-id="<%= currentUser.id %>" class="<%= isMyIdol ? 'my-show' : 'my-noshow' %>">取消追蹤</button>
-                                <button id="follow" data-user-id="<%= currentUser.id %>" class="<%= !isMyIdol ? 'my-show' : 'my-noshow' %>">追蹤</button>
-                                <% } %>
+                        <% if (isMyIdol !== undefined) { %>
+                        <button id="cancelFollow" data-user-id="<%= currentUser.id %>"
+                            class="<%= isMyIdol ? 'my-show' : 'my-noshow' %>">取消追蹤</button>
+                        <button id="follow" data-user-id="<%= currentUser.id %>"
+                            class="<%= !isMyIdol ? 'my-show' : 'my-noshow' %>">追蹤</button>
+                        <% } %>
 
-                        </div>
-                        <p>
-                            <%= currentUser.email %>
-                        </p>
-                        <p>
-                            <%= currentUser.nickname %>
-                        </p>
                     </div>
-                    <hr>
-                    <div id="blogs">
-                        <div>
-                            <% if (isMyIdol === undefined) { %>
-                                <a href="/blog/new">撰寫新文章</a>
-                                <% } %>
-                        </div>
-                        <div id="public-blog" class="pb-3">
-                            <h2>已發布的BLOG</h2>
-
-                            <% if(blogList.show.length){ %>
-
-                                <ul class="list-group list-group-flush">
-                                    <% blogList.show.forEach(({id, title}) => { %>
-                                        <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
-                                            <a href="/blog/<%= id %>" class="stretched-link">
-                                                <%= title %>
-                                            </a>
-
-                                            <% if (isMyIdol === undefined) { %>
-                                                <a class='btn btn-outline-primary btn-sm btn-blog-edit' href="/blog/edit/<%= id %>">編輯</a>
-                                                <% } %>
-
-                                        </li>
-                                        <% }) %>
-                                </ul>
-
-                                <% } else { %>
-
-                                    <p>沒有發布的BLOG</p>
-
-                                    <% } %>
-                        </div>
-
-                        <% if (isMyIdol === undefined) { %>
-
-                            <div id="private-blog" class="pb-3">
-                                <h2>編輯中的BLOG</h2>
-
-                                <% if(blogList.hidden.length){ %>
-                                    <ul class="list-group list-group-flush">
-                                        <% blogList.hidden.forEach(({id, title}) => { %>
-                                            <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
-                                                <div>
-                                                    <a class="stretched-link" href="/blog/<%= id %>">
-                                                        <%= title %>
-                                                    </a>
-                                                </div>
-
-                                                <% if (isMyIdol === undefined) { %>
-                                                    <a class='btn btn-outline-primary btn-sm btn-blog-edit' href="/blog/edit/<%= id %>">編輯</a>
-                                                    <% } %>
-                                            </li>
-
-                                            <% }) %>
-                                    </ul>
-                                    <% } else { %>
-                                        <p>沒有編輯中的BLOG</p>
-                                        <% } %>
-                            </div>
-                            <% } %>
-                    </div>
+                    <p>
+                        <%= currentUser.email %>
+                    </p>
+                    <p>
+                        <%= currentUser.nickname %>
+                    </p>
                 </div>
-                <div class="col-4" style="background: rgba(255, 185, 100, .9)">
-                    <h1>次要資料</h1>
+                <hr>
+                <div id="blogs">
                     <div>
-                        <p>Fans</p>
-                        <% if (fansList.length) { %>
-                            <ul id="fansList" class="d-flex flex-wrap p-0">
-                                <% fansList.forEach(fans => { %>
-
-                                    <li class="card follow-box m-1" data-fans-id="<%= fans.id %>">
-                                        <img src="<%= fans.avatar %>" class="card-img-top" alt="">
-                                        <div class="card-body text-center">
-                                            <a href="/other/<%= fans.id %>" class="stretched-link">
-                                                <%= fans.nickname %>
-                                            </a>
-                                        </div>
-                                    </li>
-
-                                    <% }) %>
-                            </ul>
-                            <% } %>
+                        <% if (isMyIdol === undefined) { %>
+                        <a href="/blog/new">撰寫新文章</a>
+                        <% } %>
                     </div>
-                    <div>
-                        <p>idols</p>
-                        <% if (idolList.length) { %>
-                            <ul class="d-flex flex-wrap p-0">
-                                <% idolList.forEach(idol => { %>
+                    <div id="public-blog" class="pb-3">
+                        <h2>已發布的BLOG</h2>
 
-                                    <li class="card follow-box m-1">
-                                        <img src="<%= idol.avatar %>" class="card-img-top" alt="">
-                                        <div class="card-body text-center">
-                                            <a href="/other/<%= idol.id %>" class="stretched-link">
-                                                <%= idol.nickname %>
-                                            </a>
-                                        </div>
-                                    </li>
+                        <% if(blogList.show.length){ %>
 
-                                    <% }) %>
-                            </ul>
-                            <% } %>
+                        <ul class="list-group list-group-flush">
+                            <% blogList.show.forEach(({id, title}) => { %>
+                            <li
+                                class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+                                <a href="/blog/<%= id %>" class="stretched-link">
+                                    <%= title %>
+                                </a>
+
+                                <% if (isMyIdol === undefined) { %>
+                                <a class='btn btn-outline-primary btn-sm btn-blog-edit'
+                                    href="/blog/edit/<%= id %>">編輯</a>
+                                <% } %>
+
+                            </li>
+                            <% }) %>
+                        </ul>
+
+                        <% } else { %>
+
+                        <p>沒有發布的BLOG</p>
+
+                        <% } %>
                     </div>
+
+                    <% if (isMyIdol === undefined) { %>
+
+                    <div id="private-blog" class="pb-3">
+                        <h2>編輯中的BLOG</h2>
+
+                        <% if(blogList.hidden.length){ %>
+                        <ul class="list-group list-group-flush">
+                            <% blogList.hidden.forEach(({id, title}) => { %>
+                            <li
+                                class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+                                <div>
+                                    <a class="stretched-link" href="/blog/<%= id %>">
+                                        <%= title %>
+                                    </a>
+                                </div>
+
+                                <% if (isMyIdol === undefined) { %>
+                                <a class='btn btn-outline-primary btn-sm btn-blog-edit'
+                                    href="/blog/edit/<%= id %>">編輯</a>
+                                <% } %>
+                            </li>
+
+                            <% }) %>
+                        </ul>
+                        <% } else { %>
+                        <p>沒有編輯中的BLOG</p>
+                        <% } %>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+            <div class="col-4" style="background: rgba(255, 185, 100, .9)">
+                <h1>次要資料</h1>
+                <div>
+                    <p>Fans</p>
+                    <% if (fansList.length) { %>
+                    <ul id="fansList" class="d-flex flex-wrap p-0">
+                        <% fansList.forEach(fans => { %>
+
+                        <li class="card follow-box m-1" data-fans-id="<%= fans.id %>">
+                            <img src="<%= fans.avatar %>" class="card-img-top" alt="">
+                            <div class="card-body text-center">
+                                <a href="/other/<%= fans.id %>" class="stretched-link">
+                                    <%= fans.nickname %>
+                                </a>
+                            </div>
+                        </li>
+
+                        <% }) %>
+                    </ul>
+                    <% } %>
+                </div>
+                <div>
+                    <p>idols</p>
+                    <% if (idolList.length) { %>
+                    <ul class="d-flex flex-wrap p-0">
+                        <% idolList.forEach(idol => { %>
+
+                        <li class="card follow-box m-1">
+                            <img src="<%= idol.avatar %>" class="card-img-top" alt="">
+                            <div class="card-body text-center">
+                                <a href="/other/<%= idol.id %>" class="stretched-link">
+                                    <%= idol.nickname %>
+                                </a>
+                            </div>
+                        </li>
+
+                        <% }) %>
+                    </ul>
+                    <% } %>
                 </div>
             </div>
         </div>
-        <%- include('wedgets/cdn') %>
-    
+    </div>
+    <!-- JQ AXIOS BS5 -->
+    <%- include('wedgets/cdn') %>
+
     <script>
         $(function () {
             let $btn_follow = $('#follow')

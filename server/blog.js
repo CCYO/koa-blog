@@ -90,10 +90,11 @@ async function readBlogById(blog_id, needComment) {
             }
         }
     ]
+
     if(needComment){
         include.push({
             model: Comment,
-            attributes: ['html', 'updatedAt'],
+            attributes: ['id', 'html', 'p_id', 'updatedAt'],
             include: {
                 model: User,
                 attributes: ['id', 'email', 'nickname']
