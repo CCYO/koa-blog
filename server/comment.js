@@ -1,6 +1,13 @@
 const { Op } = require('sequelize')
 const xss = require('xss')
-const { Comment, User, Blog, FollowComment } = require('../db/model')
+
+const {
+    Comment,
+    User,
+    Blog,
+    FollowComment
+} = require('../db/mysql/model')
+
 const { init_comment } = require('../utils/init')
 
 async function addComment({ blog_id, html, user_id, p_id }) {

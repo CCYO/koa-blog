@@ -5,16 +5,16 @@ const {
     NEWS: {
         LIMIT
     }
-} = require('../conf/constant')
+} = require('../../conf/constant')
 
 const { seq } = require('./model')
 
-const { readUser } = require('../server/user')
-const { readBlogById } = require('../server/blog')
-const { readComment } = require('../server/comment')
+const { readUser } = require('../../server/user')
+const { readBlogById } = require('../../server/blog')
+const { readComment } = require('../../server/comment')
 
-async function readNews({ userId, offset = 0, whereOps, fromFront}) {
-    let { markTime, listOfexceptNewsId: {people, blogs, comments} } = whereOps
+async function readNews({ userId, options}) {
+    let { markTime, fromFront, listOfexceptNewsId: {people, blogs, comments} } = options
     let listOfPeopleId = people.join(',') || undefined
     let listOfBlogsId = blogs.join(',') || undefined
     let listOfCommentsId = comments.join(',')
@@ -49,17 +49,16 @@ async function readNews({ userId, offset = 0, whereOps, fromFront}) {
 
     ) AS X
     ORDER BY confirm=1, time DESC
-    LIMIT ${LIMIT} OFFSET ${offset}
+    LIMIT ${LIMIT}
     `
     let newsList = await seq.query(query, { type: QueryTypes.SELECT })
 
     return await _init_newsOfComfirmRoNot(newsList, fromFront)
 }
 
-async function countNewsTotalAndUnconfirm({ userId, markTime, fromFront}) {
+async function countNewsTotalAndUnconfirm({ userId, options}) {
+    let {markTime, fromFront} = options
     
-    // let mark = fromFront ? '<' : '>'
-    // let where_time = fromFront ? `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T')` : 1
     let select = 
         !fromFront ?
         `SELECT COUNT(if(confirm < 1, true, null))`  :

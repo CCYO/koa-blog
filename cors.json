@@ -1,7 +1,0 @@
-[
-    {
-      "origin": ["http://34.80.116.85:8080"],
-      "method": ["GET"],
-      "maxAgeSeconds": 3600
-    }
-]

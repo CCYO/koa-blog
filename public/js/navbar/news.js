@@ -15,7 +15,7 @@ window.data = {}
 //  初始化數據
 init_data()
 
-
+console.log('okok')
 //  手動註冊 BS5 下拉選單
 var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
 var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {

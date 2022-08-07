@@ -1,5 +1,4 @@
-const { nil } = require('ajv')
-const { Img } = require('../db/model')
+const { Img } = require('../db/mysql/model')
 
 /**
  * 查找 img 紀錄

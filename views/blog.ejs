@@ -47,6 +47,7 @@
                 <%- blog.html %>
             </div>
         </div>
+        <% if (blog.show) { %>
         <div id="comment">
             <div id="editor-container"></div>
             <div id="list">
@@ -58,16 +59,8 @@
                 <% }) %>
             </div>
         </div>
+        <% } %>
     </div>
-    </div>
-    <div data-my-data="blog" class="my-noshow">
-        <%= JSON.stringify(blog) %>
-    </div>
-    <div data-my-data="me" class="my-noshow">
-        <%= JSON.stringify(me) %>
-    </div>
-    <div data-my-data="newsList" class="my-noshow">
-        <%= JSON.stringify(newsList) %>
     </div>
     <%- include('wedgets/cdn') %>
     <!-- 引入 editor css -->
@@ -77,14 +70,25 @@
     <script>
         $(function () {
             let $list = $('#list')
+            
+            let { show } = window.data.blog
+
+            if(!show){
+                return
+            }
+
             let api_comment = '/api/comment'
-
-            window.data = {}
-
-            init_data()
 
             init_editor()
             
+            let $comment = $('#comment') && undefined
+
+            $comment[0].addEventListener('drop', (e) => {
+                e.preventDefault()
+                e.stopImmediatePropagation()
+                return false
+            }, true)
+
             function init_editor() {
                 //  editor config
                 const { createEditor } = window.wangEditor
@@ -150,77 +154,10 @@
                         </div>`
 
                         $list.append(htmlStr)
-
                     }
 
                 }
             }
-
-            let $comment = $('#comment')
-
-            $comment[0].addEventListener('drop', (e) => {
-                e.preventDefault()
-                e.stopImmediatePropagation()
-                console.log(123)
-                return false
-            }, true)
-
-
-            //  初始化數據
-            function init_data() {
-                $(`[data-my-data]`).each((index, el) => {
-                    let $el = $(el)
-                    let prop = $el.data('my-data')
-                    try {
-                        window.data[prop] = JSON.parse($el.text())
-                    } catch (e) {
-                        window.data[prop] = undefined
-                    }
-                })
-                $('#data').remove()
-
-                _init_newsList()
-
-            }
-
-            function _init_newsList() {
-                let news = window.data.newsList
-
-                let { newsList: { confirm, unconfirm }, total, markTime, limit } = news
-                window.data._newsList = { limit, total, markTime, count: confirm.length + unconfirm.length }
-
-                let _newsList = window.data._newsList
-
-                if (!_newsList.count) {
-                    _newsList.listOfNewsId = { confirm: { people: [], blogs: [] }, unconfirm: undefined }
-                    window.data.newsList = { ..._newsList }
-                    delete window.data._newsList
-                    return
-                }
-
-                _newsList.listOfNewsId = {
-                    unconfirm: unconfirm.length && _init_news(unconfirm) || undefined,
-                    confirm: confirm.length && _init_news(confirm) || { people: [], blogs: [] }
-                }
-
-                window.data.newsList = { ..._newsList }
-                delete window.data._newsList
-                return
-            }
-
-
-            function _init_news(newsList) {
-                let res = { people: [], blogs: [] }
-                if (!newsList.length) {
-                    return res
-                }
-                return newsList.reduce((initVal, { type, id }) => {
-                    type === 1 && initVal.people.push(id)
-                    type === 2 && initVal.blogs.push(id)
-                    return initVal
-                }, res)
-            }
-
 
         })
     </script>

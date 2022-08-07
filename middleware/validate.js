@@ -2,11 +2,15 @@
  * @description middleware validate
  */
 
-const { validator_user } = require('../validator')
+const { validator_user } = require('../utils/validator')
 const { ErrModel } = require('../model')
 const { FORMAT_ERR } = require('../model/errRes')
 
-
+/** Middleware - 校驗 USER 資料
+ * @param {*} ctx 
+ * @param {function} next 
+ * @returns 
+ */
 const validate_user = async (ctx, next) => {
     let errors
     let action
@@ -30,8 +34,7 @@ const validate_user = async (ctx, next) => {
     }
 
     if (errors) {
-        ctx.app.emit('error', new Error(`${action}失敗，因為${errors[0].message}`), ctx)
-        return ctx.body = new ErrModel({ ...FORMAT_ERR, msg: errors })
+        throw new Error(`@ => 校驗user${action}發生錯誤 \n !! 錯誤內容為 !! => \n`, errors[0].message)
     }
     return await next()
 }

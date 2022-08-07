@@ -64,9 +64,9 @@
     <script>
         document.getElementById("data").remove();
     </script>
-    <!-- 當頁面為登入頁或註冊頁 -->
-    <% } else if ( active === 'self' || active === 'other') { %>
 
+    <!-- 當頁面為使用者資訊頁面 -->
+    <% } else if ( active === 'self' || active === 'other') { %>
     <div data-my-data="currentUser">
         <%= JSON.stringify(currentUser) %>
     </div>
@@ -76,21 +76,23 @@
     <div data-my-data="fansList">
         <%= JSON.stringify(fansList) %>
     </div>
-    <!-- 若為登入狀態 -->
-    <% if (logging) { %>
-    <%- include('./initData-logging') %>
-    <!-- 若為未登入狀態 -->
-    <% } else { %>
-    <script defer src="/js/navbar/initData-basic.js"></script>
-    <% } %>
-    <!-- 當頁面為撰寫blog頁 -->
-    <% } else if (active === 'editor') { %>
+        <!-- 若為登入狀態 -->
+        <% if (logging) { %>
+        <%- include('./initData-logging') %>
+        <!-- 若為未登入狀態 -->
+        <% } else { %>
+        <script defer src="/js/navbar/initData-basic.js"></script>
+        <% } %>
+
+    <!-- 當頁面為個資設置頁 -->
+    <% } else if (active === 'setting') { %>
+        <%- include('./initData-logging') %>
+
+    <!-- 當頁面為blog編輯頁、預覽頁、觀看頁 -->
+    <% } else if (active === 'editor' || active === 'blog') { %>
         <div data-my-data="blog">
             <%= JSON.stringify(blog) %>
         </div>
-    <%- include('./initData-logging') %>
-    <!-- 當頁面為設置頁 -->
-    <% } else if (active === 'setting') { %>
     <%- include('./initData-logging') %>
     <% } %>
 </div>

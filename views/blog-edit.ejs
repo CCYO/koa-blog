@@ -73,31 +73,11 @@
     <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
     <script>
         $(function () {
-            /* window.blog 默認結構 */
-            window.blog = {
-                author: null,
-                id: null,
-                title: null,
-                html: null,
-                show: false,
-                showAt: null,
-                createdAt: null,
-                updatedAt: null,
-                api_blog: '/api/editor',
-                api_uploadImg: '/api/editor/img',
-                imgs: [] // item { blogImg_id, id, name, url, hash }
-            }
 
+            let api_uploadImg = '/api/editor/img'
+            let api_blog = '/api/editor/'
             //  提供給後端更改前，用來驗證的資料
             let patchData = {}
-
-            // //  取得 Server 插入的 blog 資料
-            // let data_blog = $('#data_blog').text()
-            // //  轉回 obj
-            // data_blog = JSON.parse(data_blog)
-
-            // //  更新 window.blog
-            // window.blog = { ...window.blog, ...data_blog }
 
             //  定義 JQobj
             let $btn_updateTitle = $('#updateTitle')
@@ -108,6 +88,7 @@
             let $save = $('#save')
             let $remove = $('#remove')
 
+            //  初始化editor
             let editor = init_editor()
 
             //  input#title 綁定 blur handle => 驗證新標題
@@ -134,7 +115,7 @@
                     return
                 }
 
-                let { id, api_blog } = window.blog
+                let { id } = window.data.blog
 
                 const {
                     data: {
@@ -152,7 +133,7 @@
 
             //  handle => 儲存 blog
             async function handle_saveBlog(e) {
-                let { id, title, imgs, show, showAt, html, api_blog } = window.blog
+                let { id, title, imgs, show, showAt, html} = window.data.blog
                 //  要傳給後端更新的資料
                 let payload = {}
 
@@ -217,7 +198,7 @@
                 if (!errno) {
                     if (removeImgs) {
                         //  同步 window.blog.imgs 與 editor.image
-                        window.blog.imgs = imgs.filter(({ blogImg_id }) => {
+                        window.data.blog.imgs = imgs.filter(({ blogImg_id }) => {
                             return !removeImgs.includes(blogImg_id)
                         })
                     }
@@ -229,10 +210,7 @@
                     }
 
                     //  同步 window.blog 與 資料庫
-                    window.blog = { ...window.blog, ...data }
-
-                    //  清空 payload
-                    payload = {}
+                    window.data.blog = { ...window.data.blog, ...data }
 
                     alert('blog save success!')
                 } else {
@@ -248,7 +226,7 @@
             //  handle => 修改 title
             async function handle_updateTitle(e) {
                 let newTitle = $title.val().trim()
-                let { title: oldTitle, api_blog, id } = window.blog
+                let { title: oldTitle, id } = window.data.blog
 
                 let payload = { title: newTitle, id }
 
@@ -260,7 +238,7 @@
 
                 if (!errno) {
                     /* title修改成功 */
-                    window.blog.title = newTitle
+                    window.data.blog.title = newTitle
 
                     $btn_updateTitle.prop('disabled', true)
                     editor.focus(true)
@@ -275,7 +253,6 @@
 
             //  handle => 創建 blog，成功後，為 input#title 綁定 input handle => 驗證新標題
             async function handle_createBlog(e) {
-                let { api_blog } = window.blog
                 let title = $title.val().trim()
 
                 const {
@@ -287,8 +264,8 @@
                 if (!errno) {
                     alert('BLOG創立完成')
 
-                    window.blog = {
-                        ...window.blog,
+                    window.data.blog = {
+                        ...window.data.blog,
                         ...data    //  { id, title, html, show, showAt, createdAt, updatedAt }
                     }
 
@@ -310,7 +287,7 @@
             // handle => 驗證新標題
             function handle_valicate_title(e) {
                 let newTitle = $title.val().trim()
-                let { title: oldTitle } = window.blog
+                let { title: oldTitle } = window.data.blog
 
                 if (e.type === 'blur') {
                     /* blur 時的標題驗證 */
@@ -370,7 +347,7 @@
                 // editor 創建
                 const editor = createEditor({
                     //  插入後端取得的 html
-                    html: window.blog.html || '',
+                    html: window.data.blog.html || '',
                     selector: '#editor-container',
                     config: editorConfig,
                     mode: 'simple'
@@ -394,7 +371,7 @@
                 if (!url) {
                     /*  url無值，代表 window.blog.imgs 內無此圖 */
 
-                    let { id, api_uploadImg } = window.blog
+                    let { id } = window.data.blog
                     let api = `${api_uploadImg}?blog_id=${id}&hash=${hash}`
                     //  upload img
                     let formdata = new FormData()
@@ -411,7 +388,7 @@
                         /* 上傳成功 */
 
                         //  data { blogImg_id, id, name, url, hash }
-                        blog.imgs.push(data)
+                        window.data.blog.imgs.push(data)
                         //  將圖片插入 editor
                         insertFn(data.url)
                     } else {
@@ -428,13 +405,14 @@
 
             //  取得圖片的 hash
             async function _getImgHash(img) {
+                let imgs = window.data.blog.imgs
                 //  計算出 img 的 md5Hash(hex格式)
                 let md5hash = await _getMD5Hash(img)
                 let res = { hash: md5hash }
                 //  若blog.imgs有檔案
-                if (window.blog.imgs) {
+                if (imgs.length) {
                     //  利用 md5Hash 比對 blog 內是否已有該 img
-                    let exist = blog.imgs.some((img) => {
+                    let exist = imgs.some((img) => {
                         let { hash } = img
                         //  同hash，代表同img
                         if (md5hash === hash) {

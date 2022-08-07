@@ -1,5 +1,5 @@
 /**
- * @description validator JSON 4 user
+ * @description 校驗 user 的 資料格式
  */
 
 const Ajv = require("ajv").default
@@ -53,7 +53,7 @@ const schema_isEmailExist = {
     ...schema_common,
     required: ['email'],
     errorMessage: {
-        required: 'email 都必須有值'
+        required: 'email 必須有值'
     }
 }
 

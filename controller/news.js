@@ -9,9 +9,6 @@ const { NEWS: { LIMIT } } = require('../conf/constant')
 const {
     readNews,
     updateNews,
-
-    updateBlogFansComfirm,
-    updateFollowComfirm
 } = require('../server/news')
 
 const { ErrModel, SuccModel } = require('../model')
@@ -29,7 +26,10 @@ const {
     NEWS
 } = require('../model/errRes')
 
-
+/** 藉由 userID 取得 news
+ * @param {number} userId 
+ * @returns {*} resModel
+ */
 async function getNewsByUserId(userId) {
     let res = await readNews({ userId })
     return new SuccModel(res)

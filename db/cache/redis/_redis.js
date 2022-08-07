@@ -4,7 +4,7 @@
 
 const redis = require('redis')
 
-const { REDIS_CONF } = require('./conf/db')
+const { REDIS_CONF } = require('../../../conf/db')
 
 const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)
 

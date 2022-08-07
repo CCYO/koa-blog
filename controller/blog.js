@@ -3,10 +3,6 @@ const moment = require('moment')
 const my_xxs = require('../utils/xss')
 
 const {
-    FollowPeople, Blog
-} = require('../db/model')
-
-const {
     readFansByUserId
 } = require('../server/user')
 
@@ -17,14 +13,7 @@ const {
     deleteBlog,
     readBlogById,
     readBlogList,
-
-    updateFollowBlog,
-    readBlogListByUserId
 } = require('../server/blog')
-
-const {
-    readComment
-} = require('../server/comment')
 
 const {
     FollowBlog: FB

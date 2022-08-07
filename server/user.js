@@ -7,50 +7,44 @@ const { NEWS } = require('../conf/constant')
 
 const {
     User,
-    Blog,
+    Blog
+} = require('../db/mysql/model')
 
-    FollowPeople,
-    FollowBlog
-} = require('../db/model')
-const { BLOG } = require('../model/errRes')
 const hash = require('../utils/crypto')
 
 const { init_user } = require('../utils/init')
 
-/**
- * 查找 User Instance
- * @param {object} param0 
+/** 查找 User 資料
+ * @param {{ id: number, email: string, password: string }} param0 
  * @param {number} param0.id - user id
  * @param {string} param0.email - user email
  * @param {string} param0.password - user 未加密的密碼
- * @return {(object | null)} object | null 除了 password 以外的 user 資料
+ * @return {} 無資料為null，反之，password 以外的 user 資料
  */
 async function readUser({ id, email, password }){
-    const data = {}
-    if (id) data.id = id
-    if (email) data.email = email
-    if (password) data.password = hash(password)
+    const where = {}
+    if (id) where.id = id
+    if (email) where.email = email
+    if (password) where.password = hash(password)
 
-    const user = await User.findOne({ where: data })
+    const user = await User.findOne({ where })
     
     if (!user) return null
     
     return init_user(user)
 }
 
-/**
- * 創建 User Instance
+/** 創建 User
  * @param {object} param0
  * @param {string} param0.email - user email
  * @param {string} param0.password - user 未加密的密碼
  * @returns {object} object 除了 password 以外的 user 資料
  */
 const createUser = async ({ password, ...data }) => {
-    password = hash(password)
-    data = { ...data, password }
-
-    const user = await User.create(data)
-
+    let _data = { ...data }
+    _data.password = hash(password)
+    
+    const user = await User.create(_data)
     return init_user(user)
 }
 

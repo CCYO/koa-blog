@@ -1,6 +1,6 @@
 const redisStore = require('koa-redis')
 
-const { REDIS_CONF } = require('../conf/db')
+const { REDIS_CONF } = require('../../../conf/db')
 
 const store = redisStore({
     port: REDIS_CONF.port,
@@ -13,10 +13,8 @@ const store = redisStore({
 })
 
 store.client
-.on('connect', () => console.log('Redis 連線OK'))
-.on('ready', () => console.log('Redis Ready'))
-.on('error', (e) => console.error(' Redis 發生錯誤 ==>', e))
-
-
+.on('connect', () => console.log('@ => Redis 已連線'))
+.on('ready', () => console.log('@ => Redis 已準備完成'))
+.on('error', (e) => console.error('@ => Redis 發生錯誤 !! ==> \n', e))
 
 module.exports = store

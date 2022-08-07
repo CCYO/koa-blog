@@ -4,7 +4,7 @@
 
 const formidable = require('formidable')
 
-const { storage } = require('../firebase/init')
+const { storage } = require('../db/firebase')
 
 /**
  * 將jpg圖檔上傳GCS

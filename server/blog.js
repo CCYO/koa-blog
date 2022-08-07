@@ -1,6 +1,10 @@
 const {
-    User, Blog, Img, Comment, BlogImg, Blog_Fans, FollowComment
-} = require('../db/model')
+    User,
+    Blog,
+    Img,
+    Comment,
+    BlogImg,
+} = require('../db/mysql/model')
 
 const { 
     init_user,

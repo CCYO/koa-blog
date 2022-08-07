@@ -2,12 +2,16 @@
  * @description middleware validate login 
  */
 
-const { ErrModel } = require('../model/index')
+const { ErrModel } = require('../model')
 const { LOGIN: { NOT_LOGIN }} = require('../model/errRes')
 
+/** Middleware 針對 VIEW 請求，驗證是否登入
+ * @param {*} ctx 
+ * @param {function} next 
+ * @returns {promise<null>}
+ */
 const view_check_login = async (ctx, next) => {
     const { session: { user }} = ctx
-    console.log('MIDDLEWARE -> view_check_login -> ctx.session.user => ', user)
     if(user){
         await next()
     }else{
@@ -16,9 +20,13 @@ const view_check_login = async (ctx, next) => {
     return
 }
 
+/** Middleware 針對 API 請求，驗證是否登入
+ * @param {*} ctx 
+ * @param {function} next 
+ * @returns {promise<null>}
+ */
 const api_check_login = async (ctx, next) => {
     const { session: {user} } = ctx
-    console.log('MIDDLEWARE -> api_check_login -> ctx.session.user => ', user)
     if(user){
         await next()
     }else{

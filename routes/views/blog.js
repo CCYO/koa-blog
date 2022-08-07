@@ -8,10 +8,7 @@ const { NEWS: { LIMIT } } = require('../../conf/constant')
 const { view_check_login } = require('../../middleware/check_login')
 
 const {
-    getBlog,
-
-    getBlogList,
-    confirmFollowBlog
+    getBlog
 } = require('../../controller/blog')
 
 const {
@@ -81,18 +78,11 @@ router.get('/blog/:blog_id', async (ctx, next) => {
         active: 'blog',
         newsList, //  window.data 數據
 
-        blog, me
+        //  主要資訊數據
+        blog,   //  window.data 數據
+        me      //  window.data 數據
     })
 
 })
-
-router.get('/blog-list', async (ctx, next) => {
-    const { id } = ctx.session.user
-    const { data: blogs } = await getBlogList(id)
-    await ctx.render('blog-list', {
-        blogs
-    })
-})
-
 
 module.exports = router

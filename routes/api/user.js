@@ -24,13 +24,13 @@ router.post('/isEmailExist', validate_user, async (ctx, next) => {
     ctx.body = await isEmailExist(email)
 })
 
-//  register
+//  註冊
 router.post('/register', validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
     ctx.body = await register(email, password)
 })
 
-//  login
+//  登入
 router.post('/', validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
     const resModel = await findUser(email, password)

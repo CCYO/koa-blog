@@ -1,9 +1,8 @@
 /**
  * @description Controller user相關
  */
-const moment = require('moment')
+
 const ejs = require('ejs')
-const { resolve } = require('path')
 
 const {
     createUser,
@@ -11,43 +10,25 @@ const {
     readFansByUserId,
     readIdolsByUserId,
 
-    readBlogListAndAuthorByUserId,
-    readUserAndFollowReationByUserId,
-
     update,
     addFans, deleteFans,
-    readNews, updateFollow,
-    readOther,
-    confirmNews,
-    UnconfirmNewsCount,
-    readMoreNewsAndConfirm
+    updateFollow,
+    readOther
 } = require('../server/user')
 
 const {
-    readBlogList,
-
-    
-    readBlogsByUserId,
-    
+    readBlogList
 } = require('../server/blog')
 
 const {
     FollowBlog,
-
-    updateBlogFansComfirm,
-    updateFollowComfirm
 } = require('../server/news')
 
-const { validate_register } = require('../validator')
-const hash = require('../utils/crypto')
 const { ErrModel, SuccModel } = require('../model')
-
 
 const {
     REGISTER: {
-        UNEXPECTED,
         IS_EXIST,
-        NO_EMAIL,
         NO_PASSWORD
     },
     READ,
@@ -55,10 +36,9 @@ const {
     FOLLOW
 } = require('../model/errRes')
 
-/**
- * 確認信箱是否已被註冊
- * @param {string} email user 的信箱 
- * @returns {object} SuccessMode || ErrModel Instance
+/** 確認信箱是否已被註冊
+ * @param {string} email 信箱 
+ * @returns {object} resModel
  */
 async function isEmailExist(email) {
     const res = await readUser({ email })
@@ -70,8 +50,7 @@ async function isEmailExist(email) {
     }
 }
 
-/**
- * 註冊
+/** 註冊
  * @param {string} email - user 的信箱
  * @param {string} password - user 未加密的密碼
  * @returns {object} SuccessMode || ErrModel Instance
@@ -83,25 +62,39 @@ const register = async (email, password) => {
 
     const { errno } = await isEmailExist(email)
 
-    if (!errno) {
-        const user = await createUser({email,password})
-        return new SuccModel(user)
-
-    } else {
+    if (errno) {
         return new ErrModel(IS_EXIST)
     }
+
+    const user = await createUser({ email, password })
+    return new SuccModel(user)
 }
 
-/**
- * 查找 user 資料
+/** 查找 user
  * @param {string} email user 的信箱
  * @param {string} password user 的未加密密碼
- * @returns SuccessModel | ErrModel Instance，內部為 user 除了 password 以外的資料
+ * @returns resModel
  */
-const findUser = async (email, password) => {
-    const res = await readUser({ email, password })
-        if (res) return new SuccModel(res)
+const findUser = async ({ id, email, password }) => {
+    const res = await readUser({ id, email, password })
+    if (!res){
         return new ErrModel(READ.NOT_EXIST)
+    } 
+    return new SuccModel(res)
+}
+
+/** 藉由 userID 找到 當前頁面使用者的資訊，以及(被)追蹤的關係
+ * @param {number} user_id 
+ * @returns {{ currentUser: { id, email, nickname, avatar, age }, fansList: [{ id, avatar, email, nickname }], idolList: [{ id, avatar, email, nickname }]}}
+ */
+async function getPeopleById(id, isSelf = false) {
+    let data = {}
+    data.fansList = await readFansByUserId(id)
+    data.idolList = await readIdolsByUserId(id)
+    if (!isSelf) {
+        data.currentUser = await readUser({ id })
+    }
+    return new SuccModel(data)
 }
 
 //  取得 Idol fans 以及自己公開/隱藏的blog
@@ -112,32 +105,19 @@ async function getSelfInfo(id) {
 
     let blogs = { show: [], hidden: [] }
     //  處理 blogs
-    if(blogList.length){
-        blogList.forEach( item => {
-            let {blog: {show}} = item
+    if (blogList.length) {
+        blogList.forEach(item => {
+            let { blog: { show } } = item
             show && blogs.show.push(item) || blogs.hidden.push(item)
         })
     }
 
-    return new SuccModel({ blogList: blogs, fansList, idolsList})
+    return new SuccModel({ blogList: blogs, fansList, idolsList })
 }
 
-/**
- * 取得 user id 自己的資料，以及 偶像、粉絲 資料
- * @param {number} user_id 
- * @returns {object}
- * {
- *  currentUser,
- *  fansList: [ user, ...],
- *  idolList: [ user, ...]
- * }
- */
-async function getPeopleById(user_id){
-    let currentUser = await readUser({ id: user_id })
-    let fansList = await readFansByUserId(user_id)
-    let idolList = await readIdolsByUserId(user_id)
-    return new SuccModel({ currentUser, fansList, idolList})
-}
+
+
+
 
 /**
  * 追蹤
@@ -162,13 +142,13 @@ async function cancelFollowIdol(fans_id, idol_id) {
     //  也要將FollowBlog紀錄刪除
 
     //  先找出 idol 的文章
-    let blogList = await readBlogList({user_id: idol_id, getAll: true})
+    let blogList = await readBlogList({ user_id: idol_id, getAll: true })
     let blogList_id = []
-    if(blogList.length){
-        blogList.forEach(({id}) => blogList_id.push(id))
+    if (blogList.length) {
+        blogList.forEach(({ id }) => blogList_id.push(id))
     }
     //  刪除關聯
-    await FollowBlog.deleteBlog({blogList_id, follower_id: fans_id})
+    await FollowBlog.deleteBlog({ blogList_id, follower_id: fans_id })
     if (res) return new SuccModel()
     return new ErrModel(FOLLOW.CANCEL_ERR)
 }
@@ -186,20 +166,10 @@ async function getIdolsById(idol_id) {
 
 
 
-/**
- * 
- * @param {*} id 
- * @returns 
- */
-async function findUserById(id) {
-    const user = await read({ id })
-    return new SuccModel(user)
-}
-
 const modifyUserInfo = async (ctx) => {
     const { id } = ctx.session.user
     let newUserInfo = { ...ctx.request.body }
-    
+
     const user = await update(newUserInfo, id)
     if (user) {
         return new SuccModel(user)
@@ -245,9 +215,8 @@ module.exports = {
     followIdol,
     confirmFollow,
     cancelFollowIdol,
-    findUserById,
-    
+
     logout,
 
-    getOther    
+    getOther
 }

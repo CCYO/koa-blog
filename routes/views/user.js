@@ -18,27 +18,11 @@ const {
     findUserById, getFansById, getIdolsById, getNews, getOtherInfo, confirmFollow,
     getOther,
 } = require('../../controller/user')
+const { readUser } = require('../../server/user')
 
-/**
- * @description router for login
- */
-router.get('/login', async (ctx, next) => {
-    if (ctx.session.user) {
-        return ctx.redirect('/self')
-    }
-
-    await ctx.render('register&login', {
-        //  導覽列數據
-        logging: false,
-        //  導覽列數據 & 卡片Tab 數據
-        active: 'login'
-    })
-})
-
-/**
- * @description router for register
- */
+//  註冊頁
 router.get('/register', async (ctx, next) => {
+    //  若已登入，跳轉到個人頁面
     if (ctx.session.user) {
         return ctx.redirect('/self')
     }
@@ -51,12 +35,57 @@ router.get('/register', async (ctx, next) => {
     })
 })
 
-//  使用者資訊
-router.get('/other/:user_id', async (ctx, next) => {
-    let me = ctx.session.user
-    let user_id = ctx.params.user_id * 1
+//  登入頁
+router.get('/login', async (ctx, next) => {
+    //  若已登入，跳轉到個人頁面
+    if (ctx.session.user) {
+        return ctx.redirect('/self')
+    }
 
-    if (me && me.id === user_id) {
+    await ctx.render('register&login', {
+        //  導覽列數據
+        logging: false,
+        //  導覽列數據 & 卡片Tab 數據
+        active: 'login'
+    })
+})
+
+//  個人頁
+router.get('/self', view_check_login, async (ctx, next) => {
+    let currentUser = ctx.session.user
+    let id = currentUser.id
+
+    let { data: newsList } = await getNewsByUserId(id)
+    let { data: { fansList, idolList } } = await getPeopleById(id, true)
+    let { data: blogList } = await getBlogListByUserId(id, true)
+
+    await ctx.render('self', {
+        //  導覽列數據
+        logging: true,
+        active: 'self',
+        newsList, //  window.data 數據
+
+        //  主要資訊數據
+        isMyIdol: undefined, //  window.data 數據
+        currentUser,
+        blogList, //  window.data 數據
+
+        //  次要資訊數據
+        fansList, //  window.data 數據
+        idolList, //  window.data 數據
+
+        //  window.data 數據
+        me: currentUser
+    })
+})
+
+//  他人頁
+router.get('/other/:id', async (ctx, next) => {
+    let me = ctx.session.user
+    let id = ctx.params.id * 1
+
+    //  若是自己的ID，跳轉到個人頁面
+    if (me && me.id === id) {
         return ctx.redirect('/self')
     }
 
@@ -68,8 +97,8 @@ router.get('/other/:user_id', async (ctx, next) => {
         me = {}
     }
 
-    let { data: { currentUser, fansList, idolList } } = await getPeopleById(user_id)
-    let { data: blogList } = await getBlogListByUserId(user_id)
+    let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
+    let { data: blogList } = await getBlogListByUserId(id)
 
     await ctx.render('self', {
         //  導覽列數據
@@ -91,37 +120,7 @@ router.get('/other/:user_id', async (ctx, next) => {
     })
 })
 
-//  個人資訊
-router.get('/self', view_check_login, async (ctx, next) => {
-    console.log('@path => ', ctx.request.href)
-    let { id } = ctx.session.user
-    let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
-    let { data: blogList } = await getBlogListByUserId(id, true)
-    //  導覽列數據
-    let { data: newsList } = await getNewsByUserId(id)
-    console.log('@ newsList => ', newsList)
-    console.log('@ newsList.newsList.unconfirm => ', newsList.newsList.unconfirm)
 
-
-    await ctx.render('self', {
-        //  導覽列數據
-        logging: true,
-        active: 'self',
-        newsList, //  window.data 數據
-
-        //  主要資訊數據
-        isMyIdol: undefined, //  window.data 數據
-        currentUser,
-        blogList, //  window.data 數據
-
-        //  次要資訊數據
-        fansList, //  window.data 數據
-        idolList, //  window.data 數據
-
-        //  window.data 數據
-        me: currentUser
-    })
-})
 
 /**
  * @ router for setting
