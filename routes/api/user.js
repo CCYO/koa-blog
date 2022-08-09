@@ -45,14 +45,14 @@ router.post('/', validate_user, async (ctx, next) => {
 router.post('/follow', async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
-    ctx.body = await followIdol(fans_id, idol_id)
+    ctx.body = await followIdol({fans_id, idol_id})
 })
 
 //  取消追蹤
 router.post('/cancelFollow', async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
-    ctx.body = await cancelFollowIdol(fans_id, idol_id)
+    ctx.body = await cancelFollowIdol({fans_id, idol_id})
 })
 
 //  logout

@@ -12,6 +12,59 @@ const {
 } = require('../utils/init')
 
 /**
+ * @param {object} param0 查詢 blogs 紀錄所需的參數
+ * @param {number} param0.user_id user id
+ * @param {boolean} param0.getAll 是否無視 blog 公開/隱藏，false 僅拿公開，true 全拿
+ * @returns {object} 
+ *  [blog: {
+ *      id, title, show, showAt,
+ *      author: { id, email, nickname, age, avatar, avatar_hash }
+ *  }]
+ * 
+ 
+ */
+ async function readBlogList({ user_id, follower_id, allBlogs = false }) {
+    let where = { user_id }
+    let include = [{
+        model: User,
+        attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash']
+    }]
+
+    if (!allBlogs) {
+        where.show = true
+    }
+
+    if(follower_id){
+        include.push({
+            model: User,
+            as: 'FollowBlog_F',
+            attributes: [],
+            where: { id: follower_id }
+        })
+    }
+
+    let blogList = await Blog.findAll({
+        attributes: ['id', 'title', 'show', 'showAt'],
+        where,
+        include
+    })
+    // let data = { show: [], hidden: [] }
+
+    // if (!blogList.length) return []
+
+    // blogList = blogList.map(item => {
+    //     let { User: author, ...blog } = item.toJSON()
+    //     return { ...blog, author: init_user(author) }
+    // })
+    return init_blog(blogList)
+
+}
+
+async function deleteFollower(follower){
+    
+}
+
+/**
  * 創建Blog，其中會與作者作關聯，且建立一份作者自己的留言
  * @param {string} title 文章表提
  * @param {number} user_id 作者id
@@ -117,46 +170,7 @@ async function readBlogById(blog_id, needComment) {
     return init_blog(res)
 }
 
-/**
- * 
- * @param {object} param0 查詢 blogs 紀錄所需的參數
- * @param {number} param0.user_id user id
- * @param {boolean} param0.getAll 是否無視 blog 公開/隱藏，false 僅拿公開，true 全拿
- * @returns {object} 
- *  [blog: {
- *      id, title, show, showAt,
- *      author: { id, email, nickname, age, avatar, avatar_hash }
- *  }]
- * 
- 
- */
-async function readBlogList({ user_id, getAll = false }) {
-    let where = { user_id }
 
-    if (!getAll) {
-        where.show = true
-    }
-
-    let blogList = await Blog.findAll({
-        attributes: ['id', 'title', 'show', 'showAt'],
-        where,
-        include: {
-            model: User,
-            attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash']
-        }
-    })
-
-    let data = { show: [], hidden: [] }
-
-    if (!blogList.length) return []
-
-    blogList = blogList.map(item => {
-        let { User: author, ...blog } = item.toJSON()
-        return { ...blog, author: init_user(author) }
-    })
-
-    return blogList
-}
 
 module.exports = {
     createBlog,

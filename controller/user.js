@@ -20,13 +20,11 @@ const {
     deleteFans
 } = require('../server/followPeople')
 
+const FollowBlog = require('../server/followBlog')
+
 const {
     readBlogList
 } = require('../server/blog')
-
-const {
-    FollowBlog,
-} = require('../server/news')
 
 const { ErrModel, SuccModel } = require('../model')
 
@@ -101,38 +99,51 @@ async function getPeopleById(id, isSelf = false) {
     return new SuccModel(data)
 }
 
-/**
- * 追蹤
+/** 追蹤
  * @param {number} fans_id 
  * @param {number} idol_id 
  * @returns {object} SuccessModel { Follow_People Ins { id, idol_id, fans_id }} | ErrorModel
  */
-async function followIdol(fans_id, idol_id) {
-    const ok = await addFans(idol_id, fans_id)
+async function followIdol({fans_id, idol_id}) {
+    const ok = await addFans({idol_id, fans_id})
     if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
     return new SuccModel()
 }
 
-/**
- * 取消追蹤
+/** 取消追蹤
  * @param {number} fans_id 
  * @param {number} idol_id 
  * @returns {object} SuccessModel | ErrorModel
  */
-async function cancelFollowIdol(fans_id, idol_id) {
-    const res = await deleteFans(idol_id, fans_id)
+async function cancelFollowIdol({fans_id, idol_id}) {
+    const res = await deleteFans({idol_id, fans_id})
+
+    if(!res){
+        return new ErrModel(FOLLOW.CANCEL_ERR)
+    }
+
     //  也要將FollowBlog紀錄刪除
 
-    //  先找出 idol 的文章
-    let blogList = await readBlogList({ user_id: idol_id, getAll: true })
-    let blogList_id = []
-    if (blogList.length) {
-        blogList.forEach(({ id }) => blogList_id.push(id))
+    //  找出 idol 為作者，且被fans追蹤的的文章
+    let blogList = await readBlogList({ user_id: idol_id, follower_id: fans_id, allBlogs: true })
+
+    if(!blogList.length){
+        return new SuccModel()
     }
+
+    console.log('@成功退追蹤，開始退追blog')
+    let listOfBlogId = blogList.reduce((initVal, {id}) => {
+        console.log('@initCal => ', initVal)
+        initVal.push(id)
+        return initVal
+    }, [])
+
+    console.log('@ listOfBlogId => ', listOfBlogId)
     //  刪除關聯
-    await FollowBlog.deleteBlog({ blogList_id, follower_id: fans_id })
-    if (res) return new SuccModel()
-    return new ErrModel(FOLLOW.CANCEL_ERR)
+    let ok = await FollowBlog.deleteFollower({ blog_id: listOfBlogId, follower_id: fans_id })
+    console.log('@ok => ', ok)
+    if (!ok) return new ErrModel(FOLLOW.CANCEL_ERR)
+    return new SuccModel()
 }
 
 
@@ -166,15 +177,11 @@ async function confirmFollow(fans_id, idol_id) {
     return new ErrModel(FOLLOW.CONFIRM_ERR)
 }
 
-const logout = async (ctx) => {
+function logout (ctx){
     ctx.session = null
     return new SuccModel('成功登出')
 }
 
-// ----
-async function getOther(other_id) {
-    return new SuccModel(await readOther(other_id))
-}
 
 
 
@@ -188,15 +195,13 @@ module.exports = {
     register,
     findUser,
     getPeopleById,
+    followIdol,
+    cancelFollowIdol,
+    logout,
 
     modifyUserInfo,
     getFansById,
     getIdolsById,
-    followIdol,
-    confirmFollow,
-    cancelFollowIdol,
-
-    logout,
-
-    getOther
+    
+    confirmFollow
 }
