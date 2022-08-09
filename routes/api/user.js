@@ -8,8 +8,7 @@ const {
     isEmailExist,
     register, 
 
-    findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout, getNews, confirmUserNews, 
-    
+    findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout    
 } = require('../../controller/user')
 
 const { api_check_login } = require('../../middleware/check_login')
@@ -33,8 +32,8 @@ router.post('/register', validate_user, async (ctx, next) => {
 //  登入
 router.post('/', validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
-    const resModel = await findUser(email, password)
-
+    const resModel = await findUser({email, password})
+    //  判斷 session 是否存在，並儲存
     if(!resModel.errno && !ctx.session.user){
         ctx.session.user = resModel.data
     } 

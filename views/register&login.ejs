@@ -6,6 +6,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register/Login</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 
   <!-- BS5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -149,7 +151,7 @@
 
         //  valicate for email
         async function valicate_email() {
-          valicate_email_front() 
+          valicate_email_front()
           valicate_submit()
         }
 
@@ -196,7 +198,7 @@
         })
 
         $(`${selector_form} input[type='password']`).on('change', (e) => {
-          if($(e.target).val().length < password_length){
+          if ($(e.target).val().length < password_length) {
             feedback_UI(e.target, false, '密碼必須至少6個字符')
           }
         })
@@ -216,9 +218,9 @@
         //  handle for input of password
         function handle_password(e) {
           let is_valid = valicate_password()
-          
+
           valicate_submit()
-          
+
           setDisabled(
             $(`${selector_form} input[type='password']`).last(),
             is_valid

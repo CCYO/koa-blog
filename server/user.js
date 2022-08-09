@@ -22,13 +22,20 @@ const { init_user } = require('../utils/init')
  * @return {} 無資料為null，反之，password 以外的 user 資料
  */
 async function readUser({ id, email, password }){
+    if (!id && !email && !password){
+        return null
+    }
+
     const where = {}
+    
     if (id) where.id = id
     if (email) where.email = email
     if (password) where.password = hash(password)
 
-    const user = await User.findOne({ where })
-    
+    const user = await User.findOne({ 
+        where,
+        attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash']
+    })
     if (!user) return null
     
     return init_user(user)
@@ -48,12 +55,11 @@ const createUser = async ({ password, ...data }) => {
     return init_user(user)
 }
 
-/**
- * 查找 Fans，藉由 user_id
+/** 查找 Fans
  * @param {string} idol_id 
  * @returns {array} arrItem 代表 fans，若數組為空，表示沒粉絲
  */
-async function readFansByUserId(idol_id) {
+async function readFans(idol_id) {
     const idol = await User.findByPk(idol_id)
 
     const fansList = await idol.getFollowPeople_F({
@@ -64,12 +70,11 @@ async function readFansByUserId(idol_id) {
     return init_user(fansList)
 }
 
-/**
- * 查找 Idols，藉由 user_id
+/** 查找 Idols
  * @param {string} fans_id 
  * @returns {array} arrItem 代表 idol，若數組為空，表示沒偶像
  */
-async function readIdolsByUserId(fans_id) {
+async function readIdols(fans_id) {
     const fans = await User.findByPk(fans_id)
 
     const idolList = await fans.getFollowPeople_I({
@@ -80,39 +85,7 @@ async function readIdolsByUserId(fans_id) {
     return init_user(idolList)
 }
 
-/**
- * 新增 Follow_People 紀錄
- * @param {number} idol_id idol id
- * @param {number} fans_id fans id
- * @returns {object|false} 成功 {id, fans_id, idol_id}，失敗 false
- */
-async function addFans(idol_id, fans_id) {
-    const idol = await User.findByPk(idol_id)
-    const res = await idol.addFollowPeople_F(fans_id)
-    //  成功 => [ follow, ... ]
-    //  失敗 => undefined
-    if (!res) return false
-    const [item] = res.map(({ dataValues }) => dataValues)
 
-    return {
-        id: item.id,
-        fans_id: item.fans_id,
-        idol_id: item.idol_id
-    }
-}
-
-/**
- * 刪除 Follow_People 紀錄
- * @param {number} idol_id idol id
- * @param {number} fans_id fans id
- * @returns {boolean} 成功 true，失敗 false
- */
-async function deleteFans(idol_id, fans_id) {
-    const idol = await User.findByPk(idol_id)
-    const row = await idol.removeFollowPeople_F(fans_id)
-    if (!row) return false
-    return true
-}
 
 
 
@@ -669,13 +642,11 @@ async function UnconfirmNewsCount(id, time) {
 module.exports = {
     createUser,
     readUser,
-    readFansByUserId,
-    readIdolsByUserId,
+    readFans,
+    readIdols,
 
     update,
 
-    addFans,
-    deleteFans,
     readNews,
     updateFollow,
 

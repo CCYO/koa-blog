@@ -11,7 +11,7 @@ const { getBlogListByUserId } = require('../../controller/blog')
 const { getNewsByUserId } = require('../../controller/news')
 
 const {
-    getSelfInfo,
+
 
     getPeopleById,
 

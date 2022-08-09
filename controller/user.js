@@ -7,14 +7,18 @@ const ejs = require('ejs')
 const {
     createUser,
     readUser,
-    readFansByUserId,
-    readIdolsByUserId,
+    readFans,
+    readIdols,
 
     update,
-    addFans, deleteFans,
     updateFollow,
     readOther
 } = require('../server/user')
+
+const {
+    addFans,
+    deleteFans
+} = require('../server/followPeople')
 
 const {
     readBlogList
@@ -89,35 +93,13 @@ const findUser = async ({ id, email, password }) => {
  */
 async function getPeopleById(id, isSelf = false) {
     let data = {}
-    data.fansList = await readFansByUserId(id)
-    data.idolList = await readIdolsByUserId(id)
+    data.fansList = await readFans(id)
+    data.idolList = await readIdols(id)
     if (!isSelf) {
-        data.currentUser = await readUser({ id })
+        data.currentUser = await readUser({id})
     }
     return new SuccModel(data)
 }
-
-//  取得 Idol fans 以及自己公開/隱藏的blog
-async function getSelfInfo(id) {
-    let blogList = await readBlogsByUserId(id)
-    let fansList = await readFansByUserId(id)
-    let idolsList = await readIdolsByUserId(id)
-
-    let blogs = { show: [], hidden: [] }
-    //  處理 blogs
-    if (blogList.length) {
-        blogList.forEach(item => {
-            let { blog: { show } } = item
-            show && blogs.show.push(item) || blogs.hidden.push(item)
-        })
-    }
-
-    return new SuccModel({ blogList: blogs, fansList, idolsList })
-}
-
-
-
-
 
 /**
  * 追蹤
@@ -126,9 +108,9 @@ async function getSelfInfo(id) {
  * @returns {object} SuccessModel { Follow_People Ins { id, idol_id, fans_id }} | ErrorModel
  */
 async function followIdol(fans_id, idol_id) {
-    const res = await addFans(idol_id, fans_id)
-    if (res) return new SuccModel(res)
-    return new ErrModel(FOLLOW.FOLLOW_ERR)
+    const ok = await addFans(idol_id, fans_id)
+    if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
+    return new SuccModel()
 }
 
 /**
@@ -205,8 +187,6 @@ module.exports = {
     isEmailExist,
     register,
     findUser,
-    getSelfInfo,
-
     getPeopleById,
 
     modifyUserInfo,
