@@ -30,6 +30,6 @@ async function deleteFans({idol_id, fans_id}) {
 }
 
 module.exports = {
-    addFans,
-    deleteFans
+    addFans,        //  controller user
+    deleteFans      //  controller user
 }

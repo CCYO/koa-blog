@@ -640,12 +640,12 @@ async function UnconfirmNewsCount(id, time) {
 }
 
 module.exports = {
-    createUser,
-    readUser,
-    readFans,
-    readIdols,
+    createUser,     //  controller user
+    readUser,       //  controller user
+    readFans,       //  controller user
+    readIdols,      //  controller user
 
-    update,
+    update,         
 
     readNews,
     updateFollow,

@@ -11,14 +11,12 @@ const { getBlogListByUserId } = require('../../controller/blog')
 const { getNewsByUserId } = require('../../controller/news')
 
 const {
-
-
     getPeopleById,
 
-    findUserById, getFansById, getIdolsById, getNews, getOtherInfo, confirmFollow,
-    getOther,
+    getFansById,
+    getIdolsById,
+    confirmFollow,
 } = require('../../controller/user')
-const { readUser } = require('../../server/user')
 
 //  註冊頁
 router.get('/register', async (ctx, next) => {
@@ -120,11 +118,7 @@ router.get('/other/:id', async (ctx, next) => {
     })
 })
 
-
-
-/**
- * @ router for setting
- */
+//  個資更新頁
 router.get('/setting', view_check_login, async (ctx, next) => {
     const { user: me } = ctx.session
 

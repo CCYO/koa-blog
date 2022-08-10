@@ -7,8 +7,12 @@ const router = require('koa-router')()
 const { 
     isEmailExist,
     register, 
-
-    findUser, modifyUserInfo, followIdol, cancelFollowIdol, logout    
+    findUser,
+    followIdol,
+    cancelFollowIdol,
+    logout,
+    
+    modifyUserInfo    
 } = require('../../controller/user')
 
 const { api_check_login } = require('../../middleware/check_login')
@@ -66,15 +70,6 @@ router.patch('/:avatar_hash', api_check_login, parse_user_data, async(ctx, next)
     console.log('@data => ', res.data)
     ctx.session.user = res.data
 
-    ctx.body = res
-})
-
-//---
-
-
-router.get('/news_confirm', api_check_login, async(ctx, next) => {
-    const { confirm_time } = ctx.query
-    let res = await confirmUserNews(ctx.session.user.id, confirm_time * 1)
     ctx.body = res
 })
 

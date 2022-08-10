@@ -49,7 +49,7 @@
                         <div class="d-block">&nbsp;</div>
                     </label>
                 </div>
-                <button type="submit" class="btn btn-primary">送出</button>
+                <button type="submit" class="btn btn-primary" disabled>送出</button>
             </div>
         </form>
     </div>
@@ -57,28 +57,45 @@
     <%- include('wedgets/cdn') %>
     <!-- 引入 Spark-MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+    <!-- 引入 Ajv -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.11.0/ajv7.min.js"
+        integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+        </script>
+        <!-- 引入 ajv-rror-->
+        <script src="https://cdn.jsdelivr.net/npm/ajv-errors@3.0.0/dist/index.min.js"></script>
     <script>
         $(function () {
-            window.payload = { hash: undefined, data: {} }
+            window.payload = {
+                hash: undefined,    //  存放 $avatar 檔案的 hash
+            }
 
             let $avatar = $('#avatar')
             let $form = $('form').first()
+            let $submit = $('[type=submit]')
 
-            //  input[name='avatar'].onchange handle：取得頭像hash
+            window.valicate = init_valicate()
+
+            $avatar.on('click', resetFile)
             $avatar.on('change', getImgHash)
 
-            $form.on('submit', async (e) => {
+            $form.on('submit', update)
+
+            //  送出更新數據
+            async function update(e) {
                 e.preventDefault()
                 let { hash } = window.payload
                 let formData = new FormData()
 
                 let api_user = '/api/user/'
-                if (hash) {
+
+                if (hash) { //  若要更新頭像
                     api_user += hash
-                } else {
+                } else {    //  若不更新頭像
                     api_user += '0'
                 }
 
+                //  
                 for (item of e.target) {
                     let { type, name, value } = item
                     if (type === 'file' && item.files[0]) {
@@ -100,28 +117,32 @@
                     alert(msg)
                 } else {
                     console.log(data)
-                    window.data.user = data
+                    window.data.me = data
                     alert('資料更新完成!')
                 }
-            })
+            }
 
-            async function getImgHash(e) {
-                let file = e.target.files[0]
+            //  取得 $avatar 的 hash
+            async function getImgHash() {
+                let { avatar, avatar_hash } = window.data.me
+                let file = $avatar.prop('files')[0]
 
-                //  user.avatar 若有值，確認當前欲更新的 img md5hash 是否相同
-                hash = await getMD5Hash(file)
+                //  確認更新的 avatar 是否與原 avatar 相同
+                hash = await _getMD5Hash(file)
 
-                if (hash === user.avatar_hash) {
-                    return alert('目前就是這個頭像唷！')
+                if (hash === avatar_hash) {
+                    alert('目前就是這個頭像唷！')
+                    resetFile()
                     return
                 }
 
                 window.payload.hash = hash
+                $submit.prop('disabled', false)
                 return
             }
 
             //  返回 file 的 FileReader.result
-            function getMD5Hash(file) {
+            function _getMD5Hash(file) {
                 return new Promise((resolve, reject) => {
                     let fr = new FileReader()
                     fr.addEventListener('load', (evt) => {
@@ -137,6 +158,64 @@
                     })
                     fr.readAsArrayBuffer(file)
                 })
+            }
+
+            //  清空 input[type=file] #avatar
+            function resetFile() {
+                $avatar.val('')
+            }
+
+            function init_valicate() {
+                let Ajv = window.ajv7
+                let ajv = new Ajv()
+
+                const schema_common = {
+                    type: 'object',
+                    properties: {
+                        email: {
+                            type: 'string',
+                            // format: 'email',
+                            // errorMessage: 'email必須是電子信箱格式'
+                        },
+                        nickname: {
+                            type: 'string',
+                            // pattern: '^[\\w]+$',
+                            pattern: '^[\\u4e00-\\u9fa5a-zA-Z]+$',
+                            maxLength: 20,
+                            // errorMessage: '必須是英文、數字以及底線組成，必須小於20個字符'
+                        },
+                        password: {
+                            type: 'string',
+                            pattern: '^[\\w]+$',
+                            minLength: 6,
+                            maxLength: 32,
+                            // errorMessage: '必須是英文、數字以及底線組成，長度須介於6-32個字符'
+                        },
+                        age: {
+                            type: 'number',
+                            minimum: 1,
+                            maximum: 120,
+                            // errorMessage: '必須是數字，介於1-120之間'
+                        },
+                        avatar: {
+                            type: 'string',
+                            // errorMessage: '必須是string'
+                        },
+                        avatar_hash: {
+                            type: 'string',
+                            // errorMessage: '必須是string'
+                        }
+                    }
+                }
+
+                let valicator = ajv.compile(schema_common)
+
+                return ( data ) => {
+                    if (!valicator(data)) {
+                        return valicator.errors
+                    }
+                    return null
+                }
             }
         })
     </script>

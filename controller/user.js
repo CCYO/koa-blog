@@ -11,16 +11,12 @@ const {
     readIdols,
 
     update,
-    updateFollow,
-    readOther
+    updateFollow
 } = require('../server/user')
 
-const {
-    addFans,
-    deleteFans
-} = require('../server/followPeople')
+const followPeople = require('../server/followPeople')
 
-const FollowBlog = require('../server/followBlog')
+const followBlog = require('../server/followBlog')
 
 const {
     readBlogList
@@ -105,7 +101,7 @@ async function getPeopleById(id, isSelf = false) {
  * @returns {object} SuccessModel { Follow_People Ins { id, idol_id, fans_id }} | ErrorModel
  */
 async function followIdol({fans_id, idol_id}) {
-    const ok = await addFans({idol_id, fans_id})
+    const ok = await followPeople.addFans({idol_id, fans_id})
     if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
     return new SuccModel()
 }
@@ -116,7 +112,7 @@ async function followIdol({fans_id, idol_id}) {
  * @returns {object} SuccessModel | ErrorModel
  */
 async function cancelFollowIdol({fans_id, idol_id}) {
-    const res = await deleteFans({idol_id, fans_id})
+    const res = await followPeople.deleteFans({idol_id, fans_id})
 
     if(!res){
         return new ErrModel(FOLLOW.CANCEL_ERR)
@@ -131,32 +127,16 @@ async function cancelFollowIdol({fans_id, idol_id}) {
         return new SuccModel()
     }
 
-    console.log('@成功退追蹤，開始退追blog')
     let listOfBlogId = blogList.reduce((initVal, {id}) => {
-        console.log('@initCal => ', initVal)
         initVal.push(id)
         return initVal
     }, [])
 
-    console.log('@ listOfBlogId => ', listOfBlogId)
     //  刪除關聯
-    let ok = await FollowBlog.deleteFollower({ blog_id: listOfBlogId, follower_id: fans_id })
-    console.log('@ok => ', ok)
+    let ok = await followBlog.deleteFollower({ blog_id: listOfBlogId, follower_id: fans_id })
     if (!ok) return new ErrModel(FOLLOW.CANCEL_ERR)
     return new SuccModel()
 }
-
-
-async function getFansById(idol_id) {
-    const fans = await readFans(idol_id)
-    return new SuccModel(fans)
-}
-
-async function getIdolsById(idol_id) {
-    const fans = await readIdols(idol_id)
-    return new SuccModel(fans)
-}
-
 
 
 const modifyUserInfo = async (ctx) => {
@@ -171,17 +151,28 @@ const modifyUserInfo = async (ctx) => {
     }
 }
 
-async function confirmFollow(fans_id, idol_id) {
-    const row = await updateFollow({ fans_id, idol_id }, { confirm: true })
-    if (row) return new SuccModel()
-    return new ErrModel(FOLLOW.CONFIRM_ERR)
-}
-
+//  登出
 function logout (ctx){
     ctx.session = null
     return new SuccModel('成功登出')
 }
 
+
+async function getFansById(idol_id) {
+    const fans = await readFans(idol_id)
+    return new SuccModel(fans)
+}
+
+async function getIdolsById(idol_id) {
+    const fans = await readIdols(idol_id)
+    return new SuccModel(fans)
+}
+
+async function confirmFollow(fans_id, idol_id) {
+    const row = await updateFollow({ fans_id, idol_id }, { confirm: true })
+    if (row) return new SuccModel()
+    return new ErrModel(FOLLOW.CONFIRM_ERR)
+}
 
 
 
@@ -191,13 +182,14 @@ function logout (ctx){
 
 
 module.exports = {
-    isEmailExist,
-    register,
-    findUser,
-    getPeopleById,
-    followIdol,
-    cancelFollowIdol,
-    logout,
+    isEmailExist,       // api user
+    register,           // api user
+    findUser,           // api user
+    followIdol,         // api user
+    cancelFollowIdol,   // api user
+    logout,             // api user
+
+    getPeopleById,      // view user
 
     modifyUserInfo,
     getFansById,
