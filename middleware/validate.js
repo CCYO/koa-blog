@@ -14,20 +14,25 @@ const { FORMAT_ERR } = require('../model/errRes')
 const validate_user = async (ctx, next) => {
     let errors
     let action
-    switch (ctx.path) {
-        case '/api/user/isEmailExist':
+    let { method, path} = ctx
+    let reg = /\/api\/user(.+?)(\/)?$/
+    path = reg.exec(path)[1]
+    let condition = `${method}-${path}`
+    console.log('@ ===> ', condition)
+    switch (method === 'PATCH' && 'PATCH-/' || condition) {
+        case 'POST-/isEmailExist':
             action = '信箱確認'
             errors = validator_user('email', ctx.request.body)
             break;
-        case '/api/user/register':
+        case 'POST-/register':
             action = '註冊'
             errors = validator_user('register', ctx.request.body)
             break;
-        case '/api/user/':
+        case 'POST-/':
             action = '登入'
             errors = validator_user('register', ctx.request.body)
             break;
-        case '/api/user/update':
+        case 'PATCH-/':
             action = '更新'
             errors = validator_user('update', ctx.request.body)
             break;

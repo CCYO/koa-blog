@@ -95,17 +95,15 @@ async function readIdols(fans_id) {
 
 
 
-const update = async (newUserInfo, id) => {
-    if (newUserInfo.password) {
-        newUserInfo.password = hash(newUserInfo.password)
+const updateUser = async ({newUserInfo, id}) => {
+    let data = { ...newUserInfo }
+    if (data.password) {
+        data.password = hash(data.password)
     }
 
-    let [row] = await User.update(newUserInfo, {
-        where: { id }
-    })
+    let user = await User.findByPk(id)
+    user = await user.update(data)
     
-    if (!row) return false
-    let user = (await User.findByPk(id)).toJSON()
     return init_user(user)
 }
 
@@ -644,8 +642,7 @@ module.exports = {
     readUser,       //  controller user
     readFans,       //  controller user
     readIdols,      //  controller user
-
-    update,         
+    updateUser,     //  controller user
 
     readNews,
     updateFollow,

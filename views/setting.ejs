@@ -49,7 +49,7 @@
                         <div class="d-block">&nbsp;</div>
                     </label>
                 </div>
-                <button type="submit" class="btn btn-primary" disabled>送出</button>
+                <button type="submit" class="btn btn-primary">送出</button>
             </div>
         </form>
     </div>
@@ -62,8 +62,6 @@
         integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
         crossorigin="anonymous" referrerpolicy="no-referrer">
         </script>
-        <!-- 引入 ajv-rror-->
-        <script src="https://cdn.jsdelivr.net/npm/ajv-errors@3.0.0/dist/index.min.js"></script>
     <script>
         $(function () {
             window.payload = {
@@ -101,10 +99,19 @@
                     if (type === 'file' && item.files[0]) {
                         formData.append('avatar', item.files[0])
                     } else if (type !== 'submit' && value) {
+                        console.log('@ => ', { [name]: value})
+                        let err = window.valicate({ [name]: value})
+                        
+                        console.log('@err => ', err)
+                        if(err){
+                            alert(`${name}格式有誤`)
+                            return
+                        }
                         formData.append(name, value)
                     }
                 }
 
+                
                 let {
                     data: {
                         errno,
@@ -165,15 +172,18 @@
                 $avatar.val('')
             }
 
+            
             function init_valicate() {
                 let Ajv = window.ajv7
                 let ajv = new Ajv()
 
+                let regg = '^[a-z0-9][a-z0-9-_\.]+@([a-z]|[a-z0-9]?[a-z0-9-]+[a-z0-9])\.[a-z0-9]{2,10}(?:\.[a-z]{2,10})?$'
                 const schema_common = {
                     type: 'object',
                     properties: {
                         email: {
                             type: 'string',
+                            pattern: regg
                             // format: 'email',
                             // errorMessage: 'email必須是電子信箱格式'
                         },
@@ -181,6 +191,7 @@
                             type: 'string',
                             // pattern: '^[\\w]+$',
                             pattern: '^[\\u4e00-\\u9fa5a-zA-Z]+$',
+                            minLength: 2,
                             maxLength: 20,
                             // errorMessage: '必須是英文、數字以及底線組成，必須小於20個字符'
                         },
@@ -196,14 +207,6 @@
                             minimum: 1,
                             maximum: 120,
                             // errorMessage: '必須是數字，介於1-120之間'
-                        },
-                        avatar: {
-                            type: 'string',
-                            // errorMessage: '必須是string'
-                        },
-                        avatar_hash: {
-                            type: 'string',
-                            // errorMessage: '必須是string'
                         }
                     }
                 }

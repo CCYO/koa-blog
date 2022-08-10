@@ -9,8 +9,8 @@ const {
     readUser,
     readFans,
     readIdols,
+    updateUser,
 
-    update,
     updateFollow
 } = require('../server/user')
 
@@ -138,17 +138,14 @@ async function cancelFollowIdol({fans_id, idol_id}) {
     return new SuccModel()
 }
 
-
+//  更新user
 const modifyUserInfo = async (ctx) => {
     const { id } = ctx.session.user
     let newUserInfo = { ...ctx.request.body }
 
-    const user = await update(newUserInfo, id)
-    if (user) {
-        return new SuccModel(user)
-    } else {
-        return new ErrModel({ ...UPDATE.NO_THIS_ONE })
-    }
+    const user = await updateUser({newUserInfo, id})
+    
+    return new SuccModel(user)
 }
 
 //  登出
