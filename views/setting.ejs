@@ -66,13 +66,98 @@
         $(function () {
             window.payload = {
                 hash: undefined,    //  存放 $avatar 檔案的 hash
+                email: undefined,
+                nickname: undefined,
+                password: undefined,
+                age: undefined,
+                ok: []
             }
+
 
             let $avatar = $('#avatar')
             let $form = $('form').first()
             let $submit = $('[type=submit]')
 
+            $submit.prop('disabled', true)
             window.valicate = init_valicate()
+
+            let $listOfPayload = $('input:not([type=file])')
+
+            $listOfPayload.on('change', setPayload)
+
+            let errorMsg = {
+                email: {
+                    pattern: '必須符合email格式'
+                },
+                nickname: {
+                    pattern: '必須由是中文或英文組成',
+                    minLength: '必須2個字以上',
+                    maxLength: '必須20個字以下',
+                },
+                password: {
+                    pattern: '只能由數字、英文、底線_組成',
+                    minLength: '必須6個字以上',
+                    maxLength: '必須32個字以下',
+                },
+                age: {
+                    minimum: '年齡必須大於0，且只能是整數',
+                    maximum: '年齡必須小於120，且只能是整數'
+                }
+            }
+
+            function setPayload(e) {
+                let me = window.data.me
+                let $el = $(e.target)
+                let key = $el.attr('name')
+                let val = $el.val().trim()
+
+                if(!val && window.payload[key]){
+                    window.payload[key] = undefined
+                    let ind = window.payload.ok.findIndex(v => key === v)
+                    ind && window.payload.ok.splice(ind)
+                    let ok = window.payload.ok.length !== 0
+                    $submit.prop('disabled', ok)
+                    return
+                }
+
+                if (val === me[key]) {
+                    canSubmit(key)
+                    feedback_UI($el, false, '現在就是這樣囉')
+                    // $el.val('')
+                    return
+                }
+
+                if (key === 'age') {
+                    val *= 1
+                }
+
+                let res = window.valicate({ [key]: val })
+                if (res) {
+                    canSubmit(key)
+                    feedback_UI($el, false, errorMsg[key][res[0].keyword])
+                    alert(errorMsg[key][res[0].keyword])
+                    return
+                }
+
+                canSubmit(key, val)
+                feedback_UI($el, true)
+                console.log(`window.payload[${key}] => `, window.payload[key])
+            }
+
+            function canSubmit(key, val = false) {
+                let ind = window.payload.ok.findIndex(v => key === v)
+                if (val) {
+                    window.payload[key] = val
+                    !ind && window.payload.ok.push(ind)
+                } else {
+                    window.payload[key] = undefined
+                    ind && window.payload.ok.splice(ind)
+                }
+                let ok = window.payload.ok.length === 0
+                console.log(window.payload.ok.length)
+                console.log(ok)
+                $submit.prop('disabled', ok)
+            }
 
             $avatar.on('click', resetFile)
             $avatar.on('change', getImgHash)
@@ -99,11 +184,11 @@
                     if (type === 'file' && item.files[0]) {
                         formData.append('avatar', item.files[0])
                     } else if (type !== 'submit' && value) {
-                        console.log('@ => ', { [name]: value})
-                        let err = window.valicate({ [name]: value})
-                        
+                        console.log('@ => ', { [name]: value })
+                        let err = window.valicate({ [name]: value })
+
                         console.log('@err => ', err)
-                        if(err){
+                        if (err) {
                             alert(`${name}格式有誤`)
                             return
                         }
@@ -111,7 +196,7 @@
                     }
                 }
 
-                
+
                 let {
                     data: {
                         errno,
@@ -172,7 +257,7 @@
                 $avatar.val('')
             }
 
-            
+
             function init_valicate() {
                 let Ajv = window.ajv7
                 let ajv = new Ajv()
@@ -190,7 +275,7 @@
                         nickname: {
                             type: 'string',
                             // pattern: '^[\\w]+$',
-                            pattern: '^[\\u4e00-\\u9fa5a-zA-Z]+$',
+                            pattern: '^[\\u4e00-\\u9fa5\\w]+$',
                             minLength: 2,
                             maxLength: 20,
                             // errorMessage: '必須是英文、數字以及底線組成，必須小於20個字符'
@@ -213,11 +298,27 @@
 
                 let valicator = ajv.compile(schema_common)
 
-                return ( data ) => {
+                return (data) => {
                     if (!valicator(data)) {
                         return valicator.errors
                     }
                     return null
+                }
+            }
+
+            //  input 的 valicate UI
+            function feedback_UI($inp, valid, msg) {
+                if (valid === 'load') {
+                    //  驗證中
+                    $inp.next().toggleClass('my-show', true).text('loading...')
+                } else if (valid) {
+                    //  驗證成功
+                    $inp.removeClass('is-invalid').addClass('is-valid')
+                    $inp.next().removeClass('invalid-feedback myshow').addClass('valid-feedback').text(msg)
+                } else {
+                    //  驗證失敗
+                    $inp.removeClass('is-valid').addClass('is-invalid')
+                    $inp.next().removeClass('valid-feedback myshow').addClass('invalid-feedback').text(msg)
                 }
             }
         })
