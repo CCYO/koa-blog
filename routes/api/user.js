@@ -63,8 +63,8 @@ router.post('/cancelFollow', async (ctx, next) => {
 router.get('/logout', api_check_login, async (ctx, next) => {
     ctx.body = await logout(ctx)
 })
-//http://34.80.192.8:8080/api/user?avatar_hash=9c5ca35050e5dab58acbbd6cbf1c0de7&ext=jpg
-//  setting //validate_user ,
+
+//  setting
 router.patch('/', api_check_login, parse_user_data, validate_user, async(ctx, next) => {
     let res = await modifyUserInfo(ctx)
     ctx.session.user = res.data

@@ -13,12 +13,9 @@ const { GCS_ref: { AVATAR } } = require('../conf/constant')
 
 
 
-async function parse_user_data(ctx, next) {
-    //  avatar_hash = 0 代表沒有 avatar 圖檔，反之則有
-    
+async function parse_user_data(ctx, next) {    
     let { hash, ext } = ctx.query ? ctx.query : {}
     let ref = undefined
-    console.log(hash,ext)
     if(hash){
         if(ext !== 'jpg' && ext !== 'png'){
             ctx.body = new ErrModel(AVATAR_FORMAT_ERR)
