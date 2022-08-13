@@ -26,6 +26,7 @@ router.get('/register', async (ctx, next) => {
     }
 
     await ctx.render('register&login', {
+        title: 'REGISTER',
         //  導覽列數據
         logging: false,
         //  導覽列數據 & 卡片Tab 數據
@@ -41,6 +42,7 @@ router.get('/login', async (ctx, next) => {
     }
 
     await ctx.render('register&login', {
+        title: 'LOGIN',
         //  導覽列數據
         logging: false,
         //  導覽列數據 & 卡片Tab 數據
@@ -56,8 +58,10 @@ router.get('/self', view_check_login, async (ctx, next) => {
     let { data: newsList } = await getNewsByUserId(id)
     let { data: { fansList, idolList } } = await getPeopleById(id, true)
     let { data: blogList } = await getBlogListByUserId(id, true)
+    console.log('@blogList => ', blogList)
 
     await ctx.render('self', {
+        title: `${currentUser.nickname}的主頁`,
         //  導覽列數據
         logging: true,
         active: 'self',
@@ -99,6 +103,7 @@ router.get('/other/:id', async (ctx, next) => {
     let { data: blogList } = await getBlogListByUserId(id)
 
     await ctx.render('self', {
+        title: `${currentUser.nickname}的主頁`,
         //  導覽列數據
         logging: me.id ? true : false,
         active: 'other',

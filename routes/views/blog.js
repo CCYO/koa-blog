@@ -22,6 +22,7 @@ router.get('/blog/new', view_check_login, async (ctx, next) => {
     const { data: newsList } = await getNewsByUserId(me.id)
 
     await ctx.render('blog-edit', {
+        title: '編輯文章',
         //  導覽列數據
         logging: true,
         active: 'editor',
@@ -46,6 +47,7 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
     }
 
     return await ctx.render('blog-edit', { 
+        title: '編輯文章',
         //  導覽列數據
         logging: true,
         active: 'editor',
@@ -73,6 +75,7 @@ router.get('/blog/:blog_id', async (ctx, next) => {
     }
     
     return await ctx.render('blog', {
+        title: blog.title,
         //  導覽列數據
         logging: me ? true : false,
         active: 'blog',

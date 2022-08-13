@@ -179,7 +179,7 @@ async function getBlogListByUserId(user_id, is_author = false) {
     let param = { user_id }
 
     if (is_author) {
-        param.getAll = true
+        param.allBlogs = true
     }
 
     let blogList = await readBlogList(param)
