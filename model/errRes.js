@@ -16,7 +16,8 @@ module.exports = {
         INVALICATE: { errno: 301},
         UNEXPECTED: {errno: 399},
         VALICATE_ERR: {errno: 302},
-        NO_THIS_ONE: {error: 303, msg: '沒有這個人'}
+        NO_THIS_ONE: {errno: 303, msg: '沒有這個人'},
+        AVATAR_FORMAT_ERR: {errno: 304, msg: 'avatar圖檔格式錯誤，只接受JPG或PNG'}
     },
     LOGIN: {
         NOT_LOGIN: {errno: 501, msg: '未登入'}

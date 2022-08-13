@@ -64,20 +64,18 @@
         </script>
     <script>
         $(function () {
-            window.payload = {
-                hash: undefined,    //  存放 $avatar 檔案的 hash
-            }
-
             let reg_ext = /.+\.(.*)$/
 
             let $avatar = $('#avatar')
             let $form = $('form').first()
+            let $listOfPayload = $('input:not([type=file])')
             let $submit = $('[type=submit]')
 
             $submit.prop('disabled', true)
+
             window.valicate = init_valicate()
 
-            let $listOfPayload = $('input:not([type=file])')
+            resetPayload()
 
             $listOfPayload.on('input', handle_valicator)
 
@@ -128,7 +126,6 @@
                 let res = window.valicate({ [key]: val })
                 //  若校驗有問題
                 if (res) {
-                    console.log(res)
                     let [{ keyword }] = res
                     //  顯示錯誤提醒
                     UI_valiate($el, false, errorMsg[key][keyword])
@@ -137,13 +134,10 @@
 
                 //通過校驗，顯示ok提醒
                 UI_valiate($el, true)
-                console.log(`window.payload[${key}] => `, window.payload[key])
             }
 
-
-
             $avatar.on('click', resetFile)
-            $avatar.on('change', getImgHash)
+            $avatar.on('change', handle_valicator_avatar)
 
             $form.on('submit', update)
 
@@ -153,35 +147,22 @@
                 let { hash } = window.payload
                 let formData = new FormData()
 
-                let api_user = '/api/user'
-
-                if (hash) { //  若要更新頭像
-                    
-                }
-
                 let json = undefined
-                
+
                 //  
                 for (item of e.target) {
                     let { type, name, value } = item
-                    if(!value){
+                    if (!value) {
                         continue
                     }
-                    
-                    if(name === 'age'){
+
+                    if (name === 'age') {
                         value *= 1
                     }
 
-                    if (type === 'file' ) {
-
-                        let img = item.files && item.files[0]
-                        
-                        api_user += `?avatar_hash=${hash}`
-                        // let img = item.files[0]
-                        
-                        let ext = reg_ext.exec(img.name)[1]
-                        formData.append('avatar', img)
-                    } else if (type !== 'submit' && value) {    
+                    if (type === 'file') {
+                        formData.append('avatar', item.files[0])
+                    } else if (type !== 'submit' && value) {
                         let err = window.valicate({ [name]: value })
 
                         if (err) {
@@ -191,7 +172,6 @@
                         formData.append(name, value)
                     }
                 }
-return
 
                 let {
                     data: {
@@ -199,40 +179,42 @@ return
                         data,
                         msg
                     }
-                } = await axios.patch(api_user, formData)
+                } = await axios.patch(window.payload.api, formData)
 
                 if (errno) {
                     alert(msg)
                 } else {
-                    console.log(data)
                     window.data.me = data
                     alert('資料更新完成!')
                 }
             }
 
             //  取得 $avatar 的 hash
-            async function getImgHash() {
+            async function handle_valicator_avatar() {
                 let { avatar, avatar_hash } = window.data.me
                 let file = $avatar.prop('files')[0]
 
-                //  確認更新的 avatar 是否與原 avatar 相同
-                let hash = await _getMD5Hash(file)
-
-                if (hash !== avatar_hash) {
-                    UI_valiate($avatar, true)
-                    window.payload.hash = hash
+                //  校驗檔案格式(jpg png)
+                let ext = reg_ext.exec(file.name)[1]
+                ext = ext.toLowerCase().trim()
+                if (ext !== 'jpg' && ext !== 'png') {
+                    resetPayload()
+                    alert('只能傳jpg跟png啦!')
                     return
                 }
-                $avatar.val('')
-                window.payload.hash = undefined
-                console.log('清空了')
-                console.log($avatar.prop('files'))
-                alert('你的頭現在就是這樣啦! ok?')
 
+                //  確認更新的 avatar 是否與原 avatar 相同
+                let hash = await _getMD5Hash(file)
+                if (hash === avatar_hash) {
 
+                    resetPayload()
+                    alert('你的頭現在就是這樣啦! ok?')
+                    return
+                }
 
-
-
+                //  通過校驗
+                UI_valiate($avatar, true)
+                window.payload = { hash, ext, api: `${window.payload.api}?hash=${hash}&ext=${ext}` }
                 return
             }
 
@@ -256,13 +238,26 @@ return
             }
 
             //  清空 input[type=file] #avatar
-            function resetFile() {
-                
-                if ($avatar.prop('files')[0]) {
-                    confirm('要重新傳一顆頭嗎?') && $avatar.val('')
-                    window.payload.hash = undefined
+            function resetFile(e) {
+                if (!$avatar.prop('files')[0]) {
+                    return
                 }
+                if (confirm('要重新傳一顆頭嗎?')) {
+                    resetPayload()
+                } else {
+                    e.preventDefault()
+                }
+                return
+            }
 
+            function resetPayload() {
+                $avatar.val('')
+                window.payload = {
+                    hash: undefined,
+                    ext: undefined,
+                    api: '/api/user'
+                }
+                UI_valiate($avatar)
             }
 
 
@@ -347,13 +342,11 @@ return
                 let num_valid = 0
                 let num_invalid = 0
                 $('input').each((index, item) => {
-                    console.log(item, $(item).hasClass('is-invalid'))
                     $(item).hasClass('is-valid') && num_valid++
                     $(item).hasClass('is-invalid') && num_invalid++
                 })
-                console.log(num_valid, num_invalid)
                 let ok = num_valid > 0 && num_invalid < 1
-                console.log(ok)
+        
                 $submit.prop('disabled', !ok)
             }
 

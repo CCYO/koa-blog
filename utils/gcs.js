@@ -44,7 +44,7 @@ async function _parse(ctx, bar, formidableIns) {
                 reject(err)
                 return
             }
-            if (!bar.promise){
+            if (!bar.ref){
                 console.log('# 沒有avatar上傳')
                 resolve({ fields , files})
                 return
@@ -139,7 +139,7 @@ const _gen_formidable = (bar) => {
  */
 async function parse(ctx, ref) {
     let bar = { ref, _promise: undefined }
-    form = _gen_formidable(ref, _promise)
+    form = _gen_formidable(bar)
     return await _parse(ctx, bar, form)
 }
 

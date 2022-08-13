@@ -6,14 +6,25 @@ const { storage } = require('../db/firebase')
 
 const { parse } = require('../utils/gcs')
 
+const { ErrModel } = require('../model')
+const { UPDATE: { AVATAR_FORMAT_ERR } } = require('../model/errRes')
+
 const { GCS_ref: { AVATAR } } = require('../conf/constant')
+
+
 
 async function parse_user_data(ctx, next) {
     //  avatar_hash = 0 代表沒有 avatar 圖檔，反之則有
-    let { avatar_hash, ext } = ctx.query
+    
+    let { hash, ext } = ctx.query ? ctx.query : {}
     let ref = undefined
-    if(avatar_hash){
-        let filename = `${AVATAR}${avatar_hash}.jpg`
+    console.log(hash,ext)
+    if(hash){
+        if(ext !== 'jpg' && ext !== 'png'){
+            ctx.body = new ErrModel(AVATAR_FORMAT_ERR)
+            return
+        }
+        let filename = `${AVATAR}/${hash}.${ext}`
         let file_gcs = storage.bucket().file(filename)
         let [exist] = await file_gcs.exists()
         ref = exist ? undefined : file_gcs
@@ -24,8 +35,8 @@ async function parse_user_data(ctx, next) {
     if (fields.age) {
         fields.age = fields.age * 1
     }
-    if (avatar_hash) {
-        ctx.request.body = { ...ctx.request.body, ...fields, avatar: ref.publicUrl(), avatar_hash }
+    if (hash) {
+        ctx.request.body = { ...ctx.request.body, ...fields, avatar: ref.publicUrl(), avatar_hash: hash }
     }else{
         ctx.request.body =  { ...ctx.request.body, ...fields }
     }
