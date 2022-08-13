@@ -35,21 +35,24 @@ async function upload_jpg(ctx) {
  * @returns {promise} 成功為null，失敗則為error
  */
 async function _parse(ctx, bar, formidableIns) {
-    let { ref, promise } = bar
+    // let { ref, promise } = bar
+
     return new Promise((resolve, reject) => {
         formidableIns.parse(ctx.req, async (err, fields, files) => {
             if (err) {
-                console.log('formidable 解析發生錯誤')
+                console.log('# formidable 解析發生錯誤')
                 reject(err)
                 return
             }
-            if (!promise){
-                resolve({ fields })
+            if (!bar.promise){
+                console.log('# 沒有avatar上傳')
+                resolve({ fields , files})
                 return
             }
 
             try {
-                await promise
+                console.log('@bar.promise => ', bar.promise)
+                await bar.promise
                 //#region makePublic RV的組成
                 /**
                  * [
@@ -67,13 +70,12 @@ async function _parse(ctx, bar, formidableIns) {
                  * ]
                  */
                 //#endregion
-                await ref.makePublic()
-                console.log('upload file to GCS & formidable 解析完成')
-                // resolve({ fields, files })
-                resolve({ fields })
+                await bar.ref.makePublic()
+                console.log('# upload file to GCS & formidable 解析完成')
+                resolve({ fields, files })
                 return
             } catch (e) {
-                console.log('upload file to GCS 發生錯誤')
+                console.log('# upload file to GCS 發生錯誤')
                 reject(e)
                 return
             }
@@ -87,10 +89,10 @@ async function _parse(ctx, bar, formidableIns) {
  * @returns {object} writeableStream 可寫流
  */
 const _gen_formidable = (bar) => {
-    let file = bar.ref
+    
     let Ops = {}
 
-    if (file) {
+    if (bar.ref) {
         /** fileWriteStream 第一個參數的組成
          * VolatileFile {
          *    _events: [Object: null prototype] { error: [Function (anonymous)] },
@@ -109,8 +111,8 @@ const _gen_formidable = (bar) => {
          *    [Symbol(kCapture)]: false
          * }
          */
-        Ops.fileWriteStreamHandler = function() {
-            let ws = file.createWriteStream({
+        Ops.fileWriteStreamHandler = function() {   //  fileWriteStreamHandler 在調用 formidable.parse 時，才會作為 CB 調用
+            let ws = bar.ref.createWriteStream({
                 //  圖檔設定不作緩存，參考資料：https://cloud.google.com/storage/docs/metadata#caching_data
                 metadata: {
                     contnetType: 'image/jpeg',
@@ -136,8 +138,8 @@ const _gen_formidable = (bar) => {
  * @returns 
  */
 async function parse(ctx, ref) {
-    let bar = { ref, promise: undefined }
-    form = _gen_formidable(bar)
+    let bar = { ref, _promise: undefined }
+    form = _gen_formidable(ref, _promise)
     return await _parse(ctx, bar, form)
 }
 

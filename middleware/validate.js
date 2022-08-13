@@ -14,12 +14,14 @@ const { FORMAT_ERR } = require('../model/errRes')
 const validate_user = async (ctx, next) => {
     let errors
     let action
-    let { method, path} = ctx
+    let { method, path } = ctx
+
     let reg = /\/api\/user(.+?)(\/)?$/
-    path = reg.exec(path)[1]
-    let condition = `${method}-${path}`
-    console.log('@ ===> ', condition)
-    switch (method === 'PATCH' && 'PATCH-/' || condition) {
+    let _path = reg.exec(path)
+
+    let condition = _path ? `${method}-${_path[1]}` : 'PATCH-/'
+    
+    switch (condition) {
         case 'POST-/isEmailExist':
             action = '信箱確認'
             errors = validator_user('email', ctx.request.body)

@@ -65,7 +65,7 @@ router.get('/logout', api_check_login, async (ctx, next) => {
 })
 
 //  setting //validate_user ,
-router.patch('/:avatar_hash', api_check_login, parse_user_data, validate_user, async(ctx, next) => {
+router.patch('/', api_check_login, parse_user_data, validate_user, async(ctx, next) => {
     let res = await modifyUserInfo(ctx)
     ctx.session.user = res.data
     ctx.body = res

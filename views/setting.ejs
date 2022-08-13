@@ -68,6 +68,7 @@
                 hash: undefined,    //  存放 $avatar 檔案的 hash
             }
 
+            let reg_ext = /.+\.(.*)$/
 
             let $avatar = $('#avatar')
             let $form = $('form').first()
@@ -113,14 +114,14 @@
                     return
                 }
 
+                if (key === 'age') {    //  如果是age，將類型轉為number
+                    val *= 1
+                }
+
                 if (val === me[key]) {  //  如果是既有值，發生錯誤
                     //  顯示錯誤提醒
                     UI_valiate($el, false, '現在就是了，賣鬧')
                     return
-                }
-
-                if (key === 'age') {    //  如果是age，將類型轉為number
-                    val *= 1
                 }
 
                 //  如果是有效值，使用ajv校驗
@@ -152,24 +153,37 @@
                 let { hash } = window.payload
                 let formData = new FormData()
 
-                let api_user = '/api/user/'
+                let api_user = '/api/user'
 
                 if (hash) { //  若要更新頭像
-                    api_user += hash
-                } else {    //  若不更新頭像
-                    api_user += '0'
+                    
                 }
 
+                let json = undefined
+                
                 //  
                 for (item of e.target) {
                     let { type, name, value } = item
-                    if (type === 'file' && item.files[0]) {
-                        formData.append('avatar', item.files[0])
-                    } else if (type !== 'submit' && value) {
-                        console.log('@ => ', { [name]: value })
+                    if(!value){
+                        continue
+                    }
+                    
+                    if(name === 'age'){
+                        value *= 1
+                    }
+
+                    if (type === 'file' ) {
+
+                        let img = item.files && item.files[0]
+                        
+                        api_user += `?avatar_hash=${hash}`
+                        // let img = item.files[0]
+                        
+                        let ext = reg_ext.exec(img.name)[1]
+                        formData.append('avatar', img)
+                    } else if (type !== 'submit' && value) {    
                         let err = window.valicate({ [name]: value })
 
-                        console.log('@err => ', err)
                         if (err) {
                             alert(`${name}格式有誤`)
                             return
@@ -177,7 +191,7 @@
                         formData.append(name, value)
                     }
                 }
-
+return
 
                 let {
                     data: {
@@ -210,6 +224,7 @@
                     return
                 }
                 $avatar.val('')
+                window.payload.hash = undefined
                 console.log('清空了')
                 console.log($avatar.prop('files'))
                 alert('你的頭現在就是這樣啦! ok?')
@@ -245,7 +260,7 @@
                 
                 if ($avatar.prop('files')[0]) {
                     confirm('要重新傳一顆頭嗎?') && $avatar.val('')
-                    
+                    window.payload.hash = undefined
                 }
 
             }

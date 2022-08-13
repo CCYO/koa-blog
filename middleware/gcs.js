@@ -6,39 +6,29 @@ const { storage } = require('../db/firebase')
 
 const { parse } = require('../utils/gcs')
 
+const { GCS_ref: { AVATAR } } = require('../conf/constant')
+
 async function parse_user_data(ctx, next) {
     //  avatar_hash = 0 代表沒有 avatar 圖檔，反之則有
-    let { avatar_hash } = ctx.params
-    let file_gcs = (avatar_hash != 0) ? storage.bucket().file(`avatar/${avatar_hash}.jpg`) : null
-    let [exist] = (avatar_hash != 0) ? await file_gcs.exists() : [false]
-    //  正常修改
-    let file =
-        //  avatar不改
-        (avatar_hash == 0) ? null :
-        //  avatar要改，判斷GCS是否已有該檔
-        (!exist) ? file_gcs : null
+    let { avatar_hash, ext } = ctx.query
+    let ref = undefined
+    if(avatar_hash){
+        let filename = `${AVATAR}${avatar_hash}.jpg`
+        let file_gcs = storage.bucket().file(filename)
+        let [exist] = await file_gcs.exists()
+        ref = exist ? undefined : file_gcs
+    }
 
-    ctx._my =
-        //  若avatar不改 || GCS已有圖檔
-        (!file) ? {} :
-        //  若avatar有新檔要上傳GCS
-        { file }
-
-    let { fields, files } = await parse(ctx, file)
+    let { fields } = await parse(ctx, ref)
+    
     if (fields.age) {
         fields.age = fields.age * 1
     }
-    if (avatar_hash != 0) {
-        fields = { ...fields, avatar_hash: file }
+    if (avatar_hash) {
+        ctx.request.body = { ...ctx.request.body, ...fields, avatar: ref.publicUrl(), avatar_hash }
+    }else{
+        ctx.request.body =  { ...ctx.request.body, ...fields }
     }
-
-    delete ctx._my
-
-    ctx.request.body =
-        //  若avatar不用改
-        (avatar_hash == 0) ? { ...ctx.request.body, ...fields } :
-            //  若avatar有需要改
-            { ...ctx.request.body, ...fields, avatar: file_gcs.publicUrl(), avatar_hash }
 
     await next()
 }
