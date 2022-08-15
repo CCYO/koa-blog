@@ -1,15 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <!-- BS5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
-</head>
+<%- include('wedgets/common/header') %>
 
 <body>
     <%- include('wedgets/navbar/index') %>
@@ -87,6 +76,7 @@
                 let formData = new FormData()
 
                 for (item of e.target) {
+                    console.log(123)
                     let { type, name, value } = item
                     if (!value) {
                         continue
@@ -95,21 +85,20 @@
                     if (name === 'age') {
                         value *= 1
                     }
-
-                    if (name === 'avatar') {
-                        formData.append('avatar', item.files[0])
-                    } else 
                     
                     if (type !== 'submit' && name !== 'avatar') {
                         let err = window.valicate({ [name]: value })
                         err && alert(`${name}格式有誤`)
-                        return
+                        console.log('格式沒問題')
                     }
 
                     let data = name === 'avatar' ? item.files[0] : value
                     formData.append(name, data)
+                    
                 }
 
+                window.ddd = formData
+                console.log(444)
                 let {
                     data: {
                         errno,

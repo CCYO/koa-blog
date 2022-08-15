@@ -131,6 +131,7 @@ router.get('/setting', view_check_login, async (ctx, next) => {
     let { data: newsList } = await getNewsByUserId(me.id)
 
     await ctx.render('setting', {
+        title: `${me.nickname}的個資`,
         //  導覽列數據
         newsList,
         logging: true,

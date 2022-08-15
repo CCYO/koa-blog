@@ -16,6 +16,7 @@ const { GCS_ref: { AVATAR } } = require('../conf/constant')
 async function parse_user_data(ctx, next) {    
     let { hash, ext } = ctx.query ? ctx.query : {}
     let ref = undefined
+    
     if(hash){
         if(ext !== 'jpg' && ext !== 'png'){
             ctx.body = new ErrModel(AVATAR_FORMAT_ERR)
@@ -24,9 +25,10 @@ async function parse_user_data(ctx, next) {
         let filename = `${AVATAR}/${hash}.${ext}`
         let file_gcs = storage.bucket().file(filename)
         let [exist] = await file_gcs.exists()
+        console.log('@exist => ', exist)
         ref = exist ? undefined : file_gcs
     }
-
+    
     let { fields } = await parse(ctx, ref)
     
     if (fields.age) {

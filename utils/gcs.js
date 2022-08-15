@@ -40,7 +40,7 @@ async function _parse(ctx, bar, formidableIns) {
     return new Promise((resolve, reject) => {
         formidableIns.parse(ctx.req, async (err, fields, files) => {
             if (err) {
-                console.log('# formidable 解析發生錯誤')
+                console.log('# formidable 解析發生錯誤 => \n', err)
                 reject(err)
                 return
             }
@@ -49,10 +49,9 @@ async function _parse(ctx, bar, formidableIns) {
                 resolve({ fields , files})
                 return
             }
-
+            
             try {
-                console.log('@bar.promise => ', bar.promise)
-                await bar.promise
+                await bar._promise
                 //#region makePublic RV的組成
                 /**
                  * [
@@ -75,7 +74,7 @@ async function _parse(ctx, bar, formidableIns) {
                 resolve({ fields, files })
                 return
             } catch (e) {
-                console.log('# upload file to GCS 發生錯誤')
+                console.log('# upload file to GCS 發生錯誤 => \n', e)
                 reject(e)
                 return
             }
@@ -120,11 +119,12 @@ const _gen_formidable = (bar) => {
                 }
             })
             //  為 bar.promise 綁定 GCS 上傳的promise，以便捕撈錯誤
-            bar.promise = new Promise((resolve, reject) => {
+            bar._promise = new Promise((resolve, reject) => {
                 ws
                     .on('finish', resolve)
                     .on('error', reject)
             })
+            console.log('@bar 調用fileWriteStreamHandler時 => ', bar)
             return ws
         }
     }
@@ -139,7 +139,8 @@ const _gen_formidable = (bar) => {
  */
 async function parse(ctx, ref) {
     let bar = { ref, _promise: undefined }
-    form = _gen_formidable(bar)
+    let form = _gen_formidable(bar)
+    console.log('完成formidable實例生成')
     return await _parse(ctx, bar, form)
 }
 
