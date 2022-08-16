@@ -6,15 +6,28 @@ const formidable = require('formidable')
 
 const { storage } = require('../db/firebase')
 
+const { GCS_ref: { BLOG }} = require('../conf/constant')
+
 /**
  * 將jpg圖檔上傳GCS
  * @param {object} ctx 含代表「JPG圖檔hash」的 ctx.params.hash
  * @returns {string} 完成此次JPG圖檔上傳GCS後，該圖檔的公開url
  */
-async function upload_jpg(ctx) {
-    let { hash } = ctx.query
+async function upload_img(ctx) {
+    let { hash, ext } = ctx.query
+    if(ext !== 'jpg' && ext !== 'png'){
+        ctx.body = new ErrModel(AVATAR_FORMAT_ERR)
+        return
+    }
     //  建立GCS ref
-    let file_ref = storage.bucket().file(`blog/${hash}.jpg`)
+    let file_ref = storage.bucket().file(`${BLOG}/${hash}.${ext}`)
+
+
+
+    //  從這裡開始
+
+
+
     //  確認GCS是否有該圖檔
     let [exist] = await file_ref.exists()
     //  若GCS無該JPG圖，進行GCS上傳
@@ -146,5 +159,5 @@ async function parse(ctx, ref) {
 
 module.exports = {
     parse,
-    upload_jpg
+    upload_img
 }

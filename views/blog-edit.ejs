@@ -8,26 +8,35 @@
 
         #showBox {
             position: relative;
-            z-index: 999;
+            z-index: 1010;
         }
 
-        #hiddenBox {
-            position: absolute;
-            z-index: 888;
-            height: 100%;
-            width: 100%;
+        #backdrop {
+            position: fixed;
+            z-index: 1000;
+            /* height: 100%;
+            width: 100%; */
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
             background: rgba(200, 200, 200, 0.5);
+        }
+
+        #editor-container {
+            height: 400px;
+            min-height: 300px;
         }
     </style>
     <%- include('wedgets/navbar/index') %>
     <div class="container">
-        <div id='hiddenBox' class="<%= blog.title ? 'my-noshow' : 'my-show' %>"></div>
+        <div id='backdrop' class="<%= blog.title ? 'my-noshow' : 'my-show' %>"></div>
         <div id="showBox">
             <input type="text" id="title" value="<%= blog.title %>">
             <button id="updateTitle" class="<%= blog.title ? 'my-show' : 'my-noshow' %>">修改標題</button>
             <button id="createBlog" class="<%= blog.title ? 'my-noshow' : 'my-show' %>">創建BLOG</button>
         </div>
-        <div>
+        <div id="editor-wrapper">
             <div id="toolbar-container"></div>
             <div id="editor-container"></div>
         </div>
@@ -70,7 +79,7 @@
             //  定義 JQobj
             let $btn_updateTitle = $('#updateTitle')
             let $btn_createBlog = $('#createBlog')
-            let $hiddenBox = $('#hiddenBox')
+            let $backdrop = $('#backdrop')
             let $title = $('#title')
             let $checkbox_show = $('#show')
             let $save = $('#save')
@@ -132,7 +141,7 @@
                 }
 
                 //  獲取 html
-                let html_editor = my_xss(editor.getHtml().trim())
+                let html_editor = my_xss(window.editor.getHtml().trim())
 
                 if (html !== html_editor) {
                     //  若 editor 的 html 若有變化，提供給後端
@@ -140,7 +149,7 @@
                 }
 
                 //  撈出 editor 內的圖片url
-                let editorImgs = editor.getElemsByType('image').map(({ src }) => src)
+                let editorImgs = window.editor.getElemsByType('image').map(({ src }) => src)
                 editorImgs = [...new Set(editorImgs)]
 
                 /*  篩出要取消關聯的 img  */
@@ -185,7 +194,7 @@
 
                 if (!errno) {
                     if (removeImgs) {
-                        //  同步 window.blog.imgs 與 editor.image
+                        //  同步 window.blog.imgs 與 window.editor.image
                         window.data.blog.imgs = imgs.filter(({ blogImg_id }) => {
                             return !removeImgs.includes(blogImg_id)
                         })
@@ -229,7 +238,7 @@
                     window.data.blog.title = newTitle
 
                     $btn_updateTitle.prop('disabled', true)
-                    editor.focus(true)
+                    window.editor.focus(true)
 
                     alert('標題修改完成')
                 } else {
@@ -251,6 +260,7 @@
 
                 if (!errno) {
                     alert('BLOG創立完成')
+                    document.title = '撰寫文章'
 
                     window.data.blog = {
                         ...window.data.blog,
@@ -261,9 +271,10 @@
 
                     $btn_createBlog.toggleClass(['my-show', 'my-noshow'])
                     $btn_updateTitle.toggleClass(['my-show', 'my-noshow']).prop('disabled', true)
-                    $hiddenBox.toggle(false)
+                    $backdrop.toggle(false)
 
-                    editor.focus(true)
+                    window.editor.enable()
+                    window.editor.focus(true)
 
                     // location.href = `/blog/edit/${data.id}`
                 } else {
@@ -348,11 +359,27 @@
                     mode: 'simple'
                 })
 
-                return editor
+                
+                !window.data.blog.title
+                    && editor.disable()     //  若是撰寫新文章，必須等標題創建好才能編寫
+                    || editor.focus(true)   //  若是撰寫舊新文章，自動聚焦在文章末段
+
+                window.editor = editor
             }
 
             //  editor的 自定義上傳圖片方法
             async function customUpload(img, insertFn) {
+                let reg_ext = /.+\.(.*)$/
+
+                //  校驗檔案格式(jpg png)
+                let ext = reg_ext.exec(file.name)[1]
+                ext = ext.toLowerCase().trim()
+                if (ext !== 'jpg' && ext !== 'png') {
+                    resetPayload()
+                    alert('只能傳jpg跟png啦!')
+                    return
+                }
+                
                 //  生成 img 的 hash(hex格式)
                 let { url, hash } = await _getImgHash(img)
 
@@ -360,7 +387,7 @@
                     /*  url無值，代表 window.blog.imgs 內無此圖 */
 
                     let { id } = window.data.blog
-                    let api = `${api_uploadImg}?blog_id=${id}&hash=${hash}`
+                    let api = `${api_uploadImg}?blog_id=${id}&hash=${hash}&ext=${ext}`
                     //  upload img
                     let formdata = new FormData()
                     formdata.append('blogImg', img)
@@ -372,7 +399,7 @@
                         }
                     } = await axios.post(api, formdata)
 
-                    if (!errno) {
+                    if (errno) {
                         /* 上傳成功 */
 
                         //  data { blogImg_id, id, name, url, hash }
@@ -393,13 +420,14 @@
 
             //  取得圖片的 hash
             async function _getImgHash(img) {
-                let imgs = window.data.blog.imgs
+
                 //  計算出 img 的 md5Hash(hex格式)
                 let md5hash = await _getMD5Hash(img)
                 let res = { hash: md5hash }
-                //  若blog.imgs有檔案
-                if (imgs.length) {
-                    //  利用 md5Hash 比對 blog 內是否已有該 img
+
+                let imgs = window.data.blog.imgs
+                if (imgs.length) {  //  若blog.imgs有檔案
+                    //  比對 blog 內是否已有該 img
                     let exist = imgs.some((img) => {
                         let { hash } = img
                         //  同hash，代表同img

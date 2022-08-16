@@ -76,7 +76,7 @@
                 let formData = new FormData()
 
                 for (item of e.target) {
-                    console.log(123)
+                    
                     let { type, name, value } = item
                     if (!value) {
                         continue
@@ -96,9 +96,7 @@
                     formData.append(name, data)
                     
                 }
-
-                window.ddd = formData
-                console.log(444)
+                
                 let {
                     data: {
                         errno,

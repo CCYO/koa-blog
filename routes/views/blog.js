@@ -22,7 +22,7 @@ router.get('/blog/new', view_check_login, async (ctx, next) => {
     const { data: newsList } = await getNewsByUserId(me.id)
 
     await ctx.render('blog-edit', {
-        title: '編輯文章',
+        title: '撰寫新文章',
         //  導覽列數據
         logging: true,
         active: 'editor',

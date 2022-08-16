@@ -6,19 +6,39 @@ const { Img } = require('../db/mysql/model')
  * @param {boolean} toJSON 是否轉為JSON格式
  * @returns {object|null} 若有找到，視toJSON而定，RV為 img Ins 或 { id, url, hash }，找不到則 null
  */
-async function readImg(data, toJSON = true) {
-    let img = await Img.findOne({ where: data })
+async function readImg({ hash, img_id, blog_id, imgName, createBlogImg = false }) {
+
+    let opts = {}
+
+    if (img_id) {
+        opts.where.img_id = img_id
+    }
+
+    if (hash) {
+        opts.where.hash = hash
+    }
+
+    let img = await Img.findOne({ opts })
 
     if (!img) {
         return null
     }
 
-    if (!toJSON) {
-        return img
+    let { id, url, hash } = img.toJSON()
+
+    let res = { id, url, hash }
+
+    if (!createBlogImg) {
+        return res
     }
 
-    let { id, url, hash } = img.toJSON()
-    return { id, url, hash }
+    let { id: blogImg_id , name } = (await img.addBlog(blog_id, { through: { name: imgName } })).toJSON()
+    
+    if (name) {
+        res.name = name
+    }
+
+    return { ...res, blogImg_id }
 }
 
 /**
