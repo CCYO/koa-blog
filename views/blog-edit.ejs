@@ -372,7 +372,7 @@
                 let reg_ext = /.+\.(.*)$/
 
                 //  校驗檔案格式(jpg png)
-                let ext = reg_ext.exec(file.name)[1]
+                let ext = reg_ext.exec(img.name)[1]
                 ext = ext.toLowerCase().trim()
                 if (ext !== 'jpg' && ext !== 'png') {
                     resetPayload()
@@ -399,7 +399,7 @@
                         }
                     } = await axios.post(api, formdata)
 
-                    if (errno) {
+                    if (!errno) {
                         /* 上傳成功 */
 
                         //  data { blogImg_id, id, name, url, hash }

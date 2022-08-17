@@ -6,7 +6,7 @@ const { storage } = require('../db/firebase')
 
 const { parse } = require('../utils/gcs')
 
-const { ErrModel } = require('../model')
+const { ErrModel, SuccModel } = require('../model')
 const { UPDATE: { AVATAR_FORMAT_ERR } } = require('../model/errRes')
 
 const { GCS_ref: { AVATAR } } = require('../conf/constant')
@@ -14,6 +14,21 @@ const { GCS_ref: { AVATAR } } = require('../conf/constant')
 
 
 async function parse_user_data(ctx, next) {    
+
+    let res = await parse(ctx, ref)
+
+    if(!res){
+        ctx.body = new ErrModel(AVATAR_FORMAT_ERR)
+        return
+    }
+
+    if(res.age){
+        res.age *= 1
+    }
+    res = {...res, avatar_hash: ctx.query.hash}
+    ctx.body = new SuccModel(res)
+    return
+
     let { hash, ext } = ctx.query ? ctx.query : {}
     let ref = undefined
     

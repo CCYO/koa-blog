@@ -6,7 +6,7 @@ const formidable = require('formidable')
 
 const { storage } = require('../db/firebase')
 
-const { GCS_ref: { BLOG }} = require('../conf/constant')
+const { GCS_ref: { BLOG, AVATAR } } = require('../conf/constant')
 
 /**
  * 將jpg圖檔上傳GCS
@@ -14,22 +14,8 @@ const { GCS_ref: { BLOG }} = require('../conf/constant')
  * @returns {string} 完成此次JPG圖檔上傳GCS後，該圖檔的公開url
  */
 async function upload_img(ctx) {
-    let { hash, ext } = ctx.query
-    if(ext !== 'jpg' && ext !== 'png'){
-        ctx.body = new ErrModel(AVATAR_FORMAT_ERR)
-        return
-    }
-    //  建立GCS ref
-    let file_ref = storage.bucket().file(`${BLOG}/${hash}.${ext}`)
 
 
-
-    //  從這裡開始
-
-
-
-    //  確認GCS是否有該圖檔
-    let [exist] = await file_ref.exists()
     //  若GCS無該JPG圖，進行GCS上傳
     if (!exist) {
         await parse(ctx, file_ref)
@@ -57,12 +43,12 @@ async function _parse(ctx, bar, formidableIns) {
                 reject(err)
                 return
             }
-            if (!bar.ref){
+            if (!bar.ref) {
                 console.log('# 沒有avatar上傳')
-                resolve({ fields , files})
+                resolve({ fields, files })
                 return
             }
-            
+
             try {
                 await bar._promise
                 //#region makePublic RV的組成
@@ -101,7 +87,7 @@ async function _parse(ctx, bar, formidableIns) {
  * @returns {object} writeableStream 可寫流
  */
 const _gen_formidable = (bar) => {
-    
+
     let Ops = {}
 
     if (bar.ref) {
@@ -123,7 +109,7 @@ const _gen_formidable = (bar) => {
          *    [Symbol(kCapture)]: false
          * }
          */
-        Ops.fileWriteStreamHandler = function() {   //  fileWriteStreamHandler 在調用 formidable.parse 時，才會作為 CB 調用
+        Ops.fileWriteStreamHandler = function () {   //  fileWriteStreamHandler 在調用 formidable.parse 時，才會作為 CB 調用
             let ws = bar.ref.createWriteStream({
                 //  圖檔設定不作緩存，參考資料：https://cloud.google.com/storage/docs/metadata#caching_data
                 metadata: {
@@ -137,7 +123,6 @@ const _gen_formidable = (bar) => {
                     .on('finish', resolve)
                     .on('error', reject)
             })
-            console.log('@bar 調用fileWriteStreamHandler時 => ', bar)
             return ws
         }
     }
@@ -150,7 +135,37 @@ const _gen_formidable = (bar) => {
  * @param {string} ref GCS_file_ref
  * @returns 
  */
-async function parse(ctx, ref) {
+// async function parse(ctx, ref) {
+async function parse(ctx) {
+    let { hash, ext, blog_id } = ctx.query
+    if (ext !== 'jpg' && ext !== 'png') {
+        // ctx.body = new ErrModel(AVATAR_FORMAT_ERR)
+        return undefined
+        return new ErrModel(AVATAR_FORMAT_ERR)
+
+    }
+
+    let prefix = blog_id ? BLOG : AVATAR
+
+    //  建立GCS ref
+    let ref = storage.bucket().file(`${prefix}/${hash}.${ext}`)
+
+    let res = {}
+
+
+    //  確認GCS是否有該圖檔
+    let [exist] = await ref.exists()
+
+    if (!exist || !blog_id) {
+        let bar = { ref, _promise: undefined }
+        let form = _gen_formidable(bar)
+        let { fields } = await _parse(ctx, bar, form)
+        res = fields ? { ...fields } : {}
+    }
+    res[prefix] = ref.publicUrl()
+
+    return res
+
     let bar = { ref, _promise: undefined }
     let form = _gen_formidable(bar)
     console.log('完成formidable實例生成')
