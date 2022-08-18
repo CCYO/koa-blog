@@ -71,4 +71,18 @@ router.patch('/', api_check_login, parse_user_data, validate_user, async(ctx, ne
     ctx.body = res
 })
 
+const axios = require('axios')
+router.get('/imgg' , async(ctx, next) => {
+    let res = await axios.get('https://storage.googleapis.com/koa-blog-a003ccy.appspot.com/blogImg/046fabe56a4deaf4ea92625b9aed8a84.jpg', {responseType: 'stream'})
+    res.data.on('data', () => { console.log('@ =========> data')})
+    console.log('@res => ', res)
+    console.log('@ res.headers => ', res.headers)
+    console.log('@ res.header[content-type] => ', res.headers['content-type'])
+    ctx.response.set('Content-Type', res.headers['content-type'])
+    
+    ctx.res.on('pipe', (x) => console.log('@ =================================> go'))
+    ctx.res.on('finish', (x) => console.log('@ =================================> finish'))
+    ctx.body = res.data
+})
+
 module.exports = router

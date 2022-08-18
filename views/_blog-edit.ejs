@@ -264,8 +264,7 @@
 
                     window.data.blog = {
                         ...window.data.blog,
-                        ...data,    //  { id, title, html, show, showAt, createdAt, updatedAt }
-                        imgs: []
+                        ...data    //  { id, title, html, show, showAt, createdAt, updatedAt }
                     }
 
                     $title.on('input', handle_valicate_title)
@@ -388,7 +387,7 @@
                     /*  url無值，代表 window.blog.imgs 內無此圖 */
 
                     let { id } = window.data.blog
-                    let api = `${api_uploadImg}?hash=${hash}&ext=${ext}&blog_id=${id}`
+                    let api = `${api_uploadImg}?blog_id=${id}&hash=${hash}&ext=${ext}`
                     //  upload img
                     let formdata = new FormData()
                     formdata.append('blogImg', img)

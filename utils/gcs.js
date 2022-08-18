@@ -163,7 +163,7 @@ async function parse(ctx) {
         res = fields ? { ...fields } : {}
     }
     res[prefix] = ref.publicUrl()
-
+console.log('@ => ', res)
     return res
 
     let bar = { ref, _promise: undefined }

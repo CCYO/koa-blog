@@ -1,5 +1,7 @@
 const { Img } = require('../db/mysql/model')
 
+const { init_img, init_blogImg } = require('../utils/init')
+
 /**
  * 查找 img 紀錄
  * @param {object} data 查找 img 所需的 where
@@ -54,19 +56,19 @@ async function readImg({ hash, img_id, blog_id, imgName, createBlogImg }) {
  * @param {boolean} toJSON 是否轉為JSON格式
  * @returns {object} 視toJSON而定，RV為 img Ins 或 { id, url, hash }
  */
- async function createImg({hash, url, blog_id, createBlogImg}) {
+ async function createImg({hash, url, blog_id}) {
 
     const img = await Img.create({hash, url})
 
-    const { id } = img.toJSON()
+    let res = init_img(img)
 
-    let res = { id, url, hash }
-
-    if (!createBlogImg) {
+    if (!blog_id) { // 沒有 blog_id，代表不用作關聯
         return res
     }
 
-    let { id: blogImg_id , name } = (await img.addBlog(blog_id))[0].toJSON()
+    let blogImg = await img.addBlog(blog_id)
+
+    let { id: blogImg_id, name } =  init_blogImg(blogImg)
     
     if (name) {
         res.name = name
