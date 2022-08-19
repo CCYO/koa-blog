@@ -8,25 +8,20 @@ const { init_img, init_blogImg } = require('../utils/init')
  * @param {boolean} toJSON 是否轉為JSON格式
  * @returns {object|null} 若有找到，視toJSON而定，RV為 img Ins 或 { id, url, hash }，找不到則 null
  */
-async function readImg({ hash, img_id, blog_id, imgName, createBlogImg }) {
+async function readImg({ hash, img_id, blog_id }) {
 
-    let opts = { where: {}}
+    let opts = { where: {} }
 
     if (img_id) {
-        console.log('@加入id => ', img_id)
         opts.where.id = img_id
     }
 
     if (hash) {
-        console.log('@加入hash => ', hash)
         opts.where.hash = hash
     }
 
-    console.log('@opts => ', opts)
-    console.log('@opts.where => ', opts.where)
     let img = await Img.findOne(opts)
 
-    console.log('@img => ', img)
     if (!img) {
         return null
     }
@@ -35,19 +30,17 @@ async function readImg({ hash, img_id, blog_id, imgName, createBlogImg }) {
 
     let res = { id, url, hash }
 
-    if (!createBlogImg) {
+    if (!blog_id) { //若沒有blog_id，代表不作關聯
         return res
     }
 
-    let xxx = (await img.addBlog(blog_id, { through: { name: imgName } }))
+    let args = [blog_id]
 
-    let { id: blogImg_id , name } = xxx[0].toJSON()
-    
-    if (name) {
-        res.name = name
-    }
+    let xxx = (await img.addBlog(blog_id))
 
-    return { ...res, blogImg_id }
+    let { id: blogImg_id, name } = xxx[0].toJSON()
+
+    return { ...res, blogImg_id, name }
 }
 
 /**
@@ -56,9 +49,9 @@ async function readImg({ hash, img_id, blog_id, imgName, createBlogImg }) {
  * @param {boolean} toJSON 是否轉為JSON格式
  * @returns {object} 視toJSON而定，RV為 img Ins 或 { id, url, hash }
  */
- async function createImg({hash, url, blog_id}) {
+async function createImg({ hash, url, blog_id }) {
 
-    const img = await Img.create({hash, url})
+    const img = await Img.create({ hash, url })
 
     let res = init_img(img)
 
@@ -68,13 +61,14 @@ async function readImg({ hash, img_id, blog_id, imgName, createBlogImg }) {
 
     let blogImg = await img.addBlog(blog_id)
 
-    let { id: blogImg_id, name } =  init_blogImg(blogImg)
+    let [{ id: blogImg_id, name }] = init_blogImg(blogImg)
     
     if (name) {
         res.name = name
     }
-
-    return { ...res, blogImg_id }
+    res = { ...res, blogImg_id }
+    
+    return res
 }
 
 

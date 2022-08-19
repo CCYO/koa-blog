@@ -1,4 +1,5 @@
 <%- include('wedgets/common/header') %>
+
 <body>
     <style>
         body {
@@ -130,9 +131,9 @@
 
             //  handle => 儲存 blog
             async function handle_saveBlog(e) {
-                let { id, title, imgs, show, showAt, html} = window.data.blog
+                let { id, title, imgs, show, showAt, html } = window.data.blog
                 //  要傳給後端更新的資料
-                let payload = {}
+                let payload = { id }
 
                 //  若title有新值，且未更新
                 let newTitle = my_xss($title.val().trim())
@@ -142,31 +143,41 @@
 
                 //  獲取 html
                 let html_editor = my_xss(window.editor.getHtml().trim())
-
+                
                 if (html !== html_editor) {
+                    
                     //  若 editor 的 html 若有變化，提供給後端
                     payload.html = html_editor
                 }
 
                 //  撈出 editor 內的圖片url
-                let editorImgs = window.editor.getElemsByType('image').map(({ src }) => src)
-                editorImgs = [...new Set(editorImgs)]
+                let editorImgs = window.editor.getElemsByType('image').map(({ alt, src }) => ({ alt, src }))
+                // editorImgs = [...new Set(editorImgs)]
 
-                /*  篩出要取消關聯的 img  */
-                let removeImgs = imgs.filter(item => {
-                    let { blogImg_id, url } = item
-                    return !editorImgs.includes(url)
+                /*  要更新或移除的 blogImg  */
+                payload.listOfBlogImg = { cancel: [], update: [] }
+
+                imgs.forEach(dataImg => {
+
+                    let { blogImg_id, url, name } = dataImg
+
+                    if (!editorImgs.length && imgs.length) {
+                        payload.listOfBlogImg.cancel.push(blogImg_id)
+                    }
+
+                    //  整理出要更新與移除的BlogImg
+                    editorImgs.reduce((initVal, { src, alt }) => {
+                        if (src !== url) {     //  若 editor 內不包含同樣的 url，移除該 blogImg
+                            initVal.cancel.push(blogImg_id)
+                        } else if (alt && alt !== name) {    //  若 editor 內包含同樣的 url，但 name 不同，更新該 blogImg
+                            initVal.update.push({ id: blogImg_id, name: alt })
+                        }
+                        return initVal
+                    }, payload.listOfBlogImg)
                 })
 
-                if (removeImgs.length) {
-                    removeImgs = removeImgs.map(({ blogImg_id }) => blogImg_id)
-                    payload.removeImgs = removeImgs
-                }
-
                 //  整理要提供給後端的 show 值
-                if (show !== patchData.show) {
-                    /* 設定的show 與 當前blog.show 不同 */
-
+                if (show !== patchData.show) {  //  設定的show 與 當前blog.show 不同
                     if (showAt === null && patchData.show) {
                         //  初次發佈
                         payload.show = 1
@@ -184,7 +195,7 @@
                     return
                 }
 
-                payload.id = id
+                console.log(payload)
 
                 const {
                     data: {
@@ -192,27 +203,19 @@
                     }
                 } = await axios.patch(api_blog, payload)
 
-                if (!errno) {
-                    if (removeImgs) {
-                        //  同步 window.blog.imgs 與 window.editor.image
-                        window.data.blog.imgs = imgs.filter(({ blogImg_id }) => {
-                            return !removeImgs.includes(blogImg_id)
-                        })
-                    }
-
-                    if (data.title) {
-                        //  同步 window.blog.title 與 資料庫title
-                        $title.val(data.title)
-                        $btn_updateTitle.prop('disabled', true)
-                    }
-
-                    //  同步 window.blog 與 資料庫
-                    window.data.blog = { ...window.data.blog, ...data }
-
-                    alert('blog save success!')
-                } else {
+                if (errno) {
                     alert('blog save error!')
                 }
+                if (payload.title) {
+                    //  同步 window.blog.title 與 資料庫title
+                    $title.val(payload.title)
+                    $btn_updateTitle.prop('disabled', true)
+                }
+
+                //  同步 window.blog 與 資料庫
+                window.data.blog = { ...window.data.blog, ...data }
+
+                alert('blog save success!')
             }
 
             //  handle => 修改 blog show 狀態
@@ -360,7 +363,7 @@
                     mode: 'simple'
                 })
 
-                
+
                 !window.data.blog.title
                     && editor.disable()     //  若是撰寫新文章，必須等標題創建好才能編寫
                     || editor.focus(true)   //  若是撰寫舊新文章，自動聚焦在文章末段
@@ -380,7 +383,7 @@
                     alert('只能傳jpg跟png啦!')
                     return
                 }
-                
+
                 //  生成 img 的 hash(hex格式)
                 let { url, hash } = await _getImgHash(img)
 

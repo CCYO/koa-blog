@@ -28,17 +28,21 @@ module.exports = {
         NOT_EXIST: { errno: 702, msg: 'BLOG不存在'},
         NO_UPDATE: { errno: 703, msg: 'BLOG資料更新失敗'},
         UPLOAD_IMG_ERR: { errno: 704 },
-        IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg關聯紀錄失敗'},
+        IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上'},
         BLOG_REMOVE_ERR: {errno: 706, msg: '刪除Blog失敗'}
     },
+    BLOGIMG: {
+        REMOVE_ERR: { errno: 801, msg: '刪除BlogImg時，數量對不上'},
+        UPDATE_ERR: { errno: 802, msg: '更新失敗'}
+    },
     FOLLOW: {
-        FOLLOW_ERR: { errno: 801, msg: '追蹤失敗'},
-        CANCEL_ERR: { errno: 802, msg: '取消追蹤失敗'},
-        CONFIRM_ERR: { errno: 803, msg: '確認追蹤消息失敗'}
+        FOLLOW_ERR: { errno: 901, msg: '追蹤失敗'},
+        CANCEL_ERR: { errno: 902, msg: '取消追蹤失敗'},
+        CONFIRM_ERR: { errno: 903, msg: '確認追蹤消息失敗'}
     },
     NEWS: {
-        FOLLOW_CONFIRM_ERR: { errno: 901, msg: 'Follow.confirm 更新失敗'},
-        BLOG_FANS_CONFIRM_ERR: { errno: 902, msg: 'Blog_Fans.confirm 更新失敗'},
-        FOLLOW_COMMENT_CONFIRM_ERR: { errno: 903, msg: 'Blog_Fans.confirm 更新失敗'}
+        FOLLOW_CONFIRM_ERR: { errno: 1001, msg: 'Follow.confirm 更新失敗'},
+        BLOG_FANS_CONFIRM_ERR: { errno: 1002, msg: 'Blog_Fans.confirm 更新失敗'},
+        FOLLOW_COMMENT_CONFIRM_ERR: { errno: 1003, msg: 'Blog_Fans.confirm 更新失敗'}
     }
 }

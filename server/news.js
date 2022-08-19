@@ -85,8 +85,9 @@ async function deleteBlog({ blogList_id, follower_id }) {
  
  */
 
-async function updateFB(data, options) {
-    options = { ...options, paranoid: false }
+async function updateFB(data, where) {
+    
+    let options = { where, paranoid: false }
     const [row] = await FB.update(data, options)
     return row
 }
