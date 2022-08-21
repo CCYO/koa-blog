@@ -154,7 +154,6 @@ function logout (ctx){
     return new SuccModel('成功登出')
 }
 
-
 async function getFansById(idol_id) {
     const fans = await readFans(idol_id)
     return new SuccModel(fans)
@@ -164,19 +163,6 @@ async function getIdolsById(idol_id) {
     const fans = await readIdols(idol_id)
     return new SuccModel(fans)
 }
-
-async function confirmFollow(fans_id, idol_id) {
-    const row = await updateFollow({ fans_id, idol_id }, { confirm: true })
-    if (row) return new SuccModel()
-    return new ErrModel(FOLLOW.CONFIRM_ERR)
-}
-
-
-
-
-
-
-
 
 module.exports = {
     isEmailExist,       // api user
@@ -188,9 +174,7 @@ module.exports = {
 
     getPeopleById,      // view user
 
-    modifyUserInfo,
-    getFansById,
-    getIdolsById,
-    
-    confirmFollow
+    modifyUserInfo,     //  api user
+    getFansById,        //  view user
+    getIdolsById,       //  view user
 }

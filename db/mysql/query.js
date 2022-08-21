@@ -10,7 +10,7 @@ const {
 const { seq } = require('./model')
 
 const { readUser } = require('../../server/user')
-const { readBlogById } = require('../../server/blog')
+const { readBlog } = require('../../server/blog')
 const { readComment } = require('../../server/comment')
 
 async function readNews({ userId, options}) {
@@ -125,7 +125,7 @@ async function _init_newsItemOfComfirmRoNot(item) {
         let { id: fans_id, nickname } = await readUser({ id: follow_id })
         return { ...res, fans: { id: fans_id, nickname } }
     } else if (type === 2) {
-        let { id: blog_id, title, author } = await readBlogById(target_id)
+        let { id: blog_id, title, author } = await readBlog({blog_id: target_id})
         return { ...res, blog: { id: blog_id, title, author: { id: author.id, nickname: author.nickname }}}
     }else if (type === 3) {
         

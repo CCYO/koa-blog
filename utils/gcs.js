@@ -14,8 +14,6 @@ const { GCS_ref: { BLOG, AVATAR } } = require('../conf/constant')
  * @returns {string} 完成此次JPG圖檔上傳GCS後，該圖檔的公開url
  */
 async function upload_img(ctx) {
-
-
     //  若GCS無該JPG圖，進行GCS上傳
     if (!exist) {
         await parse(ctx, file_ref)
@@ -112,10 +110,10 @@ const _gen_formidable = (bar) => {
         Ops.fileWriteStreamHandler = function () {   //  fileWriteStreamHandler 在調用 formidable.parse 時，才會作為 CB 調用
             let ws = bar.ref.createWriteStream({
                 //  圖檔設定不作緩存，參考資料：https://cloud.google.com/storage/docs/metadata#caching_data
-                metadata: {
-                    contnetType: 'image/jpeg',
-                    cacheControl: 'no-store'
-                }
+                // metadata: {
+                //     contnetType: 'image/jpeg',
+                //     cacheControl: 'no-cache'
+                // }
             })
             //  為 bar.promise 綁定 GCS 上傳的promise，以便捕撈錯誤
             bar._promise = new Promise((resolve, reject) => {
@@ -141,8 +139,6 @@ async function parse(ctx) {
     if (ext !== 'jpg' && ext !== 'png') {
         // ctx.body = new ErrModel(AVATAR_FORMAT_ERR)
         return undefined
-        return new ErrModel(AVATAR_FORMAT_ERR)
-
     }
 
     let prefix = blog_id ? BLOG : AVATAR
@@ -162,14 +158,8 @@ async function parse(ctx) {
         let { fields } = await _parse(ctx, bar, form)
         res = fields ? { ...fields } : {}
     }
-    res[prefix] = ref.publicUrl()
-console.log('@ => ', res)
+    res[prefix] = ref.publicUrl() + `?hash=${hash}`
     return res
-
-    let bar = { ref, _promise: undefined }
-    let form = _gen_formidable(bar)
-    console.log('完成formidable實例生成')
-    return await _parse(ctx, bar, form)
 }
 
 module.exports = {

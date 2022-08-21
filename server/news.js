@@ -1,14 +1,9 @@
-const { Op } = require('sequelize')
-
 const { NEWS: { LIMIT } } = require('../conf/constant')
 
 const {
-    seq,
-    FollowBlog: FB,
+    FollowBlog,
     FollowPeople,
-    FollowComment,
-
-    Follow, Blog
+    FollowComment
 } = require('../db/mysql/model')
 
 const rawQuery = require('../db/mysql/query')
@@ -38,72 +33,6 @@ async function readNews({ userId, markTime = new Date().toISOString(), listOfexc
     return { newsList, numOfUnconfirm, total, markTime, limit: LIMIT }
 }
 
-async function createFollowers({ blog_id, followerList_id }) {
-    let data = followerList_id.map(follower_id => ({ blog_id, follower_id }))
-    let res = await FB.bulkCreate((data))
-
-    return res
-}
-
-async function hiddenBlog({ blog_id }) {
-    let row = await FB.destroy({ where: { blog_id, confirm: false } })
-}
-
-async function restoreBlog({ blog_id }) {
-    let res = await FB.restore({ where: { blog_id } })
-
-}
-
-async function readFollowers({ blog_id, onlyId = true }) {
-    let res = await FB.findAll({
-        attributes: ['follower_id'],
-        where: { blog_id },
-    })
-
-    if (!res.length) {
-        return []
-    }
-
-    let followerList = res.map(item => {
-        let { follower_id } = item.toJSON()
-
-        return follower_id
-    })
-
-    return followerList
-}
-
-async function deleteBlog({ blogList_id, follower_id }) {
-    let res = await seq.getQueryInterface().bulkDelete('FollowBlogs', {
-        follower_id,
-        blog_id: { [Op.in]: blogList_id }
-    })
-    // return row
-}
-
-/**
- 
- */
-
-async function updateFB(data, where) {
-    
-    let options = { where, paranoid: false }
-    const [row] = await FB.update(data, options)
-    return row
-}
-
-//  未完成
-async function softDeleteNewsOfBlog(blog_id) {
-    await Blog_Follow.findAll({
-        where: { blog_id },
-
-        include: {
-            model: News,
-            where: { confirm: false }
-        }
-    })
-}
-
 async function updateFollowComfirm(list, data = { confirm: true }) {
     let [row] = await Follow.update(data, {
         where: { id: list }
@@ -128,7 +57,7 @@ async function updateNews({ people, blogs, comments }) {
     }
 
     if (blogs.length) {
-        let [rowOfBlogs] = await FB.update({ confirm: true }, { where: { id: blogs } })
+        let [rowOfBlogs] = await FollowBlog.update({ confirm: true }, { where: { id: blogs } })
         data.rowOfBlogs = rowOfBlogs
     } else {
         data.rowOfBlogs = 0
@@ -144,24 +73,8 @@ async function updateNews({ people, blogs, comments }) {
     return data
 }
 
-
-
-let FollowBlog = {
-    createFollowers,
-    hiddenBlog,
-    restoreBlog,
-    readFollowers,
-    deleteBlog,
-    updateFB
-}
-
 module.exports = {
     readNews,
-    
-    FollowBlog,
-    
-
-
     updateFollowComfirm,
     updateBlogFansComfirm,
     updateNews

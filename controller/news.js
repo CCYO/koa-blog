@@ -89,6 +89,6 @@ async function confirmNews(listOfNewsId) {
 
 module.exports = {
     getNewsByUserId,    //  view user
-    readMoreByUserId,   
-    confirmNews
+    readMoreByUserId,   //  api news
+    confirmNews         //  api news
 }

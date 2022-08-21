@@ -15,7 +15,7 @@ const { GCS_ref: { AVATAR } } = require('../conf/constant')
 
 async function parse_user_data(ctx, next) {    
 
-    let res = await parse(ctx, ref)
+    let res = await parse(ctx)
 
     if(!res){
         ctx.body = new ErrModel(AVATAR_FORMAT_ERR)

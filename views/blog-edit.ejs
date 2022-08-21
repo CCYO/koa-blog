@@ -143,42 +143,42 @@
 
                 //  獲取 html
                 let html_editor = my_xss(window.editor.getHtml().trim())
-                
+
                 if (html !== html_editor) {
-                    
                     //  若 editor 的 html 若有變化，提供給後端
                     payload.html = html_editor
                 }
 
                 //  撈出 editor 內的圖片url
                 let editorImgs = window.editor.getElemsByType('image').map(({ alt, src }) => ({ alt, src }))
-                // editorImgs = [...new Set(editorImgs)]
 
                 /*  要更新或移除的 blogImg  */
-                payload.listOfBlogImg = { cancel: [], update: [] }
+                let listOfBlogImg = { cancel: [], update: [] }
 
-                imgs.forEach(dataImg => {
-
-                    let { blogImg_id, url, name } = dataImg
-
-                    if (!editorImgs.length && imgs.length) {
-                        payload.listOfBlogImg.cancel.push(blogImg_id)
+                let listOfEditorImgSrc = editorImgs.map( ({src}) => src )
+                let list = []
+                imgs.forEach(( {url, name, blogImg_id}, ind ) => {
+                    if(!listOfEditorImgSrc.includes(url)){
+                        listOfBlogImg.cancel.push(blogImg_id)
+                    }else{
+                        list.push(imgs[ind])
                     }
-
-                    //  整理出要更新與移除的BlogImg
-                    editorImgs.reduce((initVal, { src, alt }) => {
-                        if (src !== url) {     //  若 editor 內不包含同樣的 url，移除該 blogImg
-                            initVal.cancel.push(blogImg_id)
-                        } else if (alt && alt !== name) {    //  若 editor 內包含同樣的 url，但 name 不同，更新該 blogImg
-                            initVal.update.push({ id: blogImg_id, name: alt })
-                        }
-                        return initVal
-                    }, payload.listOfBlogImg)
                 })
+                editorImgs.forEach(({src, alt}) => {
+                    list.forEach(item => {
+                        if(item.url === src && alt !== name){
+                            listOfBlogImg.update({ blogImg_id: item.blogImg_id, name })
+                        }
+                    })
+                })
+                
+                if(listOfBlogImg.cancel.length || listOfBlogImg.update.length){
+                    payload.listOfBlogImg = listOfBlogImg
+                }
 
                 //  整理要提供給後端的 show 值
                 if (show !== patchData.show) {  //  設定的show 與 當前blog.show 不同
-                    if (showAt === null && patchData.show) {
+                    if (!showAt && patchData.show) {
                         //  初次發佈
                         payload.show = 1
                     } else if (showAt && !patchData.show) {
@@ -190,12 +190,10 @@
                     }
                 }
 
-                if (!payload.show && !payload.html && !payload.title) {
+                if (!payload.hasOwnProperty('show') && !payload.html && !payload.title) {
                     alert('沒變動，別亂好嗎?')
                     return
                 }
-
-                console.log(payload)
 
                 const {
                     data: {
@@ -205,6 +203,7 @@
 
                 if (errno) {
                     alert('blog save error!')
+                    return
                 }
                 if (payload.title) {
                     //  同步 window.blog.title 與 資料庫title
@@ -268,7 +267,8 @@
                     window.data.blog = {
                         ...window.data.blog,
                         ...data,    //  { id, title, html, show, showAt, createdAt, updatedAt }
-                        imgs: []
+                        html: null,
+                        showAt: null
                     }
 
                     $title.on('input', handle_valicate_title)
@@ -347,6 +347,17 @@
                     //  (待補)自定義 upload imgage 失敗
                 }
 
+                //  插入圖片後的回調
+                editorConfig.MENU_CONF['insertImage'] = {
+                    onInsertedImage(imageNode) {
+                        if (imageNode == null) return
+
+                        const { src, alt, url, href } = imageNode
+                        imageNode.style.width = '100%'
+                        window.x = imageNode
+                        console.log('inserted image', imageNode, src, alt, url, href)
+                    }
+                }
                 // editor 創建
                 const editor = createEditor({
                     //  插入後端取得的 html
@@ -410,6 +421,7 @@
                         window.data.blog.imgs.push(data)
                         //  將圖片插入 editor
                         insertFn(data.url)
+
                     } else {
                         //  上傳失敗
                         alert(msg)

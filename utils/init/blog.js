@@ -27,7 +27,6 @@ function _init_blog(blog) {
     let json = blog.toJSON ? blog.toJSON() : blog
     //  { Img, User, Comment, ...blog}
     let { Imgs: imgList, User: author, Comments: comments, ...data } = json
-    author = init_user(author)
 
     let res = { ...data }
 

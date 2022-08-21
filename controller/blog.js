@@ -1,18 +1,15 @@
 const { Op } = require('sequelize')
-const moment = require('moment')
 const my_xxs = require('../utils/xss')
 
 const {
-    readFans,
-    readIdols
+    readFans
 } = require('../server/user')
 
 const {
     createBlog,
-    updateBlog,
-    cancelAssociateWidthImg,
     deleteBlog,
-    readBlogById,
+    updateBlog,
+    readBlog,
     readBlogList,
 } = require('../server/blog')
 
@@ -22,19 +19,16 @@ const {
 } = require('../server/blogImg')
 
 const {
-    FollowBlog: FB
-} = require('../server/news')
-
-const {
     createFollowers,
-    hiddenBlog
+    restoreBlog,
+    hiddenBlog,
+    readFollowers
 } = require('../server/followBlog')
 
 const { SuccModel, ErrModel } = require('../model')
 const { BLOG, BLOGIMG } = require('../model/errRes')
 
-/**
- * 建立 blog
+/** 建立 blog
  * @param { string } title 標題
  * @param { number } userId 使用者ID  
  * @returns SuccModel for { data: { id, title, html, show, showAt, createdAt, updatedAt }} || ErrModel
@@ -49,14 +43,41 @@ async function addBlog(title, user_id) {
     }
 }
 
-/**
- * 更新 blog
+/** 刪除 blog
+ * @param {number} blog_id 
+ * @returns {object} SuccModel || ErrModel
+ */
+async function removeBlog(blog_id) {
+    const res = await deleteBlog(blog_id)
+    if (res) return new SuccModel()
+    return new ErrModel(BLOG.BLOG_REMOVE_ERR)
+}
+
+/** 更新 blog
+ * 
  * @param {number} blog_id blog id
  * @param {object} blog_data 要更新的資料
  * @returns {object} SuccModel || ErrModel
  */
 async function modifyBlog(blog_id, blog_data, author_id) {
     let { title, listOfBlogImg, html, show } = blog_data
+
+    //  文章內沒有的圖片，刪除關聯
+    if (listOfBlogImg && listOfBlogImg.cancel.length) {
+        let res = await deleteBlogImg({ listOfId: listOfBlogImg.cancel })
+        if (!res) {
+            return new ErrModel(BLOGIMG.REMOVE_ERR)
+        }
+    }
+
+    //  更新文章內圖片的新資訊
+    if (listOfBlogImg && listOfBlogImg.update.length) {
+        let res = await updateBulkBlogImg(listOfBlogImg.update)
+        if (!res) {
+            return new ErrModel(BLOGIMG.UPDATE_ERR)
+        }
+    }
+
     let data = {}
 
     if (title) {
@@ -67,6 +88,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
         data.html = my_xxs(html)
     }
 
+    //  依show處理如何更新 BlogFollow
     if (show > 0) {
         if (show === 1) {
             /* 初次公開，將文章與粉絲作關聯 */
@@ -78,7 +100,10 @@ async function modifyBlog(blog_id, blog_data, author_id) {
                 //  取得粉絲群的id
                 let listOfFollowerId = followerList.map(({ id }) => id)
                 //  將粉絲與文章作關聯
-                await createFollowers({ blog_id, listOfFollowerId })
+                let res = await createFollowers({ blog_id, listOfFollowerId })
+                if (!res) {
+                    return new ErrModel(BLOG.UPDATE.ERR_CREATE_BLOGFOLLOW)
+                }
             }
             //  建立文章公開數據
             data.showAt = new Date()
@@ -88,7 +113,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             data.show = false
 
             //  FollowBlog 軟刪除 confirm: false 的 粉絲
-            await hiddenBlog({ blog_id })
+            await hiddenBlog({ blog_id, confirm: false })
 
         } else if (show === 3) {
             //  不是第一次公開
@@ -100,80 +125,42 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             //  先篩出距離上次公開，這期間新增的粉絲
 
             //  restory 此 blog 的 FollowBlog.follower，且將這些follower取出
-            // await FollowBlog.restoreBlog({ blog_id })
-            let r = await updateFollowBlog({
-                deletedAt: null, createdAt: new Date()
-            }, {
-                blog_id, deletedAt: { [Op.not]: null }
-            })
+            await restoreBlog({ blog_id })
 
-            //  從這裡開始
+            //  找出目前 BlogFollower
+            let listOfFollowerId = await readFollowers({ blog_id })
 
-
-
-
-            let followerList_id = await FB.readFollowers({ blog_id })
-
-            //  找出目前FollowPeople.fans
-            let fansList = await readFansByUserId(author_id)
-            if (fansList.length) {
-                fansList.forEach(({ id }) => fansList_id.push(id))
-            }
+            //  找出目前 FollowPeople.fans
+            let listOfFans = await readFans(author_id)
 
             //  篩去兩者重複的id
-            let newFollowerList_Id = fansList_id.filter(fans_id => {
-                return !followerList_id.includes(fans_id)
-            })
-
-            if (newFollowerList_Id.length) {
+            let listOfNewFollowerId = listOfFans.reduce(( initVal, {id}) => {
+                if(!listOfFollowerId.includes(id)){
+                    initVal.push(id)
+                }
+                return initVal
+            }, [])
+            
+            if (listOfNewFollowerId.length) {
                 //  新增FollowBlog.follower
-                await FB.createFollowers({ blog_id, followerList_id: newFollowerList_Id })
+                await createFollowers({ blog_id, listOfFollowerId: listOfNewFollowerId })
             }
-
         }
     }
 
-    if (listOfBlogImg && listOfBlogImg.cancel.length) {
-        let res = await deleteBlogImg({ listOfId: listOfBlogImg.cancel })
-        if (!res) {
-            return new ErrModel(BLOGIMG.REMOVE_ERR)
-        }
-    }
-
-    if (listOfBlogImg && listOfBlogImg.update.length) {
-        let res = await updateBulkBlogImg(listOfBlogImg.update)
-        if (!res) {
-            return new ErrModel(BLOGIMG.UPDATE_ERR)
-        }
-    }
-
-    let res = await updateBlog(blog_id, data)
-    if (!res) {
-        return new ErrModel(BLOG.NO_UPDATE)
-    }
+    //  更新文章數據
+    await updateBlog(blog_id, data)
 
     return await getBlog(blog_id)
 }
 
-/**
- * 刪除 blog
- * @param {number} blog_id 
- * @returns {object} SuccModel || ErrModel
- */
-async function removeBlog(blog_id) {
-    const res = await deleteBlog(blog_id)
-    if (res) return new SuccModel()
-    return new ErrModel(BLOG.BLOG_REMOVE_ERR)
-}
-
-/**
- * 取得 blog 紀錄
+/** 取得 blog 紀錄
+ * 
  * @param {number} blog_id blog id
  * @returns 
  */
 async function getBlog(blog_id, needComment = false) {
-    const blog = await readBlogById(blog_id, needComment)
-
+    const blog = await readBlog({ blog_id }, needComment)
     if (blog) {
         return new SuccModel(blog)
     } else {
@@ -181,8 +168,7 @@ async function getBlog(blog_id, needComment = false) {
     }
 }
 
-/**
- * 藉 userId 取得 blogList
+/** 取得 blogList
  * @param {number} user_id user id
  * @param {boolean} is_author 是否作者本人
  * @returns {object} SuccessModel

@@ -32,25 +32,40 @@ async function deleteFollower({follower_id, blog_id}) {
 
 async function createFollowers({blog_id, listOfFollowerId}){
     let data = listOfFollowerId.map( follower_id => ({ blog_id, follower_id}))
-    let res = await FollowBlog(data)
-    return res
+    console.log('@data => ', data)
+    let res = await FollowBlog.bulkCreate(data)
+    if(listOfFollowerId.length !== res.length){
+        return false
+    }
+    return true
 }
 
-async function hiddenBlog({ blog_id }) {
-    let row = await FollowBlog.destroy({ where: { blog_id, confirm: false } })
+async function hiddenBlog(opt_where) {
+    // let { blog_id, confirm } = opts
+    let where = { ...opt_where }
+    
+    let row = await FollowBlog.destroy({ where })
     return row
 }
 
-async function updateFollowBlog(data, options) {
-    options = { ...options, paranoid: false }
-    const [row] = await FollowBlog.update(data, options)
+async function restoreBlog(opt_where){
+    let where = { ...opt_where }
+
+    await FollowBlog.restore(where)
+}
+
+async function updateFollowBlog(newData, opt_where, options) {
+    let where = { ...opt_where }
+    let opts = { where, ...options }
+    const [row] = await FollowBlog.update(newData, opts)
     return row
 }
 
-async function readFollowers({ blog_id, onlyId = true }) {
+async function readFollowers(opt_where) {
+    let where = { ...opt_where }
     let res = await FollowBlog.findAll({
         attributes: ['follower_id'],
-        where: { blog_id },
+        where
     })
 
     if (!res.length) {
@@ -59,7 +74,6 @@ async function readFollowers({ blog_id, onlyId = true }) {
 
     let followerList = res.map(item => {
         let { follower_id } = item.toJSON()
-
         return follower_id
     })
 
@@ -67,8 +81,10 @@ async function readFollowers({ blog_id, onlyId = true }) {
 }
 
 module.exports = {
-    deleteFollower,
     createFollowers,
+    restoreBlog,
+    deleteFollower,
     hiddenBlog,
-    updateFollowBlog
+    updateFollowBlog,
+    readFollowers
 }
