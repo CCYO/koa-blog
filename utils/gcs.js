@@ -158,7 +158,7 @@ async function parse(ctx) {
         let { fields } = await _parse(ctx, bar, form)
         res = fields ? { ...fields } : {}
     }
-    res[prefix] = ref.publicUrl() + `?hash=${hash}`
+    res[prefix] = ref.publicUrl() //+ `?hash=${hash}`
     return res
 }
 

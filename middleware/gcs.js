@@ -25,8 +25,10 @@ async function parse_user_data(ctx, next) {
     if(res.age){
         res.age *= 1
     }
+
     res = {...res, avatar_hash: ctx.query.hash}
-    ctx.body = new SuccModel(res)
+    ctx.request.body = res
+    await next()
     return
 
     let { hash, ext } = ctx.query ? ctx.query : {}
