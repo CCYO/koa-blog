@@ -8,24 +8,7 @@ const { storage } = require('../db/firebase')
 
 const { GCS_ref: { BLOG, AVATAR } } = require('../conf/constant')
 
-/**
- * 將jpg圖檔上傳GCS
- * @param {object} ctx 含代表「JPG圖檔hash」的 ctx.params.hash
- * @returns {string} 完成此次JPG圖檔上傳GCS後，該圖檔的公開url
- */
-async function upload_img(ctx) {
-    //  若GCS無該JPG圖，進行GCS上傳
-    if (!exist) {
-        await parse(ctx, file_ref)
-    }
-    //  返回圖檔資訊
-    let url = file_ref.publicUrl()
-
-    return url
-}
-
-/**
- * 利用 formidable 進行 JPG圖檔上傳GCS
+/** 利用 formidable 進行 JPG圖檔上傳GCS
  * @param {object} ctx ctx
  * @param {object} bar 過渡用的，結構為{ ref: 代表GCS_file_ref, promise: 代表 formidable 作GCS上傳時，確認狀態的 promise }
  * @param {*} formidableIns formidable Ins
@@ -79,34 +62,14 @@ async function _parse(ctx, bar, formidableIns) {
     })
 }
 
-/**
- * 生成 formidable Ins
+/** 生成 formidable Ins
  * @param {object} bar 此物件負責提供建立 formidable Ins 之 fileWriteStreamHandler 方法的 file_ref 參數，且為了能撈取 fileWriteStreamHandler 運行 GCS上傳發生的錯誤，_gen_formidable 內部會在 bar 新增 promise 屬性
  * @returns {object} writeableStream 可寫流
  */
 const _gen_formidable = (bar) => {
-
     let Ops = {}
 
     if (bar.ref) {
-        /** fileWriteStream 第一個參數的組成
-         * VolatileFile {
-         *    _events: [Object: null prototype] { error: [Function (anonymous)] },
-         *    _eventsCount: 1,
-         *    _maxListeners: undefined,
-         *    lastModifiedDate: null,
-         *    filepath: '/tmp/9cd4640d94ec41a4e3a352400',
-         *    newFilename: '9cd4640d94ec41a4e3a352400',
-         *    originalFilename: '6097898.jpg',
-         *    mimetype: 'image/jpeg',
-         *    hashAlgorithm: false,
-         *    createFileWriteStream: [Function: fileWriteStreamHandler],
-         *    size: 0,
-         *    _writeStream: null,
-         *    hash: null,
-         *    [Symbol(kCapture)]: false
-         * }
-         */
         Ops.fileWriteStreamHandler = function () {   //  fileWriteStreamHandler 在調用 formidable.parse 時，才會作為 CB 調用
             let ws = bar.ref.createWriteStream({
                 //  圖檔設定不作緩存，參考資料：https://cloud.google.com/storage/docs/metadata#caching_data
@@ -127,13 +90,10 @@ const _gen_formidable = (bar) => {
     return formidable(Ops)
 }
 
-/**
- * 上傳檔案至GCS
+/** 上傳檔案至GCS
  * @param {object} ctx ctx.req 內含要上傳GCS的檔案
- * @param {string} ref GCS_file_ref
  * @returns 
  */
-// async function parse(ctx, ref) {
 async function parse(ctx) {
     let { hash, ext, blog_id } = ctx.query
     if (ext !== 'jpg' && ext !== 'png') {
@@ -142,13 +102,10 @@ async function parse(ctx) {
     }
 
     let prefix = blog_id ? BLOG : AVATAR
+    let res = {}
 
     //  建立GCS ref
     let ref = storage.bucket().file(`${prefix}/${hash}.${ext}`)
-
-    let res = {}
-
-
     //  確認GCS是否有該圖檔
     let [exist] = await ref.exists()
 
@@ -163,6 +120,5 @@ async function parse(ctx) {
 }
 
 module.exports = {
-    parse,
-    upload_img
+    parse
 }

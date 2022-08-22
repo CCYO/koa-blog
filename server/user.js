@@ -88,9 +88,13 @@ async function readIdols(fans_id) {
     return init_user(idolList)
 }
 
-const updateUser = async ({newUserInfo, id}) => {
-    let data = { ...newUserInfo }
-    if (data.password) {
+//  更新user數據
+const updateUser = async ({newData, id}) => {
+    let data = { ...newData }
+    if(data.hasOwnProperty('age')){
+        newData.age *= 1
+    }
+    if (data.hasOwnProperty('password')) {
         data.password = hash(data.password)
     }
 

@@ -139,11 +139,8 @@ async function cancelFollowIdol({fans_id, idol_id}) {
 }
 
 //  更新user
-const modifyUserInfo = async (ctx) => {
-    const { id } = ctx.session.user
-    let newUserInfo = { ...ctx.request.body }
-
-    const user = await updateUser({newUserInfo, id})
+const modifyUserInfo = async (newData, id) => {
+    const user = await updateUser({newData, id})
     
     return new SuccModel(user)
 }
@@ -154,11 +151,13 @@ function logout (ctx){
     return new SuccModel('成功登出')
 }
 
+//  找出粉絲列表
 async function getFansById(idol_id) {
     const fans = await readFans(idol_id)
     return new SuccModel(fans)
 }
 
+//  找出偶像列表
 async function getIdolsById(idol_id) {
     const fans = await readIdols(idol_id)
     return new SuccModel(fans)

@@ -347,17 +347,6 @@
                     //  (待補)自定義 upload imgage 失敗
                 }
 
-                //  插入圖片後的回調
-                editorConfig.MENU_CONF['insertImage'] = {
-                    onInsertedImage(imageNode) {
-                        if (imageNode == null) return
-
-                        const { src, alt, url, href } = imageNode
-                        imageNode.style.width = '100%'
-                        window.x = imageNode
-                        console.log('inserted image', imageNode, src, alt, url, href)
-                    }
-                }
                 // editor 創建
                 const editor = createEditor({
                     //  插入後端取得的 html
