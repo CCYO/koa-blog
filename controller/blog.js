@@ -8,6 +8,7 @@ const {
 const {
     createBlog,
     deleteBlog,
+    deleteBlogs,
     updateBlog,
     readBlog,
     readBlogList,
@@ -48,9 +49,16 @@ async function addBlog(title, user_id) {
  * @returns {object} SuccModel || ErrModel
  */
 async function removeBlog(blog_id) {
-    const res = await deleteBlog(blog_id)
-    if (res) return new SuccModel()
-    return new ErrModel(BLOG.BLOG_REMOVE_ERR)
+    let res
+    if(Array.isArray(blog_id)){
+        res = await deleteBlogs({blogList_id: blog_id})
+    }else{
+        res = await deleteBlog(blog_id)
+    }
+    if (!res){
+        return new ErrModel(BLOG.BLOG_REMOVE_ERR)
+    }
+    return new SuccModel()
 }
 
 /** 更新 blog

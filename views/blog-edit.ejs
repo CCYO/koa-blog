@@ -2,11 +2,6 @@
 
 <body>
     <style>
-        body {
-            padding: 0;
-            margin: 0;
-        }
-
         #showBox {
             position: relative;
             z-index: 1010;
@@ -25,6 +20,7 @@
         }
 
         #editor-container {
+            border: 1px solid rgba(200, 200, 200, .8);
             height: 400px;
             min-height: 300px;
         }
@@ -72,8 +68,8 @@
     <script>
         $(function () {
 
-            let api_uploadImg = '/api/editor/img'
-            let api_blog = '/api/editor/'
+            let api_uploadImg = '/api/blog/img'
+            let api_blog = '/api/blog/'
             //  提供給後端更改前，用來驗證的資料
             let patchData = {}
 

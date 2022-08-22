@@ -60,13 +60,15 @@ async function updateBlog(blog_id, newData) {
  * @param {*} needComment 
  * @returns 
  */
-// async function deleteBlog({ blogList_id, follower_id }) {
-//     let res = await seq.getQueryInterface().bulkDelete('FollowBlogs', {
-//         follower_id,
-//         blog_id: { [Op.in]: blogList_id }
-//     })
-//     // return row
-// }
+async function deleteBlogs({ blogList_id }) {
+    let row = await seq.getQueryInterface().bulkDelete('Blog', {
+        id: { [Op.in]: blogList_id }
+    })
+    if(row !== blogList_id.length ){
+        return false
+    }
+    return true
+}
 
 /** 查找 blog 紀錄
  * 
@@ -170,6 +172,7 @@ module.exports = {
     createBlog,
     updateBlog,
     deleteBlog,
+    deleteBlogs,
     readBlog,
     readBlogList
 }

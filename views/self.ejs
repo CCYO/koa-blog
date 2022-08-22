@@ -16,6 +16,11 @@
 
         .btn-blog-edit {
             z-index: 2;
+
+        }
+
+        .btn-blog-edit>a {
+
             background: #fff;
         }
 
@@ -81,8 +86,10 @@
                                 </a>
 
                                 <% if (isMyIdol === undefined) { %>
-                                <a class='btn btn-outline-primary btn-sm btn-blog-edit'
-                                    href="/blog/edit/<%= id %>">編輯</a>
+                                <div class="btn-blog-edit">
+                                    <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
+                                    <a class='btn btn-outline-primary btn-sm' data-my-blog-id="<%= id %>">刪除</a>
+                                </div>
                                 <% } %>
 
                             </li>
@@ -103,6 +110,7 @@
 
                         <% if(blogList.hidden.length){ %>
                         <ul class="list-group list-group-flush">
+                            
                             <% blogList.hidden.forEach(({id, title}) => { %>
                             <li
                                 class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
@@ -113,9 +121,12 @@
                                 </div>
 
                                 <% if (isMyIdol === undefined) { %>
-                                <a class='btn btn-outline-primary btn-sm btn-blog-edit'
-                                    href="/blog/edit/<%= id %>">編輯</a>
+                                <div class="btn-blog-edit">
+                                    <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
+                                    <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%= id %>">刪除</a>
+                                </div>
                                 <% } %>
+
                             </li>
 
                             <% }) %>
@@ -177,8 +188,36 @@
         $(function () {
             let $btn_follow = $('#follow')
             let $btn_cancelFollow = $('#cancelFollow')
+            let $btn_removeBlog = $('[data-my-remove-blog]')
+            window.ddd = $btn_removeBlog
+            let api_blog = '/api/blog'
             let api_follow = '/api/user/follow'
             let api_cancelFollow = '/api/user/cancelFollow'
+
+            $btn_removeBlog.click(handle_removeBlog)
+
+            async function handle_removeBlog(e) {
+                if (!confirm('真的要刪掉?')) {
+                    return
+                }
+
+                let id = $(e.target).data('my-remove-blog')
+
+                const {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.delete(api_blog, { data: { id } })
+
+                if (errno) {
+                    alert(msg)
+                } else {
+                    $(ddd[0]).parents("li").remove()
+                    alert('已成功刪除此篇文章')
+                }
+                return
+            }
+
 
             $btn_follow.click(handle_follow(true))
             $btn_cancelFollow.click(handle_follow(false))

@@ -10,7 +10,7 @@ const { uploadImg } = require('../../controller/img')
 
 const { api_check_login } = require('../../middleware/check_login')
 
-router.prefix('/api/editor')
+router.prefix('/api/blog')
 
 //  建立blog
 router.post('/', api_check_login, async (ctx, next) => {
