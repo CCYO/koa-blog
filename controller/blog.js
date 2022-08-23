@@ -29,6 +29,8 @@ const {
 const { SuccModel, ErrModel } = require('../model')
 const { BLOG, BLOGIMG } = require('../model/errRes')
 
+const { BLOG: { PAGINATION } } = require('../conf/constant')
+
 /** 建立 blog
  * @param { string } title 標題
  * @param { number } userId 使用者ID  
@@ -50,12 +52,12 @@ async function addBlog(title, user_id) {
  */
 async function removeBlog(blog_id) {
     let res
-    if(Array.isArray(blog_id)){
-        res = await deleteBlogs({blogList_id: blog_id})
-    }else{
+    if (Array.isArray(blog_id)) {
+        res = await deleteBlogs({ blogList_id: blog_id })
+    } else {
         res = await deleteBlog(blog_id)
     }
-    if (!res){
+    if (!res) {
         return new ErrModel(BLOG.BLOG_REMOVE_ERR)
     }
     return new SuccModel()
@@ -142,13 +144,13 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             let listOfFans = await readFans(author_id)
 
             //  篩去兩者重複的id
-            let listOfNewFollowerId = listOfFans.reduce(( initVal, {id}) => {
-                if(!listOfFollowerId.includes(id)){
+            let listOfNewFollowerId = listOfFans.reduce((initVal, { id }) => {
+                if (!listOfFollowerId.includes(id)) {
                     initVal.push(id)
                 }
                 return initVal
             }, [])
-            
+
             if (listOfNewFollowerId.length) {
                 //  新增FollowBlog.follower
                 await createFollowers({ blog_id, listOfFollowerId: listOfNewFollowerId })
@@ -201,15 +203,28 @@ async function getBlogListByUserId(user_id, is_author = false) {
 
     let blogList = await readBlogList(param)
 
+    // let data = { show: [], hidden: [] }
+
     let data = { show: [], hidden: [] }
+
+    let page = { show: 0, hidden: 0 }
 
     blogList.forEach(item => {
         let { show } = item
+        let key = show ? 'show' : 'hidden'
         delete item.show
-        show && data.show.push(item)
-        !show && data.hidden.push(item)
+        if (!data[key][page[key]]) {
+            data[key][page[key]] = []
+        }
+        if (data[key][page[key]].length === 5 * (page[key] + 1)) {
+            page[key] += 1
+            data[key][page[key]] = []
+        }
+        data[key][page[key]].push(item)
     })
-
+    console.log('@data.show => ', data.show)
+    console.log('@page.hidden => ', data.hidden)  
+    
     return new SuccModel(data)
 }
 

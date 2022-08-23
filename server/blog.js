@@ -1,4 +1,7 @@
+const { Op } = require('sequelize')
+
 const {
+    seq,
     User,
     Blog,
     Img,
@@ -61,10 +64,11 @@ async function updateBlog(blog_id, newData) {
  * @returns 
  */
 async function deleteBlogs({ blogList_id }) {
-    let row = await seq.getQueryInterface().bulkDelete('Blog', {
+    let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('Blogs', {
         id: { [Op.in]: blogList_id }
     })
-    if(row !== blogList_id.length ){
+    
+    if(affectedRows !== blogList_id.length ){
         return false
     }
     return true

@@ -38,6 +38,34 @@
             text-decoration: none;
             font-size: 0.25rem;
         }
+
+        .list-group>.btn {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .blogList {
+            border: 1px solid rgba(0, 0, 0, .3);
+            margin-bottom: .5rem;
+        }
+
+        .blogList>* {
+            padding: .5rem
+        }
+
+        .blogList-header {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .blogList-header>h2 {
+            margin: 0;
+        }
+
+        .blogList-header>.btn {
+            margin-left: auto;
+            margin-right: 0;
+        }
     </style>
     <!-- 主導覽 -->
     <%- include('wedgets/navbar/index') %>
@@ -72,13 +100,17 @@
                         <a href="/blog/new">撰寫新文章</a>
                         <% } %>
                     </div>
-                    <div id="public-blog" class="pb-3">
-                        <h2>已發布的BLOG</h2>
 
+                    <div class="blogList bg-light p-2" data-my-blog-key="show">
                         <% if(blogList.show.length){ %>
-
+                        <div class="blogList-header">
+                            <h2>已發布的BLOG</h2>
+                            <button type="button"
+                                class="btn btn-sm btn-outline-danger <%= blogList.show.length? 'my-show' : 'my-noshow'%>"
+                                data-my-blogs="show">全部刪除</button>
+                        </div>
                         <ul class="list-group list-group-flush">
-                            <% blogList.show.forEach(({id, title}) => { %>
+                            <% blogList.show[0].forEach(({id, title}) => { %>
                             <li
                                 class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                                 <a href="/blog/<%= id %>" class="stretched-link">
@@ -88,7 +120,7 @@
                                 <% if (isMyIdol === undefined) { %>
                                 <div class="btn-blog-edit">
                                     <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
-                                    <a class='btn btn-outline-primary btn-sm' data-my-blog-id="<%= id %>">刪除</a>
+                                    <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%= id %>">刪除</a>
                                 </div>
                                 <% } %>
 
@@ -105,13 +137,21 @@
 
                     <% if (isMyIdol === undefined) { %>
 
-                    <div id="private-blog" class="pb-3">
-                        <h2>編輯中的BLOG</h2>
+                    <div class="blogList bg-light p-2" data-my-blog-key="hidden">
+                        <div class="blogList-header">
+                            <h2>編輯中的BLOG</h2>
+                            <button type="button"
+                                class="btn btn-sm btn-outline-danger <%= blogList.hidden.length? 'my-show' : 'my-noshow'%>"
+                                data-my-blogs="hidden">全部刪除</button>
+                        </div>
 
                         <% if(blogList.hidden.length){ %>
+
+
                         <ul class="list-group list-group-flush">
-                            
-                            <% blogList.hidden.forEach(({id, title}) => { %>
+
+                            <% blogList.hidden[0].forEach(({id, title}) => { %>
+
                             <li
                                 class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                                 <div>
@@ -131,6 +171,23 @@
 
                             <% }) %>
                         </ul>
+                        <nav aria-label="...">
+                            <ul class="pagination">
+                                <li class="page-item disabled">
+                                    <a class="page-link">Previous</a>
+                                </li>
+                                <% blogList.hidden.forEach((item, ind, arr) => { %>
+                                    <% if(ind){ %>
+                                <li class="page-item">
+                                    <a class="page-link" href="#"><% ind %></a>
+                                </li>
+                                <% } %>
+                                <% }) %>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
                         <% } else { %>
                         <p>沒有編輯中的BLOG</p>
                         <% } %>
@@ -189,11 +246,40 @@
             let $btn_follow = $('#follow')
             let $btn_cancelFollow = $('#cancelFollow')
             let $btn_removeBlog = $('[data-my-remove-blog]')
+            let $btn_removeBlogs = $('[data-my-blogs]')
             window.ddd = $btn_removeBlog
             let api_blog = '/api/blog'
             let api_follow = '/api/user/follow'
             let api_cancelFollow = '/api/user/cancelFollow'
 
+            $btn_removeBlogs.click(async (e) => {
+                let $blogList = $(e.target).parents('[data-my-blog-key]')
+                let $children = [...$blogList.find('[data-my-remove-blog]')]
+                let listOfBlogId = $children.reduce((init, cur) => {
+                    init.push($(cur).data('my-remove-blog'))
+                    return init
+                }, [])
+
+                const {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.delete(api_blog, { data: { id: listOfBlogId } })
+
+                if (errno) {
+                    alert(msg)
+                } else {
+                    $btn_removeBlogs.toggleClass('my-show my-noshow')
+                    $blogList.append('<p>沒有文章</p>').children('ul').remove()
+
+                    let key = $blogList.data('my-blog-key')
+                    let list = window.data.blogList[key]
+
+                    window.data.blogList[key] = []
+                    alert('已成功刪除這些文章')
+                }
+                return
+            })
             $btn_removeBlog.click(handle_removeBlog)
 
             async function handle_removeBlog(e) {
@@ -201,8 +287,8 @@
                     return
                 }
 
-                let id = $(e.target).data('my-remove-blog')
-
+                let $target = $(e.target)
+                let id = $target.data('my-remove-blog')
                 const {
                     data: {
                         errno, data, msg
@@ -213,6 +299,10 @@
                     alert(msg)
                 } else {
                     $(ddd[0]).parents("li").remove()
+                    let key = $target.parents('[data-my-blog-key]').data('my-blog-key')
+                    let list = window.data.blogList[key]
+                    let ind = list.findIndex(item => item.id === id)
+                    list.splice(ind, 1)
                     alert('已成功刪除此篇文章')
                 }
                 return
