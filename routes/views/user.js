@@ -149,4 +149,35 @@ router.get('/square', view_check_login, async (ctx, next) => {
     await ctx.render('square')
 })
 
+router.get('/tt', async (ctx) => {
+    return await ctx.render('tt')
+})
+
+router.get('/test', async (ctx) => {
+    let keys = ctx.headers
+    console.log(keys)
+    console.log(ctx.headers['if-none-match'])
+    let etag = ctx.headers.hasOwnProperty('if-none-match') ? JSON.parse(ctx.headers['if-none-match']) : undefined
+
+    if (etag && etag === 'test08242320') {
+        console.log(304)
+        // ctx.set({
+        //     etag: JSON.stringify('test08242320'),
+        //     ['Cache-Control']: 'no-cache'
+        // })
+        ctx.status = 304
+        console.log(ctx.message)
+        ctx.message = 'Not Modified'
+        console.log(ctx.message)
+        return
+    }
+    console.log(456)
+    let str = JSON.stringify('test08242320')
+    ctx.set({
+        etag: str,
+        ['Cache-Control']: 'no-cache'
+    })
+    ctx.body = { a: 'A' }
+})
+
 module.exports = router
