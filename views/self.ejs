@@ -66,6 +66,10 @@
             margin-left: auto;
             margin-right: 0;
         }
+
+        .my-disabled>a {
+            pointer-events: none;
+        }
     </style>
     <!-- 主導覽 -->
     <%- include('wedgets/navbar/index') %>
@@ -117,6 +121,7 @@
                                     <%= title %>
                                 </a>
 
+
                                 <% if (isMyIdol === undefined) { %>
                                 <div class="btn-blog-edit">
                                     <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
@@ -127,7 +132,25 @@
                             </li>
                             <% }) %>
                         </ul>
+                        <% if (blogList.show.length > 1) { %>
+                        <nav aria-label="...">
+                            <ul class="pagination" id="show-list">
+                                <li class="page-item disabled">
+                                    <a class="page-link" data-my-way="back">Previous</a>
+                                </li>
+                                <% blogList.hidden.forEach((item, ind, arr) => { %>
+                                <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
+                                    <a class="page-link" href="#" data-my-key="show"
+                                        data-my-ind="<%= ind %>"><%= ind + 1 %></a>
+                                </li>
+                                <% }) %>
 
+                                <li class="page-item">
+                                    <a class="page-link" href="#" data-my-way="next">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                        <% } %>
                         <% } else { %>
 
                         <p>沒有發布的BLOG</p>
@@ -144,14 +167,9 @@
                                 class="btn btn-sm btn-outline-danger <%= blogList.hidden.length? 'my-show' : 'my-noshow'%>"
                                 data-my-blogs="hidden">全部刪除</button>
                         </div>
-
                         <% if(blogList.hidden.length){ %>
-
-
                         <ul class="list-group list-group-flush">
-
                             <% blogList.hidden[0].forEach(({id, title}) => { %>
-
                             <li
                                 class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                                 <div>
@@ -159,35 +177,35 @@
                                         <%= title %>
                                     </a>
                                 </div>
-
                                 <% if (isMyIdol === undefined) { %>
                                 <div class="btn-blog-edit">
                                     <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
                                     <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%= id %>">刪除</a>
                                 </div>
                                 <% } %>
-
                             </li>
-
                             <% }) %>
                         </ul>
+                        <% if (blogList.hidden.length > 1) { %>
                         <nav aria-label="...">
-                            <ul class="pagination">
+                            <ul class="pagination" id="hidden-list">
                                 <li class="page-item disabled">
-                                    <a class="page-link">Previous</a>
+                                    <a class="page-link" data-my-way="back">Previous</a>
                                 </li>
                                 <% blogList.hidden.forEach((item, ind, arr) => { %>
-                                    <% if(ind){ %>
-                                <li class="page-item">
-                                    <a class="page-link" href="#"><% ind %></a>
+                                <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
+                                    <a class="page-link" href="#" data-my-key="hidden"
+                                        data-my-ind="<%= ind %>"><%= ind + 1 %></a>
                                 </li>
-                                <% } %>
                                 <% }) %>
+
                                 <li class="page-item">
-                                    <a class="page-link" href="#">Next</a>
+                                    <a class="page-link" href="#" data-my-way="next">Next</a>
                                 </li>
                             </ul>
                         </nav>
+                        <% } %>
+
                         <% } else { %>
                         <p>沒有編輯中的BLOG</p>
                         <% } %>
@@ -247,10 +265,98 @@
             let $btn_cancelFollow = $('#cancelFollow')
             let $btn_removeBlog = $('[data-my-remove-blog]')
             let $btn_removeBlogs = $('[data-my-blogs]')
-            window.ddd = $btn_removeBlog
+            let $pageLink = $('[data-my-key].page-link')
+
+            let $way = $('[data-my-way].page-link')
+
             let api_blog = '/api/blog'
             let api_follow = '/api/user/follow'
             let api_cancelFollow = '/api/user/cancelFollow'
+
+
+            window.render = {blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } }}
+            $way.on('click', (e) => {
+                e.preventDefault()
+                
+                let $target = $(e.target)
+                let way = $target.data('my-way')
+                let key = $target.parents('div.blogList').data('my-blog-key')
+                let { html, curInd } = window.render.blog[key]
+                
+
+                let tarInd = way === 'next' ? curInd + 1 : curInd - 1
+                let list = window.data.blogList[key][tarInd]
+                
+                let $ul = $(`[data-my-blog-key=${key}] ul.list-group`)
+                
+                
+
+                if (!html[curInd]) {
+                    console.log('存放當前list')
+                    html[curInd] = $ul.html()
+                }
+                if (!html[tarInd]) {
+                    console.log('存放新list')
+                    html[tarInd] = list.reduce((init, { id, title }) => {
+                        return init += templateCreator_BlogList(id, title)
+                    }, '')
+                }
+                $(`[data-my-blog-key=${key}] li.page-item`).removeClass('active my-disabled')
+                $(`[data-my-blog-key=${key}] li[data-my-ind=${tarInd}]`).addClass('active my-disabled')
+                
+                $ul.html(html[tarInd])
+
+            })
+
+
+
+
+
+            
+            $pageLink.on('click', renderBlogList)
+
+            function templateCreator_BlogList(id, title) {
+                return `
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+                            <div>
+                                <a class="stretched-link" href="/blog/${id}">${title}</a>
+                            </div>
+                            <div class="btn-blog-edit">
+                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/${id}">編輯</a>
+                                <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="${id}">刪除</a>
+                            </div>
+                        </li>
+                    </ul>`
+            }
+            
+            
+            function renderBlogList(e) {
+                
+                
+                    e.preventDefault()
+                    let $target = $(e.target)
+                    let key = $target.data('my-key')
+                    let ind = $target.data('my-ind')
+                    let list = window.data.blogList[key][ind]
+                    let $ul = $(`[data-my-blog-key=${key}] ul.list-group`)
+                    let curInd = $(`[data-my-blog-key=${key}] li.active > a`).data('my-ind')
+                    if (!html[key][curInd]) {
+                        console.log('存放當前list')
+                        html[key][curInd] = $ul.html()
+                    }
+                    if (!html[key][ind]) {
+                        console.log('存放新list')
+                        html[key][ind] = list.reduce((init, { id, title }) => {
+                            return init += templateCreator_BlogList(id, title)
+                        }, '')
+                    }
+                    $(`[data-my-blog-key=${key}] li.page-item`).removeClass('active my-disabled')
+                    $target.parent().addClass('active my-disabled')
+                    $ul.html(html[key][ind])
+                
+            }
+
 
             $btn_removeBlogs.click(async (e) => {
                 let $blogList = $(e.target).parents('[data-my-blog-key]')

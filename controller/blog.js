@@ -216,7 +216,7 @@ async function getBlogListByUserId(user_id, is_author = false) {
         if (!data[key][page[key]]) {
             data[key][page[key]] = []
         }
-        if (data[key][page[key]].length === 5 * (page[key] + 1)) {
+        if (data[key][page[key]].length === 5 ) {
             page[key] += 1
             data[key][page[key]] = []
         }
