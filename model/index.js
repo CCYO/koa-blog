@@ -26,13 +26,24 @@ const _init_error = (e) => {
     )
 }
 
-class ErrModel extends _Model {
+class ErrModel extends Error {
+    constructor({errno, msg}, e){
+        super()
+        this.stack = e.stack
+        this.message = e.message
+        this.errno = errno
+        this.msg = msg
+    }
+}
+
+class WarnModel extends _Model {
     constructor({errno, msg}){
-        super({errno, msg: _init_error(msg)})
+        super({errno, msg})
     }
 }
 
 module.exports = {
     SuccModel,
+    WarnModel,
     ErrModel
 }

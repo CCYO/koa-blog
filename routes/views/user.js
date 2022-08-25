@@ -150,6 +150,7 @@ router.get('/square', view_check_login, async (ctx, next) => {
 })
 
 router.get('/tt', async (ctx) => {
+    throw new Error('這沙小拉')
     return await ctx.render('tt')
 })
 

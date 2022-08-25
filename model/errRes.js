@@ -47,5 +47,6 @@ module.exports = {
         FOLLOW_CONFIRM_ERR: { errno: 1001, msg: 'Follow.confirm 更新失敗'},
         BLOG_FANS_CONFIRM_ERR: { errno: 1002, msg: 'Blog_Fans.confirm 更新失敗'},
         FOLLOW_COMMENT_CONFIRM_ERR: { errno: 1003, msg: 'Blog_Fans.confirm 更新失敗'}
-    }
+    },
+    SERVER_ERR: { errno: 9999, msg: '伺服器錯誤'}
 }

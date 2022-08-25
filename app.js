@@ -13,6 +13,10 @@ const json = require('koa-json')
 
 //  連接redis
 const store = require('./db/cache/redis/sessionStore')
+
+const { ErrModel } = require('./model')
+const { SERVER_ERR } = require('./model/errRes')
+
 //  router - API
 const apiUser = require('./routes/api/user')
 const apiEditor = require('./routes/api/editor')
@@ -34,21 +38,22 @@ app.use(async (ctx, next) => {
         await next()
         console.log(ctx.message)
     } catch (error) {
-        let status = error.status || 500
-        let message = error.message || null
+        if(!error.hasOwnProperty('errno')){
+            error = new ErrModel(SERVER_ERR, error)
+        }
 
         //  針對 VIEW 的錯誤
         if (!/^\/api\//.test(ctx.path)) {
-            ctx.throw(status, message, error)
-            return
+            ctx.status = 401
         }
+        ctx.body = { errno: error.errno, msg: error.msg }
         //  針對 API 的錯誤
         ctx.app.emit('error', error, ctx)
 
         //  若是 DEV 環境
-        if(isDev){
-            ctx.body = { errno: status, msg: message }
-        }
+        // if(isDev){
+        //     ctx.body = { errno: status, msg: message }
+        // }
         return
     }
 })
@@ -90,7 +95,7 @@ app.use(viewBlog.routes(), viewBlog.allowedMethods())
 // 應用的錯誤handle
 app.on('error', (err, ctx) => {
     console.log('@觸發app.on(error)')
-    console.log('@custom ErrHandle Fire!!!! => ', err)
+    console.log('@custom ErrHandle Fire!!!! => ', err.stack)
 });
 
 module.exports = app
