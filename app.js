@@ -36,17 +36,20 @@ const app = new Koa()
 app.use(async (ctx, next) => {
     try {
         await next()
-        console.log(ctx.message)
     } catch (error) {
-        if(!error.hasOwnProperty('errno')){
-            error = new ErrModel(SERVER_ERR, error)
+        if (isDev && error.hasOwnProperty('errno')) {	//  不希望發生的錯誤
+            if (!/^\/api\//.test(ctx.path)) {   //  針對 VIEW 的錯誤
+                ctx.body = error.mark
+            }else{                              //  針對 API 的錯誤
+                ctx.body = { errno: error.errno, msg: error.mark }
+            }
+        } else {    //  完全無預期的錯誤
+            if (!/^\/api\//.test(ctx.path)) {   //  針對 VIEW 的錯誤
+                ctx.status = 500
+            } else {                            //  針對 API 的錯誤
+                ctx.body = { errno: 9999, msg: 伺服器錯誤 }
+            }
         }
-
-        //  針對 VIEW 的錯誤
-        if (!/^\/api\//.test(ctx.path)) {
-            ctx.status = 401
-        }
-        ctx.body = { errno: error.errno, msg: error.msg }
         //  針對 API 的錯誤
         ctx.app.emit('error', error, ctx)
 
@@ -94,8 +97,11 @@ app.use(viewBlog.routes(), viewBlog.allowedMethods())
 
 // 應用的錯誤handle
 app.on('error', (err, ctx) => {
-    console.log('@觸發app.on(error)')
-    console.log('@custom ErrHandle Fire!!!! => ', err.stack)
+    if(!err.hasOwnProperty('errno')){   //  完全無預期的錯誤
+        err.errno = 9999
+        err.mark = '完全預期外的錯誤'
+    }
+    console.log('@ custom ErrHandle Fire!!!! => ', err.errno, err.mark, err)
 });
 
 module.exports = app

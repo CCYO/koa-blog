@@ -16,27 +16,7 @@ class SuccModel extends _Model {
     }
 }
 
-const _init_error = (e) => {
-    if(!(e instanceof Error)) return e
-    return JSON.parse(
-        JSON.stringify(
-            e,
-            Object.getOwnPropertyNames(e)
-        )
-    )
-}
-
-class ErrModel extends Error {
-    constructor({errno, msg}, e){
-        super()
-        this.stack = e.stack
-        this.message = e.message
-        this.errno = errno
-        this.msg = msg
-    }
-}
-
-class WarnModel extends _Model {
+class ErrModel extends _Model {
     constructor({errno, msg}){
         super({errno, msg})
     }
@@ -44,6 +24,5 @@ class WarnModel extends _Model {
 
 module.exports = {
     SuccModel,
-    WarnModel,
     ErrModel
 }

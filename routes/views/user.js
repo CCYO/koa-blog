@@ -11,11 +11,7 @@ const { getBlogListByUserId } = require('../../controller/blog')
 const { getNewsByUserId } = require('../../controller/news')
 
 const {
-    getPeopleById,
-
-    getFansById,
-    getIdolsById,
-    confirmFollow,
+    getPeopleById
 } = require('../../controller/user')
 
 //  註冊頁
@@ -147,11 +143,6 @@ router.get('/setting', view_check_login, async (ctx, next) => {
  */
 router.get('/square', view_check_login, async (ctx, next) => {
     await ctx.render('square')
-})
-
-router.get('/tt', async (ctx) => {
-    throw new Error('這沙小拉')
-    return await ctx.render('tt')
 })
 
 router.get('/test', async (ctx) => {

@@ -135,7 +135,7 @@
                         <% if (blogList.show.length > 1) { %>
                         <nav aria-label="...">
                             <ul class="pagination" id="show-list">
-                                <li class="page-item disabled">
+                                <li class="page-item my-disabled">
                                     <a class="page-link" data-my-way="back">Previous</a>
                                 </li>
                                 <% blogList.hidden.forEach((item, ind, arr) => { %>
@@ -189,7 +189,7 @@
                         <% if (blogList.hidden.length > 1) { %>
                         <nav aria-label="...">
                             <ul class="pagination" id="hidden-list">
-                                <li class="page-item disabled">
+                                <li class="page-item my-disabled">
                                     <a class="page-link" data-my-way="back">Previous</a>
                                 </li>
                                 <% blogList.hidden.forEach((item, ind, arr) => { %>
@@ -288,8 +288,6 @@
                 let list = window.data.blogList[key][tarInd]
                 
                 let $ul = $(`[data-my-blog-key=${key}] ul.list-group`)
-                
-                
 
                 if (!html[curInd]) {
                     console.log('存放當前list')
@@ -301,14 +299,21 @@
                         return init += templateCreator_BlogList(id, title)
                     }, '')
                 }
-                $(`[data-my-blog-key=${key}] li.page-item`).removeClass('active my-disabled')
-                $(`[data-my-blog-key=${key}] li[data-my-ind=${tarInd}]`).addClass('active my-disabled')
-                
+                UI_page(key, tarInd)
                 $ul.html(html[tarInd])
 
             })
 
 
+            function UI_page(key, tarInd){
+                let $list = $(`[data-my-blog-key=${key}]`)
+                $list.find('li.page-item').removeClass('active my-disabled')
+                console.log(tarInd)
+                $list.find(`li.page-item:nth-child(${tarInd + 2})`).addClass('active my-disabled')
+                tarInd === 0 && $list.find(`li[data-my-ind=${tarInd}]:first`).addClass('my-disabled') && $list.find(`li[data-my-ind=${tarInd}]:last`).removeClass('my-disabled')
+                let lastInd = window.render.blog[key].html.length - 1
+                tarInd === lastInd && $list.find(`li[data-my-ind=${tarInd}]:first`).removeClass('my-disabled') && $list.find(`li[data-my-ind=${tarInd}]:last`).addClass('my-disabled')
+            }
 
 
 
@@ -332,8 +337,6 @@
             
             
             function renderBlogList(e) {
-                
-                
                     e.preventDefault()
                     let $target = $(e.target)
                     let key = $target.data('my-key')

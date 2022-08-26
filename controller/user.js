@@ -9,9 +9,7 @@ const {
     readUser,
     readFans,
     readIdols,
-    updateUser,
-
-    updateFollow
+    updateUser
 } = require('../server/user')
 
 const followPeople = require('../server/followPeople')
@@ -174,6 +172,6 @@ module.exports = {
     getPeopleById,      // view user
 
     modifyUserInfo,     //  api user
-    getFansById,        //  view user
-    getIdolsById,       //  view user
+    getFansById,        
+    getIdolsById,       
 }
