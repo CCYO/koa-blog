@@ -136,7 +136,7 @@
                         <nav aria-label="...">
                             <ul class="pagination" id="show-list">
                                 <li class="page-item my-disabled">
-                                    <a class="page-link" data-my-way="back">Previous</a>
+                                    <a class="page-link" href='#' data-my-way="back">Previous</a>
                                 </li>
                                 <% blogList.hidden.forEach((item, ind, arr) => { %>
                                 <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
@@ -190,7 +190,7 @@
                         <nav aria-label="...">
                             <ul class="pagination" id="hidden-list">
                                 <li class="page-item my-disabled">
-                                    <a class="page-link" data-my-way="back">Previous</a>
+                                    <a class="page-link" href="#" data-my-way="back">Previous</a>
                                 </li>
                                 <% blogList.hidden.forEach((item, ind, arr) => { %>
                                 <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
@@ -274,51 +274,64 @@
             let api_cancelFollow = '/api/user/cancelFollow'
 
 
-            window.render = {blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } }}
-            $way.on('click', (e) => {
+            window.render = { blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } } }
+
+            $pageLink.on('click', renderBlogList)
+            $way.on('click', renderBlogList)
+
+            function renderBlogList(e) {
                 e.preventDefault()
-                
                 let $target = $(e.target)
-                let way = $target.data('my-way')
-                let key = $target.parents('div.blogList').data('my-blog-key')
-                let { html, curInd } = window.render.blog[key]
+                let blogKey = $target.parents('div.blogList').data('my-blog-key')
+                let $targetUl = $(`[data-my-blog-key=${blogKey}] ul.list-group`)
                 
+                let data_renderOfBlogKey = window.render.blog[blogKey]
+                let curInd = data_renderOfBlogKey.curInd
 
-                let tarInd = way === 'next' ? curInd + 1 : curInd - 1
-                let list = window.data.blogList[key][tarInd]
-                
-                let $ul = $(`[data-my-blog-key=${key}] ul.list-group`)
-
-                if (!html[curInd]) {
-                    console.log('存放當前list')
-                    html[curInd] = $ul.html()
+                let typeOfTarget = $target.attr('data-my-ind') ? 'page' : 'dir'
+                let tarInd
+                if (typeOfTarget === 'page'){
+                    tarInd = $target.data('my-ind')
+                }else if(typeOfTarget === 'dir'){
+                    tarInd = $target.data('my-way') === 'next' ? curInd + 1 : curInd -1
                 }
-                if (!html[tarInd]) {
+                let data_tarList = window.data.blogList[blogKey][tarInd]
+
+                if (!data_renderOfBlogKey.html[curInd]) {
+                    console.log('存放當前list')
+                    data_renderOfBlogKey.html[curInd] = $targetUl.html()
+                }
+                if (!data_renderOfBlogKey.html[tarInd]) {
                     console.log('存放新list')
-                    html[tarInd] = list.reduce((init, { id, title }) => {
+                    data_renderOfBlogKey.html[tarInd] = data_tarList.reduce((init, { id, title }) => {
                         return init += templateCreator_BlogList(id, title)
                     }, '')
                 }
-                UI_page(key, tarInd)
-                $ul.html(html[tarInd])
 
-            })
-
-
-            function UI_page(key, tarInd){
-                let $list = $(`[data-my-blog-key=${key}]`)
-                $list.find('li.page-item').removeClass('active my-disabled')
-                console.log(tarInd)
-                $list.find(`li.page-item:nth-child(${tarInd + 2})`).addClass('active my-disabled')
-                tarInd === 0 && $list.find(`li[data-my-ind=${tarInd}]:first`).addClass('my-disabled') && $list.find(`li[data-my-ind=${tarInd}]:last`).removeClass('my-disabled')
-                let lastInd = window.render.blog[key].html.length - 1
-                tarInd === lastInd && $list.find(`li[data-my-ind=${tarInd}]:first`).removeClass('my-disabled') && $list.find(`li[data-my-ind=${tarInd}]:last`).addClass('my-disabled')
+                UI_page(blogKey, tarInd)
+                $targetUl.html(data_renderOfBlogKey.html[tarInd])
+                data_renderOfBlogKey.curInd = tarInd
             }
 
+            function UI_page(key, tarInd) {
+                let $list = $(`[data-my-blog-key=${key}]`)
+                $list.find('li.page-item').removeClass('active my-disabled')
+                $list.find(`li.page-item:nth-child(${tarInd + 2})`).addClass('active my-disabled')
 
-
-            
-            $pageLink.on('click', renderBlogList)
+                let $dir_back = $list.find(`[data-my-way=back]`).parent()
+                let $dir_next = $list.find(`[data-my-way=next]`).parent()
+                let lastInd = window.render.blog[key]['html'].length - 1
+                if(tarInd === 0){
+                    $dir_back.addClass('my-disabled')
+                    $dir_next.removeClass('my-disabled')
+                }else if(tarInd === lastInd){
+                    $dir_back.removeClass('my-disabled')
+                    $dir_next.addClass('my-disabled')
+                }else{
+                    $dir_back.removeClass('my-disabled')
+                    $dir_next.removeClass('my-disabled')
+                }
+            }
 
             function templateCreator_BlogList(id, title) {
                 return `
@@ -333,31 +346,6 @@
                             </div>
                         </li>
                     </ul>`
-            }
-            
-            
-            function renderBlogList(e) {
-                    e.preventDefault()
-                    let $target = $(e.target)
-                    let key = $target.data('my-key')
-                    let ind = $target.data('my-ind')
-                    let list = window.data.blogList[key][ind]
-                    let $ul = $(`[data-my-blog-key=${key}] ul.list-group`)
-                    let curInd = $(`[data-my-blog-key=${key}] li.active > a`).data('my-ind')
-                    if (!html[key][curInd]) {
-                        console.log('存放當前list')
-                        html[key][curInd] = $ul.html()
-                    }
-                    if (!html[key][ind]) {
-                        console.log('存放新list')
-                        html[key][ind] = list.reduce((init, { id, title }) => {
-                            return init += templateCreator_BlogList(id, title)
-                        }, '')
-                    }
-                    $(`[data-my-blog-key=${key}] li.page-item`).removeClass('active my-disabled')
-                    $target.parent().addClass('active my-disabled')
-                    $ul.html(html[key][ind])
-                
             }
 
 

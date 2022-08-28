@@ -7,6 +7,7 @@ const router = require('koa-router')()
 const { NEWS: { LIMIT } } = require('../../conf/constant')
 const { view_check_login } = require('../../middleware/check_login')
 
+const { get_blog } = require('../../db/cache/redis/_redis')
 const {
     getBlog
 } = require('../../controller/blog')
@@ -40,7 +41,7 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
     const { blog_id } = ctx.params
 
     const { data: newsList } = await getNewsByUserId(me.id)    
-    const { data: blog } = await getBlog(blog_id * 1)
+    const { data: { blog, etag} } = await getBlog(blog_id * 1)
 
     if (blog.author.id != me.id) {
         return ctx.redirect('/setting')
@@ -63,7 +64,18 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
 router.get('/blog/:blog_id', async (ctx, next) => {
     let { user: me } = ctx.session
     const { blog_id } = ctx.params
-    const { data: blog } = await getBlog(blog_id, true)
+    console.log('@@@ => ', ctx.headers.hasOwnProperty('if-none-match'))
+    console.log('@@@ => ', ctx.headers['if-none-match'])
+    let match = ctx.headers.hasOwnProperty('if-none-match') ?
+        JSON.parse(ctx.headers['if-none-match']) : undefined
+        let x = await get_blog(blog_id, match)
+        if (match && x){
+            console.log(304)
+            ctx.status = 304
+            return
+        }
+    const { data: {blog, etag} } = await getBlog(blog_id, true)
+
 
     //  導覽列數據
     let newsList = {}
@@ -73,7 +85,10 @@ router.get('/blog/:blog_id', async (ctx, next) => {
     } else {
         me = {}
     }
-    
+    ctx.set({
+        etag,
+        ['Cache-Control']: 'no-cache'
+    })
     return await ctx.render('blog', {
         title: blog.title,
         //  導覽列數據

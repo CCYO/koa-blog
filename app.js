@@ -11,8 +11,11 @@ const logger = require('koa-logger')
 //  提高終端顯示數據的可讀性
 const json = require('koa-json')
 
-//  連接redis
+//  連接redis-session
 const store = require('./db/cache/redis/sessionStore')
+
+//  連接redis
+require('./db/cache/redis/_redis')
 
 const { ErrModel } = require('./model')
 const { SERVER_ERR } = require('./model/errRes')

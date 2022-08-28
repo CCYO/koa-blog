@@ -1,6 +1,9 @@
 const { Op } = require('sequelize')
 const my_xxs = require('../utils/xss')
 
+const { get_blog, set_blog } = require('../db/cache/redis/_redis')
+
+const { hash_obj } = require('../utils/crypto')
 const {
     readFans
 } = require('../server/user')
@@ -170,9 +173,20 @@ async function modifyBlog(blog_id, blog_data, author_id) {
  * @returns 
  */
 async function getBlog(blog_id, needComment = false) {
-    const blog = await readBlog({ blog_id }, needComment)
+    //  撈取緩存
+    let blog = await get_blog(blog_id)
     if (blog) {
         return new SuccModel(blog)
+    }
+    //  若無緩存，則向db取資料
+    blog = await readBlog({ blog_id }, needComment)
+    if (blog) {
+        //  計算etag
+        let hash = hash_obj(blog)
+        console.log('@hash => ', hash)
+        //  緩存
+        set_blog(blog)
+        return new SuccModel({blog, etag: JSON.stringify(hash)})
     } else {
         return new ErrModel(BLOG.NOT_EXIST)
     }
@@ -216,15 +230,15 @@ async function getBlogListByUserId(user_id, is_author = false) {
         if (!data[key][page[key]]) {
             data[key][page[key]] = []
         }
-        if (data[key][page[key]].length === 5 ) {
+        if (data[key][page[key]].length === 5) {
             page[key] += 1
             data[key][page[key]] = []
         }
         data[key][page[key]].push(item)
     })
     console.log('@data.show => ', data.show)
-    console.log('@page.hidden => ', data.hidden)  
-    
+    console.log('@page.hidden => ', data.hidden)
+
     return new SuccModel(data)
 }
 

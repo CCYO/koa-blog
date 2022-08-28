@@ -6,9 +6,12 @@ const redis = require('redis')
 
 const { REDIS_CONF } = require('../../../conf/db')
 
-const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)
 
-cli.on('error', (e) => console.log('@Redis Error --> ', e))
+    const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)
+    cli.on('error', (e) => console.log('@Redis Error --> ', e))
+    cli.on('connect', () => console.log('@ => Redis 連線ok'))
+    cli.connect()
+
 
 /**
  * redis set
@@ -16,42 +19,43 @@ cli.on('error', (e) => console.log('@Redis Error --> ', e))
  * @param {string} val 值
  * @param {number} timeout 過期時間
  */
-const set = (key, val, timeout = 60 * 60) => {
-    if(typeof val === 'object'){
+const set = async (key, val, timeout = 60 * 60) => {
+    if (typeof val === 'object') {
         val = JSON.stringify(val)
     }
-    cli.set(key, val)
-    cli.expire(key, timeout)
+    await cli.set(key, val)
+    await cli.expire(key, timeout)
+    console.log('@red set ok!')
+}
+
+async function set_blog(blog_id, hash){
+    await set(`blog/${blog_id}:${hash}`)
 }
 
 /**
  * redis get
  * @param {string} key 鑑
  */
-const get = (key) => {
-    const promise = new Promise((resolve, rejects) => {
-        cli.get(key, (err, val) => {
-            if(err){
-                rejects(err)
-                return
-            }
-            if(val === null){
-                resolve(null)
-                return
-            }
-            try {
-                resolve(
-                    JSON.parse(val)
-                )
-            } catch(err){
-                resolve(val)
-            }
-        })
-    })
-    return promise
+const get = async (key) => {
+    let val = await cli.get(key)
+    if(val === null){
+        return null
+    }
+    try {
+        return JSON.parse(val)
+    } catch (err) {
+        return val
+    }
+}
+
+async function get_blog(blog_id){
+    let val = await get(`blog/${blog_id}`)
+    return val
 }
 
 module.exports = {
     set,
-    get
+    get,
+    get_blog,
+    set_blog
 }

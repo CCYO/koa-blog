@@ -9,4 +9,11 @@ const hash = (data) => {
     return md5.update(data).digest('hex')
 }
 
-module.exports = hash
+const hash_obj = (obj) => {
+    return hash(JSON.stringify(obj))
+}
+
+module.exports = {
+    hash, 
+    hash_obj
+}
