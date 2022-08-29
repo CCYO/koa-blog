@@ -56,6 +56,7 @@
             show && gogo()
 
             function go(){
+                getNews()
                 async function getNews() {
                     let api = '/api/news'
                     let { data: { errno, data, msg } } = await axios(api)
@@ -72,7 +73,7 @@
                     if (unconfirm.length) {
                         $title_unconfirm.toggleClass
                         list_unconfirm = template_list(newsList.unconfirm)
-                        list_unconfirm += template_footer(false)
+                        // list_unconfirm += template_footer(false)
                         $('#unconfirm-news-title').after(list_unconfirm)
                     } else {
                         list_unconfirm = ''
@@ -81,7 +82,7 @@
 
                     if (confirm.length) {
                         list_confirm = template_list(newsList.confirm)
-                        list_confirm += template_footer(true)
+                        // list_confirm += template_footer(true)
                         $('#confirm-news-title').after(list_confirm)
                     } else {
                         let list_confirm = ''
@@ -99,7 +100,9 @@
                         } else {
                             init += template_comment(cur)
                         }
-                        return init
+                        let hr = cur.confirm ? `<li data-my-hr="confirm-news-hr">` : `<li data-my-hr="unconfirm-news-hr">`
+                        hr += `<hr class="dropdown-divider"></li>`
+                        return init += hr
                     }, '')
                 }
                 function template_fans({ fans, timestamp }) {
@@ -125,7 +128,8 @@
                             <span>${timestamp}</span>
                         </div>
                     </a>
-                </li>`
+                </li>
+                `
                 }
                 function template_comment({ comment, timestamp }) {
                     return `
@@ -153,7 +157,7 @@
                 <li class="dropdown-item" id="noNews">
                     <span>沒有更多了</span>
                 </li>`
-                    return t + `<li><hr class="dropdown-divider"></li>`
+                    return t
                 }
             }
             function gogo() {
