@@ -41,7 +41,6 @@ router.post('/', validate_user, async (ctx, next) => {
     if(!resModel.errno && !ctx.session.user){
         ctx.session.user = resModel.data
     } 
-    
     ctx.body = resModel
 })
 

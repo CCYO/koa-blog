@@ -10,7 +10,7 @@ const {
     Blog
 } = require('../db/mysql/model')
 
-const hash = require('../utils/crypto')
+const  { hash }  = require('../utils/crypto')
 
 const { init_user } = require('../utils/init')
 

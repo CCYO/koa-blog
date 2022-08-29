@@ -43,23 +43,14 @@ app.use(async (ctx, next) => {
         if (isDev && error.hasOwnProperty('errno')) {	//  不希望發生的錯誤
             if (!/^\/api\//.test(ctx.path)) {   //  針對 VIEW 的錯誤
                 ctx.body = error.mark
-            }else{                              //  針對 API 的錯誤
+            } else {                              //  針對 API 的錯誤
                 ctx.body = { errno: error.errno, msg: error.mark }
             }
         } else {    //  完全無預期的錯誤
-            if (!/^\/api\//.test(ctx.path)) {   //  針對 VIEW 的錯誤
-                ctx.status = 500
-            } else {                            //  針對 API 的錯誤
-                ctx.body = { errno: 9999, msg: 伺服器錯誤 }
-            }
+            ctx.status = 500
+            ctx.body = { errno: 9999, msg: '伺服器錯誤' }
         }
-        //  針對 API 的錯誤
         ctx.app.emit('error', error, ctx)
-
-        //  若是 DEV 環境
-        // if(isDev){
-        //     ctx.body = { errno: status, msg: message }
-        // }
         return
     }
 })
@@ -98,9 +89,8 @@ app.use(apiComment.routes(), apiComment.allowedMethods())
 app.use(viewUser.routes(), viewUser.allowedMethods())
 app.use(viewBlog.routes(), viewBlog.allowedMethods())
 
-// 應用的錯誤handle
 app.on('error', (err, ctx) => {
-    if(!err.hasOwnProperty('errno')){   //  完全無預期的錯誤
+    if (!err.hasOwnProperty('errno')) {   //  完全無預期的錯誤
         err.errno = 9999
         err.mark = '完全預期外的錯誤'
     }

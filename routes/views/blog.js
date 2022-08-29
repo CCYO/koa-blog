@@ -64,10 +64,8 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
 router.get('/blog/:blog_id', async (ctx, next) => {
     let { user: me } = ctx.session
     const { blog_id } = ctx.params
-    console.log('@@@ => ', ctx.headers.hasOwnProperty('if-none-match'))
-    console.log('@@@ => ', ctx.headers['if-none-match'])
     let match = ctx.headers.hasOwnProperty('if-none-match') ?
-        JSON.parse(ctx.headers['if-none-match']) : undefined
+        ctx.headers['if-none-match'] : undefined
         let x = await get_blog(blog_id, match)
         if (match && x){
             console.log(304)

@@ -28,8 +28,8 @@ const set = async (key, val, timeout = 60 * 60) => {
     console.log('@red set ok!')
 }
 
-async function set_blog(blog_id, hash){
-    await set(`blog/${blog_id}:${hash}`)
+async function set_blog(blog_id, hash, val){
+    await set(`blog/${blog_id}:${hash}`, val)
 }
 
 /**

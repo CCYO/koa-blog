@@ -176,6 +176,7 @@ async function getBlog(blog_id, needComment = false) {
     //  撈取緩存
     let blog = await get_blog(blog_id)
     if (blog) {
+        console.log('@使用緩存')
         return new SuccModel(blog)
     }
     //  若無緩存，則向db取資料
@@ -183,10 +184,10 @@ async function getBlog(blog_id, needComment = false) {
     if (blog) {
         //  計算etag
         let hash = hash_obj(blog)
-        console.log('@hash => ', hash)
         //  緩存
-        set_blog(blog)
-        return new SuccModel({blog, etag: JSON.stringify(hash)})
+        await set_blog(blog_id, hash, blog)
+        console.log('@直接與db調用資料')
+        return new SuccModel({blog, etag: hash})
     } else {
         return new ErrModel(BLOG.NOT_EXIST)
     }
