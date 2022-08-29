@@ -49,146 +49,61 @@
     <script>
         $(function () {
             let $list = $('#list')
-            getNews()
+            
+            go()
 
             let { show } = window.data.blog
+            show && gogo()
 
-            if (!show) {
-                return
-            }
-
-            let api_comment = '/api/comment'
-
-            init_editor()
-
-            let $comment = $('#comment') && undefined
-
-            $comment[0].addEventListener('drop', (e) => {
-                e.preventDefault()
-                e.stopImmediatePropagation()
-                return false
-            }, true)
-
-            function init_editor() {
-                //  editor config
-                const { createEditor } = window.wangEditor
-
-                const customPaste = function (editor, event) {
-                    event.preventDefault()
-                    const text = event.clipboardData.getData('text/plain')
-                    editor.insertText(text)
+            function go(){
+                async function getNews() {
+                    let api = '/api/news'
+                    let { data: { errno, data, msg } } = await axios(api)
+                    console.log(errno)
+                    let $menu = $('.dropdown-menu')
+                    let $title_unconfirm = $('#unconfirm-news-title')
+                    let $title_confirm = $('#confirm-news-title')
+                    render_news(data)
                 }
-                const editorConfig = {
-                    MENU_CONF: {},
-                    customPaste
-                }
-                //  editor config : placeholder
-                editorConfig.placeholder = '我有話要說'
-                // editor 創建
-                const editor = createEditor({
-                    config: editorConfig,
-                    selector: '#editor-container',
-                    mode: 'simple'
-                })
-
-                window.editor = editor
-
-                let $el = $('#editor-container')
-                $el.on('keyup', handle_keyup)
-                $el.on('click', handle_click)
-
-                function handle_click() {
-                    if (window.data.me) {
-                        return
-                    }
-                    if (confirm('請先登入')) {
-                        location.href = `/login?from=${location.pathname}`
-                    }
-                    return
-                }
-                async function handle_keyup(e) {
-
-
-                    if (e.key !== 'Enter') {
-                        return
+                function render_news({ newsList, numOfUnconfirm, total, markTime, limit }) {
+                    let { unconfirm, confirm } = newsList
+                    let list_unconfirm
+                    let list_confirm
+                    if (unconfirm.length) {
+                        $title_unconfirm.toggleClass
+                        list_unconfirm = template_list(newsList.unconfirm)
+                        list_unconfirm += template_footer(false)
+                        $('#unconfirm-news-title').after(list_unconfirm)
+                    } else {
+                        list_unconfirm = ''
+                        $('#unconfirm-news-title').addClass('my-noshow')
                     }
 
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        let comment = editor.getHtml()
-                        let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
-                        comment = comment.replace(reg, '')
-                        if (!comment.trim()) return
-                        let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id })
-                        if (errno) {
-                            alert('留言失敗')
-                            console.log('msg')
+                    if (confirm.length) {
+                        list_confirm = template_list(newsList.confirm)
+                        list_confirm += template_footer(true)
+                        $('#confirm-news-title').after(list_confirm)
+                    } else {
+                        let list_confirm = ''
+                        $('#confirm-news-title').addClass('my-noshow')
+                    }
+                    $('.dropdown-menu').append(readMore(total, limit))
+                }
+                function template_list(list) {
+                    return list.reduce((init, cur) => {
+                        let type = cur.type
+                        if (type === 1) {
+                            init += template_fans(cur)
+                        } else if (type === 2) {
+                            init += template_blog(cur)
+                        } else {
+                            init += template_comment(cur)
                         }
-                        let { html, time } = data
-                        let { nickname, id } = window.data.me
-                        editor.setHtml()
-                        let htmlStr = `
-                        <div>
-                            ${html}
-                            <a href="/other/${id}">${nickname}</a>
-                            <span>${time}</span>
-                        </div>`
-
-                        $list.append(htmlStr)
-                    }
-
+                        return init
+                    }, '')
                 }
-            }
-
-            async function getNews() {
-                let api = '/api/news'
-                let { data: { errno, data, msg } } = await axios(api)
-                console.log(errno)
-                let $menu = $('.dropdown-menu')
-                let $title_unconfirm = $('#unconfirm-news-title')
-                let $title_confirm = $('#confirm-news-title')
-                render_news(data)
-            }
-
-            function render_news({newsList, numOfUnconfirm, total, markTime, limit}){
-                let { unconfirm, confirm } = newsList
-                let list_unconfirm
-                let list_confirm
-                if(unconfirm.length){
-                    $title_unconfirm.toggleClass
-                    list_unconfirm = template_list(newsList.unconfirm)
-                    list_unconfirm += template_footer(false)
-                    $('#unconfirm-news-title').after(list_unconfirm)
-                }else{
-                    list_unconfirm = ''
-                    $('#unconfirm-news-title').addClass('my-noshow')
-                }
-                
-                if(confirm.length){
-                    list_confirm = template_list(newsList.confirm)
-                    list_confirm += template_footer(true)
-                    $('#confirm-news-title').after(list_confirm)
-                }else{
-                    let list_confirm = ''
-                    $('#confirm-news-title').addClass('my-noshow')
-                }
-                $('.dropdown-menu').append(readMore(total, limit))
-            }
-
-            function template_list(list){
-                return list.reduce((init, cur)=>{
-                    let type = cur.type
-                    if(type === 1){
-                        init += template_fans(cur)
-                    }else if(type === 2){
-                        init += template_blog(cur)
-                    }else{
-                        init += template_comment(cur)
-                    }
-                    return init
-                }, '')
-            }
-            function template_fans({fans, timestamp}) {
-                return `
+                function template_fans({ fans, timestamp }) {
+                    return `
                 <!-- 新通知 of fans -->
                 <li class="dropdown-item position-relative news-item">
                     <a href="/other/${fans.id}" class="stretched-link">
@@ -199,10 +114,9 @@
                     </a>
                 </li>`
 
-            }
-
-            function template_blog({blog, timestamp}){
-                return `
+                }
+                function template_blog({ blog, timestamp }) {
+                    return `
                 <li class="dropdown-item  position-relative news-item">
                     <a href="/blog/${blog.id}" class="stretched-link">
                         <div>
@@ -212,9 +126,9 @@
                         </div>
                     </a>
                 </li>`
-            }
-            function template_comment({comment, timestamp}){
-                return `
+                }
+                function template_comment({ comment, timestamp }) {
+                    return `
                 <li class="dropdown-item  position-relative news-item">
                     <a href="/blog/${comment.blog.id}#comment_${comment.id}" class="stretched-link">
                         <div>
@@ -223,15 +137,14 @@
                         </div>
                     </a>
                 </li>`
-            }
-            function template_footer(confirm){
-                let t = !confirm ? `<li data-my-hr="unconfirm-news-hr">` : `<li data-my-hr="confirm-news-hr">`
-                return t + `<hr class="dropdown-divider"></li>`
-            }
-
-            function readMore(total, limit){
-                let n = total - limit
-                let t = n >= 0 ? `
+                }
+                function template_footer(confirm) {
+                    let t = !confirm ? `<li data-my-hr="unconfirm-news-hr">` : `<li data-my-hr="confirm-news-hr">`
+                    return t + `<hr class="dropdown-divider"></li>`
+                }
+                function readMore(total, limit) {
+                    let n = total - limit
+                    let t = n >= 0 ? `
                 <li id="readMore">
                     <button class="dropdown-item link-primary" type="button">
                         讀取更多
@@ -240,7 +153,87 @@
                 <li class="dropdown-item" id="noNews">
                     <span>沒有更多了</span>
                 </li>`
-                return t + `<li><hr class="dropdown-divider"></li>`
+                    return t + `<li><hr class="dropdown-divider"></li>`
+                }
+            }
+            function gogo() {
+
+
+                let api_comment = '/api/comment'
+
+                init_editor()
+
+                let $comment = $('#comment') || undefined
+
+                function init_editor() {
+                    //  editor config
+                    const { createEditor } = window.wangEditor
+
+                    const customPaste = function (editor, event) {
+                        event.preventDefault()
+                        const text = event.clipboardData.getData('text/plain')
+                        editor.insertText(text)
+                    }
+                    const editorConfig = {
+                        MENU_CONF: {},
+                        customPaste
+                    }
+                    //  editor config : placeholder
+                    editorConfig.placeholder = '我有話要說'
+                    // editor 創建
+                    const editor = createEditor({
+                        config: editorConfig,
+                        selector: '#editor-container',
+                        mode: 'simple'
+                    })
+
+                    window.editor = editor
+
+                    let $el = $('#editor-container')
+                    $el.on('keyup', handle_keyup)
+                    $el.on('click', handle_click)
+
+                    function handle_click() {
+                        if (window.data.me) {
+                            return
+                        }
+                        if (confirm('請先登入')) {
+                            location.href = `/login?from=${location.pathname}`
+                        }
+                        return
+                    }
+                    async function handle_keyup(e) {
+
+
+                        if (e.key !== 'Enter') {
+                            return
+                        }
+
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            let comment = editor.getHtml()
+                            let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
+                            comment = comment.replace(reg, '')
+                            if (!comment.trim()) return
+                            let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id })
+                            if (errno) {
+                                alert('留言失敗')
+                                console.log('msg')
+                            }
+                            let { html, time } = data
+                            let { nickname, id } = window.data.me
+                            editor.setHtml()
+                            let htmlStr = `
+                        <div>
+                            ${html}
+                            <a href="/other/${id}">${nickname}</a>
+                            <span>${time}</span>
+                        </div>`
+
+                            $list.append(htmlStr)
+                        }
+
+                    }
+                }
             }
         })
     </script>
