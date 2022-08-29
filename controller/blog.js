@@ -172,21 +172,14 @@ async function modifyBlog(blog_id, blog_data, author_id) {
  * @param {number} blog_id blog id
  * @returns 
  */
-async function getBlog(blog_id, needComment = false) {
-    //  撈取緩存
-    let blog = await get_blog(blog_id)
-    if (blog) {
-        console.log('@使用緩存')
-        return new SuccModel(blog)
-    }
-    //  若無緩存，則向db取資料
-    blog = await readBlog({ blog_id }, needComment)
+async function getBlog(blog_id, needCommit = false) {
+    let blog = await readBlog({ blog_id }, needCommit)
     if (blog) {
         //  計算etag
         let hash = hash_obj(blog)
         //  緩存
         await set_blog(blog_id, hash, blog)
-        console.log('@直接與db調用資料')
+        console.log('@使用DB資料 + 存入緩存')
         return new SuccModel({blog, etag: hash})
     } else {
         return new ErrModel(BLOG.NOT_EXIST)

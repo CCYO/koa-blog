@@ -6,8 +6,8 @@ const router = require('koa-router')()
 
 const { NEWS: { LIMIT } } = require('../../conf/constant')
 const { view_check_login } = require('../../middleware/check_login')
+const { cacheBlog } = require('../../middleware/cache')
 
-const { get_blog } = require('../../db/cache/redis/_redis')
 const {
     getBlog
 } = require('../../controller/blog')
@@ -61,17 +61,9 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
 })
 
 //  查看文章
-router.get('/blog/:blog_id', async (ctx, next) => {
+router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
     let { user: me } = ctx.session
     const { blog_id } = ctx.params
-    let match = ctx.headers.hasOwnProperty('if-none-match') ?
-        ctx.headers['if-none-match'] : undefined
-        let x = await get_blog(blog_id, match)
-        if (match && x){
-            console.log(304)
-            ctx.status = 304
-            return
-        }
     const { data: {blog, etag} } = await getBlog(blog_id, true)
 
 

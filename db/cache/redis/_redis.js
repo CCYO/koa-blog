@@ -6,11 +6,10 @@ const redis = require('redis')
 
 const { REDIS_CONF } = require('../../../conf/db')
 
-
-    const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)
-    cli.on('error', (e) => console.log('@Redis Error --> ', e))
-    cli.on('connect', () => console.log('@ => Redis 連線ok'))
-    cli.connect()
+const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)
+cli.on('error', (e) => console.log('@Redis Error --> ', e))
+cli.on('connect', () => console.log('@ => Redis 連線ok'))
+cli.connect()
 
 
 /**
@@ -28,7 +27,7 @@ const set = async (key, val, timeout = 60 * 60) => {
     console.log('@red set ok!')
 }
 
-async function set_blog(blog_id, hash, val){
+async function set_blog(blog_id, hash, val) {
     await set(`blog/${blog_id}:${hash}`, val)
 }
 
@@ -38,7 +37,7 @@ async function set_blog(blog_id, hash, val){
  */
 const get = async (key) => {
     let val = await cli.get(key)
-    if(val === null){
+    if (val === null) {
         return null
     }
     try {
@@ -48,8 +47,8 @@ const get = async (key) => {
     }
 }
 
-async function get_blog(blog_id){
-    let val = await get(`blog/${blog_id}`)
+async function get_blog(blog_id, hash) {
+    let val = await get(`blog/${blog_id}:${hash}`)
     return val
 }
 

@@ -5,6 +5,7 @@
 const router = require('koa-router')()
 
 const {
+    getNewsByUserId,
     readMoreByUserId,
     confirmNews
 } = require('../../controller/news')
@@ -12,6 +13,12 @@ const {
 const { api_check_login } = require('../../middleware/check_login')
 
 router.prefix('/api/news')
+
+router.get('/', api_check_login, async ( ctx, next) => {
+    const { id } = ctx.session.user
+    ctx.body = await getNewsByUserId(id)
+    
+})
 
 router.patch('/', api_check_login, async (ctx, next) => {
     const { id } = ctx.session.user
