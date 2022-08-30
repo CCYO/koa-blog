@@ -15,7 +15,6 @@ async function initCache(){
     try{
         await cli.connect()
         await init_cacheNews()
-        await init_cacheNews()
     }catch(e){
         console.log('@ redis cache init ERR => ', e)
     }
@@ -23,22 +22,23 @@ async function initCache(){
 
 async function init_cacheNews(){
     await set('cacheNews', [])
-    return await get('cacheNews')
+    return
 }
 
 async function get_cacheNews(id){
-    let news = await get('cacheNews')
-    let m = new Map(news)
-    return m.get(id)
+    let news = new Map(await get('cacheNews'))
+    return news.get(id)
 }
 
 async function set_cacheNews(listOfUserId, data){
     let u = uuid()
-    let m = await get('cacheNews')
+    let m = new Map(await get('cacheNews'))
+    
     listOfUserId.forEach( (id) => {
         m.set(id, {etag: u, page: null, ...data})
     })
     await set('cacheNews', [...m])
+    return u
 }
 
 async function set_blog(blog_id, hash, val) {

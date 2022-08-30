@@ -13,10 +13,12 @@ async function cacheBlog(ctx, next) {
 
 async function cacheNews(ctx, next) {
     const hash = ctx.headers['if-none-match']
+    console.log('@hash => ', hash)
     const { id } = ctx.session.user
     let { page } = ctx.request.body
     if(hash){
         let news = await get_cacheNews(id)
+        console.log('@news => ', news)
         if(news.etag === hash && news.page !== null && page <= news.page){
             console.log('@使用緩存')
             ctx.status = 304

@@ -230,7 +230,7 @@ async function getBlogListByUserId(user_id, is_author = false) {
         }
         data[key][page[key]].push(item)
     })
-    console.log('@data.show => ', data.show)
+    console.log('@data.show => ', data.show[0])
     console.log('@page.hidden => ', data.hidden)
 
     return new SuccModel(data)

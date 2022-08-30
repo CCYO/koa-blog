@@ -17,9 +17,13 @@ router.prefix('/api/news')
 
 router.post('/', api_check_login, cacheNews, async ( ctx, next) => {
     const { id } = ctx.session.user
-    let { excepts } = ctx.request.body
-    ctx.body = await getNewsByUserId(id, excepts)
-    
+    let { excepts, page } = ctx.request.body
+    let { resModel, etag } = await getNewsByUserId(id, excepts, page)
+    ctx.set({
+        etag,
+        ['Cache-Control']: 'no-cache'
+    })
+    ctx.body = resModel
 })
 
 router.patch('/', api_check_login, async (ctx, next) => {

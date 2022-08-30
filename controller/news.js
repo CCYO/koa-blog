@@ -13,6 +13,7 @@ const {
 } = require('../server/news')
 
 const { ErrModel, SuccModel } = require('../model')
+const { set_cacheNews } = require('../db/cache/redis/_redis')
 
 const {
     REGISTER: {
@@ -31,10 +32,10 @@ const {
  * @param {number} userId 
  * @returns {*} resModel
  */
-async function getNewsByUserId(userId, excepts) {
+async function getNewsByUserId(userId, excepts, page) {
     let res = await _readNews({ userId, excepts})
-    
-    return new SuccModel(res)
+    let etag = await set_cacheNews([userId], {page})
+    return { resModel: new SuccModel(res), etag}
 }
 
 async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront = false, offset) {
