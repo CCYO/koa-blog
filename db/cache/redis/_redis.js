@@ -3,14 +3,52 @@
  */
 
 const redis = require('redis')
+const { uuid } = require('uuidv4')
 
 const { REDIS_CONF } = require('../../../conf/db')
 
 const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)
 cli.on('error', (e) => console.log('@Redis Error --> ', e))
-cli.on('connect', () => console.log('@ => Redis 連線ok'))
-cli.connect()
+cli.on('connect', () => console.log('@ => Redis cache init -- ok'))
 
+async function initCache(){
+    try{
+        await cli.connect()
+        await init_cacheNews()
+        await init_cacheNews()
+    }catch(e){
+        console.log('@ redis cache init ERR => ', e)
+    }
+}
+
+async function init_cacheNews(){
+    await set('cacheNews', [])
+    return await get('cacheNews')
+}
+
+async function get_cacheNews(id){
+    let news = await get('cacheNews')
+    let m = new Map(news)
+    return m.get(id)
+}
+
+async function set_cacheNews(listOfUserId, data){
+    let u = uuid()
+    let m = await get('cacheNews')
+    listOfUserId.forEach( (id) => {
+        m.set(id, {etag: u, page: null, ...data})
+    })
+    await set('cacheNews', [...m])
+}
+
+async function set_blog(blog_id, hash, val) {
+    await set(`blog/${blog_id}:${hash}`, val)
+}
+
+async function get_blog(blog_id, hash) {
+    let val = await get(`blog/${blog_id}:${hash}`)
+    return val
+}
 
 /**
  * redis set
@@ -24,11 +62,6 @@ const set = async (key, val, timeout = 60 * 60) => {
     }
     await cli.set(key, val)
     await cli.expire(key, timeout)
-    console.log('@red set ok!')
-}
-
-async function set_blog(blog_id, hash, val) {
-    await set(`blog/${blog_id}:${hash}`, val)
 }
 
 /**
@@ -47,14 +80,12 @@ const get = async (key) => {
     }
 }
 
-async function get_blog(blog_id, hash) {
-    let val = await get(`blog/${blog_id}:${hash}`)
-    return val
-}
-
 module.exports = {
     set,
     get,
     get_blog,
-    set_blog
+    set_blog,
+    get_cacheNews,
+    set_cacheNews,
+    initCache
 }

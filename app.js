@@ -4,7 +4,7 @@ const Koa = require('koa')
 const session = require('koa-generic-session')
 const views = require('koa-views')
 const static = require('koa-static')
-//  解析前端傳來的POST數據（存入koa.body）
+//  解析前端傳來的POST數據（存入ctx.request.body）
 const bodyparser = require('koa-bodyparser')
 //  打印請求跟響應的url
 const logger = require('koa-logger')
@@ -15,7 +15,7 @@ const json = require('koa-json')
 const store = require('./db/cache/redis/sessionStore')
 
 //  連接redis
-require('./db/cache/redis/_redis')
+const { initCache } = require('./db/cache/redis/_redis')
 
 const { ErrModel } = require('./model')
 const { SERVER_ERR } = require('./model/errRes')
@@ -54,6 +54,8 @@ app.use(async (ctx, next) => {
         return
     }
 })
+
+initCache()
 
 app.use(json())
 app.use(logger())

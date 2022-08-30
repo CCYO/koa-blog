@@ -11,12 +11,14 @@ const {
 } = require('../../controller/news')
 
 const { api_check_login } = require('../../middleware/check_login')
+const { cacheNews } = require('../../middleware/cache')
 
 router.prefix('/api/news')
 
-router.get('/', api_check_login, async ( ctx, next) => {
+router.post('/', api_check_login, cacheNews, async ( ctx, next) => {
     const { id } = ctx.session.user
-    ctx.body = await getNewsByUserId(id)
+    let { excepts } = ctx.request.body
+    ctx.body = await getNewsByUserId(id, excepts)
     
 })
 

@@ -17,8 +17,21 @@
         .editor-content-view p img {
             max-width: 100%;
         }
+
+        #backdrop {
+            position: fixed;
+            z-index: 1000;
+            /* height: 100%;
+            width: 100%; */
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(200, 200, 200, 0.5);
+        }
     </style>
     <%- include('wedgets/navbar/index') %>
+    <div id="backdrop"></div>
     <div class="container pt-2 pb-2">
         <div>
             <h1> <%= blog.title %> </h1>
@@ -47,26 +60,35 @@
     <!-- 引入 editor js -->
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
     <script>
-        $(function () {
-            let $list = $('#list')
-            
-            go()
+        $(async function () {
+            try{
+                await init()
+                $('#backdrop').addClass('my-noshow')
+            }catch(e){
+                console.log('@ GET ERR => ', e)
+            }
 
-            let { show } = window.data.blog
-            show && gogo()
+            async function init() {
+                let $list = $('#list')
+                await go()
+                let { show } = window.data.blog
+                show && await gogo()
+            }
 
-            function go(){
-                getNews()
+            async function go() {
+                await getNews()
+
                 async function getNews() {
                     let api = '/api/news'
-                    let { data: { errno, data, msg } } = await axios(api)
+                    let { data: { errno, data, msg } } = await axios.post(api, {page: 0, excepts: {people: [], blogs: [], comments: []}})
                     console.log(errno)
                     let $menu = $('.dropdown-menu')
                     let $title_unconfirm = $('#unconfirm-news-title')
                     let $title_confirm = $('#confirm-news-title')
                     render_news(data)
                 }
-                function render_news({ newsList, numOfUnconfirm, total, markTime, limit }) {
+
+                function render_news({ newsList, num, limit }) {
                     let { unconfirm, confirm } = newsList
                     let list_unconfirm
                     let list_confirm
@@ -88,7 +110,8 @@
                         let list_confirm = ''
                         $('#confirm-news-title').addClass('my-noshow')
                     }
-                    $('.dropdown-menu').append(readMore(total, limit))
+
+                    $('.dropdown-menu').append(readMore(num, limit))
                 }
                 function template_list(list) {
                     return list.reduce((init, cur) => {
@@ -146,7 +169,7 @@
                     let t = !confirm ? `<li data-my-hr="unconfirm-news-hr">` : `<li data-my-hr="confirm-news-hr">`
                     return t + `<hr class="dropdown-divider"></li>`
                 }
-                function readMore(total, limit) {
+                function readMore({unconfirm, confirm, total}, limit) {
                     let n = total - limit
                     let t = n >= 0 ? `
                 <li id="readMore">

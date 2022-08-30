@@ -7,6 +7,7 @@ const { init_newsOfFollowId } = require('../utils/init')
 
 const { NEWS: { LIMIT } } = require('../conf/constant')
 const {
+    _readNews,
     readNews,
     updateNews,
 } = require('../server/news')
@@ -30,8 +31,9 @@ const {
  * @param {number} userId 
  * @returns {*} resModel
  */
-async function getNewsByUserId(userId) {
-    let res = await readNews({ userId })
+async function getNewsByUserId(userId, excepts) {
+    let res = await _readNews({ userId, excepts})
+    
     return new SuccModel(res)
 }
 

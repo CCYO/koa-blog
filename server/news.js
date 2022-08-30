@@ -8,6 +8,15 @@ const {
 
 const rawQuery = require('../db/mysql/query')
 
+async function _readNews({ userId, excepts = { people: [], blogs: [], comments: [] }}) {
+
+    let newsList = await rawQuery._readNews({ userId, excepts })
+
+    let { num } = await rawQuery._count({ userId, excepts })
+    //  markTime 與 limit 僅用在 Router - VIEW
+    return { newsList, num,  limit: LIMIT }
+}
+
 /** 查找 newsList
  * @param {{ 
  *  userId: number,
@@ -74,6 +83,7 @@ async function updateNews({ people, blogs, comments }) {
 }
 
 module.exports = {
+    _readNews,
     readNews,
     updateFollowComfirm,
     updateBlogFansComfirm,
