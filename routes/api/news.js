@@ -15,6 +15,16 @@ const { cacheNews } = require('../../middleware/cache')
 
 router.prefix('/api/news')
 
+router.get('/', api_check_login, cacheNews, async (ctx, next) => {
+    const { id } = ctx.session.user
+    let res = await getNewsByUserId(id)
+    if(!ctx.session.news){
+        ctx.session.news = []
+    }
+    ctx.session.news[0] = res.data
+    ctx.body = res
+})
+
 router.post('/', api_check_login, cacheNews, async ( ctx, next) => {
     const { id } = ctx.session.user
     let { excepts, page } = ctx.request.body

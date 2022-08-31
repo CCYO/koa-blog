@@ -25,20 +25,39 @@ async function init_cacheNews(){
     return
 }
 
-async function get_cacheNews(id){
-    let news = new Map(await get('cacheNews'))
-    return news.get(id)
+async function checkNews(id){
+    let news = new Set(await get('cacheNews'))
+    return news.has(id)
 }
 
-async function set_cacheNews(listOfUserId, data){
-    let u = uuid()
-    let m = new Map(await get('cacheNews'))
-    
-    listOfUserId.forEach( (id) => {
-        m.set(id, {etag: u, page: null, ...data})
+async function remindNews(id, data){
+    let news = new Set(await get('cacheNews'))
+    let listOfUserId = id
+    if(!Array.isArray(listOfUserId)){
+        listOfUserId = [listOfUserId]
+    }
+
+    listOfUserId.forEach( (item) => {
+        news.add(item)
     })
-    await set('cacheNews', [...m])
-    return u
+
+    await set('cacheNews', news)
+    return news
+}
+
+async function removeRemindNews(id){
+    let news = new Set(await get('cacheNews'))
+    let listOfUserId = id
+    if(!Array.isArray(listOfUserId)){
+        listOfUserId = [listOfUserId]
+    }
+    
+    listOfUserId.forEach( (item) => {
+        news.delete(item)
+    })
+
+    await set('cacheNews', news)
+    return news
 }
 
 async function set_blog(blog_id, hash, val) {
@@ -85,7 +104,8 @@ module.exports = {
     get,
     get_blog,
     set_blog,
-    get_cacheNews,
-    set_cacheNews,
+    checkNews,
+    remindNews,
+    removeRemindNews,
     initCache
 }

@@ -1,4 +1,4 @@
-const { get_blog, get_cacheNews } = require('../db/cache/redis/_redis')
+const { get_blog, checkNews, removeRemindNews } = require('../db/cache/redis/_redis')
 
 async function cacheBlog(ctx, next) {
     const { blog_id } = ctx.params
@@ -12,20 +12,13 @@ async function cacheBlog(ctx, next) {
 }
 
 async function cacheNews(ctx, next) {
-    const hash = ctx.headers['if-none-match']
-    console.log('@hash => ', hash)
     const { id } = ctx.session.user
-    let { page } = ctx.request.body
-    if(hash){
-        let news = await get_cacheNews(id)
-        console.log('@news => ', news)
-        if(news.etag === hash && news.page !== null && page <= news.page){
-            console.log('@使用緩存')
-            ctx.status = 304
-            return
-        }
+    if(await checkNews(id) || !ctx.session.news || !ctx.session.news.length){
+        console.log('@ => 向DB查詢')
+        await next()
     }
-    await next()
+    console.log('@ => 使用session')
+    ctx.body = session.news[0]
 }
 
 

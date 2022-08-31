@@ -13,7 +13,7 @@ const {
 } = require('../server/news')
 
 const { ErrModel, SuccModel } = require('../model')
-const { set_cacheNews } = require('../db/cache/redis/_redis')
+const {  } = require('../db/cache/redis/_redis')
 
 const {
     REGISTER: {
@@ -33,9 +33,40 @@ const {
  * @returns {*} resModel
  */
 async function getNewsByUserId(userId, excepts, page) {
-    let res = await _readNews({ userId, excepts})
-    let etag = await set_cacheNews([userId], {page})
-    return { resModel: new SuccModel(res), etag}
+    let data = { userId }
+    if(excepts){
+        data.excepts = excepts
+    }
+    let res = await _readNews(data)
+    await removeRemindNews(id)
+    return new SuccModel(res)
+}
+
+async function readMore(ctx){
+    let userId = ctx.session.user.id, page
+    let {excepts, page} = ctx.request.body
+    let {unconfirm, confirm} = excepts
+    if(unconfirm.num === 0){
+        if(!ctx.session.news || !ctx.session.news.length){
+            //代表這一輪剛完成清空session，還不能存
+            let { people, blogs, comments } = confirm
+            let data = {userId, excepts: {people, blogs, comments}}
+            let res = await _readNews(data)
+            return new SuccModel(res)
+        }else if(ctx.session.news[page]){
+            return new SuccModel(ctx.session.news[page])
+        }else{
+            let { people, blogs, comments } = confirm
+            let data = {userId, excepts: {people, blogs, comments}}
+            let res = await _readNews(data)
+            ctx.session.news[page] = res
+            return new SuccModel(res)
+        }
+    }else{
+        // 執行confirm
+        //  _readNews
+        //  res 若 num.unconfirm > 0，更新session.news[0]，否則重置session.news = []
+    }
 }
 
 async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront = false, offset) {
