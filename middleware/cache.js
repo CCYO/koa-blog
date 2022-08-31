@@ -18,7 +18,7 @@ async function cacheNews(ctx, next) {
         await next()
     }
     console.log('@ => 使用session')
-    ctx.body = session.news[0]
+    ctx.body = ctx.session.news[0]
 }
 
 

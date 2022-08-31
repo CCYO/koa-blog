@@ -80,7 +80,7 @@
 
                 async function getNews() {
                     let api = '/api/news'
-                    let { data: { errno, data, msg } } = await axios.post(api, {page: 0, excepts: {people: [], blogs: [], comments: []}})
+                    let { data: { errno, data, msg } } = await axios(api)
                     console.log(errno)
                     let $menu = $('.dropdown-menu')
                     let $title_unconfirm = $('#unconfirm-news-title')

@@ -70,7 +70,7 @@ router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
     //  導覽列數據
     let newsList = {}
     if (me) {
-        let { resModel: {data} } = await getNewsByUserId(me.id)
+        let { data } = await getNewsByUserId(me.id)
         newsList = data
     } else {
         me = {}

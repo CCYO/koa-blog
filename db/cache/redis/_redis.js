@@ -26,6 +26,8 @@ async function init_cacheNews(){
 }
 
 async function checkNews(id){
+    let r = await get('cacheNews')
+    console.log('@r => ',r)
     let news = new Set(await get('cacheNews'))
     return news.has(id)
 }
@@ -46,7 +48,9 @@ async function remindNews(id, data){
 }
 
 async function removeRemindNews(id){
-    let news = new Set(await get('cacheNews'))
+    let r = await get('cacheNews')
+    console.log('@rrr => ', r)
+    let news = new Set(r)
     let listOfUserId = id
     if(!Array.isArray(listOfUserId)){
         listOfUserId = [listOfUserId]
@@ -56,7 +60,8 @@ async function removeRemindNews(id){
         news.delete(item)
     })
 
-    await set('cacheNews', news)
+    await set('cacheNews', [...news])
+    
     return news
 }
 
