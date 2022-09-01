@@ -7,7 +7,9 @@ const router = require('koa-router')()
 const {
     getNewsByUserId,
     readMoreByUserId,
-    confirmNews
+    confirmNews,
+
+    readMore
 } = require('../../controller/news')
 
 const { api_check_login } = require('../../middleware/check_login')
@@ -18,11 +20,11 @@ router.prefix('/api/news')
 router.get('/', api_check_login, cacheNews, async (ctx, next) => {
     const { id } = ctx.session.user
     let res = await getNewsByUserId(id)
-    if(!ctx.session.news){
-        ctx.session.news = []
-    }
-    ctx.session.news[0] = res.data
-    ctx.body = res
+    ctx.body = ctx.session.news[0] = res
+})
+
+router.post('/', api_check_login, cacheNews, async ( ctx, next) => {
+    ctx.body = await readMore(ctx)
 })
 
 router.post('/', api_check_login, cacheNews, async ( ctx, next) => {

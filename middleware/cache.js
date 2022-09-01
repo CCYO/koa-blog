@@ -12,13 +12,15 @@ async function cacheBlog(ctx, next) {
 }
 
 async function cacheNews(ctx, next) {
+    let page = ctx.request.body.page ? ctx.request.body.page : 0
     const { id } = ctx.session.user
-    if(await checkNews(id) || !ctx.session.news || !ctx.session.news.length){
+    if(await checkNews(id) || !ctx.session.news[page]){
         console.log('@ => 向DB查詢')
         await next()
+        return
     }
     console.log('@ => 使用session')
-    ctx.body = ctx.session.news[0]
+    ctx.body = ctx.session.news[page]
 }
 
 

@@ -38,6 +38,7 @@ async function getNewsByUserId(userId, excepts, page) {
         data.excepts = excepts
     }
     let res = await _readNews(data)
+    console.log('rrr => ', res)
     await removeRemindNews(userId)
     return new SuccModel(res)
 }
@@ -124,5 +125,7 @@ async function confirmNews(listOfNewsId) {
 module.exports = {
     getNewsByUserId,    //  view user
     readMoreByUserId,   //  api news
-    confirmNews         //  api news
+    confirmNews,         //  api news
+
+    readMore
 }

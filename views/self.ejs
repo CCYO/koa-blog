@@ -273,7 +273,6 @@
             let api_follow = '/api/user/follow'
             let api_cancelFollow = '/api/user/cancelFollow'
 
-
             window.render = { blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } } }
 
             $pageLink.on('click', renderBlogList)
@@ -405,7 +404,6 @@
                 return
             }
 
-
             $btn_follow.click(handle_follow(true))
             $btn_cancelFollow.click(handle_follow(false))
 
@@ -467,7 +465,6 @@
                 $btn_follow.toggle()
                 $btn_cancelFollow.toggle()
             }
-
 
         })
     </script>

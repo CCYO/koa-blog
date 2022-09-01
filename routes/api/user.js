@@ -40,7 +40,11 @@ router.post('/', validate_user, async (ctx, next) => {
     //  判斷 session 是否存在，並儲存
     if(!resModel.errno && !ctx.session.user){
         ctx.session.user = resModel.data
+        if(!ctx.session.news){
+            ctx.session.news = []
+        }
     } 
+
     ctx.body = resModel
 })
 

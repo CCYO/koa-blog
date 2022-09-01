@@ -1,4 +1,4 @@
-window.data = {}
+window.data = window.data ? window.data : {}
 //  初始化數據
 init_data()
 

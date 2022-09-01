@@ -1,4 +1,4 @@
-console.log('@news')
+
 //  下拉選單鈕、通知鈕
 let $newsDropdown = $('#newsDropdown')
 //  通知比數span
@@ -15,7 +15,6 @@ window.data = {}
 //  初始化數據
 init_data()
 
-console.log('okok')
 //  手動註冊 BS5 下拉選單
 var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
 var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
@@ -171,18 +170,26 @@ async function showDropdown() {
     //  隱藏通知筆數
     $newsCount.toggle(false)
 
-    let newsList = window.data.newsList
-    let { listOfNewsId, numOfUnconfirm, total, count } = newsList
-    if (listOfNewsId.unconfirm) {
-        //  進到這邊，代表下拉選單列表內有unconfirmNews，且目前是頁面第一次點擊下拉選單鈕
-        await confirmNews()
-        newsList.numOfUnconfirm = 0
-    } else if (numOfUnconfirm) {
-        //  非初次點擊下拉選單紐，且後端有 晚於 window.data.newsList.markTime 的 unconfirmNews
-        await moreNewsForDropdown()
-    }
+    let newsList = window.data.news.newsList
+    let { num, limit } = window.data.news
 
-    return
+    let payload = { excepts: newsList.unconfirm, page: window.data.news.page}
+
+    let api = `/api/news`
+
+    let {data: {errno, data, msg}} = await axios.post(api, payload)
+
+    console.log(data)
+    // if (listOfNewsId.unconfirm) {
+    //     //  進到這邊，代表下拉選單列表內有unconfirmNews，且目前是頁面第一次點擊下拉選單鈕
+    //     await confirmNews()
+    //     newsList.numOfUnconfirm = 0
+    // } else if (numOfUnconfirm) {
+    //     //  非初次點擊下拉選單紐，且後端有 晚於 window.data.newsList.markTime 的 unconfirmNews
+    //     await moreNewsForDropdown()
+    // }
+
+    // return
 }
 
 //  初始化數據
@@ -197,7 +204,7 @@ function init_data() {
         }
     })
     //  初始化 newsList數據
-    _init_newsList()
+    // _init_newsList()
     $('#data').remove()
 }
 
@@ -228,7 +235,6 @@ function _init_newsList() {
     return
 }
 
-
 function _init_news(newsList) {
     let res = { people: [], blogs: [], comments: [] }
     if (!newsList.length) {
@@ -241,3 +247,121 @@ function _init_news(newsList) {
         return initVal
     }, res)
 }
+
+go()
+async function go() {
+    await getNews()
+    async function getNews() {
+        let api = '/api/news'
+        let { data: { errno, data, msg } } = await axios(api)
+        console.log('@ errno => ',errno)
+        let $menu = $('.dropdown-menu')
+        let $title_unconfirm = $('#unconfirm-news-title')
+        let $title_confirm = $('#confirm-news-title')
+        console.log('@ =>', data)
+        window.data = window.data ? window.data : {}
+        window.data.news = { ...data, page: 0 }
+        render_news(data)
+    }
+
+    function render_news({ newsList, num, limit }) {
+        let { unconfirm, confirm } = newsList
+        let list_unconfirm
+        let list_confirm
+        if(num.unconfirm){
+            $('.news-count').removeClass('my-noshow').text(num.unconfirm)
+        }else{
+            $('.news-count').addClass('my-noshow')
+        }
+        if (unconfirm.length) {
+            $title_unconfirm.toggleClass
+            list_unconfirm = template_list(newsList.unconfirm)
+            // list_unconfirm += template_footer(false)
+            $('#unconfirm-news-title').after(list_unconfirm)
+        } else {
+            list_unconfirm = ''
+            $('#unconfirm-news-title').addClass('my-noshow')
+        }
+
+        if (confirm.length) {
+            list_confirm = template_list(newsList.confirm)
+            // list_confirm += template_footer(true)
+            $('#confirm-news-title').after(list_confirm)
+        } else {
+            let list_confirm = ''
+            $('#confirm-news-title').addClass('my-noshow')
+        }
+
+        $('.dropdown-menu').append(readMore(num, limit))
+    }
+    function template_list(list) {
+        return list.reduce((init, cur) => {
+            let type = cur.type
+            if (type === 1) {
+                init += template_fans(cur)
+            } else if (type === 2) {
+                init += template_blog(cur)
+            } else {
+                init += template_comment(cur)
+            }
+            let hr = cur.confirm ? `<li data-my-hr="confirm-news-hr">` : `<li data-my-hr="unconfirm-news-hr">`
+            hr += `<hr class="dropdown-divider"></li>`
+            return init += hr
+        }, '')
+    }
+    function template_fans({ fans, timestamp }) {
+        return `
+    <!-- 新通知 of fans -->
+    <li class="dropdown-item position-relative news-item">
+        <a href="/other/${fans.id}" class="stretched-link">
+            <div>
+                <span>${fans.nickname}追蹤你囉！</span><br>
+                <span>${timestamp}</span>
+            </div>
+        </a>
+    </li>`
+
+    }
+    function template_blog({ blog, timestamp }) {
+        return `
+    <li class="dropdown-item  position-relative news-item">
+        <a href="/blog/${blog.id}" class="stretched-link">
+            <div>
+                <span>${blog.author.nickname} 有新文章唷！</span><br>
+                <span>- ${blog.title}-</span><br>
+                <span>${timestamp}</span>
+            </div>
+        </a>
+    </li>
+    `
+    }
+    function template_comment({ comment, timestamp }) {
+        return `
+    <li class="dropdown-item  position-relative news-item">
+        <a href="/blog/${comment.blog.id}#comment_${comment.id}" class="stretched-link">
+            <div>
+                <span>${comment.user.nickname} 在 ${comment.blog.title} 留言囉！</span><br>
+                <span>${timestamp}</span>
+            </div>
+        </a>
+    </li>`
+    }
+    function template_footer(confirm) {
+        let t = !confirm ? `<li data-my-hr="unconfirm-news-hr">` : `<li data-my-hr="confirm-news-hr">`
+        return t + `<hr class="dropdown-divider"></li>`
+    }
+    function readMore({unconfirm, confirm, total}, limit) {
+        let n = total - limit
+        let t = n >= 0 ? `
+    <li id="readMore">
+        <button class="dropdown-item link-primary" type="button">
+            讀取更多
+        </button>
+    </li>` : `
+    <li class="dropdown-item" id="noNews">
+        <span>沒有更多了</span>
+    </li>`
+        return t
+    }
+}
+

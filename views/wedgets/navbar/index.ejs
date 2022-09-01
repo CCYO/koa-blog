@@ -18,12 +18,9 @@
             <li class="nav-item">
                 <a class="nav-link me-3 <%= active === 'self' ? `active` : `` %>" href="/self">個人頁面</a>
             </li>
-            <li class="nav-item dropdown">
-                <%- include('./news/index', { num: newsList.num,
-        confirm: newsList.newsList.confirm, unconfirm:
-        newsList.newsList.unconfirm, limit: newsList.limit, total:
-        newsList.num.total }) %>
-            </li>
+             <li class="nav-item dropdown">
+                <%- include('./news/index') %>
+            </li> 
             <li class="nav-item">
                 <a class="nav-link me-3 <%= active === 'setting' ? `active` : `` %>" href="/setting">個人設置</a>
             </li>
