@@ -3,7 +3,7 @@
  */
 
 const { htmlStr_newsList } = require('../utils/ejs-render')
-const { init_newsOfFollowId } = require('../utils/init')
+const { init_newsOfFollowId, init_excepts } = require('../utils/init')
 
 const { NEWS: { LIMIT } } = require('../conf/constant')
 const {
@@ -34,7 +34,7 @@ const {
  */
 async function getNewsByUserId(userId, excepts, page) {
     let data = { userId }
-    if(excepts){
+    if (excepts) {
         data.excepts = excepts
     }
     let res = await _readNews(data)
@@ -43,27 +43,50 @@ async function getNewsByUserId(userId, excepts, page) {
     return new SuccModel(res)
 }
 
-async function readMore(ctx){
-    let userId = ctx.session.user.id
-    let {excepts, page} = ctx.request.body
-    let {unconfirm, confirm} = excepts
-    if(unconfirm.num === 0){
-        if(!ctx.session.news || !ctx.session.news.length){
+async function readMore(ctx) {
+    let { id: userId } = ctx.session.user
+    let { excepts, page } = ctx.request.body
+    let { unconfirm, confirm } = excepts
+    
+    if(unconfirm.num){
+        let res = await confirmNews(news)
+        if (res.errno) {
+            throw res
+        }
+    }else if (ctx.session.news[page]) {
+        return ctx.session.news[page]
+    }
+    excepts = init_excepts(excepts)
+    let res = await _readNews({ userId, excepts})
+    let {newsList} = res
+    let model = new SuccModel(res)
+    if(newsList.unconfirm.length){
+        ctx.session.news[0] = model
+    }else if(unconfirm.num){
+        ctx.session.news = []
+    }else{
+        ctx.session.news[page] = model
+    }
+    return model
+
+
+    if (unconfirm.num === 0) {
+        if (!ctx.session.news || !ctx.session.news.length) {
             //代表這一輪剛完成清空session，還不能存
             let { people, blogs, comments } = confirm
-            let data = {userId, excepts: {people, blogs, comments}}
+            let data = { userId, excepts: { people, blogs, comments } }
             let res = await _readNews(data)
             return new SuccModel(res)
-        }else if(ctx.session.news[page]){
+        } else if (ctx.session.news[page]) {
             return new SuccModel(ctx.session.news[page])
-        }else{
+        } else {
             let { people, blogs, comments } = confirm
-            let data = {userId, excepts: {people, blogs, comments}}
+            let data = { userId, excepts: { people, blogs, comments } }
             let res = await _readNews(data)
             ctx.session.news[page] = res
             return new SuccModel(res)
         }
-    }else{
+    } else {
         // 執行confirm
         //  _readNews
         //  res 若 num.unconfirm > 0，更新session.news[0]，否則重置session.news = []
@@ -115,7 +138,7 @@ async function confirmNews(listOfNewsId) {
         return new ErrModel(NEWS.BLOG_FANS_CONFIRM_ERR)
     } else if (people.length !== rowOfPeople) {
         return new ErrModel(NEWS.FOLLOW_CONFIRM_ERR)
-    } else if (comments.length !== rowOfComments){
+    } else if (comments.length !== rowOfComments) {
         return new ErrModel(NEWS.FOLLOW_COMMENT_CONFIRM_ERR)
     }
     let res = { listOfNewsId, count: rowOfBlogs + rowOfPeople }

@@ -33,6 +33,24 @@ function init_newsOfFollowId(newsList) {
     return res
 }
 
+function init_excepts(excepts){
+	let res = { people: [], blogs: [], comments: []}
+	for(key in excepts){
+		let map = new Map(Object.entries(excepts[key]))
+    	map.forEach((list, k) => {
+            if(k === 'num'){
+                return
+            }
+            console.log(list, k)
+            console.log(res[k])
+    		res[k] = [...res[k], ...list]
+        })
+    }
+    return res
+}
+
+
 module.exports = {
-    init_newsOfFollowId
+    init_newsOfFollowId,
+    init_excepts
 }

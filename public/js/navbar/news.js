@@ -16,28 +16,31 @@ window.data = {}
 init_data()
 
 //  手動註冊 BS5 下拉選單
-var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
-var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
-    return new bootstrap.Dropdown(dropdownToggleEl)
-})
+// var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+// var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+//     return new bootstrap.Dropdown(dropdownToggleEl)
+// })
 
 //  綁定 下拉選單鈕 的 click handle
-$newsDropdown.click(showDropdown)
+// $newsDropdown.click(showDropdown)
 //  綁定 readMore鈕 的 click handle
-$readMore.click(moreNewsForReadMore)
+$readMore.on('click', moreNewsForReadMore)
 
 async function moreNewsForReadMore() {
-    let newsList = window.data.newsList
-    let { markTime } = newsList
-    let listOfNewsId = newsList.listOfNewsId
-    let payload = { markTime, listOfNewsId: listOfNewsId.confirm }
-
-    let { data: { errno, data, msg } } = await axios.post(api_readMore, payload)
+    let { newsList, page } = window.data.news
+    
+    let payload = { excepts: newsList, page: page + 1}
+    
+    let { data: { errno, data, msg } } = await axios.post(api_news, payload)
     if (errno) {
         alert('發生錯誤')
         console.log('@msg => ', msg)
         return
     }
+    
+    
+
+    return
 
     /*
      * numOfUnconfirm - 晚於 markTime 的 unconfirmNews 總數
@@ -173,11 +176,11 @@ async function showDropdown() {
     let newsList = window.data.news.newsList
     let { num, limit } = window.data.news
 
-    let payload = { excepts: newsList.unconfirm, page: window.data.news.page}
+    let payload = { excepts: newsList.unconfirm, page: window.data.news.page }
 
     let api = `/api/news`
 
-    let {data: {errno, data, msg}} = await axios.post(api, payload)
+    let { data: { errno, data, msg } } = await axios.post(api, payload)
 
     console.log(data)
     // if (listOfNewsId.unconfirm) {
@@ -249,33 +252,52 @@ function _init_news(newsList) {
 }
 
 go()
+
+function show(q, boo = true){
+    return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
+}
+
+let $newsCount = $('.news-count')
+let $title_unconfirm = $('#unconfirm-news-title')
+
 async function go() {
     await getNews()
+    initNewsList()
     async function getNews() {
         let api = '/api/news'
         let { data: { errno, data, msg } } = await axios(api)
-        console.log('@ errno => ',errno)
+        
         let $menu = $('.dropdown-menu')
-        let $title_unconfirm = $('#unconfirm-news-title')
+        
         let $title_confirm = $('#confirm-news-title')
-        console.log('@ =>', data)
+        
         window.data = window.data ? window.data : {}
         window.data.news = { ...data, page: 0 }
         render_news(data)
     }
 
-    function render_news({ newsList, num, limit }) {
+    function render_news({ newsList, num, limit }, first = false) {
         let { unconfirm, confirm } = newsList
         let list_unconfirm
         let list_confirm
-        if(num.unconfirm){
-            $('.news-count').removeClass('my-noshow').text(num.unconfirm)
-        }else{
-            $('.news-count').addClass('my-noshow')
+        show($newsCount, num.unconfirm).text(num.unconfirm || '')
+        
+        let map = new Map(Object.entries(newsList))
+        map.forEach((list, key) => {
+            let $title = $(`#${key}-news-title`)
+            if(list.length){
+                first && show($title, unconfirm.length) || $title.addClass('my-show')
+                
+            }
+        })
+        if(unconfirm.length){
+            
+            list_unconfirm = template_list(newsList.unconfirm)
+            let hr = $(`#${key}-news-title`)
         }
         if (unconfirm.length) {
             $title_unconfirm.toggleClass
-            list_unconfirm = template_list(newsList.unconfirm)
+            
             // list_unconfirm += template_footer(false)
             $('#unconfirm-news-title').after(list_unconfirm)
         } else {
@@ -292,7 +314,7 @@ async function go() {
             $('#confirm-news-title').addClass('my-noshow')
         }
 
-        $('.dropdown-menu').append(readMore(num, limit))
+        readMore(num.total, limit)
     }
     function template_list(list) {
         return list.reduce((init, cur) => {
@@ -346,22 +368,39 @@ async function go() {
         </a>
     </li>`
     }
-    function template_footer(confirm) {
-        let t = !confirm ? `<li data-my-hr="unconfirm-news-hr">` : `<li data-my-hr="confirm-news-hr">`
-        return t + `<hr class="dropdown-divider"></li>`
-    }
-    function readMore({unconfirm, confirm, total}, limit) {
+    
+    function readMore(total, limit) {
         let n = total - limit
-        let t = n >= 0 ? `
-    <li id="readMore">
-        <button class="dropdown-item link-primary" type="button">
-            讀取更多
-        </button>
-    </li>` : `
-    <li class="dropdown-item" id="noNews">
-        <span>沒有更多了</span>
-    </li>`
-        return t
+        if(n >= 0){
+            $readMore.addClass('my-show').removeClass('my-noshow') 
+            $noNews.addClass('my-noshow').removeClass('my-show') 
+        }else{
+            $readMore.addClass('my-noshow').removeClass('my-show') 
+            $noNews.addClass('my-show').removeClass('my-noshow') 
+        }
     }
 }
 
+function initNewsList() {
+    let { newsList } = window.data.news
+    let initNews = { confirm: { }, unconfirm: {}}
+    for(key in newsList){
+        initNews[key] = { people: [], blogs: [], comments: [] , num: 0}
+        newsList[key].reduce((init, { type, id }) => {
+            switch (type) {
+                case 1:
+                    init['people'].push(id)
+                    break;
+                case 2:
+                    init['blogs'].push(id)
+                    break;
+                case 3:
+                    init['comments'].push(id)
+                    break;
+            }
+            init.num++
+            return init
+        }, initNews[key])
+    }
+    window.data.news.newsList = initNews
+}
