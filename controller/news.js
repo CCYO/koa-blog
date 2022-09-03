@@ -53,44 +53,19 @@ async function readMore(ctx) {
         if (res.errno) {
             throw res
         }
-    }else if (ctx.session.news[page]) {
-        return ctx.session.news[page]
+        ctx.session.news = []
     }
+
     excepts = init_excepts(excepts)
     let res = await _readNews({ userId, excepts})
     let {newsList} = res
     let model = new SuccModel(res)
-    if(newsList.unconfirm.length){
+    if (!ctx.session.news.length && unconfirm.num) {
         ctx.session.news[0] = model
-    }else if(unconfirm.num){
-        ctx.session.news = []
-    }else{
+    }else if(ctx.session.news.length){
         ctx.session.news[page] = model
     }
     return model
-
-
-    if (unconfirm.num === 0) {
-        if (!ctx.session.news || !ctx.session.news.length) {
-            //代表這一輪剛完成清空session，還不能存
-            let { people, blogs, comments } = confirm
-            let data = { userId, excepts: { people, blogs, comments } }
-            let res = await _readNews(data)
-            return new SuccModel(res)
-        } else if (ctx.session.news[page]) {
-            return new SuccModel(ctx.session.news[page])
-        } else {
-            let { people, blogs, comments } = confirm
-            let data = { userId, excepts: { people, blogs, comments } }
-            let res = await _readNews(data)
-            ctx.session.news[page] = res
-            return new SuccModel(res)
-        }
-    } else {
-        // 執行confirm
-        //  _readNews
-        //  res 若 num.unconfirm > 0，更新session.news[0]，否則重置session.news = []
-    }
 }
 
 async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront = false, offset) {

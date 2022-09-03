@@ -28,17 +28,17 @@ $readMore.on('click', moreNewsForReadMore)
 
 async function moreNewsForReadMore() {
     let { newsList, page } = window.data.news
-    
-    let payload = { excepts: newsList, page: page + 1}
-    
+
+    let payload = { excepts: newsList, page: page + 1 }
+
     let { data: { errno, data, msg } } = await axios.post(api_news, payload)
     if (errno) {
         alert('發生錯誤')
         console.log('@msg => ', msg)
         return
     }
-    
-    
+
+    render_news(data)
 
     return
 
@@ -253,11 +253,11 @@ function _init_news(newsList) {
 
 go()
 
-function show(q, boo = true){
+function show(q, boo = true) {
     return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
 }
 
-let $newsCount = $('.news-count')
+
 let $title_unconfirm = $('#unconfirm-news-title')
 
 async function go() {
@@ -266,126 +266,111 @@ async function go() {
     async function getNews() {
         let api = '/api/news'
         let { data: { errno, data, msg } } = await axios(api)
-        
+
         let $menu = $('.dropdown-menu')
-        
+
         let $title_confirm = $('#confirm-news-title')
-        
+
         window.data = window.data ? window.data : {}
         window.data.news = { ...data, page: 0 }
-        render_news(data)
+        render_news(data, true)
     }
 
-    function render_news({ newsList, num, limit }, first = false) {
-        let { unconfirm, confirm } = newsList
-        let list_unconfirm
-        let list_confirm
-        show($newsCount, num.unconfirm).text(num.unconfirm || '')
-        
-        let map = new Map(Object.entries(newsList))
-        map.forEach((list, key) => {
-            let $title = $(`#${key}-news-title`)
-            if(list.length){
-                first && show($title, unconfirm.length) || $title.addClass('my-show')
-                
-            }
-        })
-        if(unconfirm.length){
-            
-            list_unconfirm = template_list(newsList.unconfirm)
-            let hr = $(`#${key}-news-title`)
-        }
-        if (unconfirm.length) {
-            $title_unconfirm.toggleClass
-            
-            // list_unconfirm += template_footer(false)
-            $('#unconfirm-news-title').after(list_unconfirm)
-        } else {
-            list_unconfirm = ''
-            $('#unconfirm-news-title').addClass('my-noshow')
-        }
-
-        if (confirm.length) {
-            list_confirm = template_list(newsList.confirm)
-            // list_confirm += template_footer(true)
-            $('#confirm-news-title').after(list_confirm)
-        } else {
-            let list_confirm = ''
-            $('#confirm-news-title').addClass('my-noshow')
-        }
-
-        readMore(num.total, limit)
-    }
-    function template_list(list) {
-        return list.reduce((init, cur) => {
-            let type = cur.type
-            if (type === 1) {
-                init += template_fans(cur)
-            } else if (type === 2) {
-                init += template_blog(cur)
-            } else {
-                init += template_comment(cur)
-            }
-            let hr = cur.confirm ? `<li data-my-hr="confirm-news-hr">` : `<li data-my-hr="unconfirm-news-hr">`
-            hr += `<hr class="dropdown-divider"></li>`
-            return init += hr
-        }, '')
-    }
-    function template_fans({ fans, timestamp }) {
-        return `
-    <!-- 新通知 of fans -->
-    <li class="dropdown-item position-relative news-item">
-        <a href="/other/${fans.id}" class="stretched-link">
-            <div>
-                <span>${fans.nickname}追蹤你囉！</span><br>
-                <span>${timestamp}</span>
-            </div>
-        </a>
-    </li>`
-
-    }
-    function template_blog({ blog, timestamp }) {
-        return `
-    <li class="dropdown-item  position-relative news-item">
-        <a href="/blog/${blog.id}" class="stretched-link">
-            <div>
-                <span>${blog.author.nickname} 有新文章唷！</span><br>
-                <span>- ${blog.title}-</span><br>
-                <span>${timestamp}</span>
-            </div>
-        </a>
-    </li>
-    `
-    }
-    function template_comment({ comment, timestamp }) {
-        return `
-    <li class="dropdown-item  position-relative news-item">
-        <a href="/blog/${comment.blog.id}#comment_${comment.id}" class="stretched-link">
-            <div>
-                <span>${comment.user.nickname} 在 ${comment.blog.title} 留言囉！</span><br>
-                <span>${timestamp}</span>
-            </div>
-        </a>
-    </li>`
-    }
     
-    function readMore(total, limit) {
-        let n = total - limit
-        if(n >= 0){
-            $readMore.addClass('my-show').removeClass('my-noshow') 
-            $noNews.addClass('my-noshow').removeClass('my-show') 
-        }else{
-            $readMore.addClass('my-noshow').removeClass('my-show') 
-            $noNews.addClass('my-show').removeClass('my-noshow') 
+}
+
+function render_news({ newsList, num, limit }, first = false) {
+    let { unconfirm, confirm } = newsList
+    let list_unconfirm
+    let list_confirm
+    show($newsCount, num.unconfirm).text(num.unconfirm || '')
+
+    let map = new Map(Object.entries(newsList))
+    map.forEach((list, key) => {
+        let $title = $(`#${key}-news-title`)
+        if (!list.length) {
+            first && $title.addClass('my-noshow')
         }
+        show($title)
+        let html_list = template_list(list)
+        let hr = $(`[data-my-hr=${key}-news-hr]`)
+        if (!hr.length){
+            $title.after(html_list)
+        }else{
+            hr.last().after(html_list)
+        }
+    })
+    readMore(num.total, limit)
+}
+function template_list(list) {
+    return list.reduce((init, cur) => {
+        let type = cur.type
+        if (type === 1) {
+            init += template_fans(cur)
+        } else if (type === 2) {
+            init += template_blog(cur)
+        } else {
+            init += template_comment(cur)
+        }
+        let hr = cur.confirm ? `<li data-my-hr="confirm-news-hr">` : `<li data-my-hr="unconfirm-news-hr">`
+        hr += `<hr class="dropdown-divider"></li>`
+        return init += hr
+    }, '')
+}
+function template_fans({ fans, timestamp }) {
+    return `
+<!-- 新通知 of fans -->
+<li class="dropdown-item position-relative news-item">
+    <a href="/other/${fans.id}" class="stretched-link">
+        <div>
+            <span>${fans.nickname}追蹤你囉！</span><br>
+            <span>${timestamp}</span>
+        </div>
+    </a>
+</li>`
+
+}
+function template_blog({ blog, timestamp }) {
+    return `
+<li class="dropdown-item  position-relative news-item">
+    <a href="/blog/${blog.id}" class="stretched-link">
+        <div>
+            <span>${blog.author.nickname} 有新文章唷！</span><br>
+            <span>- ${blog.title}-</span><br>
+            <span>${timestamp}</span>
+        </div>
+    </a>
+</li>
+`
+}
+function template_comment({ comment, timestamp }) {
+    return `
+<li class="dropdown-item  position-relative news-item">
+    <a href="/blog/${comment.blog.id}#comment_${comment.id}" class="stretched-link">
+        <div>
+            <span>${comment.user.nickname} 在 ${comment.blog.title} 留言囉！</span><br>
+            <span>${timestamp}</span>
+        </div>
+    </a>
+</li>`
+}
+
+function readMore(total, limit) {
+    let n = total - limit
+    if (n >= 0) {
+        $readMore.addClass('my-show').removeClass('my-noshow')
+        $noNews.addClass('my-noshow').removeClass('my-show')
+    } else {
+        $readMore.addClass('my-noshow').removeClass('my-show')
+        $noNews.addClass('my-show').removeClass('my-noshow')
     }
 }
 
 function initNewsList() {
     let { newsList } = window.data.news
-    let initNews = { confirm: { }, unconfirm: {}}
-    for(key in newsList){
-        initNews[key] = { people: [], blogs: [], comments: [] , num: 0}
+    let initNews = { confirm: {}, unconfirm: {} }
+    for (key in newsList) {
+        initNews[key] = { people: [], blogs: [], comments: [], num: 0 }
         newsList[key].reduce((init, { type, id }) => {
             switch (type) {
                 case 1:
