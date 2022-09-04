@@ -96,26 +96,32 @@ const _gen_formidable = (bar) => {
  */
 async function parse(ctx) {
     let { hash, ext, blog_id } = ctx.query
-    if (ext !== 'jpg' && ext !== 'png') {
-        // ctx.body = new ErrModel(AVATAR_FORMAT_ERR)
-        return undefined
+    if (hash && ext !== 'jpg' && ext !== 'png') {
+        throw new ErrModel(AVATAR_FORMAT_ERR)
     }
 
     let prefix = blog_id ? BLOG : AVATAR
     let res = {}
 
-    //  建立GCS ref
-    let ref = storage.bucket().file(`${prefix}/${hash}.${ext}`)
-    //  確認GCS是否有該圖檔
-    let [exist] = await ref.exists()
 
-    if (!exist || !blog_id) {
-        let bar = { ref, _promise: undefined }
-        let form = _gen_formidable(bar)
-        let { fields } = await _parse(ctx, bar, form)
-        res = fields ? { ...fields } : {}
+
+    let bar = { ref: undefined }
+
+    if (hash) {
+        //  建立GCS ref
+        bar.ref = storage.bucket().file(`${prefix}/${hash}.${ext}`)
+        //  確認GCS是否有該圖檔
+        let [exist] = await bar.ref.exists()
+        if (!exist) {
+            bar._promise = undefined
+        }
     }
-    res[prefix] = ref.publicUrl() //+ `?hash=${hash}`
+    let form = _gen_formidable(bar)
+    let { fields } = await _parse(ctx, bar, form)
+    res = fields ? { ...fields } : {}
+    if (bar.ref) {
+        res[prefix] = bar.ref.publicUrl() //+ `?hash=${hash}`
+    }
     return res
 }
 

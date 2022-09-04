@@ -1,7 +1,7 @@
 const { Op } = require('sequelize')
 const my_xxs = require('../utils/xss')
 
-const { get_blog, set_blog } = require('../db/cache/redis/_redis')
+const { set_blog, tellBlogFollower } = require('../server/cache')
 
 const { hash_obj } = require('../utils/crypto')
 const {
@@ -63,6 +63,7 @@ async function removeBlog(blog_id) {
     if (!res) {
         return new ErrModel(BLOG.BLOG_REMOVE_ERR)
     }
+    await readFollowers({blog_id})
     return new SuccModel()
 }
 
@@ -103,15 +104,20 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
     //  依show處理如何更新 BlogFollow
     if (show > 0) {
+        //  取得粉絲群
+        let followerList = await readFans(author_id)
+        //  取得粉絲群的id
+        let listOfFollowerId = []
+        if (followerList.length){
+            listOfFollowerId = followerList.map(({ id }) => id)
+        }
+
         if (show === 1) {
             /* 初次公開，將文章與粉絲作關聯 */
             data.show = true
 
-            //  取得粉絲群
-            let followerList = await readFans(author_id)
             if (followerList.length) {
-                //  取得粉絲群的id
-                let listOfFollowerId = followerList.map(({ id }) => id)
+                
                 //  將粉絲與文章作關聯
                 let res = await createFollowers({ blog_id, listOfFollowerId })
                 if (!res) {
@@ -127,7 +133,6 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
             //  FollowBlog 軟刪除 confirm: false 的 粉絲
             await hiddenBlog({ blog_id, confirm: false })
-
         } else if (show === 3) {
             //  不是第一次公開
             data.show = true
@@ -141,24 +146,22 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             await restoreBlog({ blog_id })
 
             //  找出目前 BlogFollower
-            let listOfFollowerId = await readFollowers({ blog_id })
-
-            //  找出目前 FollowPeople.fans
-            let listOfFans = await readFans(author_id)
-
+            let listOfBlogFollowerId = await readFollowers({ blog_id })
+            console.log('既存的follower => ', listOfBlogFollowerId)
             //  篩去兩者重複的id
-            let listOfNewFollowerId = listOfFans.reduce((initVal, { id }) => {
-                if (!listOfFollowerId.includes(id)) {
+            let listOfNewFollowerId = listOfFollowerId.reduce((initVal, { id }) => {
+                if (!listOfBlogFollowerId.includes(id)) {
                     initVal.push(id)
                 }
                 return initVal
             }, [])
-
+            console.log('@新的follower => ', listOfNewFollowerId)
             if (listOfNewFollowerId.length) {
                 //  新增FollowBlog.follower
                 await createFollowers({ blog_id, listOfFollowerId: listOfNewFollowerId })
             }
         }
+        await tellBlogFollower(blog_id)
     }
 
     //  更新文章數據
@@ -211,8 +214,6 @@ async function getBlogListByUserId(user_id, is_author = false) {
     }
 
     let blogList = await readBlogList(param)
-
-    // let data = { show: [], hidden: [] }
 
     let data = { show: [], hidden: [] }
 

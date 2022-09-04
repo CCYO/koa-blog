@@ -3,7 +3,6 @@
  */
 
 const redis = require('redis')
-const { uuid } = require('uuidv4')
 
 const { REDIS_CONF } = require('../../../conf/db')
 
@@ -23,55 +22,6 @@ async function initCache(){
 async function init_cacheNews(){
     await set('cacheNews', [])
     return
-}
-
-async function checkNews(id){
-    let r = await get('cacheNews')
-    console.log('@r => ',r)
-    let news = new Set(await get('cacheNews'))
-    return news.has(id)
-}
-
-async function remindNews(id, data){
-    let news = new Set(await get('cacheNews'))
-    let listOfUserId = id
-    if(!Array.isArray(listOfUserId)){
-        listOfUserId = [listOfUserId]
-    }
-
-    listOfUserId.forEach( (item) => {
-        news.add(item)
-    })
-
-    await set('cacheNews', news)
-    return news
-}
-
-async function removeRemindNews(id){
-    let r = await get('cacheNews')
-    console.log('@rrr => ', r)
-    let news = new Set(r)
-    let listOfUserId = id
-    if(!Array.isArray(listOfUserId)){
-        listOfUserId = [listOfUserId]
-    }
-    
-    listOfUserId.forEach( (item) => {
-        news.delete(item)
-    })
-
-    await set('cacheNews', [...news])
-    
-    return news
-}
-
-async function set_blog(blog_id, hash, val) {
-    await set(`blog/${blog_id}:${hash}`, val)
-}
-
-async function get_blog(blog_id, hash) {
-    let val = await get(`blog/${blog_id}:${hash}`)
-    return val
 }
 
 /**
@@ -107,10 +57,5 @@ const get = async (key) => {
 module.exports = {
     set,
     get,
-    get_blog,
-    set_blog,
-    checkNews,
-    remindNews,
-    removeRemindNews,
     initCache
 }

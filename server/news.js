@@ -14,7 +14,6 @@ async function _readNews({ userId, excepts = { people: [], blogs: [], comments: 
 
     let { num } = await rawQuery._count({ userId, excepts })
     //  markTime 與 limit 僅用在 Router - VIEW
-    console.log('@nnn ', newsList)
     return { newsList, num,  limit: LIMIT }
 }
 

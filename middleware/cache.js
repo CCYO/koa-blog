@@ -1,4 +1,4 @@
-const { get_blog, checkNews, removeRemindNews } = require('../db/cache/redis/_redis')
+const { get_blog, checkNews, removeRemindNews } = require('../server/cache')
 
 async function cacheBlog(ctx, next) {
     const { blog_id } = ctx.params
@@ -16,18 +16,17 @@ async function cacheNews(ctx, next) {
     const { id } = ctx.session.user
     let hasNews = await checkNews(id)
     if (!hasNews && ctx.session.news[page]) {
-        console.log('@ => 使用session')
+        console.log(`@ => ${ctx.method} - ${ctx.path} 使用session`)
         ctx.body = ctx.session.news[page]
         return
     }
     if (hasNews || (!page && !ctx.session.news[page -1]) ) {
         ctx.session.news = []
     }
-    console.log('@ => 向DB查詢')
+    await removeRemindNews(id)
+    console.log(`@ => ${ctx.method} - ${ctx.path} 向DB查詢`)
     await next()
     return
-
-
 }
 
 

@@ -103,16 +103,16 @@
                         <% if (isMyIdol === undefined) { %>
                         <a href="/blog/new">撰寫新文章</a>
                         <% } %>
-                    </div>
+                    </div>  
 
                     <div class="blogList bg-light p-2" data-my-blog-key="show">
-                        <% if(blogList.show.length){ %>
                         <div class="blogList-header">
                             <h2>已發布的BLOG</h2>
                             <button type="button"
                                 class="btn btn-sm btn-outline-danger <%= blogList.show.length? 'my-show' : 'my-noshow'%>"
                                 data-my-blogs="show">全部刪除</button>
                         </div>
+                        <% if(blogList.show.length){ %>
                         <ul class="list-group list-group-flush">
                             <% blogList.show[0].forEach(({id, title}) => { %>
                             <li
@@ -138,7 +138,7 @@
                                 <li class="page-item my-disabled">
                                     <a class="page-link" href='#' data-my-way="back">Previous</a>
                                 </li>
-                                <% blogList.hidden.forEach((item, ind, arr) => { %>
+                                <% blogList.show.forEach((item, ind, arr) => { %>
                                 <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
                                     <a class="page-link" href="#" data-my-key="show"
                                         data-my-ind="<%= ind %>"><%= ind + 1 %></a>
@@ -385,6 +385,7 @@
 
                 let $target = $(e.target)
                 let id = $target.data('my-remove-blog')
+
                 const {
                     data: {
                         errno, data, msg
@@ -394,11 +395,17 @@
                 if (errno) {
                     alert(msg)
                 } else {
-                    $(ddd[0]).parents("li").remove()
                     let key = $target.parents('[data-my-blog-key]').data('my-blog-key')
                     let list = window.data.blogList[key]
-                    let ind = list.findIndex(item => item.id === id)
-                    list.splice(ind, 1)
+                    let ind = list.forEach( (arr ,page)  => {
+                        arr.forEach( (item, ind) => {
+                            if(id === item.id){
+                                console.log(key, arr, page, ind)
+                                list[page].splice(ind, 1)
+                            }
+                        })
+                    })
+                    $target.parents('.list-group-item').remove()
                     alert('已成功刪除此篇文章')
                 }
                 return

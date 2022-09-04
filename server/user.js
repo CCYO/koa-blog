@@ -99,6 +99,7 @@ const updateUser = async ({newData, id}) => {
     }
 
     let user = await User.findByPk(id)
+    
     user = await user.update(data)
     
     return init_user(user)

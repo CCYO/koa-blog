@@ -63,6 +63,7 @@ async function updateFollowBlog(newData, opt_where, options) {
 
 async function readFollowers(opt_where) {
     let where = { ...opt_where }
+    
     let res = await FollowBlog.findAll({
         attributes: ['follower_id'],
         where

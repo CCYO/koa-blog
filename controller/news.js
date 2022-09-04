@@ -13,7 +13,7 @@ const {
 } = require('../server/news')
 
 const { ErrModel, SuccModel } = require('../model')
-const { removeRemindNews } = require('../db/cache/redis/_redis')
+const { removeRemindNews } = require('../server/cache')
 
 const {
     REGISTER: {
@@ -38,15 +38,13 @@ async function getNewsByUserId(userId, excepts, page) {
         data.excepts = excepts
     }
     let res = await _readNews(data)
-    console.log('rrr => ', res)
-    await removeRemindNews(userId)
     return new SuccModel(res)
 }
 
 async function readMore(ctx) {
     let { id: userId } = ctx.session.user
     let { excepts, page } = ctx.request.body
-    let { unconfirm, confirm } = excepts
+    let { unconfirm } = excepts
     
     if(unconfirm.num){
         let res = await confirmNews(news)
@@ -58,8 +56,9 @@ async function readMore(ctx) {
 
     excepts = init_excepts(excepts)
     let res = await _readNews({ userId, excepts})
-    let {newsList} = res
+
     let model = new SuccModel(res)
+    //  處理session
     if (!ctx.session.news.length && unconfirm.num) {
         ctx.session.news[0] = model
     }else if(ctx.session.news.length){

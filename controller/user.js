@@ -20,6 +20,8 @@ const {
     readBlogList
 } = require('../server/blog')
 
+const { remindNews, tellPeopleFollower } = require('../server/cache')
+
 const { ErrModel, SuccModel } = require('../model')
 
 const {
@@ -73,9 +75,9 @@ const register = async (email, password) => {
  */
 const findUser = async ({ id, email, password }) => {
     const res = await readUser({ id, email, password })
-    if (!res){
+    if (!res) {
         return new ErrModel(READ.NOT_EXIST)
-    } 
+    }
     return new SuccModel(res)
 }
 
@@ -88,7 +90,7 @@ async function getPeopleById(id, isSelf = false) {
     data.fansList = await readFans(id)
     data.idolList = await readIdols(id)
     if (!isSelf) {
-        data.currentUser = await readUser({id})
+        data.currentUser = await readUser({ id })
     }
     return new SuccModel(data)
 }
@@ -98,9 +100,10 @@ async function getPeopleById(id, isSelf = false) {
  * @param {number} idol_id 
  * @returns {object} SuccessModel { Follow_People Ins { id, idol_id, fans_id }} | ErrorModel
  */
-async function followIdol({fans_id, idol_id}) {
-    const ok = await followPeople.addFans({idol_id, fans_id})
+async function followIdol({ fans_id, idol_id }) {
+    const ok = await followPeople.addFans({ idol_id, fans_id })
     if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
+    await remindNews(idol_id)
     return new SuccModel()
 }
 
@@ -109,42 +112,45 @@ async function followIdol({fans_id, idol_id}) {
  * @param {number} idol_id 
  * @returns {object} SuccessModel | ErrorModel
  */
-async function cancelFollowIdol({fans_id, idol_id}) {
-    const res = await followPeople.deleteFans({idol_id, fans_id})
+async function cancelFollowIdol({ fans_id, idol_id }) {
+    const res = await followPeople.deleteFans({ idol_id, fans_id })
 
-    if(!res){
+    if (!res) {
         return new ErrModel(FOLLOW.CANCEL_ERR)
     }
 
     //  也要將FollowBlog紀錄刪除
-
     //  找出 idol 為作者，且被fans追蹤的的文章
     let blogList = await readBlogList({ user_id: idol_id, follower_id: fans_id, allBlogs: true })
 
-    if(!blogList.length){
-        return new SuccModel()
+    if (blogList.length) {
+        let listOfBlogId = blogList.reduce((initVal, { id }) => {
+            initVal.push(id)
+            return initVal
+        }, [])
+
+        //  刪除關聯
+        res = await followBlog.deleteFollower({ blog_id: listOfBlogId, follower_id: fans_id })
     }
 
-    let listOfBlogId = blogList.reduce((initVal, {id}) => {
-        initVal.push(id)
-        return initVal
-    }, [])
-
-    //  刪除關聯
-    let ok = await followBlog.deleteFollower({ blog_id: listOfBlogId, follower_id: fans_id })
-    if (!ok) return new ErrModel(FOLLOW.CANCEL_ERR)
+    if(!res){
+        return new ErrModel(FOLLOW.CANCEL_ERR)
+    }
+    
+    await remindNews([fans_id, idol_id])
     return new SuccModel()
+
 }
 
 //  更新user
 const modifyUserInfo = async (newData, id) => {
-    const user = await updateUser({newData, id})
-    
+    const user = await updateUser({ newData, id })
+    await tellPeopleFollower(id)
     return new SuccModel(user)
 }
 
 //  登出
-function logout (ctx){
+function logout(ctx) {
     ctx.session = null
     return new SuccModel('成功登出')
 }
@@ -172,6 +178,6 @@ module.exports = {
     getPeopleById,      // view user
 
     modifyUserInfo,     //  api user
-    getFansById,        
-    getIdolsById,       
+    getFansById,
+    getIdolsById,
 }

@@ -106,6 +106,7 @@
                 } = await axios.patch(window.payload.api, formData)
 
                 if (errno) {
+                    console.log('GET ERROR')
                     alert(msg)
                 } else {
                     window.data.me = data

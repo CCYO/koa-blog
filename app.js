@@ -42,9 +42,10 @@ app.use(async (ctx, next) => {
     } catch (error) {
         if (isDev && error.hasOwnProperty('errno')) {	//  不希望發生的錯誤
             if (!/^\/api\//.test(ctx.path)) {   //  針對 VIEW 的錯誤
-                ctx.body = error.mark
+                ctx.body = error.msg
             } else {                              //  針對 API 的錯誤
-                ctx.body = { errno: error.errno, msg: error.mark }
+                ctx.status = 500
+                ctx.body = { errno: error.errno, msg: error.msg }
             }
         } else {    //  完全無預期的錯誤
             ctx.status = 500
@@ -94,9 +95,14 @@ app.use(viewBlog.routes(), viewBlog.allowedMethods())
 app.on('error', (err, ctx) => {
     if (!err.hasOwnProperty('errno')) {   //  完全無預期的錯誤
         err.errno = 9999
-        err.mark = '完全預期外的錯誤'
+        err.msg = '完全預期外的錯誤'
     }
-    console.log('@ custom ErrHandle Fire!!!! => ', err.errno, err.mark, err)
+    console.log(`
+    @ custom ErrHandle Fire!!!! => \n
+    err.errno => ${err.errno}\n
+    err.msg => ${err.msg} \n
+    err => \n `, err
+    )
 });
 
 module.exports = app

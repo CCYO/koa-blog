@@ -79,7 +79,7 @@ router.get('/self', view_check_login, async (ctx, next) => {
 
 //  他人頁
 router.get('/other/:id', async (ctx, next) => {
-    let me = ctx.session.user
+    let me = ctx.session.user ? ctx.session.user : {}
     let id = ctx.params.id * 1
 
     //  若是自己的ID，跳轉到個人頁面
@@ -87,12 +87,12 @@ router.get('/other/:id', async (ctx, next) => {
         return ctx.redirect('/self')
     }
 
-    let newsList = {}
+    // let newsList = {}
     if (me) {
-        let { data } = await getNewsByUserId(me.id)
-        newsList = data
+        // let { data } = await getNewsByUserId(me.id)
+        // newsList = data
     } else {
-        me = {}
+        // me = {}
     }
 
     let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
@@ -103,7 +103,7 @@ router.get('/other/:id', async (ctx, next) => {
         //  導覽列數據
         logging: me.id ? true : false,
         active: 'other',
-        newsList, //  window.data 數據
+        // newsList, //  window.data 數據
 
         //  主要資訊數據
         currentUser, //  window.data 數據
