@@ -63,7 +63,7 @@ async function removeBlog(blog_id) {
     if (!res) {
         return new ErrModel(BLOG.BLOG_REMOVE_ERR)
     }
-    await readFollowers({blog_id})
+    await readFollowers({ blog_id })
     return new SuccModel()
 }
 
@@ -108,16 +108,16 @@ async function modifyBlog(blog_id, blog_data, author_id) {
         let followerList = await readFans(author_id)
         //  取得粉絲群的id
         let listOfFollowerId = []
-        if (followerList.length){
+        if (followerList.length) {
             listOfFollowerId = followerList.map(({ id }) => id)
         }
-
+        console.log('@listOfFollowerId => ', listOfFollowerId)
         if (show === 1) {
             /* 初次公開，將文章與粉絲作關聯 */
             data.show = true
 
-            if (followerList.length) {
-                
+            if (listOfFollowerId.length) {
+
                 //  將粉絲與文章作關聯
                 let res = await createFollowers({ blog_id, listOfFollowerId })
                 if (!res) {
@@ -149,7 +149,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             let listOfBlogFollowerId = await readFollowers({ blog_id })
             console.log('既存的follower => ', listOfBlogFollowerId)
             //  篩去兩者重複的id
-            let listOfNewFollowerId = listOfFollowerId.reduce((initVal, { id }) => {
+            let listOfNewFollowerId = listOfFollowerId.reduce((initVal, id) => {
                 if (!listOfBlogFollowerId.includes(id)) {
                     initVal.push(id)
                 }
@@ -177,14 +177,14 @@ async function modifyBlog(blog_id, blog_data, author_id) {
  */
 async function getBlog(blog_id, needCommit = false) {
     let blog = await readBlog({ blog_id }, needCommit)
-    console.log('@blog => ' , blog)
+    console.log('@blog => ', blog)
     if (blog) {
         //  計算etag
         let hash = hash_obj(blog)
         //  緩存
         await set_blog(blog_id, hash, blog)
         console.log('@使用DB資料 + 存入緩存')
-        return new SuccModel({blog, etag: hash})
+        return new SuccModel({ blog, etag: hash })
     } else {
         return new ErrModel(BLOG.NOT_EXIST)
     }
