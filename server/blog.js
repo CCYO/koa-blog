@@ -21,7 +21,7 @@ const {
 async function createBlog({ title, user_id }) {
     let blog = await Blog.create({ title, user_id })
 
-    //  為 blog 創建一個 作者的留言，且 id = pid
+    //  為 blog 創建一個 作者的留言，且 pid = id
     let comment = await blog.createComment({ user_id })
     comment = await comment.update({ p_id: comment.id })
 

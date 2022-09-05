@@ -123,6 +123,5 @@ module.exports = {
     getNewsByUserId,    //  view user
     readMoreByUserId,   //  api news
     confirmNews,         //  api news
-
     readMore
 }

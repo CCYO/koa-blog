@@ -17,7 +17,7 @@ async function _readNews({ userId, excepts}) {
     let { people, blogs, comments } = excepts
     let listOfPeopleId = people.join(',') || undefined
     let listOfBlogsId = blogs.join(',') || undefined
-    let listOfCommentsId = comments.join(',')
+    let listOfCommentsId = comments.join(',') || undefined
 
     let query = `
     SELECT type, id, target_id, follow_id, confirm, time

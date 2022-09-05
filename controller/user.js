@@ -113,7 +113,7 @@ async function followIdol({ fans_id, idol_id }) {
  * @returns {object} SuccessModel | ErrorModel
  */
 async function cancelFollowIdol({ fans_id, idol_id }) {
-    const res = await followPeople.deleteFans({ idol_id, fans_id })
+    let res = await followPeople.deleteFans({ idol_id, fans_id })
 
     if (!res) {
         return new ErrModel(FOLLOW.CANCEL_ERR)

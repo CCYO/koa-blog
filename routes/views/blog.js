@@ -62,19 +62,11 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
 
 //  查看文章
 router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
-    let { user: me } = ctx.session
+    let me = ctx.session.user ? ctx.session.user : {}
     const { blog_id } = ctx.params
     const { data: {blog, etag} } = await getBlog(blog_id, true)
 
 
-    //  導覽列數據
-    let newsList = {}
-    if (me) {
-        let { data } = await getNewsByUserId(me.id)
-        newsList = data
-    } else {
-        me = {}
-    }
     ctx.set({
         etag,
         ['Cache-Control']: 'no-cache'
@@ -84,11 +76,11 @@ router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
         //  導覽列數據
         logging: me ? true : false,
         active: 'blog',
-        newsList, //  window.data 數據
+        // newsList, //  window.data 數據
 
         //  主要資訊數據
         blog,   //  window.data 數據
-        me      //  window.data 數據
+        me     //  window.data 數據
     })
 
 })

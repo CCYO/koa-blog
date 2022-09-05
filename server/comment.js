@@ -1,6 +1,8 @@
 const { Op } = require('sequelize')
 const xss = require('xss')
 
+const { remindNews } = require('./cache')
+
 const {
     Comment,
     User,
@@ -23,7 +25,7 @@ async function addComment({ blog_id, html, user_id, p_id }) {
             blog_id,
             id: { [Op.not]: json_comment.id }
         },
-        attributes: ['id'],
+        attributes: ['id', 'user_id', 'p_id'],
         include: {
             model: User,
             attributes: ['id', 'email', 'nickname']
@@ -32,8 +34,8 @@ async function addComment({ blog_id, html, user_id, p_id }) {
     let json_otherComment = init_comment(other_comments)
     console.log('@json_otherComment => ', json_otherComment)
     let listOfCommentId = json_otherComment.map(item => item.id)
-
     console.log('@listOfCommentId => ', listOfCommentId)
+
     //  FollowComment 內部 comment_id 屬於 listOfCommentId 的數據，全部更新
     //  針對 confirm 的條目，更新 {comment_id, confirm, createdAt}
     let now = new Date()
@@ -44,7 +46,7 @@ async function addComment({ blog_id, html, user_id, p_id }) {
         }
     })
     //  針對 unconfirm 的條目，更新 {comment_id}
-    await FollowComment.update({ comment_id: json_comment.id }, {
+    await FollowComment.update({ comment_id: json_comment.id, createdAt: now }, {
         where: {
             comment_id: { [Op.in]: listOfCommentId },
             confirm: false
@@ -59,6 +61,10 @@ async function addComment({ blog_id, html, user_id, p_id }) {
     if (!hasComment) {
         await commentIns.addFollowComment_F(user_id, { through: { confirm: true } })
     }
+    //  於cache通知所有留言者有新消息
+    let listOfUserId = json_otherComment.map(item => item.user_id)
+    console.log('@listOfUserId => ', listOfUserId)
+    await remindNews(listOfUserId)
 
     return json_comment
 }

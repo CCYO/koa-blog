@@ -62,6 +62,7 @@
     <script>
         $(async function () {
             try{
+                let $list = $('#list')
                 await init()
                 $('#backdrop').addClass('my-noshow')
             }catch(e){
@@ -69,120 +70,12 @@
             }
 
             async function init() {
-                let $list = $('#list')
-                await go()
+                
+                
                 let { show } = window.data.blog
                 show && await gogo()
             }
 
-            async function go() {
-                await getNews()
-
-                async function getNews() {
-                    let api = '/api/news'
-                    let { data: { errno, data, msg } } = await axios(api)
-                    console.log(errno)
-                    let $menu = $('.dropdown-menu')
-                    let $title_unconfirm = $('#unconfirm-news-title')
-                    let $title_confirm = $('#confirm-news-title')
-                    render_news(data)
-                }
-
-                function render_news({ newsList, num, limit }) {
-                    let { unconfirm, confirm } = newsList
-                    let list_unconfirm
-                    let list_confirm
-                    if (unconfirm.length) {
-                        $title_unconfirm.toggleClass
-                        list_unconfirm = template_list(newsList.unconfirm)
-                        // list_unconfirm += template_footer(false)
-                        $('#unconfirm-news-title').after(list_unconfirm)
-                    } else {
-                        list_unconfirm = ''
-                        $('#unconfirm-news-title').addClass('my-noshow')
-                    }
-
-                    if (confirm.length) {
-                        list_confirm = template_list(newsList.confirm)
-                        // list_confirm += template_footer(true)
-                        $('#confirm-news-title').after(list_confirm)
-                    } else {
-                        let list_confirm = ''
-                        $('#confirm-news-title').addClass('my-noshow')
-                    }
-
-                    $('.dropdown-menu').append(readMore(num, limit))
-                }
-                function template_list(list) {
-                    return list.reduce((init, cur) => {
-                        let type = cur.type
-                        if (type === 1) {
-                            init += template_fans(cur)
-                        } else if (type === 2) {
-                            init += template_blog(cur)
-                        } else {
-                            init += template_comment(cur)
-                        }
-                        let hr = cur.confirm ? `<li data-my-hr="confirm-news-hr">` : `<li data-my-hr="unconfirm-news-hr">`
-                        hr += `<hr class="dropdown-divider"></li>`
-                        return init += hr
-                    }, '')
-                }
-                function template_fans({ fans, timestamp }) {
-                    return `
-                <!-- 新通知 of fans -->
-                <li class="dropdown-item position-relative news-item">
-                    <a href="/other/${fans.id}" class="stretched-link">
-                        <div>
-                            <span>${fans.nickname}追蹤你囉！</span><br>
-                            <span>${timestamp}</span>
-                        </div>
-                    </a>
-                </li>`
-
-                }
-                function template_blog({ blog, timestamp }) {
-                    return `
-                <li class="dropdown-item  position-relative news-item">
-                    <a href="/blog/${blog.id}" class="stretched-link">
-                        <div>
-                            <span>${blog.author.nickname} 有新文章唷！</span><br>
-                            <span>- ${blog.title}-</span><br>
-                            <span>${timestamp}</span>
-                        </div>
-                    </a>
-                </li>
-                `
-                }
-                function template_comment({ comment, timestamp }) {
-                    return `
-                <li class="dropdown-item  position-relative news-item">
-                    <a href="/blog/${comment.blog.id}#comment_${comment.id}" class="stretched-link">
-                        <div>
-                            <span>${comment.user.nickname} 在 ${comment.blog.title} 留言囉！</span><br>
-                            <span>${timestamp}</span>
-                        </div>
-                    </a>
-                </li>`
-                }
-                function template_footer(confirm) {
-                    let t = !confirm ? `<li data-my-hr="unconfirm-news-hr">` : `<li data-my-hr="confirm-news-hr">`
-                    return t + `<hr class="dropdown-divider"></li>`
-                }
-                function readMore({unconfirm, confirm, total}, limit) {
-                    let n = total - limit
-                    let t = n >= 0 ? `
-                <li id="readMore">
-                    <button class="dropdown-item link-primary" type="button">
-                        讀取更多
-                    </button>
-                </li>` : `
-                <li class="dropdown-item" id="noNews">
-                    <span>沒有更多了</span>
-                </li>`
-                    return t
-                }
-            }
             function gogo() {
 
 
