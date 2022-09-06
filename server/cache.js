@@ -26,7 +26,10 @@ async function checkNews(id){
 
 async function remindNews(id){
     console.log('++')
-    let news = new Set(await get('cacheNews'))
+    let news = await get('cacheNews')
+    console.log('0arr @news => ', news)
+    news = new Set(news)
+    console.log('0set @news => ', news)
     let listOfUserId = id
     if(!Array.isArray(listOfUserId)){
         listOfUserId = [listOfUserId]
@@ -34,10 +37,11 @@ async function remindNews(id){
 
     listOfUserId.forEach( (item) => {
         news.add(item)
+        console.log('after add @news => ', news)
     })
-
+    
     await set('cacheNews', [...news])
-    console.log('@cacheNews => ', news)
+    console.log('after forEach @cacheNews => ', news)
     return news
 }
 

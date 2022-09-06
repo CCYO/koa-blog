@@ -23,8 +23,8 @@ async function addComment({ blog_id, html, user_id, p_id }) {
     const other_comments = await Comment.findAll({
         where: {
             blog_id,
-            // id: { [Op.not]: json_comment.id },
-            user_id: { [Op.not]: user_id}
+            id: { [Op.not]: json_comment.id },
+            // user_id: { [Op.not]: user_id}
         },
         attributes: ['id', 'user_id', 'p_id'],
         include: {
@@ -32,7 +32,7 @@ async function addComment({ blog_id, html, user_id, p_id }) {
             attributes: ['id', 'email', 'nickname']
         }
     })
-    let json_otherComment = init_comment(other_comments)
+    let json_otherComment = init_comment(other_comments, true)
     console.log('@json_otherComment => ', json_otherComment)
     let listOfCommentId = json_otherComment.map(item => item.id)
     console.log('@listOfCommentId => ', listOfCommentId)
@@ -63,7 +63,9 @@ async function addComment({ blog_id, html, user_id, p_id }) {
         await commentIns.addFollowComment_F(user_id, { through: { confirm: true } })
     }
     //  於cache通知所有留言者有新消息
-    let listOfUserId = json_otherComment.map(item => item.user_id)
+    let listOfUserId = json_otherComment.filter(({user:{id}}) => id !== user_id).map(({user:{id}}) => id)
+    console.log('@listOfUserId => ', listOfUserId)
+    listOfUserId = [...new Set([...listOfUserId])]
     console.log('@listOfUserId => ', listOfUserId)
     await remindNews(listOfUserId)
 
@@ -79,7 +81,7 @@ async function readComment({ id, blog_id }) {
         whereOps.id = id
     }
     let res = await Comment.findAll({
-        attributes: ['id', 'html', 'updatedAt'],
+        attributes: ['id', 'html', 'updatedAt', 'p_id'],
         where: whereOps,
         include: [
             {

@@ -260,11 +260,12 @@
                     alert('BLOG創立完成')
                     document.title = '撰寫文章'
 
+                    let { user_id, createdAt, updatedAt, ..._data} = data
                     window.data.blog = {
                         ...window.data.blog,
-                        ...data,    //  { id, title, html, show, showAt, createdAt, updatedAt }
-                        html: null,
-                        showAt: null
+                        ..._data,    //  { id, title, html, show, showAt, createdAt, updatedAt }
+                        showAt: null,
+                        html: null
                     }
 
                     $title.on('input', handle_valicate_title)

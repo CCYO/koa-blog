@@ -193,7 +193,7 @@ async function go() {
         let { data: { errno, data, msg } } = await axios(api)
 
         if (errno) {
-            alert(mg)
+            alert(msg)
             return
         }
 
@@ -208,8 +208,11 @@ function init_data() {
     $(`[data-my-data]`).each((index, el) => {
         let $el = $(el)
         let prop = $el.data('my-data')
+        console.log('prop => ', prop)
         try {
-            window.data[prop] = JSON.parse($el.text())
+            let j = JSON.parse($el.text())
+            console.log('j => ', j)
+            window.data[prop] =j
         } catch (e) {
             window.data[prop] = undefined
         }

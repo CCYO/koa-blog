@@ -1,10 +1,11 @@
 
 
-const { getNewsByUserId } = require('./controller/news')
+const { initCache, get } = require('./db/cache/redis/_redis')
 
 async function go(){
     try{
-        console.log(await getNewsByUserId(1, {people: [], blogs: [], comments: [56,57]}))
+        await initCache()
+        console.log(await get('cacheNews'))
     }catch(e){
         console.log('@ e => ', e)
     }

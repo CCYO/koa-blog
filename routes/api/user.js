@@ -39,6 +39,7 @@ router.post('/', validate_user, async (ctx, next) => {
     const resModel = await findUser({email, password})
     //  判斷 session 是否存在，並儲存
     if(!resModel.errno && !ctx.session.user){
+        console.log('初次登入，設定session')
         ctx.session.user = resModel.data
         if(!ctx.session.news){
             ctx.session.news = []

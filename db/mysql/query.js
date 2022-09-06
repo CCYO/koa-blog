@@ -216,6 +216,7 @@ async function _init_newsItemOfComfirmRoNot(item) {
             return null
         }
         let { id: comment_id, user, blog } = comment
+        console.log('$$ => ', { id: comment_id})
         return { ...res, comment: { id: comment_id, user, blog } }
     }
 }

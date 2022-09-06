@@ -29,6 +29,7 @@ function _init_blog(blog) {
     let { Imgs: imgList, User: author, Comments: comments, ...data } = json
 
     let res = { ...data }
+    console.log('### ===> ', data)
 
     if(author){
         res.author = init_user(author)

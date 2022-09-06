@@ -63,6 +63,7 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
 //  查看文章
 router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
     let me = ctx.session.user ? ctx.session.user : {}
+    console.log('@有登入 => ', me)
     const { blog_id } = ctx.params
     const { data: {blog, etag} } = await getBlog(blog_id, true)
 
@@ -74,7 +75,7 @@ router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
     return await ctx.render('blog', {
         title: blog.title,
         //  導覽列數據
-        logging: me ? true : false,
+        logging: me.id ? true : false,
         active: 'blog',
         // newsList, //  window.data 數據
 
