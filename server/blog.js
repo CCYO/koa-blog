@@ -28,7 +28,7 @@ async function createBlog({ title, user_id }) {
     //  讓作者追蹤這份(↑)自己的留言，且標示為 comfirm
     let follow = await comment.addFollowComment_F(user_id, { through: { confirm: true } })
 
-    return init_blog(blog)
+    return blog
 }
 
 /** 刪除 blog

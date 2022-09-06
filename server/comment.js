@@ -19,11 +19,12 @@ async function addComment({ blog_id, html, user_id, p_id }) {
     let json_comment = commentIns.toJSON()
     let comment = await readComment({ id: json_comment.id })
 
-    //  整理出 同一blog內所有 comment(撇除當前這份)
+    //  整理出 同一blog內所有 comment(撇除當前這份，以及非留言者本人的comment)
     const other_comments = await Comment.findAll({
         where: {
             blog_id,
-            id: { [Op.not]: json_comment.id }
+            // id: { [Op.not]: json_comment.id },
+            user_id: { [Op.not]: user_id}
         },
         attributes: ['id', 'user_id', 'p_id'],
         include: {

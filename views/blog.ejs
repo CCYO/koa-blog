@@ -40,14 +40,16 @@
             </div>
         </div>
         <% if (blog.show) { %>
-        <div id="comment">
+        <div id="comment" data-my-pid="<%= (blog.comments.filter(({id, p_id}) => id === p_id))[0].p_id %>">
             <div id="editor-container"></div>
             <div id="list">
-                <% blog.comments.length && blog.comments.forEach(({html, time, user: { id, nickname }}) => { %>
+                <% blog.comments.length && blog.comments.forEach(({id, p_id, html, time, user: { id: u_id, nickname }}) => { %>
+                    <% if( id !== p_id){ %>
                 <div><%- html %>
-                    <a href="/other/<%= id %>"><%= nickname %> </a>
+                    <a href="/other/<%= u_id %>"><%= nickname %> </a>
                     <span><%= time %> </span>
                 </div>
+                <% } %>
                 <% }) %>
             </div>
         </div>
@@ -62,7 +64,7 @@
     <script>
         $(async function () {
             try{
-                let $list = $('#list')
+                
                 await init()
                 $('#backdrop').addClass('my-noshow')
             }catch(e){
@@ -77,8 +79,6 @@
             }
 
             function gogo() {
-
-
                 let api_comment = '/api/comment'
 
                 init_editor()
@@ -123,18 +123,17 @@
                         return
                     }
                     async function handle_keyup(e) {
-
-
                         if (e.key !== 'Enter') {
                             return
                         }
 
                         if (e.key === 'Enter' && !e.shiftKey) {
+                            let p_id = $('#comment').data('my-pid')
                             let comment = editor.getHtml()
                             let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
                             comment = comment.replace(reg, '')
                             if (!comment.trim()) return
-                            let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id })
+                            let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id, p_id})
                             if (errno) {
                                 alert('留言失敗')
                                 console.log('msg')
@@ -149,7 +148,7 @@
                             <span>${time}</span>
                         </div>`
 
-                            $list.append(htmlStr)
+                            $('#list').append(htmlStr)
                         }
 
                     }

@@ -2,14 +2,18 @@ const moment = require('moment')
 
 const { init_user } = require('./user')
 
-function init_comment(comment) {
+function init_comment(comment, need_ppid = false) {
     if (comment instanceof Array) {
         let res = []
 
         comment.forEach(item => {
             let json = _init_comment(item)
             let { id, p_id } = json
-            id !== p_id && res.push(json)
+            if(!need_ppid){
+                id !== p_id && res.push(json)
+            }else{
+                res.push(json)
+            } 
         })
 
         return res
