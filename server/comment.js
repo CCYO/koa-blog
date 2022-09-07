@@ -47,7 +47,7 @@ async function addComment({ blog_id, html, user_id, p_id }) {
         }
     })
     //  針對 unconfirm 的條目，更新 {comment_id}
-    await FollowComment.update({ comment_id: json_comment.id, createdAt: now }, {
+    await FollowComment.update({ comment_id: json_comment.id }, {
         where: {
             comment_id: { [Op.in]: listOfCommentId },
             confirm: false
@@ -84,11 +84,11 @@ async function readComment({ id, blog_id, p_id, createdAt }) {
         whereOps.p_id = p_id
     }
     if(createdAt){
-        whereOps.createdAt = { [Op.gte]: createdAt}
+        whereOps.createdAt = { [Op.gt]: createdAt}
     }
 
     let res = await Comment.findAll({
-        attributes: ['id', 'html', 'updatedAt', 'p_id'],
+        attributes: ['id', 'html', 'updatedAt', 'createdAt','p_id'],
         where: whereOps,
         include: [
             {

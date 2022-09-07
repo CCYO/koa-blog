@@ -216,11 +216,14 @@ async function _init_newsItemOfComfirmRoNot(item) {
             return null
         }
         let { id: comment_id, p_id, createdAt, time, user, blog } = comment
-        let other_comments = await readComment({ p_id, createdAt })
+        //  獲取早前未確認到的comment資訊
+        console.log(`尋找同部落格，晚於${createdAt}的留言`)
+        let other_comments = await readComment({ blog_id: blog.id, createdAt })
         if(other_comments.length){
             console.log('@有其他')
             let num = other_comments.length
             let names = other_comments.map( ({user, id}) => ({nickname: user.nickname, id}))
+            
             return { ...res, comment: { id: comment_id, user, blog, time, num, names, other_comments} }
         }
         console.log('@沒有其他')
