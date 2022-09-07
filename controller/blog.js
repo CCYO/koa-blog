@@ -177,13 +177,12 @@ async function modifyBlog(blog_id, blog_data, author_id) {
  */
 async function getBlog(blog_id, needCommit = false) {
     let blog = await readBlog({ blog_id }, needCommit)
-    console.log('@blog => ', blog)
     if (blog) {
         //  計算etag
         let hash = hash_obj(blog)
         //  緩存
         await set_blog(blog_id, hash, blog)
-        console.log('@使用DB資料 + 存入緩存')
+        console.log(`@BLOG 從DB撈取 + 存入緩存 session -> blog/${blog_id}: { ${hash} : BLOG數據 }`)
         return new SuccModel({ blog, etag: hash })
     } else {
         return new ErrModel(BLOG.NOT_EXIST)
@@ -232,8 +231,6 @@ async function getBlogListByUserId(user_id, is_author = false) {
         }
         data[key][page[key]].push(item)
     })
-    console.log('@data.show => ', data.show[0])
-    console.log('@page.hidden => ', data.hidden)
 
     return new SuccModel(data)
 }

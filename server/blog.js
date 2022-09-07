@@ -161,14 +161,7 @@ async function readBlogList({ user_id, follower_id, allBlogs = false }) {
         where,
         include
     })
-    // let data = { show: [], hidden: [] }
 
-    // if (!blogList.length) return []
-
-    // blogList = blogList.map(item => {
-    //     let { User: author, ...blog } = item.toJSON()
-    //     return { ...blog, author: init_user(author) }
-    // })
     return init_blog(blogList)
 }
 

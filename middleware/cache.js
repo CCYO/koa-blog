@@ -3,8 +3,8 @@ const { get_blog, checkNews, removeRemindNews } = require('../server/cache')
 async function cacheBlog(ctx, next) {
     const { blog_id } = ctx.params
     let hash = ctx.headers['if-none-match']
-    if (hash && await get_blog(blog_id, hash)) {
-        console.log('@使用緩存')
+    if(hash && await get_blog(blog_id, hash)){
+        console.log('@BLOG 使用緩存')
         ctx.status = 304
         return
     }

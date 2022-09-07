@@ -1,7 +1,7 @@
 const { Op } = require('sequelize')
 const xss = require('xss')
 
-const { remindNews } = require('./cache')
+const { remindNews, del_blog } = require('./cache')
 
 const {
     Comment,
@@ -68,7 +68,7 @@ async function addComment({ blog_id, html, user_id, p_id }) {
     listOfUserId = [...new Set([...listOfUserId])]
     console.log('@listOfUserId => ', listOfUserId)
     await remindNews(listOfUserId)
-
+    await del_blog(blog_id)
     return json_comment
 }
 

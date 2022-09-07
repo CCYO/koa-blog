@@ -39,6 +39,12 @@ const set = async (key, val, timeout = 60 * 60) => {
     }
     await cli.set(key, val)
     await cli.expire(key, timeout)
+    return true
+}
+
+const del = async (key) => {
+    await cli.del(key)
+    return true
 }
 
 /**
@@ -59,6 +65,7 @@ const get = async (key) => {
 
 module.exports = {
     set,
+    del,
     get,
     initCache
 }

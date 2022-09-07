@@ -1,4 +1,4 @@
-const { set, get } = require('../db/cache/redis/_redis')
+const { set, get, del } = require('../db/cache/redis/_redis')
 const { readFollowers } = require('./followBlog')
 const { readFans } = require('./followPeople')
 
@@ -62,13 +62,23 @@ async function removeRemindNews(id){
     return news
 }
 
-async function set_blog(blog_id, hash, val) {
-    await set(`blog/${blog_id}:${hash}`, val)
+async function set_blog(blog_id, hash = undefined, val = undefined) {
+    if(!hash && !val){
+        return await set(`blog/${blog_id}`, '')
+    }
+    return await set(`blog/${blog_id}`, {[hash]: val})
+}
+
+async function del_blog(blog_id) {
+    return await del(`blog/${blog_id}`)
 }
 
 async function get_blog(blog_id, hash) {
-    let val = await get(`blog/${blog_id}:${hash}`)
-    return val
+    let kv = await get(`blog/${blog_id}`)
+    if(!kv){
+        return null
+    }
+    return kv[hash]
 }
 
 module.exports = {
@@ -78,5 +88,6 @@ module.exports = {
     removeRemindNews,
     checkNews,
     set_blog,
+    del_blog,
     get_blog
 }

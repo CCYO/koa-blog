@@ -51,17 +51,14 @@ router.get('/self', view_check_login, async (ctx, next) => {
     let currentUser = ctx.session.user
     let id = currentUser.id
 
-    // let { data: newsList } = await getNewsByUserId(id)
     let { data: { fansList, idolList } } = await getPeopleById(id, true)
     let { data: blogList } = await getBlogListByUserId(id, true)
-    console.log('@blogList => ', blogList)
-    // console.log('@newsList => ', newsList)
+    
     await ctx.render('self', {
         title: `${currentUser.nickname}的主頁`,
         //  導覽列數據
         logging: true,
         active: 'self',
-        // newsList, //  window.data 數據
 
         //  主要資訊數據
         isMyIdol: undefined, //  window.data 數據

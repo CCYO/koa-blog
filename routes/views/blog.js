@@ -65,7 +65,6 @@ router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
     const { blog_id } = ctx.params
     const { data: {blog, etag} } = await getBlog(blog_id, true)
 
-
     ctx.set({
         etag,
         ['Cache-Control']: 'no-cache'
