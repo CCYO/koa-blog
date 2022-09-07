@@ -20,7 +20,10 @@ async function initCache(){
 }
 
 async function init_cacheNews(){
-    await set('cacheNews', [])
+    let news = await get('cacheNews')
+    if(!news){
+        await set('cacheNews', [])    
+    }
     return
 }
 

@@ -215,9 +215,17 @@ async function _init_newsItemOfComfirmRoNot(item) {
         if (!comment) {
             return null
         }
-        let { id: comment_id, user, blog } = comment
-        console.log('$$ => ', { id: comment_id})
-        return { ...res, comment: { id: comment_id, user, blog } }
+        let { id: comment_id, p_id, createdAt, time, user, blog } = comment
+        let other_comments = await readComment({ p_id, createdAt })
+        if(other_comments.length){
+            console.log('@有其他')
+            let num = other_comments.length
+            let names = other_comments.map( ({user, id}) => ({nickname: user.nickname, id}))
+            return { ...res, comment: { id: comment_id, user, blog, time, num, names, other_comments} }
+        }
+        console.log('@沒有其他')
+
+        return { ...res, comment: { id: comment_id, user, blog, time } }
     }
 }
 

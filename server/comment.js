@@ -72,7 +72,7 @@ async function addComment({ blog_id, html, user_id, p_id }) {
     return json_comment
 }
 
-async function readComment({ id, blog_id }) {
+async function readComment({ id, blog_id, p_id, createdAt }) {
     let whereOps = {}
     if (blog_id) {
         whereOps.blog_id = blog_id
@@ -80,6 +80,13 @@ async function readComment({ id, blog_id }) {
     if (id) {
         whereOps.id = id
     }
+    if(p_id){
+        whereOps.p_id = p_id
+    }
+    if(createdAt){
+        whereOps.createdAt = { [Op.gte]: createdAt}
+    }
+
     let res = await Comment.findAll({
         attributes: ['id', 'html', 'updatedAt', 'p_id'],
         where: whereOps,

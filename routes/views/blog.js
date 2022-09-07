@@ -40,11 +40,10 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
     const { createdAt, updatedAt, ...me } = ctx.session.user
     const { blog_id } = ctx.params
 
-    const { data: newsList } = await getNewsByUserId(me.id)    
-    const { data: { blog, etag} } = await getBlog(blog_id * 1)
+    const { data: { blog } } = await getBlog(blog_id * 1)
 
     if (blog.author.id != me.id) {
-        return ctx.redirect('/setting')
+        return ctx.body = '你哪位?'
     }
 
     return await ctx.render('blog-edit', { 
@@ -52,7 +51,6 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
         //  導覽列數據
         logging: true,
         active: 'editor',
-        newsList, //  window.data 數據
 
         //  主要資訊數據
         blog,   //  window.data 數據
@@ -63,7 +61,7 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
 //  查看文章
 router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
     let me = ctx.session.user ? ctx.session.user : {}
-    console.log('@有登入 => ', me)
+    
     const { blog_id } = ctx.params
     const { data: {blog, etag} } = await getBlog(blog_id, true)
 
@@ -77,11 +75,9 @@ router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
         //  導覽列數據
         logging: me.id ? true : false,
         active: 'blog',
-        // newsList, //  window.data 數據
 
         //  主要資訊數據
-        blog,   //  window.data 數據
-        me     //  window.data 數據
+        blog   //  window.data 數據
     })
 
 })

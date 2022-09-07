@@ -64,7 +64,6 @@
     <script>
         $(async function () {
             try{
-                
                 await init()
                 $('#backdrop').addClass('my-noshow')
             }catch(e){
@@ -72,8 +71,6 @@
             }
 
             async function init() {
-                
-                
                 let { show } = window.data.blog
                 show && await gogo()
             }

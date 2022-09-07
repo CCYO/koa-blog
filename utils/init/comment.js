@@ -24,13 +24,13 @@ function init_comment(comment, need_ppid = false) {
 
 function _init_comment(comment) {
     let json = comment.toJSON ? comment.toJSON() : comment
-    let { id, html, p_id, updatedAt: time, User: user, Blog: blog } = json
+    let { id, html, p_id, createdAt, updatedAt: time, User: user, Blog: blog } = json
     time = moment(time).format('YYYY-MM-DD HH:mm')
 
     user = init_user(user)
     delete user.email
 
-    let res = { id, html, p_id, time, user, blog }
+    let res = { id, html, p_id, time, createdAt, user, blog }
 
     return res
 }
