@@ -41,8 +41,8 @@ async function moreNewsForReadMore() {
 
     //  將已完成的轉移至confirm
     let m = new Map(Object.entries(newsList.unconfirm))
-    m.forEach( (item, key) => {
-        if(key === 'num'){
+    m.forEach((item, key) => {
+        if (key === 'num') {
             newsList.confirm[key] += newsList.unconfirm[key]
             newsList.unconfirm[key] = 0
             return
@@ -139,13 +139,12 @@ function render_news({ newsList, num, limit }, first = false) {
     `
     }
     function template_comment({ comment, timestamp }) {
-        let nicknames = comment.user.nickname
-        let { other } = comment
-        if(other){
-            nicknames = other.nicknames.length > 2 ?
-                other.nicknames.slice(0,2).join(',') + `與其他${other.num - 2}人，都` :
-                other.nicknames.join(',') + '都'
-        }
+        let {others} = comment
+        console.log(comment)
+        let nicknames = others.length > 2 ? 
+            others.slice(0, 2).join(',') + `與其他${others.length - 2}人，都` : others.length > 0 ?
+            others.join(',') + '都' : comment.user.nickname
+
         return `
     <li class="dropdown-item  position-relative news-item">
         <a href="/blog/${comment.blog.id}#comment_${comment.id}" class="stretched-link">
@@ -194,7 +193,7 @@ function initNewsList(newsList) {
 async function go() {
     await getNews()
     window.data.news.newsList = initNewsList(window.data.news.newsList)
-    
+
     async function getNews() {
         let api = '/api/news'
         let { data: { errno, data, msg } } = await axios(api)
@@ -219,7 +218,7 @@ function init_data() {
         try {
             let j = JSON.parse($el.text())
             console.log('j => ', j)
-            window.data[prop] =j
+            window.data[prop] = j
         } catch (e) {
             window.data[prop] = undefined
         }
