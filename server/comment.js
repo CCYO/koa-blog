@@ -76,6 +76,7 @@ async function readComment({ id, blog_id, p_id, createdAt }) {
     let whereOps = {}
     if (blog_id) {
         whereOps.blog_id = blog_id
+        console.log(`@同樣blog_id: ${blog_id}`)
     }
     if (id) {
         whereOps.id = id
@@ -85,6 +86,7 @@ async function readComment({ id, blog_id, p_id, createdAt }) {
     }
     if(createdAt){
         whereOps.createdAt = { [Op.gt]: createdAt}
+        console.log(`@晚於${createdAt}`)
     }
 
     let res = await Comment.findAll({
@@ -102,6 +104,7 @@ async function readComment({ id, blog_id, p_id, createdAt }) {
         ]
     })
     res = init_comment(res)
+    console.log('初始化的結果 res => ', res)
     return res
 }
 

@@ -139,11 +139,18 @@ function render_news({ newsList, num, limit }, first = false) {
     `
     }
     function template_comment({ comment, timestamp }) {
+        let nicknames = comment.user.nickname
+        let { other } = comment
+        if(other){
+            nicknames = other.nicknames.length > 2 ?
+                other.nicknames.slice(0,2).join(',') + `與其他${other.num - 2}人，都` :
+                other.nicknames.join(',') + '都'
+        }
         return `
     <li class="dropdown-item  position-relative news-item">
         <a href="/blog/${comment.blog.id}#comment_${comment.id}" class="stretched-link">
             <div>
-                <span>${comment.user.nickname} 在 ${comment.blog.title} 留言囉！</span><br>
+                <span>${nicknames} 在 ${comment.blog.title} 留言囉！</span><br>
                 <span>${timestamp}</span>
             </div>
         </a>

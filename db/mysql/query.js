@@ -13,23 +13,23 @@ const { readUser } = require('../../server/user')
 const { readBlog } = require('../../server/blog')
 const { readComment } = require('../../server/comment')
 
-async function _readNews({ userId, excepts}) {
+async function _readNews({ userId, excepts }) {
     let { people, blogs, comments } = excepts
     let listOfPeopleId = people.join(',') || undefined
     let listOfBlogsId = blogs.join(',') || undefined
     let listOfCommentsId = comments.join(',') || undefined
 
     let query = `
-    SELECT type, id, target_id, follow_id, confirm, time
+    SELECT type, id, target_id, follow_id, confirm, createdAt
     FROM (
-        SELECT 1 as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt as time
+        SELECT 1 as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt
         FROM FollowPeople
         WHERE idol_id=${userId}
             ${listOfPeopleId && ` AND id NOT IN (${listOfPeopleId})` || ''}
 
         UNION
 
-        SELECT 2 as type, id, blog_id as target_id, follower_id as follow_id, confirm, createdAt as time
+        SELECT 2 as type, id, blog_id as target_id, follower_id as follow_id, confirm, createdAt 
         FROM FollowBlogs
         WHERE follower_id=${userId}
             AND deletedAt IS NULL
@@ -37,13 +37,13 @@ async function _readNews({ userId, excepts}) {
 
         UNION
 
-        SELECT 3 as type, id, comment_id as target_id, follower_id as follow_id, confirm, updatedAt as time
+        SELECT 3 as type, id, comment_id as target_id, follower_id as follow_id, confirm, createdAt 
         FROM FollowComments
         WHERE follower_id=${userId}
             ${listOfCommentsId && ` AND id NOT IN (${listOfCommentsId})` || ''}
 
     ) AS X
-    ORDER BY confirm=1, time DESC
+    ORDER BY confirm=1, createdAt DESC
     LIMIT ${LIMIT}
     `
     let newsList = await seq.query(query, { type: QueryTypes.SELECT })
@@ -65,14 +65,14 @@ async function _count({ userId, excepts }) {
         COUNT(if(confirm = 1, true, null)) as confirm, 
         COUNT(*) as total
     FROM (
-        SELECT 1 as type, id, confirm, createdAt
+        SELECT 1 as type, id, confirm
         FROM FollowPeople
         WHERE
             idol_id=${userId} 
             ${listOfPeopleId && ` AND id NOT IN (${listOfPeopleId})` || ''}
         UNION
 
-        SELECT 2 as type, id, confirm, createdAt
+        SELECT 2 as type, id, confirm
         FROM FollowBlogs
         WHERE 
             follower_id=${userId}
@@ -80,7 +80,7 @@ async function _count({ userId, excepts }) {
             ${listOfBlogsId && ` AND id NOT IN (${listOfBlogsId})` || ''}
         UNION
 
-        SELECT 3 as type, id, confirm, updatedAt
+        SELECT 3 as type, id, confirm
         FROM FollowComments
         WHERE
             follower_id=${userId}
@@ -88,7 +88,7 @@ async function _count({ userId, excepts }) {
     ) AS X
     `
     let [{ unconfirm, confirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })
-    return { num: {unconfirm, confirm, total }}
+    return { num: { unconfirm, confirm, total } }
 }
 
 
@@ -101,9 +101,9 @@ async function readNews({ userId, options }) {
     let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') > DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
 
     let query = `
-    SELECT type, id, target_id, follow_id, confirm, time
+    SELECT type, id, target_id, follow_id, confirm, createdAt
     FROM (
-        SELECT 1 as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt as time
+        SELECT 1 as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt
         FROM FollowPeople
         WHERE idol_id=${userId}
             AND ${where_time}
@@ -111,7 +111,7 @@ async function readNews({ userId, options }) {
 
         UNION
 
-        SELECT 2 as type, id, blog_id as target_id, follower_id as follow_id, confirm, createdAt as time
+        SELECT 2 as type, id, blog_id as target_id, follower_id as follow_id, confirm, createdAt
         FROM FollowBlogs
         WHERE follower_id=${userId}
             AND deletedAt IS NULL
@@ -120,14 +120,14 @@ async function readNews({ userId, options }) {
 
         UNION
 
-        SELECT 3 as type, id, comment_id as target_id, follower_id as follow_id, confirm, updatedAt as time
+        SELECT 3 as type, id, comment_id as target_id, follower_id as follow_id, confirm, updatedAt
         FROM FollowComments
         WHERE follower_id=${userId}
             AND ${where_time}
             ${listOfCommentsId && ` AND id NOT IN (${listOfCommentsId})` || ''}
 
     ) AS X
-    ORDER BY confirm=1, time DESC
+    ORDER BY confirm=1, createdAt DESC
     LIMIT ${LIMIT}
     `
     let newsList = await seq.query(query, { type: QueryTypes.SELECT })
@@ -199,8 +199,8 @@ async function _init_newsOfComfirmRoNot(newsList) {
 }
 
 async function _init_newsItemOfComfirmRoNot(item) {
-    let { type, id, target_id, follow_id, confirm, time } = item
-    let timestamp = moment(time, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+    let { type, id, target_id, follow_id, confirm, createdAt } = item
+    let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
     let res = { type, id, timestamp, confirm }
     if (type === 1) {
         let { id: fans_id, nickname } = await readUser({ id: follow_id })
@@ -209,25 +209,18 @@ async function _init_newsItemOfComfirmRoNot(item) {
         let { id: blog_id, title, author } = await readBlog({ blog_id: target_id })
         return { ...res, blog: { id: blog_id, title, author: { id: author.id, nickname: author.nickname } } }
     } else if (type === 3) {
-
         let [comment] = await readComment({ id: target_id })
-
         if (!comment) {
             return null
         }
-        let { id: comment_id, p_id, createdAt, time, user, blog } = comment
+        let { id: comment_id, time, user, blog } = comment
         //  獲取早前未確認到的comment資訊
-        console.log(`尋找同部落格，晚於${createdAt}的留言`)
         let other_comments = await readComment({ blog_id: blog.id, createdAt })
-        if(other_comments.length){
-            console.log('@有其他')
-            let num = other_comments.length
-            let names = other_comments.map( ({user, id}) => ({nickname: user.nickname, id}))
-            
-            return { ...res, comment: { id: comment_id, user, blog, time, num, names, other_comments} }
+        let num = other_comments.length && other_comments.length || 0
+        if (num > 1) {
+            let nicknames = other_comments.map(({user}) => user.nickname)
+            return { ...res, comment: { id: comment_id, user, blog, time, other: { nicknames, num } } }
         }
-        console.log('@沒有其他')
-
         return { ...res, comment: { id: comment_id, user, blog, time } }
     }
 }
