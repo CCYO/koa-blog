@@ -9,7 +9,6 @@ function init_data() {
         let prop = $el.data('my-data')
         try {
             window.data[prop] = JSON.parse($el.text())
-            console.log('@@@', prop)
         } catch (e) {
             window.data[prop] = undefined
         }

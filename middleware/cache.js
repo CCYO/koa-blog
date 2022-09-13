@@ -20,7 +20,7 @@ async function cacheNews(ctx, next) {
         ctx.body = ctx.session.news[page]
         return
     }
-    if (hasNews || (!page && !ctx.session.news[page -1]) ) {
+    if (hasNews || (page && !ctx.session.news[page -1]) ) {
         ctx.session.news = []
     }
     await removeRemindNews(id)

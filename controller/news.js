@@ -32,39 +32,13 @@ const {
  * @param {number} userId 
  * @returns {*} resModel
  */
-async function getNewsByUserId(userId, excepts, page) {
+async function getNewsByUserId(userId, excepts) {
     let data = { userId }
     if (excepts) {
         data.excepts = excepts
     }
     let res = await _readNews(data)
     return new SuccModel(res)
-}
-
-async function readMore(ctx) {
-    let { id: userId } = ctx.session.user
-    let { excepts, page } = ctx.request.body
-    let { unconfirm } = excepts
-    
-    if(unconfirm.num){
-        let res = await confirmNews(news)
-        if (res.errno) {
-            throw res
-        }
-        ctx.session.news = []
-    }
-
-    excepts = init_excepts(excepts)
-    let res = await _readNews({ userId, excepts})
-
-    let model = new SuccModel(res)
-    //  處理session
-    if (!ctx.session.news.length && unconfirm.num) {
-        ctx.session.news[0] = model
-    }else if(ctx.session.news.length){
-        ctx.session.news[page] = model
-    }
-    return model
 }
 
 async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront = false, offset) {
@@ -101,6 +75,32 @@ async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront 
     }
 
     return new SuccModel(res)
+}
+
+async function readMore(ctx) {
+    let { id: userId } = ctx.session.user
+    let { excepts, page } = ctx.request.body
+    let { unconfirm } = excepts
+    
+    if(unconfirm.num){
+        let res = await confirmNews(news)
+        if (res.errno) {
+            throw res
+        }
+        ctx.session.news = []
+    }
+
+    excepts = init_excepts(excepts)
+    let res = await _readNews({ userId, excepts})
+
+    let model = new SuccModel({res, excepts})
+    //  處理session
+    if (!ctx.session.news.length) {
+        ctx.session.news[0] = model
+    }else if(ctx.session.news.length){
+        ctx.session.news[page] = model
+    }
+    return model
 }
 
 async function confirmNews(listOfNewsId) {

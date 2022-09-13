@@ -15,10 +15,7 @@ let api_readMore = '/api/news/readMore';
 //  初始化數據
 (async () => {
     try {
-        window.data = {}
-        init_data()
-        await go()
-        console.log(window.data.news)
+        await init_data()
     } catch (e) {
         console.log(e)
     }
@@ -27,19 +24,12 @@ let api_readMore = '/api/news/readMore';
 $readMore.on('click', moreNewsForReadMore)
 
 async function moreNewsForReadMore() {
-    let page = window.data.news.page
-    let newsList = window.data.news.newsList
-
-    let payload = { excepts: newsList, page: page + 1 }
-
-    let { data: { errno, data, msg } } = await axios.post(api_news, payload)
-    if (errno) {
-        alert('發生錯誤')
-        console.log('@msg => ', msg)
-        return
-    }
+    
+    let { newsList, excepts } = await getNews()
 
     //  將已完成的轉移至confirm
+    window.data.news.newsList.confirm = excepts
+
     let m = new Map(Object.entries(newsList.unconfirm))
     m.forEach((item, key) => {
         if (key === 'num') {
@@ -51,42 +41,45 @@ async function moreNewsForReadMore() {
         newsList.unconfirm[key] = []
     })
 
-    render_news(data)
+    render_news({...newsList, page: window.news.page})
 
-    let news = initNewsList(data.newsList)
+    newsList = initNewsList(newsList)
 
-    let map = new Map(Object.entries(news))
+    let map = new Map(Object.entries(newsList))
 
     map.forEach((list, key) => {
         let tar = newsList[key]
         for (let prop in tar) {
             if (prop === 'num') {
-                tar[prop] += list[prop]
+                tar.num += list.num
                 continue
             }
             tar[prop] = [...tar[prop], ...list[prop]]
         }
     })
-
-    window.data.news.page += 1
-
     return
 }
 
 function show(q, boo = true) {
+    console.log('@b => ',  boo)
     return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
 }
 
-function render_news({ newsList, num, limit }, first = false) {
+function render_news({ newsList, num, limit, page }) {
     show($newsCount, num.unconfirm).text(num.unconfirm || '')
 
     let map = new Map(Object.entries(newsList))
     map.forEach((list, key) => {
         let $title = $(`#${key}-news-title`)
+        console.log('@page=> ', page)
+        console.log('@list.length=> ', list.length)
+        console.log('@key => ', key)
+        console.log('@title => ', $title)
         if (!list.length) {
-            first && $title.addClass('my-noshow')
+            !page && show($title, false) && console.log(123)
         }
         show($title)
+
         let html_list = template_list(list)
         let hr = $(`[data-my-hr=${key}-news-hr]`)
         if (!hr.length) {
@@ -190,39 +183,45 @@ function initNewsList(newsList) {
     return initNews
 }
 
-async function go() {
-    await getNews()
-    window.data.news.newsList = initNewsList(window.data.news.newsList)
-
-    async function getNews() {
-        let api = '/api/news'
-        let { data: { errno, data, msg } } = await axios(api)
-
-        if (errno) {
-            alert(msg)
-            return
-        }
-
-        window.data = window.data ? window.data : {}
-        window.data.news = { ...data, page: 0 }
-        render_news(data, true)
-    }
-}
-
 //  初始化數據
-function init_data() {
+async function init_data() {
+    window.data = {}
+
+    //  處理 news 以外的數據
     $(`[data-my-data]`).each((index, el) => {
         let $el = $(el)
         let prop = $el.data('my-data')
-        console.log('prop => ', prop)
         try {
-            let j = JSON.parse($el.text())
-            console.log('j => ', j)
-            window.data[prop] = j
+            window.data[prop] =  JSON.parse($el.text())
         } catch (e) {
             window.data[prop] = undefined
         }
     })
-    //  初始化 newsList數據
     $('#data').remove()
+
+    //  處理 news 數據
+    let news = await getNews()
+    window.data.news = { ...news, page: 0 }
+    render_news(window.data.news)
+    window.data.news.newsList = initNewsList(news.newsList)
+}
+
+async function getNews() {
+    let url = `/api/news`
+    let methods = window.data.news ? 'POST' : 'GET'
+    let opts = { methods, url }
+    if(methods === 'POST'){
+        let page = window.data.news.page++
+        opts.body = {
+            page,
+            excepts: { ...window.data.news.newsList }
+        }
+    }
+    let { data: { errno, data, msg } } = await axios(opts)
+
+    if (errno) {
+        alert(msg)
+        return
+    }
+    return data
 }

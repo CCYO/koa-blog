@@ -34,11 +34,12 @@ function init_newsOfFollowId(newsList) {
 }
 
 function init_excepts(excepts){
-	let res = { people: [], blogs: [], comments: []}
+	let res = { people: [], blogs: [], comments: [], num: 0}
 	for(key in excepts){
 		let map = new Map(Object.entries(excepts[key]))
     	map.forEach((list, k) => {
             if(k === 'num'){
+                res.num += list.num
                 return
             }
             console.log(list, k)
