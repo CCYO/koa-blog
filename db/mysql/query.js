@@ -69,7 +69,6 @@ async function _count({ userId, excepts }) {
         FROM FollowPeople
         WHERE
             idol_id=${userId} 
-            ${listOfPeopleId && ` AND id NOT IN (${listOfPeopleId})` || ''}
         UNION
 
         SELECT 2 as type, id, confirm
@@ -77,14 +76,12 @@ async function _count({ userId, excepts }) {
         WHERE 
             follower_id=${userId}
             AND deletedAt IS NULL 
-            ${listOfBlogsId && ` AND id NOT IN (${listOfBlogsId})` || ''}
         UNION
 
         SELECT 3 as type, id, confirm
         FROM FollowComments
         WHERE
             follower_id=${userId}
-            ${listOfCommentsId && ` AND id NOT IN (${listOfCommentsId})` || ''}
     ) AS X
     `
     let [{ unconfirm, confirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })

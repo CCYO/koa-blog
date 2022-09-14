@@ -83,7 +83,7 @@ async function readMore(ctx) {
     let { unconfirm } = excepts
     
     if(unconfirm.num){
-        let res = await confirmNews(news)
+        let res = await confirmNews(unconfirm)
         if (res.errno) {
             throw res
         }
@@ -93,7 +93,7 @@ async function readMore(ctx) {
     excepts = init_excepts(excepts)
     let res = await _readNews({ userId, excepts})
 
-    let model = new SuccModel({res, excepts})
+    let model = new SuccModel({...res, excepts})
     //  處理session
     if (!ctx.session.news.length) {
         ctx.session.news[0] = model

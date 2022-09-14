@@ -39,7 +39,7 @@ function init_excepts(excepts){
 		let map = new Map(Object.entries(excepts[key]))
     	map.forEach((list, k) => {
             if(k === 'num'){
-                res.num += list.num
+                res.num += list
                 return
             }
             console.log(list, k)

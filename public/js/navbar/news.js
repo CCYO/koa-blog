@@ -25,61 +25,50 @@ $readMore.on('click', moreNewsForReadMore)
 
 async function moreNewsForReadMore() {
     
-    let { newsList, excepts } = await getNews()
+    let { num, newsList: newsList_server, excepts } = await getNews()
 
+    let newsList_window = window.data.news.newsList
     //  將已完成的轉移至confirm
-    window.data.news.newsList.confirm = excepts
+    newsList_window.confirm = excepts
+    window.data.news.num = num
 
-    let m = new Map(Object.entries(newsList.unconfirm))
-    m.forEach((item, key) => {
-        if (key === 'num') {
-            newsList.confirm[key] += newsList.unconfirm[key]
-            newsList.unconfirm[key] = 0
-            return
-        }
-        newsList.confirm[key] = [...newsList.confirm[key], ...item]
-        newsList.unconfirm[key] = []
-    })
+    render_news({newsList: newsList_server, num, page: window.data.news.page})
 
-    render_news({...newsList, page: window.news.page})
+    let newsList = initNewsList(newsList_server)
 
-    newsList = initNewsList(newsList)
+    let map_newsList = new Map(Object.entries(newsList))    //  Map{ confirm: { people: [], blogs: [], comments: [], num: 0 }, unconfirm: {...} }
 
-    let map = new Map(Object.entries(newsList))
-
-    map.forEach((list, key) => {
-        let tar = newsList[key]
-        for (let prop in tar) {
-            if (prop === 'num') {
-                tar.num += list.num
+    map_newsList.forEach((list, key) => {
+        let tar_list = newsList_window[key]
+        for(prop in list){
+            if(prop === 'num'){
+                tar_list.num += list.num
                 continue
             }
-            tar[prop] = [...tar[prop], ...list[prop]]
+            tar_list[prop] = [...tar_list[prop], ...list[prop]]
         }
     })
     return
 }
 
 function show(q, boo = true) {
-    console.log('@b => ',  boo)
     return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
 }
 
-function render_news({ newsList, num, limit, page }) {
-    show($newsCount, num.unconfirm).text(num.unconfirm || '')
+function render_news({ newsList, num, page }) {
+    let count_noRender = num.total - newsList.confirm.length - newsList.unconfirm.length
+    let count_unconfirm = num.unconfirm - newsList.unconfirm.length
+    show($newsCount, count_unconfirm).text(count_unconfirm || '')
 
     let map = new Map(Object.entries(newsList))
     map.forEach((list, key) => {
         let $title = $(`#${key}-news-title`)
-        console.log('@page=> ', page)
-        console.log('@list.length=> ', list.length)
-        console.log('@key => ', key)
-        console.log('@title => ', $title)
         if (!list.length) {
-            !page && show($title, false) && console.log(123)
+            !page && show($title, false)
+        }else{
+            $title.is(':hidden') && show($title)
         }
-        show($title)
-
+        
         let html_list = template_list(list)
         let hr = $(`[data-my-hr=${key}-news-hr]`)
         if (!hr.length) {
@@ -88,7 +77,7 @@ function render_news({ newsList, num, limit, page }) {
             hr.last().after(html_list)
         }
     })
-    readMore(num.total, limit)
+    readMore(count_noRender)
 
     function template_list(list) {
         return list.reduce((init, cur) => {
@@ -148,8 +137,8 @@ function render_news({ newsList, num, limit, page }) {
         </a>
     </li>`
     }
-    function readMore(total, limit) {
-        let n = total - limit
+    function readMore(count_noRender) {
+        let n = count_noRender - window.data.news.limit
         if (n >= 0) {
             $readMore.addClass('my-show').removeClass('my-noshow')
             $noNews.addClass('my-noshow').removeClass('my-show')
@@ -208,11 +197,12 @@ async function init_data() {
 
 async function getNews() {
     let url = `/api/news`
-    let methods = window.data.news ? 'POST' : 'GET'
-    let opts = { methods, url }
-    if(methods === 'POST'){
-        let page = window.data.news.page++
-        opts.body = {
+    let method = window.data.news ? 'POST' : 'GET'
+    let opts = { method, url }
+    console.log('@method => ', method)
+    if(method === 'POST'){
+        let page = ++window.data.news.page
+        opts.data = {
             page,
             excepts: { ...window.data.news.newsList }
         }
