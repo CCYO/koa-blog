@@ -16,7 +16,7 @@ async function cacheNews(ctx, next) {
     const { id } = ctx.session.user
     let hasNews = await checkNews(id)
     if (!hasNews && ctx.session.news[page]) {
-        console.log(`@ => ${ctx.method} - ${ctx.path} 使用session`)
+        console.log(`@ => ${ctx.method} - ${ctx.path} 使用session取得 session.news[${page}]`)
         ctx.body = ctx.session.news[page]
         return
     }

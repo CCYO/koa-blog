@@ -32,6 +32,10 @@ async function moreNewsForReadMore() {
     newsList_window.confirm = excepts
     window.data.news.num = num
 
+    
+    let count = num.unconfirm - window.data.news.newsList.unconfirm.num - newsList_server.unconfirm.length
+    show($newsCount, count).text(count || '')
+
     render_news({newsList: newsList_server, num, page: window.data.news.page})
 
     let newsList = initNewsList(newsList_server)
@@ -56,9 +60,7 @@ function show(q, boo = true) {
 }
 
 function render_news({ newsList, num, page }) {
-    let count_noRender = num.total - newsList.confirm.length - newsList.unconfirm.length
-    let count_unconfirm = num.unconfirm - newsList.unconfirm.length
-    show($newsCount, count_unconfirm).text(count_unconfirm || '')
+    
 
     let map = new Map(Object.entries(newsList))
     map.forEach((list, key) => {
@@ -77,7 +79,7 @@ function render_news({ newsList, num, page }) {
             hr.last().after(html_list)
         }
     })
-    readMore(count_noRender)
+    readMore()
 
     function template_list(list) {
         return list.reduce((init, cur) => {
@@ -138,6 +140,7 @@ function render_news({ newsList, num, page }) {
     </li>`
     }
     function readMore(count_noRender) {
+        let count_noRender = num.unconfirm - window.data.news.newsList.unconfirm.num - newsList.unconfirm.length //同$count
         let n = count_noRender - window.data.news.limit
         if (n >= 0) {
             $readMore.addClass('my-show').removeClass('my-noshow')
@@ -193,6 +196,7 @@ async function init_data() {
     window.data.news = { ...news, page: 0 }
     render_news(window.data.news)
     window.data.news.newsList = initNewsList(news.newsList)
+    show($newsCount, news.num.unconfirm).text(news.num.unconfirm || '')
 }
 
 async function getNews() {

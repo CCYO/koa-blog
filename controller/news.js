@@ -96,8 +96,10 @@ async function readMore(ctx) {
     let model = new SuccModel({...res, excepts})
     //  處理session
     if (!ctx.session.news.length) {
-        ctx.session.news[0] = model
+        console.log(`@存放session.news[0]`)
+        ctx.session.news[0] = new SuccModel(res)
     }else if(ctx.session.news.length){
+        console.log(`@存放session.news[${page}]`)
         ctx.session.news[page] = model
     }
     return model
