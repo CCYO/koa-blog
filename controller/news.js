@@ -41,42 +41,6 @@ async function getNewsByUserId(userId, excepts) {
     return new SuccModel(res)
 }
 
-async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront = false, offset) {
-
-    let { newsList, numOfUnconfirm, total } = await readNews({ userId, markTime, listOfexceptNewsId, fromFront })
-
-    let count = newsList.confirm.length + newsList.unconfirm.length
-    let htmlStr = await htmlStr_newsList(newsList)
-
-    let { confirm, unconfirm } = init_newsOfFollowId(newsList)
-
-    let res = {
-        numOfUnconfirm,
-        total,
-        count,
-        htmlStr,
-        listOfNewsId: confirm
-    }
-
-    if (!newsList.unconfirm.length) {
-        return new SuccModel(res)
-    }
-
-    //  若有 unconfirm 則直接作 confirm
-    let resModel = await confirmNews(unconfirm)
-    if (resModel.errno) {
-        return resModel
-    }
-
-    res.listOfNewsId = {
-        people: [...confirm.people, ...unconfirm.people],
-        blogs: [...confirm.blogs, ...unconfirm.blogs],
-        comments: [...confirm.comments, ...unconfirm.comments]
-    }
-
-    return new SuccModel(res)
-}
-
 async function readMore(ctx) {
     let { id: userId } = ctx.session.user
     let { excepts, page } = ctx.request.body
@@ -118,6 +82,43 @@ async function confirmNews(listOfNewsId) {
         return new ErrModel(NEWS.FOLLOW_COMMENT_CONFIRM_ERR)
     }
     let res = { listOfNewsId, count: rowOfBlogs + rowOfPeople }
+    return new SuccModel(res)
+}
+
+
+async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront = false, offset) {
+
+    let { newsList, numOfUnconfirm, total } = await readNews({ userId, markTime, listOfexceptNewsId, fromFront })
+
+    let count = newsList.confirm.length + newsList.unconfirm.length
+    let htmlStr = await htmlStr_newsList(newsList)
+
+    let { confirm, unconfirm } = init_newsOfFollowId(newsList)
+
+    let res = {
+        numOfUnconfirm,
+        total,
+        count,
+        htmlStr,
+        listOfNewsId: confirm
+    }
+
+    if (!newsList.unconfirm.length) {
+        return new SuccModel(res)
+    }
+
+    //  若有 unconfirm 則直接作 confirm
+    let resModel = await confirmNews(unconfirm)
+    if (resModel.errno) {
+        return resModel
+    }
+
+    res.listOfNewsId = {
+        people: [...confirm.people, ...unconfirm.people],
+        blogs: [...confirm.blogs, ...unconfirm.blogs],
+        comments: [...confirm.comments, ...unconfirm.comments]
+    }
+
     return new SuccModel(res)
 }
 

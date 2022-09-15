@@ -42,8 +42,6 @@ function init_excepts(excepts){
                 res.num += list
                 return
             }
-            console.log(list, k)
-            console.log(res[k])
     		res[k] = [...res[k], ...list]
         })
     }

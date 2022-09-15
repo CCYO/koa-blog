@@ -20,6 +20,7 @@ router.prefix('/api/news')
 router.get('/', api_check_login, cacheNews, async (ctx, next) => {
     const { id } = ctx.session.user
     let res = await getNewsByUserId(id)
+    console.log(`@存放session.news[0]`)
     ctx.body = ctx.session.news[0] = res
 })
 
