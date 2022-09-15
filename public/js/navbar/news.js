@@ -8,9 +8,7 @@ let $readMore = $('#readMore')
 //  下拉選單內 的 沒有更多提醒
 let $noNews = $('#noNews')
 
-let api_news = '/api/news'
-let api_readMore = '/api/news/readMore';
-
+let api_news = '/api/news';
 
 //  初始化數據
 (async () => {
@@ -20,66 +18,87 @@ let api_readMore = '/api/news/readMore';
         console.log(e)
     }
 })()
-
-$readMore.on('click', moreNewsForReadMore)
-
-async function moreNewsForReadMore() {
-    
-    let { num, newsList: newsList_server, excepts } = await getNews()
-
-    let newsList_window = window.data.news.newsList
-    //  將已完成的轉移至confirm
-    newsList_window.confirm = excepts
-    window.data.news.num = num
-
-    
-    let count = num.unconfirm - window.data.news.newsList.unconfirm.num - newsList_server.unconfirm.length
+//  更新unconfirm通知數目
+$newsDropdown.one('click', () => {
+    let {num, newsList} = window.data.news
+    let count = num.unconfirm - newsList.unconfirm.num
     show($newsCount, count).text(count || '')
+})
+$readMore.on('click', moreNewsForReadMore)
+//  handle - 讀取更多通知數據
+async function moreNewsForReadMore() {
+    //  撈數據
+    let news = await getNews()
+    let  { num, newsList, excepts } = news
 
-    render_news({newsList: newsList_server, num, page: window.data.news.page})
+    //  渲染通知數據
+    render_news(news)
 
-    let newsList = initNewsList(newsList_server)
+    //  更新當前頁面數據
+    let w_newsList = window.data.news.newsList
+    w_newsList.confirm = excepts
+    w_newsList.unconfirm = { people: [], blogs: [], comments: [], num: 0}
+    window.data.news.num = num
+    
+    newsList = initNewsList(newsList)
 
-    let map_newsList = new Map(Object.entries(newsList))    //  Map{ confirm: { people: [], blogs: [], comments: [], num: 0 }, unconfirm: {...} }
+    let map = new Map(Object.entries(newsList))    //  Map{ confirm: { people: [], blogs: [], comments: [], num: 0 }, unconfirm: {...} }
 
-    map_newsList.forEach((list, key) => {
-        let tar_list = newsList_window[key]
-        for(prop in list){
-            if(prop === 'num'){
-                tar_list.num += list.num
+    map.forEach((list, key) => {
+        let targetList = w_newsList[key]
+        for (prop in list) {
+            if (prop === 'num') {
+                targetList.num += list.num
                 continue
             }
-            tar_list[prop] = [...tar_list[prop], ...list[prop]]
+            targetList[prop] = [...targetList[prop], ...list[prop]]
         }
     })
     return
 }
-
+//  utils - 顯示el與否
 function show(q, boo = true) {
     return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
 }
+//  渲染通知數據
+function render_news(news) {
+    let { newsList, num, excepts } = news
+    //  初渲染
+    let first_render = !window.data.news
 
-function render_news({ newsList, num, page }) {
-    
+    //  渲染新通知數目
+    if (first_render) {    //初次渲染
+        show($newsCount, num.unconfirm).text(num.unconfirm || '')
+    } else {  //readMore後的渲染
+        let count = num.unconfirm - newsList.unconfirm.length
+        show($newsCount, count).text(count || '')
+    }
 
+    //  渲染通知列表
     let map = new Map(Object.entries(newsList))
     map.forEach((list, key) => {
+        //  通知的title
         let $title = $(`#${key}-news-title`)
-        if (!list.length) {
-            !page && show($title, false)
-        }else{
-            $title.is(':hidden') && show($title)
+        if (!list.length) { //  若 list 沒有內容
+            first_render && show($title, false) //  若是初渲染，則將該纇通知title隱藏
+        } else {    //若 list 有內容
+            $title.is(':hidden') && show($title)    //若該纇標題title隱藏，則顯現
         }
-        
+        //  生成 list 的 html
         let html_list = template_list(list)
+        //  此通知類型的item分隔線
         let hr = $(`[data-my-hr=${key}-news-hr]`)
-        if (!hr.length) {
+
+        if (!hr.length) {   //  若無分隔線，代表此纇list為首次渲染
             $title.after(html_list)
-        } else {
+        } else {    //  若有分隔線，代表此纇list非首次渲染
             hr.last().after(html_list)
         }
     })
-    readMore()
+
+    //  渲染readMore
+    render_readMore(news)
+
 
     function template_list(list) {
         return list.reduce((init, cur) => {
@@ -96,6 +115,7 @@ function render_news({ newsList, num, page }) {
             return init += hr
         }, '')
     }
+
     function template_fans({ fans, timestamp }) {
         return `
     <!-- 新通知 of fans -->
@@ -107,8 +127,8 @@ function render_news({ newsList, num, page }) {
             </div>
         </a>
     </li>`
-
     }
+
     function template_blog({ blog, timestamp }) {
         return `
     <li class="dropdown-item  position-relative news-item">
@@ -122,12 +142,13 @@ function render_news({ newsList, num, page }) {
     </li>
     `
     }
+
     function template_comment({ comment, timestamp }) {
-        let {others} = comment
+        let { others } = comment
         console.log(comment)
-        let nicknames = others.length > 2 ? 
+        let nicknames = others.length > 2 ?
             others.slice(0, 2).join(',') + `與其他${others.length - 2}人，都` : others.length > 0 ?
-            others.join(',') + '都' : comment.user.nickname
+                others.join(',') + '都' : comment.user.nickname
 
         return `
     <li class="dropdown-item  position-relative news-item">
@@ -139,19 +160,23 @@ function render_news({ newsList, num, page }) {
         </a>
     </li>`
     }
-    function readMore(count_noRender) {
-        let count_noRender = num.unconfirm - window.data.news.newsList.unconfirm.num - newsList.unconfirm.length //同$count
-        let n = count_noRender - window.data.news.limit
-        if (n >= 0) {
-            $readMore.addClass('my-show').removeClass('my-noshow')
-            $noNews.addClass('my-noshow').removeClass('my-show')
-        } else {
-            $readMore.addClass('my-noshow').removeClass('my-show')
-            $noNews.addClass('my-show').removeClass('my-noshow')
-        }
+
+    function render_readMore({num, newsList, excepts}) {
+        let count = num.total - newsList.unconfirm.length - newsList.confirm.length
+		if(excepts){
+			count -= excepts.num
+		}
+        console.log(`@還有${count}個通知可撈取`)
+		if(!count && !newsList.unconfirm.length){
+            show($readMore, false)
+            show($noNews)
+		}else{
+            show($readMore)
+            show($noNews, false)
+		}
     }
 }
-
+//  格式化通知數據
 function initNewsList(newsList) {
     let initNews = { confirm: {}, unconfirm: {} }
     for (key in newsList) {
@@ -174,7 +199,6 @@ function initNewsList(newsList) {
     }
     return initNews
 }
-
 //  初始化數據
 async function init_data() {
     window.data = {}
@@ -184,7 +208,7 @@ async function init_data() {
         let $el = $(el)
         let prop = $el.data('my-data')
         try {
-            window.data[prop] =  JSON.parse($el.text())
+            window.data[prop] = JSON.parse($el.text())
         } catch (e) {
             window.data[prop] = undefined
         }
@@ -193,18 +217,17 @@ async function init_data() {
 
     //  處理 news 數據
     let news = await getNews()
-    window.data.news = { ...news, page: 0 }
-    render_news(window.data.news)
-    window.data.news.newsList = initNewsList(news.newsList)
-    show($newsCount, news.num.unconfirm).text(news.num.unconfirm || '')
-}
+    render_news(news)
 
+    window.data.news = { ...news, page: 0 }
+    window.data.news.newsList = initNewsList(news.newsList)
+}
+//  撈取通知數據
 async function getNews() {
     let url = `/api/news`
     let method = window.data.news ? 'POST' : 'GET'
     let opts = { method, url }
-    console.log('@method => ', method)
-    if(method === 'POST'){
+    if (method === 'POST') {
         let page = ++window.data.news.page
         opts.data = {
             page,

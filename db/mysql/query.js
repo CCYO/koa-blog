@@ -182,7 +182,7 @@ async function _init_newsOfComfirmRoNot(newsList) {
 
     listOfPromise = await Promise.all(listOfPromise)
 
-    res = listOfPromise.reduce((initVal, currVal, index) => {
+    res = listOfPromise.reduce((initVal, currVal) => {
         if (!currVal) {
             return initVal
         }
