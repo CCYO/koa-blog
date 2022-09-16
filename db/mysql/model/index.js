@@ -42,6 +42,10 @@ Blog.hasMany(Comment, { foreignKey: 'blog_id', sourceKey: 'id'})
 Comment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id', onDelete: 'CASCADE' })
 User.hasMany(Comment, { foreignKey: 'user_id', sourceKey: 'id'})
 
+//  Comment : Comment = 1 : N
+Comment.belongsTo(Comment, { as: 'Comment_T', foreignKey: 'p_id', targetKey: 'id', onDelete: 'CASCADE' })
+Comment.hasMany(Comment, { as: 'Comment_F', foreignKey: 'p_id', sourceKey: 'id'})
+
 //  SourceModel 作為 foreignKey 的來源，
 //  as 是 TargetModel 的別名，
 User.belongsToMany(User, { as: 'FollowPeople_I', through: FollowPeople, foreignKey: 'fans_id', targetKey: 'id'})

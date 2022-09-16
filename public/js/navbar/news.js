@@ -20,7 +20,7 @@ let api_news = '/api/news';
 })()
 //  更新unconfirm通知數目
 $newsDropdown.one('click', () => {
-    let {num, newsList} = window.data.news
+    let { num, newsList } = window.data.news
     let count = num.unconfirm - newsList.unconfirm.num
     show($newsCount, count).text(count || '')
 })
@@ -29,7 +29,7 @@ $readMore.on('click', moreNewsForReadMore)
 async function moreNewsForReadMore() {
     //  撈數據
     let news = await getNews()
-    let  { num, newsList, excepts } = news
+    let { num, newsList, excepts } = news
 
     //  渲染通知數據
     render_news(news)
@@ -37,9 +37,9 @@ async function moreNewsForReadMore() {
     //  更新當前頁面數據
     let w_newsList = window.data.news.newsList
     w_newsList.confirm = excepts
-    w_newsList.unconfirm = { people: [], blogs: [], comments: [], num: 0}
+    w_newsList.unconfirm = { people: [], blogs: [], comments: [], num: 0 }
     window.data.news.num = num
-    
+
     newsList = initNewsList(newsList)
 
     let map = new Map(Object.entries(newsList))    //  Map{ confirm: { people: [], blogs: [], comments: [], num: 0 }, unconfirm: {...} }
@@ -161,19 +161,15 @@ function render_news(news) {
     </li>`
     }
 
-    function render_readMore({num, newsList, excepts}) {
+    function render_readMore({ num, newsList, excepts }) {
         let count = num.total - newsList.unconfirm.length - newsList.confirm.length
-		if(excepts){
-			count -= excepts.num
-		}
+        if (excepts) {
+            count -= excepts.num
+        }
         console.log(`@還有${count}個通知可撈取`)
-		if(!count && !newsList.unconfirm.length){
-            show($readMore, false)
-            show($noNews)
-		}else{
-            show($readMore)
-            show($noNews, false)
-		}
+        let more = !(!count && !newsList.unconfirm.length)
+        show($readMore, more)
+        show($noNews, !more)
     }
 }
 //  格式化通知數據

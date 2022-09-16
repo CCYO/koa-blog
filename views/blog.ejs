@@ -63,26 +63,31 @@
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
     <script>
         $(async function () {
+            let api_comment = '/api/comment'
             try{
-                await init()
+                await init_Comment()
                 $('#backdrop').addClass('my-noshow')
             }catch(e){
                 console.log('@ GET ERR => ', e)
             }
 
-            async function init() {
-                let { show } = window.data.blog
-                show && await gogo()
+            async function init_Comment() {
+                if(!window.data.blog.show){
+                    return
+                }
+                let comment = await getComment()
+                init_editor()
             }
 
-            function gogo() {
-                let api_comment = '/api/comment'
+            function getComment() {
 
-                init_editor()
+                
 
                 let $comment = $('#comment') || undefined
+            
+            }
 
-                function init_editor() {
+            function init_editor() {
                     //  editor config
                     const { createEditor } = window.wangEditor
 
@@ -149,8 +154,9 @@
                         }
 
                     }
+                
                 }
-            }
+            
         })
     </script>
 </body>

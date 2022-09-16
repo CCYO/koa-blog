@@ -1,11 +1,10 @@
-
-
-const { initCache, get } = require('./db/cache/redis/_redis')
+const { seq, Comment } = require('./db/mysql/model/index')
 
 async function go(){
     try{
-        await initCache()
-        console.log(await get('cacheNews'))
+        let res = await seq.sync({alter: true})
+        console.log(res)
+
     }catch(e){
         console.log('@ e => ', e)
     }
