@@ -53,7 +53,7 @@ router.get('/self', view_check_login, async (ctx, next) => {
 
     let { data: { fansList, idolList } } = await getPeopleById(id, true)
     let { data: blogList } = await getBlogListByUserId(id, true)
-    
+
     await ctx.render('self', {
         title: `${currentUser.nickname}的主頁`,
         //  導覽列數據

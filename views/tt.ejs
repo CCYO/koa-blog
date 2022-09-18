@@ -1,16 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.min.js" integrity="sha512-/Q6t3CASm04EliI1QyIDAA/nDo9R8FQ/BULoUFyN4n/BDdyIxeH7u++Z+eobdmr11gG5D/6nPFyDlnisDwhpYA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.min.js"
+        integrity="sha512-/Q6t3CASm04EliI1QyIDAA/nDo9R8FQ/BULoUFyN4n/BDdyIxeH7u++Z+eobdmr11gG5D/6nPFyDlnisDwhpYA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
+
 <body>
+    <% blog.comments.length && blog.comments.forEach(({id, html, time, user, reply}) => { %>
+    <div class="comment-list">
+        <%- html %>
+        <a href="/other/<%= user.id %>"><%= user.nickname %> </a>
+        <span><%= time %> </span>
+        <button class="reply">回覆</button>
+        <%- include('./wedgets/comment/reply-list', { reply, pid: id}) %>
+    </div>
+    <% }) %>
 
     <script>
-        async function go (){
+        async function go() {
             let res = await axios.get('/test')
             console.log(res)
             console.log(res.data)
@@ -18,4 +31,5 @@
         go()
     </script>
 </body>
+
 </html>

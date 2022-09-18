@@ -1,5 +1,5 @@
 const { init_user } = require('./user')
-const { init_comment } = require('./comment')
+const { init_comment_4_blog } = require('./comment')
 
 function init_blog(blog) {
     if (blog instanceof Array) {
@@ -45,7 +45,7 @@ function _init_blog(blog) {
     }
 
     if(comments && comments.length){
-        res.comments = init_comment(comments, true)
+        res.comments = init_comment_4_blog(comments, true)
     }else{
         res.comments = []
     }

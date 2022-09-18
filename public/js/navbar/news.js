@@ -1,4 +1,4 @@
-
+console.log('public news')
 //  下拉選單鈕、通知鈕
 let $newsDropdown = $('#newsDropdown')
 //  通知比數span

@@ -40,21 +40,21 @@
             </div>
         </div>
         <% if (blog.show) { %>
-        <div id="comment" data-my-pid="<%= (blog.comments.filter(({id, p_id}) => id === p_id))[0].p_id %>">
-            <div id="editor-container"></div>
-            <div id="list">
-                <% blog.comments.length && blog.comments.forEach(({id, p_id, html, time, user: { id: u_id, nickname }}) => { %>
-                    <% if( id !== p_id){ %>
-                <div><%- html %>
-                    <a href="/other/<%= u_id %>"><%= nickname %> </a>
+        <div id="comment">
+            <div class="editor-container"></div>
+            <div id="comment-list-container">
+                <% blog.comments.length && blog.comments.forEach(({id, html, time, user, reply}) => { %>
+                <div class="comment-list">
+                    <%- html %>
+                    <a href="/other/<%= user.id %>"><%= user.nickname %> </a>
                     <span><%= time %> </span>
+                    <button class="reply">回覆</button>
+                    <%- include('./wedgets/comment/reply-list', { reply, pid: id}) %>
                 </div>
-                <% } %>
                 <% }) %>
             </div>
         </div>
         <% } %>
-    </div>
     </div>
     <%- include('wedgets/cdn') %>
     <!-- 引入 editor css -->
@@ -62,101 +62,117 @@
     <!-- 引入 editor js -->
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
     <script>
+        console.log('blog script')
         $(async function () {
-            let api_comment = '/api/comment'
-            try{
-                await init_Comment()
+            console.log('blog script - onload')
+            try {
+                if (!window.data.blog.show) {
+                    return
+                }
+                await init_Comment('.editor-container')
                 $('#backdrop').addClass('my-noshow')
-            }catch(e){
+            } catch (e) {
                 console.log('@ GET ERR => ', e)
             }
 
-            async function init_Comment() {
-                if(!window.data.blog.show){
+            function showReply(e) {
+                let $target = $(e.target)
+                let pid = $target.data('my-pid')
+                let template = `
+                <div data-my-pid='${pid}'>
+                    <div class='editor-container'></div>
+                    <button>回覆</button>
+                </div>
+                `
+                $target.after(template)
+                $(`.editor-container[data-my-pid=${pid}]`).on(handle_click)
+                $(`.editor-container[data-my-pid=${pid}]`).on('keyup', handle_keyup)
+
+            }
+
+            async function init_Comment(selector) {
+                $('button[data-my-pid]').click(showReply)
+                init_editor(selector)
+            }
+
+
+
+
+            async function handle_keyup(e) {
+                let api_comment = '/api/comment'
+                if (e.key !== 'Enter' || e.shiftKey) {
                     return
                 }
-                let comment = await getComment()
-                init_editor()
-            }
+                let $target = $(e.target)
+                let pid_el = $target.parents(`[data-my-pid]`)
+                let pid = pid_el.length ? pid_el[0].data('myPid') : undefined
 
-            function getComment() {
+                let comment = editor.getHtml()
+                let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
+                comment = comment.replace(reg, '')
+                if (!comment.trim()) {
+                    alter('請填入留言')
+                    return
+                }
 
-                
-
-                let $comment = $('#comment') || undefined
-            
-            }
-
-            function init_editor() {
-                    //  editor config
-                    const { createEditor } = window.wangEditor
-
-                    const customPaste = function (editor, event) {
-                        event.preventDefault()
-                        const text = event.clipboardData.getData('text/plain')
-                        editor.insertText(text)
-                    }
-                    const editorConfig = {
-                        MENU_CONF: {},
-                        customPaste
-                    }
-                    //  editor config : placeholder
-                    editorConfig.placeholder = '我有話要說'
-                    // editor 創建
-                    const editor = createEditor({
-                        config: editorConfig,
-                        selector: '#editor-container',
-                        mode: 'simple'
-                    })
-
-                    window.editor = editor
-
-                    let $el = $('#editor-container')
-                    $el.on('keyup', handle_keyup)
-                    $el.on('click', handle_click)
-
-                    function handle_click() {
-                        if (window.data.me) {
-                            return
-                        }
-                        if (confirm('請先登入')) {
-                            location.href = `/login?from=${location.pathname}`
-                        }
-                        return
-                    }
-                    async function handle_keyup(e) {
-                        if (e.key !== 'Enter') {
-                            return
-                        }
-
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                            let p_id = $('#comment').data('my-pid')
-                            let comment = editor.getHtml()
-                            let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
-                            comment = comment.replace(reg, '')
-                            if (!comment.trim()) return
-                            let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id, p_id})
-                            if (errno) {
-                                alert('留言失敗')
-                                console.log('msg')
-                            }
-                            let { html, time } = data
-                            let { nickname, id } = window.data.me
-                            editor.setHtml()
-                            let htmlStr = `
+                let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id, p_id })
+                if (errno) {
+                    alert('留言失敗')
+                    console.log('msg')
+                }
+                console.log(data)
+                return
+                let { html, time } = data
+                let { nickname, id } = window.data.me
+                editor.setHtml()
+                let htmlStr = `
                         <div>
                             ${html}
                             <a href="/other/${id}">${nickname}</a>
                             <span>${time}</span>
                         </div>`
 
-                            $('#list').append(htmlStr)
-                        }
+                $('#list').append(htmlStr)
 
-                    }
-                
+            }
+
+            function init_editor(container_id) {
+                //  editor config
+                const { createEditor } = window.wangEditor
+
+                const customPaste = function (editor, event) {
+                    event.preventDefault()
+                    const text = event.clipboardData.getData('text/plain')
+                    editor.insertText(text)
                 }
-            
+                const editorConfig = {
+                    MENU_CONF: {},
+                    customPaste
+                }
+                //  editor config : placeholder
+                editorConfig.placeholder = '我有話要說'
+                // editor 創建
+                const editor = createEditor({
+                    config: editorConfig,
+                    selector: container_id,
+                    mode: 'simple'
+                })
+
+                $(container_id).click(handle_click)
+
+                function handle_click() {
+                    if (window.data.me) {
+                        return
+                    }
+                    if (confirm('請先登入')) {
+                        location.href = `/login?from=${location.pathname}`
+                    }
+                    return
+                }
+
+                return editor
+            }
+
         })
     </script>
 </body>

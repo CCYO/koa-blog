@@ -260,7 +260,9 @@
     <%- include('wedgets/cdn') %>
 
     <script>
+        console.log('self script')
         $(function () {
+            console.log('self script - onload')
             let $btn_follow = $('#follow')
             let $btn_cancelFollow = $('#cancelFollow')
             let $btn_removeBlog = $('[data-my-remove-blog]')

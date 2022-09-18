@@ -12,11 +12,32 @@ const {
 
 const { init_comment } = require('../utils/init')
 
+async function _addComment({ blog_id, html, user_id, p_id }) {
+    let data = {
+        html: xss(html),
+        blog_id,
+        user_id
+    }
+
+    if (p_id) {
+        data.p_id = pid
+    }
+    //  建立 comment
+    let commentIns = await Comment.create(data)
+    return commentIns.toJSON()
+}
+
+async function _readComment({ blog_id, html, user_id, p_id }) {
+
+}
+
 async function addComment({ blog_id, html, user_id, p_id }) {
     html = xss(html)
     //  建立 comment
     let commentIns = await Comment.create({ blog_id, html, user_id, p_id })
     let json_comment = commentIns.toJSON()
+
+
     let comment = await readComment({ id: json_comment.id })
 
     //  整理出 同一blog內所有 comment(撇除當前這份，以及非留言者本人的comment)
@@ -63,7 +84,7 @@ async function addComment({ blog_id, html, user_id, p_id }) {
         await commentIns.addFollowComment_F(user_id, { through: { confirm: true } })
     }
     //  於cache通知所有留言者有新消息
-    let listOfUserId = json_otherComment.filter(({user:{id}}) => id !== user_id).map(({user:{id}}) => id)
+    let listOfUserId = json_otherComment.filter(({ user: { id } }) => id !== user_id).map(({ user: { id } }) => id)
     console.log('@listOfUserId => ', listOfUserId)
     listOfUserId = [...new Set([...listOfUserId])]
     console.log('@listOfUserId => ', listOfUserId)
@@ -80,15 +101,15 @@ async function readComment({ id, blog_id, p_id, createdAt }) {
     if (id) {
         whereOps.id = id
     }
-    if(p_id){
+    if (p_id) {
         whereOps.p_id = p_id
     }
-    if(createdAt){
-        whereOps.createdAt = { [Op.gt]: createdAt}
+    if (createdAt) {
+        whereOps.createdAt = { [Op.gt]: createdAt }
     }
 
     let res = await Comment.findAll({
-        attributes: ['id', 'html', 'updatedAt', 'createdAt','p_id'],
+        attributes: ['id', 'html', 'updatedAt', 'createdAt', 'p_id'],
         where: whereOps,
         include: [
             {
@@ -108,6 +129,8 @@ async function readComment({ id, blog_id, p_id, createdAt }) {
 }
 
 module.exports = {
+    _addComment,
+    _readComment,
     addComment,
     readComment
 }

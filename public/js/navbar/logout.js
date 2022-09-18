@@ -1,3 +1,4 @@
+console.log('public logout')
 $('#logout').click(logout)
 
 // 登出

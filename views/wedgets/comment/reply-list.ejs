@@ -1,0 +1,16 @@
+<% if(reply.length){ %>
+<div class="reply-list" data-my-pid="<%= pid %>">
+    <% reply.forEach(item => { %>
+    <div class="reply-item">
+        <%- item.html %>
+        <a href="/other/<%= item.user.id %>"><%= item.user.nickname %> </a>
+        <span><%= item.time %> </span><button>回覆</button>
+        <% if(item.reply.length){ %>
+        <%- include('./reply-list', { reply: item.reply, p_id: item.id}) %>
+        <% }%>        
+    </div>
+    <% }) %>
+</div>
+<% }else{ %>
+    <div>456</div>
+<% } %>

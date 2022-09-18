@@ -35,6 +35,46 @@ function _init_comment(comment) {
     return res
 }
 
+function init_comment_4_blog(comments, need_ppid = false) {
+    let comments_json
+    if (comments instanceof Array) {
+        comments_json = comments.map(_init_comment)
+    }else{
+        comments_json = [_init_comment(comments)]
+    }
+    return init_4_browser(comments_json)
+    
+    function init_4_browser(list) {
+        let target
+        let res = []
+
+        list.forEach( item => {
+            item.reply = []
+            if(!item.pid){
+                res.push(item)
+            }else{
+                findAndPush(res, item)
+            }
+        })
+
+        return res
+
+        function findAndPush(list, comment) {
+            list.some((item, ind) => {
+                target = list[ind]
+                if (item.id === comment.pid) {
+                    return target.reply.push(comment)
+                }
+                if (target.reply.length) {
+                    target = target.reply
+                    findAndPush(target, comment)
+                }
+            })
+        }
+    }
+}
+
 module.exports = {
-    init_comment
+    init_comment,
+    init_comment_4_blog
 }
