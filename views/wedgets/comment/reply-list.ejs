@@ -5,6 +5,8 @@
         <%- item.html %>
         <a href="/other/<%= item.user.id %>"><%= item.user.nickname %> </a>
         <span><%= item.time %> </span><button>回覆</button>
+        <div class="editor-reply">
+        </div>
         <% if(item.reply.length){ %>
         <%- include('./reply-list', { reply: item.reply, p_id: item.id}) %>
         <% }%>        

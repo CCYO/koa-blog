@@ -40,7 +40,7 @@
             </div>
         </div>
         <% if (blog.show) { %>
-        <div id="comment">
+        <div id="comment" class="editor-comment">
             <div class="editor-container"></div>
             <div id="comment-list-container">
                 <% blog.comments.length && blog.comments.forEach(({id, html, time, user, reply}) => { %>
@@ -91,12 +91,11 @@
             }
 
             async function init_Comment(selector) {
-                $('button[data-my-pid]').click(showReply)
-                init_editor(selector)
+                let $editor = init_editor(selector)
+                window.el = $(selector)
+                let isComment = $editor.parent('.editor-comment').length ? true : false
+                $(selector).click(showReply)
             }
-
-
-
 
             async function handle_keyup(e) {
                 let api_comment = '/api/comment'
