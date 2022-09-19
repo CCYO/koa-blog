@@ -29,6 +29,10 @@
             right: 0;
             background: rgba(200, 200, 200, 0.5);
         }
+
+        .comment-item {
+            border: 1px solid;
+        }
     </style>
     <%- include('wedgets/navbar/index') %>
     <div id="backdrop"></div>
@@ -73,11 +77,13 @@
 
             function initReplyEditor(e) {
                 let $target = $(e.target)
-                let $el_editor = $target.next()
+                let $el_editor = $target.next('.editor-reply')
+                if($el_editor.children().length){
+                    console.log('不動作')
+                    return
+                }
                 let editor = init_editor($el_editor[0])
-                let pid = $el_editor.data('my-pid')
                 $el_editor.on('keyup', handle_keyup(editor))
-
             }
 
             async function init() {
@@ -86,17 +92,20 @@
                 let editor = init_editor(selector)
                 let $el = $(selector)
                 $el.on('keyup', handle_keyup(editor))
+                let $btn = $('button.reply')
+                $btn.on('click', initReplyEditor)
             }
 
             function handle_keyup(editor) {
                 let api_comment = '/api/comment'
                 return async (e) => {
+                    console.log('觸發')
                     if (!(e.key === 'Enter' && !e.shiftKey)) {
+                        console.log('裝死到底')
                         return
                     }
                     let $target = $(e.target)
-                    let pid = $target.data('myPid')
-
+                    let pid = $target.parents('[data-my-pid]').first().data('myPid')
                     let comment = editor.getHtml()
                     let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
                     comment = comment.replace(reg, '')
@@ -124,12 +133,17 @@
                         </div>
                     `
 
+                    let $comment
                     // <div class="comment-list">
                     if (!pid) {  //  文章留言
-                        $('.container-comment-list > .comment-list').prepend(template)
+                        $comment = $('.container-comment-list > .comment-list').prepend(template).children('.comment-item').first()
                     } else { // 留言回覆
-                        $target.next('.comment-list').append(template)
+                        window.tar = $target
+                        window.tem = template
+                        $comment = $target.parents('[data-my-pid]').next().append(template).children().last()
                     }
+                    window.c = $comment
+                    $comment.children('.reply').on('click', initReplyEditor)
                 }
             }
 
