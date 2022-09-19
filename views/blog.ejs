@@ -42,16 +42,12 @@
         <% if (blog.show) { %>
         <div id="comment" class="editor-comment">
             <div class="editor-container"></div>
-            <div id="comment-list-container">
-                <% blog.comments.length && blog.comments.forEach(({id, html, time, user, reply}) => { %>
+            <div class="container-comment-list">
                 <div class="comment-list">
-                    <%- html %>
-                    <a href="/other/<%= user.id %>"><%= user.nickname %> </a>
-                    <span><%= time %> </span>
-                    <button class="reply">回覆</button>
-                    <%- include('./wedgets/comment/reply-list', { reply, pid: id}) %>
+                    <% if(blog.comments.length){ %>
+                    <%- include('./wedgets/comment/reply-list', { comments: blog.comments }) %>
+                    <% } %>
                 </div>
-                <% }) %>
             </div>
         </div>
         <% } %>
@@ -69,70 +65,72 @@
                 if (!window.data.blog.show) {
                     return
                 }
-                await init_Comment('.editor-container')
+                await init()
                 $('#backdrop').addClass('my-noshow')
             } catch (e) {
                 console.log('@ GET ERR => ', e)
             }
 
-            function showReply(e) {
+            function initReplyEditor(e) {
                 let $target = $(e.target)
-                let pid = $target.data('my-pid')
-                let template = `
-                <div data-my-pid='${pid}'>
-                    <div class='editor-container'></div>
-                    <button>回覆</button>
-                </div>
-                `
-                $target.after(template)
-                $(`.editor-container[data-my-pid=${pid}]`).on(handle_click)
-                $(`.editor-container[data-my-pid=${pid}]`).on('keyup', handle_keyup)
+                let $el_editor = $target.next()
+                let editor = init_editor($el_editor[0])
+                let pid = $el_editor.data('my-pid')
+                $el_editor.on('keyup', handle_keyup(editor))
 
             }
 
-            async function init_Comment(selector) {
-                let $editor = init_editor(selector)
-                window.el = $(selector)
-                let isComment = $editor.parent('.editor-comment').length ? true : false
-                $(selector).click(showReply)
+            async function init() {
+                let selector = '.editor-container'
+                // 初始化editor
+                let editor = init_editor(selector)
+                let $el = $(selector)
+                $el.on('keyup', handle_keyup(editor))
             }
 
-            async function handle_keyup(e) {
+            function handle_keyup(editor) {
                 let api_comment = '/api/comment'
-                if (e.key !== 'Enter' || e.shiftKey) {
-                    return
-                }
-                let $target = $(e.target)
-                let pid_el = $target.parents(`[data-my-pid]`)
-                let pid = pid_el.length ? pid_el[0].data('myPid') : undefined
+                return async (e) => {
+                    if (!(e.key === 'Enter' && !e.shiftKey)) {
+                        return
+                    }
+                    let $target = $(e.target)
+                    let pid = $target.data('myPid')
 
-                let comment = editor.getHtml()
-                let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
-                comment = comment.replace(reg, '')
-                if (!comment.trim()) {
-                    alter('請填入留言')
-                    return
-                }
+                    let comment = editor.getHtml()
+                    let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
+                    comment = comment.replace(reg, '')
+                    if (!comment.trim()) {
+                        alter('請填入留言')
+                        return
+                    }
 
-                let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id, p_id })
-                if (errno) {
-                    alert('留言失敗')
-                    console.log('msg')
-                }
-                console.log(data)
-                return
-                let { html, time } = data
-                let { nickname, id } = window.data.me
-                editor.setHtml()
-                let htmlStr = `
-                        <div>
+                    let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id, p_id: pid })
+                    if (errno) {
+                        alert('留言失敗')
+                        console.log('msg')
+                    }
+
+                    let { id, p_id, html, time, user } = data
+
+                    let template = `
+                        <div class="comment-item">
                             ${html}
-                            <a href="/other/${id}">${nickname}</a>
+                            <a href="/other/${user.id}">${user.nickname}</a>
                             <span>${time}</span>
-                        </div>`
+                            <button class="reply">回覆</button>
+                            <div class="editor-reply" data-my-pid="${id}"></div>
+                            <div class="comment-list"></div>
+                        </div>
+                    `
 
-                $('#list').append(htmlStr)
-
+                    // <div class="comment-list">
+                    if (!pid) {  //  文章留言
+                        $('.container-comment-list > .comment-list').prepend(template)
+                    } else { // 留言回覆
+                        $target.next('.comment-list').append(template)
+                    }
+                }
             }
 
             function init_editor(container_id) {
@@ -160,7 +158,7 @@
                 $(container_id).click(handle_click)
 
                 function handle_click() {
-                    if (window.data.me) {
+                    if (window.data.me.id) {
                         return
                     }
                     if (confirm('請先登入')) {

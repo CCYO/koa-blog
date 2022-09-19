@@ -76,7 +76,8 @@ router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
         active: 'blog',
 
         //  主要資訊數據
-        blog   //  window.data 數據
+        blog,   //  window.data 數據
+        me
     })
 
 })

@@ -35,11 +35,11 @@ async function addComment({ blog_id, html, user_id, p_id }) {
     html = xss(html)
     //  建立 comment
     let commentIns = await Comment.create({ blog_id, html, user_id, p_id })
+    
     let json_comment = commentIns.toJSON()
-
-
+    
     let comment = await readComment({ id: json_comment.id })
-
+    return comment[0]
     //  整理出 同一blog內所有 comment(撇除當前這份，以及非留言者本人的comment)
     const other_comments = await Comment.findAll({
         where: {

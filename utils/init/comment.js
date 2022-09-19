@@ -2,18 +2,13 @@ const moment = require('moment')
 
 const { init_user } = require('./user')
 
-function init_comment(comment, need_ppid = false) {
+function init_comment(comment) {
     if (comment instanceof Array) {
         let res = []
 
         comment.forEach(item => {
             let json = _init_comment(item)
-            let { id, p_id } = json
-            if(!need_ppid){
-                id !== p_id && res.push(json)
-            }else{
-                res.push(json)
-            } 
+            res.push(json)
         })
 
         return res
@@ -39,20 +34,20 @@ function init_comment_4_blog(comments, need_ppid = false) {
     let comments_json
     if (comments instanceof Array) {
         comments_json = comments.map(_init_comment)
-    }else{
+    } else {
         comments_json = [_init_comment(comments)]
     }
     return init_4_browser(comments_json)
-    
+
     function init_4_browser(list) {
         let target
         let res = []
 
-        list.forEach( item => {
+        list.forEach(item => {
             item.reply = []
-            if(!item.pid){
+            if (!item.pid) {
                 res.push(item)
-            }else{
+            } else {
                 findAndPush(res, item)
             }
         })
