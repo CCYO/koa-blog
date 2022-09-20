@@ -1,4 +1,6 @@
+let { Op } = require('sequelize')
 let { init_comment_4_blog } = require('./utils/init/comment')
+let { Comment } = require('./db/mysql/model/index')
 
 let init = []
 let arr = [
@@ -17,31 +19,13 @@ let arr = [
 
 
 
-go(arr)
+go()
 
-function go(item) {
-    let target
-    let init = []
-    item.forEach( one => {
-        one.reply = []
-        if(!one.pid){
-            init.push(one)
-        }else{
-            findAndPush(init, one)
-        }
-    })
-    function findAndPush(init, item) {
-        init.some((one, ind) => {
-            target = init[ind]
-            if (one.id === item.pid) {
-                target.reply.push(item)
-                return true
-            }
-            if (target.reply.length) {
-                target = target.reply
-                findAndPush(target, item)
-            }
-        })
-        return init
+async function go() {
+    try {
+        let x = await Comment.findAll({ where: { p_id: null } })
+        console.log(x.map( _ => _.toJSON()))
+    } catch (e) {
+        console.log(e)
     }
 }
