@@ -45,7 +45,7 @@ function _init_blog(blog) {
     }
 
     if(comments && comments.length){
-        res.comments = init_comment_4_blog(comments, true)
+        res.comments = init_comment_4_blog(comments)
     }else{
         res.comments = []
     }

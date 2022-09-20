@@ -8,6 +8,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
     <style>
+        .editor-container {
+            border: 1px solid;
+            height: 20vh;
+            
+        }
         .editor-content-view {
             background-color: rgba(255, 200, 200, .5);
             padding: 1rem;
@@ -31,6 +36,7 @@
         }
 
         .comment-item {
+            padding: 2%;
             border: 1px solid;
         }
     </style>
@@ -78,12 +84,25 @@
             function initReplyEditor(e) {
                 let $target = $(e.target)
                 let $el_editor = $target.next('.editor-reply')
-                if($el_editor.children().length){
-                    console.log('不動作')
+                let editor = $el_editor[0].editor || undefined
+                if (editor) {
+                    $el_editor.show()
+                    editor.focus()
+                    console.log('僅顯示')
                     return
                 }
-                let editor = init_editor($el_editor[0])
+                editor = init_editor($el_editor[0], { 
+                    onBlur(){
+                        $el_editor.hide()
+                    }
+                    
+                })
+                $el_editor[0].editor = editor
+                window.aa = editor
+                $el_editor.attr('tabindex', 0)
                 $el_editor.on('keyup', handle_keyup(editor))
+                
+                
             }
 
             async function init() {
@@ -99,27 +118,33 @@
             function handle_keyup(editor) {
                 let api_comment = '/api/comment'
                 return async (e) => {
-                    console.log('觸發')
-                    if (!(e.key === 'Enter' && !e.shiftKey)) {
-                        console.log('裝死到底')
+                    console.log('觸發 => ', e.shiftKey)
+                    let isEnter = e.key === 'Enter'
+                    if ( (e.shiftKey && isEnter) || !isEnter ){
+                        console.log('繼續打字吧')
                         return
-                    }
+                    } 
                     let $target = $(e.target)
-                    let pid = $target.parents('[data-my-pid]').first().data('myPid')
                     let comment = editor.getHtml()
                     let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
                     comment = comment.replace(reg, '')
                     if (!comment.trim()) {
-                        alter('請填入留言')
+                        editor.setHtml()
+                        alert('請填入留言')
                         return
                     }
-
+                    
+                    let pid = $target.parents('[data-my-pid]').first().data('myPid')
+                    
                     let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id, p_id: pid })
+                    
+
                     if (errno) {
                         alert('留言失敗')
                         console.log('msg')
+                        return
                     }
-
+                    
                     let { id, p_id, html, time, user } = data
 
                     let template = `
@@ -142,23 +167,29 @@
                         window.tem = template
                         $comment = $target.parents('[data-my-pid]').next().append(template).children().last()
                     }
-                    window.c = $comment
+                    editor.setHtml()
+                    console.log('ok')
                     $comment.children('.reply').on('click', initReplyEditor)
                 }
             }
 
-            function init_editor(container_id) {
+            function init_editor(container_id, handle) {
                 //  editor config
                 const { createEditor } = window.wangEditor
 
+                //  功能：貼上純文字內容
                 const customPaste = function (editor, event) {
                     event.preventDefault()
                     const text = event.clipboardData.getData('text/plain')
                     editor.insertText(text)
                 }
-                const editorConfig = {
+                let editorConfig = {
                     MENU_CONF: {},
                     customPaste
+
+                }
+                if (handle) {
+                    editorConfig = { ...editorConfig, ...handle }
                 }
                 //  editor config : placeholder
                 editorConfig.placeholder = '我有話要說'

@@ -7,6 +7,7 @@ const {
     Comment,
     User,
     Blog,
+    FollowBlog,
     FollowComment
 } = require('../db/mysql/model')
 
@@ -38,8 +39,32 @@ async function addComment({ blog_id, html, user_id, p_id }) {
     
     let json_comment = commentIns.toJSON()
     
-    let comment = await readComment({ id: json_comment.id })
-    return comment[0]
+    let [comment] = await readComment({ id: json_comment.id })
+    return comment
+
+    //  確認是否文章的第一個留言
+    let comments = await Comment.findAll({
+        where: { blog_id }
+    })
+    if(comments.length = 1){//  如果是第一個留言
+        let json_comments = init_comment(comments)
+        //  通知作者
+        let author_id = json_comments[0].blog.user_id
+        //  通知文章粉絲
+        let list_fans_id = (await FollowBlog.findAll({
+            where: { blog_id },
+            attributes: ['follower_id']
+        })).map( f => f.json())
+        //  通知
+        let list_follower_id = [author_id, ...list_fans_id]
+        await commentIns.addComment_F(list_follower_id)
+    }else if(!p_id){//  如果非第一個留言，且是文章留言
+        //  通知文章粉絲
+    }else{//  如果非第一個留言，且是留言回覆
+        //  通知留言粉絲
+    }
+
+
     //  整理出 同一blog內所有 comment(撇除當前這份，以及非留言者本人的comment)
     const other_comments = await Comment.findAll({
         where: {

@@ -22,11 +22,11 @@ async function createBlog({ title, user_id }) {
     let blog = await Blog.create({ title, user_id })
 
     //  為 blog 創建一個 作者的留言，且 pid = id
-    let comment = await blog.createComment({ user_id })
-    comment = await comment.update({ p_id: comment.id })
+    // let comment = await blog.createComment({ user_id })
+    // comment = await comment.update({ p_id: comment.id })
 
     //  讓作者追蹤這份(↑)自己的留言，且標示為 comfirm
-    let follow = await comment.addFollowComment_F(user_id, { through: { confirm: true } })
+    // let follow = await comment.addFollowComment_F(user_id, { through: { confirm: true } })
 
     return init_blog(blog)
 }

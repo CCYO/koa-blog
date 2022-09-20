@@ -1,6 +1,4 @@
 <% comments.forEach(comment => { %>
-
-
     <div class="comment-item">
         <%- comment.html %>
         <a href="/other/<%= comment.user.id %>"><%= comment.user.nickname %> </a>
@@ -10,7 +8,7 @@
         </div>
         <div class="comment-list">
         <% if( comment.reply.length) { %>
-            <%- include('/wedgets/comment/reply-list', { comments: comment.reply }) %>
+            <%- include('./reply-list', { comments: comment.reply }) %>
         <% } %>
     </div>
 </div>

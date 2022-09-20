@@ -20,17 +20,15 @@ const {
 //  撰寫新文章
 router.get('/blog/new', view_check_login, async (ctx, next) => {
     const { createdAt, updatedAt, ...me } = ctx.session.user
-    const { data: newsList } = await getNewsByUserId(me.id)
 
     await ctx.render('blog-edit', {
         title: '撰寫新文章',
         //  導覽列數據
         logging: true,
         active: 'editor',
-        newsList, //  window.data 數據
 
         //  主要資訊數據
-        blog: { author: { ...me } },
+        blog: { author: { ...me } }, //  window.data 數據
         me      //  window.data 數據
     })
 })

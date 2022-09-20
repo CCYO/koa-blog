@@ -30,14 +30,17 @@ function _init_comment(comment) {
     return res
 }
 
-function init_comment_4_blog(comments, need_ppid = false) {
+function init_comment_4_blog(comments) {
     let comments_json
     if (comments instanceof Array) {
         comments_json = comments.map(_init_comment)
     } else {
         comments_json = [_init_comment(comments)]
     }
-    return init_4_browser(comments_json)
+    console.log('json => ', comments_json)
+    let x = init_4_browser(comments_json)
+    console.log(x)
+    return x
 
     function init_4_browser(list) {
         let target
@@ -45,7 +48,7 @@ function init_comment_4_blog(comments, need_ppid = false) {
 
         list.forEach(item => {
             item.reply = []
-            if (!item.pid) {
+            if (!item.p_id) {
                 res.push(item)
             } else {
                 findAndPush(res, item)
@@ -57,7 +60,10 @@ function init_comment_4_blog(comments, need_ppid = false) {
         function findAndPush(list, comment) {
             list.some((item, ind) => {
                 target = list[ind]
-                if (item.id === comment.pid) {
+                if(item.id === item.p_id){
+                    return 1
+                }
+                if (item.id === comment.p_id) {
                     return target.reply.push(comment)
                 }
                 if (target.reply.length) {
