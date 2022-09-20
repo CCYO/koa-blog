@@ -68,9 +68,10 @@
     <!-- 引入 editor js -->
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
     <script>
-        console.log('blog script')
+        console.log('blog ejs - script 行內代碼運行 ')
+        
         $(async function () {
-            console.log('blog script - onload')
+            console.log('blog ejs - script onload 運行')
             try {
                 if (!window.data.blog.show) {
                     return
@@ -100,9 +101,7 @@
                 $el_editor[0].editor = editor
                 window.aa = editor
                 $el_editor.attr('tabindex', 0)
-                $el_editor.on('keyup', handle_keyup(editor))
-                
-                
+                $el_editor.on('keyup', handle_keyup(editor))   
             }
 
             async function init() {
@@ -135,8 +134,16 @@
                     }
                     
                     let pid = $target.parents('[data-my-pid]').first().data('myPid')
-                    
-                    let { data: { errno, data, msg } } = await axios.post(api_comment, { html: comment, blog_id: window.data.blog.id, author_id: window.data.blog.author.id, p_id: pid })
+                    let listOfOtherComments = pid
+                    let listOfOtherCommenters
+                    let { data: { errno, data, msg } } = await axios.post(api_comment, {
+                        html: comment,
+                        blog_id: window.data.blog.id, 
+                        author_id: window.data.blog.author.id, 
+                        p_id: pid,
+                        listOfOtherComments,
+                        listOfOtherCommenters
+                    })
                     
 
                     if (errno) {

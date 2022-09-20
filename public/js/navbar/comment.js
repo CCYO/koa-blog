@@ -1,25 +1,17 @@
-console.log('public news - script defer 加載')
-//  下拉選單鈕、通知鈕
-let $newsDropdown = $('#newsDropdown')
-//  通知比數span
-let $newsCount = $('.news-count')
-//  下拉選單內 的 readMore鈕
-let $readMore = $('#readMore')
-//  下拉選單內 的 沒有更多提醒
-let $noNews = $('#noNews')
+console.log('public comment')
 
-let api_news = '/api/news';
+let url = '/api/comment';
 
-//  初始化數據
+//  初始化news數據
 (async () => {
-    console.log('public news init調用')
     try {
-        //  處理 news 數據
-        let news = await getNews()
-        render_news(news)
+    //  處理 news 數據
+    let news = await getComment()
+    render_news(news)
 
-        window.data.news = { ...news, page: 0 }
-        window.data.news.newsList = initNewsList(news.newsList)
+    window.data.news = { ...news, page: 0 }
+    window.data.news.newsList = initNewsList(news.newsList)
+
     } catch (e) {
         console.log(e)
     }
@@ -201,32 +193,9 @@ function initNewsList(newsList) {
     }
     return initNews
 }
-//  初始化數據
-async function init_data() {
-    window.data = {}
 
-    //  處理 news 以外的數據
-    $(`[data-my-data]`).each((index, el) => {
-        let $el = $(el)
-        let prop = $el.data('my-data')
-        try {
-            window.data[prop] = JSON.parse($el.text())
-        } catch (e) {
-            window.data[prop] = undefined
-        }
-    })
-    $('#data').remove()
-
-    //  處理 news 數據
-    let news = await getNews()
-    render_news(news)
-
-    window.data.news = { ...news, page: 0 }
-    window.data.news.newsList = initNewsList(news.newsList)
-}
 //  撈取通知數據
-async function getNews() {
-    let url = `/api/news`
+async function getComment() {
     let method = window.data.news ? 'POST' : 'GET'
     let opts = { method, url }
     if (method === 'POST') {

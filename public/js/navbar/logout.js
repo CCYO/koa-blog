@@ -1,4 +1,4 @@
-console.log('public logout')
+console.log('public logout - script defer 加載')
 $('#logout').click(logout)
 
 // 登出

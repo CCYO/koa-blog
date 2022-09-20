@@ -37,9 +37,7 @@ function init_comment_4_blog(comments) {
     } else {
         comments_json = [_init_comment(comments)]
     }
-    console.log('json => ', comments_json)
     let x = init_4_browser(comments_json)
-    console.log(x)
     return x
 
     function init_4_browser(list) {
