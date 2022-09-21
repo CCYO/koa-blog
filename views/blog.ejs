@@ -11,8 +11,9 @@
         .editor-container {
             border: 1px solid;
             height: 20vh;
-            
+
         }
+
         .editor-content-view {
             background-color: rgba(255, 200, 200, .5);
             padding: 1rem;
@@ -69,7 +70,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
     <script>
         console.log('blog ejs - script 行內代碼運行 ')
-        
+
         $(async function () {
             console.log('blog ejs - script onload 運行')
             try {
@@ -92,16 +93,16 @@
                     console.log('僅顯示')
                     return
                 }
-                editor = init_editor($el_editor[0], { 
-                    onBlur(){
+                editor = init_editor($el_editor[0], {
+                    onBlur() {
                         $el_editor.hide()
                     }
-                    
+
                 })
                 $el_editor[0].editor = editor
                 window.aa = editor
                 $el_editor.attr('tabindex', 0)
-                $el_editor.on('keyup', handle_keyup(editor))   
+                $el_editor.on('keyup', handle_keyup(editor))
             }
 
             async function init() {
@@ -119,10 +120,10 @@
                 return async (e) => {
                     console.log('觸發 => ', e.shiftKey)
                     let isEnter = e.key === 'Enter'
-                    if ( (e.shiftKey && isEnter) || !isEnter ){
+                    if ((e.shiftKey && isEnter) || !isEnter) {
                         console.log('繼續打字吧')
                         return
-                    } 
+                    }
                     let $target = $(e.target)
                     let comment = editor.getHtml()
                     let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
@@ -132,28 +133,28 @@
                         alert('請填入留言')
                         return
                     }
-                    
+
                     let pid = $target.parents('[data-my-pid]').first().data('myPid')
                     let listOfOtherComments = pid
                     let listOfOtherCommenters
                     let { data: { errno, data, msg } } = await axios.post(api_comment, {
                         html: comment,
-                        blog_id: window.data.blog.id, 
-                        author_id: window.data.blog.author.id, 
+                        blog_id: window.data.blog.id,
+                        author_id: window.data.blog.author.id,
                         p_id: pid,
                         listOfOtherComments,
                         listOfOtherCommenters
                     })
-                    
+
 
                     if (errno) {
                         alert('留言失敗')
                         console.log('msg')
                         return
                     }
-                    
-                    let { id, p_id, html, time, user } = data
 
+                    let { id, p_id, html, time, user } = data
+                    delete data.createdAt
                     let template = `
                         <div class="comment-item">
                             ${html}
@@ -168,11 +169,41 @@
                     let $comment
                     // <div class="comment-list">
                     if (!pid) {  //  文章留言
+                        //  渲染
                         $comment = $('.container-comment-list > .comment-list').prepend(template).children('.comment-item').first()
+                        //  數據更新
+                        window.data.blog.comments.unshift(data)
                     } else { // 留言回覆
                         window.tar = $target
                         window.tem = template
                         $comment = $target.parents('[data-my-pid]').next().append(template).children().last()
+                        let ok = false
+                        updateComment(window.data.blog.comments, data)
+                        function updateComment(comments, data) {
+                            console.log(`@1 -> 代入的 commentID ${comments.id} 開始匹配`)
+                            if (ok) {
+                                console.log(`@1 -> 代入的 commentID ${comments.id} 匹配中斷`)
+                                return
+                            }
+                            let { id, p_id, html, time, user } = data
+                            comments.forEach((comment, ind) => {
+                                if (comment.id === p_id) {
+                                    data.reply = []
+                                    comments[ind].reply.push(data)
+                                    ok = true
+                                    return  //中斷forEach
+                                }
+                            })
+                            if (ok) {
+                                return
+                            }
+                            comments.forEach((comment, ind) => {
+                                if (comment.reply.length) {
+                                    console.log(`@2 -> 代入 commentID ${comment.id}`)
+                                    updateComment(comment.reply, data)
+                                }
+                            })
+                        }
                     }
                     editor.setHtml()
                     console.log('ok')
