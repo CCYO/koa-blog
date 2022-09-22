@@ -13,29 +13,43 @@ const {
 
 const { init_comment } = require('../utils/init')
 
-async function _addComment({ blog_id, html, user_id, p_id }) {
+async function _addComment({ blog_id, html, user_id }) {
     let data = {
         html: xss(html),
         blog_id,
         user_id
     }
 
-    if (p_id) {
-        data.p_id = pid
-    }
     //  建立 comment
     let commentIns = await Comment.create(data)
-    return commentIns.toJSON()
+    let json_comment = commentIns.toJSON()
+    let [comment] = await readComment({ id: json_comment.id })
+    return comment
+}
+async function _addReply({ blog_id, html, user_id, p_id }) {
+    let data = {
+        html: xss(html),
+        blog_id,
+        user_id,
+        p_id
+    }
+
+    //  建立 comment
+    
+    let commentIns = await Comment.create(data)
+    let json_comment = commentIns.toJSON()
+    let [comment] = await readComment({ id: json_comment.id })
+    return comment
 }
 
 async function _readComment({ blog_id, html, user_id, p_id }) {
 
 }
 
-async function addComment({ author_id, blog_id, html, user_id, p_id }) {
+async function addComment({ blog_id, html, user_id }) {
     html = xss(html)
     //  建立 comment
-    let commentIns = await Comment.create({ blog_id, html, user_id, p_id })
+    let commentIns = await Comment.create({ blog_id, html, user_id })
     
     let json_comment = commentIns.toJSON()
     
@@ -167,6 +181,7 @@ async function readComment({ id, blog_id, p_id, createdAt }) {
 
 module.exports = {
     _addComment,
+    _addReply,
     _readComment,
     addComment,
     readComment
