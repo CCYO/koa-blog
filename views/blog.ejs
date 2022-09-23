@@ -201,11 +201,11 @@
                     commentIdList: [],
                     otherIdList: new Set()
                 }
-                
+
                 if (window.data.blog.author.id !== window.data.me.id) {
                     initVal.otherIdList.add(window.data.blog.author.id)
                 }
-                
+
                 if (listOfPid.length) {
                     listOfPid.reduce((initVal, { id, user }) => {
                         initVal.commentIdList.push(id)
@@ -214,16 +214,14 @@
                     }, initVal)
                 }
 
-                
+
                 payload = {
                     html,
-                    blog_id: window.blog.id,
+                    blog_id: window.data.blog.id,
                     p_id: !pid ? null : p_id,
-                    ...initVal
+                    otherIdList: [...initVal.otherIdList],
+                    commentIdList: initVal.commentIdList
                 }
-
-                console.log('@payload => ', payload)
-                return
                 return await axios.post(api_comment, payload)
             }
 
@@ -284,6 +282,7 @@
                     commentPid.set(pid, pidList)
                 }
                 function go(comment) {
+
                     let { id, p_id: pid, reply } = comment
                     setPid(pid, comment)
                     commentId.set(id, comment)
@@ -292,6 +291,10 @@
                     } else {
                         setPid(id)
                     }
+                }
+                if (!comments.length) {
+                    setPid(0)
+                    return
                 }
                 comments.forEach(go)
             }

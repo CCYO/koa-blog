@@ -22,7 +22,7 @@ function _init_comment(comment) {
     let { id, html, p_id, createdAt, User: user, Blog: blog } = json
     console.log('@createdAt => ', createdAt)
     time = moment(createdAt).format('YYYY-MM-DD HH:mm')
-
+    p_id = !p_id ? 0 : p_id
     user = init_user(user)
     delete user.email
 

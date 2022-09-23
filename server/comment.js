@@ -13,7 +13,7 @@ const {
 
 const { init_comment } = require('../utils/init')
 
-async function _addComment({user_id, blog_id, html, commentIdList, otherIdList, p_id }) {
+async function _addComment({ user_id, blog_id, html, commentIdList, otherIdList, p_id }) {
     let data = {
         html: xss(html),
         blog_id,
@@ -24,9 +24,70 @@ async function _addComment({user_id, blog_id, html, commentIdList, otherIdList, 
     //  建立 comment
     let commentIns = await Comment.create(data)
     let json_comment = commentIns.toJSON()
+
+    //  從FollowComment找出要更新的條目
+    let where = {}
+
+    if (!commentIdList.length && otherIdList.length === 1) {   //  若沒有，代表是文章第一個留言，直接將此條目的提醒賦予文章作者就好
+        await FollowComment.create({ comment_id: json_comment.id, follower_id: otherIdList[0] })
+    }else{
+
+    let where = {}
+    where.comment_id = { [Op.in]: commentIdList }
+
+    if (otherIdList.length) {
+        where.follower_id = { [Op.in]: otherIdList }
+    }
+    let follow = (await FollowComment.findAll({ where })).map(item => item.toJSON())
+
+    console.log('@ => ', follow)
+    return
+
+    //  要找出 otherIdList 有，follow 卻沒有的 回覆者，並做成生成條目需要的資料
+    let newFollowerIdList = otherIdList.reduce((initVal, { id }) => {
+        let isNew = follow.some((item) => item.id !== id)
+        if (isNew) {
+            initVal.push({
+                comment_id: json_comment.id,
+                follow_id: id,
+                createdAt: json_comment.createdAt
+            })
+        }
+        return initVal
+    }, [])
+
+    //  分類出要更新的id
+    let updateOfConfirm = { confirm: [], unconfirm: [] }
+    follow.reduce((initVal, { id, confirm }) => {
+        if (confirm) {
+            initVal.confirm.push(id)
+        } else {
+            initVal.unconfiirm.push(id)
+        }
+    }, updateOfConfirm)
+    //  針對 confirm
+    await FollowComment.update(
+        {
+            comment_id: json_comment.id,
+            created: json_comment.createdAt
+        },
+        {
+            where: { id: updateOfConfirm.confirm }
+        }
+    )
+    //  針對unconfirm
+    await FollowComment.update(
+        { comment_id: json_comment.id },
+        {
+            where: { id: updateOfConfirm.unconfirm }
+        }
+    )
+    //  針對未在紀錄的留言者
+    await FollowComment.bulkCreate(newFollowerIdList)
+
+    }
     let [comment] = await readComment({ id: json_comment.id })
 
-    
     return comment
 }
 async function _addReply({ blog_id, html, user_id, p_id }) {
@@ -38,7 +99,7 @@ async function _addReply({ blog_id, html, user_id, p_id }) {
     }
 
     //  建立 comment
-    
+
     let commentIns = await Comment.create(data)
     let json_comment = commentIns.toJSON()
     let [comment] = await readComment({ id: json_comment.id })
@@ -53,9 +114,9 @@ async function addComment({ blog_id, html, user_id }) {
     html = xss(html)
     //  建立 comment
     let commentIns = await Comment.create({ blog_id, html, user_id })
-    
+
     let json_comment = commentIns.toJSON()
-    
+
     let [comment] = await readComment({ id: json_comment.id })
     return comment
 
@@ -63,19 +124,19 @@ async function addComment({ blog_id, html, user_id }) {
     let comments = await Comment.findAll({
         where: { blog_id }
     })
-    if(!p_id){//  如果是文章留言
+    if (!p_id) {//  如果是文章留言
         let json_comments = init_comment(comments)
         //  通知作者
 
         //  通知文章粉絲
         let list_fans_id = (await FollowBlog.findAll({
-            where: { blog_id, p_id: null},
+            where: { blog_id, p_id: null },
             attributes: ['follower_id']
-        })).map( f => f.toJson())
+        })).map(f => f.toJson())
         //  通知
         let list_follower_id = [author_id, ...list_fans_id]
         await commentIns.addComment_F(list_follower_id)
-    }else{ //  如果是留言回覆
+    } else { //  如果是留言回覆
         //  確認是作者是否已有該筆留言的通知
         await Comment.findOne({
             where: {
@@ -88,7 +149,7 @@ async function addComment({ blog_id, html, user_id }) {
         let list_fans_id = (await Comment.findAll({
             where: { p_id },
             attributes: ['user_id']
-        })).map( f => f.json())
+        })).map(f => f.json())
     }
 
     //  處理緩存，將被通知者放入緩存
