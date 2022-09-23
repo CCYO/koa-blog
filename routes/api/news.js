@@ -21,6 +21,9 @@ router.get('/', api_check_login, cacheNews, async (ctx, next) => {
     const { id } = ctx.session.user
     let res = await getNewsByUserId(id)
     console.log(`@存放session.news[0]`)
+    if(!res.errno){
+        res.data = {...res.data, me: {...ctx.session.user}}
+    }
     ctx.body = ctx.session.news[0] = res
 })
 

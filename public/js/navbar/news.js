@@ -15,9 +15,11 @@ let api_news = '/api/news';
     console.log('public news init調用')
     try {
         //  處理 news 數據
-        let news = await getNews()
+        let data = await getNews()
+        let { me, ...news } = data
         render_news(news)
 
+        window.data.me = me
         window.data.news = { ...news, page: 0 }
         window.data.news.newsList = initNewsList(news.newsList)
     } catch (e) {
@@ -203,20 +205,6 @@ function initNewsList(newsList) {
 }
 //  初始化數據
 async function init_data() {
-    window.data = {}
-
-    //  處理 news 以外的數據
-    $(`[data-my-data]`).each((index, el) => {
-        let $el = $(el)
-        let prop = $el.data('my-data')
-        try {
-            window.data[prop] = JSON.parse($el.text())
-        } catch (e) {
-            window.data[prop] = undefined
-        }
-    })
-    $('#data').remove()
-
     //  處理 news 數據
     let news = await getNews()
     render_news(news)

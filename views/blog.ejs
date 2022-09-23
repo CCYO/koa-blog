@@ -118,6 +118,7 @@
             }
 
             let api_comment = '/api/comment'
+
             function handle_keyup(editor) {
                 return async (e) => {
                     let isEnter = e.key === 'Enter'
@@ -135,6 +136,9 @@
                     }
 
                     let pid = $target.parents('[data-my-pid]').first().data('myPid')
+                    if (!pid) {
+                        pid = 0
+                    }
                     let { data: { errno, data, msg } } = await postComment(htmlStr, pid)
 
                     if (errno) {
@@ -151,21 +155,22 @@
                     console.log('ok')
                 }
             }
+
             function updateComment(comment) {
                 let { id, p_id, html, time, user } = comment
                 let commentId = window.map.commentId
                 let commentPid = window.map.commentPid
-                let pidList
+                commentPid.set(id, [])
+                let pidList = commentPid.get(p_id)
                 if (!p_id) {  //文章回覆
-                    p_id = 0
-                    pidList = commentPid.get(0).unshift(comment)
+                    pidList.unshift(comment)
                 } else {  //留言回覆
-                    pidList = commentPid.get(p_id).push(comment)
+                    pidList.push(comment)
                 }
                 commentPid.set(p_id, pidList)
                 commentId.set(id, comment)
             }
-            
+
             function renderComment({ id, p_id, html, time, user }, $target) {
                 let template = templateComment({ id, html, time, user })
                 let $comment
@@ -191,20 +196,16 @@
             }
 
             async function postComment(html, pid) {
-                let payload = {
-                    html,
-                    blog_id: window.data.blog.id,
-                }
-
-                if (!pid) {
-                    return await axios.post(api_comment, payload)
-                }
-
                 let listOfPid = window.map.commentPid.get(pid)
                 let initVal = {
                     commentIdList: [],
-                    otherIdList: new Set().add(window.data.blog.author.id)
+                    otherIdList: new Set()
                 }
+                
+                if (window.data.blog.author.id !== window.data.me.id) {
+                    initVal.otherIdList.add(window.data.blog.author.id)
+                }
+                
                 if (listOfPid.length) {
                     listOfPid.reduce((initVal, { id, user }) => {
                         initVal.commentIdList.push(id)
@@ -213,12 +214,16 @@
                     }, initVal)
                 }
 
+                
                 payload = {
-                    ...payload,
-                    ...initVal,
-                    p_id: pid
+                    html,
+                    blog_id: window.blog.id,
+                    p_id: pid,
+                    ...initVal
                 }
 
+                console.log('@payload => ', payload)
+                return
                 return await axios.post(api_comment, payload)
             }
 
@@ -273,21 +278,18 @@
                     if (!pidList) {
                         pidList = []
                     }
-                    if(comment){
-                        pidList.push(comment)   
+                    if (comment) {
+                        pidList.push(comment)
                     }
                     commentPid.set(pid, pidList)
                 }
                 function go(comment) {
                     let { id, p_id: pid, reply } = comment
-                    if (!pid) {
-                        pid = 0
-                    }
-                    commentId.set(id, comment)
                     setPid(pid, comment)
+                    commentId.set(id, comment)
                     if (reply.length) {
                         reply.forEach(go)
-                    }else{
+                    } else {
                         setPid(id)
                     }
                 }

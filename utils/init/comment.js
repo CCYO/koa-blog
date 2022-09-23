@@ -20,6 +20,7 @@ function init_comment(comment) {
 function _init_comment(comment) {
     let json = comment.toJSON ? comment.toJSON() : comment
     let { id, html, p_id, createdAt, User: user, Blog: blog } = json
+    console.log('@createdAt => ', createdAt)
     time = moment(createdAt).format('YYYY-MM-DD HH:mm')
 
     user = init_user(user)
@@ -47,10 +48,14 @@ function init_comment_4_blog(comments) {
         list.forEach(item => {
             item.reply = []
             if (!item.p_id) {
+                item.p_id = 0
                 res.push(item)
             } else {
                 findAndPush(res, item)
             }
+        })
+        res.sort(function(a, b){
+            return b.createdAt - a.createdAt
         })
 
         return res
