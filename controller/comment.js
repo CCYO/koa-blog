@@ -11,7 +11,7 @@ async function createComment({user_id, blog_id, html, commentIdList, otherIdList
     if(p_id){
         res = await _addReply({ user_id, blog_id, html, commentIdList, otherIdList, p_id })    
     }else{
-        res = await _addComment({ user_id, blog_id, html})
+        res = await _addComment({ user_id, blog_id, html, commentIdList, otherIdList, p_id})
     }
     
     return new SuccModel(res)

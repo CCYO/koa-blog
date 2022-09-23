@@ -218,7 +218,7 @@
                 payload = {
                     html,
                     blog_id: window.blog.id,
-                    p_id: pid,
+                    p_id: !pid ? null : p_id,
                     ...initVal
                 }
 

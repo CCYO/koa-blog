@@ -13,17 +13,20 @@ const {
 
 const { init_comment } = require('../utils/init')
 
-async function _addComment({ blog_id, html, user_id }) {
+async function _addComment({user_id, blog_id, html, commentIdList, otherIdList, p_id }) {
     let data = {
         html: xss(html),
         blog_id,
-        user_id
+        user_id,
+        p_id
     }
 
     //  建立 comment
     let commentIns = await Comment.create(data)
     let json_comment = commentIns.toJSON()
     let [comment] = await readComment({ id: json_comment.id })
+
+    
     return comment
 }
 async function _addReply({ blog_id, html, user_id, p_id }) {
