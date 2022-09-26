@@ -41,13 +41,16 @@ async function _addComment({
                 follower_id: { [Op.in]: listOfNotified }
             }
         })
+        console.log('@followList => ', followList)
         //  json化
-        let followList_json = followList.map(item => item.toJSON())
+        let followList_json = followList.length ? followList.map(item => item.toJSON()) : []
         //  map化，以follower做key
         let followerList_map = new Map()
-        followList_json.forEach(item => followerList_map.set(item.follower_id, item))
+        if(followList_json.length){
+            followList_json.forEach(item => followerList_map.set(item.follower_id, item))
+        }
         //  follower的arr
-        let followerList = followerList_json.map(item => item.follower_id)
+        let followerList = followList_json.length ? followList_json.map(item => item.follower_id) : []
         //  篩出follow內沒有紀錄，分類有紀錄的要被通知者
         let initVal = {
             addList: [],
@@ -55,10 +58,11 @@ async function _addComment({
         }
         listOfNotified.reduce((initVal, NotifiedId) => {
             //  篩出沒有紀錄者
-            if (followerList.some(followerId => followerId !== NotifiedId)) {
+            if (!followerList.length || followerList.some(followerId => followerId !== NotifiedId)) {
                 initVal.addList.push({ follower_id: NotifiedId, comment_id: json_comment.id })
             } else {    //  分類有紀錄者
                 let follow = followerList_map.get(NotifiedId)
+                console.log('@follow => ', follow)
                 if (follow.confirm) {
                     initVal.updataList.confirm.push(follow.id)
                 } else {
@@ -67,9 +71,11 @@ async function _addComment({
             }
             return initVal
         }, initVal)
+        console.log('@initVal=> ', initVal)
         //  對follow沒有紀錄者，創建followCommetn關係
         if (initVal.addList.length) {
-            await FollowComment.bulkBuild(initVal.addList)
+            console.log('更佳')
+            await FollowComment.bulkCreate(initVal.addList)
         }
         //  對follow有紀錄者，更新內容
         if (initVal.updateList.confirm.length) {
@@ -88,13 +94,16 @@ async function _addComment({
 
     //  建立或更新文章作者的 followComment
     if (author) {
+        console.log('有關author的操作')
+        console.log('@author ', 1)
+        console.log('@listOfAllCommentId ', listOfAllCommentId)
         let follow = await FollowComment.findOne({
             where: {
                 comment_id: { [Op.in]: listOfAllCommentId },
-                follower_id: { [Op.in]: author }
+                follower_id: author
             }
         })
-        
+        console.log('@author - follow => ', follow)
         if (!follow) {  //創建關係
             await FollowComment.create({ comment_id: json_comment.id, follower_id: author })
         } else {    // 更新關係

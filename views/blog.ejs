@@ -197,8 +197,10 @@
 
             async function postComment(html, pid) {
                 let data = window.data
+                //  撈出同串留言
+                let listOfPid = window.map.commentPid.get(pid)
                 //  撈出串主
-                let authorOfPid = pid ? window.map.commentId.get(Pid).user.id : undefined
+                let authorOfPid = pid ? window.map.commentId.get(pid).user.id : undefined
                 let author = data.blog.author.id
                 let me = data.me.id
                 //  是否此串第一篇留言
@@ -226,7 +228,7 @@
                     //  用來新創留言
                     user_id: me,
                     html, //留言內容
-                    p_id: pid,
+                    p_id: pid ? pid : null ,
                     blog_id: data.blog.id, //文章id
                     //  用來找出作者與留言者本人的被通知人條目
                     listOfNotified: [...listOfNotified],    //被通知人
@@ -281,6 +283,7 @@
             }
 
             function mapComments(comments) {
+                console.log('mapComments')
                 window.map = window.map ? window.map : {}
                 let commentId = window.map.commentId = new Map()
                 let commentPid = window.map.commentPid = new Map()

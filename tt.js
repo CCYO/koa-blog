@@ -1,6 +1,6 @@
 let { Op } = require('sequelize')
 let { init_comment_4_blog } = require('./utils/init/comment')
-let { Comment } = require('./db/mysql/model/index')
+let { Comment, FollowComment } = require('./db/mysql/model/index')
 
 let init = []
 let arr = [
@@ -23,8 +23,13 @@ go()
 
 async function go() {
     try {
-        let x = await Comment.findAll({ where: { p_id: null } })
-        console.log(x.map( _ => _.toJSON()))
+        let x = await FollowComment.findOne({
+            where: {
+                follower_id: {[Op.in]: [1] },
+                comment_id: {[Op.in]: [ 218, 217, 216, 219, 220 ]}
+            }
+        })
+        console.log(x)
     } catch (e) {
         console.log(e)
     }
