@@ -196,31 +196,41 @@
             }
 
             async function postComment(html, pid) {
+                let data = window.data
+                //  撈出同串留言
                 let listOfPid = window.map.commentPid.get(pid)
-                let initVal = {
-                    commentIdList: [],
-                    otherIdList: new Set()
+                let author = data.blog.author.id
+                let me = data.me.id
+                //  是否此串第一篇留言
+                let isFirstComment = !listOfPid.length
+                //  確認留言者是否文章作者
+                let isAuthor = author === me
+                //  是否留言回覆
+                let isReply = !pid
+                
+
+                //  須被通知的名單
+                let listOfNotified
+                //  同串的留言id
+                let listOfCommentId
+                //  文章內所有留言id
+                let listOfAllCommentId = [...map.commentId.keys()]
+                
+                if (!isFirstComment) {
+                    listOfCommentId = listOfPid.map(({id}) => id)
+                    listOfNotified = new Set(listOfPid.map(({ user: { id } }) => id))
+                    //  加入文章作者
+                    listOfNotified.add(author)
+                    //  移除留言者
+                    listOfNotified.delete(me)
+                }else{
+                    listOfNotified = isAuthor ? new Set() : new Set(author)
                 }
-
-                if (window.data.blog.author.id !== window.data.me.id) {
-                    initVal.otherIdList.add(window.data.blog.author.id)
-                }
-
-                if (listOfPid.length) {
-                    listOfPid.reduce((initVal, { id, user }) => {
-                        initVal.commentIdList.push(id)
-                        user.id !== window.data.me.id && initVal.otherIdList.add(user.id)
-                        return initVal
-                    }, initVal)
-                }
-
-
-                payload = {
-                    html,
-                    blog_id: window.data.blog.id,
-                    p_id: !pid ? null : p_id,
-                    otherIdList: [...initVal.otherIdList],
-                    commentIdList: initVal.commentIdList
+                let payload = {
+                    html, //留言內容
+                    blog_id: data.blog.id, //文章id
+                    listOfNotified: [...listOfNotified],    //被通知人
+                    listOfCommentId, // 同串的留言id
                 }
                 return await axios.post(api_comment, payload)
             }
