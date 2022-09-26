@@ -13,10 +13,8 @@ const { api_check_login } = require('../../middleware/check_login')
 router.prefix('/api/comment')
 
 //  創建comment
-router.post('/', api_check_login, async (ctx, next) => {
-    const { id: user_id } = ctx.session.user
-    const { blog_id, html, p_id, commentIdList, otherIdList} = ctx.request.body
-    ctx.body = await createComment({user_id, blog_id, html, p_id, commentIdList, otherIdList})
+router.post('/', api_check_login, async (ctx, next) => { 
+    ctx.body = await createComment(ctx.request.body)
 })
 
 module.exports = router

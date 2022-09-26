@@ -5,15 +5,9 @@ const {
     _addReply
 } = require('../server/comment')
 
-async function createComment({user_id, blog_id, html, commentIdList, otherIdList, p_id}){
+async function createComment({user_id, blog_id, html, p_id, listOfNotified, listOfCommentId, listOfAllCommentId, author}){
     
-    let res
-    if(p_id){
-        res = await _addReply({ user_id, blog_id, html, commentIdList, otherIdList, p_id })    
-    }else{
-        res = await _addComment({ user_id, blog_id, html, commentIdList, otherIdList, p_id})
-    }
-    
+    let res = await _addComment({ user_id, blog_id, html, p_id, listOfNotified, listOfCommentId, listOfAllCommentId, author})
     return new SuccModel(res)
 }
 

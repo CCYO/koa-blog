@@ -1,4 +1,4 @@
-const { Op } = require('sequelize')
+const { Op, json } = require('sequelize')
 const xss = require('xss')
 
 const { remindNews, del_blog } = require('./cache')
@@ -13,7 +13,14 @@ const {
 
 const { init_comment } = require('../utils/init')
 
-async function _addComment({ user_id, blog_id, html, commentIdList, otherIdList, p_id }) {
+async function _addComment({
+    //  創建comment用
+    user_id, blog_id, html, p_id,
+    //  更新/創建follow用
+    listOfNotified, listOfCommentId,
+    //  更新/創建文章作者的follow用
+    listOfAllCommentId, author
+}) {
     let data = {
         html: xss(html),
         blog_id,
@@ -25,118 +32,88 @@ async function _addComment({ user_id, blog_id, html, commentIdList, otherIdList,
     let commentIns = await Comment.create(data)
     let json_comment = commentIns.toJSON()
 
-    //  留言者是不是文章作者，有沒有 author_id
-
-    //  沒有，代表留言者是文章作者，不用提醒作者
-    //  有，代表留言者不是文章作者，要提醒作者
-    //  找出作者與這篇文章回覆的關聯
-    let follow_author = await FollowComment.findOne({
-        where: {
-            follower_id: author_id,
-            comment_id: blogCommentIdList
+    //  建立同串留言者的 followComment
+    if (listOfCommentId.length && listOfNotified.length) {
+        //  找出與當前串有關的條目
+        let followList = await FollowComment.findAll({
+            where: {
+                comment_id: { [Op.in]: listOfCommentId },
+                follower_id: { [Op.in]: listOfNotified }
+            }
+        })
+        //  json化
+        let followList_json = followList.map(item => item.toJSON())
+        //  map化，以follower做key
+        let followerList_map = new Map()
+        followList_json.forEach(item => followerList_map.set(item.follower_id, item))
+        //  follower的arr
+        let followerList = followerList_json.map(item => item.follower_id)
+        //  篩出follow內沒有紀錄，分類有紀錄的要被通知者
+        let initVal = {
+            addList: [],
+            updateList: { confirm: [], unconfirm: [] }
         }
-    })
-
-    let json_follow_author
-    if (follow_author) {
-        json_follow_author = follow_author.toJSON()
-    }
-
-    //  判斷是不是作者
-    //  A有 > 通知人不需加作者
-    //  B沒有 > 通知人需加作者
-    
-    //  判斷有沒有其他留言
-    //  C有 > 第N筆留言
-    //  D沒有 > 第1筆留言 ---> 肯定 F
-
-    //  判斷有沒有其他留言者
-    //  E有 > 有留言者與作者以外的人留言過
-    //  F沒有 > 目前的留言者，只有當前留言的人或是只有作者
-
-    //  判斷作者是否留過言
-    //  G有
-    //  H沒有
-
-
-    //  D && A 不用動作
-    //  D && B -> 第1筆留言，且不是作者 -> 通知作者即可
-    //  C && E -> +A -> 用CE找出follow + 篩出 E有follow內沒有的人 -> follow依confirm判斷，篩出的人新增通知
-    //  C && E -> +B -> 同上，
-    
-
-    //  從FollowComment找出要更新的條目
-    let where = {}
-
-    if (!commentIdList.length && !author_id) {   //  文章的第一個留言，且留言者不是文章作者
-        await FollowComment.create({ comment_id: json_comment.id, follower_id: json_follow_author.id })
-    } else if (commentIdList.length ) { //文章的第N個留言
-        if(otherIdList.length && author_id){ // 有其他人留言過，作者沒留過
-            //  通知其他人，新增作者
-        }else if(otherIdList.length && !author_id){ //有其他留言過，作者留言過
-            //  通知其他人，更新作者
-        }else if(!otherIdList.length && author_id){ //沒有其他人留過，作者沒留過
-
-        }
-        //  otherIdList.length 無值，代表沒有作者以外的人留言過，不須處理
-
-        //  otherIdList.length 有值，代表作者以外的人留言過
-        let where = {}
-        where.comment_id = { [Op.in]: commentIdList }
-
-        if (otherIdList.length) {
-            where.follower_id = { [Op.in]: otherIdList }
-        }
-        let follow = (await FollowComment.findAll({ where })).map(item => item.toJSON())
-
-        console.log('@ => ', follow)
-        return
-
-        //  要找出 otherIdList 有，follow 卻沒有的 回覆者，並做成生成條目需要的資料
-        let newFollowerIdList = otherIdList.reduce((initVal, { id }) => {
-            let isNew = follow.some((item) => item.id !== id)
-            if (isNew) {
-                initVal.push({
-                    comment_id: json_comment.id,
-                    follow_id: id,
-                    createdAt: json_comment.createdAt
-                })
+        listOfNotified.reduce((initVal, NotifiedId) => {
+            //  篩出沒有紀錄者
+            if (followerList.some(followerId => followerId !== NotifiedId)) {
+                initVal.addList.push({ follower_id: NotifiedId, comment_id: json_comment.id })
+            } else {    //  分類有紀錄者
+                let follow = followerList_map.get(NotifiedId)
+                if (follow.confirm) {
+                    initVal.updataList.confirm.push(follow.id)
+                } else {
+                    initVal.updataList.unconfirm.push(follow.id)
+                }
             }
             return initVal
-        }, [])
-
-        //  分類出要更新的id
-        let updateOfConfirm = { confirm: [], unconfirm: [] }
-        follow.reduce((initVal, { id, confirm }) => {
-            if (confirm) {
-                initVal.confirm.push(id)
-            } else {
-                initVal.unconfiirm.push(id)
-            }
-        }, updateOfConfirm)
-        //  針對 confirm
-        await FollowComment.update(
-            {
-                comment_id: json_comment.id,
-                created: json_comment.createdAt
-            },
-            {
-                where: { id: updateOfConfirm.confirm }
-            }
-        )
-        //  針對unconfirm
-        await FollowComment.update(
-            { comment_id: json_comment.id },
-            {
-                where: { id: updateOfConfirm.unconfirm }
-            }
-        )
-        //  針對未在紀錄的留言者
-        await FollowComment.bulkCreate(newFollowerIdList)
-
+        }, initVal)
+        //  對follow沒有紀錄者，創建followCommetn關係
+        if (initVal.addList.length) {
+            await FollowComment.bulkBuild(initVal.addList)
+        }
+        //  對follow有紀錄者，更新內容
+        if (initVal.updateList.confirm.length) {
+            await FollowComment.update(
+                { comment_id: json_comment.id, createdAt: json_comment.createdAt, confirm: false },
+                { where: { id: initVal.updateList.confirm } }
+            )
+        }
+        if (initVal.updateList.unconfirm.length) {
+            await FollowComment.update(
+                { comment_id: json_comment.id },
+                { where: { id: initVal.updateList.unconfirm } }
+            )
+        }
     }
-    let [comment] = await readComment({ id: json_comment.id })
 
+    //  建立或更新文章作者的 followComment
+    if (author) {
+        let follow = await FollowComment.findOne({
+            where: {
+                comment_id: { [Op.in]: listOfAllCommentId },
+                follower_id: { [Op.in]: author }
+            }
+        })
+        
+        if (!follow) {  //創建關係
+            await FollowComment.create({ comment_id: json_comment.id, follower_id: author })
+        } else {    // 更新關係
+            let { id, confirm } = follow.toJSON()
+            let data = confirm
+            if (confirm) {
+                await follow.update(
+                    { comment_id: json_comment.id, createdAt: json_comment.createdAt, confirm: false }
+                )
+            }else{
+                await follow.update(
+                    { comment_id: json_comment.id }
+                )
+            }
+
+        }
+    }
+    
+    let [comment] = await readComment({ id: json_comment.id })
     return comment
 }
 async function _addReply({ blog_id, html, user_id, p_id }) {
