@@ -7,7 +7,7 @@ const {
 
 async function createComment({user_id, blog_id, html, p_id, listOfNotified, listOfCommentId, listOfAllCommentId, author}){
     
-    let res = await _addComment({ user_id, blog_id, html, p_id, listOfNotified, listOfCommentId, listOfAllCommentId, author})
+    let res = await _addComment({ user_id, blog_id, html, p_id, commenterOfPid, author})
     return new SuccModel(res)
 }
 

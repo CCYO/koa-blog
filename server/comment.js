@@ -17,9 +17,10 @@ async function _addComment({
     //  創建comment用
     user_id, blog_id, html, p_id,
     //  更新/創建follow用
-    listOfNotified, listOfCommentId,
+    // listOfNotified, listOfCommentId,
     //  更新/創建文章作者的follow用
-    listOfAllCommentId, author
+    author,
+    // listOfAllCommentId
 }) {
     let data = {
         html: xss(html),
@@ -32,7 +33,98 @@ async function _addComment({
     let commentIns = await Comment.create(data)
     let json_comment = commentIns.toJSON()
 
+    //  確認留言者是否為文章作者
+
+
     //  建立同串留言者的 followComment
+    let whereOps_comment = { blog_id, p_id }
+    if (p_id) {   //  如果是留言回覆，要連串主都撈出
+        whereOps_comment = {
+            [Op.or]: [
+                whereOps_comment,
+                { comment_id: p_id }
+            ]
+        }
+    }
+    //  與pid相關的comment
+    let commentList = await Comment.findAll({
+        where: whereOps_comment
+    })
+    let json_commentList = commentList.length ? commentList.map(comment => comment.toJSON()) : []
+    //  與pid相關的commentId
+    let commentIdList = json_commentList.length ? json_commentList.map(json => json.id) : []
+    //  與pid相關的commenterId
+    let commenterIdList = json_commentList.length ? json_commentList.map(json => json.user_id) : []
+    //  需被知會的對象
+    let notifiedIdList = []
+    if (commenterIdList.length) {
+        let commenterIdList_set = new Set(commenterIdList)
+        //  加入串主
+        p_id && commenterIdList_set.add(commenterOfPid)
+        //  移除
+        commenterIdList_set.delete(author)
+        !author && commenterIdList_set.delete(user_id)
+        notifiedIdList = [...commenterIdList_set]
+    }
+    //  撈出需被知會對象的follow
+    if (notifiedIdList.length && commentIdList.length) {
+        let followList = await FollowComment.findAll({
+            where: {
+                comment_id: { [Op.in]: commentIdList },
+                follower_id: { [Op.in]: notifiedIdList }
+            }
+        })
+        let followList_json = followList.length ? followList.map(follow => follow.toJSON()) : []
+        let followerList = followList.length ? followList_json.map(json => json.follower_id) : []
+
+        let initVal = {
+            addList: [],
+            updateList: { confirm: [], unconfirm: [] }
+        }
+        //  撈出需被知會對象分纇為「要新增follow」與「要更新的follow」
+        followList_json.reduce((initVal, json) => {
+            if (!notifiedIdList.some(notified => notified === json.follower_id)) {
+                initVal.addList.push({ follower_id: notified, comment_id: json_comment.id, createdAt: json_comment.createdAt })
+            } else {
+                let { confirm } = json
+                if (confirm) {
+                    initVal.updateList.confirm.push(json.id)
+                } else {
+                    initVal.updateList.unconfirm.push(json.id)
+                }
+            }
+            return initVal
+        }, initVal)
+
+        //  新增follow
+        if (initVal.addList.length) {
+            await FollowComment.bulkCreate(initVal.addList)
+        }
+        //  更新的follow
+        if (initVal.updateList.confirm.length) {
+            await FollowComment.update(
+                { confirm: false, comment_id: json_comment.id, createdAt: json_comment.createdAt },
+                { where: initVal.updateList.confirm }
+            )
+        }
+        //  更新的follow
+        if (initVal.updateList.unconfirm.length) {
+            await FollowComment.update(
+                { comment_id: json_comment.id },
+                { where: initVal.updateList.unconfirm }
+            )
+        }
+    }
+
+    if(author){
+        
+    }
+
+    commenterList
+
+
+
+
     if (listOfCommentId.length && listOfNotified.length) {
         //  找出與當前串有關的條目
         let followList = await FollowComment.findAll({
@@ -46,7 +138,7 @@ async function _addComment({
         let followList_json = followList.length ? followList.map(item => item.toJSON()) : []
         //  map化，以follower做key
         let followerList_map = new Map()
-        if(followList_json.length){
+        if (followList_json.length) {
             followList_json.forEach(item => followerList_map.set(item.follower_id, item))
         }
         //  follower的arr
@@ -113,7 +205,7 @@ async function _addComment({
                 await follow.update(
                     { comment_id: json_comment.id, createdAt: json_comment.createdAt, confirm: false }
                 )
-            }else{
+            } else {
                 await follow.update(
                     { comment_id: json_comment.id }
                 )
@@ -121,7 +213,7 @@ async function _addComment({
 
         }
     }
-    
+
     let [comment] = await readComment({ id: json_comment.id })
     return comment
 }
