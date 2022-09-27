@@ -198,31 +198,31 @@
             async function postComment(html, pid) {
                 let data = window.data
                 //  撈出同串留言
-                let listOfPid = window.map.commentPid.get(pid)
+                // let listOfPid = window.map.commentPid.get(pid)
                 //  撈出串主
                 let commenterOfPid = pid ? window.map.commentId.get(pid).user.id : undefined
                 let author = data.blog.author.id
                 let me = data.me.id
                 //  是否此串第一篇留言
-                let isFirstComment = !listOfPid.length
+                // let isFirstComment = !listOfPid.length
                 //  確認留言者是否文章作者
                 let isAuthor = author === me
                 //  是否留言回覆
-                let isReply = !pid
+                // let isReply = !pid
                 //  須被通知的名單
-                let listOfNotified = new Set(listOfPid.map(({ user: { id } }) => id))
+                // let listOfNotified = new Set(listOfPid.map(({ user: { id } }) => id))
                 //  加入串主
-                if(commenterOfPid){
-                    listOfNotified.add(commenterOfPid)
-                }
+                // if(commenterOfPid){
+                //     listOfNotified.add(commenterOfPid)
+                // }
                 //  移除文章作者
-                listOfNotified.delete(author)
+                // listOfNotified.delete(author)
                 //  移除留言者
-                listOfNotified.delete(me)
+                // listOfNotified.delete(me)
                 //  同串的留言id
-                let listOfCommentId = listOfPid.map(({ id }) => id)
+                // let listOfCommentId = listOfPid.map(({ id }) => id)
                 //  文章內所有留言id
-                let listOfAllCommentId = [...map.commentId.keys()]
+                // let listOfAllCommentId = [...map.commentId.keys()]
 
                 let payload = {
                     //  用來新創留言
