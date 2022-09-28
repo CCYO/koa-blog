@@ -17,12 +17,10 @@ const { toJSON } = require('../utils/seq')
 async function _addComment({
     //  創建comment用
     user_id, blog_id, html, p_id,
-    //  更新/創建follow用
-    commenterOfPid, //串主
-    // listOfNotified, listOfCommentId,
-    //  更新/創建文章作者的follow用
-    author,
-    // listOfAllCommentId
+    //  串主id
+    commenterOfPid,
+    //  文章作者id
+    author
 }) {
     let data = {
         html: xss(html),
@@ -35,20 +33,16 @@ async function _addComment({
     let commentIns = await Comment.create(data)
     let json_comment = commentIns.toJSON()
 
-    //  確認留言者是否為文章作者
-
-
-    //  建立同串留言者的 followComment
+    //  查詢與commentIns有關的所有comment
     let whereOps_comment = { blog_id, p_id }
     if (p_id) {   //  如果是留言回覆，要連串主都撈出
         whereOps_comment = {
             [Op.or]: [
                 whereOps_comment,
-                { comment_id: p_id }
+                { id: p_id }
             ]
         }
     }
-    //  與pid相關的comment
     let commentList = await Comment.findAll({
         where: whereOps_comment
     })
