@@ -12,6 +12,7 @@ const {
 } = require('../db/mysql/model')
 
 const { init_comment } = require('../utils/init')
+const { toJSON } = require('../utils/seq')
 
 async function _addComment({
     //  創建comment用
