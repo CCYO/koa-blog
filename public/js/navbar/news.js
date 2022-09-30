@@ -154,15 +154,38 @@ function render_news(news) {
     function template_comment({ comment, timestamp }) {
         let { others } = comment
         console.log(comment)
-        let nicknames = others.length > 2 ?
-            others.slice(0, 2).join(',') + `與其他${others.length - 2}人，都` : others.length > 0 ?
-                others.join(',') + '都' : comment.user.nickname
-
+        let { id: me } = window.data.me
+        let otherNotIncludeMe = []
+        if(others.length){
+            otherNotIncludeMe = new Set()
+            others.reduce((initVal, other) => {
+                console.log('抓之前', other, other.user.id, me)
+                if( other.user.id !== me ){
+                    console.log('抓 => ', other.user.id, other.user.nickname)
+                    otherNotIncludeMe.add(other.user.nickname)
+                }
+                return initVal
+            }, otherNotIncludeMe)
+            otherNotIncludeMe = [...otherNotIncludeMe]
+        } 
+        console.log('@otherNotIncludeMe => ', otherNotIncludeMe)
+        let count = otherNotIncludeMe.length
+        let nicknames = 
+            count > 1 ? otherNotIncludeMe.slice(0, 2).join(',') + `${count > 2 ? `與其他${count-2}人` :''}` + `，都` : 
+            count > 0 ? otherNotIncludeMe.join(',') :
+            comment.user.nickname
+        console.log('@nicknames => ', nicknames)
+        let who =
+            count > 1 && comment.blog.author.id === me ? '你' :
+            comment.blog.author.id === comment.user.id ? '自己': comment.blog.author.nickname
+        console.log('@comment.blog.author.nickname => ', comment.blog.author.nickname)
+        console.log('@otherNotIncludeMe[0] => ', otherNotIncludeMe[0])
+        console.log('@who => ', who)
         return `
     <li class="dropdown-item  position-relative news-item">
         <a href="/blog/${comment.blog.id}#comment_${comment.id}" class="stretched-link">
             <div>
-                <span>${nicknames} 在 ${comment.blog.title} 留言囉！</span><br>
+                <span>${nicknames}在${who}的文章「${comment.blog.title}」留言囉！</span><br>
                 <span>${timestamp}</span>
             </div>
         </a>

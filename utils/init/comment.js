@@ -1,6 +1,7 @@
 const moment = require('moment')
 
 const { init_user } = require('./user')
+// const { init_blog } = require('./blog')
 
 function init_comment(comment) {
     if (comment instanceof Array) {
@@ -25,7 +26,8 @@ function _init_comment(comment) {
     p_id = !p_id ? 0 : p_id
     user = init_user(user)
     delete user.email
-
+    // blog = init_blog(blog)
+    blog = { author: blog.User, title: blog.title, id: blog.id }
     let res = { id, html, p_id, time, createdAt, user, blog }
 
     return res

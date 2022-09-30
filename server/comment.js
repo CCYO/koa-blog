@@ -314,7 +314,11 @@ async function readComment({ id, blog_id, p_id, createdAt }) {
             },
             {
                 model: Blog,
-                attributes: ['id', 'title']
+                attributes: ['id', 'title'],
+                include: {
+                    model: User,
+                    attributes: ['nickname', 'id']
+                }
             }
         ]
     })

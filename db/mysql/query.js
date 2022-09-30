@@ -137,7 +137,7 @@ async function _init_newsItemOfComfirmRoNot(item) {
         let { id: comment_id, time, user, blog } = comment
         //  獲取早前未確認到的comment資訊
         let other_comments = await readComment({ blog_id: blog.id, createdAt })
-        let others = other_comments.length ? other_comments.map(({user}) => user.nickname) : []
+        let others = other_comments.length ? other_comments.filter(({user}) => user.nickname) : []
         
         return { ...res, comment: { id: comment_id, user, blog, time, others } }
     }
