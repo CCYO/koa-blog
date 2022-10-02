@@ -7,7 +7,6 @@ const { init_newsOfFollowId, init_excepts } = require('../utils/init')
 
 const { NEWS: { LIMIT } } = require('../conf/constant')
 const {
-    _readNews,
     readNews,
     updateNews,
 } = require('../server/news')
@@ -37,36 +36,26 @@ async function getNewsByUserId(userId, excepts) {
     if (excepts) {
         data.excepts = excepts
     }
-    let res = await _readNews(data)
+    let res = await readNews(data)
     return new SuccModel(res)
 }
 
 async function readMore(ctx) {
     let { id: userId } = ctx.session.user
-    let { excepts, page } = ctx.request.body
+    let { excepts } = ctx.request.body
     let { unconfirm } = excepts
     
     if(unconfirm.num){
         let res = await confirmNews(unconfirm)
-        if (res.errno) {
+        if(res.errno){
             throw res
         }
-        ctx.session.news = []
     }
 
     excepts = init_excepts(excepts)
-    let res = await _readNews({ userId, excepts})
-
-    let model = new SuccModel({...res, excepts})
-    //  處理session
-    if (!ctx.session.news.length) {
-        console.log(`@存放session.news[0]`)
-        ctx.session.news[0] = new SuccModel(res)
-    }else if(ctx.session.news.length){
-        console.log(`@存放session.news[${page}]`)
-        ctx.session.news[page] = model
-    }
-    return model
+    let res = await readNews({ userId, excepts})
+    
+    return new SuccModel({...res, excepts})
 }
 
 async function confirmNews(listOfNewsId) {

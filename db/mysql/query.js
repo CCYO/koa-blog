@@ -13,7 +13,7 @@ const { readUser } = require('../../server/user')
 const { readBlog } = require('../../server/blog')
 const { readComment } = require('../../server/comment')
 
-async function _readNews({ userId, excepts }) {
+async function readNews({ userId, excepts }) {
     // let { people, blogs, comments } = excepts
     let list = { people: '', blogs: '', comments: ''}
     if(excepts){
@@ -53,19 +53,11 @@ async function _readNews({ userId, excepts }) {
     LIMIT ${LIMIT}
     `
     let newsList = await seq.query(query, { type: QueryTypes.SELECT })
-    console.log('@query res => ', newsList)
 
     return await _init_newsOfComfirmRoNot(newsList, userId)
 }
 
-async function _count({ userId, excepts }) {
-    let { people, blogs, comments } = excepts
-    let listOfPeopleId = people.join(',') || undefined
-    let listOfBlogsId = blogs.join(',') || undefined
-    let listOfCommentsId = comments.join(',')
-
-
-
+async function count({ userId }) {
     let query = `
     SELECT
         COUNT(if(confirm < 1, true, null)) as unconfirm, 
@@ -92,6 +84,7 @@ async function _count({ userId, excepts }) {
     ) AS X
     `
     let [{ unconfirm, confirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })
+    
     return { num: { unconfirm, confirm, total } }
 }
 
@@ -114,8 +107,7 @@ async function _init_newsOfComfirmRoNot(newsList, userId) {
         confirm && initVal.confirm.push(currVal) || initVal.unconfirm.push(currVal)
         return initVal
     }, res)
-
-    console.log('@重整後res => ', res)
+    
     return res
 }
 
@@ -180,53 +172,8 @@ async function countNewsTotalAndUnconfirm({ userId, options }) {
     return { numOfUnconfirm, total }
 }
 
-async function readNews({ userId, options }) {
-    let { markTime, fromFront, listOfexceptNewsId: { people, blogs, comments } } = options
-    let listOfPeopleId = people.join(',') || undefined
-    let listOfBlogsId = blogs.join(',') || undefined
-    let listOfCommentsId = comments.join(',')
-
-    let where_time = `DATE_FORMAT('${markTime}', '%Y-%m-%d %T') > DATE_FORMAT(createdAt, '%Y-%m-%d %T')`
-
-    let query = `
-    SELECT type, id, target_id, follow_id, confirm, createdAt
-    FROM (
-        SELECT 1 as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt
-        FROM FollowPeople
-        WHERE idol_id=${userId}
-            AND ${where_time}
-            ${listOfPeopleId && ` AND id NOT IN (${listOfPeopleId})` || ''}
-
-        UNION
-
-        SELECT 2 as type, id, blog_id as target_id, follower_id as follow_id, confirm, createdAt
-        FROM FollowBlogs
-        WHERE follower_id=${userId}
-            AND deletedAt IS NULL
-            AND ${where_time}
-            ${listOfBlogsId && ` AND id NOT IN (${listOfBlogsId})` || ''}
-
-        UNION
-
-        SELECT 3 as type, id, comment_id as target_id, follower_id as follow_id, confirm, updatedAt
-        FROM FollowComments
-        WHERE follower_id=${userId}
-            AND ${where_time}
-            ${listOfCommentsId && ` AND id NOT IN (${listOfCommentsId})` || ''}
-
-    ) AS X
-    ORDER BY confirm=1, createdAt DESC
-    LIMIT ${LIMIT}
-    `
-    let newsList = await seq.query(query, { type: QueryTypes.SELECT })
-
-    return await _init_newsOfComfirmRoNot(newsList, fromFront)
-}
-
-
 module.exports = {
-    _readNews,
-    _count,
     readNews,
+    count,
     countNewsTotalAndUnconfirm
 }

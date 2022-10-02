@@ -44,12 +44,13 @@ async function moreNewsForReadMore() {
 
     //  更新當前頁面數據
     let w_newsList = window.data.news.newsList
-    w_newsList.confirm = excepts
+    w_newsList.confirm = excepts ? excepts : { people: [], blogs: [], comments: [], num: 0 }
     w_newsList.unconfirm = { people: [], blogs: [], comments: [], num: 0 }
     window.data.news.num = num
 
     newsList = initNewsList(newsList)
 
+    console.log('@newsList => ', newsList)
     let map = new Map(Object.entries(newsList))    //  Map{ confirm: { people: [], blogs: [], comments: [], num: 0 }, unconfirm: {...} }
 
     map.forEach((list, key) => {

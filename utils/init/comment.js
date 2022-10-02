@@ -21,14 +21,10 @@ function init_comment(comment) {
 function _init_comment(comment) {
     let json = comment.toJSON ? comment.toJSON() : comment
     let { id, html, p_id, createdAt, User: user, Blog: blog } = json
-    console.log('@createdAt => ', createdAt)
     time = moment(createdAt).format('YYYY-MM-DD HH:mm')
     p_id = !p_id ? 0 : p_id
     user = init_user(user)
     delete user.email
-    // blog = init_blog(blog)
-    console.log('@>>>', comment)
-    console.log('@>>>', blog)
     if(blog){
         blog = { author: blog.User, title: blog.title, id: blog.id }
         return { id, html, p_id, time, createdAt, user, blog }

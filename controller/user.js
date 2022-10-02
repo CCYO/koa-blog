@@ -103,8 +103,7 @@ async function getPeopleById(id, isSelf = false) {
 async function followIdol({ fans_id, idol_id }) {
     const ok = await followPeople.addFans({ idol_id, fans_id })
     if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
-    await remindNews(idol_id)
-    return new SuccModel()
+    return new SuccModel({notifiedIdList: [idol_id]})
 }
 
 /** 取消追蹤
@@ -137,8 +136,7 @@ async function cancelFollowIdol({ fans_id, idol_id }) {
         return new ErrModel(FOLLOW.CANCEL_ERR)
     }
     
-    await remindNews([fans_id, idol_id])
-    return new SuccModel()
+    return new SuccModel({notifiedIdList: [fans_id, idol_id]})
 
 }
 

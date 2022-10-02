@@ -19,9 +19,8 @@ async function tellUser(user_id){
 
 async function checkNews(id){
     let cacheNews = await get('cacheNews')
-    console.log('@cacheNew => ', cacheNews)
-    let news = new Set(await get('cacheNews'))
-    return news.has(id)
+    console.log('@get cacheNews => ', cacheNews)
+    return  new Set(cacheNews).has(id)
 }
 
 async function remindNews(id){
