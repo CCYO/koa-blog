@@ -71,7 +71,7 @@
             let api_uploadImg = '/api/blog/img'
             let api_blog = '/api/blog/'
             //  提供給後端更改前，用來驗證的資料
-            let patchData = {}
+            let patchData = window.patchData = {}
 
             //  定義 JQobj
             let $btn_updateTitle = $('#updateTitle')
@@ -208,7 +208,7 @@
                 }
 
                 //  同步 window.blog 與 資料庫
-                window.data.blog = { ...window.data.blog, ...data.blog }
+                window.data.blog = { ...window.data.blog, ...data }
 
                 alert('blog save success!')
             }

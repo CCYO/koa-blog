@@ -27,10 +27,14 @@ function _init_comment(comment) {
     user = init_user(user)
     delete user.email
     // blog = init_blog(blog)
-    blog = { author: blog.User, title: blog.title, id: blog.id }
-    let res = { id, html, p_id, time, createdAt, user, blog }
-
-    return res
+    console.log('@>>>', comment)
+    console.log('@>>>', blog)
+    if(blog){
+        blog = { author: blog.User, title: blog.title, id: blog.id }
+        return { id, html, p_id, time, createdAt, user, blog }
+    }
+    
+    return { id, html, p_id, time, createdAt, user}
 }
 
 function init_comment_4_blog(comments) {

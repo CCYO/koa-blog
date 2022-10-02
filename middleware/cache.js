@@ -1,4 +1,4 @@
-const { get_blog, checkNews, removeRemindNews } = require('../server/cache')
+const { get_blog, checkNews, removeRemindNews, remindNews } = require('../server/cache')
 
 async function cacheBlog(ctx, next) {
     const { blog_id } = ctx.params
@@ -29,8 +29,24 @@ async function cacheNews(ctx, next) {
     return
 }
 
+async function notifiedNews(ctx, next){
+    await next()
+    if(ctx.body.errno){
+        return
+    }
+    let { notifiedIdList, ...otherData } = ctx.body.data
+    if(notifiedIdList && notifiedIdList.length){
+        console.trace('@要被通知的人 => ', notifiedIdList)
+        await remindNews(notifiedIdList)
+    }
+    
+    ctx.body.data = { ...otherData }
+    return
+}
+
 
 module.exports = {
     cacheBlog,
-    cacheNews
+    cacheNews,
+    notifiedNews
 }

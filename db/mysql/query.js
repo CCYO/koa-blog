@@ -55,7 +55,7 @@ async function _readNews({ userId, excepts }) {
     let newsList = await seq.query(query, { type: QueryTypes.SELECT })
     console.log('@query res => ', newsList)
 
-    return await _init_newsOfComfirmRoNot(newsList)
+    return await _init_newsOfComfirmRoNot(newsList, userId)
 }
 
 async function _count({ userId, excepts }) {
@@ -95,14 +95,14 @@ async function _count({ userId, excepts }) {
     return { num: { unconfirm, confirm, total } }
 }
 
-async function _init_newsOfComfirmRoNot(newsList) {
+async function _init_newsOfComfirmRoNot(newsList, userId) {
     let res = { unconfirm: [], confirm: [] }
 
     if (!newsList.length) {
         return res
     }
 
-    let listOfPromise = newsList.map(_init_newsItemOfComfirmRoNot)
+    let listOfPromise = newsList.map( news => _init_newsItemOfComfirmRoNot(news, userId))
 
     listOfPromise = await Promise.all(listOfPromise)
 
@@ -119,7 +119,7 @@ async function _init_newsOfComfirmRoNot(newsList) {
     return res
 }
 
-async function _init_newsItemOfComfirmRoNot(item) {
+async function _init_newsItemOfComfirmRoNot(item, userId) {
     let { type, id, target_id, follow_id, confirm, createdAt } = item
     let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
     let res = { type, id, timestamp, confirm }
@@ -136,7 +136,7 @@ async function _init_newsItemOfComfirmRoNot(item) {
         }
         let { id: comment_id, time, user, blog } = comment
         //  獲取早前未確認到的comment資訊
-        let other_comments = await readComment({ blog_id: blog.id, createdAt })
+        let other_comments = await readComment({ blog_id: blog.id, createdAt }, userId)
         let others = other_comments.length ? other_comments.filter(({user}) => user.nickname) : []
         
         return { ...res, comment: { id: comment_id, user, blog, time, others } }
