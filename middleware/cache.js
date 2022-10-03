@@ -1,15 +1,58 @@
-const { get_blog, checkNews, removeRemindNews, remindNews } = require('../server/cache')
+const { set_blog, get_blog, checkNews, removeRemindNews, remindNews } = require('../server/cache')
+
+const { hash_obj } = require('../utils/crypto')
 const { SuccModel } = require('../model')
 
 async function cacheBlog(ctx, next) {
     const { blog_id } = ctx.params
     let hash = ctx.headers['if-none-match']
-    if (hash && await get_blog(blog_id, hash)) {
-        console.log('@BLOG 使用緩存')
-        ctx.status = 304
-        return
+    console.log('hash => ', hash)
+    if (hash) {
+        let cache = await get_blog(blog_id, hash)
+        if (cache === true) {
+            console.log('@BLOG直接使用緩存304')
+            ctx.status = 304
+            return
+        } else if (Array.isArray(cache)) {
+            ctx.blog = cache
+            console.log(`@BLOG 從cache撈取 -> blog/${blog_id}: [ ${etag} : BLOG數據 ]`)
+            ctx.set({
+                etag,
+                ['Cache-Control']: 'no-cache'
+            })
+        }
     }
+    // if (hash && await get_blog(blog_id, hash)) {
+    //     console.log('@BLOG 使用緩存')
+    //     ctx.status = 304
+    //     return
+    // }
     await next()
+
+    if (!ctx.blog[0]) {
+        let blog = ctx.blog[1]
+        //  計算etag
+        let etag = hash_obj(blog)
+        console.trace('@etag => ', etag)
+        //  緩存
+        await set_blog(blog_id, etag, blog)
+        console.log(`@BLOG 從DB撈取 + 存入緩存 session -> blog/${blog_id}: [ ${etag} : BLOG數據 ]`)
+        ctx.set({
+            etag,
+            ['Cache-Control']: 'no-cache'
+        })
+    }
+    delete ctx.blog
+    return
+}
+
+async function resetBlog(ctx, next) {
+    await next()
+    let { blog } = ctx.body.data
+    let etag = hash_obj(blog)
+
+    await set_blog(blog.id, etag, blog)
+    console.log(`@reset blog cache ${etag}`)
 }
 
 async function cacheNews(ctx, next) {
@@ -37,7 +80,7 @@ async function cacheNews(ctx, next) {
     await next()
 
     //  next 接回來，繼續處理緩存
-    
+
     if (ctx.body.errno) {   //  若發生錯誤
         return
     }
@@ -50,9 +93,9 @@ async function cacheNews(ctx, next) {
         return
     }
     let { excepts, ...data } = ctx.body.data
-    if (excepts){
-        let { newsList: {confirm, unconfirm}, num } = data
-        if(excepts.num + confirm.length + unconfirm.length === num.total){
+    if (excepts) {
+        let { newsList: { confirm, unconfirm }, num } = data
+        if (excepts.num + confirm.length + unconfirm.length === num.total) {
             console.trace(`@這輪包含confirm動作，所以保持session為空`)
             return
         }
@@ -82,5 +125,6 @@ async function notifiedNews(ctx, next) {
 module.exports = {
     cacheBlog,
     cacheNews,
+    resetBlog,
     notifiedNews
 }

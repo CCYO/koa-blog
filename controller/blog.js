@@ -138,7 +138,6 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
             //  FollowBlog 軟刪除 confirm: false 的 粉絲
             await hiddenBlog({ blog_id, confirm: false })
-            responseData = {}
         } else if (show === 3) {
             //  不是第一次公開
             data.show = true
@@ -167,8 +166,9 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
     //  更新文章數據
     await updateBlog(blog_id, data)
-    let blog = await readBlog(blog_id)
-    responseData = { ...responseData, ...data }
+    let blog = await readBlog({ blog_id }, true)
+    // responseData = { ...responseData, ...data }
+    responseData = { ...responseData, blog }
     return new SuccModel(responseData)
 }
 
@@ -181,11 +181,12 @@ async function getBlog(blog_id, needCommit = false) {
     let blog = await readBlog({ blog_id }, needCommit)
     if (blog) {
         //  計算etag
-        let hash = hash_obj(blog)
+        // let hash = hash_obj(blog)
         //  緩存
-        await set_blog(blog_id, hash, blog)
-        console.log(`@BLOG 從DB撈取 + 存入緩存 session -> blog/${blog_id}: { ${hash} : BLOG數據 }`)
-        return new SuccModel({ blog, etag: hash })
+        // await set_blog(blog_id, hash, blog)
+        // console.log(`@BLOG 從DB撈取 + 存入緩存 session -> blog/${blog_id}: { ${hash} : BLOG數據 }`)
+        // return new SuccModel({ blog, etag: hash })
+        return new SuccModel({blog})
     } else {
         return new ErrModel(BLOG.NOT_EXIST)
     }
