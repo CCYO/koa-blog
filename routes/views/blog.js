@@ -16,6 +16,8 @@ const {
     getNewsByUserId
 } = require('../../controller/news')
 
+const { renderFile } = require('../../utils/ejs')
+
 
 //  撰寫新文章
 router.get('/blog/new', view_check_login, async (ctx, next) => {
@@ -64,21 +66,20 @@ router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
         const { blog_id } = ctx.params
         const resModel = await getBlog(blog_id, true)
         blog = resModel.data.blog
-        ctx.blog = [ undefined, blog ]
+        let htmlStr = await renderFile('blog', {
+            title: blog.title,
+            //  主要資訊數據
+            blog   //  window.data 數據
+        })
+        console.log('@htmlStr => ', htmlStr)
+        ctx.blog = { 
+            api: [ undefined, blog ],
+            view: htmlStr
+        }
     }else{
-        blog = ctx.blog[1]
+        blog = ctx.blog.view
     }
-    
-    return await ctx.render('blog', {
-        title: blog.title,
-        //  導覽列數據
-        // logging: me.id ? true : false,
-        active: 'blog',
-
-        //  主要資訊數據
-        blog   //  window.data 數據
-    })
-
+    ctx.body = htmlStr
 })
 
 module.exports = router

@@ -58,20 +58,27 @@ async function removeRemindNews(id){
     return news
 }
 
-async function set_blog(blog_id, hash = undefined, val = undefined) {
+async function set_blogAPI(blog_id, hash = undefined, val = undefined) {
     if(!hash && !val){
-        return await set(`blog/${blog_id}`, '')
+        return await set(`API:blog/${blog_id}`, '')
     }
-    return await set(`blog/${blog_id}`, [[hash, val]])
+    return await set(`API:blog/${blog_id}`, [[hash, val]])
+}
+
+async function set_blogVIEW(blog_id, hash = undefined, val = undefined) {
+    if(!hash && !val){
+        return await set(`VIEW:blog/${blog_id}`, '')
+    }
+    return await set(`VIEW:blog/${blog_id}`, [[hash, val]])
 }
 
 async function del_blog(blog_id) {
     return await del(`blog/${blog_id}`)
 }
 
-async function get_blog(blog_id, etag) {
+async function get_blogVIEW(blog_id, etag) {
     //  取緩存KV
-    let blog = await get(`blog/${blog_id}`)
+    let blog = await get(`VIEW:blog/${blog_id}`)
     if(!blog){  //若沒有，則退出
         console.log('@blog沒有緩存')
         return null
@@ -89,13 +96,16 @@ async function get_blog(blog_id, etag) {
     return true // 告知etag有效 
 }
 
+
+
 module.exports = {
     tellBlogFollower,
     tellPeopleFollower,
     remindNews,
     removeRemindNews,
     checkNews,
-    set_blog,
+    set_blogAPI,
+    set_blogVIEW,
     del_blog,
-    get_blog
+    get_blogVIEW
 }
