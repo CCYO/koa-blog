@@ -62,19 +62,31 @@ async function set_blog(blog_id, hash = undefined, val = undefined) {
     if(!hash && !val){
         return await set(`blog/${blog_id}`, '')
     }
-    return await set(`blog/${blog_id}`, {[hash]: val})
+    return await set(`blog/${blog_id}`, [[hash, val]])
 }
 
 async function del_blog(blog_id) {
     return await del(`blog/${blog_id}`)
 }
 
-async function get_blog(blog_id, hash) {
-    let kv = await get(`blog/${blog_id}`)
-    if(!kv){
+async function get_blog(blog_id, etag) {
+    //  取緩存KV
+    let blog = await get(`blog/${blog_id}`)
+    if(!blog){  //若沒有，則退出
+        console.log('@blog沒有緩存')
         return null
     }
-    return kv[hash]
+    //  取緩存KV
+    let kv = [...new Map(blog).entries()][0]
+    console.log('@緩存內的etag => ', kv[0])
+    console.log('@請求來的etag => ', etag)
+    let exist = kv[0] === etag ? true : false
+    if(!exist){ //  若沒有，代表etag失效
+        console.log('@etag失效')
+        return kv // 給予現存KV
+    }
+    console.log('cache => ', kv)
+    return true // 告知etag有效 
 }
 
 module.exports = {

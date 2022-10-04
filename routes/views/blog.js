@@ -38,7 +38,7 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
     const { createdAt, updatedAt, ...me } = ctx.session.user
     const { blog_id } = ctx.params
 
-    const { data: { blog } } = await getBlog(blog_id * 1)
+    const { data: {blog} } = await getBlog(blog_id * 1)
 
     if (blog.author.id != me.id) {
         return ctx.body = '你哪位?'
@@ -59,14 +59,16 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
 //  查看文章
 router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
     let me = ctx.session.user ? ctx.session.user : {}
+    let blog
+    if(!ctx.blog){
+        const { blog_id } = ctx.params
+        const resModel = await getBlog(blog_id, true)
+        blog = resModel.data.blog
+        ctx.blog = [ undefined, blog ]
+    }else{
+        blog = ctx.blog[1]
+    }
     
-    const { blog_id } = ctx.params
-    const { data: {blog, etag} } = await getBlog(blog_id, true)
-    console.log('@comment => ', blog.comments)
-    ctx.set({
-        etag,
-        ['Cache-Control']: 'no-cache'
-    })
     return await ctx.render('blog', {
         title: blog.title,
         //  導覽列數據

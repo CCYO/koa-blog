@@ -9,7 +9,7 @@ const { addBlog, modifyBlog, removeBlog } = require('../../controller/blog')
 const { uploadImg } = require('../../controller/img')
 
 const { api_check_login } = require('../../middleware/check_login')
-const { notifiedNews } = require('../../middleware/cache')
+const { notifiedNews, resetBlog } = require('../../middleware/cache')
 
 router.prefix('/api/blog')
 
@@ -32,11 +32,12 @@ router.delete('/', api_check_login, notifiedNews, async (ctx, next) => {
 })
 
 //  更新 blog 資料
-router.patch('/', api_check_login, notifiedNews ,async(ctx, next) => {
+router.patch('/', api_check_login, notifiedNews, resetBlog, async(ctx, next) => {
     const { id: user_id } = ctx.session.user
     // const { removeImgs, id, html, show } = ctx.request.body
     const { id: blog_id, ...blog_data } = ctx.request.body
-    return ctx.body = await modifyBlog(blog_id, blog_data, user_id)
+    ctx.body = await modifyBlog(blog_id, blog_data, user_id)
+    return 
 })
 
 module.exports = router
