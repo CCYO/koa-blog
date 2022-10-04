@@ -20,7 +20,11 @@ const { parse_user_data } = require('../../middleware/gcs')
 const { validate_user } = require('../../middleware/validate')
 const { notifiedNews } = require('../../middleware/cache')
 
+const { getMe } = require('../../utils/user')
+
 router.prefix('/api/user')
+
+router.get('/', api_check_login, getMe)
 
 //  驗證信箱是否已被註冊
 router.post('/isEmailExist', validate_user, async (ctx, next) => {

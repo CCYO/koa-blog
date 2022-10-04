@@ -70,7 +70,7 @@ router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
     return await ctx.render('blog', {
         title: blog.title,
         //  導覽列數據
-        logging: me.id ? true : false,
+        // logging: me.id ? true : false,
         active: 'blog',
 
         //  主要資訊數據

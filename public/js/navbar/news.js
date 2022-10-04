@@ -26,6 +26,7 @@ let api_news = '/api/news';
         console.log(e)
     }
 })()
+
 //  更新unconfirm通知數目
 $newsDropdown.one('click', () => {
     let { num, newsList } = window.data.news
