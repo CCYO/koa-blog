@@ -2,71 +2,71 @@ const { set, get, del } = require('../db/cache/redis/_redis')
 const { readFollowers } = require('./followBlog')
 const { readFans } = require('./followPeople')
 
-async function tellBlogFollower(blog_id){
-    let followers = await readFollowers({blog_id})
+async function tellBlogFollower(blog_id) {
+    let followers = await readFollowers({ blog_id })
     await remindNews(followers)
 }
 
-async function tellPeopleFollower(idol_id){
-    let followers = await readFans({idol_id})
+async function tellPeopleFollower(idol_id) {
+    let followers = await readFans({ idol_id })
     await remindNews(followers)
 }
 
-async function tellUser(user_id){
-    let followers = await readFollowers({blog_id})
+async function tellUser(user_id) {
+    let followers = await readFollowers({ blog_id })
     await remindNews(followers)
 }
 
-async function checkNews(id){
+async function checkNews(id) {
     let cacheNews = await get('cacheNews')
     console.log('@get cacheNews => ', cacheNews)
-    return  new Set(cacheNews).has(id)
+    return new Set(cacheNews).has(id)
 }
 
-async function remindNews(id){
+async function remindNews(id) {
     console.log('++')
     let news = await get('cacheNews')
     news = new Set(news)
     let listOfUserId = id
-    if(!Array.isArray(listOfUserId)){
+    if (!Array.isArray(listOfUserId)) {
         listOfUserId = [listOfUserId]
     }
 
-    listOfUserId.forEach( (item) => {
+    listOfUserId.forEach((item) => {
         console.log(`@使用者${item}有新通知囉`)
         news.add(item)
     })
-    
+
     await set('cacheNews', [...news])
     return news
 }
 
-async function removeRemindNews(id){
+async function removeRemindNews(id) {
     let r = await get('cacheNews')
     let news = new Set(r)
     let listOfUserId = id
-    if(!Array.isArray(listOfUserId)){
+    if (!Array.isArray(listOfUserId)) {
         listOfUserId = [listOfUserId]
     }
-    
-    listOfUserId.forEach( (item) => {
+
+    listOfUserId.forEach((item) => {
         news.delete(item)
     })
 
     await set('cacheNews', [...news])
-    
+
     return news
 }
 
 async function set_blogAPI(blog_id, hash = undefined, val = undefined) {
-    if(!hash && !val){
+    if (!hash && !val) {
         return await set(`API:blog/${blog_id}`, '')
     }
     return await set(`API:blog/${blog_id}`, [[hash, val]])
 }
 
 async function set_blogVIEW(blog_id, hash = undefined, val = undefined) {
-    if(!hash && !val){
+    if (!hash && !val) {
         return await set(`VIEW:blog/${blog_id}`, '')
     }
     return await set(`VIEW:blog/${blog_id}`, [[hash, val]])
@@ -79,7 +79,22 @@ async function del_blog(blog_id) {
 async function get_blogVIEW(blog_id, etag) {
     //  取緩存KV
     let blog = await get(`VIEW:blog/${blog_id}`)
-    if(!blog){  //若沒有，則退出
+    if (!blog) {  //若沒有，則退出
+        return null
+    }
+    //  取緩存KV
+    let kv = [...new Map(blog).entries()][0]
+    let exist = kv[0] === etag ? true : false
+    if (!exist) { //  若沒有，代表etag失效
+        return kv // 給予現存KV
+    }
+    return true // 告知etag有效 
+}
+
+async function get_blogAPI(blog_id, etag) {
+    //  取緩存KV
+    let blog = await get(`API:blog/${blog_id}`)
+    if (!blog) {  //若沒有，則退出
         console.log('@blog沒有緩存')
         return null
     }
@@ -87,16 +102,15 @@ async function get_blogVIEW(blog_id, etag) {
     let kv = [...new Map(blog).entries()][0]
     console.log('@緩存內的etag => ', kv[0])
     console.log('@請求來的etag => ', etag)
-    let exist = kv[0] === etag ? true : false
-    if(!exist){ //  若沒有，代表etag失效
+    let exist = etag && kv[0] === etag ? true : false
+
+    if (!exist) { //  若沒有，代表etag失效
         console.log('@etag失效')
         return kv // 給予現存KV
     }
     console.log('cache => ', kv)
     return true // 告知etag有效 
 }
-
-
 
 module.exports = {
     tellBlogFollower,
@@ -107,5 +121,6 @@ module.exports = {
     set_blogAPI,
     set_blogVIEW,
     del_blog,
-    get_blogVIEW
+    get_blogVIEW,
+    get_blogAPI
 }

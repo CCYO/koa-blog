@@ -1,25 +1,24 @@
-const { set_blogAPI, set_blogVIEW, get_blogVIEW, checkNews, removeRemindNews, remindNews } = require('../server/cache')
+const { set_blogAPI, set_blogVIEW, get_blogVIEW, get_blogAPI, checkNews, removeRemindNews, remindNews } = require('../server/cache')
 
 const { hash_obj } = require('../utils/crypto')
 const { SuccModel } = require('../model')
 
-async function cacheBlog(ctx, next) {
+async function cacheBlogView(ctx, next) {
     const { blog_id } = ctx.params
     let hash = ctx.headers['if-none-match']
     console.log('hash => ', hash)
     if (hash) {
-        let cache = await get_blogVIEW(blog_id, hash)
-        if (cache === true) {
+        let view = await get_blogVIEW(blog_id, hash)
+        if (view === true) {
             console.log('@BLOG直接使用緩存304')
             ctx.status = 304
             return
-        } else if (Array.isArray(cache)) {
-            ctx.blog = cache
+        } else if (Array.isArray(view)) {
+            // let api = await get_blogAPI(blog_id)
+            // ctx.blog = { view, api }
+            ctx.blog.view = view
+            let [etag] = view
             console.log(`@BLOG 從cache撈取 -> blog/${blog_id}: [ ${etag} : BLOG數據 ]`)
-            ctx.set({
-                etag,
-                ['Cache-Control']: 'no-cache'
-            })
         }
     }
     // if (hash && await get_blog(blog_id, hash)) {
@@ -30,26 +29,24 @@ async function cacheBlog(ctx, next) {
     await next()
 
     let { api, view } = ctx.blog
-    let etag
-    if (!api[0]) {
+    if (api.length) {
         let blogData = api[1]
         //  計算etag
-        etag = hash_obj(blogData)
-        console.trace('@blogAPI etag => ', etag)
+        api[0] = hash_obj(blogData)
+        console.trace('@blogAPI etag => ', api[0])
         //  緩存
-        await set_blogAPI(blog_id, etag, blogData)
-        console.log(`@BLOG API 從DB撈取 + 存入緩存 session -> API:blog/${blog_id}: [ ${etag} : BLOG數據 ]`)
-    }
+        await set_blogAPI(blog_id, api[0], api[1])
+        console.log(`@BLOG API 從DB撈取 + 存入緩存 session -> API:blog/${blog_id}: [ ${api[0]} : BLOG數據 ]`)
 
-    if(view){
-        etag = hash_obj(blogData)
-        console.trace('@blogVIEW etag => ', etag)
-        await set_blogVIEW(blog_id, etag, view)
-        console.log(`@BLOG 從DB撈取 + 存入緩存 session -> VIEW:blog/${blog_id}: [ ${etag} : BLOG VIEW ]`)
+        let blogView = view[1]
+        view[0] = hash_obj(blogView)
+        console.trace('@blogVIEW etag => ', view[0])
+        await set_blogVIEW(blog_id, view[0], view[1])
+        console.log(`@BLOG 從DB撈取 + 存入緩存 session -> VIEW:blog/${blog_id}: [ ${view[0]} : BLOG VIEW ]`)
     }
 
     ctx.set({
-        etag,
+        etag: view[0],
         ['Cache-Control']: 'no-cache'
     })
 
@@ -134,7 +131,7 @@ async function notifiedNews(ctx, next) {
 
 
 module.exports = {
-    cacheBlog,
+    cacheBlogView,
     cacheNews,
     resetBlog,
     notifiedNews

@@ -6,7 +6,7 @@ const router = require('koa-router')()
 
 const { NEWS: { LIMIT } } = require('../../conf/constant')
 const { view_check_login } = require('../../middleware/check_login')
-const { cacheBlog } = require('../../middleware/cache')
+const { cacheBlogView } = require('../../middleware/cache')
 
 const {
     getBlog
@@ -35,7 +35,7 @@ router.get('/blog/new', view_check_login, async (ctx, next) => {
     })
 })
 
-//  修改文章
+//  編輯文章
 router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
     const { createdAt, updatedAt, ...me } = ctx.session.user
     const { blog_id } = ctx.params
@@ -59,27 +59,24 @@ router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
 })
 
 //  查看文章
-router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
+router.get('/blog/:blog_id', cacheBlogView, async (ctx, next) => {
     let me = ctx.session.user ? ctx.session.user : {}
-    let blog
+    let api = []
+    let view = []
     if(!ctx.blog){
         const { blog_id } = ctx.params
         const resModel = await getBlog(blog_id, true)
-        blog = resModel.data.blog
-        let htmlStr = await renderFile('blog', {
+        let blog = api[1] = resModel.data.blog
+        view[1] = await renderFile('blog', {
             title: blog.title,
             //  主要資訊數據
             blog   //  window.data 數據
         })
-        console.log('@htmlStr => ', htmlStr)
-        ctx.blog = { 
-            api: [ undefined, blog ],
-            view: htmlStr
-        }
     }else{
-        blog = ctx.blog.view
+        view = ctx.blog.view
     }
-    ctx.body = htmlStr
+    ctx.blog = { api, view }
+    ctx.body = view[1]
 })
 
 module.exports = router
