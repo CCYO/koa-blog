@@ -6,7 +6,7 @@ const router = require('koa-router')()
 
 const { NEWS: { LIMIT } } = require('../../conf/constant')
 const { view_check_login } = require('../../middleware/check_login')
-const { cacheBlogView } = require('../../middleware/cache')
+const { cacheBlogView, cacheBlogApi } = require('../../middleware/cache')
 
 const {
     getBlog
@@ -36,17 +36,22 @@ router.get('/blog/new', view_check_login, async (ctx, next) => {
 })
 
 //  編輯文章
-router.get('/blog/edit/:blog_id', view_check_login, async (ctx, next) => {
+router.get('/blog/edit/:blog_id', cacheBlogApi, view_check_login, async (ctx, next) => {
     const { createdAt, updatedAt, ...me } = ctx.session.user
     const { blog_id } = ctx.params
-
-    const { data: {blog} } = await getBlog(blog_id * 1)
-
+    let blog
+    if (!ctx.blog) {
+        const resModel = await getBlog(blog_id * 1)
+        blog = resModel.data.blog
+    }else{
+        blog = ctx.blog.api[1]
+    }
+    
     if (blog.author.id != me.id) {
         return ctx.body = '你哪位?'
     }
 
-    return await ctx.render('blog-edit', { 
+    return await ctx.render('blog-edit', {
         title: '編輯文章',
         //  導覽列數據
         logging: true,
@@ -63,7 +68,7 @@ router.get('/blog/:blog_id', cacheBlogView, async (ctx, next) => {
     let me = ctx.session.user ? ctx.session.user : {}
     let api = []
     let view = []
-    if(!ctx.blog){
+    if (!ctx.blog) {
         const { blog_id } = ctx.params
         const resModel = await getBlog(blog_id, true)
         let blog = api[1] = resModel.data.blog
@@ -72,7 +77,7 @@ router.get('/blog/:blog_id', cacheBlogView, async (ctx, next) => {
             //  主要資訊數據
             blog   //  window.data 數據
         })
-    }else{
+    } else {
         view = ctx.blog.view
     }
     ctx.blog = { api, view }

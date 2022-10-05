@@ -54,6 +54,61 @@ async function cacheBlogView(ctx, next) {
     return
 }
 
+async function cacheBlogApi(ctx, next) {
+    const { blog_id } = ctx.params
+    let hash = ctx.headers['if-none-match']
+    console.log('hash => ', hash)
+
+    let api = await get_blogAPI(blog_id, hash)
+    // if (api === true) {
+    //     console.log('@BLOG API 直接使用緩存304')
+    //     ctx.status = 304
+    //     ctx.blog.api = api
+    // } else if (Array.isArray(api)) {
+    //     // let api = await get_blogAPI(blog_id)
+    //     // ctx.blog = { view, api }
+    //     ctx.blog.api = api
+    //     let [etag] = api
+    //     console.log(`@BLOG 從cache撈取 -> API:blog/${blog_id}: [ ${etag} : BLOG數據 ]`)
+    // }
+    if (api) {
+        console.log('@blog API使用緩存')
+        ctx.blog = { api }
+    }
+
+    // if (hash && await get_blog(blog_id, hash)) {
+    //     console.log('@BLOG 使用緩存')
+    //     ctx.status = 304
+    //     return
+    // }
+    await next()
+
+    // let { api, view } = ctx.blog
+    // if (api.length) {
+    //     let blogData = api[1]
+    //     //  計算etag
+    //     api[0] = hash_obj(blogData)
+    //     console.trace('@blogAPI etag => ', api[0])
+    //     //  緩存
+    //     await set_blogAPI(blog_id, api[0], api[1])
+    //     console.log(`@BLOG API 從DB撈取 + 存入緩存 session -> API:blog/${blog_id}: [ ${api[0]} : BLOG數據 ]`)
+
+    //     let blogView = view[1]
+    //     view[0] = hash_obj(blogView)
+    //     console.trace('@blogVIEW etag => ', view[0])
+    //     await set_blogVIEW(blog_id, view[0], view[1])
+    //     console.log(`@BLOG 從DB撈取 + 存入緩存 session -> VIEW:blog/${blog_id}: [ ${view[0]} : BLOG VIEW ]`)
+    // }
+
+    // ctx.set({
+    //     etag: view[0],
+    //     ['Cache-Control']: 'no-cache'
+    // })
+
+    delete ctx.blog
+    return
+}
+
 async function resetBlog(ctx, next) {
     await next()
     let { blog } = ctx.body.data
@@ -132,6 +187,7 @@ async function notifiedNews(ctx, next) {
 
 module.exports = {
     cacheBlogView,
+    cacheBlogApi,
     cacheNews,
     resetBlog,
     notifiedNews

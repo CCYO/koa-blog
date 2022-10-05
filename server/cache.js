@@ -104,12 +104,13 @@ async function get_blogAPI(blog_id, etag) {
     console.log('@請求來的etag => ', etag)
     let exist = etag && kv[0] === etag ? true : false
 
-    if (!exist) { //  若沒有，代表etag失效
-        console.log('@etag失效')
-        return kv // 給予現存KV
-    }
-    console.log('cache => ', kv)
-    return true // 告知etag有效 
+    // if (!exist) { //  若沒有，代表etag失效
+    //     console.log('@etag失效')
+    //     return kv // 給予現存KV
+    // }
+    // console.log('cache => ', kv)
+    // return true // 告知etag有效 
+    return kv
 }
 
 module.exports = {
