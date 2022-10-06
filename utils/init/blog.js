@@ -40,6 +40,7 @@ function _init_blog(blog) {
             initVal.push({ ...img, blogImg_id, name })
             return initVal
         }, [])
+        console.log('@imgs => ', res.imgs)
     }else{
         res.imgs = []
     }

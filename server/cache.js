@@ -58,59 +58,30 @@ async function removeRemindNews(id) {
     return news
 }
 
-async function set_blogAPI(blog_id, hash = undefined, val = undefined) {
+async function set_blog(blog_id, hash = undefined, val = undefined) {
     if (!hash && !val) {
-        return await set(`API:blog/${blog_id}`, '')
+        return await set(`blog/${blog_id}`, '')
     }
-    return await set(`API:blog/${blog_id}`, [[hash, val]])
-}
-
-async function set_blogVIEW(blog_id, hash = undefined, val = undefined) {
-    if (!hash && !val) {
-        return await set(`VIEW:blog/${blog_id}`, '')
-    }
-    return await set(`VIEW:blog/${blog_id}`, [[hash, val]])
+    return await set(`blog/${blog_id}`, [[hash, val]])
 }
 
 async function del_blog(blog_id) {
     return await del(`blog/${blog_id}`)
 }
 
-async function get_blogVIEW(blog_id, etag) {
+async function get_blog(blog_id, etag) {
     //  取緩存KV
-    let blog = await get(`VIEW:blog/${blog_id}`)
+    let blog = await get(`blog/${blog_id}`)
     if (!blog) {  //若沒有，則退出
-        return null
+        return []
     }
     //  取緩存KV
     let kv = [...new Map(blog).entries()][0]
     let exist = kv[0] === etag ? true : false
-    if (!exist) { //  若沒有，代表etag失效
+    if (!exist) { // 代表etag失效or前端根本沒緩存
         return kv // 給予現存KV
     }
-    return true // 告知etag有效 
-}
-
-async function get_blogAPI(blog_id, etag) {
-    //  取緩存KV
-    let blog = await get(`API:blog/${blog_id}`)
-    if (!blog) {  //若沒有，則退出
-        console.log('@blog沒有緩存')
-        return null
-    }
-    //  取緩存KV
-    let kv = [...new Map(blog).entries()][0]
-    console.log('@緩存內的etag => ', kv[0])
-    console.log('@請求來的etag => ', etag)
-    let exist = etag && kv[0] === etag ? true : false
-
-    // if (!exist) { //  若沒有，代表etag失效
-    //     console.log('@etag失效')
-    //     return kv // 給予現存KV
-    // }
-    // console.log('cache => ', kv)
-    // return true // 告知etag有效 
-    return kv
+    return [true] // 告知etag有效 
 }
 
 module.exports = {
@@ -119,9 +90,7 @@ module.exports = {
     remindNews,
     removeRemindNews,
     checkNews,
-    set_blogAPI,
-    set_blogVIEW,
+    set_blog,
     del_blog,
-    get_blogVIEW,
-    get_blogAPI
+    get_blog
 }

@@ -105,7 +105,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
         data.html = my_xxs(html)
     }
 
-    let responseData 
+    let responseData = {}
     //  依show處理如何更新 BlogFollow
     if (show > 0) {
         //  取得粉絲群
@@ -115,7 +115,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
         if (followerList.length) {
             listOfFollowerId = followerList.map(({ id }) => id)
         }
-        responseData = { notifiedIdList: listOfFollowerId }
+        responseData.notifiedIdList = listOfFollowerId
         console.log('@listOfFollowerId => ', listOfFollowerId)
         if (show === 1) {
             /* 初次公開，將文章與粉絲作關聯 */
@@ -167,8 +167,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     //  更新文章數據
     await updateBlog(blog_id, data)
     let blog = await readBlog({ blog_id }, true)
-    // responseData = { ...responseData, ...data }
-    responseData = { ...responseData, blog }
+    responseData.blog = blog
     return new SuccModel(responseData)
 }
 
@@ -180,12 +179,6 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 async function getBlog(blog_id, needCommit = false) {
     let blog = await readBlog({ blog_id }, needCommit)
     if (blog) {
-        //  計算etag
-        // let hash = hash_obj(blog)
-        //  緩存
-        // await set_blog(blog_id, hash, blog)
-        // console.log(`@BLOG 從DB撈取 + 存入緩存 session -> blog/${blog_id}: { ${hash} : BLOG數據 }`)
-        // return new SuccModel({ blog, etag: hash })
         return new SuccModel({blog})
     } else {
         return new ErrModel(BLOG.NOT_EXIST)

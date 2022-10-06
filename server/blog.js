@@ -123,7 +123,6 @@ async function readBlog({ blog_id }, needComment) {
     if (!res) {
         return null
     }
-    res = init_blog(res)
 
     return init_blog(res)
 }

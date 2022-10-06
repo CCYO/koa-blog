@@ -12,7 +12,7 @@ const { SuccModel, ErrModel } = require('../model')
  * @param { object } ctx
  * @returns { object } SuccessModel { data: { blogImg_id, id, url, name, hash }}
  */
- async function uploadImg(ctx) {
+ async function uploadImg(ctx, next) {
     let { blog_id, hash } = ctx.query
     //  查找img紀錄，若有則代表GCS內已有圖檔，直接將該img紀錄與blog作連結
     let img = await readImg({hash, blog_id})
@@ -21,7 +21,9 @@ const { SuccModel, ErrModel } = require('../model')
         let { blogImg: url } = await parse(ctx)
         img = await createImg({hash, url, blog_id})
     }
-    return new SuccModel(img)
+
+    ctx.body = new SuccModel(img)
+    return
 }
 
 module.exports = {

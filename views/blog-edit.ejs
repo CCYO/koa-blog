@@ -1,4 +1,4 @@
-<%- include('wedgets/common/header') %>
+<%- include('wedgets/common/header', { title: blog.title }) %>
 
 <body>
     <style>
@@ -25,13 +25,13 @@
             min-height: 300px;
         }
     </style>
-    <%- include('wedgets/navbar/index') %>
+    <%- include('wedgets/navbar/blog-index') %>
     <div class="container">
-        <div id='backdrop' class="<%= blog.title ? 'my-noshow' : 'my-show' %>"></div>
+        <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>"></div>
         <div id="showBox">
-            <input type="text" id="title" value="<%= blog.title %>">
-            <button id="updateTitle" class="<%= blog.title ? 'my-show' : 'my-noshow' %>">修改標題</button>
-            <button id="createBlog" class="<%= blog.title ? 'my-noshow' : 'my-show' %>">創建BLOG</button>
+            <input type="text" id="title" value="<%= blog.id ? blog.title : '' %>">
+            <button id="updateTitle" class="<%= blog.id ? 'my-show' : 'my-noshow' %>">修改標題</button>
+            <button id="createBlog" class="<%= blog.id ? 'my-noshow' : 'my-show' %>">創建BLOG</button>
         </div>
         <div id="editor-wrapper">
             <div id="toolbar-container"></div>
@@ -52,9 +52,6 @@
             無轉譯 => { "html":"<p>56871139</p>") 會造成<p>直接渲染至頁面
             轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
     -->
-    <div id="data_blog" style="display: none">
-        <%= JSON.stringify(locals.blog) %>
-    </div>
 
     <%- include('wedgets/cdn') %>
     <!-- 引入 editor css -->
@@ -65,6 +62,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
 
     <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
+    <script defer src="/js/navbar/blog-initData.js"></script>
     <script>
         $(function () {
 
@@ -84,6 +82,8 @@
 
             //  初始化editor
             let editor = init_editor()
+            
+            $title.on('focus', () => console.log('okok') )
 
             //  input#title 綁定 blur handle => 驗證新標題
             $title.on('blur', handle_valicate_title)
@@ -127,53 +127,58 @@
 
             //  handle => 儲存 blog
             async function handle_saveBlog(e) {
+                //  本地資料
                 let { id, title, imgs, show, showAt, html } = window.data.blog
                 //  要傳給後端更新的資料
-                let payload = { id }
+                let payload = { }
 
-                //  若title有新值，且未更新
-                let newTitle = my_xss($title.val().trim())
-                if (title !== newTitle) {
-                    payload.title = newTitle
+                //  若title有新值
+                let curTitle = my_xss($title.val().trim())
+                if (title !== curTitle) {
+                    payload.title = curTitle    //  放入payload
                 }
 
-                //  獲取 html
-                let html_editor = my_xss(window.editor.getHtml().trim())
+                //  若html有新值
+                let curHtml = my_xss(window.editor.getHtml().trim())
 
-                if (html !== html_editor) {
-                    //  若 editor 的 html 若有變化，提供給後端
-                    payload.html = html_editor
+                if (html !== curHtml) {
+                    payload.html = curHtml  //  放入payload
                 }
 
                 //  撈出 editor 內的圖片url
-                let editorImgs = window.editor.getElemsByType('image').map(({ alt, src }) => ({ alt, src }))
+                let curImgs = window.editor.getElemsByType('image').map(({ alt, src }) => ({ alt, src }))
 
                 /*  要更新或移除的 blogImg  */
                 let listOfBlogImg = { cancel: [], update: [] }
 
-                let listOfEditorImgSrc = editorImgs.map( ({src}) => src )
+                let curImgSrcSet = new Set( curImgs.map(({src}) => src) )
                 let list = []
-                imgs.forEach(( {url, name, blogImg_id}, ind ) => {
-                    if(!listOfEditorImgSrc.includes(url)){
-                        listOfBlogImg.cancel.push(blogImg_id)
+
+                imgs.forEach(img => {
+                    let {url, blogImg_id} = img
+                    if(!curImgSrcSet.has(url)){
+                        listOfBlogImg.cancel.push(blogImg_id)   //  篩出要取消關聯的blogImg
                     }else{
-                        list.push(imgs[ind])
+                        list.push(img)    //  暫時保留
                     }
                 })
-                editorImgs.forEach(({src, alt}) => {
+
+                //  篩出alt不同的blogImg
+                curImgs.forEach(({src, alt}) => {
                     list.forEach(item => {
-                        if(item.url === src && alt !== name){
-                            listOfBlogImg.update({ blogImg_id: item.blogImg_id, name })
+                        if(item.url === src && item.name !== alt ){
+                            listOfBlogImg.update.push({ blogImg_id: item.blogImg_id, name: item.name })
                         }
                     })
                 })
                 
+                //  若有需要取消關聯或更新名稱的img
                 if(listOfBlogImg.cancel.length || listOfBlogImg.update.length){
-                    payload.listOfBlogImg = listOfBlogImg
+                    payload.listOfBlogImg = listOfBlogImg   //  放入payload
                 }
 
-                //  整理要提供給後端的 show 值
-                if (show !== patchData.show) {  //  設定的show 與 當前blog.show 不同
+                //  若show有變動
+                if (patchData.show != undefined && show !== patchData.show ) {
                     if (!showAt && patchData.show) {
                         //  初次發佈
                         payload.show = 1
@@ -186,9 +191,11 @@
                     }
                 }
 
-                if (!payload.hasOwnProperty('show') && !payload.html && !payload.title) {
+                if (!Object.getOwnPropertyNames(payload).length) {
                     alert('沒變動，別亂好嗎?')
                     return
+                }else{
+                    payload.id = id
                 }
 
                 const {
@@ -208,7 +215,7 @@
                 }
 
                 //  同步 window.blog 與 資料庫
-                window.data.blog = { ...window.data.blog, ...data }
+                window.data.blog = { ...window.data.blog, ...data.blog }
 
                 alert('blog save success!')
             }
@@ -249,6 +256,10 @@
             //  handle => 創建 blog，成功後，為 input#title 綁定 input handle => 驗證新標題
             async function handle_createBlog(e) {
                 let title = $title.val().trim()
+                if(!title){
+                    alert('標題不能為空')
+                    return
+                }
 
                 const {
                     data: {
@@ -258,26 +269,26 @@
 
                 if (!errno) {
                     alert('BLOG創立完成')
-                    document.title = '撰寫文章'
+                    // document.title = '撰寫文章'
 
-                    let { user_id, createdAt, updatedAt, ..._data} = data
-                    window.data.blog = {
-                        ...window.data.blog,
-                        ..._data,    //  { id, title, html, show, showAt, createdAt, updatedAt }
-                        showAt: null,
-                        html: null
-                    }
+                    // let { user_id, createdAt, updatedAt, ..._data} = data
+                    // window.data.blog = {
+                    //     ...window.data.blog,
+                    //     ..._data,    //  { id, title, html, show, showAt, createdAt, updatedAt }
+                    //     showAt: null,
+                    //     html: null
+                    // }
 
-                    $title.on('input', handle_valicate_title)
+                    // $title.on('input', handle_valicate_title)
 
-                    $btn_createBlog.toggleClass(['my-show', 'my-noshow'])
-                    $btn_updateTitle.toggleClass(['my-show', 'my-noshow']).prop('disabled', true)
-                    $backdrop.toggle(false)
+                    // $btn_createBlog.toggleClass(['my-show', 'my-noshow'])
+                    // $btn_updateTitle.toggleClass(['my-show', 'my-noshow']).prop('disabled', true)
+                    // $backdrop.toggle(false)
 
-                    window.editor.enable()
-                    window.editor.focus(true)
+                    // window.editor.enable()
+                    // window.editor.focus(true)
 
-                    // location.href = `/blog/edit/${data.id}`
+                    location.href = `/blog/edit/${data.id}`
                 } else {
                     alert(`BLOG創立失敗 => ${msg.message}`)
                     console.log(msg.stack)
@@ -287,14 +298,15 @@
             // handle => 驗證新標題
             function handle_valicate_title(e) {
                 let newTitle = $title.val().trim()
-                let { title: oldTitle } = window.data.blog
+                let { id, title: oldTitle } = window.data.blog
 
                 if (e.type === 'blur') {
                     /* blur 時的標題驗證 */
-                    if (!oldTitle && !newTitle) {
+                    if (!id && !newTitle) {
                         //  未建立blog 且 標題又為空
                         alert('請先寫入標題')
-                    } else if (oldTitle && !newTitle) {
+                        setTimeout( () => $title.focus() , 0)
+                    } else if (id && !newTitle) {
                         //  已建立blog 且 標題為空
                         $title.val(oldTitle)
                     }
@@ -361,7 +373,7 @@
                 })
 
 
-                !window.data.blog.title
+                !window.data.blog.id
                     && editor.disable()     //  若是撰寫新文章，必須等標題創建好才能編寫
                     || editor.focus(true)   //  若是撰寫舊新文章，自動聚焦在文章末段
 

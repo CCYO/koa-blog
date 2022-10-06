@@ -21,7 +21,7 @@ router.post('/', api_check_login, async (ctx, next) => {
 })
 
 //  上傳圖片
-router.post('/img', api_check_login, async (ctx, next) => {
+router.post('/img', api_check_login, resetBlog, uploadImg, async (ctx, next) => {
     return ctx.body = await uploadImg(ctx)
 })
 
@@ -36,8 +36,7 @@ router.patch('/', api_check_login, notifiedNews, resetBlog, async(ctx, next) => 
     const { id: user_id } = ctx.session.user
     // const { removeImgs, id, html, show } = ctx.request.body
     const { id: blog_id, ...blog_data } = ctx.request.body
-    ctx.body = await modifyBlog(blog_id, blog_data, user_id)
-    return 
+    ctx.body  = await modifyBlog(blog_id, blog_data, user_id)
 })
 
 module.exports = router
