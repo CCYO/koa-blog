@@ -5,33 +5,23 @@ const { init_img, init_blogImg } = require('../utils/init')
 /** 查找 img 紀錄
  * @param {object} data 查找 img 所需的 where
  */
-async function readImg({ hash, img_id, blog_id }) {
+async function readImg( whereOps , associateWithBlog = 0) {
+    
+    let where = { ...whereOps }  //  { hash, img_id, blog_id } 
 
-    let opts = { where: {} }
+    let img = await Img.findOne({where})
 
-    if (img_id) {
-        opts.where.id = img_id
+    let res = img
+
+    if (img) {
+        res = init_img(img)
     }
 
-    if (hash) {
-        opts.where.hash = hash
-    }
-
-    let img = await Img.findOne(opts)
-
-    let res = null
-
-    if (!img) {
+    if(!img || !associateWithBlog){
         return res
     }
 
-    res = init_img(img)
-
-    if (!blog_id) { //若沒有blog_id，代表不作關聯
-        return res
-    }
-
-    let blogImg = await img.addBlog(blog_id)
+    let blogImg = await img.addBlog(associateWithBlog)
     let [{ id: blogImg_id, name }] = init_blogImg(blogImg)
 
     if(name){
@@ -46,17 +36,18 @@ async function readImg({ hash, img_id, blog_id }) {
 /** 建立 img 紀錄
  * @param {object} data 建立 img 所需的 where
  */
-async function createImg({ hash, url, blog_id }) {
+async function createImg( imgData, associateWithBlog = 0) {
 
-    const img = await Img.create({ hash, url })
+    //  imgData { hash, url }
+    const img = await Img.create(imgData)
 
     let res = init_img(img)
 
-    if (!blog_id) { // 沒有 blog_id，代表不用作關聯
+    if (!associateWithBlog) { // 沒有 blog_id，代表不用作關聯
         return res
     }
 
-    let blogImg = await img.addBlog(blog_id)
+    let blogImg = await img.addBlog(associateWithBlog)
 
     let [{ id: blogImg_id, name }] = init_blogImg(blogImg)
     

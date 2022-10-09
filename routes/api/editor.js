@@ -6,7 +6,7 @@ const router = require('koa-router')()
 
 const { addBlog, modifyBlog, removeBlog } = require('../../controller/blog')
 
-const { uploadImg } = require('../../controller/img')
+const { uploadImg } = require('../../middleware/blogImg')
 
 const { api_check_login } = require('../../middleware/check_login')
 const { notifiedNews, resetBlog } = require('../../middleware/cache')
@@ -21,9 +21,7 @@ router.post('/', api_check_login, async (ctx, next) => {
 })
 
 //  上傳圖片
-router.post('/img', api_check_login, resetBlog, uploadImg, async (ctx, next) => {
-    return ctx.body = await uploadImg(ctx)
-})
+router.post('/img', api_check_login, resetBlog, uploadImg)
 
 //  刪除 blog
 router.delete('/', api_check_login, notifiedNews, async (ctx, next) => {
