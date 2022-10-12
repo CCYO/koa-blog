@@ -3,7 +3,7 @@
  */
 const { Sequelize, DataTypes } = require('sequelize')
 
-const { MYSQL_CONF } = require('../../conf/db')
+const { MYSQL_CONF } = require('../../conf/key/db')
 
 let seqOps = { ...MYSQL_CONF, logging: false}
 const seq = new Sequelize(seqOps)

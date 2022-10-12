@@ -22,13 +22,11 @@ async function readImg( whereOps , associateWithBlog = 0) {
     }
 
     let blogImg = await img.addBlog(associateWithBlog)
-    let [{ id: blogImg_id, name }] = init_blogImg(blogImg)
-
-    if(name){
-        res.name = name
-    }
+    let blogImgAlt = await blogImg.createBlogImgAlt({})
+    let [{ id: blogImg_id }] = init_blogImg(blogImg)
 
     res.blogImg_id = blogImg_id
+    res.blogImgAlt_id = blogImgAlt.id
 
     return res
 }
@@ -49,15 +47,13 @@ async function createImg( imgData, associateWithBlog = 0) {
     }
 
     let blogImg = await img.addBlog(associateWithBlog)
+    let { dataValues: { id: blogImgAlt_id, alt }} = await blogImg[0].createBlogImgAlt({})
 
-    let [{ id: blogImg_id, name }] = init_blogImg(blogImg)
-    
-    if (name) {
-        res.name = name
-    }
+    let [{ id: blogImg_id }] = init_blogImg(blogImg)
     
     res.blogImg_id = blogImg_id
-    
+    res.blogImgAlt_id = blogImgAlt_id
+    res.alt = alt ? alt : blogImgAlt_id
     return res
 }
 

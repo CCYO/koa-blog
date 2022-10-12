@@ -1,6 +1,6 @@
 const redisStore = require('koa-redis')
 
-const { REDIS_CONF } = require('../../../conf/db')
+const { REDIS_CONF } = require('../../../conf/key/db')
 
 const redis = require('redis')
 const cli = redis.createClient()
