@@ -4,6 +4,7 @@ const Blog = require('./Blog')
 const Img = require('./Img')
 const Comment = require('./Comment')
 const BlogImg = require('./relation-Blog&Img')
+const BlogImgAlt = require('./blogImgAlt')
 
 const FollowPeople = require('./FollowPeople')
 const FollowBlog = require('./FollowBlog')
@@ -33,6 +34,10 @@ User.hasMany(Blog, { foreignKey: 'user_id', sourceKey: 'id'})
 //  Blog : Img = M : N
 Blog.belongsToMany(Img, { through: BlogImg, foreignKey: 'blog_id', targetKey: 'id' })
 Img.belongsToMany(Blog, { through: BlogImg, foreignKey: 'img_id', targetKey: 'id' })
+
+//  BlogImg : BlogImgImg = 1 : N
+BlogImgAlt.belongsTo(BlogImg, { foreignKey: 'blogImg_id', targetKey: 'id', onDelete: 'CASCADE' })
+BlogImg.hasMany(BlogImgAlt, { foreignKey: 'blogImg_id', sourceKey: 'id'})
 
 //  Blog : Comment = 1 : N
 Comment.belongsTo(Blog, { foreignKey: 'blog_id', targetKey: 'id', onDelete: 'CASCADE'})
@@ -75,7 +80,7 @@ Comment.belongsToMany(User, { as: 'FollowComment_F', through: FollowComment, for
 
 module.exports = {
     User, Blog, Img, Comment,
-    BlogImg, 
+    BlogImg, BlogImgAlt,
     
     FollowPeople,
     FollowBlog,

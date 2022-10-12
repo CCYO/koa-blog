@@ -1,6 +1,6 @@
 let { Op } = require('sequelize')
 let { init_comment_4_blog } = require('./utils/init/comment')
-let { User, Comment, FollowComment, Blog } = require('./db/mysql/model/index')
+let { User, Comment, FollowComment, Blog, BlogImg } = require('./db/mysql/model/index')
 
 let init = []
 let arr = [
@@ -23,8 +23,9 @@ go()
 
 async function go() {
     try {
-        let follow = await FollowComment.findAll({ where: { id: 119}, attributes: ['id']})
-        console.log(follow)
+        let blogImg = await BlogImg.findByPk(1)
+        let blogImgAlt = await blogImg.createBlogImgAlt({ blogImg_id: 1 })
+        console.log('@ => ', blogImgAlt )
     } catch (e) {
         console.log(e)
     }
