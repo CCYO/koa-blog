@@ -14,7 +14,7 @@ const ops = {
   //  在node運行時，可以用 process.env.GOOGLE_APPLICATION_CREDENTIALS 確認
   credential: applicationDefault(),
   // storageBucket: "gfb20220419.appspot.com" 沒辦法寫在 服務帳號的密鑰json 內?gs://
-  storageBucket: "koa-blog-a003ccy.appspot.com"
+  storageBucket: "koa-a004ccy.appspot.com"
 }
 
 const app = initializeApp(ops)

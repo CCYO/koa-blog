@@ -18,7 +18,8 @@ const { SuccModel, ErrModel } = require('../model')
     let img = await readImg({hash}, blog_id)
     img && console.log('@GCS有圖檔，僅作BlogImg關聯')
     if(!img){   //  若GCS沒有該圖檔，則 upload GCS
-        let { blogImg: url } = await parse(ctx)
+        let ress = await parse(ctx)
+        let { blogImg: url } = ress
         img = await createImg({hash, url}, blog_id)
         console.log('@GCS無圖檔，直接創建img且作BlogImg關聯')
     }

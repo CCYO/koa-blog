@@ -32,8 +32,6 @@ const {
 const { SuccModel, ErrModel } = require('../model')
 const { BLOG, BLOGIMG } = require('../model/errRes')
 
-const { BLOG: { PAGINATION } } = require('../conf/constant')
-
 /** 建立 blog
  * @param { string } title 標題
  * @param { number } userId 使用者ID  

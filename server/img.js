@@ -39,6 +39,7 @@ async function readImg( whereOps , associateWithBlog = 0) {
 async function createImg( imgData, associateWithBlog = 0) {
 
     //  imgData { hash, url }
+    console.log('@ => ', imgData)
     const img = await Img.create(imgData)
 
     let res = init_img(img)
