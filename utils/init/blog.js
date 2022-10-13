@@ -36,8 +36,9 @@ function _init_blog(blog) {
 
     if(imgList && imgList.length){
         res.imgs = imgList.reduce((initVal, curVal, index) => {
-            let { BlogImg: { id: blogImg_id, name }, ...img } = curVal
-            initVal.push({ ...img, blogImg_id, name })
+            let { BlogImg: { id: blogImg_id }, id, hash, url } = curVal
+            
+            initVal.push({ id, hash, url, blogImg_id })
             return initVal
         }, [])
         console.log('@imgs => ', res.imgs)

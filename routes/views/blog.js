@@ -13,8 +13,6 @@ const {
 
 //  撰寫新文章
 router.get('/blog/new', view_check_login, cacheBlog, async (ctx, next) => {
-    const { createdAt, updatedAt, ...me } = ctx.session.user
-
     if (!ctx.blog.length) {
         ctx.blog[1] = { title: '撰寫新文章'}
     }

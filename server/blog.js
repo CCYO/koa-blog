@@ -7,7 +7,8 @@ const {
     Img,
     Comment,
     BlogImg,
-    FollowBlog
+    FollowBlog,
+    BlogImgAlt
 } = require('../db/mysql/model')
 
 const {
@@ -99,7 +100,7 @@ async function readBlog({ blog_id }, needComment) {
             attributes: ['id', 'url', 'hash'],
             through: {
                 model: BlogImg,
-                attributes: ['id']
+                attributes: ['id'],
             }
         }
     ]
