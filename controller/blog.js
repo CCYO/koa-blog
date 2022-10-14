@@ -75,21 +75,13 @@ async function removeBlog(blog_id) {
  * @returns {object} SuccModel || ErrModel
  */
 async function modifyBlog(blog_id, blog_data, author_id) {
-    let { title, listOfBlogImg, html, show } = blog_data
+    let { title, cancel, html, show } = blog_data
 
     //  文章內沒有的圖片，刪除關聯
-    if (listOfBlogImg && listOfBlogImg.cancel.length) {
-        let res = await deleteBlogImg({ listOfId: listOfBlogImg.cancel })
+    if (cancel) {
+        let res = await deleteBlogImg({ listOfId: cancel })
         if (!res) {
             return new ErrModel(BLOGIMG.REMOVE_ERR)
-        }
-    }
-
-    //  更新文章內圖片的新資訊
-    if (listOfBlogImg && listOfBlogImg.update.length) {
-        let res = await updateBulkBlogImg(listOfBlogImg.update)
-        if (!res) {
-            return new ErrModel(BLOGIMG.UPDATE_ERR)
         }
     }
 
@@ -166,6 +158,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     await updateBlog(blog_id, data)
     let blog = await readBlog({ blog_id }, true)
     responseData.blog = blog
+    //  responseData: { blog, notifiedIdList }
     return new SuccModel(responseData)
 }
 

@@ -96,12 +96,18 @@ async function readBlog({ blog_id }, needComment) {
             attributes: ['id', 'email', 'nickname']
         },
         {
-            model: Img,
-            attributes: ['id', 'url', 'hash'],
-            through: {
-                model: BlogImg,
-                attributes: ['id'],
-            }
+            model: BlogImg,
+            attributes: ['id', 'name'],
+            include: [
+                {
+                    model: Img,
+                    attributes: ['id', 'url', 'hash']
+                },
+                {
+                    model: BlogImgAlt,
+                    attributes: ['alt']
+                }
+            ]
         }
     ]
 

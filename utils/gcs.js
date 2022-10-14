@@ -95,7 +95,7 @@ const _gen_formidable = (bar) => {
  * @returns 
  */
 async function parse(ctx) {
-    let { hash, ext, blog_id } = ctx.query
+    let { ext, hash, blog_id } = ctx.query
     if (hash && ext !== 'jpg' && ext !== 'png') {
         throw new ErrModel(AVATAR_FORMAT_ERR)
     }

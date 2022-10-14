@@ -5,8 +5,8 @@ const { init_img, init_blogImg } = require('../utils/init')
 /** 查找 img 紀錄
  * @param {object} data 查找 img 所需的 where
  */
-async function readImg( whereOps , associateWithBlog = 0) {
-    
+async function readImg( whereOps , associateWithBlog = {} ) {
+    let { blog_id, name } = associateWithBlog
     let where = { ...whereOps }  //  { hash, img_id, blog_id } 
 
     let img = await Img.findOne({where})
@@ -17,16 +17,15 @@ async function readImg( whereOps , associateWithBlog = 0) {
         res = init_img(img)
     }
 
-    if(!img || !associateWithBlog){
+    if(!img || !blog_id){
         return res
     }
 
-    let blogImg = await img.addBlog(associateWithBlog)
-    let blogImgAlt = await blogImg.createBlogImgAlt({})
+    let blogImg = await img.addBlog(blog_id, { through: { name } })
+    
     let [{ id: blogImg_id }] = init_blogImg(blogImg)
 
     res.blogImg_id = blogImg_id
-    res.blogImgAlt_id = blogImgAlt.id
 
     return res
 }
@@ -34,27 +33,20 @@ async function readImg( whereOps , associateWithBlog = 0) {
 /** 建立 img 紀錄
  * @param {object} data 建立 img 所需的 where
  */
-async function createImg( imgData, associateWithBlog = 0) {
-
-    //  imgData { hash, url }
-    console.log('@ => ', imgData)
+async function createImg( imgData, associateWithBlog = {} ) {
+    let { blog_id, name } = associateWithBlog    
     const img = await Img.create(imgData)
 
     let res = init_img(img)
 
-    if (!associateWithBlog) { // 沒有 blog_id，代表不用作關聯
+    if (!blog_id) { // 沒有 blog_id，代表不用作關聯
         return res
     }
 
-    let blogImg = await img.addBlog(associateWithBlog)
-    let { dataValues: { id: blogImgAlt_id, alt }} = await blogImg[0].createBlogImgAlt({})
+    let blogImg = await img.addBlog(blog_id, { through: { name }})
 
-    let [{ id: blogImg_id }] = init_blogImg(blogImg)
-    
-    res.blogImg_id = blogImg_id
-    res.blogImgAlt_id = blogImgAlt_id
-    res.alt = alt ? alt : blogImgAlt_id
-    return res
+    let [{ blogImg_id }] = init_blogImg(blogImg)
+    return  { ...res, blogImg_id, name }
 }
 
 module.exports = {

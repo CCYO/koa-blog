@@ -34,7 +34,8 @@ router.patch('/', api_check_login, notifiedNews, resetBlog, async(ctx, next) => 
     const { id: user_id } = ctx.session.user
     // const { removeImgs, id, html, show } = ctx.request.body
     const { id: blog_id, ...blog_data } = ctx.request.body
-    ctx.body  = await modifyBlog(blog_id, blog_data, user_id)
+    let res = await modifyBlog(blog_id, blog_data, user_id)
+    ctx.body = res
 })
 
 module.exports = router

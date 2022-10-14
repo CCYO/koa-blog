@@ -20,10 +20,10 @@
          type: INTEGER,
          allowNull: false,
      },
-    //  name: {
-    //      type: STRING,
-    //      allowNull: true
-    //  }
+     name: {
+         type: STRING,
+         allowNull: true
+     }
  })
  
  module.exports = BlogImg

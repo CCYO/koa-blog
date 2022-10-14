@@ -4,7 +4,7 @@ const Blog = require('./Blog')
 const Img = require('./Img')
 const Comment = require('./Comment')
 const BlogImg = require('./relation-Blog&Img')
-const BlogImgAlt = require('./blogImgAlt')
+const BlogImgAlt = require('./BlogImgAlt')
 
 const FollowPeople = require('./FollowPeople')
 const FollowBlog = require('./FollowBlog')
@@ -30,6 +30,14 @@ const News = require('./News')
 //  User : Blog = 1 : N
 Blog.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id', onDelete: 'CASCADE' })
 User.hasMany(Blog, { foreignKey: 'user_id', sourceKey: 'id'})
+
+//  Blog : BlogImg = 1 : N
+BlogImg.belongsTo(Blog, { foreignKey: 'blog_id', targetKey: 'id', onDelete: 'CASCADE' })
+Blog.hasMany(BlogImg, { foreignKey: 'blog_id', sourceKey: 'id'})
+
+//  Img : BlogImg = 1 : N
+BlogImg.belongsTo(Img, { foreignKey: 'img_id', targetKey: 'id', onDelete: 'CASCADE' })
+Img.hasMany(BlogImg, { foreignKey: 'img_id', sourceKey: 'id'})
 
 //  Blog : Img = M : N
 Blog.belongsToMany(Img, { through: BlogImg, foreignKey: 'blog_id', targetKey: 'id' })

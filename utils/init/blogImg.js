@@ -16,16 +16,9 @@ function init_blogImg(blogImg) {
 }
 
 function _init_blogImg(blogImg) {
-    let json = blogImg.toJSON ? blogImg.toJSON() : blogImg
-    console.log('@json => ', json)
-    return json
-    let { id, Imgs, Blogs, name , ...data} = json
-    // let img = init_img(Imgs)
-    // let blog = init_blog(Blogs)
-    return { id, img, blog, ...data}
-    // const { id, hash, url } = json_blogImg
+    let { id: blogImg_id, img_id, blog_id, name } = blogImg.toJSON ? blogImg.toJSON() : blogImg
 
-    // return { id, hash, url }
+    return { blogImg_id, img_id, blog_id, name }
 }
 
 module.exports = {
