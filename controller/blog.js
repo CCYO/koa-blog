@@ -192,12 +192,8 @@ async function getBlog(blog_id, needCommit = false) {
  *  } 
  * }
  */
-async function getBlogListByUserId(user_id, is_author = false) {
+async function getBlogListByUserId(user_id) {
     let param = { user_id }
-
-    if (is_author) {
-        param.allBlogs = true
-    }
 
     let blogList = await readBlogList(param)
 

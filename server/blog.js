@@ -146,16 +146,12 @@ async function readBlog({ blog_id }, needComment) {
  * 
  
  */
-async function readBlogList({ user_id, follower_id, allBlogs = false }) {
+async function readBlogList({ user_id, follower_id}) {
     let where = { user_id }
     let include = [{
         model: User,
         attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash']
     }]
-
-    if (!allBlogs) {
-        where.show = true
-    }
 
     if (follower_id) {
         include.push({

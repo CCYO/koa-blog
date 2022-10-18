@@ -85,13 +85,11 @@ const findUser = async ({ id, email, password }) => {
  * @param {number} user_id 
  * @returns {{ currentUser: { id, email, nickname, avatar, age }, fansList: [{ id, avatar, email, nickname }], idolList: [{ id, avatar, email, nickname }]}}
  */
-async function getPeopleById(id, isSelf = false) {
+async function getPeopleById(id) {
     let data = {}
+    data.currentUser = await readUser({id})
     data.fansList = await readFans(id)
     data.idolList = await readIdols(id)
-    if (!isSelf) {
-        data.currentUser = await readUser({ id })
-    }
     return new SuccModel(data)
 }
 

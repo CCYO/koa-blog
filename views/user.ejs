@@ -72,7 +72,7 @@
         }
     </style>
     <!-- 主導覽 -->
-    <%- include('wedgets/navbar/index') %>
+    <%- include('wedgets/navbar/user-index') %>
 
     <div class="container">
         <div class="row">
@@ -81,14 +81,8 @@
                 <div class="userInfo">
                     <div class='avatar-box'>
                         <img src="<%= currentUser.avatar %>" alt="" srcset="">
-
-                        <% if (isMyIdol !== undefined) { %>
-                        <button id="cancelFollow" data-user-id="<%= currentUser.id %>"
-                            class="<%= isMyIdol ? 'my-show' : 'my-noshow' %>">取消追蹤</button>
-                        <button id="follow" data-user-id="<%= currentUser.id %>"
-                            class="<%= !isMyIdol ? 'my-show' : 'my-noshow' %>">追蹤</button>
-                        <% } %>
-
+                        <button id="cancelFollow" data-user-id="<%= currentUser.id %>" class="my-noshow">取消追蹤</button>
+                        <button id="follow" data-user-id="<%= currentUser.id %>" class="my-noshow">追蹤</button>
                     </div>
                     <p>
                         <%= currentUser.email %>
@@ -99,11 +93,9 @@
                 </div>
                 <hr>
                 <div id="blogs">
-                    <div>
-                        <% if (isMyIdol === undefined) { %>
+                    <div id="newBlog" class="my-noshow">
                         <a href="/blog/new">撰寫新文章</a>
-                        <% } %>
-                    </div>  
+                    </div>
 
                     <div class="blogList bg-light p-2" data-my-blog-key="show">
                         <div class="blogList-header">
@@ -120,15 +112,10 @@
                                 <a href="/blog/<%= id %>" class="stretched-link">
                                     <%= title %>
                                 </a>
-
-
-                                <% if (isMyIdol === undefined) { %>
                                 <div class="btn-blog-edit">
                                     <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
                                     <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%= id %>">刪除</a>
                                 </div>
-                                <% } %>
-
                             </li>
                             <% }) %>
                         </ul>
@@ -157,14 +144,11 @@
 
                         <% } %>
                     </div>
-
-                    <% if (isMyIdol === undefined) { %>
-
+                    <% if(blogList.hidden){ %>
                     <div class="blogList bg-light p-2" data-my-blog-key="hidden">
                         <div class="blogList-header">
                             <h2>編輯中的BLOG</h2>
-                            <button type="button"
-                                class="btn btn-sm btn-outline-danger <%= blogList.hidden.length? 'my-show' : 'my-noshow'%>"
+                            <button type="button" class="btn btn-sm btn-outline-danger"
                                 data-my-blogs="hidden">全部刪除</button>
                         </div>
                         <% if(blogList.hidden.length){ %>
@@ -177,12 +161,10 @@
                                         <%= title %>
                                     </a>
                                 </div>
-                                <% if (isMyIdol === undefined) { %>
                                 <div class="btn-blog-edit">
                                     <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
                                     <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%= id %>">刪除</a>
                                 </div>
-                                <% } %>
                             </li>
                             <% }) %>
                         </ul>
@@ -256,9 +238,22 @@
             </div>
         </div>
     </div>
+    <!-- 當前使用者頁面的使用者資料 -->
+    <div data-my-data="currentUser">
+        <%- JSON.stringify(currentUser) %>
+    </div>
+    <div data-my-data="fansList">
+        <%- JSON.stringify(fansList) %>
+    </div>
+    <div data-my-data="idolList">
+        <%- JSON.stringify(idolList) %>
+    </div>
+    <div data-my-data="blogList">
+        <%- JSON.stringify(blogList) %>
+    </div>
     <!-- JQ AXIOS BS5 -->
     <%- include('wedgets/cdn') %>
-
+    <script defer src="/js/navbar/user-initData.js"></script>
     <script>
         console.log('self script')
         $(function () {
@@ -274,6 +269,31 @@
             let api_blog = '/api/blog'
             let api_follow = '/api/user/follow'
             let api_cancelFollow = '/api/user/cancelFollow'
+            console.log('@2')
+            
+            init()
+
+            async function init() {
+                let res = await Promise.all([window.data.me])
+                console.log('@res => ', res)
+                console.log('@2 init')
+
+                let { currentUser, me } = window.data
+                console.log('@me => ', me)
+                console.log('@currentUser => ', currentUser)
+                let isSelf = currentUser.id === me.id
+                
+                $('#newBlog').toggleClass('my-show', isSelf).toggleClass('my-noshow', !isSelf)
+                $('#newBlog').toggleClass('my-show', isSelf).toggleClass('my-noshow', !isSelf)
+                if (me) {
+                    let isMyIdol = window.data.fansList.some((fans) => fans.id === me.id)
+                    $('#cancelFollow').toggleClass('my-show', isMyIdol).toggleClass('my-noshow', !isMyIdol)
+                    $('#follow').toggleClass('my-show', !isMyIdol).toggleClass('my-noshow', isMyIdol)
+                }
+                $('.btn-blog-edit').toggleClass('my-show', isSelf).toggleClass('my-noshow', !isSelf)
+                $('[data-my-blog-key=hidden]').toggleClass('my-show', isSelf).toggleClass('my-noshow', !isSelf)
+                $('.blogList-header').toggleClass('my-show', isSelf).toggleClass('my-noshow', !isSelf)
+            }
 
             window.render = { blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } } }
 
@@ -299,12 +319,12 @@
                 let typeOfTarget = $target.attr('data-my-ind') ? 'page' : 'dir'
                 //  目標頁碼
                 let tarInd
-                if (typeOfTarget === 'page'){   // 若標籤纇型是頁碼
+                if (typeOfTarget === 'page') {   // 若標籤纇型是頁碼
                     //  目標頁碼即為標籤的data-my-ind(也是從0開始)
                     tarInd = $target.data('my-ind')
-                }else if(typeOfTarget === 'dir'){   //若標籤纇型是方向
+                } else if (typeOfTarget === 'dir') {   //若標籤纇型是方向
                     //  目標頁碼以計算方式取得
-                    tarInd = $target.data('my-way') === 'next' ? curInd + 1 : curInd -1
+                    tarInd = $target.data('my-way') === 'next' ? curInd + 1 : curInd - 1
                 }
 
                 //  查詢data是否有當前頁碼的數據
@@ -334,13 +354,13 @@
                 //  
                 let $back = $list.find(`li.page-item:first`)
                 let $next = $list.find(`li.page-item:last`)
-                
+
                 let lastPageIndex = window.data.blogList[key].length - 1
 
-                if(tarInd === 0){   // 目標是第一頁
+                if (tarInd === 0) {   // 目標是第一頁
                     //  next不能按
                     $back.addClass('my-disabled')
-                }else if(tarInd === lastPageIndex){ //  目標是最後一頁
+                } else if (tarInd === lastPageIndex) { //  目標是最後一頁
                     $next.addClass('my-disabled')
                 }
                 let $tarPage = $list.find(`a.page-link[data-my-ind=${tarInd}]`).parent().addClass('active my-disabled')

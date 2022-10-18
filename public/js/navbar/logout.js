@@ -19,6 +19,7 @@ async function logout(e) {
 
     if (!errno) {
         alert(data)
+        console.log(location.href)
         location.href = '/login'
     }
 }

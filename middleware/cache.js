@@ -1,4 +1,4 @@
-const { set_blog, get_blog, checkNews, removeRemindNews, remindNews } = require('../server/cache')
+const { set_user, get_user, set_blog, get_blog, checkNews, removeRemindNews, remindNews } = require('../server/cache')
 
 const { hash_obj } = require('../utils/crypto')
 const { SuccModel } = require('../model')
@@ -39,6 +39,65 @@ async function cacheBlog(ctx, next) {
     })
     
     delete ctx.blog
+    return
+}
+
+async function cacheUser(ctx, next) {
+    let user_id = ctx.params.id
+    let ifNoneMatch = ctx.headers['if-none-match']
+    ctx.user = await get_user(user_id, ifNoneMatch)
+
+    if (ctx.user.exist) {
+        console.log(`@user/${user_id} 直接使用緩存304`)
+        ctx.status = 304
+        return
+    } else if (ctx.user.kv) {
+        console.log(`@user/${user_id} 完成 CACHE撈取`)
+    }
+    await next()
+
+    if (!ctx.user[0]) {
+        //  計算etag
+        ctx.user[0] = hash_obj(ctx.user[1])
+        console.trace(`@user/${user_id} etag => `, ctx.user[0])
+        //  緩存
+        await set_user(user_id, ctx.user[0], ctx.user[1])
+        console.log(`@user/${user_id} 完成 DB撈取 + 緩存`)
+    }
+    
+    ctx.set({
+        etag: ctx.user[0],
+        ['Cache-Control']: 'no-cache'
+    })
+    
+    delete ctx.user
+    return
+}
+
+async function cacheSelf(ctx, next) {
+    let user_id = ctx.session.user.id
+    
+    ctx.user = await get_user(user_id)
+
+    if (ctx.user.exist) {
+        console.log(`@user/${user_id} 完成 CACHE撈取`)
+    }
+    await next()
+
+    if (!ctx.user[0]) {
+        //  計算etag
+        ctx.user[0] = hash_obj(ctx.user[1])
+        console.trace(`@user/${user_id} etag => `, ctx.user[0])
+        //  緩存
+        await set_user(user_id, ctx.user[0], ctx.user[1])
+        console.log(`@user/${user_id} 完成 DB撈取 + 緩存`)
+    }
+    
+    ctx.set({
+        ['Cache-Control']: 'no-store'
+    })
+    
+    delete ctx.user
     return
 }
 
@@ -124,6 +183,8 @@ async function notifiedNews(ctx, next) {
 module.exports = {
     cacheBlog,
     resetBlog,
+    cacheUser,
+    cacheSelf,
     cacheNews,
     notifiedNews
 }
