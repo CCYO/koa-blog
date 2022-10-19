@@ -18,7 +18,7 @@ const {
 const { api_check_login } = require('../../middleware/check_login')
 const { parse_user_data } = require('../../middleware/gcs')
 const { validate_user } = require('../../middleware/validate')
-const { notifiedNews } = require('../../middleware/cache')
+const { cache_resetUser, notifiedNews } = require('../../middleware/cache')
 
 const { getMe } = require('../../utils/user')
 
@@ -55,14 +55,14 @@ router.post('/', validate_user, async (ctx, next) => {
 })
 
 //  追蹤
-router.post('/follow', api_check_login, notifiedNews, async (ctx, next) => {
+router.post('/follow', api_check_login, cache_resetUser, notifiedNews, async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await followIdol({fans_id, idol_id})
 })
 
 //  取消追蹤
-router.post('/cancelFollow', api_check_login, notifiedNews, async (ctx, next) => {
+router.post('/cancelFollow', api_check_login, cache_resetUser, notifiedNews, async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await cancelFollowIdol({fans_id, idol_id})

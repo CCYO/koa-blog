@@ -20,6 +20,17 @@ const view_check_login = async (ctx, next) => {
     return
 }
 
+async function view_check_isMe (ctx, next){
+    let me = ctx.session.user ? ctx.session.user.id : undefined
+    let currentUser = ctx.params.id * 1
+
+    //  若是自己的ID，跳轉到個人頁面
+    if ( me === currentUser) {
+        return ctx.redirect('/self')
+    }
+    await next()
+}
+
 /** Middleware 針對 API 請求，驗證是否登入
  * @param {*} ctx 
  * @param {function} next 
@@ -37,5 +48,6 @@ const api_check_login = async (ctx, next) => {
 
 module.exports = {
     view_check_login,
+    view_check_isMe,
     api_check_login
 }

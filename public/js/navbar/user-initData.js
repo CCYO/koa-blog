@@ -5,6 +5,8 @@ console.log('public initData-base - script defer 加載')
 
 window.data = window.data ? window.data : {}
 console.log('@1')
+
+window.p = getMe()
 //  初始化數據
 init_data()
 
@@ -22,9 +24,10 @@ async function init_data() {
         }
     })
     $(`[data-my-data]`).remove()
-    window.data.me = await getMe()
-    console.log('@1 init await ok')
-    await render_nav(me)
+    // let me = window.data.me = await window.p
+    //  await getMe()
+    await window.p
+    await render_nav(window.data.me.id)
 }
 
 async function render_nav(user_id) {
@@ -86,12 +89,11 @@ async function getMe() {
     let api = '/api/user'
     let { data: { errno, data, msg } } = await axios.get(api)
     if (errno) {
-        alert(msg)
-        return
+        data = {}
     }
     window.data.me = data
     console.log('@getMe => ', window.data.me)
-    return data.id
+    return errno
 }
 
 

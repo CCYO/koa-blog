@@ -4,7 +4,7 @@
 
 const router = require('koa-router')()
 
-const { view_check_login } = require('../../middleware/check_login')
+const { view_check_login, view_check_isMe } = require('../../middleware/check_login')
 
 const { getBlogListByUserId } = require('../../controller/blog')
 
@@ -70,17 +70,12 @@ router.get('/self', view_check_login, cacheSelf, async (ctx, next) => {
 })
 
 //  他人頁
-router.get('/other/:id', cacheUser, async (ctx, next) => {
+router.get('/other/:id', view_check_isMe, cacheUser, async (ctx, next) => {
     
-    let me = ctx.session.user ? ctx.session.user : {}
-    let id = ctx.params.id * 1
-
-    //  若是自己的ID，跳轉到個人頁面
-    if (me && me.id === id) {
-        return ctx.redirect('/self')
-    }
+    
 
     if (!ctx.user.kv) {
+        console.log('@近來了')
         const { id } = ctx.params
         let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
         let { data: blogList } = await getBlogListByUserId(id)

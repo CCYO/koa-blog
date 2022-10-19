@@ -199,7 +199,7 @@
                 <h1>次要資料</h1>
                 <div>
                     <p>Fans</p>
-                    <% if (fansList.length) { %>
+                    
                     <ul id="fansList" class="d-flex flex-wrap p-0">
                         <% fansList.forEach(fans => { %>
 
@@ -214,11 +214,11 @@
 
                         <% }) %>
                     </ul>
-                    <% } %>
+                    
                 </div>
                 <div>
                     <p>idols</p>
-                    <% if (idolList.length) { %>
+                    
                     <ul class="d-flex flex-wrap p-0">
                         <% idolList.forEach(idol => { %>
 
@@ -233,7 +233,7 @@
 
                         <% }) %>
                     </ul>
-                    <% } %>
+                    
                 </div>
             </div>
         </div>
@@ -256,7 +256,7 @@
     <script defer src="/js/navbar/user-initData.js"></script>
     <script>
         console.log('self script')
-        $(function () {
+        $(async function () {
             console.log('self script - onload')
             let $btn_follow = $('#follow')
             let $btn_cancelFollow = $('#cancelFollow')
@@ -269,30 +269,24 @@
             let api_blog = '/api/blog'
             let api_follow = '/api/user/follow'
             let api_cancelFollow = '/api/user/cancelFollow'
-            console.log('@2')
             
-            init()
+            await init()
 
             async function init() {
-                let res = await Promise.all([window.data.me])
-                console.log('@res => ', res)
-                console.log('@2 init')
-
+                let res = await window.p
                 let { currentUser, me } = window.data
-                console.log('@me => ', me)
-                console.log('@currentUser => ', currentUser)
                 let isSelf = currentUser.id === me.id
                 
                 $('#newBlog').toggleClass('my-show', isSelf).toggleClass('my-noshow', !isSelf)
                 $('#newBlog').toggleClass('my-show', isSelf).toggleClass('my-noshow', !isSelf)
-                if (me) {
+                if (!isSelf) {
                     let isMyIdol = window.data.fansList.some((fans) => fans.id === me.id)
                     $('#cancelFollow').toggleClass('my-show', isMyIdol).toggleClass('my-noshow', !isMyIdol)
                     $('#follow').toggleClass('my-show', !isMyIdol).toggleClass('my-noshow', isMyIdol)
                 }
                 $('.btn-blog-edit').toggleClass('my-show', isSelf).toggleClass('my-noshow', !isSelf)
                 $('[data-my-blog-key=hidden]').toggleClass('my-show', isSelf).toggleClass('my-noshow', !isSelf)
-                $('.blogList-header').toggleClass('my-show', isSelf).toggleClass('my-noshow', !isSelf)
+                $('.blogList-header').toggleClass('my-noshow', !isSelf)
             }
 
             window.render = { blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } } }
@@ -428,17 +422,6 @@
                 if (errno) {
                     alert(msg)
                 } else {
-                    // let key = $target.parents('[data-my-blog-key]').data('my-blog-key')
-                    // let list = window.data.blogList[key]
-                    // let ind = list.forEach( (arr ,page)  => {
-                    //     arr.forEach( (item, ind) => {
-                    //         if(id === item.id){
-                    //             console.log(key, arr, page, ind)
-                    //             list[page].splice(ind, 1)
-                    //         }
-                    //     })
-                    // })
-                    // $target.parents('.list-group-item').remove()
                     alert('已成功刪除此篇文章')
                     location.href = '/self'
                 }
@@ -451,8 +434,9 @@
             //  handle for follow or cancel follow
             function handle_follow(toFollow = true) {
                 let api = toFollow ? api_follow : api_cancelFollow
-
+                
                 let { fansList, me } = window.data
+                console.log('@me => ', me)
                 if (!me) {
                     return () => {
                         alert('請先登入')
@@ -463,7 +447,9 @@
                 let feedback_func = () => {
                     if (toFollow) {
                         alert('已追蹤')
+                        //  follow 與 cancelFollow 鈕的 toggle
                         _btnFollowToggle()
+                        //  將登入用戶加入fansList
                         fansList.unshift(me)
                         let html_li = `
                         <li class="card follow-box m-1" data-fans-id="${me.id}">
@@ -485,6 +471,7 @@
                 }
 
                 return async (e) => {
+                    console.log('@try')
                     let $target = $(e.target)
                     let id = $target.data('user-id')
                     const {

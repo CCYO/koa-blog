@@ -1,4 +1,4 @@
-const { set_user, get_user, set_blog, get_blog, checkNews, removeRemindNews, remindNews } = require('../server/cache')
+const { set_user, del_users,get_user, set_blog, get_blog, checkNews, removeRemindNews, remindNews } = require('../server/cache')
 
 const { hash_obj } = require('../utils/crypto')
 const { SuccModel } = require('../model')
@@ -180,11 +180,16 @@ async function notifiedNews(ctx, next) {
     return
 }
 
+async function cache_resetUser(ctx, next){
+
+}
+
 module.exports = {
     cacheBlog,
     resetBlog,
     cacheUser,
     cacheSelf,
+    cache_resetUser,
     cacheNews,
     notifiedNews
 }
