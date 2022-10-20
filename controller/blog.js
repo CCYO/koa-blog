@@ -76,6 +76,10 @@ async function removeBlog(blog_id) {
  */
 async function modifyBlog(blog_id, blog_data, author_id) {
     let { title, cancel, html, show } = blog_data
+    //  用於緩存處理
+    let cache = { blog: [ blog_id ] }
+    //  用於前端響應
+    let data = {}
 
     //  文章內沒有的圖片，刪除關聯
     if (cancel) {
@@ -85,8 +89,6 @@ async function modifyBlog(blog_id, blog_data, author_id) {
         }
     }
 
-    let data = {}
-
     if (title) {
         data.title = my_xxs(title)
     }
@@ -94,8 +96,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     if (html) {
         data.html = my_xxs(html)
     }
-
-    let responseData = {}
+    
     //  依show處理如何更新 BlogFollow
     if (show > 0) {
         //  取得粉絲群
@@ -105,8 +106,8 @@ async function modifyBlog(blog_id, blog_data, author_id) {
         if (followerList.length) {
             listOfFollowerId = followerList.map(({ id }) => id)
         }
-        responseData.notifiedIdList = listOfFollowerId
-        console.log('@listOfFollowerId => ', listOfFollowerId)
+        //  提供緩存處理
+        cache.news = listOfFollowerId
         if (show === 1) {
             /* 初次公開，將文章與粉絲作關聯 */
             data.show = true
@@ -157,9 +158,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     //  更新文章數據
     await updateBlog(blog_id, data)
     let blog = await readBlog({ blog_id }, true)
-    responseData.blog = blog
-    //  responseData: { blog, notifiedIdList }
-    return new SuccModel(responseData)
+    return new SuccModel(blog, cache)
 }
 
 /** 取得 blog 紀錄

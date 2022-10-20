@@ -65,8 +65,14 @@ async function set_blog(blog_id, hash = undefined, val = undefined) {
     return await set(`blog/${blog_id}`, [[hash, val]])
 }
 
-async function del_blog(blog_id) {
-    return await del(`blog/${blog_id}`)
+async function del_blogs(blogList) {
+    if(!Array.isArray(blogList)){
+        userList = [blogList]
+    }
+    let list = Promise.all(
+        blogList.map( async (blog_id) => await del(`blog/${blog_id}`))
+    )
+    return await list
 }
 
 async function get_blog(blog_id, etag) {
@@ -126,7 +132,7 @@ module.exports = {
     removeRemindNews,
     checkNews,
     set_blog,
-    del_blog,
+    del_blogs,
     get_blog,
     set_user,
     del_users,

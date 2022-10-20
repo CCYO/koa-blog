@@ -101,7 +101,9 @@ async function getPeopleById(id) {
 async function followIdol({ fans_id, idol_id }) {
     const ok = await followPeople.addFans({ idol_id, fans_id })
     if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
-    return new SuccModel({notifiedIdList: [idol_id]})
+    //  用於處理緩存
+    let cache = { user: [fans_id, idol_id], news: [fans_id, idol_id] }
+    return new SuccModel(undefined, cache)
 }
 
 /** 取消追蹤

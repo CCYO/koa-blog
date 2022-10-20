@@ -1,4 +1,4 @@
-const { set_user, del_users,get_user, set_blog, get_blog, checkNews, removeRemindNews, remindNews } = require('../server/cache')
+const { set_user, del_users, get_user, set_blog, del_blogs, get_blog, checkNews, removeRemindNews, remindNews } = require('../server/cache')
 
 const { hash_obj } = require('../utils/crypto')
 const { SuccModel } = require('../model')
@@ -21,6 +21,8 @@ async function cacheBlog(ctx, next) {
         return
     } else if (ctx.blog.length === 2) {
         console.log(`@blog/${blog_id} 完成 CACHE撈取`)
+    }else{
+        console.log(`@blog/${blog_id} 無緩存，向DB撈資料`)
     }
     await next()
 
@@ -103,15 +105,20 @@ async function cacheSelf(ctx, next) {
 
 async function resetBlog(ctx, next) {
     await next()
-    let { blog } = ctx.body.data
-    if(!blog){
-        let { blog_id } = ctx.query
-        blog = await readBlog({blog_id}, true)
-    }
-    let etag = hash_obj(blog)
+    let { cache } = ctx.body
+    // // if(!blog){
+    // //     let { blog_id } = ctx.query
+    // //     blog = await readBlog({blog_id}, true)
+    // // }
+    // let etag = hash_obj(blog)
 
-    await set_blog(blog.id, etag, blog)
-    console.log(`@reset blog cache ${etag}`)
+    // await set_blog(blog.id, etag, blog)
+    // console.log(`@reset blog cache ${etag}`)
+    if( !cache || !cache.blog.length ){
+        return
+    }
+    await del_blogs(cache.blog)
+    delete ctx.body.cache.blog
 }
 
 async function cacheNews(ctx, next) {
@@ -170,18 +177,43 @@ async function notifiedNews(ctx, next) {
     if (ctx.body.errno) {
         return
     }
-    let { notifiedIdList, ...otherData } = ctx.body.data
-    if (notifiedIdList && notifiedIdList.length) {
-        console.trace('@要被通知的人 => ', notifiedIdList)
-        await remindNews(notifiedIdList)
+    let { cache } = ctx.body
+    if (cache && cache.news.length) {
+        console.trace('@要被通知的人 => ', cache.news)
+        await remindNews(cache.news)
+        delete ctx.body.cache.news
     }
-
-    ctx.body.data = { ...otherData }
     return
 }
 
 async function cache_resetUser(ctx, next){
+    await next()
+    let { cache } = ctx.body
+    if( !cache || !cache.user.length ){
+        return
+    }
+    await del_users(cache.user)
+    delete ctx.body.cache.user
+}
 
+async function cache_reset(ctx, next){
+    await next()
+
+    let { cache } = ctx.body
+    if( !cache ){
+        return
+    }
+    let { user = [], blog = [], news = [] } = cache
+    if( user.length ){
+        await del_users(user)
+    }
+    if( blog.length ){
+        await del_blogs(blog)
+    }
+    if( news.length ){
+        await remindNews(cache.news)
+    }
+    delete ctx.body.cache
 }
 
 module.exports = {
@@ -191,5 +223,7 @@ module.exports = {
     cacheSelf,
     cache_resetUser,
     cacheNews,
-    notifiedNews
+    notifiedNews,
+    
+    cache_reset
 }

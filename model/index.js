@@ -7,12 +7,16 @@ class _Model {
         this.errno = errno
         if(msg) this.msg = msg
         if(data) this.data = data
+
     }
 }
 
 class SuccModel extends _Model {
-    constructor(data){
+    constructor(data, cache){
         super({data})
+        if(cache){
+            this.cache = cache
+        }
     }
 }
 
