@@ -47,52 +47,54 @@ async function cacheBlog(ctx, next) {
 async function cacheUser(ctx, next) {
     let user_id = ctx.params.id
     let ifNoneMatch = ctx.headers['if-none-match']
-    ctx.user = await get_user(user_id, ifNoneMatch)
-
-    if (ctx.user.exist) {
+    ctx.cache = {}
+    ctx.cache.user = await get_user(user_id, ifNoneMatch)
+    let { exist, kv } = ctx.cache.user
+    if (exist === 0) {
         console.log(`@user/${user_id} 直接使用緩存304`)
         ctx.status = 304
+        delete ctx.cache
         return
-    } else if (ctx.user.kv) {
-        console.log(`@user/${user_id} 完成 CACHE撈取`)
-    }
+    } 
     await next()
 
     if (!ctx.user[0]) {
         //  計算etag
         ctx.user[0] = hash_obj(ctx.user[1])
-        console.trace(`@user/${user_id} etag => `, ctx.user[0])
+        console.log(`@user/${user_id} 生成 etag => `, ctx.user[0])
         //  緩存
         await set_user(user_id, ctx.user[0], ctx.user[1])
-        console.log(`@user/${user_id} 完成 DB撈取 + 緩存`)
+        console.log(`@user/${user_id} 完成緩存`)
     }
     
     ctx.set({
         etag: ctx.user[0],
         ['Cache-Control']: 'no-cache'
     })
+    console.log(`響應新的etag => ${ctx.user[0]}`)
     
     delete ctx.user
+    delete ctx.cache
     return
 }
 
+//  self頁 前端不會有緩存資料，所以在後端驗證是本人後，向系統cache查詢個人資料
 async function cacheSelf(ctx, next) {
     let user_id = ctx.session.user.id
+    //  向系統cache撈資料
+    //  ctx.cache.user = { exist: BOO, kv: [K, V] }
+    ctx.cache = {}
+    ctx.cache.user = await get_user(user_id)
     
-    ctx.user = await get_user(user_id)
-
-    if (ctx.user.exist) {
-        console.log(`@user/${user_id} 完成 CACHE撈取`)
-    }
     await next()
 
-    if (!ctx.user[0]) {
+    if (!ctx.user[0]) { //  假使緩存不存在，或是非最新版，存入緩存
         //  計算etag
         ctx.user[0] = hash_obj(ctx.user[1])
-        console.trace(`@user/${user_id} etag => `, ctx.user[0])
+        console.log(`@ 系統緩存 user/${user_id} 生成 etag => `, ctx.user[0])
         //  緩存
         await set_user(user_id, ctx.user[0], ctx.user[1])
-        console.log(`@user/${user_id} 完成 DB撈取 + 緩存`)
+        console.log(`@ 系統緩存 user/${user_id} 完成緩存`)
     }
     
     ctx.set({
@@ -100,25 +102,17 @@ async function cacheSelf(ctx, next) {
     })
     
     delete ctx.user
+    delete ctx.cache
     return
 }
 
 async function resetBlog(ctx, next) {
     await next()
     let { cache } = ctx.body
-    // // if(!blog){
-    // //     let { blog_id } = ctx.query
-    // //     blog = await readBlog({blog_id}, true)
-    // // }
-    // let etag = hash_obj(blog)
-
-    // await set_blog(blog.id, etag, blog)
-    // console.log(`@reset blog cache ${etag}`)
     if( !cache || !cache.blog.length ){
         return
     }
     await del_blogs(cache.blog)
-    delete ctx.body.cache.blog
 }
 
 async function cacheNews(ctx, next) {
@@ -193,13 +187,13 @@ async function cache_resetUser(ctx, next){
         return
     }
     await del_users(cache.user)
-    delete ctx.body.cache.user
 }
 
 async function cache_reset(ctx, next){
     await next()
 
     let { cache } = ctx.body
+    
     if( !cache ){
         return
     }
@@ -211,7 +205,7 @@ async function cache_reset(ctx, next){
         await del_blogs(blog)
     }
     if( news.length ){
-        await remindNews(cache.news)
+        await remindNews(news)
     }
     delete ctx.body.cache
 }

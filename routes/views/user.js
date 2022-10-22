@@ -52,11 +52,24 @@ router.get('/login', async (ctx, next) => {
 router.get('/self', view_check_login, cacheSelf, async (ctx, next) => {
     let id = ctx.session.user.id
 
-    let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
-    let { data: blogList } = await getBlogListByUserId(id)
-    ctx.user[1] =  { currentUser, fansList, idolList, blogList }
-    console.log('@blog => ', blogList.hidden)
-    console.log('@currentUser => ', currentUser)
+    //  ctx.cache.user = { exist: 0 || 1 || 2 || 3, kv: [K, V] }
+    let {exist, kv} = ctx.cache.user
+    if (exist === 3) {
+        let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
+        let { data: blogList } = await getBlogListByUserId(id)
+        ctx.user = []
+        ctx.user[1] = { currentUser, fansList, idolList, blogList }
+        console.log(`@user/${id} 完成 DB撈取 => `, ctx.user[1])
+    }else{
+        let [ etag, user ] = kv
+        ctx.user = [ etag, user ]
+    }
+
+    let { currentUser, fansList, idolList, blogList } = ctx.user[1]
+
+    if(currentUser.id !== id){
+        ctx.body = '你哪位'
+    }
 
     await ctx.render('user', {
         title: `${currentUser.nickname}的主頁`,
@@ -71,21 +84,18 @@ router.get('/self', view_check_login, cacheSelf, async (ctx, next) => {
 
 //  他人頁
 router.get('/other/:id', view_check_isMe, cacheUser, async (ctx, next) => {
-    
-    
-
-    if (!ctx.user.kv) {
-        console.log('@近來了')
-        const { id } = ctx.params
+    const { id } = ctx.params
+    //   = { exist: BOO, kv: [K, V] }
+    let {exist, kv} = ctx.cache.user
+    if (exist === 3) {
         let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
         let { data: blogList } = await getBlogListByUserId(id)
         ctx.user = []
-        ctx.user[1] =  { currentUser, fansList, idolList, blogList }
-        delete ctx.user[1].blogList.hidden
+        ctx.user[1] = { currentUser, fansList, idolList, blogList }
+        console.log(`@user/${id} 完成 DB撈取 => `, ctx.user[1])
     }else{
-        let data = ctx.user.kv[1]
-        ctx.user = []
-        ctx.user[1] = data 
+        let [ etag, user ] = kv
+        ctx.user = [ etag, user ]
     }
 
     let { currentUser, fansList, idolList, blogList } = ctx.user[1]
@@ -94,10 +104,10 @@ router.get('/other/:id', view_check_isMe, cacheUser, async (ctx, next) => {
         title: `${currentUser.nickname}的主頁`,
 
         //  主要資訊數據
-        currentUser, //  window.data 數據
-        blogList, //  window.data 數據
-        fansList, //  window.data 數據
-        idolList //  window.data 數據
+        currentUser,    //  window.data 數據
+        blogList,       //  window.data 數據
+        fansList,       //  window.data 數據
+        idolList,       //  window.data 數據
     })
 })
 
@@ -106,12 +116,12 @@ router.get('/setting', view_check_login, async (ctx, next) => {
     const { user: me } = ctx.session
 
     //  導覽列數據
-    let { data: newsList } = await getNewsByUserId(me.id)
+    // let { data: newsList } = await getNewsByUserId(me.id)
 
     await ctx.render('setting', {
         title: `${me.nickname}的個資`,
         //  導覽列數據
-        newsList,
+        // newsList,
         logging: true,
         active: 'setting',
 

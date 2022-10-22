@@ -142,15 +142,11 @@ async function cancelFollowIdol({ fans_id, idol_id }) {
 
 //  更新user
 const modifyUserInfo = async (newData, id) => {
-    const user = await updateUser({ newData, id })
-    await tellPeopleFollower(id)
-    return new SuccModel(user)
-}
-
-//  登出
-function logout(ctx) {
-    ctx.session = null
-    return new SuccModel('成功登出')
+    let user = await updateUser({ newData, id })
+    let fans = await followPeople.readFans({ idol_id: id })
+    let idols = await followPeople.readIdols({ fans_id: id })
+    let people = [ ...fans, ...idols ]
+    return new SuccModel(user, { news: people , user: [...people, id ] })
 }
 
 //  找出粉絲列表
@@ -171,7 +167,6 @@ module.exports = {
     findUser,           // api user
     followIdol,         // api user
     cancelFollowIdol,   // api user
-    logout,             // api user
 
     getPeopleById,      // view user
 

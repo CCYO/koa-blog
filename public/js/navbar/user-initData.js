@@ -1,19 +1,19 @@
 {/* <script defer src="/js/navbar/news.js"></script>
 <script defer src="/js/navbar/logout.js"></script> */}
 
-console.log('public initData-base - script defer 加載')
+//  取得登入使用者的個人資訊
+window.p = getMe()
 
+//  
 window.data = window.data ? window.data : {}
 console.log('@1')
 
-window.p = getMe()
+
 //  初始化數據
-init_data()
+init_data().catch( e => console.log(e) )
 
 //  初始化數據
 async function init_data() {
-    console.log('@1 init')
-    //  處理 news 以外的數據
     $(`[data-my-data]`).each((index, el) => {
         let $el = $(el)
         let prop = $el.data('my-data')
@@ -24,10 +24,26 @@ async function init_data() {
         }
     })
     $(`[data-my-data]`).remove()
-    // let me = window.data.me = await window.p
-    //  await getMe()
-    await window.p
+    let errno = await window.p
     await render_nav(window.data.me.id)
+    if(!errno){
+        $('#logout').click( logout )
+    }
+}
+
+async function logout(e){
+    let ready = confirm('真的要登出?')
+    if(!ready){
+        alert('對嘛，再待一下嘛')
+        return
+    }
+    let { data: {
+        errno, data, msg
+    } } = await axios.get('/api/user/logout')
+    alert( data || msg )
+    if(!errno){
+        location.href = '/login'
+    }
 }
 
 async function render_nav(user_id) {
@@ -78,7 +94,7 @@ function template_nav(user_id) {
             <a class="nav-link me-3" href="/setting">個人設置</a>
         </li>
         <li class="nav-item">
-            <a id="logout" class="btn btn-outline-success text-nowrap" href="/api/user/logout">登出</a>
+            <a id="logout" class="btn btn-outline-success text-nowrap">登出</a>
         </li>
     `
     let template = user_id ? template_login : template_noLogin
@@ -92,7 +108,6 @@ async function getMe() {
         data = {}
     }
     window.data.me = data
-    console.log('@getMe => ', window.data.me)
     return errno
 }
 
@@ -111,7 +126,6 @@ async function initNews() {
 
     //  初始化數據
     (async () => {
-        console.log('public news init調用')
         try {
             //  處理 news 數據
             let data = await getNews()

@@ -10,8 +10,6 @@ const {
     findUser,
     followIdol,
     cancelFollowIdol,
-    logout,
-    
     modifyUserInfo    
 } = require('../../controller/user')
 
@@ -19,11 +17,13 @@ const { api_check_login } = require('../../middleware/check_login')
 const { parse_user_data } = require('../../middleware/gcs')
 const { validate_user } = require('../../middleware/validate')
 const { cache_reset } = require('../../middleware/cache')
+const { login, logout } = require('../../middleware/loginAndOut')
 
 const { getMe } = require('../../utils/user')
 
 router.prefix('/api/user')
 
+//  取得登入資料
 router.get('/', api_check_login, getMe)
 
 //  驗證信箱是否已被註冊
@@ -39,19 +39,9 @@ router.post('/register', validate_user, async (ctx, next) => {
 })
 
 //  登入
-router.post('/', validate_user, async (ctx, next) => {
+router.post('/', validate_user, login, async (ctx, next) => {
     const { email, password } = ctx.request.body
-    const resModel = await findUser({email, password})
-    //  判斷 session 是否存在，並儲存
-    if(!resModel.errno && !ctx.session.user){
-        console.log('初次登入，設定session')
-        ctx.session.user = resModel.data
-        if(!ctx.session.news){
-            ctx.session.news = []
-        }
-    } 
-
-    ctx.body = resModel
+    ctx.body = await findUser({email, password})
 })
 
 //  追蹤
@@ -68,33 +58,14 @@ router.post('/cancelFollow', api_check_login, cache_reset, async (ctx, next) => 
     ctx.body = await cancelFollowIdol({fans_id, idol_id})
 })
 
-//  logout
-router.get('/logout', api_check_login, async (ctx, next) => {
-    ctx.body = await logout(ctx)
-})
+//  登出
+router.get('/logout', api_check_login, logout)
 
 //  setting
-router.patch('/', api_check_login, parse_user_data, validate_user, async(ctx, next) => {
+router.patch('/', api_check_login, cache_reset, login, parse_user_data, validate_user, async(ctx, next) => {
     let { id } = ctx.session.user
     let { body: newData } = ctx.request
-    console.log('@newData => ', newData)
-    let res = await modifyUserInfo(newData, id)
-    ctx.session.user = res.data
-    ctx.body = res
-})
-
-const axios = require('axios')
-router.get('/imgg' , async(ctx, next) => {
-    let res = await axios.get('https://storage.googleapis.com/koa-blog-a003ccy.appspot.com/blogImg/046fabe56a4deaf4ea92625b9aed8a84.jpg', {responseType: 'stream'})
-    res.data.on('data', () => { console.log('@ =========> data')})
-    console.log('@res => ', res)
-    console.log('@ res.headers => ', res.headers)
-    console.log('@ res.header[content-type] => ', res.headers['content-type'])
-    ctx.response.set('Content-Type', res.headers['content-type'])
-    
-    ctx.res.on('pipe', (x) => console.log('@ =================================> go'))
-    ctx.res.on('finish', (x) => console.log('@ =================================> finish'))
-    ctx.body = res.data
+    ctx.body = await modifyUserInfo(newData, id)
 })
 
 module.exports = router

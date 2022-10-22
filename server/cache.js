@@ -24,13 +24,15 @@ async function checkNews(id) {
 }
 
 async function remindNews(id) {
-    console.log('++')
     let news = await get('cacheNews')
     news = new Set(news)
+
     let listOfUserId = id
     if (!Array.isArray(listOfUserId)) {
         listOfUserId = [listOfUserId]
     }
+    
+    listOfUserId = [ ...new Set(listOfUserId) ]
 
     listOfUserId.forEach((item) => {
         console.log(`@使用者${item}有新通知囉`)
@@ -67,10 +69,15 @@ async function set_blog(blog_id, hash = undefined, val = undefined) {
 
 async function del_blogs(blogList) {
     if(!Array.isArray(blogList)){
-        userList = [blogList]
+        blogList = [blogList]
     }
+    blogList = [ ...new Set(blogList) ]
+
     let list = Promise.all(
-        blogList.map( async (blog_id) => await del(`blog/${blog_id}`))
+        blogList.map( async (blog_id) => {
+            console.log(`@將系統緩存 blog/${blog_id} 刪除`)
+            return await del(`blog/${blog_id}`)
+        })
     )
     return await list
 }
@@ -101,28 +108,40 @@ async function del_users(userList) {
     if(!Array.isArray(userList)){
         userList = [userList]
     }
+    userList = [ ...new Set(userList) ]
     let list = Promise.all(
-        userList.map( async (user_id) => await del(`user/${user_id}`))
+        userList.map( async (user_id) => {
+            console.log(`@將系統緩存 user/${user_id} 刪除`)
+            return await del(`user/${user_id}`)
+        })
     )
     return await list
 }
 
-async function get_user(user_id, etag) {
+async function get_user(user_id, ifNoneMatch) {
     //  取緩存KV
     let user = await get(`user/${user_id}`)
-    let res = { exist: false, kv: undefined}
-    if (!user) {  //若沒有，則退出
-        console.log('@CACHE - get user -> 沒有緩存')
-        return res
+    let res = { exist: 3, kv: undefined}
+    if (!user) {  //    若系統cache沒有資料
+        console.log(`@系統緩存 user/${user_id} 沒有資料`)
+        return res  //  exist: 1 代表無緩存
     }
-    res.kv = [...new Map(user).entries()][0]
-    res.exist = res.kv[0] === etag ? true : false
-    
-    console.log('@CACHE - res.kv[0] -> ', res.kv[0])
-    console.log('@CACHE - etag -> ', etag)
-    console.log('@CACHE - exist -> ', res.exist)
+    //  若系統cache有資料
+    res.kv = [...new Map(user).entries()][0]    //  [K, V]
+
+    if(!ifNoneMatch){
+        console.log(`@此次 user/${user_id} 緩存請求未攜帶 if-none-match，但直接使用撈取道的緩存`)
+        res.exist = 2   //  代表請求未攜帶 if-none-match
+    }else if(ifNoneMatch !== res.kv[0]){
+        console.log(`@此次 user/${user_id} 緩存請求所攜帶的if-none-match 已過期，但直接使用撈取道的緩存`)
+        console.log('@if-none-match => ', ifNoneMatch)
+        console.log('@etag => ', res.kv[0])
+        res.exist = 1   //  代表請求 if-none-match 已過期
+    }else{
+        console.log(`@此次 user/${user_id} 緩存請求所攜帶的if-none-match 是最新的`)
+        res.exist = 0  //  代表請求 if-none-match 仍是最新的
+    }
     return res
-    
 }
 
 module.exports = {

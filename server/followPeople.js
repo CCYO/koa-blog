@@ -48,8 +48,28 @@ async function readFans(opts_where) {
     return fansList
 }
 
+async function readIdols(opts_where) {
+    let where = {...opts_where}
+    let res = await FollowPeople.findAll({
+        attributes: ['idol_id'],
+        where
+    })
+
+    if (!res.length) {
+        return []
+    }
+
+    let idolList = res.map(item => {
+        let { idol_id } = item.toJSON()
+        return idol_id
+    })
+
+    return idolList
+}
+
 module.exports = {
     addFans,        //  controller user
     deleteFans,     //  controller user
-    readFans        //  server cache
+    readFans,        //  server cache
+    readIdols
 }
