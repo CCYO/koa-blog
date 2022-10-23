@@ -9,12 +9,19 @@ const {
 const rawQuery = require('../db/mysql/query')
 
 async function readNews({ userId, excepts = { people: [], blogs: [], comments: [] }}) {
-
+    /*
+    {
+        unconfirm: [
+        { type, id, timestamp, confirm, fans: ... },
+        { type, id, timestamp, confirm, blog: ... },
+        { type, id, timestamp, confirm, comment: ... },
+        ... ],
+        confirm: [...] 
+    }*/
     let newsList = await rawQuery.readNews({ userId, excepts })
-
+    //   { num: { unconfirm, confirm, total } }
     let { num } = await rawQuery.count({ userId, excepts })
-    //  markTime 與 limit 僅用在 Router - VIEW
-    return { newsList, num,  limit: LIMIT }
+    return { newsList, num, limit: LIMIT }
 }
 
 async function updateFollowComfirm(list, data = { confirm: true }) {

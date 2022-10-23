@@ -53,19 +53,18 @@ router.get('/self', view_check_login, cacheSelf, async (ctx, next) => {
     let id = ctx.session.user.id
 
     //  ctx.cache.user = { exist: 0 || 1 || 2 || 3, kv: [K, V] }
-    let {exist, kv} = ctx.cache.user
+    let {exist, kv} = ctx.cache
     if (exist === 3) {
         let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
         let { data: blogList } = await getBlogListByUserId(id)
-        ctx.user = []
-        ctx.user[1] = { currentUser, fansList, idolList, blogList }
-        console.log(`@user/${id} 完成 DB撈取 => `, ctx.user[1])
+        ctx.cache.user = [ undefined, { currentUser, fansList, idolList, blogList }]
+        console.log(`@user/${id} 完成 DB撈取`)
     }else{
         let [ etag, user ] = kv
-        ctx.user = [ etag, user ]
+        ctx.cache.user = [ etag, user ]
     }
 
-    let { currentUser, fansList, idolList, blogList } = ctx.user[1]
+    let { currentUser, fansList, idolList, blogList } = ctx.cache.user[1]
 
     if(currentUser.id !== id){
         ctx.body = '你哪位'
@@ -86,19 +85,18 @@ router.get('/self', view_check_login, cacheSelf, async (ctx, next) => {
 router.get('/other/:id', view_check_isMe, cacheUser, async (ctx, next) => {
     const { id } = ctx.params
     //   = { exist: BOO, kv: [K, V] }
-    let {exist, kv} = ctx.cache.user
+    let { exist, kv } = ctx.cache
     if (exist === 3) {
         let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
         let { data: blogList } = await getBlogListByUserId(id)
-        ctx.user = []
-        ctx.user[1] = { currentUser, fansList, idolList, blogList }
-        console.log(`@user/${id} 完成 DB撈取 => `, ctx.user[1])
+        ctx.cache.user =[ undefined, { currentUser, fansList, idolList, blogList } ]
+        console.log(`@user/${id} 完成 DB撈取`)
     }else{
         let [ etag, user ] = kv
-        ctx.user = [ etag, user ]
+        ctx.cache.user = [ etag, user ]
     }
 
-    let { currentUser, fansList, idolList, blogList } = ctx.user[1]
+    let { currentUser, fansList, idolList, blogList } = ctx.cache.user[1]
 
     await ctx.render('user', {
         title: `${currentUser.nickname}的主頁`,
@@ -113,20 +111,17 @@ router.get('/other/:id', view_check_isMe, cacheUser, async (ctx, next) => {
 
 //  個資更新頁
 router.get('/setting', view_check_login, async (ctx, next) => {
-    const { user: me } = ctx.session
+    const { user: currentUser } = ctx.session
 
     //  導覽列數據
     // let { data: newsList } = await getNewsByUserId(me.id)
 
     await ctx.render('setting', {
-        title: `${me.nickname}的個資`,
-        //  導覽列數據
-        // newsList,
-        logging: true,
-        active: 'setting',
+        title: `${currentUser.nickname}的個資`,
+        
 
         //  window.data 數據
-        me
+        currentUser
     })
 })
 

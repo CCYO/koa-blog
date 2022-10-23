@@ -35,6 +35,15 @@ function init_newsOfFollowId(newsList) {
 
 function init_excepts(excepts){
 	let res = { people: [], blogs: [], comments: [], num: 0}
+    /*excepts: {
+        unconfirm: { 
+            people: [ id, ... ],
+            blogs: [ id, ... ],
+            comments: [ id, ...],
+            num: NUMBER
+        },
+        confirm: { ... }
+    }*/
 	for(key in excepts){
 		let map = new Map(Object.entries(excepts[key]))
     	map.forEach((list, k) => {

@@ -2,7 +2,7 @@
  * @description 錯誤訊息
  */
 
-module.exports = {
+module.exports = {    
     REGISTER: {
         UNEXPECTED: {errno: 199},
         IS_EXIST: {errno: 101, msg: '此信箱已被登記'},
@@ -19,8 +19,9 @@ module.exports = {
         NO_THIS_ONE: {errno: 303, msg: '沒有這個人'},
         AVATAR_FORMAT_ERR: {errno: 304, msg: 'avatar圖檔格式錯誤，只接受JPG或PNG'}
     },
-    LOGIN: {
-        NOT_LOGIN: {errno: 501, msg: '未登入'}
+    PERMISSION: {
+        NOT_LOGIN: {errno: 501, msg: '未登入'},
+        NOT_SELF: {errno: 501, msg: '非本人'}
     },
     FORMAT_ERR: { errno: 601},
     BLOG: {

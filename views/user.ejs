@@ -74,7 +74,7 @@
     </style>
     
     <!-- 主導覽： NAV_CSS + NAV第一層template -->
-    <%- include('wedgets/navbar/user-index') %>
+    <%- include('wedgets/navbar/index') %>
 
     <div class="container">
         <div class="row">
@@ -257,15 +257,17 @@
 
     <!-- JQ AXIOS BS5 -->
     <%- include('wedgets/cdn') %>
+    <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
+    <script defer src="/js/initData.js"></script>
+    <!-- 取得登入資料 -->
+    <script defer src="/js/getMe.js"></script>
     <!--
-        初始化來自ejs傳入當前頁面所需的數據 +
-        取得登入資料 +
         logout功能 +
         完整渲染 NAV +
         取得news +
         完整渲染 通知下拉選單
     -->
-    <script defer src="/js/navbar/user-initData.js"></script>
+    <script defer src="/js/navbar.js"></script>
     <script>
         $(async function () {
             let $btn_follow = $('#follow')
@@ -283,7 +285,9 @@
             await init()
 
             async function init() {
-                let res = await window.p
+                // await window.initData()
+                await window._myPromiseIns.initData()
+                console.log('@ 已確認頁面所需數據皆已初始化完成')
                 let { currentUser, me } = window.data
                 let isSelf = currentUser.id === me.id
 
@@ -446,7 +450,6 @@
                 let api = toFollow ? api_follow : api_cancelFollow
 
                 let { fansList, me } = window.data
-                console.log('@me => ', me)
                 if (!me) {
                     return () => {
                         alert('請先登入')
@@ -481,7 +484,6 @@
                 }
 
                 return async (e) => {
-                    console.log('@try')
                     let $target = $(e.target)
                     let id = $target.data('user-id')
                     const {

@@ -19,8 +19,9 @@ async function tellUser(user_id) {
 
 async function checkNews(id) {
     let cacheNews = await get('cacheNews')
-    console.log('@get cacheNews => ', cacheNews)
-    return new Set(cacheNews).has(id)
+    cacheNews = new Set(cacheNews)
+    console.log(`@ 向系統緩存撈取 cacheNews 數據 =>`, [...cacheNews])
+    return cacheNews.has(id)
 }
 
 async function remindNews(id) {
@@ -35,7 +36,7 @@ async function remindNews(id) {
     listOfUserId = [ ...new Set(listOfUserId) ]
 
     listOfUserId.forEach((item) => {
-        console.log(`@使用者${item}有新通知囉`)
+        console.log(`@ user_id:${item} 的 session.news 有更動`)
         news.add(item)
     })
 
@@ -53,6 +54,7 @@ async function removeRemindNews(id) {
 
     listOfUserId.forEach((item) => {
         news.delete(item)
+        console.log(`@ 從系統緩存 cacheNews 移除 ${item} `)
     })
 
     await set('cacheNews', [...news])
@@ -128,12 +130,12 @@ async function get_user(user_id, ifNoneMatch) {
     }
     //  若系統cache有資料
     res.kv = [...new Map(user).entries()][0]    //  [K, V]
-
+    console.log(`@系統緩存 user/${user_id} 有資料`)
     if(!ifNoneMatch){
-        console.log(`@此次 user/${user_id} 緩存請求未攜帶 if-none-match，但直接使用撈取道的緩存`)
+        console.log(`@此次 user/${user_id} 緩存請求未攜帶 if-none-match → 直接使用系統緩存`)
         res.exist = 2   //  代表請求未攜帶 if-none-match
     }else if(ifNoneMatch !== res.kv[0]){
-        console.log(`@此次 user/${user_id} 緩存請求所攜帶的if-none-match 已過期，但直接使用撈取道的緩存`)
+        console.log(`@此次 user/${user_id} 緩存請求所攜帶的if-none-match 已過期 → 所以直接使用系統緩存`)
         console.log('@if-none-match => ', ifNoneMatch)
         console.log('@etag => ', res.kv[0])
         res.exist = 1   //  代表請求 if-none-match 已過期

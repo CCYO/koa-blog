@@ -12,19 +12,28 @@ const {
     readMore
 } = require('../../controller/news')
 
-const { api_check_login } = require('../../middleware/check_login')
+const { api_check_login, api_check_isMe } = require('../../middleware/check_login')
 const { cacheNews } = require('../../middleware/cache')
 
 router.prefix('/api/news')
 
 router.get('/', api_check_login, cacheNews, async (ctx, next) => {
-    const { id } = ctx.session.user
-    let res = await getNewsByUserId(id)
+    
+    
     ctx.body = res
 })
 
-router.post('/', api_check_login, cacheNews, async ( ctx, next) => {
-    ctx.body = await readMore(ctx)
+router.post('/', api_check_isMe, cacheNews, async ( ctx, next) => {
+    const id = ctx.session.user.id
+    let res
+    if(ctx.request.body.page === 0){
+        res = await getNewsByUserId(id)
+    }else{
+        let { newsList, excepts } = ctx.request.body
+        res = await readMore(id, excepts, newsList)
+    }
+
+    ctx.body = res
 })
 
 module.exports = router

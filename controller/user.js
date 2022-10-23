@@ -102,7 +102,7 @@ async function followIdol({ fans_id, idol_id }) {
     const ok = await followPeople.addFans({ idol_id, fans_id })
     if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
     //  用於處理緩存
-    let cache = { user: [fans_id, idol_id], news: [fans_id, idol_id] }
+    let cache = { user: [fans_id, idol_id], news: [idol_id] }
     return new SuccModel(undefined, cache)
 }
 
@@ -135,8 +135,8 @@ async function cancelFollowIdol({ fans_id, idol_id }) {
     if(!res){
         return new ErrModel(FOLLOW.CANCEL_ERR)
     }
-    
-    return new SuccModel({notifiedIdList: [fans_id, idol_id]})
+    let cache = { user: [fans_id, idol_id], news: [fans_id, idol_id] }
+    return new SuccModel(undefined, cache)
 
 }
 

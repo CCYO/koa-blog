@@ -1,6 +1,7 @@
 <%- include('wedgets/common/header') %>
 
 <body>
+    <!-- 主導覽： NAV_CSS + NAV第一層template -->
     <%- include('wedgets/navbar/index') %>
     <div class="container">
         <h3>修改個人資訊</h3>
@@ -42,7 +43,10 @@
             </div>
         </form>
     </div>
-
+    <!-- 當前使用者頁面的使用者資料 -->
+    <div data-my-data="currentUser">
+        <%- JSON.stringify(currentUser) %>
+    </div>
     <%- include('wedgets/cdn') %>
     <!-- 引入 Spark-MD5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
@@ -50,14 +54,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.11.0/ajv7.min.js"
         integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
         crossorigin="anonymous" referrerpolicy="no-referrer">
-        </script>
+    </script>
+    <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
+    <script defer src="/js/initData.js"></script>
+    <!-- 取得登入資料 -->
+    <script defer src="/js/getMe.js"></script>
+    <!--
+        logout功能 +
+        完整渲染 NAV +
+        取得news +
+        完整渲染 通知下拉選單
+    -->
+    <script defer src="/js/navbar.js"></script>
     <script>
-        $(function () {
+        $(async function () {
             let $avatar = $('#avatar')
             let $form = $('form').first()
             let $listOfPayload = $('input:not([type=file])')
             let $submit = $('[type=submit]')
 
+            await window._myPromiseIns.initData()
             //  初始化 window.valicate，用來校驗 input 資料
             init_valicatorForInput()
 
@@ -76,7 +92,7 @@
                 let formData = new FormData()
 
                 for (item of e.target) {
-                    
+
                     let { type, name, value } = item
                     if (!value) {
                         continue
@@ -85,7 +101,7 @@
                     if (name === 'age') {
                         value *= 1
                     }
-                    
+
                     if (type !== 'submit' && name !== 'avatar') {
                         let err = window.valicate({ [name]: value })
                         err && alert(`${name}格式有誤`)
@@ -94,9 +110,9 @@
 
                     let data = name === 'avatar' ? item.files[0] : value
                     formData.append(name, data)
-                    
+
                 }
-                
+
                 let {
                     data: {
                         errno,
@@ -202,7 +218,7 @@
                 let msg = window.valicate({ [key]: val })
                 //  若校驗有問題
                 if (msg) {
-                    
+
                     //  顯示錯誤提醒
                     UI_input($el, false, msg)
                     return
@@ -222,7 +238,7 @@
                 }
                 UI_input($avatar)
             }
-     
+
             //  用來改變input的UI
             function UI_input($inp, status, msg) {
                 // $inp.next().toggleClass('my-show', true).text('loading...')
@@ -252,7 +268,7 @@
                     $(item).hasClass('is-invalid') && num_invalid++
                 })
                 let ok = num_valid > 0 && num_invalid < 1
-        
+
                 $submit.prop('disabled', !ok)
             }
 
@@ -294,24 +310,24 @@
                 let valicator = ajv.compile(schema_common)
 
                 let errorMsg = {
-                email: {
-                    pattern: '必須符合email格式'
-                },
-                nickname: {
-                    pattern: '必須由是中文或英文組成',
-                    minLength: '必須2個字以上',
-                    maxLength: '必須20個字以下',
-                },
-                password: {
-                    pattern: '只能由數字、英文、底線_組成',
-                    minLength: '必須6個字以上',
-                    maxLength: '必須32個字以下',
-                },
-                age: {
-                    minimum: '年齡必須大於0，且只能是整數',
-                    maximum: '年齡必須小於120，且只能是整數'
+                    email: {
+                        pattern: '必須符合email格式'
+                    },
+                    nickname: {
+                        pattern: '必須由是中文或英文組成',
+                        minLength: '必須2個字以上',
+                        maxLength: '必須20個字以下',
+                    },
+                    password: {
+                        pattern: '只能由數字、英文、底線_組成',
+                        minLength: '必須6個字以上',
+                        maxLength: '必須32個字以下',
+                    },
+                    age: {
+                        minimum: '年齡必須大於0，且只能是整數',
+                        maximum: '年齡必須小於120，且只能是整數'
+                    }
                 }
-            }
 
 
                 window.valicate = (data) => {

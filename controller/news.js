@@ -31,37 +31,58 @@ const {
  * @param {number} userId 
  * @returns {*} resModel
  */
-async function getNewsByUserId(userId, excepts) {
-    let data = { userId }
-    if (excepts) {
-        data.excepts = excepts
-    }
-    let res = await readNews(data)
+async function getNewsByUserId(userId) {
+    /*
+    {
+        newsList: {
+            unconfirm: [
+                { type, id, timestamp, confirm, fans: ... },
+                { type, id, timestamp, confirm, blog: ... },
+                { type, id, timestamp, confirm, comment: ... },
+            ... ],
+            confirm: [...]
+        },
+        num: { unconfirm, confirm, total },
+        limit
+    }*/
+    let res = await readNews({ userId })
     return new SuccModel(res)
 }
 
-async function readMore(ctx) {
-    let { id: userId } = ctx.session.user
-    let { excepts } = ctx.request.body
-    let { unconfirm } = excepts
-    
-    if(unconfirm.num){
-        let res = await confirmNews(unconfirm)
-        if(res.errno){
+async function readMore(userId, excepts, newsList ) {
+    /*excepts: {
+        people: [ id, ... ],
+        blogs: [ id, ... ],
+        comments: [ id, ...],
+        num: NUMBER
+    }*/
+
+    if (newsList.num) {
+        let res = await confirmNews(newsList)
+        if (res.errno) {
             throw res
         }
     }
+    /*
+    {
+        newsList: {
+            unconfirm: [
+                { type, id, timestamp, confirm, fans: ... },
+                { type, id, timestamp, confirm, blog: ... },
+                { type, id, timestamp, confirm, comment: ... },
+            ... ],
+            confirm: [...]
+        },
+        num: { unconfirm, confirm, total },
+        limit
+    }*/
+    let res = await readNews({ userId, excepts })
 
-    excepts = init_excepts(excepts)
-    let res = await readNews({ userId, excepts})
-    
-    return new SuccModel({...res, excepts})
+    return new SuccModel({ ...res })
 }
 
 async function confirmNews(listOfNewsId) {
-
-    let { people, blogs, comments } = listOfNewsId
-
+    let { blogs, people, comments } = listOfNewsId
     const { rowOfBlogs, rowOfPeople, rowOfComments } = await updateNews(listOfNewsId)
     if (blogs.length !== rowOfBlogs) {
         return new ErrModel(NEWS.BLOG_FANS_CONFIRM_ERR)
