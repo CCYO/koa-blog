@@ -21,7 +21,7 @@ const schema_common = {
         nickname: {
             type: 'string',
             // pattern: '^[\\w]+$',
-            pattern: '^[\\u4e00-\\u9fa5a-zA-Z]+$',
+            pattern: '^[\\u4e00-\\u9fa5a-zA-Z\\d]+$',
             maxLength: 20,
             errorMessage: '必須是英文、數字以及底線組成，必須小於20個字符'
         },

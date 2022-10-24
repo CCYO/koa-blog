@@ -1,4 +1,5 @@
-<%- include('wedgets/common/header', { title: blog.title }) %>
+<!-- favicon + MY_CSS + BS5_CSS -->
+<%- include('wedgets/common/header') %>
 
 <body>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,7 +42,10 @@
             border: 1px solid;
         }
     </style>
-    <%- include('wedgets/navbar/blog-index') %>
+
+    <!-- 主導覽： NAV_CSS + NAV第一層template -->
+    <%- include('wedgets/navbar/index') %>
+
     <div id="backdrop"></div>
     <div class="container pt-2 pb-2">
         <div>
@@ -63,18 +67,37 @@
         </div>
         <% } %>
     </div>
+
+    <!-- 當前使用者頁面的使用者資料 -->
+    <div data-my-data="blog">
+        <%- JSON.stringify(blog) %>
+    </div>
+
+    <!-- JQ AXIOS BS5 -->
     <%- include('wedgets/cdn') %>
     <!-- 引入 editor css -->
     <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
     <!-- 引入 editor js -->
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
-    <script defer src="/js/navbar/blog-initData.js"></script>
+    <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
+    <script defer src="/js/initData.js"></script>
+    
+    <!-- 取得登入資料 -->
+    <script defer src="/js/getMe.js"></script>
+    <!--
+        logout功能 +
+        完整渲染 NAV +
+        取得news +
+        完整渲染 通知下拉選單
+    -->
+    <script defer src="/js/navbar.js"></script>
     <script>
-        console.log('blog ejs - script 行內代碼運行 ')
+        
 
         $(async function () {
-            console.log('blog ejs - script onload 運行')
             try {
+                await window._myPromiseIns.initData()
+                console.log('@ 已確認頁面所需數據皆已初始化完成')
                 if (!window.data.blog.show) {
                     return
                 }
@@ -85,6 +108,7 @@
             }
 
             async function init() {
+                
                 //  將comment Map化
                 mapComments(window.data.blog.comments)
                 let selector = '.editor-container'

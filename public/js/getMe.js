@@ -1,3 +1,7 @@
+window._my_promise_all = window._my_promise_all ? window._my_promise_all : []
+window._myPromiseIns = window._myPromiseIns ? window._myPromiseIns : {}
+window._myPromiseIns.initData = window._myPromiseIns.initData ? window._myPromiseIns.initData : Promise.resolve()
+
 window._myPromiseIns.getMe = initData().then(({ errno, data, msg }) => {
     if (!errno) {
         window.data.me = data

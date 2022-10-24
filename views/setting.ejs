@@ -54,7 +54,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.11.0/ajv7.min.js"
         integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
         crossorigin="anonymous" referrerpolicy="no-referrer">
-    </script>
+        </script>
     <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
     <script defer src="/js/initData.js"></script>
     <!-- 取得登入資料 -->
@@ -84,35 +84,59 @@
             $avatar.on('click', handle_resetAvatar)
             $avatar.on('change', handle_valicator_avatar)
             $form.on('submit', handle_update)
-
             //  handle - 送出更新數據
             async function handle_update(e) {
                 e.preventDefault()
                 let { hash } = window.payload
                 let formData = new FormData()
-
+                let valid = true
                 for (item of e.target) {
-
                     let { type, name, value } = item
                     if (!value) {
                         continue
                     }
 
-                    if (name === 'age') {
-                        value *= 1
+                    if (name === 'age') {    //  如果是age，將類型轉為number
+                        let el = $('[name=age]')
+                        let n
+                        try {
+                            n = Number.parseInt(value)
+                        } catch (err) {
+                            $('[name=age]').val()
+                            UI_input(el, false, '請輸入整數，賣鬧')
+                            valid = false
+                        }
+                        el.val(n)
                     }
 
                     if (type !== 'submit' && name !== 'avatar') {
-                        let err = window.valicate({ [name]: value })
-                        err && alert(`${name}格式有誤`)
-                        console.log('格式沒問題')
+                        if (window.valicate({ [name]: value })) {
+                            alert(`${name}格式有誤`)
+                            valid = false
+                        }
+                    }
+
+                    if (value === window.data.me[name]) {  //  如果是既有值，發生錯誤
+                        //  顯示錯誤提醒
+                        UI_input($el, false, '現在就是了，賣鬧')
+                        valid = false
                     }
 
                     let data = name === 'avatar' ? item.files[0] : value
                     formData.append(name, data)
 
                 }
+                if (![...formData.keys()].length) {
+                    alert('沒有要更新的就別亂')
+                    valid = false
+                }
 
+                if (!valid) {
+                    delete formData
+                    return
+                }
+
+                
                 let {
                     data: {
                         errno,
@@ -192,7 +216,7 @@
             }
 
             //  handle - 驗證 input 資料(除了avatar)
-            function handle_valicate(e) {
+            async function handle_valicate(e) {
                 let me = window.data.me
                 let $el = $(e.target)
                 let key = $el.attr('name')
@@ -205,7 +229,16 @@
                 }
 
                 if (key === 'age') {    //  如果是age，將類型轉為number
-                    val *= 1
+                    let n
+                    try {
+                        n = Number.parseInt(val)
+                    } catch (err) {
+                        console.log('GG')
+                        $el.val()
+                        UI_input($el, false, '請輸入整數，賣鬧')
+                        return
+                    }
+                    $el.val(n).blur().focus()
                 }
 
                 if (val === me[key]) {  //  如果是既有值，發生錯誤
@@ -215,13 +248,18 @@
                 }
 
                 //  如果是有效值，使用ajv校驗
-                let msg = window.valicate({ [key]: val })
-                //  若校驗有問題
-                if (msg) {
-
+                if (msg = window.valicate({ [key]: val })) {  //  若校驗有問題
                     //  顯示錯誤提醒
                     UI_input($el, false, msg)
                     return
+                }
+                console.log('前端驗證ok')
+                if (key === 'email') {
+                    let { data: { errno, msg } } = await axios.post('/api/user/isEmailExist', { email: val })
+                    if (errno) {
+                        UI_input($el, false, msg)
+                        return
+                    }
                 }
 
                 //通過校驗，顯示ok提醒
@@ -284,12 +322,12 @@
                     properties: {
                         email: {
                             type: 'string',
-                            pattern: '^[a-z0-9][a-z0-9-_\.]+@([a-z]|[a-z0-9]?[a-z0-9-]+[a-z0-9])\.[a-z0-9]{2,10}(?:\.[a-z]{2,10})?$'
+                            pattern: '^[a-z0-9][a-z0-9-_\\.]+@([a-z]|[a-z0-9]?[a-z0-9-]+[a-z0-9])\\.[a-z0-9]{2,10}(?:\\.[a-z]{2,10})?$'
                         },
                         nickname: {
                             type: 'string',
                             // pattern: '^[\\w]+$',
-                            pattern: '^[\\u4e00-\\u9fa5\\w]+$',
+                            pattern: '^[\\u4e00-\\u9fa5a-zA-Z\\d]+$',
                             minLength: 2,
                             maxLength: 20,
                         },

@@ -13,34 +13,32 @@ async function cacheBlog(ctx, next) {
     console.log('@blog_id => ', blog_id)
     let ifNoneMatch = ctx.headers['if-none-match']
     console.log('@if-none-match => ', ifNoneMatch)
-    ctx.blog = await get_blog(blog_id, ifNoneMatch)
-
-    if (ctx.blog.length === 1) {
-        console.log(`@blog/${blog_id} 直接使用緩存304`)
+    ctx.cache = {}
+    ctx.cache = await get_blog(blog_id, ifNoneMatch)
+    let { exist, kv } = ctx.cache
+    if (exist === 0) {
+        console.log(`@user/${user_id} 直接使用緩存304`)
         ctx.status = 304
+        delete ctx.cache
         return
-    } else if (ctx.blog.length === 2) {
-        console.log(`@blog/${blog_id} 完成 CACHE撈取`)
-    } else {
-        console.log(`@blog/${blog_id} 無緩存，向DB撈資料`)
     }
     await next()
 
-    if (!ctx.blog[0]) {
+    if (!ctx.cache.blog[0]) {
         //  計算etag
-        ctx.blog[0] = hash_obj(ctx.blog[1])
-        console.trace(`@blog/${blog_id} etag => `, ctx.blog[0])
+        ctx.cache.blog[0] = hash_obj(ctx.cache.blog[1])
+        console.log(`@blog/${blog_id} 生成 etag => `, ctx.cache.blog[0])
         //  緩存
-        await set_blog(blog_id, ctx.blog[0], ctx.blog[1])
-        console.log(`@blog/${blog_id} 完成 DB撈取 + 緩存`)
+        await set_blog(blog_id, ctx.cache.blog[0], ctx.cache.blog[1])
+        console.log(`@blog/${blog_id} 完成緩存`)
     }
 
     ctx.set({
-        etag: ctx.blog[0],
+        etag: ctx.cache.blog[0],
         ['Cache-Control']: 'no-cache'
     })
-
-    delete ctx.blog
+    console.log(`響應新的etag => ${ctx.cache.blog[0]}`)
+    delete ctx.cache
     return
 }
 

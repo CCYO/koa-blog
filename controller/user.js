@@ -12,6 +12,10 @@ const {
     updateUser
 } = require('../server/user')
 
+const {
+    readBlogByAuthor
+} = require('../server/blog')
+
 const followPeople = require('../server/followPeople')
 
 const followBlog = require('../server/followBlog')
@@ -33,6 +37,7 @@ const {
     UPDATE,
     FOLLOW
 } = require('../model/errRes')
+const { Blog } = require('../db/mysql/model')
 
 /** 確認信箱是否已被註冊
  * @param {string} email 信箱 
@@ -87,7 +92,7 @@ const findUser = async ({ id, email, password }) => {
  */
 async function getPeopleById(id) {
     let data = {}
-    data.currentUser = await readUser({id})
+    data.currentUser = await readUser({ id })
     data.fansList = await readFans(id)
     data.idolList = await readIdols(id)
     return new SuccModel(data)
@@ -132,7 +137,7 @@ async function cancelFollowIdol({ fans_id, idol_id }) {
         res = await followBlog.deleteFollower({ blog_id: listOfBlogId, follower_id: fans_id })
     }
 
-    if(!res){
+    if (!res) {
         return new ErrModel(FOLLOW.CANCEL_ERR)
     }
     let cache = { user: [fans_id, idol_id], news: [fans_id, idol_id] }
@@ -143,10 +148,18 @@ async function cancelFollowIdol({ fans_id, idol_id }) {
 //  更新user
 const modifyUserInfo = async (newData, id) => {
     let user = await updateUser({ newData, id })
-    let fans = await followPeople.readFans({ idol_id: id })
-    let idols = await followPeople.readIdols({ fans_id: id })
-    let people = [ ...fans, ...idols ]
-    return new SuccModel(user, { news: people , user: [...people, id ] })
+    let cache = { user: [ id ]}
+    if (newData.nickname || newData.email) {
+        let fans = await followPeople.readFans({ idol_id: id })
+        let idols = await followPeople.readIdols({ fans_id: id })
+        let people = [...fans, ...idols]
+        let blog = await readBlogByAuthor(id)
+        cache.news = people
+        cache.user = [ ...cache.user, ...people]
+        cache.blog = blog
+    }
+
+    return new SuccModel(user, cache)
 }
 
 //  找出粉絲列表

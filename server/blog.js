@@ -171,11 +171,23 @@ async function readBlogList({ user_id, follower_id}) {
     return init_blog(blogList)
 }
 
+async function readBlogByAuthor(author_id, opts = { where: {}, attributes: [] }){
+    let { where, attributes } = opts
+    where.user_id = author_id
+    attributes.push('id')
+    let blogList = await Blog.findAll( {
+        where,
+        attributes
+    })
+    return init_blog(blogList).map( ({id}) => id)
+}
+
 module.exports = {
     createBlog,
     updateBlog,
     deleteBlog,
     deleteBlogs,
     readBlog,
-    readBlogList
+    readBlogList,
+    readBlogByAuthor
 }

@@ -40,13 +40,22 @@ router.get('/blog/edit/:blog_id', view_check_login, cacheBlog, async (ctx, next)
 
 //  查看文章
 router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
-    if (!ctx.blog.length) {
-        const { blog_id } = ctx.params
+    const { blog_id } = ctx.params
+    //   = { exist: BOO, kv: [K, V] }
+    let { exist, kv } = ctx.cache
+    if (exist === 3) {
         const resModel = await getBlog(blog_id, true)
-        ctx.blog[1] = resModel.data.blog  
+        ctx.cache.blog = [ undefined, resModel ]
+        console.log(`@blog/${blog_id} 完成 DB撈取`)
+    }else{
+        let [ etag, resModel ] = kv
+        ctx.cache.blog = [ etag, resModel ]
     }
 
-    return await ctx.render('blog', { blog: ctx.blog[1]})
+    let blog = ctx.cache.blog[1].data
+    console.log('@blog => ', blog)
+
+    return await ctx.render('blog', blog)
 })
 
 module.exports = router

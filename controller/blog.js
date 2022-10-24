@@ -168,6 +168,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
  */
 async function getBlog(blog_id, needCommit = false) {
     let blog = await readBlog({ blog_id }, needCommit)
+    console.log('@ blog => ', blog)
     if (blog) {
         return new SuccModel({blog})
     } else {
