@@ -6,8 +6,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
     <style>
         .editor-container {
             border: 1px solid;
@@ -95,11 +93,6 @@
 
         $(async function () {
             try {
-                await window._myPromiseIns.initData()
-                console.log('@ 已確認頁面所需數據皆已初始化完成')
-                if (!window.data.blog.show) {
-                    return
-                }
                 await init()
                 $('#backdrop').addClass('my-noshow')
             } catch (e) {
@@ -107,16 +100,20 @@
             }
 
             async function init() {
-                
+                await window._myPromiseIns.initData()
+                console.log('@ 已確認頁面所需數據皆已初始化完成')
+                if (!window.data.blog.show) {
+                    return
+                }
                 //  將comment Map化
                 mapComments(window.data.blog.comments)
                 let selector = '.editor-container'
                 // 初始化editor
                 let editor = init_editor(selector)
-                let $el = $(selector)
-                $el.on('keyup', handle_keyup(editor))
-                let $btn = $('button.reply')
-                $btn.on('click', initReplyEditor)
+                let $editor = $(selector)
+                let $commentBtn = $('button.reply')
+                $editor.on('keyup', handle_keyup(editor))
+                $commentBtn.on('click', initReplyEditor)
             }
 
             function initReplyEditor(e) {
