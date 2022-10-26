@@ -57,18 +57,30 @@
         <%- JSON.stringify(blog) %>
     </div>
 
+    <!-- 引入 Spark-MD5 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+    <!-- 引入 xss -->
+    <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
     
-
+    <!-- JQ AXIOS BS5 -->
     <%- include('wedgets/cdn') %>
     <!-- 引入 editor css -->
     <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
     <!-- 引入 editor js -->
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
-    <!-- 引入 Spark-MD5 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
-
-    <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
-    <script defer src="/js/navbar/blog-initData.js"></script>
+    <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
+    <script defer src="/js/initData.js"></script>
+    
+    <!-- 取得登入資料 -->
+    <script defer src="/js/getMe.js"></script>
+    <!--
+        logout功能 +
+        完整渲染 NAV +
+        取得news +
+        完整渲染 通知下拉選單
+    -->
+    <script defer src="/js/navbar.js"></script>
+    
     <script>
         $(function () {
 
