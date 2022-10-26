@@ -1,6 +1,11 @@
-<%- include('wedgets/common/header', { title: blog.title }) %>
+<!-- favicon + MY_CSS + BS5_CSS -->
+<%- include('wedgets/common/header') %>
 
 <body>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
     <style>
         #showBox {
             position: relative;
@@ -25,7 +30,8 @@
             min-height: 300px;
         }
     </style>
-    <%- include('wedgets/navbar/blog-index') %>
+    <!-- 主導覽： NAV_CSS + NAV第一層template -->
+    <%- include('wedgets/navbar/index') %>
     <div class="container">
         <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>"></div>
         <div id="showBox">
@@ -46,12 +52,12 @@
         <button id="remove">刪除此篇文章</button>
     </div>
 
-    <!-- 
-        取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
-        如 { html: `<p>56871139</p>`}
-            無轉譯 => { "html":"<p>56871139</p>") 會造成<p>直接渲染至頁面
-            轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
-    -->
+    <!-- 當前使用者頁面的使用者資料 -->
+    <div data-my-data="blog">
+        <%- JSON.stringify(blog) %>
+    </div>
+
+    
 
     <%- include('wedgets/cdn') %>
     <!-- 引入 editor css -->

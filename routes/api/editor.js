@@ -9,7 +9,7 @@ const { addBlog, modifyBlog, removeBlog } = require('../../controller/blog')
 const { uploadImg } = require('../../middleware/blogImg')
 
 const { api_check_login } = require('../../middleware/check_login')
-const { notifiedNews, resetBlog } = require('../../middleware/cache')
+const { notifiedNews, resetBlog, cache_reset } = require('../../middleware/cache')
 
 router.prefix('/api/blog')
 
@@ -24,9 +24,10 @@ router.post('/', api_check_login, async (ctx, next) => {
 router.post('/img', api_check_login, resetBlog, uploadImg)
 
 //  刪除 blog
-router.delete('/', api_check_login, notifiedNews, async (ctx, next) => {
+router.delete('/', api_check_login, cache_reset, async (ctx, next) => {
+    const author = ctx.session.user.id
     const { id } = ctx.request.body
-    ctx.body = await removeBlog(id)
+    ctx.body = await removeBlog(id, author)
 })
 
 //  更新 blog 資料

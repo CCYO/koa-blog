@@ -51,21 +51,28 @@ async function addBlog(title, user_id) {
  * @param {number} blog_id 
  * @returns {object} SuccModel || ErrModel
  */
-async function removeBlog(blog_id) {
-    let notifiedIdList = await readFollowers({ blog_id })
-    if(notifiedIdList.length){
-        notifiedIdList = [ ...new Set(notifiedIdList)]
+async function removeBlog(blogList, author) {
+    if (!Array.isArray(blogList)) {
+        blogList = [blogList]
     }
-    let res
-    if (Array.isArray(blog_id)) {
-        res = await deleteBlogs({ blogList_id: blog_id })
-    } else {
-        res = await deleteBlog(blog_id)
-    }
+    let res = await deleteBlogs({ blogList_id: blogList })
+
     if (!res) {
         return new ErrModel(BLOG.BLOG_REMOVE_ERR)
     }
-    return new SuccModel({notifiedIdList})
+
+    //  blog 的 follower
+    let promiseList = blogList.map(async blog_id => {
+        return await readFollowers({ blog_id })
+    })
+    let resList = await Promise.all(promiseList)
+    let cache = { news: [], user: [author] }
+    resList.reduce((initVal, curVal) => {
+        let set = new Set( [...initVal, ...curVal] )
+        return cache.news = [...set]
+    }, cache.news )
+
+    return new SuccModel(undefined, cache)
 }
 
 /** 更新 blog

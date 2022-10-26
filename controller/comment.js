@@ -12,7 +12,7 @@ async function createComment({user_id, blog_id, html, p_id, author}){
     let cacheNews = await setRelatedComment(json, { author })
 
     let cache = { news: cacheNews, blog: blog_id }
-    let comment = await readComment({ id: json.id })
+    let [ comment ] = await readComment({ id: json.id })
     return new SuccModel(comment, cache)
 }
 

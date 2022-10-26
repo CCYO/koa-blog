@@ -3,6 +3,11 @@ window.data = { me: {} }
 window._myPromiseIns = {}
 window._my_promise_all = []
 //  初始化數據
+
+        // 取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
+        // 如 { html: `<p>56871139</p>`}
+        //     無轉譯 => { "html":"<p>56871139</p>") 會造成<p>直接渲染至頁面
+        //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
 window._myPromiseIns.initData = async function() {
     $(`[data-my-data]`).each((index, el) => {
         let $el = $(el)

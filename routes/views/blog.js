@@ -55,7 +55,7 @@ router.get('/blog/edit/:blog_id', view_check_login, cacheBlog, async (ctx, next)
         return ctx.body = '你哪位?'
     }
 
-    return await ctx.render('blog', blog)
+    return await ctx.render('blog-edit', blog)
 })
 
 //  查看文章

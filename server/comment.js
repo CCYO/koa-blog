@@ -282,7 +282,7 @@ async function addComment({
 }
 
 async function setRelatedComment(comment, { author }) {
-    let whereOps_comment = { blog_id: comment.p_id, p_id: comment.p_id }
+    let whereOps_comment = { blog_id: comment.blog_id, p_id: comment.p_id }
     //  查詢與commentIns有關的所有comment
     if (comment.p_id) {   //  如果是留言回覆，要連串主都撈出
         whereOps_comment = {
@@ -401,7 +401,11 @@ async function setRelatedComment(comment, { author }) {
         } else {    //  若無follow，即新增)
             // await commentIns.addFollowComment_F(author)
             console.log(`@ 創建 comment_id: ${comment.id} 與 author_id: ${author} 的關聯`)
-            initVal.addList.push(author)
+            initVal.addList.push({
+                follower_id: author,
+                comment_id: comment.id,
+                createdAt: comment.createdAt   //  即為當前comment的創建時間
+            })
         }
 
         //  新增follow

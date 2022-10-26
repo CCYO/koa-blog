@@ -36,7 +36,7 @@ async function remindNews(id) {
     listOfUserId = [ ...new Set(listOfUserId) ]
 
     listOfUserId.forEach((item) => {
-        console.log(`@ user_id:${item} 的 session.news 有更動`)
+        console.log(`@ 下一次 user_id:${item} 要取得news時，會因為系統緩存 cacheNews 包含該使用者，導致需向DB取數據，並重新緩存 session.news`)
         news.add(item)
     })
 

@@ -9,7 +9,8 @@ go()
 
 async function go() {
     try {
-        let res = await readFans({ idol_id: 1 })
+        let comment = await Comment.build({ title: '896', user_id: 1, blog_id: 1})
+        let res = comment.toJSON()
         console.log('@ => ', res)
     } catch (e) {
         console.log(e)

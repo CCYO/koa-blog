@@ -17,7 +17,7 @@ async function cacheBlog(ctx, next) {
     ctx.cache = await get_blog(blog_id, ifNoneMatch)
     let { exist, kv } = ctx.cache
     if (exist === 0) {
-        console.log(`@user/${user_id} 直接使用緩存304`)
+        console.log(`@blog/${blog_id} 直接使用緩存304`)
         ctx.status = 304
         delete ctx.cache
         return
@@ -141,7 +141,7 @@ async function cacheNews(ctx, next) {
         clearNews = true
     }
     if (clearNews) {
-        console.log('@清空緩存')
+        console.log(`@ 清空 user/${id} 的 session.news`)
         page = 0
         ctx.session.news = []   //  清空緩存
     }
@@ -201,15 +201,15 @@ async function cache_reset(ctx, next) {
     }
     let { user = [], blog = [], news = [] } = cache
     if (user.length) {
-        console.log('@ 執行 cache/user 的 reset')
+        console.log(`@ 執行 cache/user 的 reset，user 包含 => ${user}`)
         await del_users(user)
     }
     if (blog.length) {
-        console.log('@ 執行 cache/blog 的 reset')
+        console.log(`@ 執行 cache/blog 的 reset，blog 包含 => ${blog}`)
         await del_blogs(blog)
     }
     if (news.length) {
-        console.log('@ 執行 cache/news 的 remind')
+        console.log(`@ 執行 cache/news 的 remind，news 包含 => ${news}`)
         await remindNews(news)
     }
     delete ctx.body.cache
