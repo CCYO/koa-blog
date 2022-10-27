@@ -18,19 +18,17 @@ const { cacheNews } = require('../../middleware/cache')
 router.prefix('/api/news')
 
 router.get('/', api_check_login, cacheNews, async (ctx, next) => {
-    
-    
     ctx.body = res
 })
 
-router.post('/', api_check_isMe, cacheNews, async ( ctx, next) => {
+router.post('/', api_check_login, cacheNews, async ( ctx, next) => {
     const id = ctx.session.user.id
     let res
     if(ctx.request.body.page === 0){
         res = await getNewsByUserId(id)
     }else{
-        let { newsList, excepts } = ctx.request.body
-        res = await readMore(id, excepts, newsList)
+        //  let { page, newsList, excepts } = ctx.request.body
+        res = await readMore({id, ...ctx.request.body})
     }
 
     ctx.body = res

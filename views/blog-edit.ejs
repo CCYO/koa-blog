@@ -61,7 +61,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <!-- 引入 xss -->
     <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
-    
+
     <!-- JQ AXIOS BS5 -->
     <%- include('wedgets/cdn') %>
     <!-- 引入 editor css -->
@@ -70,7 +70,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
     <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
     <script defer src="/js/initData.js"></script>
-    
+
     <!-- 取得登入資料 -->
     <script defer src="/js/getMe.js"></script>
     <!--
@@ -80,9 +80,9 @@
         完整渲染 通知下拉選單
     -->
     <script defer src="/js/navbar.js"></script>
-    
+
     <script>
-        $(function () {
+        $(async function () {
 
             let api_uploadImg = '/api/blog/img'
             let api_blog = '/api/blog/'
@@ -98,8 +98,13 @@
             let $save = $('#save')
             let $remove = $('#remove')
 
-            //  初始化editor
-            let editor = init_editor()
+            await init().catch( e => console.log(`user.ejs 初始化時發生錯誤 => ${e}`))
+
+            async function init() {
+                await window._myPromiseIns.initData()
+                //  初始化editor
+                init_editor()
+            }
 
 
             $title.on('focus', () => console.log('okok'))
@@ -171,9 +176,9 @@
                 let cancel = []
                 let curImgSrcSet = new Set(curImgs.map(({ src }) => src))
 
-                if(!curImgSrcSet.size){
-                    cancel = imgs.map(({blogImg_id}) => blogImg_id)
-                }else if (imgs.length) {
+                if (!curImgSrcSet.size) {
+                    cancel = imgs.map(({ blogImg_id }) => blogImg_id)
+                } else if (imgs.length) {
                     imgs.reduce((initVal, img) => {
                         let { url, blogImg_id } = img
                         //  篩出要取消關聯的blogImg
@@ -181,8 +186,8 @@
                         return initVal
                     }, cancel)
                 }
-                
-                if(cancel.length){
+
+                if (cancel.length) {
                     payload.cancel = cancel
                 }
 
@@ -224,7 +229,7 @@
                 }
 
                 //  同步 window.blog 與 資料庫
-                window.data.blog = { ...window.data.blog, ...data.blog }
+                window.data.blog = { ...window.data.blog, ...data }
 
                 alert('blog save success!')
             }
@@ -436,7 +441,7 @@
                     /*  url 有值，代表 blog.imgs 已有此圖 */
 
                     //  直接插入圖片
-                    insertFn(url, )
+                    insertFn(url,)
                 }
             }
 

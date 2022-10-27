@@ -7,17 +7,13 @@ const { CACHE: { BLOG: { EDITOR } }, } = require('../conf/constant')
 const { readBlog } = require('../server/blog')
 
 async function cacheBlog(ctx, next) {
-    console.log('@EDITOR => ', EDITOR)
-    console.log('@params => ', ctx.params)
     let blog_id = ctx.params.blog_id ? ctx.params.blog_id : EDITOR
-    console.log('@blog_id => ', blog_id)
     let ifNoneMatch = ctx.headers['if-none-match']
-    console.log('@if-none-match => ', ifNoneMatch)
     ctx.cache = {}
     ctx.cache = await get_blog(blog_id, ifNoneMatch)
     let { exist, kv } = ctx.cache
     if (exist === 0) {
-        console.log(`@blog/${blog_id} 直接使用緩存304`)
+        console.log(`@ blog/${blog_id} 直接使用緩存304`)
         ctx.status = 304
         delete ctx.cache
         return
@@ -27,17 +23,17 @@ async function cacheBlog(ctx, next) {
     if (!ctx.cache.blog[0]) {
         //  計算etag
         ctx.cache.blog[0] = hash_obj(ctx.cache.blog[1])
-        console.log(`@blog/${blog_id} 生成 etag => `, ctx.cache.blog[0])
+        console.log(`@ blog/${blog_id} 生成 etag => `, ctx.cache.blog[0])
         //  緩存
         await set_blog(blog_id, ctx.cache.blog[0], ctx.cache.blog[1])
-        console.log(`@blog/${blog_id} 完成緩存`)
+        console.log(`@ blog/${blog_id} 完成緩存`)
     }
 
     ctx.set({
         etag: ctx.cache.blog[0],
         ['Cache-Control']: 'no-cache'
     })
-    console.log(`響應新的etag => ${ctx.cache.blog[0]}`)
+    console.log(`@ 響應新的etag => ${ctx.cache.blog[0]}`)
     delete ctx.cache
     return
 }
@@ -69,7 +65,7 @@ async function cacheUser(ctx, next) {
         etag: ctx.cache.user[0],
         ['Cache-Control']: 'no-cache'
     })
-    console.log(`響應新的etag => ${ctx.cache.user[0]}`)
+    console.log(`@ 響應新的etag => ${ctx.cache.user[0]}`)
     delete ctx.cache
     return
 }
@@ -117,13 +113,13 @@ async function cacheNews(ctx, next) {
     let hasNews = await checkNews(id)
     //  若沒有新通知，且有緩存
     if (!hasNews && ctx.session.news[page]) {
-        console.log(`@ session.news[${page}] 直接使用緩存`)
+        console.log(`@ user/${id} 直接使用緩存 session.news[${page}]`)
         ctx.body = ctx.session.news[page]
         return
     }
 
     if(!ctx.session.news[page]){
-        console.log(`@ session.news[${page}] 沒有緩存`)
+        console.log(`@ 因為 user/${id} 的 session.news[${page}] 沒有緩存`)
     }
 
     let clearNews = false
@@ -140,14 +136,14 @@ async function cacheNews(ctx, next) {
         console.log(`@ 因為 緩存session.news數組不完全`)
         clearNews = true
     }
-    if (clearNews) {
+    if (ctx.session.news.length && clearNews) {
         console.log(`@ 清空 user/${id} 的 session.news`)
         page = 0
         ctx.session.news = []   //  清空緩存
     }
 
     // 移除系統「通知有新訊息」的緩存
-    console.log(`@ 向DB查詢 news數據`)
+    console.log(`@ user/${id} 向DB查詢 news數據`)
     await next()
 
     //  next 接回來，繼續處理緩存

@@ -31,7 +31,7 @@ router.delete('/', api_check_login, cache_reset, async (ctx, next) => {
 })
 
 //  更新 blog 資料
-router.patch('/', api_check_login, notifiedNews, resetBlog, async(ctx, next) => {
+router.patch('/', api_check_login, cache_reset, async(ctx, next) => {
     const { id: user_id } = ctx.session.user
     // const { removeImgs, id, html, show } = ctx.request.body
     const { id: blog_id, ...blog_data } = ctx.request.body

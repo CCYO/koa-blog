@@ -49,7 +49,7 @@ async function getNewsByUserId(userId) {
     return new SuccModel(res)
 }
 
-async function readMore(userId, excepts, newsList ) {
+async function readMore({id, excepts, newsList}) {
     /*excepts: {
         people: [ id, ... ],
         blogs: [ id, ... ],
@@ -76,7 +76,7 @@ async function readMore(userId, excepts, newsList ) {
         num: { unconfirm, confirm, total },
         limit
     }*/
-    let res = await readNews({ userId, excepts })
+    let res = await readNews({ userId: id, excepts })
 
     return new SuccModel({ ...res })
 }

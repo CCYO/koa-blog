@@ -17,6 +17,7 @@ window._myPromiseIns.initData = async function() {
         } catch (e) {
             window.data[prop] = undefined
         }
+        console.log(`@ window.data.${prop} finish `)
     })
     $(`[data-my-data]`).remove()
     console.log('@ window.data[data-my-data] finish')

@@ -12,6 +12,7 @@ window._myPromiseIns.renderNav = renderNav()
 
 window._my_promise_all.push(window._myPromiseIns.renderNav)
 
+let first_render_news = true
 //  初始化數據
 async function renderNav() {
     await window._myPromiseIns.getMe
@@ -20,6 +21,7 @@ async function renderNav() {
     if (window.data.me.id) {
         $('#logout').click(logout)
         await initNews()
+        first_render_news = false
     }
     return !!window.data.me.id
 }
@@ -48,8 +50,8 @@ async function initNews() {
         limit
     }*/
     let newsData = await getNews()
-    render_news(newsData)
     window.data.news = init_News(newsData)
+    render_news(newsData)
     console.log('@ window.data.news finish ')
 
     //  更新unconfirm通知數目
@@ -75,11 +77,9 @@ async function initNews() {
     //  渲染通知數據
     function render_news(news) {
         let { newsList, num } = news
-        //  判斷是否初次渲染
-        let first_render = !window.data.news
 
         //  渲染新通知數目
-        if (first_render) {    //初次渲染
+        if (first_render_news) {    //初次渲染
             show($newsCount, num.unconfirm).text(num.unconfirm || '')
         } else {  //readMore觸發的渲染
             //  DB_unconfirm - 此次 newsList_unconfirm
@@ -98,7 +98,7 @@ async function initNews() {
             //  通知的title
             let $title = $(`#${key}-news-title`)
             if (!list.length) { //  若 list 沒有內容
-                first_render && show($title, false) //  初渲染，則隱藏title
+                first_render_news && show($title, false) //  初渲染，則隱藏title
             } else {    //若 list 有內容
                 $title.is(':hidden') && show($title)    // 非初次渲染，若title隱藏，將其顯示
             }
@@ -204,17 +204,20 @@ async function initNews() {
             }
         }
 
-        function render_readMore({ num, newsList, excepts }) {
+        function render_readMore({ num, newsList }) {
             //  DB_news_num - 此次響應unconfirm - 此次響應confirm
-            let count = num.total - newsList.unconfirm.length - newsList.confirm.length
+            let count = num.total - newsList.unconfirm.length - newsList.confirm.length - window.data.news.excepts.num
 
-            if (excepts) {  //  若非初次渲染，則存在已撈取過的news
-                //  再減去撈取過的news
-                count -= excepts.num
-            }
+            // if (excepts) {  //  若非初次渲染，則存在已撈取過的news
+            //     //  再減去撈取過的news
+            //     count -= excepts.num
+            // }
             // let more = !(!count && !newsList.unconfirm.length)
             //  若DB還有可撈取的news || 此次響應存在unconfirm（因為要手凍按最後一次readMore，讓後端作confirm）
-            let more = newsList.unconfirm.length + newsList.unconfirm.length !== 0
+            // let more = newsList.unconfirm.length + newsList.unconfirm.length !== 0
+            console.log('@ newsList.unconfirm.length => ', newsList.unconfirm.length)
+            let more = count !== 0 || newsList.unconfirm.length !== 0
+            console.log('@ more => ', more)
             show($readMore, more)
             show($noNews, !more)
         }
@@ -224,7 +227,7 @@ async function initNews() {
         let { newsList } = data
         newsList = init_newsList(newsList)
         let res = { ...data, newsList }
-        if (!window.data.news) {   //  初次渲染
+        if (first_render_news) {   //  初次渲染
             res.excepts = init_excepts(newsList)
             res.page = 0
         } else {  //  若非初次渲染
@@ -303,11 +306,10 @@ async function initNews() {
     //  撈取通知數據
     async function getNews() {
         let opts = {
-            user_id: window.data.me.id,
             newsList: { num: 0 },
             page: 0
         }
-        if (window.data.news) { //  非初次渲染
+        if (!first_render_news) { //  非初次渲染
             opts = {
                 ...opts,
                 newsList: window.data.news.newsList.unconfirm,

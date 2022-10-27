@@ -77,7 +77,7 @@ async function del_blogs(blogList) {
 
     let list = Promise.all(
         blogList.map( async (blog_id) => {
-            console.log(`@將系統緩存 blog/${blog_id} 刪除`)
+            console.log(`@ 將系統緩存 blog/${blog_id} 刪除`)
             return await del(`blog/${blog_id}`)
         })
     )
@@ -116,32 +116,25 @@ async function get_blog(blog_id, ifNoneMatch) {
     let blog = await get(`blog/${blog_id}`)
     let res = { exist: 3, kv: undefined}
     if (!blog) {  //    若系統cache沒有資料
-        console.log(`@系統緩存 blog/${blog_id} 沒有資料`)
+        console.log(`@ 系統緩存 blog/${blog_id} 沒有資料`)
         return res  //  exist: 3 代表無緩存
     }
      //  若系統cache有資料
      res.kv = [...new Map(blog).entries()][0]    //  [K, V]
-     console.log(`@系統緩存 blog/${blog_id} 有資料`)
+     console.log(`@ 系統緩存 blog/${blog_id} 有資料`)
      if(!ifNoneMatch){
-        console.log(`@此次 blog/${blog_id} 緩存請求未攜帶 if-none-match → 直接使用系統緩存`)
+        console.log(`@ 此次 blog/${blog_id} 緩存請求未攜帶 if-none-match → 直接使用系統緩存`)
         res.exist = 2   //  代表請求未攜帶 if-none-match
     }else if(ifNoneMatch !== res.kv[0]){
-        console.log(`@此次 blog/${blog_id} 緩存請求所攜帶的if-none-match 已過期 → 所以直接使用系統緩存`)
-        console.log('@if-none-match => ', ifNoneMatch)
-        console.log('@etag => ', res.kv[0])
+        console.log(`@ 此次 blog/${blog_id} 緩存請求所攜帶的if-none-match 已過期 → 所以直接使用系統緩存`)
+        console.log('@ if-none-match => ', ifNoneMatch)
+        console.log('@ etag => ', res.kv[0])
         res.exist = 1   //  代表請求 if-none-match 已過期
     }else{
-        console.log(`@此次 blog/${blog_id} 緩存請求所攜帶的if-none-match 是最新的`)
+        console.log(`@ 此次 blog/${blog_id} 緩存請求所攜帶的if-none-match 是最新的`)
         res.exist = 0  //  代表請求 if-none-match 仍是最新的
     }
     return res
-    // //  取緩存KV
-    // let kv = [...new Map(blog).entries()][0]
-    // let exist = kv[0] === etag ? true : false
-    // if (!exist) { // 代表etag失效or前端根本沒緩存
-    //     return kv // 給予現存KV
-    // }
-    // return [true] // 告知etag有效 
 }
 
 async function set_user(user_id, hash = undefined, val = undefined) {

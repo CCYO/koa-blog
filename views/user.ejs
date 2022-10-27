@@ -282,7 +282,7 @@
             let api_follow = '/api/user/follow'
             let api_cancelFollow = '/api/user/cancelFollow'
 
-            await init()
+            await init().catch( e => console.log(`user.ejs 初始化時發生錯誤 => ${e}`))
 
             async function init() {
                 // await window.initData()

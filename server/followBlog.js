@@ -32,7 +32,6 @@ async function deleteFollower({follower_id, blog_id}) {
 
 async function createFollowers({blog_id, listOfFollowerId}){
     let data = listOfFollowerId.map( follower_id => ({ blog_id, follower_id}))
-    console.log('@data => ', data)
     let res = await FollowBlog.bulkCreate(data)
     if(listOfFollowerId.length !== res.length){
         return false

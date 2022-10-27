@@ -115,6 +115,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
         }
         //  提供緩存處理
         cache.news = listOfFollowerId
+        cache.user = [ author_id ]
         if (show === 1) {
             /* 初次公開，將文章與粉絲作關聯 */
             data.show = true
@@ -175,7 +176,6 @@ async function modifyBlog(blog_id, blog_data, author_id) {
  */
 async function getBlog(blog_id, needCommit = false) {
     let blog = await readBlog({ blog_id }, needCommit)
-    console.log('@ blog => ', blog)
     if (blog) {
         return new SuccModel({blog})
     } else {
