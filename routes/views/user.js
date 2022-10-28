@@ -15,6 +15,7 @@ const {
 } = require('../../controller/user')
 
 const { cacheUser, cacheSelf } = require('../../middleware/cache')
+const { confirmFollow } = require('../../middleware/confirmFollow')
 
 //  註冊頁
 router.get('/register', async (ctx, next) => {
@@ -82,7 +83,7 @@ router.get('/self', view_check_login, cacheSelf, async (ctx, next) => {
 })
 
 //  他人頁
-router.get('/other/:id', view_check_isMe, cacheUser, async (ctx, next) => {
+router.get('/other/:id', view_check_isMe, confirmFollow, cacheUser, async (ctx, next) => {
     const { id } = ctx.params
     //   = { exist: BOO, kv: [K, V] }
     let { exist, kv } = ctx.cache

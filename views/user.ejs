@@ -150,7 +150,7 @@
                     <div class="blogList bg-light p-2" data-my-blog-key="hidden">
                         <div class="blogList-header">
                             <h2>編輯中的BLOG</h2>
-                            <button type="button" class="btn btn-sm btn-outline-danger  <%= blogList.show.length? 'my-show' : 'my-noshow'%>"
+                            <button type="button" class="btn btn-sm btn-outline-danger  <%= blogList.hidden.length? 'my-show' : 'my-noshow'%>"
                                 data-my-blogs="hidden">全部刪除</button>
                         </div>
                         <% if(blogList.hidden.length){ %>

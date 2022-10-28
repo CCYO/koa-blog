@@ -12,7 +12,7 @@ const { CACHE: { BLOG: { EDITOR } }, } = require('../conf/constant')
 const { readBlog } = require('../server/blog')
 
 async function cachePublic(ctx, next){
-
+    let path = ctx.path
 }
 
 async function cacheBlog(ctx, next) {
@@ -26,7 +26,8 @@ async function cacheBlog(ctx, next) {
         ctx.status = 304
         delete ctx.cache
         return
-    }else if(exist === 3 && blog_id === EDITOR){
+    }
+    if(blog_id === EDITOR){
         ctx.cache = { blog: [undefined, { title: '撰寫新文章' }]}
     }
     await next()
@@ -225,6 +226,6 @@ module.exports = {
     cache_resetUser,
     cacheNews,
     notifiedNews,
-
+    cachePublic,
     cache_reset
 }

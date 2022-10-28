@@ -31,6 +31,7 @@ const viewBlog = require('./routes/views/blog')
 
 const { isDev } = require('./utils/env')
 const { REDIS_CONF } = require('./conf/constant')
+const { cachePublic } = require('./middleware/cache')
 
 const app = new Koa()
 
@@ -62,7 +63,7 @@ app.use(json())
 app.use(logger())
 
 //  靜態檔案
-app.use(static(resolve(__dirname, 'public')))
+app.use(static(resolve(__dirname, 'public'), { maxage: 60 * 60 * 1000 }))
 
 //  加密 session
 app.keys = [REDIS_CONF.SESSION_KEY]
