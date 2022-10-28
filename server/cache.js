@@ -17,6 +17,14 @@ async function tellUser(user_id) {
     await remindNews(followers)
 }
 
+async function set_public(string){
+    
+}
+
+async function get_public(){
+
+}
+
 async function checkNews(id) {
     let cacheNews = await get('cacheNews')
     cacheNews = new Set(cacheNews)
@@ -195,5 +203,6 @@ module.exports = {
     get_blog,
     set_user,
     del_users,
-    get_user
+    get_user,
+    set_public, get_public
 }

@@ -64,7 +64,7 @@ async function readMore({id, excepts, newsList}) {
         }
     }
     /*
-    {
+    res: {
         newsList: {
             unconfirm: [
                 { type, id, timestamp, confirm, fans: ... },
@@ -77,8 +77,15 @@ async function readMore({id, excepts, newsList}) {
         limit
     }*/
     let res = await readNews({ userId: id, excepts })
+    console.log('@ res => ', res)
+    let cache = { news: [] }
+    let { newsList: { unconfirm, confirm} } = res
+    if(unconfirm.length + confirm.length === 0){
+        console.log('@ 純粹作為最後一次readMore確認')
+        cache.news.push(id)
+    }
 
-    return new SuccModel({ ...res })
+    return new SuccModel(res, cache)
 }
 
 async function confirmNews(listOfNewsId) {

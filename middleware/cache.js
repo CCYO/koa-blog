@@ -1,10 +1,19 @@
-const { set_user, del_users, get_user, set_blog, del_blogs, get_blog, checkNews, removeRemindNews, remindNews } = require('../server/cache')
+const {
+    set_public, get_public,
+    set_user, del_users, get_user,
+    set_blog, del_blogs, get_blog,
+    checkNews, removeRemindNews, remindNews
+} = require('../server/cache')
 
 const { hash_obj } = require('../utils/crypto')
 const { SuccModel } = require('../model')
 const { CACHE: { BLOG: { EDITOR } }, } = require('../conf/constant')
 
 const { readBlog } = require('../server/blog')
+
+async function cachePublic(ctx, next){
+
+}
 
 async function cacheBlog(ctx, next) {
     let blog_id = ctx.params.blog_id ? ctx.params.blog_id : EDITOR
@@ -17,6 +26,8 @@ async function cacheBlog(ctx, next) {
         ctx.status = 304
         delete ctx.cache
         return
+    }else if(exist === 3 && blog_id === EDITOR){
+        ctx.cache = { blog: [undefined, { title: '撰寫新文章' }]}
     }
     await next()
 
@@ -136,7 +147,7 @@ async function cacheNews(ctx, next) {
         console.log(`@ 因為 緩存session.news數組不完全`)
         clearNews = true
     }
-    if (ctx.session.news.length && clearNews) {
+    if (clearNews) {
         console.log(`@ 清空 user/${id} 的 session.news`)
         page = 0
         ctx.session.news = []   //  清空緩存
@@ -151,17 +162,11 @@ async function cacheNews(ctx, next) {
     if (ctx.body.errno) {   //  若發生錯誤
         return
     }
-    console.log(`@ user/${id} 的 session.news[${page}] 完成緩存`)
 
-    if (ctx.session.news.length) {  //  若session未清空
-        ctx.session.news[page] = ctx.body
-        return
-    }
-    let { ...data } = ctx.body.data
-    
-    //  存放 session.news[0]
-    let cache = new SuccModel({ ...data })    //  緩存須含me
-    ctx.session.news[0] = cache
+    //  ctx.body = { errno, data, cache }
+    let { errno, data } = ctx.body
+    ctx.session.news[page] = { errno, data }
+    console.log(`@ user/${id} 的 session.news[${page}] 完成緩存`)
 }
 
 async function notifiedNews(ctx, next) {
@@ -190,11 +195,16 @@ async function cache_resetUser(ctx, next) {
 async function cache_reset(ctx, next) {
     await next()
 
+    console.log('@ ctx.body => ', ctx.body)
     let { cache } = ctx.body
-
-    if (!cache) {
-        return
-    }
+    // let { _cache } = ctx._my
+    // if (!cache && !_cache) {
+    //     return
+    // }
+    // if(!cache){
+    //     cache = _cache
+    // }
+    
     let { user = [], blog = [], news = [] } = cache
     if (user.length) {
         console.log(`@ 執行 cache/user 的 reset，user 包含 => ${user}`)

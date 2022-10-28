@@ -1,14 +1,16 @@
 <% comments.forEach(comment => { %>
-    <div class="comment-item">
+<div id='comment_<%= comment.id %>' class="comment-item">
+    <div>
         <%- comment.html %>
-        <a href="/other/<%= comment.user.id %>"><%= comment.user.nickname %> </a>
-        <span><%= comment.time %> </span>
-        <button class="reply">回覆</button>
-        <div class="editor-reply" data-my-pid="<%= comment.id %>">
-        </div>
-        <div class="comment-list">
+    </div>
+    <a href="/other/<%= comment.user.id %>"><%= comment.user.nickname %> </a>
+    <span><%= comment.time %> </span>
+    <button class="reply">回覆</button>
+    <div class="editor-reply" data-my-pid="<%= comment.id %>">
+    </div>
+    <div class="comment-list">
         <% if( comment.reply.length) { %>
-            <%- include('./reply-list', { comments: comment.reply }) %>
+        <%- include('./reply-list', { comments: comment.reply }) %>
         <% } %>
     </div>
 </div>

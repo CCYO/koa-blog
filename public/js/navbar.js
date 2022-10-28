@@ -66,11 +66,10 @@ async function initNews() {
         //  取news
         let newsData = await getNews()
         let { num, newsList, excepts } = newsData
-
-        //  渲染通知數據
-        render_news(newsData)
         //  更新data
         window.data.news = init_News(newsData)
+        //  渲染通知數據
+        render_news(newsData)
         return
     }
 
@@ -135,11 +134,12 @@ async function initNews() {
                 return init += hr
             }, '')
 
-            function template_fans({ fans, timestamp }) {
+            function template_fans({ confirm, id, fans, timestamp }) {
+                let query = confirm ? '' : `?anchorType=1&anchorId=${id}`
                 return `
                     <!-- 新通知 of fans -->
                     <li class="dropdown-item position-relative news-item">
-                        <a href="/other/${fans.id}" class="stretched-link">
+                        <a href="/other/${fans.id}${query}" class="stretched-link">
                             <div>
                                 <span>${fans.nickname}追蹤你囉！</span><br>
                                 <span>${timestamp}</span>
@@ -148,10 +148,11 @@ async function initNews() {
                     </li>`
             }
 
-            function template_blog({ blog, timestamp }) {
+            function template_blog({ confirm, id, blog, timestamp }) {
+                let query = confirm ? '' : `?anchorType=2&anchorId=${id}`
                 return `
                 <li class="dropdown-item  position-relative news-item">
-                    <a href="/blog/${blog.id}" class="stretched-link">
+                    <a href="/blog/${blog.id}${query}" class="stretched-link">
                         <div>
                             <span>${blog.author.nickname} 有新文章唷！</span><br>
                             <span>- ${blog.title}-</span><br>
@@ -162,9 +163,8 @@ async function initNews() {
                 `
             }
 
-            function template_comment({ comment, timestamp }) {
+            function template_comment({ confirm, id, comment, timestamp }) {
                 let { others } = comment
-                console.log(comment)
                 let { id: me } = window.data.me
                 let otherNotIncludeMe = []
                 if (others.length) {
@@ -192,9 +192,10 @@ async function initNews() {
                 console.log('@comment.blog.author.nickname => ', comment.blog.author.nickname)
                 console.log('@otherNotIncludeMe[0] => ', otherNotIncludeMe[0])
                 console.log('@who => ', who)
+                let query = confirm ? '' : `?anchorType=3&anchorId=${id}`
                 return `
                 <li class="dropdown-item  position-relative news-item">
-                    <a href="/blog/${comment.blog.id}#comment_${comment.id}" class="stretched-link">
+                    <a href="/blog/${comment.blog.id}${query}#comment_${comment.id}" class="stretched-link">
                         <div>
                             <span>${nicknames}在${who}的文章「${comment.blog.title}」留言囉！</span><br>
                             <span>${timestamp}</span>
@@ -206,18 +207,8 @@ async function initNews() {
 
         function render_readMore({ num, newsList }) {
             //  DB_news_num - 此次響應unconfirm - 此次響應confirm
-            let count = num.total - newsList.unconfirm.length - newsList.confirm.length - window.data.news.excepts.num
-
-            // if (excepts) {  //  若非初次渲染，則存在已撈取過的news
-            //     //  再減去撈取過的news
-            //     count -= excepts.num
-            // }
-            // let more = !(!count && !newsList.unconfirm.length)
-            //  若DB還有可撈取的news || 此次響應存在unconfirm（因為要手凍按最後一次readMore，讓後端作confirm）
-            // let more = newsList.unconfirm.length + newsList.unconfirm.length !== 0
-            console.log('@ newsList.unconfirm.length => ', newsList.unconfirm.length)
+            let count = num.total - window.data.news.excepts.num
             let more = count !== 0 || newsList.unconfirm.length !== 0
-            console.log('@ more => ', more)
             show($readMore, more)
             show($noNews, !more)
         }
@@ -233,9 +224,8 @@ async function initNews() {
         } else {  //  若非初次渲染
             // { people: [id, ...], blogs: [id, ...], comments: [id, ...], num }
             let r_excepts = init_excepts(newsList)
-            let w_excepts = window.data.news.excepts
+            let {excepts: w_excepts, page: w_page} = window.data.news
             for (key in r_excepts) {
-                console.log('@ => ', r_excepts)
                 if (key === 'num') {
                     r_excepts.num += w_excepts.num
                     break
@@ -243,6 +233,7 @@ async function initNews() {
                 r_excepts[key] = [...r_excepts[key], ...w_excepts[key]]
             }
             res.excepts = r_excepts
+            res.page = w_page
         }
         return res
     }

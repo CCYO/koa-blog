@@ -156,9 +156,10 @@
                         return
                     }
 
+                    window._target_ = $target
                     let pid = $target.parents('[data-my-pid]').first().data('myPid')
                     if (!pid) {
-                        pid = 0
+                        pid = null
                     }
                     let { data: { errno, data, msg } } = await postComment(htmlStr, pid)
 
@@ -206,8 +207,8 @@
 
             function templateComment({ id, html, time, user }) {
                 return `
-                    <div class="comment-item">
-                        ${html}
+                    <div id="comment_${id}" class="comment-item">
+                        <div>${html}</div>
                         <a href="/other/${user.id}">${user.nickname}</a>
                         <span>${time}</span>
                         <button class="reply">回覆</button>
@@ -216,49 +217,13 @@
                     </div>`
             }
 
-            async function postComment(html, pid) {
+            async function postComment(html, p_id = null) {
                 let data = window.data
-                //  撈出同串留言
-                // let listOfPid = window.map.commentPid.get(pid)
-                //  撈出串主
-                let commenterOfPid = pid ? window.map.commentId.get(pid).user.id : undefined
-                let author = data.blog.author.id
-                let me = data.me.id
-                //  是否此串第一篇留言
-                // let isFirstComment = !listOfPid.length
-                //  確認留言者是否文章作者
-                let isAuthor = author === me
-                //  是否留言回覆
-                // let isReply = !pid
-                //  須被通知的名單
-                // let listOfNotified = new Set(listOfPid.map(({ user: { id } }) => id))
-                //  加入串主
-                // if(commenterOfPid){
-                //     listOfNotified.add(commenterOfPid)
-                // }
-                //  移除文章作者
-                // listOfNotified.delete(author)
-                //  移除留言者
-                // listOfNotified.delete(me)
-                //  同串的留言id
-                // let listOfCommentId = listOfPid.map(({ id }) => id)
-                //  文章內所有留言id
-                // let listOfAllCommentId = [...map.commentId.keys()]
+                let blog_id = data.blog.id
+                let user_id = data.me.id
+                let author = data.blog.author.id !== data.me.id ? data.blog.author.id : undefined 
 
-                let payload = {
-                    //  用來新創留言
-                    user_id: me,
-                    html, //留言內容
-                    p_id: pid ? pid : null ,
-                    commenterOfPid,
-                    blog_id: data.blog.id, //文章id
-                    //  用來找出作者與留言者本人的被通知人條目
-                    // listOfNotified: [...listOfNotified],    //被通知人
-                    // listOfCommentId, // 同串的留言id
-                    //  用來找出follow的作者關係條目
-                    // listOfAllCommentId: isAuthor ? undefined : [...map.commentId.keys()],
-                    author: isAuthor ? undefined : author
-                }
+                let payload = { blog_id, user_id, author, html, p_id }
                 return await axios.post(api_comment, payload)
             }
 

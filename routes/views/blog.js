@@ -5,7 +5,8 @@
 const router = require('koa-router')()
 
 const { view_check_login } = require('../../middleware/check_login')
-const { cacheBlog } = require('../../middleware/cache')
+const { cache_reset, cacheBlog } = require('../../middleware/cache')
+const { confirmFollow } = require('../../middleware/confirmFollow')
 
 const {
     getBlog
@@ -13,12 +14,8 @@ const {
 
 //  撰寫新文章
 router.get('/blog/new', view_check_login, cacheBlog, async (ctx, next) => {
-    if (!ctx.blog.length) {
-        ctx.blog[1] = { title: '撰寫新文章'}
-    }
-
     await ctx.render('blog-edit', {
-        blog: ctx.blog[1]
+        blog: ctx.cache.blog[1]
     })
 })
 
@@ -29,11 +26,11 @@ router.get('/blog/edit/:blog_id', view_check_login, cacheBlog, async (ctx, next)
     let { exist, kv } = ctx.cache
     if (exist === 3) {
         const resModel = await getBlog(blog_id, true)
-        ctx.cache.blog = [ undefined, resModel ]
+        ctx.cache.blog = [undefined, resModel]
         console.log(`@blog/${blog_id} 完成 DB撈取`)
-    }else{
-        let [ etag, resModel ] = kv
-        ctx.cache.blog = [ etag, resModel ]
+    } else {
+        let [etag, resModel] = kv
+        ctx.cache.blog = [etag, resModel]
     }
 
     let blog = ctx.cache.blog[1].data
@@ -46,17 +43,17 @@ router.get('/blog/edit/:blog_id', view_check_login, cacheBlog, async (ctx, next)
 })
 
 //  查看文章
-router.get('/blog/:blog_id', cacheBlog, async (ctx, next) => {
+router.get('/blog/:blog_id', cache_reset, confirmFollow, cacheBlog, async (ctx, next) => {
     const { blog_id } = ctx.params
     //   = { exist: BOO, kv: [K, V] }
     let { exist, kv } = ctx.cache
     if (exist === 3) {
         const resModel = await getBlog(blog_id, true)
-        ctx.cache.blog = [ undefined, resModel ]
+        ctx.cache.blog = [undefined, resModel]
         console.log(`@ blog/${blog_id} 完成 DB撈取`)
-    }else{
-        let [ etag, resModel ] = kv
-        ctx.cache.blog = [ etag, resModel ]
+    } else {
+        let [etag, resModel] = kv
+        ctx.cache.blog = [etag, resModel]
     }
 
     let blog = ctx.cache.blog[1].data
