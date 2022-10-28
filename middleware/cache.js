@@ -195,16 +195,12 @@ async function cache_resetUser(ctx, next) {
 async function cache_reset(ctx, next) {
     await next()
 
-    console.log('@ ctx.body => ', ctx.body)
     let { cache } = ctx.body
-    // let { _cache } = ctx._my
-    // if (!cache && !_cache) {
-    //     return
-    // }
-    // if(!cache){
-    //     cache = _cache
-    // }
-    
+
+    if(!cache){
+        return
+    }
+
     let { user = [], blog = [], news = [] } = cache
     if (user.length) {
         console.log(`@ 執行 cache/user 的 reset，user 包含 => ${user}`)

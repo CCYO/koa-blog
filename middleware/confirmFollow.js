@@ -1,4 +1,5 @@
 const { FollowPeople, FollowBlog, FollowComment } = require('../db/mysql/model')
+const { remindNews } = require('../server/cache')
 
 async function confirmFollow(ctx, next){
     await next()
@@ -26,10 +27,10 @@ async function confirmFollow(ctx, next){
         res = await FollowComment.update({confirm: true}, opts)
         console.log(`@ 完成 FollowComment/${id} confirm => `, res)
     }
-    console.log('@ ctx.session.user => ', ctx.session.user)
-    console.log('@ ctx.body => ', ctx.body)
+    if(res[0]){
+        await remindNews([ctx.session.user.id])
+    }
     return
-    // ctx._my = { _cache: { news: [ctx.session.user.id] } }
 }
 
 module.exports = {

@@ -5,7 +5,7 @@
 const router = require('koa-router')()
 
 const { view_check_login } = require('../../middleware/check_login')
-const { cache_reset, cacheBlog } = require('../../middleware/cache')
+const { cacheBlog } = require('../../middleware/cache')
 const { confirmFollow } = require('../../middleware/confirmFollow')
 
 const {
@@ -43,7 +43,7 @@ router.get('/blog/edit/:blog_id', view_check_login, cacheBlog, async (ctx, next)
 })
 
 //  查看文章
-router.get('/blog/:blog_id', cache_reset, confirmFollow, cacheBlog, async (ctx, next) => {
+router.get('/blog/:blog_id', confirmFollow, cacheBlog, async (ctx, next) => {
     const { blog_id } = ctx.params
     //   = { exist: BOO, kv: [K, V] }
     let { exist, kv } = ctx.cache
