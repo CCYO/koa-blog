@@ -68,12 +68,14 @@
     <script defer src="/js/navbar.js"></script>
     <script>
         $(async function () {
+            //  初始化 ejs 附加、用於此頁面的數據
+            await window._my.initData()
+            console.log('@ 已確認頁面所需數據皆已初始化完成')
+
             let $avatar = $('#avatar')
             let $form = $('form').first()
             let $listOfPayload = $('input:not([type=file])')
             let $submit = $('[type=submit]')
-
-            await window._myPromiseIns.initData()
             //  初始化 window.valicate，用來校驗 input 資料
             init_valicatorForInput()
 
@@ -136,7 +138,7 @@
                     return
                 }
 
-                
+
                 let {
                     data: {
                         errno,

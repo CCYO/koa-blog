@@ -32,7 +32,7 @@
     </style>
     <!-- 主導覽： NAV_CSS + NAV第一層template -->
     <%- include('wedgets/navbar/index') %>
-    
+
     <div class="container">
         <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>"></div>
         <div id="showBox">
@@ -88,7 +88,8 @@
 
                 async function init() {
                     //  初始化 ejs 附加、用於此頁面的數據
-                    await window._myPromiseIns.initData()
+                    await window._my.initData()
+                    console.log('@ 已確認頁面所需數據皆已初始化完成')
 
                     let api_blog = '/api/blog/'
                     let $title = $('#title')

@@ -100,7 +100,8 @@
             }
 
             async function init() {
-                await window._myPromiseIns.initData()
+                //  初始化 ejs 附加、用於此頁面的數據
+                await window._my.initData()
                 console.log('@ 已確認頁面所需數據皆已初始化完成')
                 if (!window.data.blog.show) {
                     return

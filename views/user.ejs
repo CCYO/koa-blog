@@ -285,8 +285,6 @@
             await init().catch(e => console.log(`user.ejs 初始化時發生錯誤 => ${e}`))
 
             async function init() {
-                // await window.initData()
-                // await window._myPromiseIns.initData()
                 await window._my.initData()
                 console.log('@ 已確認頁面所需數據皆已初始化完成')
                 let { currentUser, me } = window.data
