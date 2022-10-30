@@ -29,6 +29,8 @@ const {
     readFollowers
 } = require('../server/followBlog')
 
+const { FollowBlog } = require('../db/mysql/model')
+
 const { SuccModel, ErrModel } = require('../model')
 const { BLOG, BLOGIMG } = require('../model/errRes')
 
@@ -85,88 +87,66 @@ async function removeBlog(blogList, author) {
  * @returns {object} SuccModel || ErrModel
  */
 async function modifyBlog(blog_id, blog_data, author_id) {
-    let { title, cancel, html, show } = blog_data
+    let { title, cancelImgs, html, show } = blog_data
+    //  粉絲群的id
+    let listOfFollowerId = []
+    //  用於更新Blog
+    let data = {}
     //  用於緩存處理
     let cache = { blog: [blog_id] }
-    //  用於前端響應
-    let data = {}
 
     //  文章內沒有的圖片，刪除關聯
-    if (cancel) {
-        let res = await deleteBlogImg({ listOfId: cancel })
+    if (cancelImgs) {
+        let res = await deleteBlogImg({ listOfId: cancelImgs })
         if (!res) {
             return new ErrModel(BLOGIMG.REMOVE_ERR)
         }
     }
 
-    if (title) {
-        data.title = my_xxs(title)
-    }
-
-    if (html) {
-        data.html = my_xxs(html)
-    }
-
-    //  依show處理如何更新 BlogFollow
-    if (show > 0) {
+    let needUpdateShow = blog_data.hasOwnProperty('show')
+    //  若預更新的數據有 show 或 title
+    if (needUpdateShow || title) {
         //  取得粉絲群
         let followerList = await readFans(author_id)
         //  取得粉絲群的id
-        let listOfFollowerId = []
-        if (followerList.length) {
-            listOfFollowerId = followerList.map(({ id }) => id)
-        }
+        followerList.reduce((initVal, { id }) => {
+            initVal.push(id)
+            return initVal
+        }, listOfFollowerId)
+
         //  提供緩存處理
         cache.news = listOfFollowerId
         cache.user = [author_id]
-        if (show === 1) {
-            /* 初次公開，將文章與粉絲作關聯 */
-            data.show = true
-
-            if (listOfFollowerId.length) {
-
-                //  將粉絲與文章作關聯
-                let res = await createFollowers({ blog_id, listOfFollowerId })
-                if (!res) {
-                    return new ErrModel(BLOG.UPDATE.ERR_CREATE_BLOGFOLLOW)
-                }
-            }
-            //  建立文章公開數據
-            data.showAt = new Date()
-
-        } else if (show === 2) {
-            /*  公開過又隱藏 */
-            data.show = false
-
-            //  FollowBlog 軟刪除 confirm: false 的 粉絲
-            await hiddenBlog({ blog_id, confirm: false })
-        } else if (show === 3) {
-            //  不是第一次公開
-            data.show = true
-
-            //  restory 此 blog 的 FollowBlog.follower，且將這些follower取出
-            await restoreBlog({ blog_id })
-
-            //  找出目前 BlogFollower
-            let listOfBlogFollowerId = await readFollowers({ blog_id })
-
-            //  篩去兩者重複的id
-            let listOfNewFollowerId = listOfFollowerId.reduce((initVal, id) => {
-                if (!listOfBlogFollowerId.includes(id)) {
-                    initVal.push(id)
-                }
-                return initVal
-            }, [])
-
-            if (listOfNewFollowerId.length) {
-                //  新增FollowBlog.follower
-                await createFollowers({ blog_id, listOfFollowerId: listOfNewFollowerId })
-            }
-        }
-        await tellBlogFollower(blog_id)
     }
 
-    //  更新文章數據
+    if (title) {
+        //  存放 blog 要更新的數據
+        data.title = my_xxs(title)
+    }
+
+    //  依show處理更新 BlogFollow
+    if (needUpdateShow) { 
+        //  存放 blog 要更新的數據
+        data.show = show
+        if (show) { // 公開blog
+            //  要更新的資料
+            let updateDate = listOfFollowerId.map(follower_id => ({ blog_id, follower_id, deletedAt: null }))
+            //  更新資料之 blog_id + follower_id 主鍵對若不存在，則新建，反之更新
+            updateDate.length && await FollowBlog.bulkBuild(updateDate, { updateOnDuplicate: ['deletedAt'] })
+            //  存放 blog 要更新的數據
+            data.showAt = new Date()
+        } else if (!show) { // 隱藏blog
+            //  軟刪除既有的條目
+            await hiddenBlog({ blog_id, confirm: false })
+        }
+    }
+
+    if (html) {
+        //  存放 blog 要更新的數據
+        data.html = my_xxs(html)
+    }
+
+    //  更新文章
     await updateBlog(blog_id, data)
     let blog = await readBlog({ blog_id }, true)
     return new SuccModel(blog, cache)

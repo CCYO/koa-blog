@@ -286,7 +286,8 @@
 
             async function init() {
                 // await window.initData()
-                await window._myPromiseIns.initData()
+                // await window._myPromiseIns.initData()
+                await window._my.initData()
                 console.log('@ 已確認頁面所需數據皆已初始化完成')
                 let { currentUser, me } = window.data
                 let isSelf = currentUser.id === me.id

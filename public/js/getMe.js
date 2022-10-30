@@ -1,15 +1,13 @@
-window._my_promise_all = window._my_promise_all ? window._my_promise_all : []
-window._myPromiseIns = window._myPromiseIns ? window._myPromiseIns : {}
-window._myPromiseIns.initData = window._myPromiseIns.initData ? window._myPromiseIns.initData : Promise.resolve()
-
-window._myPromiseIns.getMe = initData().then(({ errno, data, msg }) => {
+window._my.promiseIns.getMe = initData().then(({ errno, data, msg }) => {
+    window.data.me = {}
     if (!errno) {
         window.data.me = data
         console.log('@ window.data.me finish ')
         console.log('@ getMe.js --- ok')
         return
     }
-    console.log(msg)
+    console.log('@ 未登入狀態 ')
+    
     let pathname = location.pathname
     if ( pathname === '/self' || pathname === '/setting') {
         location.pathname = '/login'
@@ -17,7 +15,7 @@ window._myPromiseIns.getMe = initData().then(({ errno, data, msg }) => {
 })
 .catch(e => console.log(e))
 
-window._my_promise_all.push(window._myPromiseIns.getMe)
+window._my.promiseAll.push(window._my.promiseIns.getMe)
 
 async function initData() {
     let api = '/api/user'
