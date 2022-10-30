@@ -14,7 +14,7 @@ window._my.initData = async function () {
         let $el = $(el)
         let prop = $el.data('my-data')
         try {
-            window.data[prop] = JSON.parse($el.html())
+            window.data[prop] = JSON.parse($el.html())  // 不用 text() 是因為 /edit/blog/:id 具有 html格式的資料
         } catch (e) {
             window.data[prop] = undefined
         }

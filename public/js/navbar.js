@@ -1,4 +1,3 @@
-// window._myPromiseIns.renderNav = renderNav()
 window._my.promiseIns.renderNav = initData()
     .then(_ => console.log('@ navbar.js --- ok'))
     .catch(e => console.log(e))
