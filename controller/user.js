@@ -149,7 +149,7 @@ async function cancelFollowIdol({ fans_id, idol_id }) {
 const modifyUserInfo = async (newData, id) => {
     let user = await updateUser({ newData, id })
     let cache = { user: [ id ]}
-    if (newData.nickname || newData.email) {
+    if (newData.nickname || newData.email || newData.avatar) {
         let fans = await followPeople.readFans({ idol_id: id })
         let idols = await followPeople.readIdols({ fans_id: id })
         let people = [...fans, ...idols]

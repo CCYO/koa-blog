@@ -34,6 +34,7 @@
                     </label>
                 </div>
                 <div class="mb-3">
+                    <img id="avatar-img" src="" alt="">
                     <label class="form-label w-100">頭像
                         <input type="file" id="avatar" class="form-control" name="avatar" autocomplete="off">
                         <div class="d-block">&nbsp;</div>
@@ -57,8 +58,7 @@
         </script>
     <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
     <script defer src="/js/initData.js"></script>
-    <!-- 取得登入資料 -->
-    <script defer src="/js/getMe.js"></script>
+
     <!--
         logout功能 +
         完整渲染 NAV +
@@ -68,23 +68,180 @@
     <script defer src="/js/navbar.js"></script>
     <script>
         $(async function () {
-            //  初始化 ejs 附加、用於此頁面的數據
-            await window._my.initData()
-            console.log('@ 已確認頁面所需數據皆已初始化完成')
-
-            let $avatar = $('#avatar')
             let $form = $('form').first()
-            let $listOfPayload = $('input:not([type=file])')
             let $submit = $('[type=submit]')
-            //  初始化 window.valicate，用來校驗 input 資料
-            init_valicatorForInput()
 
-            //  重製 window.payload，用來存放 upload 時的 avatar 部分數據
-            resetPayload()
+            try {
+                await init()
+                console.log('@ 關於頁面內的初始化皆已完成')
+            } catch (err) {
+                console.log('@ init 發生錯誤 => ', err)
+            }
+            async function init() {
+                //  初始化 ejs 附加、用於此頁面的數據
+                await window._my.initData()
+                console.log('@ 已確認頁面所需數據皆已初始化完成')
 
-            $listOfPayload.on('input', handle_valicate)
-            $avatar.on('click', handle_resetAvatar)
-            $avatar.on('change', handle_valicator_avatar)
+                //  用來存放 upload 時的 avatar 數據
+                window.payload = {
+                    hash: undefined,
+                    ext: undefined,
+                    api: '/api/user'
+                }
+
+                let $avatar = $('#avatar')
+                let $avatarImg = $('#avatar-img')
+                //  初始化 input placeholder
+                reset_placeholder()
+                //  初始化 window.valicate，用來校驗 input 資料
+                init_valicatorForInput()
+
+                //  除了 avatar =以外的input，綁定 handle: 驗證資料是否有效
+                $('input:not([type=file])').on('input', handle_valicate)
+                $avatar.on('click', handle_resetAvatar)
+                $avatar.on('change', handle_valicator_avatar)
+
+                //  設置 avatar 相關資訊
+                async function handle_valicator_avatar() {
+                    let { avatar_hash } = window.data.me
+
+                    //  限制上船一張圖
+                    let files = $avatar.prop('files')
+                    if (files.length > 1) {
+                        alert('你只有一顆頭，不要太貪心好嗎')
+                        return
+                    }
+
+                    let file = $avatar.prop('files')[0]
+                    //  取得副檔名
+                    let ext = _getExt(file)
+                    if (ext !== 'jpg' && ext !== 'png') {
+                        resetAvatar()
+                        alert('只能傳jpg跟png啦!')
+                        return
+                    }
+
+                    //  確認avatar 是否同既有 avatar 
+                    let hash = await _getMD5Hash(file)
+                    if (hash === avatar_hash) {
+                        resetAvatar()
+                        alert('你的頭現在就是這樣啦! ok?')
+                        return
+                    }
+
+                    //  通過校驗
+                    UI_input($avatar, true)
+                    //  同步 window.payload
+                    window.payload = { hash, ext, api: `${window.payload.api}?hash=${hash}&ext=${ext}` }
+                    
+                    //  計算 avatar hash
+                    function _getMD5Hash(file) {
+                        return new Promise((resolve, reject) => {
+                            let fr = new FileReader()
+                            fr.addEventListener('load', (evt) => {
+                                if (fr.readyState === FileReader.DONE) {
+                                    let hash = SparkMD5.ArrayBuffer.hash(fr.result)
+                                    console.log('計算出的hash => ', hash)
+                                    resolve(hash)
+                                }
+                            })
+                            fr.addEventListener('error', (error) => {
+                                console.log('fr load 發生錯誤 => ', error)
+                                reject(error)
+                            })
+                            fr.readAsArrayBuffer(file)
+                        })
+                    }
+                    function _getExt(file) {
+                        //  副檔名regux
+                        let reg_ext = /.+\.(.*)$/
+                        //  校驗檔案格式(jpg png)
+                        return reg_ext.exec(file.name)[1].toLowerCase()
+                    }
+                }
+                //  重新選擇要上傳的頭像
+                function handle_resetAvatar(e) {
+                    if (!$avatar.prop('files')[0]) {
+                        return
+                    }
+                    if (confirm('要重新傳一顆頭嗎?')) {
+                        $avatarImg.attr('src', window.data.me.avartar)
+                        //  重設頭像表格
+                        resetAvatar()
+                    } else {
+                        e.preventDefault()
+                    }
+                }
+                //  重製 window.payload 與 input[type=file]
+                function resetAvatar() {
+                    $avatar.val('')
+                    window.payload = {
+                        hash: undefined,
+                        ext: undefined,
+                        api: '/api/user'
+                    }
+                    UI_input($avatar)
+                }
+                //  驗證 input 資料(除了avatar)
+                async function handle_valicate(e) {
+                    let me = window.data.me
+                    let $el = $(e.target)
+                    let key = $el.attr('name')
+                    let val = $el.val().trim()
+
+                    //  若無值
+                    if (!val) {
+                        //  移除提醒
+                        UI_input($el)
+                        return
+                    }
+
+                    //  如果是age，將類型轉為number
+                    if (key === 'age') {
+                        let n
+                        try {
+                            n = Number.parseInt(val)    //  轉化為數值
+                        } catch (err) { //  若為無效值，reset + 提醒
+                            $el.val()
+                            UI_input($el, false, '請輸入整數，賣鬧')
+                            return
+                        }
+                        //  設為有效值，並重新聚焦(會用blur在focus，是因為我只用focus沒反應)
+                        $el.val(n).blur().focus()
+                    }
+
+                    //  如果是既有值，顯示錯誤提醒
+                    if (val === me[key]) {
+                        UI_input($el, false, '現在就是了，賣鬧')
+                        return
+                    }
+
+                    //  如果是有效值，使用ajv校驗
+                    let msg = window.valicate({ [key]: val })
+                    if (msg) {  //  若校驗有問題，顯示錯誤提醒
+                        UI_input($el, false, msg)
+                        return
+                    }
+
+                    //  若email已被註冊，顯示錯誤提醒
+                    if (key === 'email') {
+                        let { data: { errno, msg } } = await axios.post('/api/user/isEmailExist', { email: val })
+                        if (errno) {
+                            UI_input($el, false, msg)
+                            return
+                        }
+                    }
+
+                    //通過校驗，顯示ok提醒
+                    UI_input($el, true)
+                }
+
+
+
+            }
+
+
+
             $form.on('submit', handle_update)
             //  handle - 送出更新數據
             async function handle_update(e) {
@@ -109,6 +266,8 @@
                             valid = false
                         }
                         el.val(n)
+                        value = n
+                        console.log(typeof value)
                     }
 
                     if (type !== 'submit' && name !== 'avatar') {
@@ -138,7 +297,6 @@
                     return
                 }
 
-
                 let {
                     data: {
                         errno,
@@ -151,141 +309,34 @@
                     console.log('GET ERROR')
                     alert(msg)
                 } else {
+
+                    var keys = [...formData.keys()]
+                    console.log('@keys => ', keys)
+                    for (let k of key) {
+                        UI_input($(`input[name=${k}]`), false, undefined, '更新完成')
+                    }
                     window.data.me = data
+                    reset_placeholder()
+                    resetAvatar()
                     alert('資料更新完成!')
                 }
             }
 
-            //  handle - 設置 avatar 相關資訊
-            async function handle_valicator_avatar() {
-                let { avatar_hash } = window.data.me
-                let file = $avatar.prop('files')[0]
-                let reg_ext = /.+\.(.*)$/
 
-                //  校驗檔案格式(jpg png)
-                let ext = reg_ext.exec(file.name)[1]
-                ext = ext.toLowerCase().trim()
-                if (ext !== 'jpg' && ext !== 'png') {
-                    resetPayload()
-                    alert('只能傳jpg跟png啦!')
-                    return
-                }
 
-                //  確認更新的 avatar 是否與原 avatar 相同
-                let hash = await _getMD5Hash(file)
-                if (hash === avatar_hash) {
-                    resetPayload()
-                    alert('你的頭現在就是這樣啦! ok?')
-                    return
-                }
 
-                //  通過校驗
-                UI_input($avatar, true)
-                window.payload = { hash, ext, api: `${window.payload.api}?hash=${hash}&ext=${ext}` }
-                return
-            }
 
-            //  計算 avatar hash
-            function _getMD5Hash(file) {
-                return new Promise((resolve, reject) => {
-                    let fr = new FileReader()
-                    fr.addEventListener('load', (evt) => {
-                        if (fr.readyState === FileReader.DONE) {
-                            let hash = SparkMD5.ArrayBuffer.hash(fr.result)
-                            console.log('計算出的hash => ', hash)
-                            resolve(hash)
-                        }
-                    })
-                    fr.addEventListener('error', (error) => {
-                        console.log('fr load 發生錯誤 => ', error)
-                        reject(error)
-                    })
-                    fr.readAsArrayBuffer(file)
-                })
-            }
 
-            //  handle - 是否重新選擇要上傳的頭像
-            function handle_resetAvatar(e) {
-                if (!$avatar.prop('files')[0]) {
-                    return
-                }
-                if (confirm('要重新傳一顆頭嗎?')) {
-                    resetPayload()
-                } else {
-                    e.preventDefault()
-                }
-                return
-            }
 
-            //  handle - 驗證 input 資料(除了avatar)
-            async function handle_valicate(e) {
-                let me = window.data.me
-                let $el = $(e.target)
-                let key = $el.attr('name')
-                let val = $el.val().trim()
 
-                if (!val) {   //  如果沒有值，那就沒事
-                    //  移除提醒
-                    UI_input($el)
-                    return
-                }
-
-                if (key === 'age') {    //  如果是age，將類型轉為number
-                    let n
-                    try {
-                        n = Number.parseInt(val)
-                    } catch (err) {
-                        console.log('GG')
-                        $el.val()
-                        UI_input($el, false, '請輸入整數，賣鬧')
-                        return
-                    }
-                    $el.val(n).blur().focus()
-                }
-
-                if (val === me[key]) {  //  如果是既有值，發生錯誤
-                    //  顯示錯誤提醒
-                    UI_input($el, false, '現在就是了，賣鬧')
-                    return
-                }
-
-                //  如果是有效值，使用ajv校驗
-                if (msg = window.valicate({ [key]: val })) {  //  若校驗有問題
-                    //  顯示錯誤提醒
-                    UI_input($el, false, msg)
-                    return
-                }
-                console.log('前端驗證ok')
-                if (key === 'email') {
-                    let { data: { errno, msg } } = await axios.post('/api/user/isEmailExist', { email: val })
-                    if (errno) {
-                        UI_input($el, false, msg)
-                        return
-                    }
-                }
-
-                //通過校驗，顯示ok提醒
-                UI_input($el, true)
-            }
-
-            //  重製 window.payload 與 input[type=file]
-            function resetPayload() {
-                $avatar.val('')
-                window.payload = {
-                    hash: undefined,
-                    ext: undefined,
-                    api: '/api/user'
-                }
-                UI_input($avatar)
-            }
 
             //  用來改變input的UI
-            function UI_input($inp, status, msg) {
+            function UI_input($inp, status, msg, updateOK) {
                 // $inp.next().toggleClass('my-show', true).text('loading...')
                 switch (status) {
                     case true:  //  valid
                         $inp.removeClass('is-invalid').addClass('is-valid')
-                        $inp.next().removeClass('invalid-feedback myshow').addClass('valid-feedback').text('ok')
+                        $inp.next().removeClass('invalid-feedback myshow').addClass('valid-feedback').text(updateOK ? updateOK : 'ok')
                         break
                     case false: //  invalid
                         $inp.removeClass('is-valid').addClass('is-invalid')
@@ -380,6 +431,18 @@
                 }
             }
 
+            function reset_placeholder() {
+                $('form')[0].reset()
+                for (let prop in window.data.me) {
+                    if (!window.data.me) {
+                        continue
+                    }
+                    if (prop === 'avatar') {
+                        $('#avatar-img').attr('src', window.data.me.avatar)
+                    }
+                    $(`input[name=${prop}]`).attr('placeholder', window.data.me[prop])
+                }
+            }
         })
     </script>
 </body>

@@ -3,14 +3,13 @@ const { SuccModel } = require('../model')
 async function login(ctx, next) {
     await next()
     let { errno, data } = ctx.body
-    if(errno){
-        return 
+    if (errno) {
+        return
     }
 
-    if (!ctx.session.user) {
-        ctx.session.user = data
-    }
-    
+    ctx.session.user = data
+    console.log(`@ 設定 user/${data.id} session`)
+
     if (!ctx.session.news) {
         ctx.session.news = []
     }

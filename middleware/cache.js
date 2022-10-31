@@ -11,7 +11,7 @@ const { CACHE: { BLOG: { EDITOR } }, } = require('../conf/constant')
 
 const { readBlog } = require('../server/blog')
 
-async function cachePublic(ctx, next){
+async function cachePublic(ctx, next) {
     let path = ctx.path
 }
 
@@ -27,8 +27,8 @@ async function cacheBlog(ctx, next) {
         delete ctx.cache
         return
     }
-    if(blog_id === EDITOR){
-        ctx.cache = { blog: [undefined, { title: '撰寫新文章' }]}
+    if (blog_id === EDITOR) {
+        ctx.cache = { blog: [undefined, { title: '撰寫新文章' }] }
     }
     await next()
 
@@ -130,7 +130,7 @@ async function cacheNews(ctx, next) {
         return
     }
 
-    if(!ctx.session.news[page]){
+    if (!ctx.session.news[page]) {
         console.log(`@ 因為 user/${id} 的 session.news[${page}] 沒有緩存`)
     }
 
@@ -198,7 +198,7 @@ async function cache_reset(ctx, next) {
 
     let { cache } = ctx.body
 
-    if(!cache){
+    if (!cache) {
         return
     }
 
