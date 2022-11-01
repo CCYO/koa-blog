@@ -2,9 +2,8 @@
 
 <body>
     <style>
-        .backdrop::after {
+        #backdrop {
             content: '';
-            display: block;
             position: fixed;
             z-index: 9999;
             height: 100%;
@@ -15,12 +14,12 @@
             right: 0;
             background: rgba(200, 200, 200, 0.5);
             pointer-events: none;
+            border: 5px solid;
         }
-       
     </style>
     <!-- 主導覽： NAV_CSS + NAV第一層template -->
     <%- include('wedgets/navbar/index') %>
-    
+
     <div class="container">
         <h3>修改個人資訊</h3>
         <form class="row">
@@ -63,7 +62,6 @@
         </form>
     </div>
     <div id='backdrop'>
-        <input type="text" id="aa">
     </div>
     <!-- 當前使用者頁面的使用者資料 -->
     <div data-my-data="currentUser">
@@ -90,23 +88,21 @@
     <script>
         $(async function () {
 
+            let $backdrop = $('#backdrop')
+
             try {
-                $('*').attr('tabIndex', '-1')
-                $('body').addClass('backdrop').css('pointer-events', 'none')
                 await init()
                 console.log('@ 關於頁面內的初始化皆已完成')
-                await new Promise((r) => {
-                    setTimeout(() => {
-                        r()
-                    }, 2000)
-                })
-                $('body').removeClass('backdrop').css('pointer-events', 'auto')
-                $('*').removeAttr('tabindex')
+                $('*').removeAttr('tabIndex')
+                $('body').css('pointer-events', 'auto')
+                $('#backdrop').addClass('my-noshow')
+
             } catch (err) {
                 console.log('@ init 發生錯誤 => ', err)
             }
 
             async function init() {
+                UI_loading()
                 //  初始化 ejs 附加、用於此頁面的數據
                 await window._my.initData()
                 console.log('@ 已確認頁面所需數據皆已初始化完成')
@@ -129,12 +125,13 @@
                 $avatar.on('change', handle_valicator_avatar)
                 $('form').first().on('submit', handle_update)
 
+                UI_loadend()
                 //  校驗input當前值
                 async function valicateInputValue(el, event) {
                     let name = $(el).attr('name')
 
                     //  submit Inp 不須校驗
-                    if(name === 'submit'){
+                    if (name === 'submit') {
                         return null
                     }
 
@@ -152,7 +149,7 @@
                         UI_input($el)   //  UI重置
                         return null
                     }
-                    
+
                     //  將age轉為有效的整數
                     if (name === 'age') {
                         let num
@@ -214,6 +211,7 @@
                         return
                     }
 
+                    UI_loading()
                     let {
                         data: {
                             errno,
@@ -221,7 +219,7 @@
                             msg
                         }
                     } = await axios.patch(window.payload.api, formData)
-
+                    UI_loadend()
                     if (errno) {
                         console.log('GET ERROR')
                         alert(msg)
@@ -400,8 +398,10 @@
                 }
                 //  驗證email是否已被註冊
                 async function isEmailExist(email) {
+                    UI_loading()
                     let api = '/api/user/isEmailExist'
                     let { data: { errno, msg } } = await axios.post(api, { email })
+                    UI_loadend()
                     return !errno   // true，代表未註冊，反之
                 }
                 //  input有效值驗證器(除了avatar以外的資料)
@@ -481,6 +481,18 @@
                         UI_input($el, false, msg)
                         return false
                     }
+                }
+                //  頁面讀取中，禁止任何點擊、tab獲取焦點
+                function UI_loading() {
+                    $backdrop.removeClass('my-noshow')
+                    $('*').attr('tabIndex', '-1')
+                    $('body').css('pointer-events', 'none')
+                }
+                //  頁面讀取完畢，解禁點擊、tab獲取焦點
+                function UI_loadend() {
+                    $backdrop.addClass('my-noshow')
+                    $('*').removeAttr('tabIndex')
+                    $('body').css('pointer-events', 'auto')
                 }
             }
         })
