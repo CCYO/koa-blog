@@ -1,8 +1,25 @@
 <%- include('wedgets/common/header') %>
 
 <body>
+    <style>
+        #backdrop {
+            content: '';
+            position: fixed;
+            z-index: 9999;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(200, 200, 200, 0.5);
+            pointer-events: none;
+            border: 5px solid;
+        }
+    </style>
     <!-- 主導覽： NAV_CSS + NAV第一層template -->
     <%- include('wedgets/navbar/index') %>
+
     <div class="container">
         <h3>修改個人資訊</h3>
         <form class="row">
@@ -44,6 +61,8 @@
             </div>
         </form>
     </div>
+    <div id='backdrop'>
+    </div>
     <!-- 當前使用者頁面的使用者資料 -->
     <div data-my-data="currentUser">
         <%- JSON.stringify(currentUser) %>
@@ -69,55 +88,66 @@
     <script>
         $(async function () {
 
+            let $backdrop = $('#backdrop')
 
             try {
                 await init()
                 console.log('@ 關於頁面內的初始化皆已完成')
+                $('*').removeAttr('tabIndex')
+                $('body').css('pointer-events', 'auto')
+                $('#backdrop').addClass('my-noshow')
+
             } catch (err) {
                 console.log('@ init 發生錯誤 => ', err)
             }
 
             async function init() {
+                UI_loading()
                 //  初始化 ejs 附加、用於此頁面的數據
                 await window._my.initData()
                 console.log('@ 已確認頁面所需數據皆已初始化完成')
-
                 //  用來存放 upload 時的 avatar 數據
                 window.payload = {
                     hash: undefined,
                     ext: undefined,
                     api: '/api/user'
                 }
-
                 let $avatar = $('#avatar')
                 let $avatarImg = $('#avatar-img')
                 let $submit = $('[type=submit]')
-
                 //  初始化 input placeholder
                 reset_placeholder()
                 //  初始化 input 資料校驗器
                 let valicate = init_valicatorForInput()
-
                 //  除了 avatar =以外的input，綁定 handle: 驗證資料是否有效
                 $('input:not([type=file])').on('input', handle_valicate)
                 $avatar.on('click', handle_resetAvatar)
                 $avatar.on('change', handle_valicator_avatar)
                 $('form').first().on('submit', handle_update)
 
+                UI_loadend()
                 //  校驗input當前值
                 async function valicateInputValue(el, event) {
-                    let $el = $(el)
                     let name = $(el).attr('name')
-                    let value = $el.val().trim()
+
+                    //  submit Inp 不須校驗
+                    if (name === 'submit') {
+                        return null
+                    }
+
+                    let $el = $(el)
+                    let value = $el.val()
+                    let trim = value.trim()
                     let submiting = event.type === 'submit'
                     let inputing = event.type === 'input'
+                    let valueIsSpace = value.length && !trim.length //  若值為空格
+                    let valueIsEmpty = !value.length // 若沒有值
                     //  若無值，則略過
-                    if (!value) {
-                        if (inputing) { //若是inputEvent
-                            return valicate({ [name]: value })   //  直接校驗
-                        } else if (submiting) {
-                            return null
-                        }
+                    if (valueIsSpace) { //  若值為空格
+                        return valicate({ [name]: value })   //  直接校驗
+                    } else if (valueIsEmpty) { //  若無值
+                        UI_input($el)   //  UI重置
+                        return null
                     }
 
                     //  將age轉為有效的整數
@@ -132,34 +162,25 @@
                         value = num
                     }
 
-                    //  將submit與avatar以外的input都校驗一遍
-                    if (name !== 'submit' && name !== 'avatar' && !valicate({ [name]: value })) {
+                    //  除avatar以外的input，若校驗失敗，回傳false
+                    if (name !== 'avatar' && !valicate({ [name]: value })) {
                         return false
                     }
-
-                    //  如果是既有值，顯示錯誤提醒
-                    let { me } = window.data
-
-                    let sameAvatar = submiting && name === 'avatar' && window.payload.hash === me.avatar_hash
-                    if (sameAvatar) {
-                        alert('你的頭現在就是醬了啦')
-                        return false
-                    }
-                    let sameOther = value === me[name]
+                    //  若是既存值，回傳false
+                    let sameOther = value === window.data[name]
                     if (sameOther) {
                         UI_input($el, false, '現在就是了，賣鬧')
                         return false
                     }
+                    //  若email已註冊，回傳false
                     let EmailIsRegistered = name === 'email' && !(await isEmailExist(value))
                     if (EmailIsRegistered) {
                         UI_input($el, false, '此信箱已被註冊')
                         return false
                     }
-
-                    //  完成以上驗證，存入formdata
+                    //  完成以上驗證，代表為有效值，回傳 kv
                     let data = name === 'avatar' ? el.files[0] : value
                     return { name, data }
-
                 }
                 //  送出要更新的數據
                 async function handle_update(e) {
@@ -190,6 +211,7 @@
                         return
                     }
 
+                    UI_loading()
                     let {
                         data: {
                             errno,
@@ -197,7 +219,7 @@
                             msg
                         }
                     } = await axios.patch(window.payload.api, formData)
-
+                    UI_loadend()
                     if (errno) {
                         console.log('GET ERROR')
                         alert(msg)
@@ -243,7 +265,7 @@
                     }
 
                     let maxSize = 1024 * 1024 * 1 // 1MB = 1024 KB = 1024 * 1024 Byte
-                    if(file.size > maxSize){   // File.size的單位是 Byte
+                    if (file.size > maxSize) {   // File.size的單位是 Byte
                         resetAvatar('你的頭太大了，只能1MB以下!')
                         return
                     }
@@ -330,9 +352,7 @@
                     await valicateInputValue(el, e)
                 }
 
-
                 //  utils -----------
-
                 //  UI input有效值提醒 
                 function UI_input($inp, status, msg) {
                     switch (status) {
@@ -351,7 +371,6 @@
                     //  UI submit權限
                     valicate_submit()
                 }
-
                 //  UI submit權限
                 function valicate_submit() {
                     let num_valid = 0
@@ -364,7 +383,6 @@
 
                     $submit.prop('disabled', !ok)
                 }
-
                 //  UI input值同步 window.data.me
                 function reset_placeholder() {
                     $('form')[0].reset()
@@ -378,15 +396,14 @@
                         $(`input[name=${prop}]`).attr('placeholder', window.data.me[prop])
                     }
                 }
-
                 //  驗證email是否已被註冊
                 async function isEmailExist(email) {
+                    UI_loading()
                     let api = '/api/user/isEmailExist'
                     let { data: { errno, msg } } = await axios.post(api, { email })
+                    UI_loadend()
                     return !errno   // true，代表未註冊，反之
                 }
-
-
                 //  input有效值驗證器(除了avatar以外的資料)
                 function init_valicatorForInput() {
                     $submit.prop('disabled', true)
@@ -404,7 +421,6 @@
                             },
                             nickname: {
                                 type: 'string',
-                                // pattern: '^[\\w]+$',
                                 pattern: '^[\\u4e00-\\u9fa5a-zA-Z\\d]+$',
                                 minLength: 2,
                                 maxLength: 20,
@@ -417,7 +433,7 @@
                             },
                             age: {
                                 type: 'number',
-                                minimum: 0,
+                                minimum: 1,
                                 maximum: 120,
                             }
                         }
@@ -429,7 +445,7 @@
                             pattern: '必須符合email格式'
                         },
                         nickname: {
-                            pattern: '必須由是中文或英文組成',
+                            pattern: '必須由是中文或英文或數字組成',
                             minLength: '必須2個字以上',
                             maxLength: '必須20個字以下',
                         },
@@ -464,8 +480,19 @@
                         let msg = errorMsg[key][keyword]
                         UI_input($el, false, msg)
                         return false
-
                     }
+                }
+                //  頁面讀取中，禁止任何點擊、tab獲取焦點
+                function UI_loading() {
+                    $backdrop.removeClass('my-noshow')
+                    $('*').attr('tabIndex', '-1')
+                    $('body').css('pointer-events', 'none')
+                }
+                //  頁面讀取完畢，解禁點擊、tab獲取焦點
+                function UI_loadend() {
+                    $backdrop.addClass('my-noshow')
+                    $('*').removeAttr('tabIndex')
+                    $('body').css('pointer-events', 'auto')
                 }
             }
         })
