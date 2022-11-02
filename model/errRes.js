@@ -21,7 +21,7 @@ module.exports = {
     },
     PERMISSION: {
         NOT_LOGIN: {errno: 501, msg: '未登入'},
-        NOT_SELF: {errno: 501, msg: '非本人'}
+        NOT_SELF: {errno: 502, msg: '非本人'}
     },
     FORMAT_ERR: { errno: 601},
     BLOG: {

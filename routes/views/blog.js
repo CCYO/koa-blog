@@ -34,7 +34,7 @@ router.get('/blog/edit/:blog_id', view_check_login, cacheBlog, async (ctx, next)
     }
 
     let blog = ctx.cache.blog[1].data
-
+    
     if (blog.blog.author.id != ctx.session.user.id) {
         return ctx.body = '你哪位?'
     }

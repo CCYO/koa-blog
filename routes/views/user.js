@@ -98,7 +98,9 @@ router.get('/other/:id', view_check_isMe, confirmFollow, cacheUser, async (ctx, 
     }
 
     let { currentUser, fansList, idolList, blogList } = ctx.cache.user[1]
-
+    //  非文章作者，所以不傳入未公開的文章
+    blogList.hidden = []
+    
     await ctx.render('user', {
         title: `${currentUser.nickname}的主頁`,
 
