@@ -107,7 +107,7 @@
                     function init_createBlog() {
                         let $btn_createBlog = $('#createBlog')
                         //  btn#createBlog 綁定 click handle => 創建 blog
-                        $btn_createBlog.toggleClass('my-noshow', !blog.id).click(handle_createBlog)
+                        $btn_createBlog.removeClass('my-noshow').click(handle_createBlog)
                         //  handle => 創建 blog
                         async function handle_createBlog(e) {
                             let title = $title.val().trim()

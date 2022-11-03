@@ -326,21 +326,7 @@
                         init.push($(cur).data('my-remove-blog'))
                         return init
                     }, [])
-                    //  送出刪除命令
-                    const {
-                        data: {
-                            errno, data, msg
-                        }
-                    } = await axios.delete(api_blog, { data: { id: listOfBlogId } })
-
-                    if (!errno) {
-                        alert('已成功刪除該頁文章')
-                        location.href = '/self' //  刷新頁面
-                    } else if (errno === 501) {   //  代表未登入
-                        location.href = '/login'
-                    } else {  //  刪除失敗
-                        alert(msg)
-                    }
+                    removeBlog(listOfBlogId)
                     return
                 }
                 //  刪除單篇文章功能
@@ -353,20 +339,7 @@
                     //  要被刪除的文章id
                     let id = $target.data('my-remove-blog')
                     //  送出刪除命令
-                    const {
-                        data: {
-                            errno, data, msg
-                        }
-                    } = await axios.delete('/api/blog', { data: { id } })
-
-                    if (!errno) {
-                        alert('已成功刪除此篇文章')
-                        location.href = '/self' //  刷新頁面
-                    } else if (errno === 501) {   //  代表未登入
-                        location.href = '/login'
-                    } else {  //  刪除失敗
-                        alert(msg)
-                    }
+                    await removeBlog(id)
                     return
                 }
                 //  渲染文章列表
@@ -501,7 +474,7 @@
                         </li>
                         `
                         //  在粉絲列表中插入 粉絲htmlStr
-                        $(`ul#fansList`).prepend(html_li)
+                        $(`ul#fansList`).prepend(htmlStr)
                     }
                     function UI_cancelFollow() {
                         alert('已退追')
@@ -531,6 +504,25 @@
                     }
                 }
 
+                //  utils -----
+                //  axios 刪除文章
+                async function removeBlog(blogList) {
+                    //  送出刪除命令
+                    const {
+                        data: {
+                            errno, data, msg
+                        }
+                    } = await axios.delete('/api/blog', { data: { id: blogList } })
+
+                    if (!errno) {
+                        alert('已成功刪除該頁文章')
+                        location.href = '/self' //  刷新頁面
+                    } else if (errno === 501) {   //  代表未登入
+                        location.href = '/login'
+                    } else {  //  刪除失敗
+                        alert(msg)
+                    }
+                }
             }
 
 
