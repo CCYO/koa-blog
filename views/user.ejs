@@ -95,8 +95,36 @@
                 </div>
                 <hr>
                 <div id="blogs">
-                    <div id="newBlog" class="my-noshow">
+                    <!-- <div id="newBlog" class="my-noshow">
                         <a href="/blog/new">撰寫新文章</a>
+                    </div> -->
+
+                    <!-- Button trigger modal -->
+                    <button id="newBlog" type="button" class="btn btn-primary my-noshow" data-bs-toggle="modal"
+                        data-bs-target="#exampleModal">
+                        撰寫新文章
+                    </button>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="blogTitle" class="form-label">文章標題</label>
+                                        <input type="text" class="form-control" id="blogTitle"
+                                            placeholder="Example input placeholder">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">取消建立文章</button>
+                                    <button id="sendBlogTitle" type="button" class="btn btn-primary">建立文章</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="blogList bg-light p-2" data-my-blog-key="show">
@@ -256,6 +284,9 @@
         <%- JSON.stringify(blogList) %>
     </div>
 
+    <!-- 引入 xss -->
+    <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
+
     <!-- JQ AXIOS BS5 -->
     <%- include('wedgets/cdn') %>
     <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
@@ -299,6 +330,8 @@
                 } else {  //  自己的頁面
                     //  顯示建立新文章btn
                     $('#newBlog').removeClass('my-noshow')
+                    //  綁定創建文章功能
+                    $('#sendBlogTitle').click(handle_createBlog)
                     //  顯示編輯文章title
                     $('[data-my-blog-key=hidden]').removeClass('my-noshow')
                     //  隱藏文章編輯/刪除功能
@@ -314,6 +347,46 @@
                 $('[data-my-key].page-link').on('click', renderBlogList)
                 //  文章列表 的 上下頁，綁定翻頁功能
                 $('[data-my-way].page-link').on('click', renderBlogList)
+
+                function getBlogTitle(value) {
+                    let val = value.trim()
+                    if(!val.length){
+                        return false
+                    }
+                    return my_xss(value)
+                }
+
+                // 用來對表格內容進行xss
+                function my_xss(html) {
+                    return filterXSS(html)
+                }
+                
+                //  handle => 創建 blog
+                async function handle_createBlog(e) {
+                    let $el = $('#blogTitle')
+                    let title = getBlogTitle($el.val())
+                    
+                    if(!title){
+                        alert('標題不能為空')
+                        return
+                    }
+
+                    console.log(title)
+                    
+                    const {
+                        data: {
+                            errno, data, msg
+                        }
+                    } = await axios.post('/api/blog', { title })
+
+                    if (!errno) {
+                        alert('BLOG創立完成')
+                        location.href = `/blog/edit/${data.id}`
+                    } else {
+                        alert(`BLOG創立失敗 => ${msg.message}`)
+                        console.log(msg.stack)
+                    }
+                }
 
                 //  刪除當前頁碼的所有文章
                 async function handle_removeBlogs(e) {

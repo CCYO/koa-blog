@@ -43,7 +43,7 @@ async function addBlog(title, user_id) {
     try {
         title = my_xxs(title)
         const blog = await createBlog({ title, user_id })
-        return new SuccModel(blog)
+        return new SuccModel(blog, { user: [ user_id ] })
     } catch (e) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
     }
