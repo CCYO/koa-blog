@@ -37,8 +37,7 @@
         <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>"></div>
         <div id="showBox">
             <input type="text" id="title" value="<%= blog.id ? blog.title : '' %>">
-            <button id="updateTitle" class="my-noshow">修改標題</button>
-            <button id="createBlog" class="my-noshow">創建BLOG</button>
+            <button id="updateTitle">修改標題</button>
         </div>
         <div id="editor-wrapper">
             <div id="toolbar-container"></div>
@@ -90,58 +89,28 @@
                     console.log('@ 已確認頁面所需數據皆已初始化完成')
 
                     let api_blog = '/api/blog/'
+
+                    //  input#title 綁定 input + blur handle => 驗證新標題
                     let $title = $('#title')
-                    //  input#title 綁定 blur handle => 驗證新標題
-                    $title.on('blur', handle_valicate_title).on('input', handle_valicate_title)
+                    $title
+                        .on('blur', handle_valicateTitle)
+                        .on('input', handle_valicateTitle)
 
-                    let { blog = { id: undefined } } = window.data
-                    if (blog.id) {  //  若文章存在
-                        //  初始化 編輯文章功能
-                        init_editorBlog()
-                    } else {
-                        //  初始化 建立文章功能
-                        init_createBlog()
-                    }
+                    //  綁定 title 更新更能
+                    let $btn_updateTitle = $('#updateTitle')
+                    $btn_updateTitle
+                        .prop('disabled', true)
+                        .click(handle_updateTitle)
 
-                    // 初始化 建立文章頁 的功能
-                    function init_createBlog() {
-                        let $btn_createBlog = $('#createBlog')
-                        //  btn#createBlog 綁定 click handle => 創建 blog
-                        $btn_createBlog.removeClass('my-noshow').click(handle_createBlog)
-                        //  handle => 創建 blog
-                        async function handle_createBlog(e) {
-                            let title = $title.val().trim()
-                            if (!title) {
-                                alert('標題不能為空')
-                                return
-                            }
-
-                            const {
-                                data: {
-                                    errno, data, msg
-                                }
-                            } = await axios.post(api_blog, { title })
-
-                            if (!errno) {
-                                alert('BLOG創立完成')
-                                location.href = `/blog/edit/${data.id}`
-                            } else {
-                                alert(`BLOG創立失敗 => ${msg.message}`)
-                                console.log(msg.stack)
-                            }
-                        }
-
-                    }
+                    //  初始化 編輯文章功能
+                    init_editorBlog()
 
                     // 初始化 編輯文章頁 的功能
                     function init_editorBlog() {
-                        let $btn_updateTitle = $('#updateTitle')
                         let $checkbox_show = $('#show')
                         let api_uploadImg = '/api/blog/img'
                         //  初始化editor
                         init_editor()
-                        //  btn#updateTitle 綁定 click handle => 修改 blog title
-                        $btn_updateTitle.toggleClass('my-noshow', blog.id).prop('disabled', true).click(handle_updateTitle)
 
                         //  btn#save 綁定 click handle => 存檔 blog
                         $('#save').on('click', handle_saveBlog)
@@ -154,13 +123,11 @@
                                 return
                             }
 
-                            let { id } = window.data.blog
-
                             const {
                                 data: {
                                     errno, data, msg
                                 }
-                            } = await axios.delete(api_blog, { data: { id } })
+                            } = await axios.delete(api_blog, { data: { id: window.data.blog.id } })
 
                             if (!errno) {
                                 alert('已成功刪除此篇文章')
@@ -169,7 +136,6 @@
                                 alert(msg)
                             }
                         }
-
                         //  handle => 儲存 blog
                         async function handle_saveBlog(e) {
                             //  本地資料
@@ -178,8 +144,8 @@
                             let payload = {}
 
                             //  取出當前title
-                            let curTitle = my_xss($title.val().trim())
-                            if (title !== curTitle) {   //  若title有新值
+                            let curTitle = valicateAndGetTitle($title.val())
+                            if (curTitle) {   //  若title有新值
                                 payload.title = curTitle    //  放入payload
                             }
 
@@ -201,7 +167,6 @@
                             if (curShow !== show) { //  若show有變動
                                 payload.show = curShow //  放入payload
                             }
-
 
                             //  payload 若沒有要更新的資料
                             if (!Object.getOwnPropertyNames(payload).length) {
@@ -243,7 +208,6 @@
 
                             /* 取出當前*/
                             function htmlNotIncludeEmpty() {
-                                let html = window.data.blog.html
                                 //  取出當前html
                                 let curHtml = my_xss(window.editor.getHtml().trim())
                                 //  匹配開頭、結尾的空格與空行
@@ -279,33 +243,6 @@
                                 return cancelImgs
                             }
                         }
-
-                        //  handle => 修改 title
-                        async function handle_updateTitle(e) {
-                            let newTitle = $title.val().trim()
-                            let { title: oldTitle, id } = window.data.blog
-
-                            let payload = { title: newTitle, id }
-
-                            const {
-                                data: {
-                                    errno, data, msg
-                                }
-                            } = await axios.patch(api_blog, payload)
-
-                            if (!errno) {
-                                /* title修改成功 */
-                                window.data.blog.title = newTitle
-
-                                $btn_updateTitle.prop('disabled', true)
-                                alert('標題修改完成')
-                            } else {
-                                /* title修改失敗 */
-                                alert(`標題修改失敗 => ${msg.message}`)
-                            }
-                            return
-                        }
-
                         //  初始化 editor
                         function init_editor() {
                             //  editor 的 繁中設定
@@ -456,38 +393,61 @@
                             }
 
                         }
-
                     }
+
+                    //  handle => 更新 title
+                    async function handle_updateTitle(e) {
+                        let title = valicateAndGetTitle($title.val())
+
+                        if (!title) {
+                            alert('標題格式有誤')
+                        }
+
+                        const {
+                            data: {
+                                errno, data, msg
+                            }
+                        } = await axios.patch(api_blog, { title, id: window.data.blog.id })
+
+                        if (!errno) {
+                            /* title修改成功 */
+                            window.data.blog.title = title
+                            //  無法更新
+                            $btn_updateTitle.prop('disabled', true)
+                            alert('標題修改完成')
+                        } else {
+                            /* title修改失敗 */
+                            alert(`標題修改失敗 => ${msg.message}`)
+                        }
+                        return
+                    }
+                    //  handle 驗證 title
+                    function handle_valicateTitle(e) {
+                        //  驗證標題
+                        let title = valicateAndGetTitle(e.target.value)
+                        if (title) {  //  驗證ok
+                            $btn_updateTitle.prop('disabled', false)    //  可更新
+                        } else {  //  驗證失敗
+                            e.type === 'input' && $btn_updateTitle.prop('disabled', true)   //不可更新
+                            e.type === 'blur' && $title.val(window.data.blog.title)   //  恢復原title
+                        }
+                    }
+
+
+                    //  utils ------
 
                     // 用來對表格內容進行xss
                     function my_xss(html) {
                         return filterXSS(html)
                     }
 
-                    // handle => 驗證新標題
-                    function handle_valicate_title(e) {
-                        let newTitle = $title.val().trim()
-                        let { id, title: oldTitle } = window.data.blog
-
-                        if (e.type === 'blur') {    /* blur 時的標題驗證 */
-                            if (!id && !newTitle) { //  未建立blog 且 標題又為空
-                                alert('請先寫入標題')
-                                setTimeout(() => $title.focus(), 0)   //自動聚焦回標題框
-                            } else if (id && !newTitle) {   //  已建立blog 且 標題為空
-                                $title.val(oldTitle)    //  恢復原標題
-                            }
-                            return
-                        }
-                        if (e.type === 'input') {
-                            if (!id) {    //  未建立blog
-                                return
-                            }
-                            if (newTitle && oldTitle !== newTitle) {    //  標題有新值
-                                $btn_updateTitle.prop('disabled', false)
-                            } else {
-                                $btn_updateTitle.prop('disabled', true)
-                            }
-                            return
+                    // 驗證 標題
+                    function valicateAndGetTitle(title) {
+                        let newTitle = my_xss($title.val().trim())
+                        if (newTitle && newTitle !== window.data.blog.title) {
+                            return newTitle
+                        } else {
+                            return false
                         }
                     }
                 }

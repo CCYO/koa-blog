@@ -132,7 +132,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             //  要更新的資料
             let updateDate = listOfFollowerId.map(follower_id => ({ blog_id, follower_id, deletedAt: null }))
             //  更新資料之 blog_id + follower_id 主鍵對若不存在，則新建，反之更新
-            updateDate.length && await FollowBlog.bulkBuild(updateDate, { updateOnDuplicate: ['deletedAt'] })
+            updateDate.length && await FollowBlog.bulkCreate(updateDate, { updateOnDuplicate: ['deletedAt'] })
             //  存放 blog 要更新的數據
             data.showAt = new Date()
         } else if (!show) { // 隱藏blog
