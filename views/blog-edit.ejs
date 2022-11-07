@@ -61,6 +61,11 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
         <!-- 引入 xss -->
         <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
+        <!-- 引入 Ajv -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.11.0/ajv7.min.js"
+            integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
+            crossorigin="anonymous" referrerpolicy="no-referrer">
+            </script>
 
         <!-- JQ AXIOS BS5 -->
         <%- include('wedgets/cdn') %>
@@ -88,10 +93,16 @@
                     await window._my.initData()
                     console.log('@ 已確認頁面所需數據皆已初始化完成')
 
+                    let Ajv = window.ajv7
+                    let ajv = new Ajv()
+
                     let api_blog = '/api/blog/'
 
                     //  input#title 綁定 input + blur handle => 驗證新標題
                     let $title = $('#title')
+
+
+
                     $title
                         .on('blur', handle_valicateTitle)
                         .on('input', handle_valicateTitle)
@@ -102,6 +113,7 @@
                         .prop('disabled', true)
                         .click(handle_updateTitle)
 
+
                     //  初始化 編輯文章功能
                     init_editorBlog()
 
@@ -111,7 +123,6 @@
                         let api_uploadImg = '/api/blog/img'
                         //  初始化editor
                         init_editor()
-
                         //  btn#save 綁定 click handle => 存檔 blog
                         $('#save').on('click', handle_saveBlog)
                         //  btn#remove 綁定 click handle => 刪除 blog
@@ -393,6 +404,90 @@
                             }
 
                         }
+
+
+                    }
+
+                    //  
+                    let valicate = valicator()
+                    //  handle 驗證 title
+                    function handle_valicateTitle(e) {
+                        //  驗證標題
+                        // let title = valicateAndGetTitle(e.target.value)
+                        // if (title) {  //  驗證ok
+                        //     $btn_updateTitle.prop('disabled', false)    //  可更新
+                        // } else {  //  驗證失敗
+                        //     e.type === 'input' && $btn_updateTitle.prop('disabled', true)   //不可更新
+                        //     e.type === 'blur' && $title.val(window.data.blog.title)   //  恢復原title
+                        // }
+                        let title = htmlNotIncludeEmpty(e.target.value)
+                        console.log('@格式化的title => ', title)
+                        let valid = valicate({ title })
+                        console.log('@驗證後的結果 => ', valid)
+                        if (valid) {
+                            $btn_updateTitle.prop('disabled', false)    //  可更新
+                            console.log('@ valid ')
+                            return
+                        }
+                        console.log('@ inValid => ', valicate.errors)
+                    }
+
+                    function valicator() {
+
+                        ajv.addKeyword({
+                            keyword: 'myTitle',
+                            type: 'string',
+                            schemaType: 'object',
+                            validate: function _(schema, data) {
+                                let { maxLength } = schema
+                                console.log('@@ => ', data)
+                                let title = window.data.blog.title
+                                let l = data.length
+                                console.log('@ l =============> ', l)
+                                if (l >= 1 && l <= maxLength && title !== data) {
+                                    return true
+                                }
+                                if (!_.errors) {
+                                    _.errors = []
+                                }
+                                let e = { keyword: 'title' }
+                                if (title === data) {
+                                    e.errno = 1
+                                    e.message = `跟現在標題一樣，別鬧了`
+                                } else if (l < 1) {
+                                    e.errno = 2
+                                    e.message = '標題不能為空'
+                                } else if (l > maxLength) {
+                                    e.errno = 3
+                                    e.message = `標題不能超過${maxLength}個字`
+                                }
+                                _.errors.push(e)
+                                return false
+                            }
+                        })
+                        let schema = {
+                            type: 'object',
+                            properties: {
+                                title: {
+                                    type: 'string',
+                                    myTitle: {
+                                        maxLength: 25
+                                    }
+                                }
+                            }
+                        }
+                        let valicate = ajv.compile(schema)
+                        return valicate
+                        // (data) => {
+                        //     console.log('@ data => ', data)
+                        //     if (valicate(data)) {
+                        //         return true
+                        //     } else {
+                        //         return false
+                        //     }
+                        // }
+                        //  keyword/myTitle 的 validate
+
                     }
 
                     //  handle => 更新 title
@@ -421,18 +516,6 @@
                         }
                         return
                     }
-                    //  handle 驗證 title
-                    function handle_valicateTitle(e) {
-                        //  驗證標題
-                        let title = valicateAndGetTitle(e.target.value)
-                        if (title) {  //  驗證ok
-                            $btn_updateTitle.prop('disabled', false)    //  可更新
-                        } else {  //  驗證失敗
-                            e.type === 'input' && $btn_updateTitle.prop('disabled', true)   //不可更新
-                            e.type === 'blur' && $title.val(window.data.blog.title)   //  恢復原title
-                        }
-                    }
-
 
                     //  utils ------
 
@@ -450,8 +533,29 @@
                             return false
                         }
                     }
+
+                    //  去除空格與進行xss
+                    function htmlNotIncludeEmpty(data) {
+                        //  取出當前html
+                        let curHtml = my_xss(data.trim())
+                        //  匹配開頭、結尾的空格與空行
+                        var reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g
+                        var reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g
+                        //  移除開頭、結尾的空格與空行
+                        curHtml = curHtml.replace(reg_start, '')
+                        curHtml = curHtml.replace(reg_end, '')
+                        return curHtml
+                    }
+
+                    //  valicate errno
+                    let errnoTag = {
+                        title: {
+                            1: ''
+                        }
+                    }
                 }
-            })    
+            })
+
         </script>
 </body>
 
