@@ -36,14 +36,14 @@
     <div class="container">
         <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>"></div>
         <div id="showBox">
-            <input type="text" id="title" value="<%= blog.id ? blog.title : '' %>">
+            <input type="text" id="title" name="title" value="<%= blog.id ? blog.title : '' %>">
             <button id="updateTitle">修改標題</button>
         </div>
         <div id="editor-wrapper">
             <div id="toolbar-container"></div>
             <div id="editor-container"></div>
 
-            <label> <input type="checkbox" id="show" <%= blog.show ? 'checked' : '' %> />公開文章</label>
+            <label> <input type="checkbox" id="show" name='show' <%= blog.show ? 'checked' : '' %> />公開文章</label>
             <% if (blog.show) { %>
             <p>已於 <%= blog.showAt %> 發佈</p>
             <% } %>
@@ -94,7 +94,7 @@
                     console.log('@ 已確認頁面所需數據皆已初始化完成')
 
                     let Ajv = window.ajv7
-                    let ajv = new Ajv()
+                    let ajv = new Ajv({allErrors: true})
 
                     let api_blog = '/api/blog/'
 
@@ -147,52 +147,85 @@
                                 alert(msg)
                             }
                         }
+
+                        //  蒐集 input 表格數據
+                        function getInputValue(){
+                            let payload = {
+                                title: my_xss( $('[name=title]').val().trim() ),
+                                html: htmlNotIncludeEmpty(),
+                                show: $('[name=show]').is(':checked')
+                            }
+                            return payload
+
+                            /* 取出當前*/
+                            function htmlNotIncludeEmpty() {
+                                //  取出當前html
+                                let curHtml = my_xss(window.editor.getHtml().trim())
+                                //  匹配開頭、結尾的空格與空行
+                                var reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g
+                                var reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g
+                                //  移除開頭、結尾的空格與空行
+                                curHtml = curHtml.replace(reg_start, '')
+                                curHtml = curHtml.replace(reg_end, '')
+                                return curHtml
+                            }
+                        }
+
+                        window.aa = handle_saveBlog
                         //  handle => 儲存 blog
-                        async function handle_saveBlog(e) {
-                            //  本地資料
-                            let { id, title, imgs, show, showAt, html } = window.data.blog
-                            //  要傳給後端更新的資料
-                            let payload = {}
+                        async function handle_saveBlog(e, payload) {
+                            // let payload = getInputValue()
 
-                            //  取出當前title
-                            let curTitle = valicateAndGetTitle($title.val())
-                            if (curTitle) {   //  若title有新值
-                                payload.title = curTitle    //  放入payload
+                            if( payload.show && !payload.html){
+                                alert('沒內容公開幹嘛啦')
+                                return
                             }
 
-                            //  取出當前html
-                            let curHtml = htmlNotIncludeEmpty()
-                            if (curHtml && html !== curHtml) {   //  若當前html非空值且為新值
-                                //  加入payload
-                                payload.html = curHtml
+                            for( prop in payload ){
+                                let val = payload[prop]
+                                if(val == undefined && val === blog[prop]){
+                                    delete payload[prop]
+                                }
                             }
 
+                            if(!Object.getOwnPropertyNames(payload).length){
+                                alert('沒有要更新的就別亂')
+                                return
+                            }
+
+                            
+                            if(!valicate(payload)){
+                                let model = {
+                                    '/html': {
+                                        minLength: '文章內容不能為空',
+                                        maxLength: '文章內容太多了'
+                                    },
+                                    '/show': {
+                                        type: '公開與否的數據格式不正確'
+                                    }
+                                }
+                                let errors = valicate.errors
+                                for( error of errors){
+                                    let { instancePath, keyword, message } = error
+                                    console.log('@ error => ', error)
+                                    console.log('@ instancePath => ', instancePath)
+                                    if(!error.hasOwnProperty(instancePath)){
+                                        alert(message)
+                                    }else{
+                                        alert(model[instancePath][keyword])
+                                    }
+                                }
+                                return
+                            }
+                            return
                             //  取出 要刪除關聯的圖片
                             let cancelImgs = removeAssociateImgs()
                             if (cancelImgs.length) {    //  若cancel有值
                                 payload.cancelImgs = cancelImgs //  放入payload
                             }
 
-                            //  取出 當前show值
-                            let curShow = $checkbox_show.is(':checked')
-                            if (curShow !== show) { //  若show有變動
-                                payload.show = curShow //  放入payload
-                            }
-
-                            //  payload 若沒有要更新的資料
-                            if (!Object.getOwnPropertyNames(payload).length) {
-                                alert('沒變動，別亂好嗎?')
-                                return
-                            }
-
-                            //  要公開，卻沒內容
-                            if (payload.show && !curHtml) {
-                                alert('沒內容公開幹嘛啦')
-                                return
-                            }
-
                             //  payload放入blog_id
-                            payload.id = id
+                            payload.id = window.data.blog.id
 
                             const {
                                 data: {
@@ -440,25 +473,20 @@
                             schemaType: 'object',
                             validate: function _(schema, data) {
                                 let { maxLength } = schema
-                                console.log('@@ => ', data)
                                 let title = window.data.blog.title
                                 let l = data.length
-                                console.log('@ l =============> ', l)
                                 if (l >= 1 && l <= maxLength && title !== data) {
                                     return true
                                 }
                                 if (!_.errors) {
                                     _.errors = []
                                 }
-                                let e = { keyword: 'title' }
+                                let e = { keyword: 'myTitle' }
                                 if (title === data) {
-                                    e.errno = 1
                                     e.message = `跟現在標題一樣，別鬧了`
                                 } else if (l < 1) {
-                                    e.errno = 2
                                     e.message = '標題不能為空'
                                 } else if (l > maxLength) {
-                                    e.errno = 3
                                     e.message = `標題不能超過${maxLength}個字`
                                 }
                                 _.errors.push(e)
@@ -473,6 +501,14 @@
                                     myTitle: {
                                         maxLength: 25
                                     }
+                                },
+                                html: {
+                                    type: 'string',
+                                    minLength: 1,
+                                    maxLength: 65536
+                                },
+                                show: {
+                                    type: 'boolean'
                                 }
                             }
                         }
