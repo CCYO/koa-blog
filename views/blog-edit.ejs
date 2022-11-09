@@ -94,7 +94,7 @@
                     console.log('@ 已確認頁面所需數據皆已初始化完成')
 
                     let Ajv = window.ajv7
-                    let ajv = new Ajv({allErrors: true})
+                    let ajv = new Ajv({ allErrors: true })
 
                     let api_blog = '/api/blog/'
 
@@ -149,9 +149,9 @@
                         }
 
                         //  蒐集 input 表格數據
-                        function getInputValue(){
+                        function getInputValue() {
                             let payload = {
-                                title: my_xss( $('[name=title]').val().trim() ),
+                                title: my_xss($('[name=title]').val().trim()),
                                 html: htmlNotIncludeEmpty(),
                                 show: $('[name=show]').is(':checked')
                             }
@@ -176,25 +176,25 @@
                         async function handle_saveBlog(e, payload) {
                             // let payload = getInputValue()
 
-                            if( payload.show && !payload.html){
+                            if (payload.show && !payload.html) {
                                 alert('沒內容公開幹嘛啦')
                                 return
                             }
 
-                            for( prop in payload ){
+                            for (prop in payload) {
                                 let val = payload[prop]
-                                if(val == undefined && val === blog[prop]){
+                                if (val == undefined && val === blog[prop]) {
                                     delete payload[prop]
                                 }
                             }
 
-                            if(!Object.getOwnPropertyNames(payload).length){
+                            if (!Object.getOwnPropertyNames(payload).length) {
                                 alert('沒有要更新的就別亂')
                                 return
                             }
 
-                            
-                            if(!valicate(payload)){
+
+                            if (!valicate(payload)) {
                                 let model = {
                                     '/html': {
                                         minLength: '文章內容不能為空',
@@ -205,13 +205,13 @@
                                     }
                                 }
                                 let errors = valicate.errors
-                                for( error of errors){
+                                for (error of errors) {
                                     let { instancePath, keyword, message } = error
                                     console.log('@ error => ', error)
                                     console.log('@ instancePath => ', instancePath)
-                                    if(!error.hasOwnProperty(instancePath)){
+                                    if (!error.hasOwnProperty(instancePath)) {
                                         alert(message)
-                                    }else{
+                                    } else {
                                         alert(model[instancePath][keyword])
                                     }
                                 }
@@ -468,26 +468,146 @@
                     function valicator() {
 
                         ajv.addKeyword({
-                            keyword: 'myTitle',
-                            type: 'string',
+                            keyword: 'myBlog',
+                            type: 'object',
                             schemaType: 'object',
-                            validate: function _(schema, data) {
-                                let { maxLength } = schema
-                                let title = window.data.blog.title
-                                let l = data.length
-                                if (l >= 1 && l <= maxLength && title !== data) {
-                                    return true
-                                }
+                            validate: function _(schema, {title, html, show}) {
                                 if (!_.errors) {
                                     _.errors = []
                                 }
-                                let e = { keyword: 'myTitle' }
-                                if (title === data) {
-                                    e.message = `跟現在標題一樣，別鬧了`
-                                } else if (l < 1) {
-                                    e.message = '標題不能為空'
-                                } else if (l > maxLength) {
-                                    e.message = `標題不能超過${maxLength}個字`
+                                let e = {}
+                                try {
+                                    if(title){}
+                                    if (typeof data !== 'string') {
+                                        throw new Error()
+                                    }
+                                    let title = data.trim()
+                                    let l = title.length
+                                    let curTitle = window.data.blog.title
+                                    if(l >= minLength && l <= maxLength && title !== curTitle){
+                                        return true
+                                    }else if( title === curTitle ){
+                                        e = {
+                                            keyword: 'some',
+                                            params: { some: curTitle },
+                                            message: `這是舊標題`
+                                        }
+                                    }else if(l > maxLength){
+                                        e = {
+                                            keyword: 'maxLength',
+                                            params: { maxLength },
+                                            message: `標題長度不能超過${maxLength}個字`
+                                        }
+                                    }else if(l < minLength){
+                                        e = {
+                                            keyword: 'minLength',
+                                            params: { minLength },
+                                            message: `標題長度不能少於${minLength}個字`
+                                        }
+                                    }
+                                } catch (err) {
+                                    e = {
+                                        keyword: 'type',
+                                        params: { type: 'string'},
+                                        message: '標題的數據格式必須是string'
+                                    }
+                                }
+                                _.errors.push(e)
+                                return false
+                            }
+                        })
+                        
+                        ajv.addKeyword({
+                            keyword: 'myTitle',
+                            type: 'string',
+                            schemaType: 'object',
+                            validate: function _([minLength, maxLength], data) {
+                                if (!_.errors) {
+                                    _.errors = []
+                                }
+                                let e = {}
+                                try {
+                                    if (typeof data !== 'string') {
+                                        throw new Error()
+                                    }
+                                    let title = data.trim()
+                                    let l = title.length
+                                    let curTitle = window.data.blog.title
+                                    if(l >= minLength && l <= maxLength && title !== curTitle){
+                                        return true
+                                    }else if( title === curTitle ){
+                                        e = {
+                                            keyword: 'some',
+                                            params: { some: curTitle },
+                                            message: `這是舊標題`
+                                        }
+                                    }else if(l > maxLength){
+                                        e = {
+                                            keyword: 'maxLength',
+                                            params: { maxLength },
+                                            message: `標題長度不能超過${maxLength}個字`
+                                        }
+                                    }else if(l < minLength){
+                                        e = {
+                                            keyword: 'minLength',
+                                            params: { minLength },
+                                            message: `標題長度不能少於${minLength}個字`
+                                        }
+                                    }
+                                } catch (err) {
+                                    e = {
+                                        keyword: 'type',
+                                        params: { type: 'string'},
+                                        message: '標題的數據格式必須是string'
+                                    }
+                                }
+                                _.errors.push(e)
+                                return false
+                            }
+                        })
+                        ajv.addKeyword({
+                            keyword: 'myContent',
+                            type: 'string',
+                            schemaType: 'object',
+                            validate: function _([minLength, maxLength], data) {
+                                if (!_.errors) {
+                                    _.errors = []
+                                }
+                                let e = {}
+                                try {
+                                    if (typeof data !== 'string') {
+                                        throw new Error()
+                                    }
+                                    let title = data.trim()
+                                    let l = title.length
+                                    let curTitle = window.data.blog.title
+                                    if(l >= minLength && l <= maxLength && title !== curTitle){
+                                        return true
+                                    }else if( title === curTitle ){
+                                        e = {
+                                            keyword: 'some',
+                                            params: { some: curTitle },
+                                            message: `這是舊標題`
+                                        }
+                                    }else if(l > maxLength){
+                                        e = {
+                                            keyword: 'maxLength',
+                                            params: { maxLength },
+                                            message: `標題長度不能超過${maxLength}個字`
+                                        }
+                                    }else if(l < minLength){
+                                        e = {
+                                            keyword: 'minLength',
+                                            params: { minLength },
+                                            message: `標題長度不能少於${minLength}個字`
+                                        }
+                                    }
+                                } catch (err) {
+                                    e = {
+                                        keyword: 'type',
+                                        params: { type: 'string'},
+                                        message: '標題的數據格式必須是string'
+                                    }
                                 }
                                 _.errors.push(e)
                                 return false
@@ -499,21 +619,47 @@
                                 title: {
                                     type: 'string',
                                     myTitle: {
+                                        minLength: 1,
                                         maxLength: 25
                                     }
                                 },
                                 html: {
                                     type: 'string',
-                                    minLength: 1,
-                                    maxLength: 65536
+                                    myContent: {
+                                        minLength: 1,
+                                        maxLength: 65536
+                                    }
                                 },
                                 show: {
                                     type: 'boolean'
                                 }
                             }
                         }
-                        let valicate = ajv.compile(schema)
-                        return valicate
+
+                        let errModel = {
+                            '/title': {
+                                minLength: {
+                                    msg: '文章內容太少了，不能少於',
+
+                                },
+                                maxLength: '文章內容太多了，不能多過'
+                            },
+                            '/html': {
+                                minLength: '文章內容不能為空',
+                                maxLength: '文章內容太多了'
+                            },
+                            '/show': {
+                                type: '公開與否的數據格式不正確'
+                            }
+                        }
+
+                        if (!valicate(payload)) {
+                            return valicate.errors
+                        }else{
+                            return null
+                        }
+                        // let valicate = ajv.compile(schema)
+                        // return valicate
                         // (data) => {
                         //     console.log('@ data => ', data)
                         //     if (valicate(data)) {
