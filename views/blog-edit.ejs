@@ -97,10 +97,16 @@
                     let ajv = new Ajv({ allErrors: true })
 
                     let api_blog = '/api/blog/'
+                    let payload = new Map()
 
                     //  input#title 綁定 input + blur handle => 驗證新標題
                     let $title = $('#title')
+                    if(!window.data.blog.html){
+                        input[name=show].prop('disabled', true)
+                    }
+                    function canSubmit(){
 
+                    }
 
 
                     $title
