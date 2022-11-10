@@ -101,10 +101,10 @@
 
                     //  input#title 綁定 input + blur handle => 驗證新標題
                     let $title = $('#title')
-                    if(!window.data.blog.html){
-                        input[name=show].prop('disabled', true)
+                    if (!window.data.blog.html) {
+                        input[name = show].prop('disabled', true)
                     }
-                    function canSubmit(){
+                    function canSubmit() {
 
                     }
 
@@ -471,100 +471,44 @@
                         console.log('@ inValid => ', valicate.errors)
                     }
 
+                    let errModel = {
+                        title: {
+                            ch: '標題'
+                        },
+                        html: {
+                            ch: '文章內文'
+                        }
+                    }
                     function valicator() {
 
                         ajv.addKeyword({
-                            keyword: 'myBlog',
-                            type: 'object',
-                            schemaType: 'object',
-                            validate: function _(schema, {title, html, show}) {
-                                if (!_.errors) {
-                                    _.errors = []
-                                }
-                                let e = {}
-                                try {
-                                    if(title){}
-                                    if (typeof data !== 'string') {
-                                        throw new Error()
-                                    }
-                                    let title = data.trim()
-                                    let l = title.length
-                                    let curTitle = window.data.blog.title
-                                    if(l >= minLength && l <= maxLength && title !== curTitle){
-                                        return true
-                                    }else if( title === curTitle ){
-                                        e = {
-                                            keyword: 'some',
-                                            params: { some: curTitle },
-                                            message: `這是舊標題`
-                                        }
-                                    }else if(l > maxLength){
-                                        e = {
-                                            keyword: 'maxLength',
-                                            params: { maxLength },
-                                            message: `標題長度不能超過${maxLength}個字`
-                                        }
-                                    }else if(l < minLength){
-                                        e = {
-                                            keyword: 'minLength',
-                                            params: { minLength },
-                                            message: `標題長度不能少於${minLength}個字`
-                                        }
-                                    }
-                                } catch (err) {
-                                    e = {
-                                        keyword: 'type',
-                                        params: { type: 'string'},
-                                        message: '標題的數據格式必須是string'
-                                    }
-                                }
-                                _.errors.push(e)
-                                return false
-                            }
-                        })
-                        
-                        ajv.addKeyword({
-                            keyword: 'myTitle',
+                            keyword: 'contentLength',
                             type: 'string',
                             schemaType: 'object',
-                            validate: function _([minLength, maxLength], data) {
+                            validate: function _(schema, data) {
+                                let { range: [minLength, maxLength], inputName } = schema
+                                let l = data.length
+                                let curValue = window.data.blog[inputName]
+                                if (l >= minLength && l <= maxLength && title !== curTitle) {
+                                    return true
+                                }
+                                let e = {}
+                                let model = errModel[inputName]
+                                let {ch} = model
                                 if (!_.errors) {
                                     _.errors = []
                                 }
-                                let e = {}
-                                try {
-                                    if (typeof data !== 'string') {
-                                        throw new Error()
-                                    }
-                                    let title = data.trim()
-                                    let l = title.length
-                                    let curTitle = window.data.blog.title
-                                    if(l >= minLength && l <= maxLength && title !== curTitle){
-                                        return true
-                                    }else if( title === curTitle ){
-                                        e = {
-                                            keyword: 'some',
-                                            params: { some: curTitle },
-                                            message: `這是舊標題`
-                                        }
-                                    }else if(l > maxLength){
-                                        e = {
-                                            keyword: 'maxLength',
-                                            params: { maxLength },
-                                            message: `標題長度不能超過${maxLength}個字`
-                                        }
-                                    }else if(l < minLength){
-                                        e = {
-                                            keyword: 'minLength',
-                                            params: { minLength },
-                                            message: `標題長度不能少於${minLength}個字`
-                                        }
-                                    }
-                                } catch (err) {
+                                if (data === curVal) {
                                     e = {
-                                        keyword: 'type',
-                                        params: { type: 'string'},
-                                        message: '標題的數據格式必須是string'
+                                        myMessage: `若${ch}沒有要變動，就別亂好嗎？`
+                                    }
+                                } else if (l > maxLength) {
+                                    e = {
+                                        myMessage: `標題長度不能超過${maxLength}個字`
+                                    }
+                                } else if (l < minLength) {
+                                    e = {
+                                        myMessage: `標題長度不能少於${minLength}個字`
                                     }
                                 }
                                 _.errors.push(e)
@@ -580,41 +524,30 @@
                                     _.errors = []
                                 }
                                 let e = {}
-                                try {
-                                    if (typeof data !== 'string') {
-                                        throw new Error()
-                                    }
-                                    let title = data.trim()
-                                    let l = title.length
-                                    let curTitle = window.data.blog.title
-                                    if(l >= minLength && l <= maxLength && title !== curTitle){
-                                        return true
-                                    }else if( title === curTitle ){
-                                        e = {
-                                            keyword: 'some',
-                                            params: { some: curTitle },
-                                            message: `這是舊標題`
-                                        }
-                                    }else if(l > maxLength){
-                                        e = {
-                                            keyword: 'maxLength',
-                                            params: { maxLength },
-                                            message: `標題長度不能超過${maxLength}個字`
-                                        }
-                                    }else if(l < minLength){
-                                        e = {
-                                            keyword: 'minLength',
-                                            params: { minLength },
-                                            message: `標題長度不能少於${minLength}個字`
-                                        }
-                                    }
-                                } catch (err) {
+                                let l = title.length
+                                let curTitle = window.data.blog.title
+                                if (l >= minLength && l <= maxLength && title !== curTitle) {
+                                    return true
+                                } else if (title === curTitle) {
                                     e = {
-                                        keyword: 'type',
-                                        params: { type: 'string'},
-                                        message: '標題的數據格式必須是string'
+                                        keyword: 'some',
+                                        params: { some: curTitle },
+                                        myMessage: `這是舊標題`
+                                    }
+                                } else if (l > maxLength) {
+                                    e = {
+                                        keyword: 'maxLength',
+                                        params: { maxLength },
+                                        myMessage: `標題長度不能超過${maxLength}個字`
+                                    }
+                                } else if (l < minLength) {
+                                    e = {
+                                        keyword: 'minLength',
+                                        params: { minLength },
+                                        myMessage: `標題長度不能少於${minLength}個字`
                                     }
                                 }
+
                                 _.errors.push(e)
                                 return false
                             }
@@ -661,7 +594,7 @@
 
                         if (!valicate(payload)) {
                             return valicate.errors
-                        }else{
+                        } else {
                             return null
                         }
                         // let valicate = ajv.compile(schema)
