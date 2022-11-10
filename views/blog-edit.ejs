@@ -86,7 +86,7 @@
 
         <script>
             $(async function () {
-                await init().catch(e => console.log(`user.ejs 初始化時發生錯誤 => ${e}`))
+                await init().catch(e => console.log(`blog-editor.ejs 初始化時發生錯誤 => ${e}`))
 
                 async function init() {
                     //  初始化 ejs 附加、用於此頁面的數據
@@ -97,31 +97,29 @@
                     let ajv = new Ajv({ allErrors: true })
 
                     let api_blog = '/api/blog/'
-                    let payload = new Map()
+
 
                     //  input#title 綁定 input + blur handle => 驗證新標題
                     let $title = $('#title')
                     if (!window.data.blog.html) {
                         input[name = show].prop('disabled', true)
                     }
-                    function canSubmit() {
+                    
+                    $title.on('input', handle_title)
 
-                    }
+                    // $title
+                    //     .on('blur', handle_valicateTitle)
+                    //     .on('input', handle_valicateTitle)
 
-
-                    $title
-                        .on('blur', handle_valicateTitle)
-                        .on('input', handle_valicateTitle)
-
-                    //  綁定 title 更新更能
-                    let $btn_updateTitle = $('#updateTitle')
-                    $btn_updateTitle
-                        .prop('disabled', true)
-                        .click(handle_updateTitle)
+                    // //  綁定 title 更新更能
+                    // let $btn_updateTitle = $('#updateTitle')
+                    // $btn_updateTitle
+                    //     .prop('disabled', true)
+                    //     .click(handle_updateTitle)
 
 
-                    //  初始化 編輯文章功能
-                    init_editorBlog()
+                    // //  初始化 編輯文章功能
+                    // init_editorBlog()
 
                     // 初始化 編輯文章頁 的功能
                     function init_editorBlog() {
@@ -443,12 +441,10 @@
                             }
 
                         }
-
-
                     }
 
                     //  
-                    let valicate = valicator()
+                    // let valicate = valicator()
                     //  handle 驗證 title
                     function handle_valicateTitle(e) {
                         //  驗證標題
@@ -471,145 +467,110 @@
                         console.log('@ inValid => ', valicate.errors)
                     }
 
-                    let errModel = {
-                        title: {
-                            ch: '標題'
+                    let schema = {
+                        type: 'object',
+                        properties: {
+                            title: {
+                                type: 'string',
+                                diff: 'title',
+                                minLength: 1,
+                                maxLength: 25
+
+                            },
+                            html: {
+                                type: 'string',
+                                diff: 'html',
+                                minLength: 1,
+                                maxLength: 65536
+                            },
+                            show: {
+                                type: 'boolean',
+                                diff: 'show'
+                            }
                         },
-                        html: {
-                            ch: '文章內文'
-                        }
+                        if: { properties: { show: true } },
+                        then: { required: ['html'] }
                     }
-                    function valicator() {
 
+                    let payload = new Map()
+                    let valicator = init_valicator(schema) 
+
+                    function init_valicator(schema) {
+                        //  定義 keyword: diff
                         ajv.addKeyword({
-                            keyword: 'contentLength',
-                            type: 'string',
-                            schemaType: 'object',
-                            validate: function _(schema, data) {
-                                let { range: [minLength, maxLength], inputName } = schema
-                                let l = data.length
-                                let curValue = window.data.blog[inputName]
-                                if (l >= minLength && l <= maxLength && title !== curTitle) {
+                            keyword: 'diff',
+                            type: ['string', 'number', 'boolean'],
+                            schemaType: 'string',
+                            validate: function _(inputName, newData) {
+                                let curData = window.data.blog[inputName]
+                                if (newData !== curData) {
                                     return true
                                 }
-                                let e = {}
-                                let model = errModel[inputName]
-                                let {ch} = model
                                 if (!_.errors) {
                                     _.errors = []
                                 }
-                                if (data === curVal) {
-                                    e = {
-                                        myMessage: `若${ch}沒有要變動，就別亂好嗎？`
-                                    }
-                                } else if (l > maxLength) {
-                                    e = {
-                                        myMessage: `標題長度不能超過${maxLength}個字`
-                                    }
-                                } else if (l < minLength) {
-                                    e = {
-                                        myMessage: `標題長度不能少於${minLength}個字`
-                                    }
-                                }
-                                _.errors.push(e)
+                                _.errors.push({ keyword: 'diff' })
                                 return false
-                            }
-                        })
-                        ajv.addKeyword({
-                            keyword: 'myContent',
-                            type: 'string',
-                            schemaType: 'object',
-                            validate: function _([minLength, maxLength], data) {
-                                if (!_.errors) {
-                                    _.errors = []
-                                }
-                                let e = {}
-                                let l = title.length
-                                let curTitle = window.data.blog.title
-                                if (l >= minLength && l <= maxLength && title !== curTitle) {
-                                    return true
-                                } else if (title === curTitle) {
-                                    e = {
-                                        keyword: 'some',
-                                        params: { some: curTitle },
-                                        myMessage: `這是舊標題`
-                                    }
-                                } else if (l > maxLength) {
-                                    e = {
-                                        keyword: 'maxLength',
-                                        params: { maxLength },
-                                        myMessage: `標題長度不能超過${maxLength}個字`
-                                    }
-                                } else if (l < minLength) {
-                                    e = {
-                                        keyword: 'minLength',
-                                        params: { minLength },
-                                        myMessage: `標題長度不能少於${minLength}個字`
-                                    }
-                                }
-
-                                _.errors.push(e)
-                                return false
-                            }
-                        })
-                        let schema = {
-                            type: 'object',
-                            properties: {
-                                title: {
-                                    type: 'string',
-                                    myTitle: {
-                                        minLength: 1,
-                                        maxLength: 25
-                                    }
-                                },
-                                html: {
-                                    type: 'string',
-                                    myContent: {
-                                        minLength: 1,
-                                        maxLength: 65536
-                                    }
-                                },
-                                show: {
-                                    type: 'boolean'
-                                }
-                            }
-                        }
-
-                        let errModel = {
-                            '/title': {
-                                minLength: {
-                                    msg: '文章內容太少了，不能少於',
-
-                                },
-                                maxLength: '文章內容太多了，不能多過'
                             },
-                            '/html': {
-                                minLength: '文章內容不能為空',
-                                maxLength: '文章內容太多了'
-                            },
-                            '/show': {
-                                type: '公開與否的數據格式不正確'
+                            errors: true
+                        })
+                        //  定義schema
+                        let valicate = ajv.compile(schema)
+
+                        return (newData) => {
+                            console.log('@@ => ', newData)
+                            if (!valicate(newData)) {
+                                console.log(valicate.errors)
+                                let kvPairs = valicate.errors.map(inputNameAndMessage)
+                                return kvPairs
+                            } else {
+                                return null
                             }
                         }
-
-                        if (!valicate(payload)) {
-                            return valicate.errors
-                        } else {
-                            return null
+                        //  用來生成 { inputName, message } 錯誤提醒的函數
+                        function inputNameAndMessage(error) {
+                            let { instancePath, keyword, params } = error
+                            let inputName = instancePath.slice(1)
+                            let value = params ? [...Object.entries(params)][0][1] : undefined
+                            let message
+                            switch (keyword) {
+                                case 'type':
+                                    message = `數據格式必須為${value}`
+                                    break
+                                case 'minLength':
+                                    message = `不能少於${value}個字元`
+                                    break
+                                case 'maxLength':
+                                    message = `不能多於${value}個字元`
+                                    break
+                                case 'if':
+                                    message = '請寫內文，不然幹嘛公開文章'
+                                    break
+                                case 'diff':
+                                    message = '與既有值相同，若沒有要更新就別鬧了'
+                                    break
+                                default:
+                                    message = `錯誤訊息的keyword為${keyword} -- 未知的狀況`
+                                    break;
+                            }
+                            return { inputName, message }
                         }
-                        // let valicate = ajv.compile(schema)
-                        // return valicate
-                        // (data) => {
-                        //     console.log('@ data => ', data)
-                        //     if (valicate(data)) {
-                        //         return true
-                        //     } else {
-                        //         return false
-                        //     }
-                        // }
-                        //  keyword/myTitle 的 validate
 
                     }
+
+                    
+                    function handle_title(e){
+                        let data = { title: my_xss(e.target.value.trim())}
+                        let res = valicator(data)
+                        if(!res){
+                            console.log('ok')
+                        }else{
+                            console.log(res.inputName, res.msg)
+                        }
+                        
+                    }
+
+
 
                     //  handle => 更新 title
                     async function handle_updateTitle(e) {
