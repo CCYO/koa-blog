@@ -34,9 +34,12 @@
     <%- include('wedgets/navbar/index') %>
 
     <div class="container">
-        <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>"></div>
+        <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>" ></div>
         <div id="showBox">
-            <input type="text" id="title" name="title" value="<%= blog.id ? blog.title : '' %>">
+            <input type="text" id="title" name="title" class="form-control is-valid" value="<%= blog.id ? blog.title : '' %>">
+            <div class="valid-feedback">
+                Looks good!
+            </div>
             <button id="updateTitle">修改標題</button>
         </div>
         <div id="editor-wrapper">
@@ -104,8 +107,8 @@
                     if (!window.data.blog.html) {
                         input[name = show].prop('disabled', true)
                     }
-                    
-                    $title.on('input', handle_title)
+
+                    $title.on('input', handle_input)
 
                     // $title
                     //     .on('blur', handle_valicateTitle)
@@ -119,7 +122,9 @@
 
 
                     // //  初始化 編輯文章功能
-                    // init_editorBlog()
+                    init_editorBlog()
+                    let payload = new Map()
+                    setPayload()
 
                     // 初始化 編輯文章頁 的功能
                     function init_editorBlog() {
@@ -152,33 +157,9 @@
                             }
                         }
 
-                        //  蒐集 input 表格數據
-                        function getInputValue() {
-                            let payload = {
-                                title: my_xss($('[name=title]').val().trim()),
-                                html: htmlNotIncludeEmpty(),
-                                show: $('[name=show]').is(':checked')
-                            }
-                            return payload
-
-                            /* 取出當前*/
-                            function htmlNotIncludeEmpty() {
-                                //  取出當前html
-                                let curHtml = my_xss(window.editor.getHtml().trim())
-                                //  匹配開頭、結尾的空格與空行
-                                var reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g
-                                var reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g
-                                //  移除開頭、結尾的空格與空行
-                                curHtml = curHtml.replace(reg_start, '')
-                                curHtml = curHtml.replace(reg_end, '')
-                                return curHtml
-                            }
-                        }
-
                         window.aa = handle_saveBlog
                         //  handle => 儲存 blog
                         async function handle_saveBlog(e, payload) {
-                            // let payload = getInputValue()
 
                             if (payload.show && !payload.html) {
                                 alert('沒內容公開幹嘛啦')
@@ -254,19 +235,6 @@
 
                             alert('blog save success!')
 
-                            /* 取出當前*/
-                            function htmlNotIncludeEmpty() {
-                                //  取出當前html
-                                let curHtml = my_xss(window.editor.getHtml().trim())
-                                //  匹配開頭、結尾的空格與空行
-                                var reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g
-                                var reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g
-                                //  移除開頭、結尾的空格與空行
-                                curHtml = curHtml.replace(reg_start, '')
-                                curHtml = curHtml.replace(reg_end, '')
-                                return curHtml
-                            }
-
                             /*  要移除的 blogImg  */
                             function removeAssociateImgs() {
                                 let imgs = window.data.blog.imgs
@@ -324,6 +292,7 @@
 
                                 //  (待補)自定義 upload imgage 失敗
                             }
+                            editorConfig.onChange = handle_editorChange()
 
                             // editor 創建
                             const editor = createEditor({
@@ -440,13 +409,36 @@
                                 })
                             }
 
+                            //  handle：editor選區改變、內容改變時觸發
+                            function handle_editorChange() {
+                                let init = true
+                                return (editor) => {
+                                    let html = htmlNotIncludeEmpty(editor.getHtml())
+                                    if (init) {
+                                        payload.set('curHtml', html)
+                                        init = false
+                                        return
+                                    }
+                                    if (html === payload.get('curHtml')) {
+                                        return
+                                    } else {
+                                        payload.set('curHtml', html)
+                                    }
+                                    let res = valicator({ html })
+                                    if (res) {
+                                        $('#save').prop('disabled', true)
+                                        console.log(res)
+                                    } else {
+                                        setPayload(html)
+                                    }
+                                }
+                            }
+
                         }
                     }
 
-                    //  
-                    // let valicate = valicator()
                     //  handle 驗證 title
-                    function handle_valicateTitle(e) {
+                    function handle_input(e) {
                         //  驗證標題
                         // let title = valicateAndGetTitle(e.target.value)
                         // if (title) {  //  驗證ok
@@ -455,16 +447,14 @@
                         //     e.type === 'input' && $btn_updateTitle.prop('disabled', true)   //不可更新
                         //     e.type === 'blur' && $title.val(window.data.blog.title)   //  恢復原title
                         // }
-                        let title = htmlNotIncludeEmpty(e.target.value)
-                        console.log('@格式化的title => ', title)
-                        let valid = valicate({ title })
-                        console.log('@驗證後的結果 => ', valid)
-                        if (valid) {
-                            $btn_updateTitle.prop('disabled', false)    //  可更新
-                            console.log('@ valid ')
-                            return
+                        let title = my_xss(e.target.value.trim())
+                        let res = valicator({ title })
+                        if (res) {
+                            $('#save').prop('disabled', true)
+                            console.log(res)
+                        } else {
+                            setPayload(title)
                         }
-                        console.log('@ inValid => ', valicate.errors)
                     }
 
                     let schema = {
@@ -487,13 +477,9 @@
                                 type: 'boolean',
                                 diff: 'show'
                             }
-                        },
-                        if: { properties: { show: true } },
-                        then: { required: ['html'] }
+                        }
                     }
-
-                    let payload = new Map()
-                    let valicator = init_valicator(schema) 
+                    let valicator = init_valicator(schema)
 
                     function init_valicator(schema) {
                         //  定義 keyword: diff
@@ -518,9 +504,7 @@
                         let valicate = ajv.compile(schema)
 
                         return (newData) => {
-                            console.log('@@ => ', newData)
                             if (!valicate(newData)) {
-                                console.log(valicate.errors)
                                 let kvPairs = valicate.errors.map(inputNameAndMessage)
                                 return kvPairs
                             } else {
@@ -555,23 +539,7 @@
                             }
                             return { inputName, message }
                         }
-
                     }
-
-                    
-                    function handle_title(e){
-                        let data = { title: my_xss(e.target.value.trim())}
-                        let res = valicator(data)
-                        if(!res){
-                            console.log('ok')
-                        }else{
-                            console.log(res.inputName, res.msg)
-                        }
-                        
-                    }
-
-
-
                     //  handle => 更新 title
                     async function handle_updateTitle(e) {
                         let title = valicateAndGetTitle($title.val())
@@ -629,10 +597,21 @@
                         return curHtml
                     }
 
-                    //  valicate errno
-                    let errnoTag = {
-                        title: {
-                            1: ''
+                    //  canSave
+                    function setPayload(dataObj) {
+                        if (dataObj) {
+                            let kv = [...Object.entries(dataObj)][0]
+                            let k = kv[0]
+                            let v = kv[1]
+                            payload.set(k, v)
+                        }
+                        let curHtml = payload.get('curHtml')
+                        let curShow = $('#show').is(':checked')
+                        let noChange = payload.has('html') && payload.has('title') && payload.has('show')
+                        if (!curHtml && curShow || noChange) {
+                            $('#save').prop('disabled', true)
+                        } else {
+                            $('#save').prop('disabled', false)
                         }
                     }
                 }
