@@ -34,9 +34,10 @@
     <%- include('wedgets/navbar/index') %>
 
     <div class="container">
-        <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>" ></div>
+        <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>"></div>
         <div id="showBox">
-            <input type="text" id="title" name="title" class="form-control is-valid" value="<%= blog.id ? blog.title : '' %>">
+            <input type="text" id="title" name="title" class="form-control"
+                value="<%= blog.id ? blog.title : '' %>">
             <div class="valid-feedback">
                 Looks good!
             </div>
@@ -55,8 +56,9 @@
             <button id="remove">刪除此篇文章</button>
         </div>
 
+        
         <!-- 當前使用者頁面的使用者資料 -->
-        <div data-my-data="blog" style="display: none">
+        <div data-my-data="blog" >
             <%- JSON.stringify(blog) %>
         </div>
 
@@ -104,11 +106,24 @@
 
                     //  input#title 綁定 input + blur handle => 驗證新標題
                     let $title = $('#title')
-                    if (!window.data.blog.html) {
-                        input[name = show].prop('disabled', true)
-                    }
+                    // if (!window.data.blog.html) {
+                    //     input[name = show].prop('disabled', true)
+                    // }
 
                     $title.on('input', handle_input)
+                    $title.on('blur', (e) => {
+                        let $el = $(e.target)
+                        if($el.attr('data-errno') === '1'){
+                            $el.removeClass('is-invalid')
+                        }
+                    })
+                    $('[name=show]').on('change', (e) => {
+                        let show = e.target.checked
+                        let res = valicator({ show })
+                        if (!res) {
+                            setPayload({ show })
+                        }
+                    })
 
                     // $title
                     //     .on('blur', handle_valicateTitle)
@@ -123,15 +138,15 @@
 
                     // //  初始化 編輯文章功能
                     init_editorBlog()
-                    let payload = new Map()
+                    window.payload = new Map()
                     setPayload()
 
                     // 初始化 編輯文章頁 的功能
                     function init_editorBlog() {
-                        let $checkbox_show = $('#show')
                         let api_uploadImg = '/api/blog/img'
                         //  初始化editor
                         init_editor()
+
                         //  btn#save 綁定 click handle => 存檔 blog
                         $('#save').on('click', handle_saveBlog)
                         //  btn#remove 綁定 click handle => 刪除 blog
@@ -156,72 +171,53 @@
                                 alert(msg)
                             }
                         }
-
-                        window.aa = handle_saveBlog
                         //  handle => 儲存 blog
-                        async function handle_saveBlog(e, payload) {
+                        async function handle_saveBlog(e) {
 
-                            if (payload.show && !payload.html) {
-                                alert('沒內容公開幹嘛啦')
+                            let payloadObj = [...payload.entries()].reduce((initVal, [k, v]) => {
+                                if (k !== 'curHtml') {
+                                    initVal[k] = v
+                                }
+                                return initVal
+                            }, {})
+                            console.log('@ payloadObj => ', payloadObj)
+
+                            let res = valicator(payloadObj)
+                            if(res){
+                                console.log('@res => ', res)
+                                res.forEach(({message}) => alert(message))
                                 return
                             }
 
-                            for (prop in payload) {
-                                let val = payload[prop]
-                                if (val == undefined && val === blog[prop]) {
-                                    delete payload[prop]
-                                }
-                            }
+                            let curHtml = payload.get('curHtml')
+                            let curShow = $('#show').is(':checked')
 
-                            if (!Object.getOwnPropertyNames(payload).length) {
-                                alert('沒有要更新的就別亂')
+                            if(!curHtml && curShow){
+                                alert('沒有內容是要公開什麼啦')
                                 return
                             }
 
-
-                            if (!valicate(payload)) {
-                                let model = {
-                                    '/html': {
-                                        minLength: '文章內容不能為空',
-                                        maxLength: '文章內容太多了'
-                                    },
-                                    '/show': {
-                                        type: '公開與否的數據格式不正確'
-                                    }
-                                }
-                                let errors = valicate.errors
-                                for (error of errors) {
-                                    let { instancePath, keyword, message } = error
-                                    console.log('@ error => ', error)
-                                    console.log('@ instancePath => ', instancePath)
-                                    if (!error.hasOwnProperty(instancePath)) {
-                                        alert(message)
-                                    } else {
-                                        alert(model[instancePath][keyword])
-                                    }
-                                }
-                                return
-                            }
-                            return
+                            
                             //  取出 要刪除關聯的圖片
                             let cancelImgs = removeAssociateImgs()
                             if (cancelImgs.length) {    //  若cancel有值
-                                payload.cancelImgs = cancelImgs //  放入payload
+                                payloadObj.cancelImgs = cancelImgs //  放入payload
                             }
 
                             //  payload放入blog_id
-                            payload.id = window.data.blog.id
+                            payloadObj.id = window.data.blog.id
 
                             const {
                                 data: {
                                     errno, data, msg
                                 }
-                            } = await axios.patch(api_blog, payload)
+                            } = await axios.patch(api_blog, payloadObj)
 
                             if (errno) {
                                 alert('blog save error!')
                                 return
                             }
+
                             //  若此次有更新title
                             if (payload.title) {
                                 //  同步 window.blog.title
@@ -425,11 +421,8 @@
                                         payload.set('curHtml', html)
                                     }
                                     let res = valicator({ html })
-                                    if (res) {
-                                        $('#save').prop('disabled', true)
-                                        console.log(res)
-                                    } else {
-                                        setPayload(html)
+                                    if (!res) {
+                                        setPayload({ html })
                                     }
                                 }
                             }
@@ -449,12 +442,12 @@
                         // }
                         let title = my_xss(e.target.value.trim())
                         let res = valicator({ title })
-                        if (res) {
-                            $('#save').prop('disabled', true)
-                            console.log(res)
-                        } else {
-                            setPayload(title)
+                        if (!res) {
+                            setPayload({ title })
+                            return
                         }
+                        console.log(res)
+                        $(e.target).addClass('is-invalid').attr('data-errno', '1').next().addClass('invalid-feedback').text(res[0].message)
                     }
 
                     let schema = {
@@ -477,7 +470,8 @@
                                 type: 'boolean',
                                 diff: 'show'
                             }
-                        }
+                        },
+                        minProperties: 1
                     }
                     let valicator = init_valicator(schema)
 
@@ -505,14 +499,20 @@
 
                         return (newData) => {
                             if (!valicate(newData)) {
-                                let kvPairs = valicate.errors.map(inputNameAndMessage)
-                                return kvPairs
+                                let list_inputNameAndMessage = valicate.errors.map(error => {
+                                    let { inputName, message } = inputNameAndMessage(error)
+                                    payload.delete(inputName)
+                                    console.log('@ Invalid => ', inputName)
+                                    return { inputName, message }
+                                })
+                                return list_inputNameAndMessage
                             } else {
                                 return null
                             }
                         }
                         //  用來生成 { inputName, message } 錯誤提醒的函數
                         function inputNameAndMessage(error) {
+                            console.log('@ error => ', error)
                             let { instancePath, keyword, params } = error
                             let inputName = instancePath.slice(1)
                             let value = params ? [...Object.entries(params)][0][1] : undefined
@@ -532,6 +532,9 @@
                                     break
                                 case 'diff':
                                     message = '與既有值相同，若沒有要更新就別鬧了'
+                                    break
+                                case 'minProperties':
+                                    message = '沒有要變動就別亂'
                                     break
                                 default:
                                     message = `錯誤訊息的keyword為${keyword} -- 未知的狀況`
@@ -571,7 +574,17 @@
 
                     // 用來對表格內容進行xss
                     function my_xss(html) {
-                        return filterXSS(html)
+                        return filterXSS(html, {
+                            onIgnoreTag(tag, html){
+                                console.log('@tag => ', tag)
+                                console.log('@html => ', html)
+                                let reg = /<input type="checkbox" disabled >/
+                                if(reg.test(html)){
+                                    console.log('@xss => ', html)
+                                    return html
+                                }   
+                            }
+                        })
                     }
 
                     // 驗證 標題
@@ -599,6 +612,7 @@
 
                     //  canSave
                     function setPayload(dataObj) {
+                        console.log('@ dataObj => ', dataObj)
                         if (dataObj) {
                             let kv = [...Object.entries(dataObj)][0]
                             let k = kv[0]
@@ -609,9 +623,9 @@
                         let curShow = $('#show').is(':checked')
                         let noChange = payload.has('html') && payload.has('title') && payload.has('show')
                         if (!curHtml && curShow || noChange) {
-                            $('#save').prop('disabled', true)
+                            // $('#save').prop('disabled', true)
                         } else {
-                            $('#save').prop('disabled', false)
+                            // $('#save').prop('disabled', false)
                         }
                     }
                 }

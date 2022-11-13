@@ -10,11 +10,17 @@ window.data = {}
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
 
 window._my.initData = async function () {
+    console.log(123)
     $(`[data-my-data]`).each((index, el) => {
+        console.log(1111)
         let $el = $(el)
         let prop = $el.data('my-data')
+        console.log(1111, $el, prop)
         try {
-            window.data[prop] = JSON.parse($el.html())  // 不用 text() 是因為 /edit/blog/:id 具有 html格式的資料
+            console.log('xx => ', prop)
+            let val = $el.html()
+            if(prop === 'blog'){ val =decodeURI(JSON.parse(val)) }
+            window.data[prop] = JSON.parse(val)  // 不用 text() 是因為 /edit/blog/:id 具有 html格式的資料
         } catch (e) {
             window.data[prop] = undefined
         }
