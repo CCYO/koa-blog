@@ -37,10 +37,12 @@ router.get('/blog/edit/:blog_id', view_check_login, cacheBlog, async (ctx, next)
     if (blog.blog.author.id != ctx.session.user.id) {
         return ctx.body = '你哪位?'
     }
-    
-    blog = encodeURI(JSON.stringify(blog.blog))
-    console.log(blog)
-    return await ctx.render('blog-edit', {blog})
+    console.log('@blog => ', blog)
+    if(blog.blog.html){
+        blog.blog.html = encodeURI(JSON.stringify(blog.blog.html))
+    }
+    console.log('@blog => ', blog)
+    return await ctx.render('blog-edit', {blog: blog.blog})
 })
 
 //  查看文章

@@ -28,6 +28,7 @@ const apiComment = require('./routes/api/comment')
 //  router - VIEW
 const viewUser = require('./routes/views/user')
 const viewBlog = require('./routes/views/blog')
+const viewAlbum = require('./routes/views/album')
 
 const { isDev } = require('./utils/env')
 const { REDIS_CONF } = require('./conf/constant')
@@ -92,6 +93,7 @@ app.use(apiComment.routes(), apiComment.allowedMethods())
 // Router - VIEW
 app.use(viewUser.routes(), viewUser.allowedMethods())
 app.use(viewBlog.routes(), viewBlog.allowedMethods())
+app.use(viewAlbum.routes(), viewAlbum.allowedMethods())
 
 app.on('error', (err, ctx) => {
     if (!err.hasOwnProperty('errno')) {   //  完全無預期的錯誤
