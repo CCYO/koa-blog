@@ -33,16 +33,15 @@ router.get('/blog/edit/:blog_id', view_check_login, cacheBlog, async (ctx, next)
         ctx.cache.blog = [etag, resModel]
     }
 
-    let blog = ctx.cache.blog[1].data
-    if (blog.blog.author.id != ctx.session.user.id) {
+    let blog = { ...ctx.cache.blog[1].data }   //  複製一份
+    console.log('@blog = > ', blog)
+    if (blog.author.id != ctx.session.user.id) {
         return ctx.body = '你哪位?'
     }
-    console.log('@blog => ', blog)
-    if(blog.blog.html){
-        blog.blog.html = encodeURI(JSON.stringify(blog.blog.html))
+    if(blog.html){
+        blog.html = encodeURI(blog.html)    //  將html做百分比編碼，前端再自行解碼
     }
-    console.log('@blog => ', blog)
-    return await ctx.render('blog-edit', {blog: blog.blog})
+    return await ctx.render('blog-edit', {blog})
 })
 
 //  查看文章
@@ -60,8 +59,8 @@ router.get('/blog/:blog_id', confirmFollow, cacheBlog, async (ctx, next) => {
     }
 
     let blog = ctx.cache.blog[1].data
-
-    return await ctx.render('blog', blog)
+    console.log('@blog => ', blog)
+    return await ctx.render('blog', {blog})
 })
 
 module.exports = router

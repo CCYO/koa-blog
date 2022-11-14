@@ -91,7 +91,7 @@
 
         <script>
             $(async function () {
-                await init().catch(e => console.log(`blog-editor.ejs 初始化時發生錯誤 => ${e}`))
+                await init().catch(e => console.log(`blog-editor.ejs 初始化時發生錯誤 =>`, e))
 
                 async function init() {
                     //  初始化 ejs 附加、用於此頁面的數據
@@ -290,6 +290,7 @@
                             }
                             editorConfig.onChange = handle_editorChange()
 
+                            console.log('@editor => ', window.data.blog.html)
                             // editor 創建
                             const editor = createEditor({
                                 //  插入後端取得的 html
@@ -409,7 +410,10 @@
                             function handle_editorChange() {
                                 let init = true
                                 return (editor) => {
-                                    let html = htmlNotIncludeEmpty(editor.getHtml())
+                                    let editorgetHtml = editor.getHtml()
+                                    let html = htmlNotIncludeEmpty(editorgetHtml)
+                                    console.log('@ editorgetHtml => ', editorgetHtml)
+                                    console.log('@ html => ', html)
                                     if (init) {
                                         payload.set('curHtml', html)
                                         init = false
@@ -575,15 +579,32 @@
                     // 用來對表格內容進行xss
                     function my_xss(html) {
                         return filterXSS(html, {
-                            onIgnoreTag(tag, html){
-                                console.log('@tag => ', tag)
-                                console.log('@html => ', html)
-                                let reg = /<input type="checkbox" disabled >/
-                                if(reg.test(html)){
-                                    console.log('@xss => ', html)
-                                    return html
-                                }   
-                            }
+                            whiteList: {
+                                ...filterXSS.whiteList,
+                                div: ['data-w-e-type'],
+                                input: ['type']
+                            },
+                            onTagAttr(tag, attr, value){
+                                console.log('@onTagAttr tag => ', tag)
+                                let checkbbox = tag === 'input' && attr === 'type' && value === 'checkbox' 
+                                let todoDiv = tag === 'div' && attr === 'data-w-e-type' && value === 'todo'
+                                if(checkbbox){
+                                    return 'checkbox'
+                                }
+                                if(todoDiv){
+                                    return 'todo'
+                                }
+                            },
+
+                            // onIgnoreTag(tag, html){
+                            //     console.log('@tag => ', tag)
+                            //     console.log('@html => ', html)
+                            //     let reg = /<input type="checkbox" disabled >/
+                            //     if(reg.test(html)){
+                            //         console.log('@xss => ', html)
+                            //         return html
+                            //     }   
+                            // }
                         })
                     }
 

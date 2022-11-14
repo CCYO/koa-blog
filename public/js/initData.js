@@ -16,18 +16,17 @@ window._my.initData = async function () {
             let val = $(el).html()
             window.val = val    
             if(prop === 'blog'){
-                val = JSON.parse(val)
-                val.html = JSON.parse(decodeURI(val.html))
-                val.html = val.html === 'null' ? '' : val.html
-                console.log(val.html)
-                console.log(val.html === 'null')
-                console.log('@before => ', val)
-                val = JSON.stringify(val)
+                console.log('@ parse 前 => ', val)
+                val = JSON.parse(val)   // 整體轉回obj
+                val.html = decodeURI(val.html)  // html資料做百分比解碼，再轉回obj
+                console.log('@html decodeURI 後 => ', val.html)
+                val.html = val.html === 'null' ? '' : val.html  //  若html資料為無，則檢視為零長度的字段
+                console.log('@ parse 後 => ', val)
+                val = JSON.stringify(val)   //  再將整體轉為字符
             }
-            console.log('@after => ', val)
             window.data[prop] = JSON.parse(val)  // 不用 text() 是因為 /edit/blog/:id 具有 html格式的資料
         } catch (e) {
-            window.data[prop] = undefined
+            throw e 
         }
         console.log(`@ window.data.${prop} finish `)
     })

@@ -34,8 +34,7 @@ router.get('/list/:user_id', async (ctx, next) => {
 
 router.get('/:blog_id', async (ctx, next) => {
     let { blog_id } = ctx.params
-    let { data } = await getBlog(blog_id * 1)
-    console.log(data)
-    ctx.body = 'ok'
+    let { data: { imgs } } = await getBlog(blog_id * 1)
+    await ctx.render('album', { imgs })
 })
 module.exports = router
