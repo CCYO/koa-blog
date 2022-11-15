@@ -2,17 +2,24 @@ const xss = require('xss')
 
 function my_xxs(html) {
   return xss(html, {
-    onIgnoreTag(tag, html) {
-      let reg = /<input type="checkbox" disabled >/
-      if (reg.test(html)) {
-        return html
+    whiteList: {
+      ...xss.whiteList,
+      div: ['data-w-e-type'],
+      input: ['type']
+    },
+    onTagAttr(tag, attr, value) {
+      let checkbbox = tag === 'input' && attr === 'type' && value === 'checkbox'
+      let todoDiv = tag === 'div' && attr === 'data-w-e-type' && value === 'todo'
+      if (checkbbox) {
+        return 'checkbox'
+      }
+      if (todoDiv) {
+        return 'todo'
       }
     },
-    onIgnoreTagAttr: function (tag, name, value, isWhiteAttr) {
-      let attr = name.substr(0, 5)
-      if (attr === "data-" || attr === 'style') {
-        // 通过内置的escapeAttrValue函数来对属性值进行转义
-        return `${name}="${xss.escapeAttrValue(value)}"`;
+    onIgnoreTag(tag, html) {
+      if (tag === 'x-img') {
+        return html
       }
     }
   })

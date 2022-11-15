@@ -1,22 +1,133 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
+<!-- favicon + MY_CSS + BS5_CSS -->
+<%- include('wedgets/common/header') %>
 
 <body>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+
+    <!-- 主導覽： NAV_CSS + NAV第一層template -->
+    <%- include('wedgets/navbar/index') %>
+
     <ul>
         <% imgs.forEach( ({name, img_id, blogImg_id, url}) => { %>
-            <li>
-                <img src="<%= url %>" alt="<%= name %>"><br>
-                <span><%= name %></span>
-            </li>
+        <li data-my-photo="<%= blogImg_id %>">
+            <img src="<%= url %>" alt="<%= name %>"><br>
+            <span><%= name %></span>
+            <div class="my-noshow">
+                <input type="text"  value="<%= name %>">
+                <button>更新</button>
+            </div>
+        </li>
         <% }) %>
     </ul>
+    <!-- 當前使用者頁面的使用者資料 -->
+    <div data-my-data="imgs">
+        <%- JSON.stringify(imgs) %>
+    </div>
+
+    <!-- 引入 xss -->
+    <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
+    <!-- 引入 Ajv -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.11.0/ajv7.min.js"
+        integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+        </script>
+
+    <!-- JQ AXIOS BS5 -->
+    <%- include('wedgets/cdn') %>
+    <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
+    <script defer src="/js/initData.js"></script>
+
+    <!--
+        logout功能 +
+        完整渲染 NAV +
+        取得news +
+        完整渲染 通知下拉選單
+    -->
+    <script defer src="/js/navbar.js"></script>
+
+    <script>
+        $(async function () {
+            try {
+                await window._my.initData()
+                await init()
+                console.log('@ album.ejs init OK')
+            } catch (e) {
+                console.log('@ 初始化 發生錯誤 => ', e)
+            }
+
+            async function init() {
+                data.map_imgs = new Map()
+                window.data.imgs.forEach(({ blogImg_id, hash, img_id, name, url }, index) => {
+                    data.map_imgs.set(blogImg_id, { hash, img_id, name, url, index })
+                })
+
+                $('li[data-my-photo] > span').click((e) => {
+                    let $el = $(e.target)
+                    let $parent = $el.parent()
+                    let blogImg_id = $parent.attr('data-my-photo')
+                    $el.toggle().next().toggle().children('input').focus()
+                })
+                $(`[data-my-photo] input`).on('focus', (e) => {
+                    setTimeout(() => {
+                        let $el = $(e.target)
+                        
+                        $el[0].selectionStart = $el.val().length
+                        photoNameIsDiff($el)
+                    }, 0)
+                })
+                // $(`[data-my-photo] input`).on('blur', (e) => {
+                //     let $el = $(e.target)
+                //     let blogImg_id = $el.parents('li').attr('data-my-photo') * 1
+                //     $el.toggle()
+                //     $el.next().hide()
+                //     $(`[data-my-photo=${blogImg_id}] > span`).toggle()
+                // })
+                $(`[data-my-photo] input`).on('input', (e) => {   
+                    photoNameIsDiff($(e.target))
+                })
+                $(`[data-my-photo] button`).on('click', async (e) => {
+                    let $el = $(e.target)
+                    let $parent = $el.parents('li')
+                    let name = $el.prev().val()
+                    let blogImg_id = $parent.attr('data-my-photo') * 1
+                    // axios
+                    let {data: { errno, data, msg } } = await axios.post('/api/album', {name, blogImg_id})
+                    if(errno){
+                        console.log('@相片改名失敗')
+                        return
+                    }
+                    let map_imgs = window.data.map_imgs
+                    let imgs = window.data.imgs
+                    let img = map_imgs.get(blogImg_id)
+                    map_imgs.set(blogImg_id, { ...img, name})
+                    imgs[img.index].name = name
+                    $parent.children('span').text(name).toggle()
+                    $parent.children('div').toggle()
+                })
+                function photoNameIsDiff($el){
+                    let blogImg_id
+                    let $target
+                    if($el[0].tagName === 'li'){
+                        $target = $el
+                        blogImg_id = $target.attr('data-my-photo') * 1
+                    }else{
+                        $target = $el.parents('li[data-my-photo]')
+                        blogImg_id = $target.attr('data-my-photo') * 1
+                    }
+                    let $btn = $target.find('button')
+                    console.log($btn)
+                    let curData = window.data.map_imgs.get(blogImg_id)
+                    if ($el.val() === curData.name) {
+                        $btn.prop('disabled', true)
+                        return
+                    }
+                    $btn.prop('disabled', false)
+                }
+            }
+        })
+    </script>
 </body>
 
 </html>

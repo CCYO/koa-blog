@@ -25,6 +25,7 @@ const apiUser = require('./routes/api/user')
 const apiEditor = require('./routes/api/editor')
 const apiNews = require('./routes/api/news')
 const apiComment = require('./routes/api/comment')
+const apiAlbum = require('./routes/api/album')
 //  router - VIEW
 const viewUser = require('./routes/views/user')
 const viewBlog = require('./routes/views/blog')
@@ -89,6 +90,7 @@ app.use(apiUser.routes(), apiUser.allowedMethods())
 app.use(apiEditor.routes(), apiEditor.allowedMethods())
 app.use(apiNews.routes(), apiNews.allowedMethods())
 app.use(apiComment.routes(), apiComment.allowedMethods())
+app.use(apiAlbum.routes(), apiAlbum.allowedMethods())
 
 // Router - VIEW
 app.use(viewUser.routes(), viewUser.allowedMethods())

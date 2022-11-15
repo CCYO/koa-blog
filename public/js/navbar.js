@@ -204,19 +204,15 @@ async function initData() {
                             }, otherNotIncludeMe)
                             otherNotIncludeMe = [...otherNotIncludeMe]
                         }
-                        console.log('@otherNotIncludeMe => ', otherNotIncludeMe)
                         let count = otherNotIncludeMe.length
                         let nicknames =
                             count > 1 ? otherNotIncludeMe.slice(0, 2).join(',') + `${count > 2 ? `與其他${count - 2}人` : ''}` + `，都` :
                                 count > 0 ? otherNotIncludeMe.join(',') :
                                     comment.user.nickname
-                        console.log('@nicknames => ', nicknames)
+                        
                         let who =
                             count > 1 && comment.blog.author.id === me ? '你' :
                                 comment.blog.author.id === comment.user.id ? '自己' : comment.blog.author.nickname
-                        console.log('@comment.blog.author.nickname => ', comment.blog.author.nickname)
-                        console.log('@otherNotIncludeMe[0] => ', otherNotIncludeMe[0])
-                        console.log('@who => ', who)
                         let query = confirm ? '' : `?anchorType=3&anchorId=${id}`
                         return `
                         <li class="dropdown-item  position-relative news-item">

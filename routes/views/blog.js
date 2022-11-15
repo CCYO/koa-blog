@@ -34,7 +34,6 @@ router.get('/blog/edit/:blog_id', view_check_login, cacheBlog, async (ctx, next)
     }
 
     let blog = { ...ctx.cache.blog[1].data }   //  複製一份
-    console.log('@blog = > ', blog)
     if (blog.author.id != ctx.session.user.id) {
         return ctx.body = '你哪位?'
     }
@@ -58,8 +57,10 @@ router.get('/blog/:blog_id', confirmFollow, cacheBlog, async (ctx, next) => {
         ctx.cache.blog = [etag, resModel]
     }
 
-    let blog = ctx.cache.blog[1].data
-    console.log('@blog => ', blog)
+    let blog = { ...ctx.cache.blog[1].data }   //  複製一份
+    if(blog.html){
+        blog.html = encodeURI(blog.html)    //  將html做百分比編碼，前端再自行解碼
+    }
     return await ctx.render('blog', {blog})
 })
 

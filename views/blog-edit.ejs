@@ -36,8 +36,7 @@
     <div class="container">
         <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>"></div>
         <div id="showBox">
-            <input type="text" id="title" name="title" class="form-control"
-                value="<%= blog.id ? blog.title : '' %>">
+            <input type="text" id="title" name="title" class="form-control" value="<%= blog.id ? blog.title : '' %>">
             <div class="valid-feedback">
                 Looks good!
             </div>
@@ -56,9 +55,9 @@
             <button id="remove">刪除此篇文章</button>
         </div>
 
-        
+
         <!-- 當前使用者頁面的使用者資料 -->
-        <div data-my-data="blog" >
+        <div data-my-data="blog">
             <%- JSON.stringify(blog) %>
         </div>
 
@@ -113,7 +112,7 @@
                     $title.on('input', handle_input)
                     $title.on('blur', (e) => {
                         let $el = $(e.target)
-                        if($el.attr('data-errno') === '1'){
+                        if ($el.attr('data-errno') === '1') {
                             $el.removeClass('is-invalid')
                         }
                     })
@@ -183,20 +182,35 @@
                             console.log('@ payloadObj => ', payloadObj)
 
                             let res = valicator(payloadObj)
-                            if(res){
+                            if (res) {
                                 console.log('@res => ', res)
-                                res.forEach(({message}) => alert(message))
+                                res.forEach(({ message }) => alert(message))
                                 return
                             }
 
                             let curHtml = payload.get('curHtml')
                             let curShow = $('#show').is(':checked')
 
-                            if(!curHtml && curShow){
+                            if (!curHtml && curShow) {
                                 alert('沒有內容是要公開什麼啦')
                                 return
                             }
 
+                            //  將<img>替換為替代符
+                            function getImg(html) {
+                                let reg = /<img src="(.+?)".+?\/>/g
+                                let res
+                                let _html = html
+                                while (res = reg.exec(html)) {
+                                    let exist = window.data.blog.imgs.find(({ url }) => url === res[1])
+                                    console.log('@exist => ', exist)
+                                    if (exist) {
+                                        _html = _html.replace(res[0], `<x-img data-id='${exist.img_id}' />`)
+                                    }
+                                }
+                                return _html
+                            }
+                            payloadObj.html = getImg(payload.get('html'))
                             
                             //  取出 要刪除關聯的圖片
                             let cancelImgs = removeAssociateImgs()
@@ -226,6 +240,10 @@
                                 $btn_updateTitle.prop('disabled', true)
                             }
 
+                            //  重置 payload
+                            payload.delete('title')
+                            payload.delete('html')
+                            payload.delete('show')
                             //  同步 window.blog
                             window.data.blog = { ...window.data.blog, ...data }
 
@@ -584,17 +602,24 @@
                                 div: ['data-w-e-type'],
                                 input: ['type']
                             },
-                            onTagAttr(tag, attr, value){
+                            onTagAttr(tag, attr, value) {
                                 console.log('@onTagAttr tag => ', tag)
-                                let checkbbox = tag === 'input' && attr === 'type' && value === 'checkbox' 
+                                let checkbbox = tag === 'input' && attr === 'type' && value === 'checkbox'
                                 let todoDiv = tag === 'div' && attr === 'data-w-e-type' && value === 'todo'
-                                if(checkbbox){
+                                if (checkbbox) {
                                     return 'checkbox'
                                 }
-                                if(todoDiv){
+                                if (todoDiv) {
                                     return 'todo'
                                 }
                             },
+                            onIgnoreTag(tag, html){
+                                console.log('@ ignore tag => ', tag)
+                                if(tag === 'x-img'){
+                                    console.log('ok')
+                                    return html
+                                }
+                            }
 
                             // onIgnoreTag(tag, html){
                             //     console.log('@tag => ', tag)
@@ -608,6 +633,7 @@
                         })
                     }
 
+                    window.xxx = my_xss
                     // 驗證 標題
                     function valicateAndGetTitle(title) {
                         let newTitle = my_xss($title.val().trim())
