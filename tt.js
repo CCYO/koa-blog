@@ -1,17 +1,19 @@
 let { Op } = require('sequelize')
-let { init_comment_4_blog } = require('./utils/init/comment')
-let { User, Comment, FollowComment, Blog, BlogImg } = require('./db/mysql/model/index')
-const { readBlog } = require('./server/blog')
-const { readBlogImg } = require('./server/blogImg')
-const { readFans } = require('./server/followPeople')
-
+let { 
+    User,
+    Comment,
+    FollowComment,
+    Blog,
+    BlogImg,
+    BlogImgAlt
+} = require('./db/mysql/model/index')
 go()
 
 async function go() {
     try {
-        let comment = await Comment.build({ title: '896', user_id: 1, blog_id: 1})
-        let res = comment.toJSON()
-        console.log('@ => ', res)
+        let blogImgAlt_1 = await BlogImgAlt.build({ blogImg: 42, alt: '42-1'})
+        let blogImgAlt_2 = await BlogImgAlt.build({ blogImg: 42, alt: '42-1'})
+        console.log('@ => ', blogImgAlt_1, blogImgAlt_2)
     } catch (e) {
         console.log(e)
     }

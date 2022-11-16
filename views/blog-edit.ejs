@@ -211,7 +211,7 @@
                                 return _html
                             }
                             payloadObj.html = getImg(payload.get('html'))
-                            
+
                             //  取出 要刪除關聯的圖片
                             let cancelImgs = removeAssociateImgs()
                             if (cancelImgs.length) {    //  若cancel有值
@@ -306,6 +306,23 @@
 
                                 //  (待補)自定義 upload imgage 失敗
                             }
+                            //  editor config : image edit
+                            editorConfig.MENU_CONF['editImage'] = {
+                                onUpdatedImage(imageNode) {                    // JS 语法
+                                    console.log(' +++ imageNode => ', imageNode)
+                                    if (imageNode == null) return
+                                    const { src, alt, url } = imageNode
+                                    console.log('updated image', src, alt, url)
+                                },
+                                async checkImage(src, alt, url) {
+                                    console.log('+++ alt => ', alt)
+                                    console.log('+++ src => ', src)
+                                    console.log('+++ url => ', url)
+                                    //  修改
+                                    return true
+                                }
+                            }
+
                             editorConfig.onChange = handle_editorChange()
 
                             console.log('@editor => ', window.data.blog.html)
@@ -602,8 +619,8 @@
                                 div: ['data-w-e-type'],
                                 input: ['type']
                             },
+                            //  在白名單上的attr filter
                             onTagAttr(tag, attr, value) {
-                                console.log('@onTagAttr tag => ', tag)
                                 let checkbbox = tag === 'input' && attr === 'type' && value === 'checkbox'
                                 let todoDiv = tag === 'div' && attr === 'data-w-e-type' && value === 'todo'
                                 if (checkbbox) {
@@ -613,23 +630,13 @@
                                     return 'todo'
                                 }
                             },
-                            onIgnoreTag(tag, html){
-                                console.log('@ ignore tag => ', tag)
-                                if(tag === 'x-img'){
+                            //  不在白名單上的tag filter
+                            onIgnoreTag(tag, html) {
+                                if (tag === 'x-img') {
                                     console.log('ok')
                                     return html
                                 }
                             }
-
-                            // onIgnoreTag(tag, html){
-                            //     console.log('@tag => ', tag)
-                            //     console.log('@html => ', html)
-                            //     let reg = /<input type="checkbox" disabled >/
-                            //     if(reg.test(html)){
-                            //         console.log('@xss => ', html)
-                            //         return html
-                            //     }   
-                            // }
                         })
                     }
 

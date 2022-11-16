@@ -23,9 +23,10 @@ async function readImg( whereOps , associateWithBlog = {} ) {
 
     let blogImg = await img.addBlog(blog_id, { through: { name } })
     
-    let [{ id: blogImg_id }] = init_blogImg(blogImg)
-
-    res.blogImg_id = blogImg_id
+    let [ init_blogImg_ins ] = init_blogImg(blogImg)
+    
+    res.blogImg_id = init_blogImg_ins.blogImg_id
+    res.name = init_blogImg_ins.name
 
     return res
 }

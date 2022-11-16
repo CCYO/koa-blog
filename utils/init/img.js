@@ -19,10 +19,8 @@ function init_img(img) {
 
 function _init_img(img) {
     let json_img = img.toJSON ? img.toJSON() : img
-
-    const { id: img_id, hash, url } = json_img
-
-    return { img_id, hash, url }
+    //  { id, hash, url}
+    return json_img
 }
 
 module.exports = {

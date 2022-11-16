@@ -10,7 +10,7 @@
     <%- include('wedgets/navbar/index') %>
 
     <ul>
-        <% imgs.forEach( ({name, img_id, blogImg_id, url}) => { %>
+        <% album.imgs.forEach( ({name, img_id, blogImg_id, url}) => { %>
         <li data-my-photo="<%= blogImg_id %>">
             <img src="<%= url %>" alt="<%= name %>"><br>
             <span><%= name %></span>
@@ -22,10 +22,9 @@
         <% }) %>
     </ul>
     <!-- 當前使用者頁面的使用者資料 -->
-    <div data-my-data="imgs">
-        <%- JSON.stringify(imgs) %>
+    <div data-my-data="album">
+        <%- JSON.stringify(album) %>
     </div>
-
     <!-- 引入 xss -->
     <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
     <!-- 引入 Ajv -->
@@ -51,6 +50,9 @@
         $(async function () {
             try {
                 await window._my.initData()
+                let { blog, imgs } = window.data.album
+                window.data.blog = blog
+                window.data.imgs = imgs
                 await init()
                 console.log('@ album.ejs init OK')
             } catch (e) {
@@ -92,8 +94,14 @@
                     let $parent = $el.parents('li')
                     let name = $el.prev().val()
                     let blogImg_id = $parent.attr('data-my-photo') * 1
+                    let blog_id = window.data.blog.id
+                    let payload = {
+                        blog_id: window.data.blog.id,
+                        name,
+                        blogImg_id
+                    }
                     // axios
-                    let {data: { errno, data, msg } } = await axios.post('/api/album', {name, blogImg_id})
+                    let {data: { errno, data, msg } } = await axios.post('/api/album', payload)
                     if(errno){
                         console.log('@相片改名失敗')
                         return

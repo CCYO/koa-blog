@@ -14,8 +14,16 @@ function init_blogImgAlt(blogImgAlt) {
 
 function _init_blogImgAlt(blogImgAlt) {
     let json = blogImgAlt.toJSON ? blogImgAlt.toJSON() : blogImgAlt
-    
-    return json
+    console.log('@json => ', json)
+    let { id, alt, BlogImg } = json
+    let res = { id, alt }
+    if(!BlogImg){
+        return res
+    }
+    if(!alt){
+        alt = name
+    }
+    return { id, img_id, blog_id, blogImg_id, alt, name }
 }
 
 module.exports = {

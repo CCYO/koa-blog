@@ -1,14 +1,13 @@
 const { FollowBlog } = require('./model')
-
-async function go(){
-    try{
-        let data = [
-            { blog_id: 27, follower_id: 3, deletedAt: null},
-            { blog_id: 27, follower_id: 2, deletedAt: null},
-        ]
-        let res = await FollowBlog.bulkCreate(data, { updateOnDuplicate: ['deletedAt']})
+const { createBlogImgAlt, readBlogImgAlt } = require('../../server/blogImgAlt')
+async function go() {
+    try {
+        // let blogImgAlt = await createBlogImgAlt({ blogImg_id: 42, alt: '6666' })
+        // console.log('@ 創建的 blogImgAlt => ', blogImgAlt)
+        blogImgAlt = await readBlogImgAlt({id: 1 })
+        console.log('@ 找到的 blogImgAlt => ', blogImgAlt)
         console.log('@ ok => res => ', res)
-    }catch(err){
+    } catch (err) {
         console.log(err)
     }
 }
