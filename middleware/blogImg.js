@@ -4,8 +4,12 @@ const {
 } = require('../server/img')
 
 const {
-
+    createBlogImg
 } = require('../server/blogImg')
+
+const {
+    createBlogImg
+} = require('../server/blogImgAlt')
 
 const { parse } = require('../utils/gcs')
 
@@ -28,8 +32,9 @@ const { SuccModel, ErrModel } = require('../model')
         img = await createImg({hash, url})
     }
     console.log('@Img與Blog作關聯')
-    let blogImg = await createBlogImg({ img_id: img.img_id, blog_id, name })
-    let blogImgAlt = await createBlogImgAlt({ blogImg_id: blogImg.blogImg_id})
+    let blogImg = await createBlogImg({ img_id: img.id, blog_id, name })
+    let blogImgAlt = await createBlogImgAlt({ blogImg_id: blogImg.blogImg_id })
+    
     //  找不到，創建img
     img && console.log('@GCS有圖檔，僅作BlogImg關聯')
     if(!img){   //  若GCS沒有該圖檔，則 upload GCS
