@@ -6,14 +6,15 @@ let {
     Blog,
     BlogImg,
     BlogImgAlt
-} = require('./db/mysql/model/index')
+} = require('./db/mysql/model')
+
+const { readBlog } = require('./server/blog')
 go()
 
 async function go() {
     try {
-        let blogImgAlt_1 = await BlogImgAlt.build({ blogImg: 42, alt: '42-1'})
-        let blogImgAlt_2 = await BlogImgAlt.build({ blogImg: 42, alt: '42-1'})
-        console.log('@ => ', blogImgAlt_1, blogImgAlt_2)
+        let blog = await readBlog({blog_id: 58})
+        console.log('@blog => ', blog)
     } catch (e) {
         console.log(e)
     }

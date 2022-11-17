@@ -14,12 +14,12 @@ function init_blogImgAlt(blogImgAlt) {
 
 function _init_blogImgAlt(blogImgAlt) {
     let json = blogImgAlt.toJSON ? blogImgAlt.toJSON() : blogImgAlt
-    console.log('@json => ', json)
     let { id, alt, BlogImg } = json
     let res = { id, alt }
     if(!BlogImg){
         return res
     }
+    let { id: blogImg_id, img_id, blog_id, name } = BlogImg
     if(!alt){
         alt = name
     }

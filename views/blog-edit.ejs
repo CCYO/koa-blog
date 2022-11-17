@@ -124,18 +124,7 @@
                         }
                     })
 
-                    // $title
-                    //     .on('blur', handle_valicateTitle)
-                    //     .on('input', handle_valicateTitle)
-
-                    // //  綁定 title 更新更能
-                    // let $btn_updateTitle = $('#updateTitle')
-                    // $btn_updateTitle
-                    //     .prop('disabled', true)
-                    //     .click(handle_updateTitle)
-
-
-                    // //  初始化 編輯文章功能
+                    //  初始化 編輯文章功能
                     init_editorBlog()
                     window.payload = new Map()
                     setPayload()
@@ -385,13 +374,13 @@
                                     }
                                     /* 上傳成功 */
 
-                                    //  data { img_id, blogImg_id, name, url, hash }
+                                    //  data 是 blogImgAlt { id, alt, img_id, url, hash, blogImg_id, blog_id, name }
                                     if (data.name) {
                                         data.name = decodeURIComponent(data.name)
                                     }
                                     window.data.blog.imgs.push(data)
                                     //  將圖片插入 editor
-                                    insertFn(data.url, data.name)
+                                    insertFn(`${data.url}&blogImgAlt=${data.id}`, data.name)
                                 } else {
                                     /*  url 有值，代表 blog.imgs 已有此圖 */
 
@@ -402,23 +391,18 @@
 
                             //  取得圖片的 hash
                             async function _getImgHash(img) {
-
                                 //  計算出 img 的 md5Hash(hex格式)
                                 let md5hash = await _getMD5Hash(img)
                                 let res = { hash: md5hash }
 
                                 let imgs = window.data.blog.imgs
-                                if (imgs.length) {  //  若blog.imgs有檔案
-                                    //  比對 blog 內是否已有該 img
-                                    let exist = imgs.some((img) => {
-                                        let { hash } = img
-                                        //  同hash，代表同img
-                                        if (md5hash === hash) {
-                                            //  返回 blog.imgs 內相同的img資料
-                                            return res = img
-                                        }
-                                    })
+                                if (!imgs.length) {
+                                    return res
                                 }
+                                //  若blog.imgs有檔案
+                                //  比對 blog 內是否已有該 img
+                                let exist = imgs.find(({ hash }) => md5hash === hash)
+                                res = exist ? exist : res
                                 return res
                             }
 
@@ -471,14 +455,6 @@
 
                     //  handle 驗證 title
                     function handle_input(e) {
-                        //  驗證標題
-                        // let title = valicateAndGetTitle(e.target.value)
-                        // if (title) {  //  驗證ok
-                        //     $btn_updateTitle.prop('disabled', false)    //  可更新
-                        // } else {  //  驗證失敗
-                        //     e.type === 'input' && $btn_updateTitle.prop('disabled', true)   //不可更新
-                        //     e.type === 'blur' && $title.val(window.data.blog.title)   //  恢復原title
-                        // }
                         let title = my_xss(e.target.value.trim())
                         let res = valicator({ title })
                         if (!res) {

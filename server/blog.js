@@ -105,7 +105,7 @@ async function readBlog({ blog_id }, needComment) {
                 },
                 {
                     model: BlogImgAlt,
-                    attributes: ['alt']
+                    attributes: ['id', 'alt']
                 }
             ]
         }

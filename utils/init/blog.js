@@ -35,8 +35,9 @@ function _init_blog(blog) {
         res.author = init_user(author)
     }
 
+    res.imgs = []
     if(blogImgs && blogImgs.length){
-        res.imgs = blogImgs.map( blogimg => {
+        let imgList = blogImgs.map( blogimg => {
             let {
                 name,
                 id: blogImg_id,
@@ -47,24 +48,20 @@ function _init_blog(blog) {
                 },
                 BlogImgAlts
             } = blogimg
-            let blogImgAltList = init_blogImgAlt(BlogImgAlts)
-            return { img_id, name, hash, url, blogImg_id }
+            let blogImgAltList = init_blogImgAlt(BlogImgAlts)   // [{ id, alt },...]
+            return { img_id, hash, url, blogImg_id, name, blogImgAltList }
         })
-    }else{
-        res.imgs = []
+        imgList.reduce((initVal, {blogImgAltList, ...imgData}) => {
+            blogImgAltList.forEach( blogImgAlt => {
+                let img = {...blogImgAlt, ...imgData }
+                if(!img.alt){
+                    img.alt = img.name
+                }
+                initVal.push(img)
+            })
+            return initVal
+        }, res.imgs)
     }
-
-    // if(imgList && imgList.length){
-    //     res.imgs = imgList.reduce((initVal, curVal, index) => {
-    //         let { BlogImg: { id: blogImg_id }, id, hash, url } = curVal
-            
-    //         initVal.push({ id, hash, url, blogImg_id })
-    //         return initVal
-    //     }, [])
-    //     console.log('@imgs => ', res.imgs)
-    // }else{
-    //     res.imgs = []
-    // }
 
     if(comments && comments.length){
         res.comments = init_comment_4_blog(comments)

@@ -7,32 +7,25 @@ async function createBlogImgAlt({ blogImg_id, alt }){
         data.alt = alt
     }
     let blogImgAlt = await BlogImgAlt.create(data)
-    console.log('@ 尚未 JSON化 的 blogImgAlt => ', blogImgAlt)
-    return await readBlogImgAlt({ id: blogImgAlt.id })
+    return await readBlogImgAlt({ id: blogImgAlt.dataValues.id })
 }
 
 async function readBlogImgAlt({ id }){
     let where = { id }
-    console.log(BlogImgAlt.findOne)
-    let res = await BlogImgAlt.findByPk(1, {
+
+    let blogImgAlt = await BlogImgAlt.findOne({
+        where,
         include: {
             model: BlogImg,
             attributes: ['id', 'blog_id', 'img_id', 'name']
         }
     })
-    console.log('@ init => ', init_blogImgAlt(res))
-
-    return
-    let blogImgAlt = await BlogImgAlt.findOne({
-        where: { id },
-        include: {
-            model: 'BlogImgs',
-            attributes: ['id', 'blog_id', 'img_id', 'name']
-        }
-    })
-    if(blogImgAlt){
-        blogImgAlt = init_blogImgAlt(blogImgAlt)
+    
+    if(!blogImgAlt){
+        return null
     }
+
+    return init_blogImgAlt(blogImgAlt)
 }
 
 module.exports = {

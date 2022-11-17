@@ -29,17 +29,14 @@ window._my.initData = async function () {
                     function parseHtml(htmlStr) {
                         let _html = htmlStr
                         while (res = reg.exec(htmlStr)) {
+                            //  imgs : [{ id, alt, img_id, hash, url, blogImg_id, name}, ...]
                             let exist = blog.imgs.find((img) => {
-                                console.log(img)
-                                console.log(res)
-                                let ok = img.img_id === res[1] * 1
-                                console.log(ok)
+                                let ok = img.id === res[1] * 1
                                 return ok
                             })
-                            console.log(exist)
                             if (exist) {
-                                let { url, name } = exist
-                                _html = _html.replace(res[0], `<img src='${url}' alt='${name}' />`)
+                                let { url, name, id } = exist
+                                _html = _html.replace(res[0], `<img src='${url}&blogImgAlt=${id}' alt='${name}' />`)
                                 console.log('@_html => ', _html)
                             }
                         }
