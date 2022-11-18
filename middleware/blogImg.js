@@ -8,7 +8,7 @@ const {
 } = require('../server/blogImg')
 
 const {
-    createBlogImg
+    createBlogImgAlt
 } = require('../server/blogImgAlt')
 
 const { parse } = require('../utils/gcs')
@@ -35,7 +35,7 @@ const { SuccModel, ErrModel } = require('../model')
     console.log('@GCS有圖檔，僅作BlogImg關聯')
     let blogImg = await createBlogImg({ img_id: img.id, blog_id, name })
     let blogImgAlt = await createBlogImgAlt({ blogImg_id: blogImg.id })
-    ctx.body = new SuccModel(blogImgAlt)
+    ctx.body = new SuccModel({ ...blogImgAlt, img_id: img.id, url: img.url, hash})
 }
 
 module.exports = {
