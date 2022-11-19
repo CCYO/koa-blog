@@ -7,6 +7,8 @@ const router = require('koa-router')()
 const { addBlog, modifyBlog, removeBlog } = require('../../controller/blog')
 
 const { uploadImg } = require('../../middleware/blogImg')
+const { addBlogImgAlt } = require('../../controller/blogImgAlt')
+
 
 const { api_check_login } = require('../../middleware/check_login')
 const { notifiedNews, resetBlog, cache_reset } = require('../../middleware/cache')
@@ -22,6 +24,12 @@ router.post('/', api_check_login, cache_reset, async (ctx, next) => {
 
 //  上傳圖片
 router.post('/img', api_check_login, resetBlog, uploadImg)
+
+//  建立Blog既有圖片的alt
+router.post('/blogImgAlt', api_check_login, resetBlog, async(ctx, next) => {
+    let { blogImg_id } = ctx.request.body
+    ctx.body = await addBlogImgAlt(blogImg_id)
+})
 
 //  刪除 blog
 router.delete('/', api_check_login, cache_reset, async (ctx, next) => {
