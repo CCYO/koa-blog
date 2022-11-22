@@ -23,6 +23,10 @@ const {
 } = require('../server/blogImg')
 
 const {
+    deleteBlogImgAlt
+} = require('../server/blogImgAlt')
+
+const {
     createFollowers,
     restoreBlog,
     hiddenBlog,
@@ -97,7 +101,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
     //  文章內沒有的圖片，刪除關聯
     if (cancelImgs) {
-        let res = await deleteBlogImg({ listOfId: cancelImgs })
+        let res = await deleteBlogImgAlt({ id: cancelImgs })
         if (!res) {
             return new ErrModel(BLOGIMG.REMOVE_ERR)
         }

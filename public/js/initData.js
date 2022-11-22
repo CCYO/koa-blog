@@ -21,13 +21,13 @@ window._my.initData = async function () {
                 console.log('解碼後的html => ', htmlStr)
                 // val.html = val.html === 'null' ? '' : val.html  //  若html資料為無，則檢視為零長度的字段
                 if (htmlStr !== 'null') {
-                    let reg = /<x-img data-id='(\w+?)' \/>/g
-                    let res
-
+                    // let reg = /<x-img data-id='(\w+?)'.+?data-style='(.+?)'\/>/g
+                    var reg = /<x-img.+?data-id='(?<id>\w+?)'.+?(data-style='(?<style>.+?)')?.*?\/>/g
                     blog.html = parseHtml(htmlStr)
                     console.log('@blog.html => ', blog.html)
                     function parseHtml(htmlStr) {
                         let _html = htmlStr
+                        let res
                         while (res = reg.exec(htmlStr)) {
                             //  imgs : [{ id, alt, img_id, hash, url, blogImg_id, name}, ...]
                             let exist = blog.imgs.find((img) => {
@@ -35,8 +35,9 @@ window._my.initData = async function () {
                                 return ok
                             })
                             if (exist) {
-                                let { url, name, id } = exist
-                                _html = _html.replace(res[0], `<img src='${url}&blogImgAlt=${id}' alt='${name}' />`)
+                                let { url, alt, id } = exist
+                                let replaceStr = res.groups.style ? `<img src='${url}?blogImgAlt=${id}' alt='${alt}' style='${res.groups.style}' />` : `<img src='${url}?blogImgAlt=${id}' alt='${alt}' />`
+                                _html = _html.replace(res[0], replaceStr)
                                 console.log('@_html => ', _html)
                             }
                         }

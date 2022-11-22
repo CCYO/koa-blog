@@ -196,17 +196,17 @@
                                 payloadObj.cancelImgs = cancelImgs //  放入payload
                             }
                             console.log('@payloadObj => ', payloadObj)
-                            return
+                            
 
                             //  將<img>替換為替代符
                             function getImg(html) {
-                                let reg = /<img src=".+?blogImgAlt=(\w+?)".+?\/>/g
+                                let reg = /<img src=".+?style="(.+?)".+?blogImgAlt=(\w+?)".+?\/>/g
                                 let res
                                 let _html = html
                                 while (res = reg.exec(html)) {
                                     if (res) {
                                         console.log('轉換img時找到的blogImgAlt => ', res[1])
-                                        _html = _html.replace(res[0], `<x-img data-id='${res[1]}' />`)
+                                        _html = _html.replace(res[0], `<x-img data-id='${res[3]}' data-style='${res[2]}'/>`)
                                     }
                                 }
                                 return _html
@@ -323,17 +323,24 @@
                             }
                             //  editor config : image edit
                             editorConfig.MENU_CONF['editImage'] = {
-                                onUpdatedImage(imageNode) {                    // JS 语法
-                                    console.log(' +++ imageNode => ', imageNode)
-                                    if (imageNode == null) return
-                                    const { src, alt, url } = imageNode
-                                    console.log('updated image', src, alt, url)
-                                },
                                 async checkImage(src, alt, url) {
-                                    console.log('+++ alt => ', alt)
-                                    console.log('+++ src => ', src)
-                                    console.log('+++ url => ', url)
                                     //  修改
+                                    let reg = /blogImgAlt=(\w+)/
+                                    let res_reg = reg.exec(src)
+                                    let blogImgAlt_id = res_reg[1] * 1
+                                    alt = my_xss(alt)
+                                    let { data: { errno, msg }} = await axios.patch('/api/blog/blogImgAlt', { blogImgAlt_id, alt })
+                                    if(errno){
+                                        return msg
+                                    }
+                                    window.data.blog.imgs.forEach((img, index, imgs) => {
+                                        if(img.id === blogImgAlt_id){
+                                            imgs[index].alt = alt
+                                            window.data.map_imgs.set(blogImgAlt_id, {
+                                                ...window.data.map_imgs.get(blogImgAlt_id), alt
+                                            })
+                                        }
+                                    })
                                     return true
                                 }
                             }
@@ -477,6 +484,7 @@
                                     } else {
                                         payload.set('curHtml', html)
                                     }
+
                                     let res = valicator({ html })
                                     if (!res) {
                                         setPayload({ html })

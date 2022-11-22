@@ -39,15 +39,18 @@ module.exports = {
         REMOVE_ERR: { errno: 801, msg: '刪除BlogImg時，數量對不上'},
         UPDATE_ERR: { errno: 802, msg: '更新失敗'}
     },
+    BLOGIMGALT: {
+        UPDATE_ERR: { errno: 902, msg: '更新失敗'}
+    },
     FOLLOW: {
-        FOLLOW_ERR: { errno: 901, msg: '追蹤失敗'},
-        CANCEL_ERR: { errno: 902, msg: '取消追蹤失敗'},
-        CONFIRM_ERR: { errno: 903, msg: '確認追蹤消息失敗'}
+        FOLLOW_ERR: { errno: 1001, msg: '追蹤失敗'},
+        CANCEL_ERR: { errno: 1002, msg: '取消追蹤失敗'},
+        CONFIRM_ERR: { errno: 1003, msg: '確認追蹤消息失敗'}
     },
     NEWS: {
-        FOLLOW_CONFIRM_ERR: { errno: 1001, msg: 'Follow.confirm 更新失敗'},
-        BLOG_FANS_CONFIRM_ERR: { errno: 1002, msg: 'Blog_Fans.confirm 更新失敗'},
-        FOLLOW_COMMENT_CONFIRM_ERR: { errno: 1003, msg: 'Blog_Fans.confirm 更新失敗'}
+        FOLLOW_CONFIRM_ERR: { errno: 1101, msg: 'Follow.confirm 更新失敗'},
+        BLOG_FANS_CONFIRM_ERR: { errno: 1102, msg: 'Blog_Fans.confirm 更新失敗'},
+        FOLLOW_COMMENT_CONFIRM_ERR: { errno: 1103, msg: 'Blog_Fans.confirm 更新失敗'}
     },
     SERVER_ERR: { errno: 9999, msg: '伺服器錯誤'}
 }
