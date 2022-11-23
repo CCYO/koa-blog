@@ -171,6 +171,8 @@
                             let payloadObj = [...payload.entries()].reduce((initVal, [k, v]) => {
                                 if (k !== 'curHtml') {
                                     initVal[k] = v
+                                }else{
+
                                 }
                                 return initVal
                             }, {})
@@ -200,13 +202,15 @@
 
                             //  將<img>替換為替代符
                             function getImg(html) {
-                                let reg = /<img src=".+?style="(.+?)".+?blogImgAlt=(\w+?)".+?\/>/g
+                                // let reg = /<img src=".+?style="(.+?)".+?blogImgAlt=(\w+?)".+?\/>/g
+                                let reg = /<img.+?src=".+?blogImgAlt=(?<id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g
                                 let res
                                 let _html = html
                                 while (res = reg.exec(html)) {
                                     if (res) {
-                                        console.log('轉換img時找到的blogImgAlt => ', res[1])
-                                        _html = _html.replace(res[0], `<x-img data-id='${res[3]}' data-style='${res[2]}'/>`)
+                                        let {id, style} = res.groups
+                                        console.log('轉換img時找到的blogImgAlt => ', id)
+                                        _html = _html.replace(res[0], `<x-img data-id='${id}' data-style='${style}'/>`)
                                     }
                                 }
                                 return _html
@@ -216,6 +220,7 @@
 
                             //  payload放入blog_id
                             payloadObj.id = window.data.blog.id
+                            console.log('@payloadObj ===> ', payloadObj)
 
                             const {
                                 data: {
@@ -328,8 +333,9 @@
                                     let reg = /blogImgAlt=(\w+)/
                                     let res_reg = reg.exec(src)
                                     let blogImgAlt_id = res_reg[1] * 1
+                                    let blog_id = window.data.blog.id
                                     alt = my_xss(alt)
-                                    let { data: { errno, msg }} = await axios.patch('/api/blog/blogImgAlt', { blogImgAlt_id, alt })
+                                    let { data: { errno, msg }} = await axios.patch('/api/blog/blogImgAlt', { blog_id, blogImgAlt_id, alt })
                                     if(errno){
                                         return msg
                                     }
@@ -480,8 +486,10 @@
                                         return
                                     }
                                     if (html === payload.get('curHtml')) {
+                                        console.log(`html === payload.get('curHtml') => GG`, )
                                         return
                                     } else {
+                                        console.log(`html !== payload.get('curHtml') => OK`, )
                                         payload.set('curHtml', html)
                                     }
 
@@ -635,17 +643,16 @@
                             whiteList: {
                                 ...filterXSS.whiteList,
                                 div: ['data-w-e-type'],
-                                input: ['type']
+                                input: ['type'],
+                                img: ['src', 'alt', 'style', 'data-href']
                             },
                             //  在白名單上的attr filter
-                            onTagAttr(tag, attr, value) {
+                            onTagAttr(tag, attr, value, isW) {
                                 let checkbbox = tag === 'input' && attr === 'type' && value === 'checkbox'
                                 let todoDiv = tag === 'div' && attr === 'data-w-e-type' && value === 'todo'
-                                if (checkbbox) {
-                                    return 'checkbox'
-                                }
-                                if (todoDiv) {
-                                    return 'todo'
+                                let img = tag === 'img' && attr === 'src' || attr === 'alt' || attr === 'style' || attr === 'data-href'
+                                if (checkbbox || todoDiv || img) {
+                                    return `${attr}="${value}"`
                                 }
                             },
                             //  不在白名單上的tag filter

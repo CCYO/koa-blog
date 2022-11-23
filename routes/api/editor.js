@@ -26,12 +26,12 @@ router.post('/', api_check_login, cache_reset, async (ctx, next) => {
 router.post('/img', api_check_login, resetBlog, uploadImg)
 
 //  建立Blog既有圖片的alt
-router.post('/blogImgAlt', api_check_login, resetBlog, async(ctx, next) => {
+router.post('/blogImgAlt', api_check_login, cache_reset, async(ctx, next) => {
     let { blogImg_id } = ctx.request.body
     ctx.body = await addBlogImgAlt(blogImg_id)
 })
 
-router.patch('/blogImgAlt', api_check_login, resetBlog, async(ctx, next) => {
+router.patch('/blogImgAlt', api_check_login, cache_reset, async(ctx, next) => {
     let { blogImgAlt_id, blog_id, alt } = ctx.request.body
     ctx.body = await modifiedBlogImgAlt(blogImgAlt_id, blog_id, alt)
 })

@@ -5,16 +5,16 @@ function my_xxs(html) {
     whiteList: {
       ...xss.whiteList,
       div: ['data-w-e-type'],
-      input: ['type']
+      input: ['type'],
+      img: ['src', 'alt', 'style', 'data-href']
     },
-    onTagAttr(tag, attr, value) {
+    //  在白名單上的attr filter
+    onTagAttr(tag, attr, value, isW) {
       let checkbbox = tag === 'input' && attr === 'type' && value === 'checkbox'
       let todoDiv = tag === 'div' && attr === 'data-w-e-type' && value === 'todo'
-      if (checkbbox) {
-        return 'checkbox'
-      }
-      if (todoDiv) {
-        return 'todo'
+      let img = tag === 'img' && attr === 'src' || attr === 'alt' || attr === 'style' || attr === 'data-href'
+      if (checkbbox || todoDiv || img) {
+        return `${attr}="${value}"`
       }
     },
     onIgnoreTag(tag, html) {
