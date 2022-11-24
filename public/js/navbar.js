@@ -12,9 +12,9 @@ async function initData() {
     let { errno, data, msg } = await getMe()
 
     if (!errno) {
-        window.data.me = data
         console.log('@ window.data.me finish ')
         console.log('@ getMe.js --- ok')
+        return data
     }
 
     //  渲染基本NAV
