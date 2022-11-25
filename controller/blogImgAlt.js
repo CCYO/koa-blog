@@ -6,9 +6,9 @@ const {
 const { SuccModel, ErrModel } = require('../model')
 const { BLOGIMGALT } = require('../model/errRes')
 
-async function addBlogImgAlt(blogImg_id){
+async function addBlogImgAlt(blogImg_id, blog_id){
     let blogImgAlt = await createBlogImgAlt({blogImg_id})
-    return new SuccModel(blogImgAlt, { blog: [blogImgAlt.blog_id]})
+    return new SuccModel(blogImgAlt, { blog: [blog_id]})
 }
 
 async function modifiedBlogImgAlt(id, blog_id, alt){

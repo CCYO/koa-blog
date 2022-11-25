@@ -27,8 +27,8 @@ router.post('/img', api_check_login, resetBlog, uploadImg)
 
 //  建立Blog既有圖片的alt
 router.post('/blogImgAlt', api_check_login, cache_reset, async(ctx, next) => {
-    let { blogImg_id } = ctx.request.body
-    ctx.body = await addBlogImgAlt(blogImg_id)
+    let { blogImg_id, blog_id } = ctx.request.body
+    ctx.body = await addBlogImgAlt(blogImg_id, blog_id)
 })
 
 router.patch('/blogImgAlt', api_check_login, cache_reset, async(ctx, next) => {

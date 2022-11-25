@@ -32,8 +32,8 @@ window._my.initData = async function () {
         let blog = JSON.parse(data)   // 整體轉回obj
         if (blog.imgs.length) {
             blog.map_imgs = new Map()
-            blog.imgs.forEach(({ id, alt, img_id, url, hash, blogImg_id, name }, index) => {
-                blog.map_imgs.set(id, { index, alt, img_id, url, hash, blogImg_id, name })
+            blog.imgs.forEach(( img, index ) => {
+                blog.map_imgs.set(img.id, { ...img, index })
             })
         }
         let htmlStr = decodeURI(blog.html)  // html資料做百分比解碼
