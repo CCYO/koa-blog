@@ -98,7 +98,7 @@
                                 await window._my.initData()
                                 console.log('@ 已確認頁面所需數據皆已初始化完成')
 
-                                //  定義公用的變量
+                                //  公用變量
                                 //  API
                                 let api_blog = '/api/blog/'
                                 //  JQ Ele
@@ -107,11 +107,11 @@
 
                                 //  預設updateTitle無法觸發
                                 $btn_updateTitle.prop('disabled', true)
-                                //  初始化 頁面各功能
 
-                                //  存放酬載
+                                //  初始化 頁面各功能
+                                //  updateBlog 酬載容器
                                 window.payload = init_Payload()
-                                //  初始化 編輯文章功能
+                                //  editor
                                 window.editor = init_editor()
                                 //  生成 valicator
                                 let valicator = init_valicator()
@@ -150,7 +150,7 @@
                                     const editorConfig = {
                                         placeholder: '請開始撰寫文章內容...',
                                         //  每次editor焦點/內容變動時調用
-                                        onChange: handle_change,
+                                        onChange: handle_change(),
                                         MENU_CONF: {
                                             //  關於 upload img 的配置
                                             uploadImage: {
@@ -294,22 +294,21 @@
                                         //  因為 editor 是 autoFocus，故handle_change 一開始便會被調用，也利用這點先為 payload 設置 html數據
                                         let init = true
                                         return (editor) => {
-                                            let htmlStr = editor.getHtml()
                                             //  xss & 移除頭尾空行
-                                            htmlStr = xssAndRemoveEmpty(editorgetHtml)
+                                            let html = xssAndRemoveEmpty(editor.getHtml())
                                             //  初始化 payload.curHtml
                                             if (init) {
-                                                payload.set('curHtml', htmlStr)
+                                                payload.set('curHtml', html)
                                                 init = false
                                                 return
                                             }
-                                            if (htmlStr === payload.get('curHtml')) {   //  若htmlStr沒變化則不動作
+                                            if (html === payload.get('curHtml')) {   //  若htmlStr沒變化則不動作
                                                 return
                                             } else {    //  若htmlStr變化則更新
-                                                payload.set('curHtml', htmlStr)
+                                                payload.set('curHtml', html)
                                             }
                                             //  驗證htmlStr
-                                            let res = valicator({ html: htmlStr })
+                                            let res = valicator({ html })
                                             if (!res) {
                                                 payload.setKVpairs({ html })
                                             }
@@ -351,9 +350,10 @@
                                 async function handle_saveBlog(e) {
                                     let payloadObj = checkAndGetCurData()
 
+                                    //  取出當前 html
                                     let curHtml = payload.get('curHtml')
-                                    let curShow = $('#show').is(':checked')
-
+                                    let curShow = $('#show').is(':checked')\
+                                    //  若當前要save的狀態是「文章沒內容」、「要公開」，則不合法
                                     if (!curHtml && curShow) {
                                         alert('沒有內容是要公開什麼啦')
                                         return
@@ -572,19 +572,21 @@
                                 //  utils ------
                                 //  檢查並返回當前所有表格數據
                                 function checkAndGetCurData() {
+                                    //  複製 payload 內除了 curHtml 以外的所有數據
                                     let payloadObj = [...payload.entries()].reduce((initVal, [k, v]) => {
                                         if (k !== 'curHtml') {
                                             initVal[k] = v
                                         }
                                         return initVal
                                     }, {})
-
+                                    //  驗證數據是否都合法
                                     let errors = valicator(payloadObj)
-                                    if (!errors) {
-                                        return payloadObj
+                                    if (errors) {  //  代表不合法
+                                        errors.forEach(({ message }) => alert(message))
+                                        return false
                                     }
-                                    errors.forEach(({ message }) => alert(message))
-                                    return false
+                                    //  合法
+                                    return payloadObj
                                 }
                                 // 用來對表格內容進行xss
                                 function my_xss(html) {

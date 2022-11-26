@@ -10,11 +10,10 @@ async function initData() {
     await Promise.all(window._my.promiseAll)
 
     let { errno, data, msg } = await getMe()
-
     if (!errno) {
         console.log('@ window.data.me finish ')
         console.log('@ getMe.js --- ok')
-        return data
+        window.data.me = data
     }
 
     //  渲染基本NAV

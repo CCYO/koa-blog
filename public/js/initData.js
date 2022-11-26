@@ -26,7 +26,7 @@ window._my.initData = async function () {
     })
     $(`[data-my-data]`).remove()
     console.log('@ initData.js --- ok')
-    await Promise.all(window._my.promiseAll)
+    let all = await Promise.all(window._my.promiseAll)
 
     function initBlog(data) {
         let blog = JSON.parse(data)   // 整體轉回obj
