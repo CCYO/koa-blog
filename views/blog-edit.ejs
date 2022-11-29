@@ -1,670 +1,715 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
 <%- include('wedgets/common/header') %>
 
-    <body>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
-        <style>
-            #showBox {
-                position: relative;
-                z-index: 1010;
-            }
+<body>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
+    <style>
+        #backdrop.my-show {
+            background: rgba(202, 71, 71, 0.5);
+            position: fixed;
+            z-index: 1000;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-            #backdrop {
-                position: fixed;
-                z-index: 1000;
-                /* height: 100%;
-            width: 100%; */
-                top: 0;
-                left: 0;
-                bottom: 0;
-                right: 0;
-                background: rgba(200, 200, 200, 0.5);
-            }
+        #backdrop>div {
+            font-size: 100px;
+        }
 
-            #editor-container {
-                border: 1px solid rgba(200, 200, 200, .8);
-                height: 400px;
-                min-height: 300px;
-            }
-        </style>
-        <!-- 主導覽： NAV_CSS + NAV第一層template -->
-        <%- include('wedgets/navbar/index') %>
+        #editor-container {
+            border: 1px solid rgba(200, 200, 200, .8);
+            height: 400px;
+            min-height: 300px;
+        }
+    </style>
+    <!-- 主導覽： NAV_CSS + NAV第一層template -->
+    <%- include('wedgets/navbar/index') %>
+    <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>">
+        <div>讀取中...</div>
+    </div>
+    <div class="container">
+        <div id="showBox">
+            <input type="text" id="title" name="title" class="form-control" value="<%= blog.id ? blog.title : '' %>">
+            <div class="valid-feedback">
+                Looks good!
+            </div>
+            <button id="updateTitle">修改標題</button>
+        </div>
+        <div id="editor-wrapper">
+            <div id="toolbar-container"></div>
+            <div id="editor-container"></div>
+            <span id="wordCount"></span>
 
-            <div class="container">
-                <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>"></div>
-                <div id="showBox">
-                    <input type="text" id="title" name="title" class="form-control"
-                        value="<%= blog.id ? blog.title : '' %>">
-                    <div class="valid-feedback">
-                        Looks good!
-                    </div>
-                    <button id="updateTitle">修改標題</button>
-                </div>
-                <div id="editor-wrapper">
-                    <div id="toolbar-container"></div>
-                    <div id="editor-container"></div>
+            <label> <input type="checkbox" id="show" name='show' />公開文章</label>
+            <% if (blog.show) { %>
+            <p>已於 <%= blog.showAt %> 發佈</p>
+            <% } %>
 
-                    <label> <input type="checkbox" id="show" name='show' />公開文章</label>
-                    <% if (blog.show) { %>
-                        <p>已於 <%= blog.showAt %> 發佈</p>
-                        <% } %>
+            <button id="save">存檔</button>
+            <button id="remove">刪除此篇文章</button>
+        </div>
 
-                            <button id="save">存檔</button>
-                            <button id="remove">刪除此篇文章</button>
-                </div>
+        <!-- 當前使用者頁面的使用者資料 -->
+        <div data-my-data="blog" style="display: none;">
+            <%- JSON.stringify(blog) %>
+        </div>
 
+        <!-- 引入 Spark-MD5 -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+        <!-- 引入 xss -->
+        <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
+        <!-- 引入 Ajv -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.11.0/ajv7.min.js"
+            integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
+            crossorigin="anonymous" referrerpolicy="no-referrer">
+            </script>
 
-                <!-- 當前使用者頁面的使用者資料 -->
-                <div data-my-data="blog">
-                    <%- JSON.stringify(blog) %>
-                </div>
+        <!-- JQ AXIOS BS5 -->
+        <%- include('wedgets/cdn') %>
+        <!-- 引入 editor css -->
+        <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
+        <!-- 引入 editor js -->
+        <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
+        <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
+        <script defer src="/js/initData.js"></script>
 
-                <!-- 引入 Spark-MD5 -->
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
-                <!-- 引入 xss -->
-                <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
-                <!-- 引入 Ajv -->
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.11.0/ajv7.min.js"
-                    integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
-                    crossorigin="anonymous" referrerpolicy="no-referrer">
-                    </script>
-
-                <!-- JQ AXIOS BS5 -->
-                <%- include('wedgets/cdn') %>
-                    <!-- 引入 editor css -->
-                    <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css"
-                        rel="stylesheet">
-                    <!-- 引入 editor js -->
-                    <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
-                    <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
-                    <script defer src="/js/initData.js"></script>
-
-                    <!--
+        <!--
             logout功能 +
             完整渲染 NAV +
             取得news +
             完整渲染 通知下拉選單
         -->
-                    <script defer src="/js/navbar.js"></script>
+        <script defer src="/js/navbar.js"></script>
 
-                    <script>
-                        $(async function () {
-                            await init().catch(e => console.log(`blog-editor.ejs 初始化時發生錯誤 =>`, e))
-                            async function init() {
-                                //  初始化 ejs 附加、用於此頁面的數據
-                                await window._my.initData()
-                                console.log('@ 已確認頁面所需數據皆已初始化完成')
+        <script>
+            $(async function () {
 
-                                //  公用變量
-                                //  API
-                                let api_blog = '/api/blog/'
-                                //  JQ Ele
-                                let $title = $('#title')
-                                let $btn_updateTitle = $('#updateTitle')
-                                let $show = $('[name=show]')
+                //  公用變量
+                //  API
+                let api_blog = '/api/blog/'
+                //  JQ Ele
+                let $title = $('#title')
+                let $btn_updateTitle = $('#updateTitle')
+                let $show = $('[name=show]')
+                let $backdrop = $('#backdrop')
+                let $wordCount = $('#wordCount')
+                //  schema
+                let htmlStr_minLength = 1
+                let htmlStr_maxLength = 65536
+                let schema = {
+                    type: 'object',
+                    properties: {
+                        title: {
+                            type: 'string',
+                            diff: 'title',
+                            minLength: 1,
+                            maxLength: 25
+                        },
+                        html: {
+                            type: 'string',
+                            diff: 'html',
+                            minLength: htmlStr_minLength,
+                            maxLength: htmlStr_maxLength
+                        },
+                        show: {
+                            type: 'boolean',
+                            diff: 'show'
+                        }
+                    },
+                    minProperties: 1
+                }
+                //  初始化
+                init()
 
-                                //  預設updateTitle無法觸發
+                //  初始化
+                async function init() {
+                    try {
+                        //  讀取中，遮蔽畫面
+                        loading()
+                        //  初始化 ejs 提供的數據
+                        // await window._my.initData()
+                        await window._my.promiseAll
+                        console.log('@ init data OK')
+                        //  初始化頁面
+                        init_pageUI()
+                        init_pageFuc()
+                        console.log('@ init page OK')
+                        //  讀取完成，解除遮蔽
+                        loadEnd()
+                    } catch (e) {
+                        console.log(`init blog-editor.ejs Err =>`, e)
+                    }
+
+                    //  初始化 頁面UI
+                    function init_pageUI() {
+                        //  初始化 btn#updateTitle
+                        $btn_updateTitle.prop('disabled', true)
+                        //  初始化 input[name=show]
+                        $show.prop('checked', window.data.blog.show)
+                    }
+                    //  初始化 頁面各功能
+                    function init_pageFuc() {
+                        //  updateBlog 酬載容器
+                        let payload = init_payload()
+                        window.payload = payload
+                        //  editor
+                        let editor = init_editor()
+                        //  生成 valicator
+                        let valicator = init_valicator(schema)
+                        //  $title handleInput => 驗證標題合法性
+                        $title.on('input', handle_input)
+                        //  $title handleBlur => 若標題非法，恢復原標題
+                        $title.on('blur', handle_blur)
+                        //  $btn_updateTitlebtn handleClick => 送出新標題
+                        $btn_updateTitle.on('click', handle_updateTitle)
+                        //  $show handleChange => 改變文章的公開狀態
+                        $show.on('change', handle_changeShow)
+                        //  $save handleClick => 更新文章
+                        $('#save').on('click', handle_saveBlog)
+                        //  btn#remove 綁定 click handle => 刪除 blog
+                        $('#remove').on('click', handle_removeBlog)
+
+                        //  handle
+                        //  關於 刪除文章的相關操作
+                        async function handle_removeBlog(e) {
+                            if (!confirm('真的要刪掉?')) {
+                                return
+                            }
+                            loading()
+                            const {
+                                data: {
+                                    errno, data, msg
+                                }
+                            } = await axios.delete(api_blog, { data: { id: window.data.blog.id } })
+                            loadEnd()
+                            if (!errno) {
+                                my_alert('已成功刪除此篇文章')
+                                location.href = '/self'
+                            } else {
+                                my_alert(msg)
+                            }
+                        }
+                        //  關於 更新文章的相關操作
+                        async function handle_saveBlog(e) {
+                            //  若當前html沒有內容，則不合法
+                            if (!payload.get('curHtml')) {
+                                alert('沒有內容是要存什麼啦')
+                                return
+                            }
+                            //  檢查並提取(除了curHtml以外)當前payload數據
+                            let payloadObj = checkAndGetPayload()
+                            if (!payloadObj) {   //  代表有非法值
+                                return
+                            }
+                            //  更新完成後，用來與 window.payload 同步數據
+                            let _payloadObj = { ...payloadObj }
+                            //  取出 要刪除關聯的圖片
+                            let cancelImgs = getBlogImgIdList_needToRemoveAssociate()
+                            if (cancelImgs.length) {    //  若cancel有值
+                                payloadObj.cancelImgs = cancelImgs //  放入payload
+                            }
+                            //  若有img，則將其轉換為自定義<x-img>
+                            if (editor.getElemsByType('image').length) {
+                                payloadObj.html = parseImgToXImg(payload.get('html'))
+                            }
+                            //  payloadObj 放入 blog_id
+                            payloadObj.id = window.data.blog.id
+                            loading()
+                            const {
+                                data: {
+                                    errno, data, msg
+                                }
+                            } = await axios.patch(api_blog, payloadObj)
+                            loadEnd()
+                            if (errno) {
+                                my_alert('blog save error!')
+                                return
+                            }
+
+                            //  若此次有更新title
+                            if (payloadObj.title) {
+                                //  同步頁面數據
+                                $title.val(payloadObj.title)
+                                //  關閉title更新鈕
                                 $btn_updateTitle.prop('disabled', true)
-                                //  依初始化數據決定show
-                                $show.prop('clicked', window.data.blog.show)
+                            }
 
-                                //  初始化 頁面各功能
-                                //  updateBlog 酬載容器
-                                let payload = init_Payload()
-                                //  editor
-                                let editor = init_editor()
-                                //  生成 valicator
-                                let valicator = init_valicator()
-                                //  $title handleInput => 驗證標題合法性
-                                $title.on('input', handle_input)
-                                //  $title handleBlur => 若標題非法，恢復原標題
-                                $title.on('blur', handle_blur)
-                                //  $btn_updateTitlebtn handleClick => 送出新標題
-                                $btn_updateTitle.on('click', handle_updateTitle)
-                                //  $show handleChange => 改變文章的公開狀態
-                                $show.on('change', handle_changeShow)
-                                //  $save handleClick => 更新文章
-                                $('#save').on('click', handle_saveBlog)
-                                //  btn#remove 綁定 click handle => 刪除 blog
-                                $('#remove').on('click', handle_removeBlog)
+                            //  重置 payload
+                            payload.reset()
+                            //  同步 window.blog
+                            window.data.blog = { ...window.data.blog, ..._payloadObj }
+                            // setTimeout( () => alert('blog save success!') , 0)
+                            my_alert('blog save success!')
+                            
 
-                                //  handle => 刪除 blog
-                                async function handle_removeBlog(e) {
-                                    if (!confirm('真的要刪掉?')) {
-                                        return
-                                    }
-
-                                    const {
-                                        data: {
-                                            errno, data, msg
-                                        }
-                                    } = await axios.delete(api_blog, { data: { id: window.data.blog.id } })
-
-                                    if (!errno) {
-                                        alert('已成功刪除此篇文章')
-                                        location.href = '/self'
-                                    } else {
-                                        alert(msg)
+                            //  將<img>替換為自定義<x-img>
+                            function parseImgToXImg(html) {
+                                let reg = /<img.+?src=".+?blogImgAlt=(?<id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g
+                                let res
+                                let _html = html
+                                while (res = reg.exec(html)) {
+                                    if (res) {
+                                        let { id, style } = res.groups
+                                        _html = _html.replace(res[0], `<x-img data-id='${id}' data-style='${style}'/>`)
                                     }
                                 }
-                                //  關於更新文章的相關操作
-                                async function handle_saveBlog(e) {
-                                    //  檢查並提取(除了curHtml以外)當前payload數據
-                                    let payloadObj = checkAndGetPayload()
-                                    if(!payloadObj){   //  代表有非法值
-                                        return
-                                    }
-                                    //  取出當前 html
-                                    let curHtml = payload.get('curHtml')
-                                    let curShow = $('#show').is(':checked')
-                                    //  若當前要save的狀態是「文章沒內容」、「要公開」，則不合法
-                                    if (!curHtml && curShow) {
-                                        alert('沒有內容是要公開什麼啦')
-                                        return
-                                    }
-                                    //  取出 要刪除關聯的圖片
-                                    let cancelImgs = getBlogImgIdList_needToRemoveAssociate()
-                                    if (cancelImgs.length) {    //  若cancel有值
-                                        payloadObj.cancelImgs = cancelImgs //  放入payload
-                                    }
-                                    //  若有img，則將其轉換為自定義<x-img>
-                                    if(editor.getElemsByType('image').length){
-                                        payloadObj.html = parseImgToXImg(payload.get('html'))
-                                    }
-                                    //  payloadObj 放入 blog_id
-                                    payloadObj.id = window.data.blog.id
-                                    const {
-                                        data: {
-                                            errno, data, msg
-                                        }
-                                    } = await axios.patch(api_blog, payloadObj)
-
-                                    if (errno) {
-                                        alert('blog save error!')
-                                        return
-                                    }
-
-                                    //  若此次有更新title
-                                    if (payloadObj.title) {
-                                        //  同步頁面數據
-                                        $title.val(payloadObj.title)
-                                        //  關閉title更新鈕
-                                        $btn_updateTitle.prop('disabled', true)
-                                    }
-
-                                    //  重置 payload
-                                    payload.reset()
-                                    //  同步 window.blog
-                                    window.data.blog = { ...window.data.blog, ...data }
-                                    alert('blog save success!')
-
-                                    //  將<img>替換為自定義<x-img>
-                                    function parseImgToXImg(html) {
-                                        let reg = /<img.+?src=".+?blogImgAlt=(?<id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g
-                                        let res
-                                        let _html = html
-                                        while (res = reg.exec(html)) {
-                                            if (res) {
-                                                let { id, style } = res.groups
-                                                _html = _html.replace(res[0], `<x-img data-id='${id}' data-style='${style}'/>`)
-                                            }
-                                        }
-                                        return _html
-                                    }
-                                    /*  取出要移除的 blogImgAlt_id  */
-                                    function getBlogImgIdList_needToRemoveAssociate() {
-                                        let reg = /blogImgAlt=(?<blogImgAlt_id>\w+)/
-                                        //  複製一份 blogImgAlt
-                                        let _blogImgAlt = new Map([...window.data.blog.map_imgs])
-                                        //  找出[{src, alt, href}, ...]
-                                        editor.getElemsByType('image').forEach(({ src }) => {
-                                            let res = reg.exec(src)
-                                            if (res) {
-                                                _blogImgAlt.delete(res.groups.blogImgAlt_id * 1)
-                                            }
-                                            return
-                                        })
-                                        return [..._blogImgAlt.keys()]
-                                    }
-                                    //  檢查並返回當前所有表格數據
-                                    function checkAndGetPayload() {
-                                        //  複製 payload 內除了 curHtml 以外的所有數據
-                                        let payloadObj = [...payload.entries()].reduce((initVal, [k, v]) => {
-                                            if (k !== 'curHtml') {
-                                                initVal[k] = v
-                                            }
-                                            return initVal
-                                        }, {})
-                                        //  驗證數據是否都合法
-                                        let errors = valicator(payloadObj)
-                                        if (errors) {  //  代表不合法
-                                            errors.forEach(({ message }) => alert(message))
-                                            return false
-                                        }
-                                        //  合法
-                                        return payloadObj
-                                    }
-                                }
-                                //  關於設定文章公開/隱藏時的操作
-                                function handle_changeShow(e) {
-                                    let show = e.target.checked
-                                    let [error] = valicator({ show })
-                                    if (!error) {   //  代表合法
-                                        //  存入 payload
-                                        payload.setKVpairs({ show })
+                                return _html
+                            }
+                            /*  取出要移除的 blogImgAlt_id  */
+                            function getBlogImgIdList_needToRemoveAssociate() {
+                                let reg = /blogImgAlt=(?<blogImgAlt_id>\w+)/
+                                //  複製一份 blogImgAlt
+                                let _blogImgAlt = new Map([...window.data.blog.map_imgs])
+                                //  找出[{src, alt, href}, ...]
+                                editor.getElemsByType('image').forEach(({ src }) => {
+                                    let res = reg.exec(src)
+                                    if (res) {
+                                        _blogImgAlt.delete(res.groups.blogImgAlt_id * 1)
                                     }
                                     return
-                                }
-                                //  關於 更新title 的相關操作
-                                async function handle_updateTitle(e) {
-                                    let payloadData = {
-                                        id: window.data.blog.id,
-                                        title: payload.get('title')
+                                })
+                                return [..._blogImgAlt.keys()]
+                            }
+                            //  檢查並返回當前所有表格數據
+                            function checkAndGetPayload() {
+                                //  複製 payload 內除了 curHtml 以外的所有數據
+                                let payloadObj = [...payload.entries()].reduce((initVal, [k, v]) => {
+                                    if (k !== 'curHtml') {
+                                        initVal[k] = v
                                     }
-                                    let { data: { errno, msg, data } } = await axios.patch(api_blog, payloadData)
-                                    if (errno) {
-                                        alert(msg)
-                                        return
-                                    }
-                                    //  使 $btn_updateTitle 無法作用
-                                    e.target.disabled = true
-                                    //  同步數據
-                                    window.data.blog.title = title
-                                    payload.delete('title')
+                                    return initVal
+                                }, {})
+                                //  驗證數據是否都合法
+                                let errors = valicator(payloadObj)
+                                if (errors.length) {  //  代表不合法
+                                    errors.forEach(({ message }) => my_alert(message))
+                                    return false
                                 }
-                                //  關於 title 輸入新值後，又沒立即更新的相關操作
-                                function handle_blur(e) {
-                                    let $el = $(e.target)
-                                    let value = $el.val().trim()
-                                    //  如果標題不變，或是沒有值
-                                    if (value === window.data.blog.title || !v) {
-                                        //  移除非法提醒
-                                        $el.removeClass('is-invalid')
-                                        //  恢復原標題
-                                        $el.val(window.data.blog.title)
-                                    }
-                                    return
-                                }
-                                //  關於 title 輸入新值時的相關操作
-                                function handle_input(e) {
-                                    let title = my_xss(e.target.value.trim())
-                                    let [error] = valicator({ title })
-                                    if (!error) { //  代表合法
-                                        //  存入 payload
-                                        payload.setKVpairs({ title })
-                                        //  移除非法提醒
-                                        $(e.target).removeClass('is-invalid')
-                                        //  $btn_updateTitle 可作用
-                                        $btn_updateTitle.prop('disabled', false)
-                                        return
-                                    }
-                                    //  $btn_updateTitle 不可作用
-                                    $btn_updateTitle.prop('disabled', true)
-                                    //  顯示非法提醒
-                                    $(e.target).addClass('is-invalid').next().addClass('invalid-feedback').text(error.message)
-                                }
+                                //  合法
+                                return payloadObj
+                            }
+                        }
+                        //  關於 設定文章公開/隱藏時的操作
+                        function handle_changeShow(e) {
+                            let show = e.target.checked
+                            let errors = valicator({ show })
+                            if (!errors.length) {   //  代表合法
+                                //  存入 payload
+                                payload.setKVpairs({ show })
+                            }
+                            return
+                        }
+                        //  關於 更新title 的相關操作
+                        async function handle_updateTitle(e) {
+                            let payloadData = {
+                                id: window.data.blog.id,
+                                title: payload.get('title')
+                            }
+                            loading()
+                            let { data: { errno, msg, data: blog } } = await axios.patch(api_blog, payloadData)
+                            if (errno) {
+                                my_alert(msg)
+                                return
+                            }
+                            //  使 $btn_updateTitle 無法作用
+                            e.target.disabled = true
+                            //  同步數據
+                            window.data.blog.title = blog.title
+                            payload.delete('title')
+                            loadEnd()
+                            my_alert('標題更新完成')
+                        }
+                        //  關於 title 輸入新值後，又沒立即更新的相關操作
+                        function handle_blur(e) {
+                            let $el = $(e.target)
+                            let value = $el.val().trim()
+                            //  如果標題不變，或是沒有值
+                            if (value === window.data.blog.title || !value) {
+                                //  移除非法提醒
+                                $el.removeClass('is-invalid')
+                                //  恢復原標題
+                                $el.val(window.data.blog.title)
+                            }
+                            return
+                        }
+                        //  關於 title 輸入新值時的相關操作
+                        function handle_input(e) {
+                            let title = my_xss(e.target.value.trim())
+                            let [error] = valicator({ title })
+                            if (!error) { //  代表合法
+                                //  存入 payload
+                                payload.setKVpairs({ title })
+                                //  移除非法提醒
+                                $(e.target).removeClass('is-invalid')
+                                //  $btn_updateTitle 可作用
+                                $btn_updateTitle.prop('disabled', false)
+                                return
+                            }
+                            //  $btn_updateTitle 不可作用
+                            $btn_updateTitle.prop('disabled', true)
+                            //  顯示非法提醒
+                            $(e.target).addClass('is-invalid').next().addClass('invalid-feedback').text(error.message)
+                        }
 
-                                //  utils ------
-                                // 用來對表格內容進行xss
-                                function my_xss(html) {
-                                    return filterXSS(html, {
-                                        whiteList: {
-                                            ...filterXSS.whiteList,
-                                            div: ['data-w-e-type'],
-                                            input: ['type'],
-                                            img: ['src', 'alt', 'style', 'data-href']
-                                        },
-                                        //  若ele的tag與attr符合白名單，會進入此過濾函數
-                                        onTagAttr(tag, attr, attrVal, isW) {
-                                            let checkbbox = tag === 'input' && attr === 'type' && attrVal === 'checkbox'
-                                            let todoDiv = tag === 'div' && attr === 'data-w-e-type' && attrVal === 'todo'
-                                            let img = tag === 'img' && attr === 'src' || attr === 'alt' || attr === 'style' || attr === 'data-href'
-                                            if (checkbbox || todoDiv || img) {
-                                                //  返回的字符串會成為ele的attr與attrVal
-                                                return `${attr}="${attrVal}"`
-                                            }
-                                        },
-                                        //  若ele的tag不符合白名單，會進入此過濾函數
-                                        onIgnoreTag(tag, htmlStr) {
-                                            if (tag === 'x-img') {
-                                                return htmlStr
-                                            }
-                                        }
-                                    })
-                                }
-
-                                //  init函數
-                                //  初始化 valicator
-                                function init_valicator() {
-                                    let Ajv = window.ajv7
-                                    let ajv = new Ajv({ allErrors: true })
-                                    //  定義 keyword: diff，定義不可與現存的表格值相同
-                                    ajv.addKeyword({
-                                        keyword: 'diff',
-                                        type: ['string', 'number', 'boolean'],
-                                        schemaType: 'string',
-                                        validate: function _(inputName, newData) {
-                                            let curData = window.data.blog[inputName]
-                                            if (newData !== curData) {
-                                                return true
-                                            }
-                                            if (!_.errors) {
-                                                _.errors = []
-                                            }
-                                            _.errors.push({ keyword: 'diff' })
-                                            return false
-                                        },
-                                        errors: true
-                                    })
-                                    //  schema
-                                    let schema = {
-                                        type: 'object',
-                                        properties: {
-                                            title: {
-                                                type: 'string',
-                                                diff: 'title',
-                                                minLength: 1,
-                                                maxLength: 25
-
-                                            },
-                                            html: {
-                                                type: 'string',
-                                                diff: 'html',
-                                                minLength: 1,
-                                                maxLength: 65536
-                                            },
-                                            show: {
-                                                type: 'boolean',
-                                                diff: 'show'
-                                            }
-                                        },
-                                        minProperties: 1
-                                    }
-                                    //  生成驗證函數
-                                    let valicate = ajv.compile(schema)
-                                    //  返回驗證器
-                                    return (newData) => {
-                                        if (!valicate(newData)) {   //  代表非法
-                                            let list_inputNameAndMessage = valicate.errors.map(error => {
-                                                //  取得造成非法的相關資訊
-                                                let { inputName, message } = inputNameAndMessage(error)
-                                                //  移除payload非法的數據
-                                                payload.delete(inputName)
-                                                return { inputName, message }
-                                            })
-                                            return list_inputNameAndMessage
-                                        } else {    //  代表合法
-                                            return []
-                                        }
-                                    }
-                                    //  提取非法訊息的 { inputName, message } 
-                                    function inputNameAndMessage(error) {
-                                        let { instancePath, keyword, params } = error
-                                        //  instancePath 格式為 /xxx
-                                        let inputName = instancePath.slice(1)
-                                        let value = params ? [...Object.entries(params)][0][1] : undefined
-                                        let message
-                                        switch (keyword) {
-                                            case 'type':
-                                                message = `數據格式必須為${value}`
-                                                break
-                                            case 'minLength':
-                                                message = `不能少於${value}個字元`
-                                                break
-                                            case 'maxLength':
-                                                message = `不能多於${value}個字元`
-                                                break
-                                            case 'if':
-                                                message = '請寫內文，不然幹嘛公開文章'
-                                                break
-                                            case 'diff':
-                                                message = '與既有值相同，若沒有要更新就別鬧了'
-                                                break
-                                            case 'minProperties':
-                                                message = '沒有要變動就別亂'
-                                                break
-                                            default:
-                                                message = `錯誤訊息的keyword為${keyword} -- 未知的狀況`
-                                                break;
-                                        }
-                                        return { inputName, message }
-                                    }
-                                }
-                                // 初始化 編輯文章頁 的功能
-                                function init_editor() {
-                                    let api_img = '/api/blog/img'
-                                    let api_createBlogImgAlt = '/api/blog/blogImgAlt'
-                                    //  editor 的 繁中設定
-                                    wangEditor.i18nAddResources('tw', {
-                                        // 标题
-                                        header: {
-                                            title: '標題',
-                                            text: '文字',
-                                        },
-                                        blockQuote: {
-                                            title: '圖標'
-                                        },
-
-                                        // ... 其他语言词汇，下文说明 ...
-                                    })
-                                    wangEditor.i18nChangeLanguage('tw')
-                                    //  editor config
-                                    const { createEditor, createToolbar } = window.wangEditor
-                                    //  editor 相關配置
-                                    const editorConfig = {
-                                        placeholder: '請開始撰寫文章內容...',
-                                        //  每次editor焦點/內容變動時調用
-                                        onChange: handle_change(),
-                                        MENU_CONF: {
-                                            //  關於 upload img 的配置
-                                            uploadImage: {
-                                                //  圖片的上傳函數
-                                                customUpload,
-                                            },
-                                            //  關於 edit img 的配置
-                                            editImage: {
-                                                //  編輯前的檢查函數
-                                                checkImage
-                                            }
-                                        }
-                                    }
-                                    //  editor 編輯欄 創建
-                                    const editor = createEditor({
-                                        //  插入後端取得的 html
-                                        html: window.data.blog.html || '',
-                                        selector: '#editor-container',
-                                        config: editorConfig,
-                                        mode: 'simple'
-                                    })
-                                    //  editor 工具欄 創建
-                                    const toolbar = createToolbar({
-                                        editor,
-                                        selector: '#toolbar-container',
-                                        mode: 'simple'
-                                    })
-                                    return editor
-
-                                    //  editor 的 修改圖片資訊前的檢查函數
-                                    async function checkImage(src, alt, url) {
-                                        //  修改
-                                        let reg = /blogImgAlt=(\w+)/
-                                        let res_reg = reg.exec(src)
-                                        let blogImgAlt_id = res_reg[1] * 1
-                                        let blog_id = window.data.blog.id
-                                        alt = my_xss(alt)
-                                        let { data: { errno, msg } } = await axios.patch('/api/blog/blogImgAlt', { blog_id, blogImgAlt_id, alt })
-                                        if (errno) {
-                                            return msg
-                                        }
-                                        window.data.blog.imgs.some((img, index, imgs) => {
-                                            if (img.id !== blogImgAlt_id) {
-                                                return false
-                                            }
-                                            imgs[index].alt = alt
-                                            window.data.blog.map_imgs.set(blogImgAlt_id, { ...imgs[index], index })
-                                        })
+                        //  init函數
+                        //  初始化 valicator
+                        function init_valicator(schema) {
+                            let Ajv = window.ajv7
+                            let ajv = new Ajv({ allErrors: true })
+                            //  定義 keyword: diff，定義不可與現存的表格值相同
+                            ajv.addKeyword({
+                                keyword: 'diff',
+                                type: ['string', 'number', 'boolean'],
+                                schemaType: 'string',
+                                validate: function _(inputName, newData) {
+                                    let curData = window.data.blog[inputName]
+                                    if (newData !== curData) {
                                         return true
                                     }
-                                    //  editor的 自定義上傳圖片方法
-                                    async function customUpload(img, insertFn) {
-                                        let nameAndExt = getNameAndExt(img)
-                                        let { name, ext } = nameAndExt
-                                        if (ext !== 'png' || ext !== 'jpg') {
-                                            alert('只能提供png與jpg的圖檔類型')
-                                            return
-                                        }
-
-                                        //  生成 img 的 hash(hex格式)
-                                        let { hash, ...other } = await _getHash(img)
-
-                                        let res
-                                        let blog_id = window.data.blog.id
-                                        if (!other.blogImg_id) { // img為新圖，傳給後端建檔
-                                            //  imgName要作為query參數傳送，必須先作百分比編碼
-                                            name = encodeURIComponent(name)
-                                            let api = `${api_img}?hash=${hash}&name=${name}&ext=${ext}&blog_id=${blog_id}`
-                                            //  創建 formData，作為酬載數據的容器
-                                            let formdata = new FormData()
-                                            //  放入圖片數據
-                                            formdata.append('blogImg', img)
-                                            //  upload
-                                            res = await axios.post(api, formdata)
-                                        } else {    // img為重覆的舊圖，傳給後端新建一個blogImgAlt
-                                            res = await axios.post(api_createBlogImgAlt, { blog_id, blogImg_id: other.blogImg_id })
-                                        }
-
-                                        let {
-                                            data: {
-                                                errno, data, msg
-                                            }
-                                        } = res
-
-                                        //  上傳失敗
-                                        if (errno) {
-                                            alert('上傳圖片失敗', msg)
-                                            return
-                                        }
-                                        //  上傳成功
-                                        if (other.blogImg_id) { //  img為舊圖
-                                            data = { ...other, ...data }
-                                        } else {    //  img為新圖
-                                            data.name = decodeURIComponent(data.name)
-                                        }
-                                        //  data格式: blogImgAlt { id, alt, img_id, url, hash, blogImg_id, blog_id, name }
-                                        //  同步數據
-                                        window.data.blog.imgs.push(data)
-                                        window.data.blog.map_imgs.set(data.id, ...data)
-                                        //  將圖片插入 editor
-                                        insertFn(`${data.url}?blogImgAlt=${data.id}`, data.name)
-
-                                        //  取得圖片的 hash
-                                        async function _getHash(img) {
-                                            //  取得 img 的 MD5 Hash(hex格式)
-                                            let hash = await _getMD5Hash(img)
-                                            let res = { hash }
-
-                                            let { imgs } = window.data.blog
-                                            if (!imgs.length) {
-                                                return res
-                                            }
-                                            //  利用hash，確認img是否為舊圖
-                                            let exist = imgs.find(img => img.hash === hash)
-                                            if (!exist) {
-                                                return res
-                                            }
-                                            return exist
-
-                                            //  計算 file 的 MD5 Hash
-                                            function _getMD5Hash(file) {
-                                                return new Promise((resolve, reject) => {
-                                                    let fr = new FileReader()
-                                                    fr.addEventListener('load', (evt) => {
-                                                        if (fr.readyState === FileReader.DONE) {
-                                                            let hash = SparkMD5.ArrayBuffer.hash(fr.result)
-                                                            resolve(hash)
-                                                        }
-                                                    })
-                                                    fr.addEventListener('error', (error) => {
-                                                        reject(error)
-                                                    })
-                                                    fr.readAsArrayBuffer(file)
-                                                })
-                                            }
-                                        }
-
-                                        function getNameAndExt(imgName) {
-                                            let reg = /^(.+)\.(.+?)$/
-                                            let [_, name, ext] = reg.exec(imgName)
-                                            return { name, ext }
-                                        }
+                                    if (!_.errors) {
+                                        _.errors = []
                                     }
-                                    //  handle：editor選區改變、內容改變時觸發
-                                    function handle_change() {
-                                        //  因為 editor 是 autoFocus，故handle_change 一開始便會被調用，也利用這點先為 payload 設置 html數據
-                                        let init = true
-                                        return (editor) => {
-                                            //  xss & 移除頭尾空行
-                                            let html = xssAndRemoveEmpty(editor.getHtml())
-                                            //  初始化 payload.curHtml
-                                            if (init) {
-                                                payload.set('curHtml', html)
-                                                init = false
-                                                return
-                                            }
-                                            if (html === payload.get('curHtml')) {   //  若htmlStr沒變化則不動作
-                                                return
-                                            } else {    //  若htmlStr變化則更新
-                                                payload.set('curHtml', html)
-                                            }
-                                            //  驗證htmlStr
-                                            let res = valicator({ html })
-                                            if (!res) {
-                                                payload.setKVpairs({ html })
-                                            }
-                                        }
-
-                                        //  去除空格與進行xss
-                                        function xssAndRemoveEmpty(data) {
-                                            //  xss
-                                            let curHtml = my_xss(data.trim())
-                                            //  移除開頭、結尾的空格與空行
-                                            let reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g
-                                            let reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g
-                                            curHtml = curHtml.replace(reg_start, '')
-                                            curHtml = curHtml.replace(reg_end, '')
-                                            return curHtml
-                                        }
-                                    }
+                                    _.errors.push({ keyword: 'diff' })
+                                    return false
+                                },
+                                errors: true
+                            })
+                            //  生成驗證函數
+                            let valicate = ajv.compile(schema)
+                            //  返回驗證器
+                            return (newData) => {
+                                if (!valicate(newData)) {   //  代表非法
+                                    let list_inputNameAndMessage = valicate.errors.map(error => {
+                                        //  取得造成非法的相關資訊
+                                        let { inputName, message, keyword } = inputNameAndMessage(error)
+                                        //  移除payload非法的數據
+                                        payload.delete(inputName)
+                                        return { inputName, message, keyword }
+                                    })
+                                    return list_inputNameAndMessage
+                                } else {    //  代表合法
+                                    return []
                                 }
-                                //  初始化 payload
-                                function init_Payload() {
-                                    let payload = new Map()
-                                    payload.setKVpairs = setKVpairs
-                                    payload.reset = reset
-                                    return payload
-
-                                    function setKVpairs(dataObj) {
-                                        //  將kv資料存入
-                                        if (dataObj) {
-                                            let kv = [...Object.entries(dataObj)][0]
-                                            let k = kv[0]
-                                            let v = kv[1]
-                                            payload.set(k, v)
-                                        }
-                                    }
-                                    function reset() {
-                                        let curHtml = payload.get('curHtml')
-                                        payload.clear()
-                                        payload.set('curHtml', curHtml)
+                            }
+                            //  提取非法訊息的 { inputName, message } 
+                            function inputNameAndMessage(error) {
+                                let { instancePath, keyword, params } = error
+                                //  instancePath 格式為 /xxx
+                                let inputName = instancePath.slice(1)
+                                let value = params ? [...Object.entries(params)][0][1] : undefined
+                                let message
+                                switch (keyword) {
+                                    case 'type':
+                                        message = `數據格式必須為${value}`
+                                        break
+                                    case 'minLength':
+                                        message = `不能少於${value}個字元`
+                                        break
+                                    case 'maxLength':
+                                        message = `不能多於${value}個字元`
+                                        break
+                                    case 'if':
+                                        message = '請寫內文，不然幹嘛公開文章'
+                                        break
+                                    case 'diff':
+                                        let name =
+                                            inputName === 'title' ? '標題' :
+                                                inputName === 'html' ? '內文' :
+                                                    '文章公開/隱藏設定'
+                                        message = `與當前的${name}相同，若沒有要更新就別鬧了`
+                                        break
+                                    case 'minProperties':
+                                        message = '沒有要變動就別亂'
+                                        break
+                                    default:
+                                        message = `錯誤訊息的keyword為${keyword} -- 未知的狀況`
+                                        break;
+                                }
+                                return { inputName, message, keyword }
+                            }
+                        }
+                        // 初始化 編輯文章頁 的功能
+                        function init_editor() {
+                            let api_img = '/api/blog/img'
+                            let api_createBlogImgAlt = '/api/blog/blogImgAlt'
+                            //  editor 的 繁中設定
+                            wangEditor.i18nAddResources('tw', {
+                                // 标题
+                                header: {
+                                    title: '標題',
+                                    text: '文字',
+                                },
+                                blockQuote: {
+                                    title: '圖標'
+                                },
+                                // ... 其他语言词汇，下文说明 ...
+                            })
+                            wangEditor.i18nChangeLanguage('tw')
+                            //  editor config
+                            const { createEditor, createToolbar } = window.wangEditor
+                            //  editor 相關配置
+                            const editorConfig = {
+                                placeholder: '請開始撰寫文章內容...',
+                                //  每次editor焦點/內容變動時調用
+                                onChange: handle_change(),
+                                MENU_CONF: {
+                                    //  關於 upload img 的配置
+                                    uploadImage: {
+                                        //  圖片的上傳函數
+                                        customUpload,
+                                    },
+                                    //  關於 edit img 的配置
+                                    editImage: {
+                                        //  編輯前的檢查函數
+                                        checkImage
                                     }
                                 }
                             }
-                        })
+                            //  editor 編輯欄 創建
+                            const editor = createEditor({
+                                //  插入後端取得的 html
+                                html: window.data.blog.html || '',
+                                selector: '#editor-container',
+                                config: editorConfig,
+                                mode: 'simple'
+                            })
+                            //  editor 工具欄 創建
+                            const toolbar = createToolbar({
+                                editor,
+                                selector: '#toolbar-container',
+                                mode: 'simple'
+                            })
+                            return editor
+                            //  editor 的 修改圖片資訊前的檢查函數
+                            async function checkImage(src, alt, url) {
+                                //  修改
+                                let reg = /blogImgAlt=(\w+)/
+                                let res_reg = reg.exec(src)
+                                let blogImgAlt_id = res_reg[1] * 1
+                                let blog_id = window.data.blog.id
+                                alt = my_xss(alt)
+                                let { data: { errno, msg } } = await axios.patch('/api/blog/blogImgAlt', { blog_id, blogImgAlt_id, alt })
+                                if (errno) {
+                                    return msg
+                                }
+                                window.data.blog.imgs.some((img, index, imgs) => {
+                                    if (img.id !== blogImgAlt_id) {
+                                        return false
+                                    }
+                                    imgs[index].alt = alt
+                                    window.data.blog.map_imgs.set(blogImgAlt_id, { ...imgs[index], index })
+                                })
+                                return true
+                            }
+                            //  editor的 自定義上傳圖片方法
+                            async function customUpload(img, insertFn) {
+                                let nameAndExt = getNameAndExt(img.name)
+                                let { name, ext } = nameAndExt
+                                if (ext !== 'png' && ext !== 'jpg') {
+                                    alert('只能提供png與jpg的圖檔類型')
+                                    return
+                                }
+                                //  生成 img 的 hash(hex格式)
+                                let { hash, ...other } = await _getHash(img)
+                                let res
+                                let blog_id = window.data.blog.id
+                                loading()
+                                if (!other.blogImg_id) { // img為新圖，傳給後端建檔
+                                    //  imgName要作為query參數傳送，必須先作百分比編碼
+                                    name = encodeURIComponent(name)
+                                    let api = `${api_img}?hash=${hash}&name=${name}&ext=${ext}&blog_id=${blog_id}`
+                                    //  創建 formData，作為酬載數據的容器
+                                    let formdata = new FormData()
+                                    //  放入圖片數據
+                                    formdata.append('blogImg', img)
+                                    //  upload
+                                    res = await axios.post(api, formdata)
+                                } else {    // img為重覆的舊圖，傳給後端新建一個blogImgAlt
+                                    res = await axios.post(api_createBlogImgAlt, { blog_id, blogImg_id: other.blogImg_id })
+                                }
+                                loadEnd()
+                                let {
+                                    data: {
+                                        errno, data, msg
+                                    }
+                                } = res
+                                //  上傳失敗
+                                if (errno) {
+                                    my_alert('上傳圖片失敗', msg)
+                                    return
+                                }
+                                //  上傳成功
+                                if (other.blogImg_id) { //  img為舊圖
+                                    data = { ...other, ...data }
+                                } else {    //  img為新圖
+                                    data.name = decodeURIComponent(data.name)
+                                }
+                                //  data格式: blogImgAlt { id, alt, img_id, url, hash, blogImg_id, blog_id, name }
+                                //  同步數據
+                                let index = window.data.blog.imgs.push(data)
+                                window.data.blog.map_imgs.set(data.id, { ...data, index })
+                                //  將圖片插入 editor
+                                insertFn(`${data.url}?blogImgAlt=${data.id}`, data.name)
+                                //  取得圖片的 hash
+                                async function _getHash(img) {
+                                    //  取得 img 的 MD5 Hash(hex格式)
+                                    let hash = await _getMD5Hash(img)
+                                    let res = { hash }
+                                    let { imgs } = window.data.blog
+                                    if (!imgs.length) {
+                                        return res
+                                    }
+                                    //  利用hash，確認img是否為舊圖
+                                    let exist = imgs.find(img => img.hash === hash)
+                                    if (!exist) {
+                                        return res
+                                    }
+                                    return exist
+                                    //  計算 file 的 MD5 Hash
+                                    function _getMD5Hash(file) {
+                                        return new Promise((resolve, reject) => {
+                                            let fr = new FileReader()
+                                            fr.addEventListener('load', (evt) => {
+                                                if (fr.readyState === FileReader.DONE) {
+                                                    let hash = SparkMD5.ArrayBuffer.hash(fr.result)
+                                                    resolve(hash)
+                                                }
+                                            })
+                                            fr.addEventListener('error', (error) => {
+                                                reject(error)
+                                            })
+                                            fr.readAsArrayBuffer(file)
+                                        })
+                                    }
+                                }
+                                function getNameAndExt(imgName) {
+                                    let reg = /^(.+)\.(.+?)$/
+                                    let [_, name, ext] = reg.exec(imgName)
+                                    return { name, ext }
+                                }
+                            }
+                            //  handle：editor選區改變、內容改變時觸發
+                            function handle_change() {
+                                //  因為 editor 是 autoFocus，故handle_change 一開始便會被調用，也利用這點先為 payload 設置 html數據
+                                let init = true
+                                return (editor) => {
+                                    //  xss & 移除頭尾空行
+                                    let html = xssAndRemoveEmpty(editor.getHtml())
+                                    //  初始化 payload.curHtml
+                                    if (init) {
+                                        payload.set('curHtml', html)
+                                        $wordCount.text(`還能輸入${htmlStr_maxLength - payload.get('curHtml').length}個字`)
+                                        init = false
+                                        return
+                                    }
+                                    //  僅是 editor 獲得/失去焦點
+                                    if (html === payload.get('curHtml')) {
+                                        return
+                                    }
+                                    //  驗證htmlStr
+                                    let errors = valicator({ html })
+                                    payload.setKVpairs({ curHtml: html })
+                                    if (errors.length) { //  非法
+                                        let [{ keyword }] = errors
+                                        console.log('keyword => ', keyword, errors, htmlStr_maxLength, html.length)
+                                        if (keyword === 'minLength') {
+                                            $wordCount.text(`還能輸入${htmlStr_maxLength}個字`)
+                                        } else if (keyword === 'maxLength') {
+                                            $wordCount.text(`已經超過${html.length - htmlStr_maxLength}可輸入字數`)
+                                        } else if (keyword === 'diff') {
+                                            $wordCount.text(`還能輸入${htmlStr_maxLength - html.length}個字`)
+                                        }
+                                        return
+                                    }
+                                    console.log('OK', htmlStr_maxLength, html.length)
+                                    $wordCount.text(`還能輸入${htmlStr_maxLength - html.length}個字`)
+                                    payload.setKVpairs({ html })
+                                }
+                                //  去除空格與進行xss
+                                function xssAndRemoveEmpty(data) {
+                                    //  xss
+                                    let curHtml = my_xss(data.trim())
+                                    //  移除開頭、結尾的空格與空行
+                                    let reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g
+                                    let reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g
+                                    curHtml = curHtml.replace(reg_start, '')
+                                    curHtml = curHtml.replace(reg_end, '')
+                                    return curHtml
+                                }
+                            }
+                        }
+                        //  初始化 payload
+                        function init_payload() {
+                            let payload = new Map()
+                            payload.setKVpairs = setKVpairs
+                            payload.reset = reset
+                            return payload
+                            function setKVpairs(dataObj) {
+                                //  將kv資料存入
+                                if (dataObj) {
+                                    let kv = [...Object.entries(dataObj)].forEach(([key, val]) => payload.set(key, val))
+                                }
+                            }
+                            function reset() {
+                                let curHtml = payload.get('curHtml')
+                                payload.clear()
+                                payload.set('curHtml', curHtml)
+                            }
+                        }
+                    }
+                }
 
-                    </script>
-    </body>
+                //  utils ------
+                //  表格內容xss
+                function my_xss(html) {
+                    return filterXSS(html, {
+                        whiteList: {
+                            ...filterXSS.whiteList,
+                            div: ['data-w-e-type'],
+                            input: ['type'],
+                            img: ['src', 'alt', 'style', 'data-href']
+                        },
+                        //  若ele的tag與attr符合白名單，會進入此過濾函數
+                        onTagAttr(tag, attr, attrVal, isW) {
+                            let checkbbox = tag === 'input' && attr === 'type' && attrVal === 'checkbox'
+                            let todoDiv = tag === 'div' && attr === 'data-w-e-type' && attrVal === 'todo'
+                            let img = tag === 'img' && attr === 'src' || attr === 'alt' || attr === 'style' || attr === 'data-href'
+                            if (checkbbox || todoDiv || img) {
+                                //  返回的字符串會成為ele的attr與attrVal
+                                return `${attr}="${attrVal}"`
+                            }
+                        },
+                        //  若ele的tag不符合白名單，會進入此過濾函數
+                        onIgnoreTag(tag, htmlStr) {
+                            if (tag === 'x-img') {
+                                return htmlStr
+                            }
+                        }
+                    })
+                }
+                //  配合loadEnd發生的alert，作異步處理
+                function my_alert(msg){
+                    setTimeout( () => { alert(msg)}, 10)
+                }
+                //  讀取畫面，遮蔽效果
+                function loading() {
+                    $backdrop.addClass('my-show')
+                    $('input').attr('disabled', true)
+                }
+                //  讀取完成，取消遮蔽
+                function loadEnd() {
+                    $backdrop.removeClass('my-show')
+                    $('input').removeAttr('disabled')
+                }
+            })
 
-    </html>
+        </script>
+</body>
+
+</html>

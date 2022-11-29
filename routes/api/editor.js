@@ -23,7 +23,7 @@ router.post('/', api_check_login, cache_reset, async (ctx, next) => {
 })
 
 //  上傳圖片
-router.post('/img', api_check_login, resetBlog, uploadImg)
+router.post('/img', api_check_login, cache_reset, uploadImg)
 
 //  建立Blog既有圖片的alt
 router.post('/blogImgAlt', api_check_login, cache_reset, async(ctx, next) => {

@@ -1,8 +1,8 @@
-window._my.promiseIns.renderNav = initData()
-    .then(_ => console.log('@ navbar.js --- ok'))
-    .catch(e => console.log(e))
+// window._my.promiseIns.renderNav = initData()
+//     .then(_ => console.log('@ navbar.js --- ok'))
+//     .catch(e => console.log(e))
 
-window._my.promiseAll.push(window._my.promiseIns.renderNav)
+// window._my.promiseAll.push(window._my.promiseIns.renderNav)
 
 //  初始化 Nav功能
 async function initData() {
@@ -400,6 +400,7 @@ async function initData() {
     }
 }
 
+window._my.promiseAll.push(initData())
 //  utils - 顯示el與否
 function show(q, boo = true) {
     return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
