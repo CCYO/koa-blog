@@ -1,33 +1,34 @@
-// window._my.promiseIns.renderNav = initData()
-//     .then(_ => console.log('@ navbar.js --- ok'))
-//     .catch(e => console.log(e))
-
-// window._my.promiseAll.push(window._my.promiseIns.renderNav)
+window._my.init()
 
 //  初始化 Nav功能
 async function initData() {
     //  等待前面有關初始化功能的 js 已完成
-    await Promise.all(window._my.promiseAll)
-
-    let { errno, data, msg } = await getMe()
+    // await Promise.all(window._my.promiseAll)
+    // await window._my.promiseAll
+    let res = {}
+    let { errno, data: me = {}, msg } = await getMe()
     if (!errno) {
         console.log('@ window.data.me finish ')
-        console.log('@ getMe.js --- ok')
-        window.data.me = data
     }
+    let isLogin = Boolean(!errno)
 
     //  渲染基本NAV
-    $('#my-navbar-header-register').html(template_nav())
+    $('#my-navbar-header-register').html(template_nav(isLogin))
 
-    //  若未登入
-    if (!window.data.me.id) {
+
+    if (!isLogin) {     //  未登入
         console.log('@ 目前為登出狀態，僅渲染基本NAV')
-        return
+    } else {        //  登入
+        res.me = window.data.me = me
+        //  初始化 登入狀態應有的功能
+        await init_login()
+        console.log('@ 目前為登入狀態，渲染完整NAV')
     }
 
-    //  初始化 登入狀態應有的功能
-    await init_login()
-    console.log('@ 目前為登入狀態，渲染完整NAV')
+    console.log(res)
+
+    
+    return res
 
     //  初始化 登入狀態 的功能
     async function init_login() {
@@ -36,6 +37,7 @@ async function initData() {
         //  初始化 通知列表 功能
         await initNews()
 
+        
         async function logout(e) {
             let ready = confirm('真的要登出?')
             if (!ready) {
@@ -86,13 +88,15 @@ async function initData() {
                 show($newsCount, count).text(count || '')
             })
             $readMore.on('click', moreNewsForReadMore)
+
+            
             //  handle - 讀取更多通知數據
             async function moreNewsForReadMore() {
                 //  取news
                 let newsData = await getNews(false)
                 let { num, newsList, excepts } = newsData
                 //  更新data
-                window.data.news = init_News(newsData, false)
+                res.news = window.data.news = init_News(newsData, false)
                 //  渲染通知數據
                 render_news(newsData, false)
                 return
@@ -208,7 +212,7 @@ async function initData() {
                             count > 1 ? otherNotIncludeMe.slice(0, 2).join(',') + `${count > 2 ? `與其他${count - 2}人` : ''}` + `，都` :
                                 count > 0 ? otherNotIncludeMe.join(',') :
                                     comment.user.nickname
-                        
+
                         let who =
                             count > 1 && comment.blog.author.id === me ? '你' :
                                 comment.blog.author.id === comment.user.id ? '自己' : comment.blog.author.nickname
@@ -338,7 +342,7 @@ async function initData() {
         }
     }
 
-    function template_nav() {
+    function template_nav(isLogin) {
         let template_news = `
             <a class="nav-link dropdown-toggle" href="#" id="newsDropdown"
                 role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">通知
@@ -380,7 +384,7 @@ async function initData() {
                 <a id="logout" class="btn btn-outline-success text-nowrap">登出</a>
             </li>
         `
-        let template = window.data.me.id ? template_login : template_noLogin
+        let template = isLogin ? template_login : template_noLogin
         return template
     }
 
@@ -400,7 +404,6 @@ async function initData() {
     }
 }
 
-window._my.promiseAll.push(initData())
 //  utils - 顯示el與否
 function show(q, boo = true) {
     return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)

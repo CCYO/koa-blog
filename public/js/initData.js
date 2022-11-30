@@ -1,7 +1,36 @@
-window._my = {}
-window._my.promiseIns = {}
-window._my.promiseAll = []
+class My {
+    data = {}
+    promiseIns = Promise.resolve()
+
+    async ready() {
+        return await this.promiseIns
+    }
+    setPromise(p) {
+        this.promiseIns = p
+    }
+    async init() {
+        try {
+            this.show()
+            let res = await this.ready()
+            console.log('@res ===> ', res)
+            if(res){
+                console.log('res有值')
+                this.data = { ...this.data, ...res }    
+            }
+            this.setPromise(initData())
+        } catch (e) {
+            throw e
+        }
+    }
+    show(){
+        console.log('@initData => ', initData)
+    }
+}
+
+window._my = new My()
 window.data = {}
+
+window._my.init()
 
 //  初始化數據
 //  取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
@@ -9,25 +38,26 @@ window.data = {}
 //     無轉譯 => { "html":"<p>56871139</p>") 會造成<p>直接渲染至頁面
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
 
-// window._my.initData = async function () {
 async function initData() {
+    let res = {}
     $(`[data-my-data]`).each((index, el) => {
         let prop = $(el).data('my-data')
         try {
             let val = $(el).html()
             if (prop === 'blog') {
-                window.data.blog = initBlog(val)
+                res.blog = initBlog(val)
+                
             } else {
-                window.data[prop] = JSON.parse(val)
+                res[prop] = JSON.parse(val)
             }
         } catch (e) {
             throw e
         }
     })
     $(`[data-my-data]`).remove()
-    console.log('@ initData.js OK')
-    // let all = await Promise.all(window._my.promiseAll)
+    console.log('@ initData.js OK ===> ', res)
 
+    return res
     function initBlog(data) {
         let blog = JSON.parse(data)   // 整體轉回obj
         blog.map_imgs = new Map()
@@ -72,4 +102,3 @@ async function initData() {
         }
     }
 }
-window._my.promiseAll.push(initData())
