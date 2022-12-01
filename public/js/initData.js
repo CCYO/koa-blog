@@ -1,36 +1,31 @@
 class My {
     data = {}
-    promiseIns = Promise.resolve()
-
-    async ready() {
-        return await this.promiseIns
-    }
-    setPromise(p) {
-        this.promiseIns = p
+    promiseAll = []
+    add(initData){
+        this.promiseAll.push(initData())
     }
     async init() {
         try {
-            this.show()
-            let res = await this.ready()
-            console.log('@res ===> ', res)
-            if(res){
-                console.log('res有值')
-                this.data = { ...this.data, ...res }    
-            }
-            this.setPromise(initData())
+            console.log('Ready')
+            let list = await Promise.all(this.promiseAll)
+            this.data = list.reduce( (initVal, curdata) => {
+                console.log('@curdata => ', curdata)
+                initVal = { ...initVal, ...curdata }
+                return initVal
+            }, {})
+            console.log('Finish => ', this.data)
+            return this.data
         } catch (e) {
             throw e
         }
     }
-    show(){
-        console.log('@initData => ', initData)
-    }
 }
 
 window._my = new My()
+window._my.add(initData)
 window.data = {}
 
-window._my.init()
+// window._my.init()
 
 //  初始化數據
 //  取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
@@ -39,6 +34,7 @@ window._my.init()
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
 
 async function initData() {
+    console.log('init')
     let res = {}
     $(`[data-my-data]`).each((index, el) => {
         let prop = $(el).data('my-data')
@@ -46,7 +42,7 @@ async function initData() {
             let val = $(el).html()
             if (prop === 'blog') {
                 res.blog = initBlog(val)
-                
+
             } else {
                 res[prop] = JSON.parse(val)
             }
@@ -55,8 +51,6 @@ async function initData() {
         }
     })
     $(`[data-my-data]`).remove()
-    console.log('@ initData.js OK ===> ', res)
-
     return res
     function initBlog(data) {
         let blog = JSON.parse(data)   // 整體轉回obj

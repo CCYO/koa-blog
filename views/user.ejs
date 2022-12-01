@@ -302,23 +302,21 @@
     <script>
         $(async function () {
             try {
-                // await init()
-                await window._my.init()
+                window.data = await window._my.init()
+                console.log('user')
+                console.log('window.data => ', window.data)
+                await initData()
                 console.log('@ 關於頁面內的初始化皆已完成')
             } catch (err) {
                 console.log('@ init 發生錯誤 => ', err)
             }
 
             async function initData() {
-                // await window._my.ready()
-                // console.log('@ ==> window.data => ', window.data)
-                // window.data = { ...window._my.data }
                 console.log('@ 已確認頁面所需數據皆已初始化完成')
                 //  存放 文章列表分頁 的數據
                 window.render = { blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } } }
 
                 let { currentUser, me } = window.data
-                consol.log('xxxxxxxxxxx => ', currentUser, me)
                 let isSelf = currentUser.id === me.id
                 //  追蹤鈕
                 let $btn_follow = $('#follow')
@@ -598,19 +596,6 @@
                     }
                 }
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         })
     </script>

@@ -1,7 +1,9 @@
-window._my.init()
+window._my.add(initData)
 
 //  初始化 Nav功能
 async function initData() {
+    console.log('navbar')
+    //  navbar------
     //  等待前面有關初始化功能的 js 已完成
     // await Promise.all(window._my.promiseAll)
     // await window._my.promiseAll
@@ -76,7 +78,7 @@ async function initData() {
                 num: { unconfirm, confirm, total },
                 limit
             }*/
-            let newsData = await getNews(true)
+            let newsData = res.news = await getNews(true)
             window.data.news = init_News(newsData, true)
             render_news(newsData, true)
             console.log('@ window.data.news finish ')
