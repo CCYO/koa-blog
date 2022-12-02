@@ -1,28 +1,25 @@
 class My {
     data = {}
     promiseAll = []
-    add(initData){
-        this.promiseAll.push(initData())
-    }
-    async init() {
+    async init(initData) {
         try {
             console.log('Ready')
-            let list = await Promise.all(this.promiseAll)
-            this.data = list.reduce( (initVal, curdata) => {
-                console.log('@curdata => ', curdata)
-                initVal = { ...initVal, ...curdata }
-                return initVal
-            }, {})
-            console.log('Finish => ', this.data)
-            return this.data
+            let promise = initData()
+            this.promiseAll.push(promise)
+            let res = await promise
+            this.data = { ...this.data, ...res }
         } catch (e) {
             throw e
         }
     }
+    async check(){
+        await Promise.all(this.promiseAll)
+        return this.data
+    }
 }
 
 window._my = new My()
-window._my.add(initData)
+window._my.init(initData)
 window.data = {}
 
 // window._my.init()

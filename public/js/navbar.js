@@ -1,35 +1,25 @@
-window._my.add(initData)
+window._my.init(initData)
 
 //  初始化 Nav功能
 async function initData() {
-    console.log('navbar')
-    //  navbar------
     //  等待前面有關初始化功能的 js 已完成
-    // await Promise.all(window._my.promiseAll)
-    // await window._my.promiseAll
-    let res = {}
+
     let { errno, data: me = {}, msg } = await getMe()
     if (!errno) {
         console.log('@ window.data.me finish ')
     }
+    let res = { me }
     let isLogin = Boolean(!errno)
 
     //  渲染基本NAV
     $('#my-navbar-header-register').html(template_nav(isLogin))
 
-
-    if (!isLogin) {     //  未登入
-        console.log('@ 目前為登出狀態，僅渲染基本NAV')
-    } else {        //  登入
-        res.me = window.data.me = me
+    if (isLogin) {     //  未登入
         //  初始化 登入狀態應有的功能
         await init_login()
         console.log('@ 目前為登入狀態，渲染完整NAV')
     }
 
-    console.log(res)
-
-    
     return res
 
     //  初始化 登入狀態 的功能
@@ -38,23 +28,6 @@ async function initData() {
         $('#logout').click(logout)
         //  初始化 通知列表 功能
         await initNews()
-
-        
-        async function logout(e) {
-            let ready = confirm('真的要登出?')
-            if (!ready) {
-                alert('對嘛，再待一下嘛')
-                return
-            }
-            let { data: {
-                errno, data, msg
-            } } = await axios.get('/api/user/logout')
-            alert(data || msg)
-            if (!errno) {
-                location.href = '/login'
-            }
-        }
-
         async function initNews() {
             //  下拉選單鈕、通知鈕
             let $newsDropdown = $('#newsDropdown')
@@ -78,8 +51,8 @@ async function initData() {
                 num: { unconfirm, confirm, total },
                 limit
             }*/
-            let newsData = res.news = await getNews(true)
-            window.data.news = init_News(newsData, true)
+            let newsData = await getNews(true)
+            window.data.news = res.news = init_News(newsData, true)
             render_news(newsData, true)
             console.log('@ window.data.news finish ')
 
@@ -91,7 +64,7 @@ async function initData() {
             })
             $readMore.on('click', moreNewsForReadMore)
 
-            
+
             //  handle - 讀取更多通知數據
             async function moreNewsForReadMore() {
                 //  取news
@@ -195,7 +168,7 @@ async function initData() {
 
                     function template_comment({ confirm, id, comment, timestamp }) {
                         let { others } = comment
-                        let { id: me } = window.data.me
+                        let { id: me } = res.me
                         let otherNotIncludeMe = []
                         if (others.length) {
                             otherNotIncludeMe = new Set()
@@ -307,8 +280,8 @@ async function initData() {
                     },
                     confirm: { ... }
                 }*/
-                for (key in newsList) {
-                    let map = new Map(Object.entries(newsList[key]))
+                for (prop in newsList) {
+                    let map = new Map(Object.entries(newsList[prop]))
                     map.forEach((list, k) => {
                         if (k === 'num') {
                             res.num += list
@@ -342,8 +315,21 @@ async function initData() {
                 return data
             }
         }
+        async function logout(e) {
+            let ready = confirm('真的要登出?')
+            if (!ready) {
+                alert('對嘛，再待一下嘛')
+                return
+            }
+            let { data: {
+                errno, data, msg
+            } } = await axios.get('/api/user/logout')
+            alert(data || msg)
+            if (!errno) {
+                location.href = '/login'
+            }
+        }
     }
-
     function template_nav(isLogin) {
         let template_news = `
             <a class="nav-link dropdown-toggle" href="#" id="newsDropdown"
@@ -389,7 +375,6 @@ async function initData() {
         let template = isLogin ? template_login : template_noLogin
         return template
     }
-
     async function getMe() {
         let api = '/api/user'
         let { data } = await axios.get(api)
@@ -404,9 +389,8 @@ async function initData() {
         }
         return data
     }
-}
-
-//  utils - 顯示el與否
-function show(q, boo = true) {
-    return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
+    //  utils - 顯示el與否
+    function show(q, boo = true) {
+        return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
+    }
 }
