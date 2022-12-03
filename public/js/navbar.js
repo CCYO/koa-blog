@@ -51,9 +51,13 @@ async function initData() {
                 num: { unconfirm, confirm, total },
                 limit
             }*/
+            //  發送請求、取得數據
             let newsData = await getNews(true)
-            window.data.news = res.news = init_News(newsData, true)
+            //  渲染頁面
             render_news(newsData, true)
+            //  初始化數據、存入頁面
+            window.data.news = res.news = init_News(newsData, true)
+            
             console.log('@ window.data.news finish ')
 
             //  更新unconfirm通知數目
@@ -62,9 +66,8 @@ async function initData() {
                 let count = num.unconfirm - newsList.unconfirm.num
                 show($newsCount, count).text(count || '')
             })
+
             $readMore.on('click', moreNewsForReadMore)
-
-
             //  handle - 讀取更多通知數據
             async function moreNewsForReadMore() {
                 //  取news
@@ -96,24 +99,24 @@ async function initData() {
                         'confirm' => [...]
                 }*/
                 let map = new Map(Object.entries(newsList))
+                //  list 代表 unconfirmList | confirmList，key 代表 'unconfirm' | 'confirm'
                 map.forEach((list, key) => {
-                    //  通知的title
+                    //  通知列表中，對應的title
                     let $title = $(`#${key}-news-title`)
-                    if (!list.length) { //  若 list 沒有內容
+                    if (!list.length) { //  list 沒有內容
                         firstRender && show($title, false) //  初渲染，則隱藏title
-                    } else {    //若 list 有內容
-                        $title.is(':hidden') && show($title)    // 非初次渲染，若title隱藏，將其顯示
+                    } else {    //  若 list 有內容
+                        $title.is(':hidden') && show($title)    //  非初次渲染，若title隱藏，則讓其顯示
                     }
                     //  生成 list 的 html
                     let html_list = template_list(list)
-                    //  此通知類型的item分隔線
+                    //  對應此通知分纇的item分隔線
                     let hr = $(`[data-my-hr=${key}-news-hr]`)
-
                     if (!hr.length) {   //  無分隔線，代表此纇list為首次渲染
                         //  渲染在title後方
                         $title.after(html_list)
                     } else {    //  有分隔線，代表此纇list非首次渲染
-                        //  渲染在item後方
+                        //  在最後一個此纇通知的後方加入item
                         hr.last().after(html_list)
                     }
                 })
