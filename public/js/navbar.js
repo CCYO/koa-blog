@@ -1,64 +1,25 @@
 window._my.init(init)
 
 async function init() {
-    let data
     try {
-        data = await initData()
-        window.data.me = data.me
+        // 取得news數據
+        let _data = await getData()
+        window.data.me = _data.me
         //  初始化 通知列表 功能
-        await initNews(data)
-        console.log('navbar === ok')
-        console.log('navbar me = > ', window.data)
+        await initNews(_data)
     } catch (e) {
         throw e
     }
-    //  初始化 Nav功能
-    async function initData() {
-        //  等待前面有關初始化功能的 js 已完成
-        let { errno, data: me = {}, msg } = await getMe()
-        let isLogin = Boolean(!errno)
-        if (!isLogin) {
-            console.log('@ navbar.js getMe -- 未登入')
-            return { me }
-        }
-        let news = await getNews(me, true)
-        return { me, news }
-
-        async function getMe() {
-            let api = '/api/user'
-            let { data } = await axios.get(api)
-            let { errno } = data
-            if (errno) {
-                let pathname = location.pathname
-                if (pathname === '/self' || pathname === '/setting') {
-                    location.pathname = '/login'
-                    return
-                }
-            }
-            return data
-        }
-    }
+    //  初始化 通知列表 功能
     async function initNews(data) {
         //  渲染基本navBar
         $('#my-navbar-header-register').html(template_nav(data.me.id))
-        if (!data.me.id) { //  代表未登入
+        if (!data.me.id) { //  未登入就結束
             return
         }
-        //  下拉選單鈕、通知鈕
-        let $newsDropdown = $('#newsDropdown')
-        //  通知比數span
-        let $newsCount = $('.news-count')
-        //  下拉選單內 的 readMore鈕
-        let $readMore = $('#readMore')
-        //  下拉選單內 的 沒有更多提醒
-        let $noNews = $('#noNews')
-        //  發送請求、取得數據
-        let newsData = data.news
-
-        //  登出功能
-        $('#logout').click(logout)
+        //  作用域內的公用數據，全都存在這裡
         /*  取得 news
-        newsData: {
+        _data: {
             newsList: {
                 unconfirm: [
                     { type, id, timestamp, confirm, fans: ... },
@@ -69,53 +30,86 @@ async function init() {
             },
             num: { unconfirm, confirm, total },
             limit
-        }*/
+        }
+        ↓ initNews 之後
+        _data: {
+            initNews: { 
+                confirm: { people: [id...], blogs: [id...], comments: [id...], num: 0 },
+                unconfirm: { people: [id...], blogs: [id...], comments: [id...], num: 0 }
+            },
+            excepts: { people: [id...], blogs: [id...], comments: [id...], num: 0 },
+            num: { unconfirm, confirm, total },
+            limit
+        }
+        */
+        let _data = data
+        //  下拉選單鈕、通知鈕
+        let $newsDropdown = $('#newsDropdown')
+        //  通知比數span
+        let $newsCount = $('.news-count')
+        //  下拉選單內 的 readMore鈕
+        let $readMore = $('#readMore')
+        //  下拉選單內 的 沒有更多提醒
+        let $noNews = $('#noNews')
+
         //  初次渲染news
-        render_news(newsData, true)
+        render_news(_data.news, true)
         //  初始化數據、存入頁面
-        data.news = init_News(newsData, true)
-        console.log('@ window.data.news finish ')
+        _data.news = init_News(_data.news, true)
+
         //  更新unconfirm通知數目
         $newsDropdown.one('click', () => {
             let { num, newsList } = data.news
             let count = num.unconfirm - newsList.unconfirm.num
             show($newsCount, count).text(count || '')
         })
-
+        //  讀取更多
         $readMore.on('click', moreNewsForReadMore)
+        //  登出功能
+        $('#logout').click(logout)
+        async function logout(e) {
+            let ready = confirm('真的要登出?')
+            if (!ready) {
+                alert('對嘛，再待一下嘛')
+                return
+            }
+            let { data: {
+                errno, data, msg
+            } } = await axios.get('/api/user/logout')
+            alert(data || msg)
+            if (!errno) {
+                location.href = '/login'
+            }
+        }
         //  handle - 讀取更多通知數據
         async function moreNewsForReadMore() {
             //  取news
-            let thisTime_newsData = await getNews(data, false)
+            let news = await getNews(_data.news)
             //  渲染通知數據
-            render_news(thisTime_newsData, false)
+            render_news(news, false)
             //  更新data
-            console.log('@cur => ', data)
-            data.news = init_News(thisTime_newsData, false)
+            _data.news = init_News(news, false)
             return
         }
-        function init_News(thisTime_newsData, firstRender) {
-            let { newsList } = thisTime_newsData
+        function init_News(news) {
+            let { newsList } = news
             newsList = init_newsList(newsList)
-            let res = { ...thisTime_newsData, newsList }
-            if (firstRender) {   //  初次渲染
-                res.excepts = init_excepts(newsList)
+            let res = { ...news, newsList }
+            let excepts = init_excepts(newsList)
+            if (!_data.news.excepts) {   //  初次渲染
+                res.excepts = excepts
                 res.page = 0
-            } else {  //  若非初次渲染
+            } else {  //  非初次渲染
                 // { people: [id, ...], blogs: [id, ...], comments: [id, ...], num }
-                let r_excepts = init_excepts(newsList)
-                console.log('@data news => ', data)
-                console.log('@data newsList => ', newsList)
-                let { excepts: w_excepts, page: w_page } = data.news
-                for (key in r_excepts) {
+                for (key in _data.news.excepts) {
                     if (key === 'num') {
-                        r_excepts.num += w_excepts.num
+                        excepts.num += _data.news.excepts.num
                         break
                     }
-                    r_excepts[key] = [...r_excepts[key], ...w_excepts[key]]
+                    excepts[key] = [..._data.news.excepts[key], ...excepts[key]]
                 }
-                res.excepts = r_excepts
-                res.page = w_page
+                res.excepts = excepts
+                res.page = ++_data.news.page
             }
             return res
 
@@ -311,20 +305,6 @@ async function init() {
                 }
             }
         }
-        async function logout(e) {
-            let ready = confirm('真的要登出?')
-            if (!ready) {
-                alert('對嘛，再待一下嘛')
-                return
-            }
-            let { data: {
-                errno, data, msg
-            } } = await axios.get('/api/user/logout')
-            alert(data || msg)
-            if (!errno) {
-                location.href = '/login'
-            }
-        }
         function template_nav(isLogin) {
             let template_news = `
                     <a class="nav-link dropdown-toggle" href="#" id="newsDropdown"
@@ -371,19 +351,39 @@ async function init() {
             return template
         }
     }
+    //  取得news數據
+    async function getData() {
+        //  取得登入者數據
+        let { errno, data, msg } = await getMe()
+        if (errno) {   //  未登入
+            return {}
+        }
+        let news = await getNews()
+        return { me: data, news }
+
+        async function getMe() {
+            let api = '/api/user'
+            let { data } = await axios.get(api)
+            let { errno } = data
+            if (errno) {
+                let pathname = location.pathname
+                if (pathname === '/self' || pathname === '/setting') {
+                    location.pathname = '/login'
+                    return
+                }
+            }
+            return data
+        }
+    }
     //  撈取通知數據
-    async function getNews(data, firstRender) {
+    async function getNews(_news) {
         let opts = {
             newsList: { num: 0 },
             page: 0
         }
-        if (!firstRender) { //  非初次渲染
-            opts = {
-                ...opts,
-                newsList: data.news.newsList.unconfirm,
-                page: ++data.news.page,
-                excepts: data.news.excepts
-            }
+        if (_news) { //  非初次渲染
+            let { newsList: { unconfirm: newsList }, page, excepts } = _news
+            opts = { ...opts, newsList, page: ++page, excepts }
         }
         let { data: { errno, data: news, msg } } = await axios.post(`/api/news`, opts)
         if (errno) {
@@ -392,10 +392,8 @@ async function init() {
         }
         return news
     }
-}
-
-//  utils - 顯示el與否
-
-function show(q, boo = true) {
-    return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
+    //  utils - 顯示el與否
+    function show(q, boo = true) {
+        return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
+    }
 }
