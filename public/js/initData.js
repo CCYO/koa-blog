@@ -8,6 +8,7 @@ class My {
             this.promiseAll.push(promise)
             let res = await promise
             this.data = { ...this.data, ...res }
+            return res
         } catch (e) {
             throw e
         }

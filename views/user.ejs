@@ -302,7 +302,8 @@
     <script>
         $(async function () {
             try {
-                window.data = await window._my.check()
+                let data = await window._my.check()
+                window.data = { ...window.data, ...data}
                 console.log('window.data => ', window.data)
                 await initData()
                 console.log('@ 關於頁面內的初始化皆已完成')
