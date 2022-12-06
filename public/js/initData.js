@@ -19,9 +19,9 @@ class My {
     }
 }
 
-window._my = new My()
-window._my.init(initData)
-window.data = {}
+// window._my = new My()
+// window._my.init(initData)
+// window.data = {}
 
 // window._my.init()
 
@@ -93,4 +93,8 @@ async function initData() {
             return _html
         }
     }
+}
+
+export {
+    My, initData
 }
