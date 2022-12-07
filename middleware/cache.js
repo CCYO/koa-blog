@@ -118,6 +118,7 @@ async function resetBlog(ctx, next) {
     await del_blogs(cache.blog)
 }
 
+//  撈取cacheNews，若沒有或過期，則向DB撈取，並於最後作緩存
 async function cacheNews(ctx, next) {
     let { page, newsList } = ctx.request.body
     const { id } = ctx.session.user
@@ -159,11 +160,9 @@ async function cacheNews(ctx, next) {
     await next()
 
     //  next 接回來，繼續處理緩存
-
     if (ctx.body.errno) {   //  若發生錯誤
         return
     }
-
     //  ctx.body = { errno, data, cache }
     let { errno, data } = ctx.body
     ctx.session.news[page] = { errno, data }
@@ -193,6 +192,7 @@ async function cache_resetUser(ctx, next) {
     await del_users(cache.user)
 }
 
+//  需要重置的cache數據
 async function cache_reset(ctx, next) {
     await next()
 

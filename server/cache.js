@@ -32,6 +32,7 @@ async function checkNews(id) {
     return cacheNews.has(id)
 }
 
+//  向相關使用者通知news有變動，待他們下一次請求時，主動向系統請求數據
 async function remindNews(id) {
     let news = await get('cacheNews')
     news = new Set(news)

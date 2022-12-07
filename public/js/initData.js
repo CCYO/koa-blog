@@ -8,6 +8,8 @@ class My {
             this.promiseAll.push(promise)
             let res = await promise
             this.data = { ...this.data, ...res }
+            console.log('init res => ', res)
+            console.log('init data => ', this.data)
             return res
         } catch (e) {
             throw e

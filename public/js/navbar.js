@@ -1,14 +1,11 @@
 async function initData() {
     try {
         // 取得登入者數據
-        let { errno, data: me = {}, msg } = await getMe()
-        if (!errno) {   //  登入
-            // 取得news數據
-            let news = await getNews()
-            //  初始化 通知列表 功能
-            await initNews({ me, news })
+        let data = await getNews()
+        if(data.me.id){
+            await initNews(data)
         }
-        return { me }
+        return { me: data.me }
     } catch (e) {
         throw e
     }
@@ -359,31 +356,27 @@ async function initNews(data) {
 async function getNews(_news) {
     let opts = {
         newsList: { num: 0 },
-        page: 0
+        page: 0,
     }
-    if (_news) { //  非初次渲染
+    if (_news) {   //  非初次渲染
         let { newsList: { unconfirm: newsList }, page, excepts } = _news
-        opts = { ...opts, newsList, page: ++page, excepts }
-    }
-    let { data: { errno, data: news, msg } } = await axios.post(`/api/news`, opts)
-    if (errno) {
-        alert(msg)
-        return
-    }
-    return news
-}
-async function getMe() {
-    let api = '/api/user'
-    let { data } = await axios.get(api)
-    let { errno } = data
-    if (errno) {
-        let pathname = location.pathname
-        if (pathname === '/self' || pathname === '/setting') {
-            location.pathname = '/login'
-            return
+        opts = { 
+            ...opts,
+            newsList,
+            page: ++page,
+            excepts
         }
     }
-    return data
+    let { data: { errno, data, msg } } = await axios.post(`/api/news`, opts)
+    if(!errno){
+        return data
+    }
+    if (!page) {
+        console.log('未登入')
+        return { me: {}}
+    }
+    alert(msg)
+    return 
 }
 //  utils - 顯示el與否
 function show(q, boo = true) {

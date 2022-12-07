@@ -6,6 +6,7 @@ const { htmlStr_newsList } = require('../utils/ejs-render')
 const { init_newsOfFollowId, init_excepts } = require('../utils/init')
 
 const { NEWS: { LIMIT } } = require('../conf/constant')
+const { readUser } = require('../server/user')
 const {
     readNews,
     updateNews,
@@ -31,7 +32,7 @@ const {
  * @param {number} userId 
  * @returns {*} resModel
  */
-async function getNewsByUserId(userId) {
+async function getMeAndTheFirstNews(userId) {
     /*
     {
         newsList: {
@@ -45,8 +46,9 @@ async function getNewsByUserId(userId) {
         num: { unconfirm, confirm, total },
         limit
     }*/
-    let res = await readNews({ userId })
-    return new SuccModel(res)
+    let me = await readUser({ id: userId })
+    let news = await readNews({ userId })
+    return new SuccModel({ me, news })
 }
 
 async function readMore({id, excepts, newsList}) {
@@ -140,7 +142,7 @@ async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront 
 }
 
 module.exports = {
-    getNewsByUserId,    //  view user
+    getMeAndTheFirstNews,    //  view user
     readMoreByUserId,   //  api news
     confirmNews,         //  api news
     readMore
