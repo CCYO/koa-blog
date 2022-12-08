@@ -1,11 +1,12 @@
-async function initData() {
+async function initNavbar() {
     try {
         // 取得登入者數據
         let data = await getNews()
-        if(data.me.id){
+        if(data.me.id){ //  登入狀態
+            //  初始化通知列表相關功能
             await initNews(data)
         }
-        return { me: data.me }
+        return data
     } catch (e) {
         throw e
     }
@@ -15,9 +16,6 @@ async function initData() {
 async function initNews(data) {
     //  渲染基本navBar
     $('#my-navbar-header-register').html(template_nav(data.me.id))
-    if (!data.me.id) { //  未登入就結束
-        return
-    }
     //  作用域內的公用數據，全都存在這裡
     /*  取得 news
     _data: {
@@ -368,11 +366,10 @@ async function getNews(_news) {
         }
     }
     let { data: { errno, data, msg } } = await axios.post(`/api/news`, opts)
-    if(!errno){
+    if(!errno){ //  登入狀態，且成功取得數據
         return data
     }
-    if (!page) {
-        console.log('未登入')
+    if (!page) {    //  登出狀態
         return { me: {}}
     }
     alert(msg)
@@ -383,6 +380,4 @@ function show(q, boo = true) {
     return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
 }
 
-export {
-    initData
-}
+export default initNavbar 

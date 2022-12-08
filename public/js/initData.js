@@ -1,15 +1,19 @@
 class My {
+    constructor(){
+        this.data = initData()
+    }
     data = {}
     promiseAll = []
     async init(initData) {
         try {
-            console.log('Ready')
             let promise = initData()
             this.promiseAll.push(promise)
             let res = await promise
-            this.data = { ...this.data, ...res }
-            console.log('init res => ', res)
-            console.log('init data => ', this.data)
+            for(let key in res){
+                if(key !== 'news'){
+                    this.data = { ...this.data, [key]: res[key] }
+                }
+            }
             return res
         } catch (e) {
             throw e
@@ -33,7 +37,7 @@ class My {
 //     無轉譯 => { "html":"<p>56871139</p>") 會造成<p>直接渲染至頁面
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
 
-async function initData() {
+function initData() {
     console.log('init')
     let res = {}
     $(`[data-my-data]`).each((index, el) => {
@@ -97,6 +101,4 @@ async function initData() {
     }
 }
 
-export {
-    My, initData
-}
+export default My

@@ -318,37 +318,28 @@
     -->
     <!-- <script defer src="/js/navbar.js"></script> -->
     <script type="module" defer>
-        import * as pageData from '/js/initData.js'
-        import * as navbarData from '/js/navbar.js'
+        import initData from '/js/initData.js'
+        import initNavbar from '/js/navbar.js'
         $(async function () {
             try {
-                console.log('@pageData => ', pageData)
-                console.log('@navbarData => ', navbarData)
                 //  讀取畫面，遮蔽效果
                 loading()
-                let my = new pageData.My()
-                await my.init(pageData.initData)
-                await my.init(navbarData.initData)
-                console.log('@my => ', my.data)
-                let data = await my.check()
-                window.data = { ...window.data, ...data }
-                console.log('window.data => ', window.data)
-                await initData()
-                console.log('@ 關於頁面內的初始化皆已完成')
+                let pageData = new initData()
+                // await my.init(pageData.initData)
+                await pageData.init(initNavbar)
+                await initPage(await pageData.check())
                 //  讀取完成，取消遮蔽
                 loadEnd()
             } catch (err) {
                 console.log('@ init 發生錯誤 => ', err)
             }
-
-
-
-            async function initData() {
+            async function initPage(data) {
                 console.log('@ 已確認頁面所需數據皆已初始化完成')
+                let pageData = data
+                let { currentUser, me, fansList } = pageData
                 //  存放 文章列表分頁 的數據
                 window.render = { blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } } }
 
-                let { currentUser, me } = window.data
                 let isSelf = currentUser.id === me.id
                 //  追蹤鈕
                 let $btn_follow = $('#follow')
@@ -357,7 +348,7 @@
 
                 if (!isSelf) {  //  非自己的頁面
                     //  判端是否為自己的偶像，顯示追蹤/退追鈕
-                    let isMyIdol = window.data.fansList.some((fans) => fans.id === me.id)
+                    let isMyIdol = fansList.some((fans) => fans.id === me.id)
                     $btn_cancelFollow.toggleClass('my-noshow', !isMyIdol)
                     $btn_follow.toggleClass('my-noshow', isMyIdol)
                 } else {  //  自己的頁面
@@ -381,29 +372,13 @@
                 //  文章列表 的 上下頁，綁定翻頁功能
                 $('[data-my-way].page-link').on('click', renderBlogList)
 
-                function getBlogTitle(value) {
-                    let val = value.trim()
-                    if (!val.length) {
-                        return false
-                    }
-                    return my_xss(value)
-                }
-
-                // 用來對表格內容進行xss
-                function my_xss(html) {
-                    return filterXSS(html)
-                }
-
                 //  handle => 創建 blog
                 async function handle_createBlog(e) {
-                    let $el = $('#blogTitle')
-                    let title = getBlogTitle($el.val())
-
+                    let title = getBlogTitle($('#blogTitle').val())
                     if (!title) {
                         alert('標題不能為空')
                         return
                     }
-
                     const {
                         data: {
                             errno, data, msg
@@ -414,8 +389,16 @@
                         alert('BLOG創立完成')
                         location.href = `/blog/edit/${data.id}`
                     } else {
-                        alert(`BLOG創立失敗 => ${msg.message}`)
-                        console.log(msg.stack)
+                        alert(`BLOG創立失敗 => ${msg}`)
+                    }
+
+                    //  取title值
+                    function getBlogTitle(value) {
+                        let val = value.trim()
+                        if (!val.length) {
+                            return false
+                        }
+                        return filterXSS(value)
                     }
                 }
 
