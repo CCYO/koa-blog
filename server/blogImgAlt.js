@@ -46,6 +46,12 @@ async function readBlogImgAlt({ id }){
     return init_blogImgAlt(blogImgAlt)
 }
 
+async function courtOfSomeImgInBlog({blog_id, blogImg_id}){
+    let {} = await BlogImgAlt.findAndCountAll({
+        where: { blogImg_id }
+    })
+}
+
 module.exports = {
     createBlogImgAlt,
     deleteBlogImgAlt,

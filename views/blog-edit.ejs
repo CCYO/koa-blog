@@ -88,9 +88,8 @@
     <!-- <script defer src="/js/navbar.js"></script> -->
 
     <script type="module" defer>
-        import * as pageData from '/js/initData.js'
-        import * as navbarData from '/js/navbar.js'
-
+        import initData from '/js/initData.js'
+        import initNavbar from '/js/navbar.js'
 
         //  公用變量
         //  API
@@ -126,20 +125,21 @@
             },
             minProperties: 1
         }
-        //  初始化
-        init()
+
+        try {
+            let pageData = new initData()
+            await pageData.init(initNavbar)
+            await initPage(await pageData.check())
+        } catch (e) {
+            console.log('@page error => ', e)
+        }
 
         //  初始化
-        async function init() {
+        async function initPage(data) {
+            let pageData = data
             try {
                 //  讀取中，遮蔽畫面
                 loading()
-                //  初始化 ejs 提供的數據
-                let my = new pageData.My()
-                await my.init(pageData.initData)
-                await my.init(navbarData.init)
-                let data = await my.check()
-                window.data = { ...window.data, ...data }
                 //  初始化頁面
                 init_pageUI()
                 init_pageFuc()
@@ -154,15 +154,49 @@
                 //  初始化 btn#updateTitle
                 $btn_updateTitle.prop('disabled', true)
                 //  初始化 input[name=show]
-                $show.prop('checked', window.data.blog.show)
+                $show.prop('checked', pageData.blog.show)
             }
             //  初始化 頁面各功能
             function init_pageFuc() {
                 //  updateBlog 酬載容器
                 let payload = init_payload()
-                window.payload = payload
+                pageData.payload = payload
                 //  editor
                 let editor = init_editor()
+                window.editor = editor
+                console.log('@ => ', pageData)
+                initImgData()
+                async function initImgData() {
+                    let cancelImgs = getBlogImgIdList_needToRemoveAssociate()
+                    if (!cancelImgs.length) {    //  若cancel無值
+                        return
+                    }
+                    cancelImgs = cancelImg.map( altId => {
+                        let {id, blogImg_id} = pageData.blog.map_imgs.get(altId)
+                        return {id, blogImg_id}
+                    })
+                    let ops = {
+                        cancelImgs,
+                        id: pageData.blog.id
+                    }
+                    loading()
+                    const {
+                        data: {
+                            errno, data, msg
+                        }
+                    } = await axios.patch(api_blog += '/one', ops)
+                    loadEnd()
+                    if (errno) {
+                        my_alert('blog save error!')
+                        return
+                    }
+                    cancelImgs.forEach(id => {
+                        let { index } = pageData.blog.map_imgs.get(id)
+                        pageData.blog.imgs.splice(index, 1, null)
+                        pageData.blog.map_imgs.delete(id)
+                    })
+                    console.log('@pageData => ', pageData)
+                }
                 //  生成 valicator
                 let valicator = init_valicator(schema)
                 //  $title handleInput => 驗證標題合法性
@@ -189,7 +223,7 @@
                         data: {
                             errno, data, msg
                         }
-                    } = await axios.delete(api_blog, { data: { id: window.data.blog.id } })
+                    } = await axios.delete(api_blog, { data: { id: pageData.blog.id } })
                     loadEnd()
                     if (!errno) {
                         my_alert('已成功刪除此篇文章')
@@ -222,7 +256,7 @@
                         payloadObj.html = parseImgToXImg(payload.get('html'))
                     }
                     //  payloadObj 放入 blog_id
-                    payloadObj.id = window.data.blog.id
+                    payloadObj.id = pageData.blog.id
                     loading()
                     const {
                         data: {
@@ -246,7 +280,7 @@
                     //  重置 payload
                     payload.reset()
                     //  同步 window.blog
-                    window.data.blog = { ...window.data.blog, ..._payloadObj }
+                    pageData.blog = { ...pageData.blog, ..._payloadObj }
                     // setTimeout( () => alert('blog save success!') , 0)
                     my_alert('blog save success!')
 
@@ -268,7 +302,7 @@
                     function getBlogImgIdList_needToRemoveAssociate() {
                         let reg = /blogImgAlt=(?<blogImgAlt_id>\w+)/
                         //  複製一份 blogImgAlt
-                        let _blogImgAlt = new Map([...window.data.blog.map_imgs])
+                        let _blogImgAlt = new Map([...pageData.blog.map_imgs])
                         //  找出[{src, alt, href}, ...]
                         editor.getElemsByType('image').forEach(({ src }) => {
                             let res = reg.exec(src)
@@ -311,7 +345,7 @@
                 //  關於 更新title 的相關操作
                 async function handle_updateTitle(e) {
                     let payloadData = {
-                        id: window.data.blog.id,
+                        id: pageData.blog.id,
                         title: payload.get('title')
                     }
                     loading()
@@ -323,7 +357,7 @@
                     //  使 $btn_updateTitle 無法作用
                     e.target.disabled = true
                     //  同步數據
-                    window.data.blog.title = blog.title
+                    pageData.blog.title = blog.title
                     payload.delete('title')
                     loadEnd()
                     my_alert('標題更新完成')
@@ -333,11 +367,11 @@
                     let $el = $(e.target)
                     let value = $el.val().trim()
                     //  如果標題不變，或是沒有值
-                    if (value === window.data.blog.title || !value) {
+                    if (value === pageData.blog.title || !value) {
                         //  移除非法提醒
                         $el.removeClass('is-invalid')
                         //  恢復原標題
-                        $el.val(window.data.blog.title)
+                        $el.val(pageData.blog.title)
                     }
                     return
                 }
@@ -371,7 +405,7 @@
                         type: ['string', 'number', 'boolean'],
                         schemaType: 'string',
                         validate: function _(inputName, newData) {
-                            let curData = window.data.blog[inputName]
+                            let curData = pageData.blog[inputName]
                             if (newData !== curData) {
                                 return true
                             }
@@ -477,7 +511,7 @@
                     //  editor 編輯欄 創建
                     const editor = createEditor({
                         //  插入後端取得的 html
-                        html: window.data.blog.html || '',
+                        html: pageData.blog.html || '',
                         selector: '#editor-container',
                         config: editorConfig,
                         mode: 'simple'
@@ -495,18 +529,18 @@
                         let reg = /blogImgAlt=(\w+)/
                         let res_reg = reg.exec(src)
                         let blogImgAlt_id = res_reg[1] * 1
-                        let blog_id = window.data.blog.id
+                        let blog_id = pageData.blog.id
                         alt = my_xss(alt)
                         let { data: { errno, msg } } = await axios.patch('/api/blog/blogImgAlt', { blog_id, blogImgAlt_id, alt })
                         if (errno) {
                             return msg
                         }
-                        window.data.blog.imgs.some((img, index, imgs) => {
+                        pageData.blog.imgs.some((img, index, imgs) => {
                             if (img.id !== blogImgAlt_id) {
                                 return false
                             }
                             imgs[index].alt = alt
-                            window.data.blog.map_imgs.set(blogImgAlt_id, { ...imgs[index], index })
+                            pageData.blog.map_imgs.set(blogImgAlt_id, { ...imgs[index], index })
                         })
                         return true
                     }
@@ -521,7 +555,7 @@
                         //  生成 img 的 hash(hex格式)
                         let { hash, ...other } = await _getHash(img)
                         let res
-                        let blog_id = window.data.blog.id
+                        let blog_id = pageData.blog.id
                         loading()
                         if (!other.blogImg_id) { // img為新圖，傳給後端建檔
                             //  imgName要作為query參數傳送，必須先作百分比編碼
@@ -555,8 +589,8 @@
                         }
                         //  data格式: blogImgAlt { id, alt, img_id, url, hash, blogImg_id, blog_id, name }
                         //  同步數據
-                        let index = window.data.blog.imgs.push(data)
-                        window.data.blog.map_imgs.set(data.id, { ...data, index })
+                        let index = pageData.blog.imgs.push(data)
+                        pageData.blog.map_imgs.set(data.id, { ...data, index })
                         //  將圖片插入 editor
                         insertFn(`${data.url}?blogImgAlt=${data.id}`, data.name)
                         //  取得圖片的 hash
@@ -564,12 +598,17 @@
                             //  取得 img 的 MD5 Hash(hex格式)
                             let hash = await _getMD5Hash(img)
                             let res = { hash }
-                            let { imgs } = window.data.blog
+                            let { imgs } = pageData.blog
                             if (!imgs.length) {
                                 return res
                             }
                             //  利用hash，確認img是否為舊圖
-                            let exist = imgs.find(img => img.hash === hash)
+                            let exist = imgs.find(img => {
+                                if (img) {
+                                    return img.hash === hash
+                                }
+                                return false
+                            })
                             if (!exist) {
                                 return res
                             }
@@ -664,6 +703,21 @@
                         payload.clear()
                         payload.set('curHtml', curHtml)
                     }
+                }
+                /*  取出要移除的 blogImgAlt_id  */
+                function getBlogImgIdList_needToRemoveAssociate() {
+                    let reg = /blogImgAlt=(?<blogImgAlt_id>\w+)/
+                    //  複製一份 blogImgAlt
+                    let _blogImgAlt = new Map([...pageData.blog.map_imgs])
+                    //  找出[{src, alt, href}, ...]
+                    editor.getElemsByType('image').forEach(({ src }) => {
+                        let res = reg.exec(src)
+                        if (res) {
+                            _blogImgAlt.delete(res.groups.blogImgAlt_id * 1)
+                        }
+                        return
+                    })
+                    return [..._blogImgAlt.keys()]
                 }
             }
         }

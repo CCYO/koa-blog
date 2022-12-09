@@ -7,7 +7,7 @@ const router = require('koa-router')()
 const { addBlog, modifyBlog, removeBlog } = require('../../controller/blog')
 
 const { uploadImg } = require('../../middleware/blogImg')
-const { addBlogImgAlt, modifiedBlogImgAlt } = require('../../controller/blogImgAlt')
+const { addBlogImgAlt, modifiedBlogImgAlt, deleteImgs } = require('../../controller/blogImgAlt')
 
 
 const { api_check_login } = require('../../middleware/check_login')
@@ -48,6 +48,13 @@ router.patch('/', api_check_login, cache_reset, async(ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { id: blog_id, ...blog_data } = ctx.request.body
     let res = await modifyBlog(blog_id, blog_data, user_id)
+    ctx.body = res
+})
+
+router.patch('/one', api_check_login, cache_reset, async(ctx, next) => {
+    const { id: user_id } = ctx.session.user
+    const { id: blog_id, cancelImgs } = ctx.request.body
+    let res = await deleteImgs(blog_id, cancelImgs, user_id)
     ctx.body = res
 })
 

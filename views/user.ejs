@@ -320,197 +320,204 @@
     <script type="module" defer>
         import initData from '/js/initData.js'
         import initNavbar from '/js/navbar.js'
-        $(async function () {
-            try {
-                //  讀取畫面，遮蔽效果
-                loading()
-                let pageData = new initData()
-                // await my.init(pageData.initData)
-                await pageData.init(initNavbar)
-                await initPage(await pageData.check())
-                //  讀取完成，取消遮蔽
-                loadEnd()
-            } catch (err) {
-                console.log('@ init 發生錯誤 => ', err)
+
+        //  init
+        try {
+            //  讀取畫面，遮蔽效果
+            loading()
+            let pageData = new initData()
+            // await my.init(pageData.initData)
+            await pageData.init(initNavbar)
+            await initPage(await pageData.check())
+            //  讀取完成，取消遮蔽
+            await loadEnd()
+        } catch (err) {
+            console.log('@ init 發生錯誤 => ', err)
+        }
+
+        //  initPage
+        async function initPage(data) {
+            //  public Var
+            let pageData = data
+            let { currentUser, me, fansList } = pageData
+            //  存放 文章列表分頁 的數據
+            window.render = { blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } } }
+            let isSelf = currentUser.id === me.id
+            //  追蹤鈕
+            let $btn_follow = $('#follow')
+            //  取消追蹤鈕
+            let $btn_cancelFollow = $('#cancelFollow')
+
+            //  UI
+            if (!isSelf) {  //  非自己的頁面
+                //  判端是否為自己的偶像，顯示追蹤/退追鈕
+                let isMyIdol = fansList.some((fans) => fans.id === me.id)
+                $btn_cancelFollow.toggleClass('my-noshow', !isMyIdol)
+                $btn_follow.toggleClass('my-noshow', isMyIdol)
+            } else {  //  自己的頁面
+                //  顯示建立新文章btn
+                $('#newBlog').removeClass('my-noshow')
+                //  顯示編輯文章title
+                $('[data-my-blog-key=hidden]').removeClass('my-noshow')
+                //  隱藏文章編輯/刪除功能
+                $('.btn-blog-edit').removeClass('my-noshow')
             }
-            async function initPage(data) {
-                console.log('@ 已確認頁面所需數據皆已初始化完成')
-                let pageData = data
-                let { currentUser, me, fansList } = pageData
-                //  存放 文章列表分頁 的數據
-                window.render = { blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } } }
 
-                let isSelf = currentUser.id === me.id
-                //  追蹤鈕
-                let $btn_follow = $('#follow')
-                //  取消追蹤鈕
-                let $btn_cancelFollow = $('#cancelFollow')
+            //  event listener
+            if (isSelf) {
+                //  綁定創建文章功能
+                $('#sendBlogTitle').click(handle_createBlog)
+                //  為刪除文章btn綁定handle
+                $('[data-my-remove-blog]').click(handle_removeBlog)
+                $('[data-my-remove-blogs]').click(handle_removeBlogs)
+            }
+            //  綁定追蹤/退追功能
+            $btn_follow.click(handle_follow(true))
+            $btn_cancelFollow.click(handle_follow(false))
+            //  文章列表 的 頁碼，綁定翻頁功能
+            $('[data-my-key].page-link').on('click', renderBlogList)
+            //  文章列表 的 上下頁，綁定翻頁功能
+            $('[data-my-way].page-link').on('click', renderBlogList)
 
-                if (!isSelf) {  //  非自己的頁面
-                    //  判端是否為自己的偶像，顯示追蹤/退追鈕
-                    let isMyIdol = fansList.some((fans) => fans.id === me.id)
-                    $btn_cancelFollow.toggleClass('my-noshow', !isMyIdol)
-                    $btn_follow.toggleClass('my-noshow', isMyIdol)
-                } else {  //  自己的頁面
-                    //  顯示建立新文章btn
-                    $('#newBlog').removeClass('my-noshow')
-                    //  綁定創建文章功能
-                    $('#sendBlogTitle').click(handle_createBlog)
-                    //  顯示編輯文章title
-                    $('[data-my-blog-key=hidden]').removeClass('my-noshow')
-                    //  隱藏文章編輯/刪除功能
-                    $('.btn-blog-edit').removeClass('my-noshow')
-                    //  為刪除文章btn綁定handle
+            //  handle => 創建 blog
+            async function handle_createBlog(e) {
+                let title = getBlogTitle($('#blogTitle').val())
+                if (!title) {
+                    alert('標題不能為空')
+                    return
+                }
+                loading()
+                const {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.post('/api/blog', { title })
+                await loadEnd()
+                if (!errno) {
+                    alert('BLOG創立完成')
+                    location.href = `/blog/edit/${data.id}`
+                } else {
+                    alert(`BLOG創立失敗 => ${msg}`)
+                }
+
+                //  取title值
+                function getBlogTitle(value) {
+                    let val = value.trim()
+                    if (!val.length) {
+                        return false
+                    }
+                    return filterXSS(value)
+                }
+            }
+            //  刪除當前頁碼的所有文章
+            async function handle_removeBlogs(e) {
+                //  取得文章列表container
+                let $blogList = $(e.target).parents('[data-my-blog-key]')
+                //  取得當前文章列表的移除鈕
+                let $children = [...$blogList.find('[data-my-remove-blog]')]
+                //  取得所有移除鈕上的文章id
+                let listOfBlogId = $children.reduce((init, cur) => {
+                    init.push($(cur).data('my-remove-blog'))
+                    return init
+                }, [])
+                removeBlog(listOfBlogId)
+                return
+            }
+            //  刪除單篇文章功能
+            async function handle_removeBlog(e) {
+                if (!confirm('真的要刪掉?')) {
+                    return
+                }
+                //  刪除鈕
+                let $target = $(e.target)
+                //  要被刪除的文章id
+                let id = $target.data('my-remove-blog')
+                //  送出刪除命令
+                await removeBlog(id)
+                return
+            }
+            //  渲染文章列表
+            function renderBlogList(e) {
+                e.preventDefault()
+                //  觸發handle的el
+                let $target = $(e.target)
+
+                //  文章列表type
+                let blogKey = $target.parents('div.blogList').data('my-blog-key')
+                //  文章列表的ul
+                let $targetUl = $(`[data-my-blog-key=${blogKey}] ul.list-group`)
+                //  當前列表存放在window.render的htmlStr
+                let data_renderOfBlogKey = window.render.blog[blogKey]
+                //  當前列表存放在window.data的數據
+                let data_blogList = pageData.blogList[blogKey]
+                //  當前頁碼(從0開始)
+                let curInd = data_renderOfBlogKey.curInd
+                //  目標頁碼
+                let tarInd = getTargetPage()
+
+                //  從 window.render 取得當前列表當前頁的數據
+                let data_curList = data_renderOfBlogKey.html[curInd]
+                if (!data_curList) {   //若無值
+                    //  將當前頁 htmlStr 存入 window.render
+                    data_renderOfBlogKey.html[curInd] = $targetUl.html()
+                }
+
+                //  從 window.render 取得當前列表目標頁的數據
+                let data_tarList = data_renderOfBlogKey.html[tarInd]
+                if (!data_tarList) {    //若沒有
+                    //  創建 目標頁 htmlStr
+                    let htmlStr = data_blogList[tarInd].reduce((init, { id, title }) => {
+                        return init += templateCreator_BlogList(id, title)
+                    }, '')
+                    //  存入 window.render
+                    data_renderOfBlogKey.html[tarInd] = htmlStr
+                }
+
+                //  更新頁碼條UI
+                UI_page()
+                //  渲染 目標頁 htmlStr
+                $targetUl.html(data_renderOfBlogKey.html[tarInd])
+                //  更新 window.render 頁碼
+                data_renderOfBlogKey.curInd = tarInd
+                //  若是自己的頁面，要為刪除文章鈕綁定功能
+                if (isSelf) {
                     $('[data-my-remove-blog]').click(handle_removeBlog)
-                    $('[data-my-remove-blogs]').click(handle_removeBlogs)
-                }
-                //  綁定追蹤/退追功能
-                $btn_follow.click(handle_follow(true))
-                $btn_cancelFollow.click(handle_follow(false))
-                //  文章列表 的 頁碼，綁定翻頁功能
-                $('[data-my-key].page-link').on('click', renderBlogList)
-                //  文章列表 的 上下頁，綁定翻頁功能
-                $('[data-my-way].page-link').on('click', renderBlogList)
-
-                //  handle => 創建 blog
-                async function handle_createBlog(e) {
-                    let title = getBlogTitle($('#blogTitle').val())
-                    if (!title) {
-                        alert('標題不能為空')
-                        return
-                    }
-                    const {
-                        data: {
-                            errno, data, msg
-                        }
-                    } = await axios.post('/api/blog', { title })
-
-                    if (!errno) {
-                        alert('BLOG創立完成')
-                        location.href = `/blog/edit/${data.id}`
-                    } else {
-                        alert(`BLOG創立失敗 => ${msg}`)
-                    }
-
-                    //  取title值
-                    function getBlogTitle(value) {
-                        let val = value.trim()
-                        if (!val.length) {
-                            return false
-                        }
-                        return filterXSS(value)
-                    }
                 }
 
-                //  刪除當前頁碼的所有文章
-                async function handle_removeBlogs(e) {
-                    //  取得文章列表container
-                    let $blogList = $(e.target).parents('[data-my-blog-key]')
-                    //  取得當前文章列表的移除鈕
-                    let $children = [...$blogList.find('[data-my-remove-blog]')]
-                    //  取得所有移除鈕上的文章id
-                    let listOfBlogId = $children.reduce((init, cur) => {
-                        init.push($(cur).data('my-remove-blog'))
-                        return init
-                    }, [])
-                    removeBlog(listOfBlogId)
-                    return
+                //  UI 頁碼條
+                function UI_page() {
+                    //  當前文章列表的container
+                    let $list = $(`[data-my-blog-key=${blogKey}]`)
+                    //  移除 頁碼列 的 .active .my-disable
+                    $list.find('li.page-item').removeClass('active my-disabled')
+                    //  上一頁btn
+                    let $back = $list.find(`li.page-item:first`)
+                    //  下一頁btn
+                    let $next = $list.find(`li.page-item:last`)
+                    //  當前文章列表的最後一頁頁碼
+                    let lastPageIndex = pageData.blogList[blogKey].length - 1
+                    if (tarInd === 0) {   // 若目標頁碼為0(第一頁)
+                        //  上一頁 禁按
+                        $back.addClass('my-disabled')
+                    } else if (tarInd === lastPageIndex) { //  //  若目標頁碼為最後一頁
+                        //  下一頁 禁按
+                        $next.addClass('my-disabled')
+                    }
+                    //  目標頁碼 btn 的 li
+                    let $tarPage = $list.find(`a.page-link[data-my-ind=${tarInd}]`).parent()
+                    //  顯示為當前頁，並禁止點擊
+                    $tarPage.addClass('active my-disabled')
                 }
-                //  刪除單篇文章功能
-                async function handle_removeBlog(e) {
-                    if (!confirm('真的要刪掉?')) {
-                        return
-                    }
-                    //  刪除鈕
-                    let $target = $(e.target)
-                    //  要被刪除的文章id
-                    let id = $target.data('my-remove-blog')
-                    //  送出刪除命令
-                    await removeBlog(id)
-                    return
-                }
-                //  渲染文章列表
-                function renderBlogList(e) {
-                    e.preventDefault()
-                    //  觸發handle的el
-                    let $target = $(e.target)
 
-                    //  文章列表type
-                    let blogKey = $target.parents('div.blogList').data('my-blog-key')
-                    //  文章列表的ul
-                    let $targetUl = $(`[data-my-blog-key=${blogKey}] ul.list-group`)
-                    //  當前列表存放在window.render的htmlStr
-                    let data_renderOfBlogKey = window.render.blog[blogKey]
-                    //  當前列表存放在window.data的數據
-                    let data_blogList = window.data.blogList[blogKey]
-                    //  當前頁碼(從0開始)
-                    let curInd = data_renderOfBlogKey.curInd
-                    //  目標頁碼
-                    let tarInd = getTargetPage()
-
-                    //  從 window.render 取得當前列表當前頁的數據
-                    let data_curList = data_renderOfBlogKey.html[curInd]
-                    if (!data_curList) {   //若無值
-                        //  將當前頁 htmlStr 存入 window.render
-                        data_renderOfBlogKey.html[curInd] = $targetUl.html()
-                    }
-
-                    //  從 window.render 取得當前列表目標頁的數據
-                    let data_tarList = data_renderOfBlogKey.html[tarInd]
-                    if (!data_tarList) {    //若沒有
-                        //  創建 目標頁 htmlStr
-                        let htmlStr = data_blogList[tarInd].reduce((init, { id, title }) => {
-                            return init += templateCreator_BlogList(id, title)
-                        }, '')
-                        //  存入 window.render
-                        data_renderOfBlogKey.html[tarInd] = htmlStr
-                    }
-
-                    //  更新頁碼條UI
-                    UI_page()
-                    //  渲染 目標頁 htmlStr
-                    $targetUl.html(data_renderOfBlogKey.html[tarInd])
-                    //  更新 window.render 頁碼
-                    data_renderOfBlogKey.curInd = tarInd
-                    //  若是自己的頁面，要為刪除文章鈕綁定功能
-                    if (isSelf) {
-                        $('[data-my-remove-blog]').click(handle_removeBlog)
-                    }
-
-                    //  UI 頁碼條
-                    function UI_page() {
-                        //  當前文章列表的container
-                        let $list = $(`[data-my-blog-key=${blogKey}]`)
-                        //  移除 頁碼列 的 .active .my-disable
-                        $list.find('li.page-item').removeClass('active my-disabled')
-                        //  上一頁btn
-                        let $back = $list.find(`li.page-item:first`)
-                        //  下一頁btn
-                        let $next = $list.find(`li.page-item:last`)
-                        //  當前文章列表的最後一頁頁碼
-                        let lastPageIndex = window.data.blogList[blogKey].length - 1
-                        if (tarInd === 0) {   // 若目標頁碼為0(第一頁)
-                            //  上一頁 禁按
-                            $back.addClass('my-disabled')
-                        } else if (tarInd === lastPageIndex) { //  //  若目標頁碼為最後一頁
-                            //  下一頁 禁按
-                            $next.addClass('my-disabled')
-                        }
-                        //  目標頁碼 btn 的 li
-                        let $tarPage = $list.find(`a.page-link[data-my-ind=${tarInd}]`).parent()
-                        //  顯示為當前頁，並禁止點擊
-                        $tarPage.addClass('active my-disabled')
-                    }
-
-                    //  創建文章列表 htmlStr
-                    function templateCreator_BlogList(id, title) {
-                        let blogEdit = isSelf ? `
+                //  創建文章列表 htmlStr
+                function templateCreator_BlogList(id, title) {
+                    let blogEdit = isSelf ? `
                             <div class="btn-blog-edit">
                                 <a class='btn btn-outline-primary btn-sm' href="/blog/edit/${id}">編輯</a>
                                 <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="${id}">刪除</a>
                             </div>` : ''
 
-                        return `                    
+                    return `                    
                         <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                             <div>
                                 <a class="stretched-link" href="/blog/${id}">${title}</a>
@@ -518,41 +525,41 @@
                             ${blogEdit}
                         </li>
                     `
-                    }
-                    //  取得目標頁碼
-                    function getTargetPage() {
-                        //  判斷handle是 頁碼 或 上下頁 觸發
-                        let typeOfTarget = $target.attr('data-my-ind') ? 'page' : 'dir'
-                        //  取得目表頁碼
-                        if (typeOfTarget === 'page') {   // 若el是頁碼
-                            //  目標頁碼 從 el[data-my-ind] 取得
-                            return $target.data('my-ind')
-                        } else if (typeOfTarget === 'dir') {   //若el是上下頁
-                            //  目標頁碼 以 計算方式 取得
-                            return $target.data('my-way') === 'next' ? curInd + 1 : curInd - 1
-                        }
-                    }
-
                 }
-                //  handle 追蹤功能
-                function handle_follow(toFollow) {
-                    let { fansList, me } = window.data
-                    //  若未登入，跳轉到登入頁
-                    if (!me) {
-                        return () => {
-                            alert('請先登入')
-                            location.href = `/login?from=${location.pathname}`
-                        }
+                //  取得目標頁碼
+                function getTargetPage() {
+                    //  判斷handle是 頁碼 或 上下頁 觸發
+                    let typeOfTarget = $target.attr('data-my-ind') ? 'page' : 'dir'
+                    //  取得目表頁碼
+                    if (typeOfTarget === 'page') {   // 若el是頁碼
+                        //  目標頁碼 從 el[data-my-ind] 取得
+                        return $target.data('my-ind')
+                    } else if (typeOfTarget === 'dir') {   //若el是上下頁
+                        //  目標頁碼 以 計算方式 取得
+                        return $target.data('my-way') === 'next' ? curInd + 1 : curInd - 1
                     }
+                }
 
-                    let api = toFollow ? '/api/user/follow' : '/api/user/cancelFollow'
+            }
+            //  handle 追蹤功能
+            function handle_follow(toFollow) {
+                let { fansList, me } = pageData
+                //  若未登入，跳轉到登入頁
+                if (!me) {
+                    return () => {
+                        alert('請先登入')
+                        location.href = `/login?from=${location.pathname}`
+                    }
+                }
 
-                    function UI_follow() {
-                        alert('已追蹤')
-                        //  更新 window.data 追蹤名單
-                        fansList.unshift(me)
-                        //  生成 粉絲htmlStr
-                        let htmlStr = `
+                let api = toFollow ? '/api/user/follow' : '/api/user/cancelFollow'
+
+                function UI_follow() {
+                    alert('已追蹤')
+                    //  更新 window.data 追蹤名單
+                    fansList.unshift(me)
+                    //  生成 粉絲htmlStr
+                    let htmlStr = `
                         <li class="card follow-box m-1" data-fans-id="${me.id}">
                             <img src="${me.avatar}" class="card-img-top" alt="">
                             <div class="card-body text-center">
@@ -560,68 +567,85 @@
                             </div>
                         </li>
                         `
-                        //  在粉絲列表中插入 粉絲htmlStr
-                        $(`ul#fansList`).prepend(htmlStr)
-                    }
-                    function UI_cancelFollow() {
-                        alert('已退追')
-                        //  更新 window.data 追蹤名單
-                        fansList.splice(fansList.indexOf(me.id), 1)
-                        //  同步 頁面的粉絲列表
-                        $(`li[data-fans-id='${me.id}']`).remove()
-                    }
-                    let UI_feedback = toFollow ? UI_follow : UI_cancelFollow
-
-                    return async (e) => {
-                        let id = window.data.currentUser.id
-                        const {
-                            data: {
-                                errno, data, msg
-                            }
-                        } = await axios.post(api, { id })
-
-                        if (!errno) {
-                            UI_feedback()
-                            $btn_follow.toggle()
-                            $btn_cancelFollow.toggle()
-                        } else {
-                            alert('操作發生錯誤')
-                            console.log(msg)
-                        }
-                    }
+                    //  在粉絲列表中插入 粉絲htmlStr
+                    $(`ul#fansList`).prepend(htmlStr)
                 }
+                function UI_cancelFollow() {
+                    alert('已退追')
+                    //  更新 window.data 追蹤名單
+                    fansList.splice(fansList.indexOf(me.id), 1)
+                    //  同步 頁面的粉絲列表
+                    $(`li[data-fans-id='${me.id}']`).remove()
+                }
+                let UI_feedback = toFollow ? UI_follow : UI_cancelFollow
 
-                //  utils -----
-                //  axios 刪除文章
-                async function removeBlog(blogList) {
-                    //  送出刪除命令
+                return async (e) => {
+                    let id = pageData.currentUser.id
+                    loading()
                     const {
                         data: {
                             errno, data, msg
                         }
-                    } = await axios.delete('/api/blog', { data: { id: blogList } })
-
+                    } = await axios.post(api, { id })
+                    loadEnd()
+                    await delay( (errno, msg) => {
                     if (!errno) {
-                        alert('已成功刪除該頁文章')
-                        location.href = '/self' //  刷新頁面
-                    } else if (errno === 501) {   //  代表未登入
-                        location.href = '/login'
-                    } else {  //  刪除失敗
-                        alert(msg)
+                        UI_feedback()
+                        $btn_follow.toggle()
+                        $btn_cancelFollow.toggle()
+                    } else {
+                        alert('操作發生錯誤')
+                        console.log(msg)
                     }
+                })
                 }
             }
-            //  讀取畫面，遮蔽效果
-            function loading() {
-                $('#backdrop').addClass('my-show')
-                $('input').attr('disabled', true)
+
+            //  utils -----
+            //  axios 刪除文章
+            async function removeBlog(blogList) {
+                //  送出刪除命令
+                loading()
+                const {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.delete('/api/blog', { data: { id: blogList } })
+                loadEnd()
+                await delay( (errno, msg) => {
+                if (!errno) {
+                    alert('已成功刪除該頁文章')
+                    location.href = '/self' //  刷新頁面
+                } else if (errno === 501) {   //  代表未登入
+                    location.href = '/login'
+                } else {  //  刪除失敗
+                    alert(msg)
+                }
             }
-            //  讀取完成，取消遮蔽
-            function loadEnd() {
-                $('#backdrop').removeClass('my-show')
-                $('input').removeAttr('disabled')
+                )
             }
-        })
+        }
+
+        //  utils
+        //  讀取畫面，遮蔽效果
+        function loading() {
+            $('#backdrop').addClass('my-show')
+            $('input').attr('disabled', true)
+        }
+        //  讀取完成，取消遮蔽
+        function loadEnd() {
+            $('#backdrop').removeClass('my-show')
+            $('input').removeAttr('disabled')
+            // return new Promise((resolve) => setTimeout(resolve , 200) )
+        }
+
+        function delay(fn){
+            return new Promise((resolve) => setTimeout(() => {
+                fn()
+                resolve()
+            } , 200) )
+        }
+
     </script>
 </body>
 

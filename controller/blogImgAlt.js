@@ -19,7 +19,15 @@ async function modifiedBlogImgAlt(id, blog_id, alt){
     return new SuccModel(null, { blog: [blog_id]})
 }
 
+async function deleteImgs(blog_id, cancelImgs, user_id){
+    let { id, blogImg_id } = cancelImgs
+    
+    await readBlogImgAlt()
+
+}
+
 module.exports = { 
     addBlogImgAlt,
-    modifiedBlogImgAlt
+    modifiedBlogImgAlt,
+    deleteImgs
 }
