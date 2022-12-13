@@ -4,14 +4,12 @@
 
 const router = require('koa-router')()
 
-const { addBlog, modifyBlog, removeBlog } = require('../../controller/blog')
-
-const { uploadImg } = require('../../middleware/blogImg')
-const { addBlogImgAlt, modifiedBlogImgAlt, deleteImgs } = require('../../controller/blogImgAlt')
-
-
 const { api_check_login } = require('../../middleware/check_login')
-const { notifiedNews, resetBlog, cache_reset } = require('../../middleware/cache')
+const { cache_reset } = require('../../middleware/cache')
+const { uploadImg } = require('../../middleware/blogImg')
+
+const { addBlog, removeBlog, modifyBlog } = require('../../controller/blog')
+const { addBlogImgAlt, modifiedBlogImgAlt, deleteImgs } = require('../../controller/blogImgAlt')
 
 router.prefix('/api/blog')
 
@@ -20,20 +18,6 @@ router.post('/', api_check_login, cache_reset, async (ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { title } = ctx.request.body
     return ctx.body = await addBlog(title, user_id)
-})
-
-//  上傳圖片
-router.post('/img', api_check_login, cache_reset, uploadImg)
-
-//  建立Blog既有圖片的alt
-router.post('/blogImgAlt', api_check_login, cache_reset, async(ctx, next) => {
-    let { blogImg_id, blog_id } = ctx.request.body
-    ctx.body = await addBlogImgAlt(blogImg_id, blog_id)
-})
-
-router.patch('/blogImgAlt', api_check_login, cache_reset, async(ctx, next) => {
-    let { blogImgAlt_id, blog_id, alt } = ctx.request.body
-    ctx.body = await modifiedBlogImgAlt(blogImgAlt_id, blog_id, alt)
 })
 
 //  刪除 blog
@@ -51,6 +35,24 @@ router.patch('/', api_check_login, cache_reset, async(ctx, next) => {
     ctx.body = res
 })
 
+//  與圖片有關 -------
+
+//  上傳圖片
+router.post('/img', api_check_login, cache_reset, uploadImg)
+
+//  為Blog的blogImg建立另一筆blogImgAlt數據
+router.post('/blogImgAlt', api_check_login, cache_reset, async(ctx, next) => {
+    let { blogImg_id, blog_id } = ctx.request.body
+    ctx.body = await addBlogImgAlt(blogImg_id, blog_id)
+})
+
+//  修改blogImgAlt數據
+router.patch('/blogImgAlt', api_check_login, cache_reset, async(ctx, next) => {
+    let { blogImgAlt_id, blog_id, alt } = ctx.request.body
+    ctx.body = await modifiedBlogImgAlt(blogImgAlt_id, blog_id, alt)
+})
+
+//  初始化blog的圖片列表數據（通常用在上一次Blog有上傳圖片，但未儲存文章時，會導致沒有建立edito需要的<x-img>，因此需要初始化將其刪除）
 router.patch('/initImgs', api_check_login, cache_reset, async(ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { id: blog_id, cancelImgs } = ctx.request.body

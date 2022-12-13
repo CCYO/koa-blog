@@ -23,28 +23,27 @@ async function modifiedBlogImgAlt(id, blog_id, alt) {
     return new SuccModel(null, { blog: [blog_id] })
 }
 
+//  依據情況，<刪除BlogImgAlt>或<刪除整筆BlogImg>
 async function deleteImgs(blog_id, cancelImgs, user_id) {
     //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
     let promiseList = cancelImgs.map(async (item) => {
         let { blogImg_id, blogImgAlt_list } = item
+        //  確認在BlogImgAlt內，同樣BlogImg的條目共有幾條
         let { count } = await BlogImgAlt.findAndCountAll({ where: { blogImg_id } })
         let res
-        if (count === blogImgAlt_list.length) {  //  若要刪除的alt數量與資料夾存放的blogImgAlt數量相同
+        if (count === blogImgAlt_list.length) {  //  BlogImg條目 === 要刪除的BlogImgAlt數量，代表該Blog已沒有該張圖片
+            //  刪除整筆 BlogImg
             res = await deleteBlogImg({ listOfId: [blogImg_id] })
-        } else {  //  若要刪除的alt數量與資料夾存放的blogImgAlt數量相同
+        } else {  //  BlogImg條目 !== 要刪除的BlogImgAlt數量，代表該Blog仍有同樣的圖片
             res = await deleteBlogImgAlt({ id: blogImgAlt_list })
         }
-        if (!res) {
-            throw new Error(`${blogImg_id} 初始化失敗`)
+        if (!res) { //  代表刪除不完全
+            throw new Error(BLOGIMGALT.REMOVE_ERR)
         }
         return true
     })
-    try{
-        await Promise.all(promiseList)
-        return new SuccModel(null, { blog: [blog_id]})
-    }catch(err){
-        throw err
-    }
+    await Promise.all(promiseList)
+    return new SuccModel(null, { blog: [blog_id] })
 }
 
 module.exports = {

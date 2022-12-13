@@ -41,7 +41,7 @@ module.exports = {
     },
     BLOGIMGALT: {
         UPDATE_ERR: { errno: 902, msg: '更新失敗'},
-        INIT_ERR: { errno: 903, msg: '文章內的圖片數據初始化失敗'}
+        REMOVE_ERR: { errno: 903, msg: '文章內的圖片數據初始化失敗'}
     },
     FOLLOW: {
         FOLLOW_ERR: { errno: 1001, msg: '追蹤失敗'},
