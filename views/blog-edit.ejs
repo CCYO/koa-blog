@@ -171,10 +171,21 @@
                     if (!cancelImgs.length) {    //  若cancel無值
                         return
                     }
-                    cancelImgs = cancelImg.map( altId => {
-                        let {id, blogImg_id} = pageData.blog.map_imgs.get(altId)
-                        return {id, blogImg_id}
+                    cancelImgs = cancelImgs.map(altId => {
+                        let { id, blogImg_id } = pageData.blog.map_imgs.get(altId)
+                        return { id, blogImg_id }
                     })
+                    let map_cancelImgs = cancelImgs.reduce((initVal, { id, blogImg_id }) => {
+                        let some = initVal.has(blogImg_id)
+                        if (some) {
+                            initVal.set(blogImg_id, [...initVal.get(blogImg_id), id])
+                        } else {
+                            initVal.set(blogImg_id, [id])
+                        }
+                        return initVal
+                    }, new Map())
+                    console.log('xxx => ', map_cancelImgs)
+                    cancelImgs = [...map_cancelImgs.entries()].map(([blogImg_id, blogImgAlt_list]) => ({ blogImg_id, blogImgAlt_list }))
                     let ops = {
                         cancelImgs,
                         id: pageData.blog.id
@@ -184,16 +195,18 @@
                         data: {
                             errno, data, msg
                         }
-                    } = await axios.patch(api_blog += '/one', ops)
+                    } = await axios.patch(api_blog + 'initImgs', ops)
                     loadEnd()
                     if (errno) {
                         my_alert('blog save error!')
                         return
                     }
-                    cancelImgs.forEach(id => {
-                        let { index } = pageData.blog.map_imgs.get(id)
-                        pageData.blog.imgs.splice(index, 1, null)
-                        pageData.blog.map_imgs.delete(id)
+                    cancelImgs.forEach(({ blogImgAlt_list }) => {
+                        blogImgAlt_list.forEach(id => {
+                            let { index } = pageData.blog.map_imgs.get(id)
+                            pageData.blog.imgs.splice(index, 1, null)
+                            pageData.blog.map_imgs.delete(id)
+                        })
                     })
                     console.log('@pageData => ', pageData)
                 }

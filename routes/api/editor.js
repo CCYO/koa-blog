@@ -51,9 +51,10 @@ router.patch('/', api_check_login, cache_reset, async(ctx, next) => {
     ctx.body = res
 })
 
-router.patch('/one', api_check_login, cache_reset, async(ctx, next) => {
+router.patch('/initImgs', api_check_login, cache_reset, async(ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { id: blog_id, cancelImgs } = ctx.request.body
+    //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
     let res = await deleteImgs(blog_id, cancelImgs, user_id)
     ctx.body = res
 })

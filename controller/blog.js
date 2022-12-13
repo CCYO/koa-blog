@@ -23,7 +23,7 @@ const {
 } = require('../server/blogImg')
 
 const {
-    deleteBlogImgAlt
+    deleteBlogImgAlt,
 } = require('../server/blogImgAlt')
 
 const {
