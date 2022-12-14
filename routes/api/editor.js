@@ -9,7 +9,7 @@ const { cache_reset } = require('../../middleware/cache')
 const { uploadImg } = require('../../middleware/blogImg')
 
 const { addBlog, removeBlog, modifyBlog } = require('../../controller/blog')
-const { addBlogImgAlt, modifiedBlogImgAlt, deleteImgs } = require('../../controller/blogImgAlt')
+const { addBlogImgAlt, modifiedBlogImgAlt, cutImgsWithBlog } = require('../../controller/blogImgAlt')
 
 router.prefix('/api/blog')
 
@@ -30,8 +30,14 @@ router.delete('/', api_check_login, cache_reset, async (ctx, next) => {
 //  更新 blog 資料
 router.patch('/', api_check_login, cache_reset, async(ctx, next) => {
     const { id: user_id } = ctx.session.user
-    const { id: blog_id, ...blog_data } = ctx.request.body
-    let res = await modifyBlog(blog_id, blog_data, user_id)
+    const { id: blog_id, cancelImgs, ...blog_data } = ctx.request.body
+    let res
+    if(cancelImgs){
+        res = await cutImgsWithBlog(blog_id, cancelImgs, user_id)
+    }
+    if(Object.getOwnPropertyNames(blog_data).length){
+        res = await modifyBlog(blog_id, blog_data, user_id)
+    }
     ctx.body = res
 })
 
@@ -57,7 +63,7 @@ router.patch('/initImgs', api_check_login, cache_reset, async(ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { id: blog_id, cancelImgs } = ctx.request.body
     //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
-    let res = await deleteImgs(blog_id, cancelImgs, user_id)
+    let res = await cutImgsWithBlog(blog_id, cancelImgs, user_id)
     ctx.body = res
 })
 

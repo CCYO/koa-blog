@@ -24,7 +24,7 @@ async function modifiedBlogImgAlt(id, blog_id, alt) {
 }
 
 //  依據情況，<刪除BlogImgAlt>或<刪除整筆BlogImg>
-async function deleteImgs(blog_id, cancelImgs, user_id) {
+async function cutImgsWithBlog(blog_id, cancelImgs, user_id) {
     //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
     let promiseList = cancelImgs.map(async (item) => {
         let { blogImg_id, blogImgAlt_list } = item
@@ -49,5 +49,5 @@ async function deleteImgs(blog_id, cancelImgs, user_id) {
 module.exports = {
     addBlogImgAlt,
     modifiedBlogImgAlt,
-    deleteImgs
+    cutImgsWithBlog
 }

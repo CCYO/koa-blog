@@ -99,13 +99,13 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     //  用於緩存處理
     let cache = { blog: [blog_id] }
 
-    //  文章內沒有的圖片，刪除關聯
-    if (cancelImgs) {
-        let res = await deleteBlogImgAlt({ id: cancelImgs })
-        if (!res) {
-            return new ErrModel(BLOGIMG.REMOVE_ERR)
-        }
-    }
+    // //  文章內沒有的圖片，刪除關聯
+    // if (cancelImgs) {
+    //     let res = await deleteBlogImgAlt({ id: cancelImgs })
+    //     if (!res) {
+    //         return new ErrModel(BLOGIMG.REMOVE_ERR)
+    //     }
+    // }
 
     let needUpdateShow = blog_data.hasOwnProperty('show')
     //  若預更新的數據有 show 或 title
