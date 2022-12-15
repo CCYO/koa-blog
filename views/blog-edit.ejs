@@ -92,46 +92,19 @@
                     import initData from '/js/initData.js'
                     import initNavbar from '/js/navbar.js'
 
-                    //  公用變量
-                    //  API
-                    let api_blog = '/api/blog'
-                    let api_initImg = api_blog + '/initImgs'
-                    //  JQ Ele
-                    let $title = $('#title')
-                    let $btn_updateTitle = $('#updateTitle')
-                    let $show = $('[name=show]')
-                    let $backdrop = $('#backdrop')
-                    let $wordCount = $('#wordCount')
-                    //  schema
-                    let htmlStr_minLength = 1
-                    let htmlStr_maxLength = 65536
-                    let schema = {
-                        type: 'object',
-                        properties: {
-                            title: {
-                                type: 'string',
-                                diff: 'title',
-                                minLength: 1,
-                                maxLength: 25
-                            },
-                            html: {
-                                type: 'string',
-                                diff: 'html',
-                                minLength: htmlStr_minLength,
-                                maxLength: htmlStr_maxLength
-                            },
-                            show: {
-                                type: 'boolean',
-                                diff: 'show'
-                            }
-                        },
-                        minProperties: 1
-                    }
-
                     try {
+                        //  讀取中，遮蔽畫面
+                        loading()
+                        //  初始化ejs附帶的數據
                         let pageData = new initData()
+                        //  初始化navbar數據
                         await pageData.init(initNavbar)
-                        await initPage(await pageData.check())
+                        //  確認以上所有初始化已完成，取得彙整後數據
+                        let data = await pageData.check()
+                        //  初始化頁面功能，並傳入上面彙整後的初始化數據
+                        await initPage(data)
+                        //  讀取完成，解除遮蔽
+                        loadEnd()
                     } catch (e) {
                         console.log('@page error => ', e)
                     }
@@ -139,14 +112,46 @@
                     //  初始化
                     async function initPage(data) {
                         let pageData = data
+                        //  公用變量
+                        //  API
+                        let api_blog = '/api/blog'
+                        let api_initImg = api_blog + '/initImgs'
+                        //  JQ Ele
+                        let $title = $('#title')
+                        let $btn_updateTitle = $('#updateTitle')
+                        let $show = $('[name=show]')
+                        // let $backdrop = $('#backdrop')
+                        let $wordCount = $('#wordCount')
+                        //  schema
+                        let htmlStr_minLength = 1
+                        let htmlStr_maxLength = 65536
+                        let schema = {
+                            type: 'object',
+                            properties: {
+                                title: {
+                                    type: 'string',
+                                    diff: 'title',
+                                    minLength: 1,
+                                    maxLength: 25
+                                },
+                                html: {
+                                    type: 'string',
+                                    diff: 'html',
+                                    minLength: htmlStr_minLength,
+                                    maxLength: htmlStr_maxLength
+                                },
+                                show: {
+                                    type: 'boolean',
+                                    diff: 'show'
+                                }
+                            },
+                            minProperties: 1
+                        }
+
                         try {
-                            //  讀取中，遮蔽畫面
-                            loading()
                             //  初始化頁面
                             init_pageUI()
                             init_pageFuc()
-                            //  讀取完成，解除遮蔽
-                            loadEnd()
                         } catch (e) {
                             console.log(`init blog-editor.ejs Err =>`, e)
                         }
@@ -178,7 +183,7 @@
                                 if (!cancelImgs.length) {    //  若cancel無值
                                     return
                                 }
-                                
+
                                 //  整理要與該blog切斷關聯的圖片，格式為[{blogImg_id, blogImgAlt_list}, ...]
                                 // let cancelImgs = _cancelImgs.reduce((initVal, curAlt) => {
                                 //     //  從pageData利用altId取得blogImg_id
@@ -769,48 +774,50 @@
                                 // }, [])
                             }
                         }
+                        
+                        //  utils ------
+                        //  表格內容xss
+                        function my_xss(html) {
+                            return filterXSS(html, {
+                                whiteList: {
+                                    ...filterXSS.whiteList,
+                                    div: ['data-w-e-type'],
+                                    input: ['type'],
+                                    img: ['src', 'alt', 'style', 'data-href']
+                                },
+                                //  若ele的tag與attr符合白名單，會進入此過濾函數
+                                onTagAttr(tag, attr, attrVal, isW) {
+                                    let checkbbox = tag === 'input' && attr === 'type' && attrVal === 'checkbox'
+                                    let todoDiv = tag === 'div' && attr === 'data-w-e-type' && attrVal === 'todo'
+                                    let img = tag === 'img' && attr === 'src' || attr === 'alt' || attr === 'style' || attr === 'data-href'
+                                    if (checkbbox || todoDiv || img) {
+                                        //  返回的字符串會成為ele的attr與attrVal
+                                        return `${attr}="${attrVal}"`
+                                    }
+                                },
+                                //  若ele的tag不符合白名單，會進入此過濾函數
+                                onIgnoreTag(tag, htmlStr) {
+                                    if (tag === 'x-img') {
+                                        return htmlStr
+                                    }
+                                }
+                            })
+                        }
+                        //  配合loadEnd發生的alert，作異步處理
+                        function my_alert(msg) {
+                            setTimeout(() => { alert(msg) }, 10)
+                        }
                     }
 
                     //  utils ------
-                    //  表格內容xss
-                    function my_xss(html) {
-                        return filterXSS(html, {
-                            whiteList: {
-                                ...filterXSS.whiteList,
-                                div: ['data-w-e-type'],
-                                input: ['type'],
-                                img: ['src', 'alt', 'style', 'data-href']
-                            },
-                            //  若ele的tag與attr符合白名單，會進入此過濾函數
-                            onTagAttr(tag, attr, attrVal, isW) {
-                                let checkbbox = tag === 'input' && attr === 'type' && attrVal === 'checkbox'
-                                let todoDiv = tag === 'div' && attr === 'data-w-e-type' && attrVal === 'todo'
-                                let img = tag === 'img' && attr === 'src' || attr === 'alt' || attr === 'style' || attr === 'data-href'
-                                if (checkbbox || todoDiv || img) {
-                                    //  返回的字符串會成為ele的attr與attrVal
-                                    return `${attr}="${attrVal}"`
-                                }
-                            },
-                            //  若ele的tag不符合白名單，會進入此過濾函數
-                            onIgnoreTag(tag, htmlStr) {
-                                if (tag === 'x-img') {
-                                    return htmlStr
-                                }
-                            }
-                        })
-                    }
-                    //  配合loadEnd發生的alert，作異步處理
-                    function my_alert(msg) {
-                        setTimeout(() => { alert(msg) }, 10)
-                    }
                     //  讀取畫面，遮蔽效果
                     function loading() {
-                        $backdrop.addClass('my-show')
+                        $('#backdrop').addClass('my-show')
                         $('input').attr('disabled', true)
                     }
                     //  讀取完成，取消遮蔽
                     function loadEnd() {
-                        $backdrop.removeClass('my-show')
+                        $('#backdrop').removeClass('my-show')
                         $('input').removeAttr('disabled')
                     }
 
