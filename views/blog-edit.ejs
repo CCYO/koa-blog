@@ -30,7 +30,7 @@
         </style>
         <!-- 主導覽： NAV_CSS + NAV第一層template -->
         <%- include('wedgets/navbar/index') %>
-            <div id='backdrop' class="<%= blog.id ? 'my-noshow' : 'my-show' %>">
+            <div id='backdrop' class="my-noshow">
                 <div>讀取中...</div>
             </div>
             <div class="container">
@@ -77,19 +77,11 @@
                 <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
                 <!-- 引入 editor js -->
                 <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
-                <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
-                <!-- <script defer src="/js/initData.js"></script> -->
-
-                <!--
-            logout功能 +
-            完整渲染 NAV +
-            取得news +
-            完整渲染 通知下拉選單
-        -->
-                <!-- <script defer src="/js/navbar.js"></script> -->
 
                 <script type="module" defer>
+                    //  初始化來自ejs傳入當前頁面所需的數據
                     import initData from '/js/initData.js'
+                    //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
                     import initNavbar from '/js/navbar.js'
 
                     try {
@@ -111,8 +103,8 @@
 
                     //  初始化
                     async function initPage(data) {
-                        let pageData = data
                         //  公用變量
+                        let pageData = data
                         //  API
                         let api_blog = '/api/blog'
                         let api_initImg = api_blog + '/initImgs'
