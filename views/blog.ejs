@@ -50,7 +50,7 @@
                 <%= blog.title %>
             </h1>
             <div class="editor-content-view">
-
+                
             </div>
         </div>
         <% if (blog.show) { %>
@@ -102,19 +102,14 @@
         }
 
         async function initPage(data) {
-            console.log('@data => ', data)
             //  渲染文章內容
             $('.editor-content-view').html(data.blog.html)
-            //  評論功能
-            //  若文章不是公開的，不需要作評論功能設定
-            
+            //  若文章是預覽頁，或者非公開的，不需要作評論功能設定
             if (!isPreview() || !data.blog.show ) {
-                console.log('不用繡評論')
                 $('#comment').remove()
                 loadEnd()
                 return
             }
-            console.log('繼續走')
             //  公用變量
             let pageData = data
             let api_comment = '/api/comment'
