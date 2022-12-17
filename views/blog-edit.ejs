@@ -176,25 +176,6 @@
                                     return
                                 }
 
-                                //  整理要與該blog切斷關聯的圖片，格式為[{blogImg_id, blogImgAlt_list}, ...]
-                                // let cancelImgs = _cancelImgs.reduce((initVal, curAlt) => {
-                                //     //  從pageData利用altId取得blogImg_id
-                                //     let { blogImg_id } = pageData.blog.map_imgs.get(curAlt)
-                                //     //  ok表示當前正在整理的圖片，其blogImg是否已存在initVal裡頭
-                                //     let ok = initVal.some((img, index) => {
-                                //         if (img.blogImg_id !== blogImg_id) {  //  若不存在，則先跳出
-                                //             return false
-                                //         }
-                                //         //  若存在，則將當前片altId直接收入blogImgAlt_list
-                                //         initVal[index]['blogImgAlt_list'].push(curAlt)
-                                //         return true
-                                //     })
-                                //     if (!ok) {    //  不存在，將當前整理的圖片整筆記錄下來
-                                //         initVal.push({ blogImg_id, blogImgAlt_list: [curAlt] })
-                                //     }
-                                //     return initVal
-                                // }, [])
-                                // loading()
                                 const {
                                     data: {
                                         errno, data, msg
@@ -239,13 +220,13 @@
                                 if (!confirm('真的要刪掉?')) {
                                     return
                                 }
-                                loading()
+                                loading(editor)
                                 const {
                                     data: {
                                         errno, data, msg
                                     }
                                 } = await axios.delete(api_blog, { data: { id: pageData.blog.id } })
-                                loadEnd()
+                                loadEnd(editor)
                                 if (!errno) {
                                     my_alert('已成功刪除此篇文章')
                                     location.href = '/self'
@@ -278,13 +259,13 @@
                                 }
                                 //  payloadObj 放入 blog_id
                                 payloadObj.id = pageData.blog.id
-                                loading()
+                                loading(editor)
                                 const {
                                     data: {
                                         errno, data, msg
                                     }
                                 } = await axios.patch(api_blog, payloadObj)
-                                loadEnd()
+                                loadEnd(editor)
                                 if (errno) {
                                     my_alert('blog save error!')
                                     return
@@ -303,9 +284,12 @@
                                 //  同步 window.blog
                                 pageData.blog = { ...pageData.blog, ..._payloadObj }
                                 // setTimeout( () => alert('blog save success!') , 0)
-                                my_alert('blog save success!')
-
-
+                                // my_alert('blog save success!')
+                                if(confirm('儲存成功！是否預覽？（新開視窗）')){
+                                    window.open(`/blog/${pageData.blog.id}?preview=true`)
+                                }
+                                return
+                                
                                 //  將<img>替換為自定義<x-img>
                                 function parseImgToXImg(html) {
                                     let reg = /<img.+?src=".+?blogImgAlt=(?<id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g
@@ -354,7 +338,7 @@
                                     id: pageData.blog.id,
                                     title: payload.get('title')
                                 }
-                                loading()
+                                loading(editor)
                                 let { data: { errno, msg, data: blog } } = await axios.patch(api_blog, payloadData)
                                 if (errno) {
                                     my_alert(msg)
@@ -365,7 +349,7 @@
                                 //  同步數據
                                 pageData.blog.title = blog.title
                                 payload.delete('title')
-                                loadEnd()
+                                loadEnd(editor)
                                 my_alert('標題更新完成')
                             }
                             //  關於 title 輸入新值後，又沒立即更新的相關操作
@@ -562,7 +546,7 @@
                                     let { hash, ...other } = await _getHash(img)
                                     let res
                                     let blog_id = pageData.blog.id
-                                    loading()
+                                    loading(editor)
                                     if (!other.blogImg_id) { // img為新圖，傳給後端建檔
                                         //  imgName要作為query參數傳送，必須先作百分比編碼
                                         name = encodeURIComponent(name)
@@ -576,7 +560,7 @@
                                     } else {    // img為重覆的舊圖，傳給後端新建一個blogImgAlt
                                         res = await axios.post(api_createBlogImgAlt, { blog_id, blogImg_id: other.blogImg_id })
                                     }
-                                    loadEnd()
+                                    loadEnd(editor)
                                     let {
                                         data: {
                                             errno, data, msg
@@ -742,28 +726,6 @@
                                     })
                                 }
                                 return cancelImgs
-                                // let _cancelImgs = [...copy_map_imgs.keys()]
-                                // if (!_cancelImgs.length) {    //  若cancel無值
-                                //     return
-                                // }
-                                // //  整理要與該blog切斷關聯的圖片，格式為[{blogImg_id, blogImgAlt_list}, ...]
-                                // let cancelImgs = _cancelImgs.reduce((initVal, curAlt) => {
-                                //     //  從pageData利用altId取得blogImg_id
-                                //     let { blogImg_id } = pageData.blog.map_imgs.get(curAlt)
-                                //     //  ok表示當前正在整理的圖片，其blogImg是否已存在initVal裡頭
-                                //     let ok = initVal.some((img, index) => {
-                                //         if (img.blogImg_id !== blogImg_id) {  //  若不存在，則先跳出
-                                //             return false
-                                //         }
-                                //         //  若存在，則將當前片altId直接收入blogImgAlt_list
-                                //         initVal[index]['blogImgAlt_list'].push(curAlt)
-                                //         return true
-                                //     })
-                                //     if (!ok) {    //  不存在，將當前整理的圖片整筆記錄下來
-                                //         initVal.push({ blogImg_id, blogImgAlt_list: [curAlt] })
-                                //     }
-                                //     return initVal
-                                // }, [])
                             }
                         }
                         
@@ -803,14 +765,20 @@
 
                     //  utils ------
                     //  讀取畫面，遮蔽效果
-                    function loading() {
+                    function loading(editor) {
                         $('#backdrop').addClass('my-show')
                         $('input').attr('disabled', true)
+                        if(editor){
+                            editor.disable()
+                        }
                     }
                     //  讀取完成，取消遮蔽
-                    function loadEnd() {
+                    function loadEnd(editor) {
                         $('#backdrop').removeClass('my-show')
                         $('input').removeAttr('disabled')
+                        if(editor){
+                            editor.enable()
+                        }
                     }
 
 

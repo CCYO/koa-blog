@@ -25,12 +25,6 @@ class My {
     }
 }
 
-// window._my = new My()
-// window._my.init(initData)
-// window.data = {}
-
-// window._my.init()
-
 //  初始化數據
 //  取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
 //  如 { html: `<p>56871139</p>`}
@@ -38,18 +32,18 @@ class My {
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
 
 function initData() {
-    console.log('init')
     let res = {}
     $(`[data-my-data]`).each((index, el) => {
         let prop = $(el).data('my-data')
         try {
             let val = $(el).html()
+            //  針對blog數據處理
             if (prop === 'blog') {
                 res.blog = initBlog(val)
-
             } else {
                 res[prop] = JSON.parse(val)
             }
+            //  
         } catch (e) {
             throw e
         }
@@ -58,12 +52,15 @@ function initData() {
     return res
     function initBlog(data) {
         let blog = JSON.parse(data)   // 整體轉回obj
+        //  處理blog內的img數據
         blog.map_imgs = new Map()
         if (blog.imgs.length) {
             blog.imgs.forEach((img, index) => {
                 blog.map_imgs.set(img.id, { ...img, index })
             })
         }
+        //  處理blog內的comment數據
+        blog = { ...blog, ...mapComments(blog.comments) }
         //  將存放在後端「百分比編碼格式的blog.html」解析為一般htmlStr
         blog.html = parseHtml(blog.html)
         return blog //  再將整體轉為字符
@@ -97,6 +94,29 @@ function initData() {
                 })
             }
             return _html
+        }
+        //  將comment數據Map化
+        function mapComments(comments) {
+            return comments.reduce((initVal, comment) => {
+                let { map_commentId, map_commentPid } = initVal
+                return set(comment)
+
+                function set(comment) {
+                    let { id, p_id: pid, reply } = comment
+                    map_commentId.set(id, comment)
+                    let commentsOfPid = map_commentPid.get(pid) || []
+                    map_commentPid.set(pid, [...commentsOfPid, comment])
+                    if (reply.length) {
+                        reply.forEach(item => set(item))
+                    } else {
+                        map_commentPid.set(id, [])
+                    }
+                    return { map_commentId, map_commentPid }
+                }
+            }, {
+                map_commentId: new Map(),
+                map_commentPid: new Map().set(0, [])
+            })
         }
     }
 }

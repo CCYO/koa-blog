@@ -1,249 +1,173 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
 <%- include('wedgets/common/header') %>
 
-    <body>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
-        <style>
-            .editor-container {
-                border: 1px solid;
-                height: 20vh;
-            }
+<body>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
+    <style>
+        .editor-container {
+            border: 1px solid;
+            height: 20vh;
+        }
 
-            .editor-content-view {
-                background-color: rgba(255, 200, 200, .5);
-                padding: 1rem;
-                margin-bottom: 1rem;
-            }
+        .editor-content-view {
+            background-color: rgba(255, 200, 200, .5);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
 
-            .editor-content-view p img {
-                max-width: 100%;
-            }
+        .editor-content-view p img {
+            max-width: 100%;
+        }
 
-            #backdrop {
-                position: fixed;
-                z-index: 1000;
-                /* height: 100%;
+        #backdrop {
+            position: fixed;
+            z-index: 1000;
+            /* height: 100%;
             width: 100%; */
-                top: 0;
-                left: 0;
-                bottom: 0;
-                right: 0;
-                background: rgba(200, 200, 200, 0.5);
-            }
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(200, 200, 200, 0.5);
+        }
 
-            .comment-item {
-                padding: 2%;
-                border: 1px solid;
-            }
-        </style>
+        .comment-item {
+            padding: 2%;
+            border: 1px solid;
+        }
+    </style>
 
-        <!-- 主導覽： NAV_CSS + NAV第一層template -->
-        <%- include('wedgets/navbar/index') %>
+    <!-- 主導覽： NAV_CSS + NAV第一層template -->
+    <%- include('wedgets/navbar/index') %>
 
-            <div id="backdrop" class="my-noshow"></div>
-            <div class="container pt-2 pb-2">
-                <div>
-                    <h1>
-                        <%= blog.title %>
-                    </h1>
-                    <div class="editor-content-view">
+    <div id="backdrop" class="my-noshow"></div>
+    <div class="container pt-2 pb-2">
+        <div>
+            <h1>
+                <%= blog.title %>
+            </h1>
+            <div class="editor-content-view">
 
-                    </div>
-                </div>
-                <% if (blog.show) { %>
-                    <div id="comment" class="editor-comment">
-                        <div class="editor-container"></div>
-                        <div class="container-comment-list">
-                            <div class="comment-list">
-                                <% if(blog.comments.length){ %>
-                                    <%- include('./wedgets/comment/reply-list', { comments: blog.comments }) %>
-                                        <% } %>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+        </div>
+        <% if (blog.show) { %>
+        <div id="comment" class="editor-comment">
+            <div class="editor-container"></div>
+            <div class="container-comment-list">
+                <div class="comment-list">
+                    <% if(blog.comments.length){ %>
+                    <%- include('./wedgets/comment/reply-list', { comments: blog.comments }) %>
                     <% } %>
+                </div>
             </div>
+        </div>
+        <% } %>
+    </div>
 
-            <!-- 當前使用者頁面的使用者資料 -->
-            <div data-my-data="blog">
-                <%- JSON.stringify(blog) %>
-            </div>
+    <!-- 當前使用者頁面的使用者資料 -->
+    <div data-my-data="blog">
+        <%- JSON.stringify(blog) %>
+    </div>
 
-            <!-- JQ AXIOS BS5 -->
-            <%- include('wedgets/cdn') %>
-                <!-- 引入 editor css -->
-                <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
-                <!-- 引入 editor js -->
-                <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
-                <script type="module" defer>
-                    //  初始化來自ejs傳入當前頁面所需的數據
-                    import initData from '/js/initData.js'
-                    //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
-                    import initNavbar from '/js/navbar.js'
+    <!-- JQ AXIOS BS5 -->
+    <%- include('wedgets/cdn') %>
+    <!-- 引入 editor css -->
+    <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
+    <!-- 引入 editor js -->
+    <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
+    <script type="module" defer>
+        //  初始化來自ejs傳入當前頁面所需的數據
+        import initData from '/js/initData.js'
+        //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
+        import initNavbar from '/js/navbar.js'
 
-                    try {
-                        //  讀取中，遮蔽畫面
-                        loading()
-                        //  初始化ejs附帶的數據
-                        let pageData = new initData()
-                        //  初始化navbar數據
-                        await pageData.init(initNavbar)
-                        //  確認以上所有初始化已完成，取得彙整後數據
-                        let data = await pageData.check()
-                        //  初始化頁面功能，並傳入上面彙整後的初始化數據
-                        await initPage(data)
-                        //  讀取完成，解除遮蔽
-                        loadEnd()
-                    } catch (e) {
-                        console.log('@page error => ', e)
+        try {
+            //  讀取中，遮蔽畫面
+            loading()
+            //  初始化ejs附帶的數據
+            let pageData = new initData()
+            //  初始化navbar數據
+            await pageData.init(initNavbar)
+            //  確認以上所有初始化已完成，取得彙整後數據
+            let data = await pageData.check()
+            //  初始化頁面功能，並傳入上面彙整後的初始化數據
+            await initPage(data)
+            //  讀取完成，解除遮蔽
+            loadEnd()
+        } catch (e) {
+            console.log('@page error => ', e)
+        }
+
+        async function initPage(data) {
+            console.log('@data => ', data)
+            //  渲染文章內容
+            $('.editor-content-view').html(data.blog.html)
+            //  評論功能
+            //  若文章不是公開的，不需要作評論功能設定
+            
+            if (!isPreview() || !data.blog.show ) {
+                console.log('不用繡評論')
+                $('#comment').remove()
+                loadEnd()
+                return
+            }
+            console.log('繼續走')
+            //  公用變量
+            let pageData = data
+            let api_comment = '/api/comment'
+            let selector = '.editor-container'
+            // 初始化editor
+            let editor = init_editor(selector)
+            let $editor = $(selector)
+            let $commentBtn = $('button.reply')
+            $editor.on('keyup', handle_keyup(editor))
+            $commentBtn.on('click', initReplyEditor)
+
+            //  pid=0的editor > handle_keyup > initReplyEditor > updateComment + renderComment> initReplyEditor
+
+            function handle_keyup(editor) {
+                return async (e) => {
+                    let isEnter = e.key === 'Enter'
+                    if ((e.shiftKey && isEnter) || !isEnter) {
+                        return
+                    }
+                    let $target = $(e.target)
+                    let htmlStr = editor.getHtml()
+                    let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
+                    let str = htmlStr.replace(reg, '')
+                    if (!str.trim()) {
+                        editor.setHtml()
+                        alert('請填入留言')
+                        return
                     }
 
-                    async function initPage(data) {
-                        //  公用變量
-                        let pageData = window.data = data
-                        if (!pageData.blog.show) {
-                            return
-                        }
-                        $('.editor-content-view').html(pageData.blog.html)
-                        //  將comment Map化
-                        window.map = { ...mapComments(pageData.blog.comments)}
-                        let selector = '.editor-container'
-                        // 初始化editor
-                        let editor = init_editor(selector)
-                        let $editor = $(selector)
-                        let $commentBtn = $('button.reply')
-                        $editor.on('keyup', handle_keyup(editor))
-                        $commentBtn.on('click', initReplyEditor)
+                    let pid = $target.parents('[data-my-pid]').first().data('myPid')
+                    if (!pid) {
+                        pid = null
+                    }
+                    let { data: { errno, data, msg } } = await postComment(htmlStr, pid)
 
-
-                        function mapComments(comments) {
-
-                            
-
-                            return comments.reduce((initVal, comment) => {
-                                let { commentId, commentPid } = initVal
-                                return set(comment)
-                                function set(comment) {
-                                    let { id, p_id: pid, reply } = comment
-                                    console.log('@comment => ', comment)
-                                    commentId.set(id, comment)
-                                    let commentsOfPid = commentPid.get(pid) || []
-                                    console.log(pid, commentsOfPid)
-                                    commentPid.set(pid, [ ...commentsOfPid, comment ])
-                                    if(reply.length){
-                                        reply.forEach( item => set(item))
-                                    }else{
-                                        commentPid.set(id, [])
-                                    }
-                                    return {commentId, commentPid }
-                                }
-                            }, {
-                                commentId: new Map(),
-                                commentPid: new Map().set(0, [])
-                            })
-
-
-
-
-                            // function setPid(pid, comment) {
-                            //     let pidList = commentPid.get(pid)
-                            //     if (!pidList) {
-                            //         pidList = []
-                            //     }
-                            //     if (comment) {
-                            //         pidList.push(comment)
-                            //     }
-                            //     commentPid.set(pid, pidList)
-                            // }
-                            // function go(comment) {
-
-                            //     let { id, p_id: pid, reply } = comment
-                            //     setPid(pid, comment)
-                            //     commentId.set(id, comment)
-                            //     if (reply.length) {
-                            //         reply.forEach(go)
-                            //     } else {
-                            //         setPid(id)
-                            //     }
-                            // }
-                            // if (!comments.length) {
-                            //     setPid(0)
-                            //     return
-                            // }
-                            // comments.forEach(go)
-                        }
-
+                    if (errno) {
+                        alert('留言失敗')
+                        console.log(msg)
+                        return
                     }
 
-                    function initReplyEditor(e) {
-                        let $target = $(e.target)
-                        let $el_editor = $target.next('.editor-reply')
-                        let editor = $el_editor[0].editor || undefined
-                        if (editor) {
-                            $el_editor.show()
-                            editor.focus()
-                            console.log('僅顯示')
-                            return
-                        }
-                        editor = init_editor($el_editor[0], {
-                            onBlur() {
-                                $el_editor.hide()
-                            }
+                    let { id, p_id, html, time, user } = data
+                    delete data.createdAt
+                    renderComment(data, $target)
+                    updateComment(data)
+                    editor.setHtml()
+                    console.log('ok')
 
-                        })
-                        $el_editor[0].editor = editor
-                        window.aa = editor
-                        $el_editor.attr('tabindex', 0)
-                        $el_editor.on('keyup', handle_keyup(editor))
-                    }
-
-                    let api_comment = '/api/comment'
-
-                    function handle_keyup(editor) {
-                        return async (e) => {
-                            let isEnter = e.key === 'Enter'
-                            if ((e.shiftKey && isEnter) || !isEnter) {
-                                return
-                            }
-                            let $target = $(e.target)
-                            let htmlStr = editor.getHtml()
-                            let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
-                            let str = htmlStr.replace(reg, '')
-                            if (!str.trim()) {
-                                editor.setHtml()
-                                alert('請填入留言')
-                                return
-                            }
-
-                            window._target_ = $target
-                            let pid = $target.parents('[data-my-pid]').first().data('myPid')
-                            if (!pid) {
-                                pid = null
-                            }
-                            let { data: { errno, data, msg } } = await postComment(htmlStr, pid)
-
-                            if (errno) {
-                                alert('留言失敗')
-                                console.log(msg)
-                                return
-                            }
-
-                            let { id, p_id, html, time, user } = data
-                            delete data.createdAt
-                            renderComment(data, $target)
-                            updateComment(data)
-                            editor.setHtml()
-                            console.log('ok')
-                        }
-                    }
 
                     function updateComment(comment) {
                         let { id, p_id, html, time, user } = comment
-                        let commentId = window.map.commentId
-                        let commentPid = window.map.commentPid
+                        let commentId = pageData.blog.map_commentId
+                        let commentPid = pageData.blog.map_commentPid
                         commentPid.set(id, [])
                         let pidList = commentPid.get(p_id)
                         if (!p_id) {  //文章回覆
@@ -265,10 +189,9 @@
                             $comment = $target.parents('[data-my-pid]').next().append(template).children().last()
                         }
                         $comment.children('.reply').on('click', initReplyEditor)
-                    }
 
-                    function templateComment({ id, html, time, user }) {
-                        return `
+                        function templateComment({ id, html, time, user }) {
+                            return `
                     <div id="comment_${id}" class="comment-item">
                         <div>${html}</div>
                         <a href="/other/${user.id}">${user.nickname}</a>
@@ -277,72 +200,107 @@
                         <div class="editor-reply" data-my-pid="${id}"></div>
                         <div class="comment-list"></div>
                     </div>`
+                        }
+
                     }
 
                     async function postComment(html, p_id = null) {
-                        let data = window.data
-                        let blog_id = data.blog.id
-                        let user_id = data.me.id
-                        let author = data.blog.author.id !== data.me.id ? data.blog.author.id : undefined
-
+                        let blog_id = pageData.blog.id
+                        let user_id = pageData.me.id
+                        let author = pageData.blog.author.id !== user_id ? pageData.blog.author.id : undefined
                         let payload = { blog_id, user_id, author, html, p_id }
                         return await axios.post(api_comment, payload)
                     }
-
-                    function init_editor(container_id, handle) {
-                        //  editor config
-                        const { createEditor } = window.wangEditor
-
-                        //  功能：貼上純文字內容
-                        const customPaste = function (editor, event) {
-                            event.preventDefault()
-                            const text = event.clipboardData.getData('text/plain')
-                            editor.insertText(text)
-                        }
-                        let editorConfig = {
-                            MENU_CONF: {},
-                            customPaste
-
-                        }
-                        if (handle) {
-                            editorConfig = { ...editorConfig, ...handle }
-                        }
-                        //  editor config : placeholder
-                        editorConfig.placeholder = '我有話要說'
-                        // editor 創建
-                        const editor = createEditor({
-                            config: editorConfig,
-                            selector: container_id,
-                            mode: 'simple'
-                        })
-
-                        $(container_id).click(handle_click)
-
-                        function handle_click() {
-                            if (window.data.me.id) {
-                                return
-                            }
-                            if (confirm('請先登入')) {
-                                location.href = `/login?from=${location.pathname}`
-                            }
-                            return
-                        }
-
-                        return editor
-                    }
-                    //  utils ------
-                    //  讀取畫面，遮蔽效果
-                    function loading() {
-                        $('#backdrop').addClass('my-show')
-                        $('input').attr('disabled', true)
-                    }
-                    //  讀取完成，取消遮蔽
-                    function loadEnd() {
-                        $('#backdrop').removeClass('my-show')
-                        $('input').removeAttr('disabled')
+                }
+            }
+            //  初始化子評論的editor
+            function initReplyEditor(e) {
+                let $target = $(e.target)
+                let $el_editor = $target.next('.editor-reply')
+                let editor = $el_editor[0].editor || undefined
+                if (editor) {
+                    $el_editor.show()
+                    editor.focus()
+                    console.log('僅顯示')
+                    return
+                }
+                editor = init_editor($el_editor[0], {
+                    onBlur() {
+                        $el_editor.hide()
                     }
 
-                </script>
-    </body>
+                })
+                $el_editor[0].editor = editor
+                $el_editor.attr('tabindex', 0)
+                $el_editor.on('keyup', handle_keyup(editor))
+            }
+            //  初始化editor
+            function init_editor(container_id, handle) {
+                //  editor config
+                const { createEditor } = window.wangEditor
 
-    </html>
+                //  功能：貼上純文字內容
+                const customPaste = function (editor, event) {
+                    event.preventDefault()
+                    const text = event.clipboardData.getData('text/plain')
+                    editor.insertText(text)
+                }
+                let editorConfig = {
+                    MENU_CONF: {},
+                    customPaste
+                }
+                if (handle) {
+                    editorConfig = { ...editorConfig, ...handle }
+                }
+                //  editor config : placeholder
+                editorConfig.placeholder = '我有話要說'
+                // editor 創建
+                const editor = createEditor({
+                    config: editorConfig,
+                    selector: container_id,
+                    mode: 'simple'
+                })
+
+                $(container_id).click(handle_click)
+
+                //  要登入才能留言
+                function handle_click() {
+                    if (pageData.me.id) {   //  若登入，無需動作
+                        return
+                    }
+                    if (confirm('請先登入')) {  //  未登入，前往登入頁
+                        location.href = `/login?from=${location.pathname}`
+                    }
+                    return
+                }
+
+                return editor
+            }
+            //  確認是否為文章預覽頁面
+            function isPreview() {
+                let reg = /preview=(?<preview>.+)&?/
+                let query = window.location.query
+                let res = reg.exec(query)
+                console.log('@res => ', res)
+                let preview = res ? res.groups.preview : false
+                return preview
+            }
+        }
+
+
+        //  utils ------
+        //  讀取畫面，遮蔽效果
+        function loading() {
+            $('#backdrop').addClass('my-show')
+            $('input').attr('disabled', true)
+        }
+        //  讀取完成，取消遮蔽
+        function loadEnd() {
+            $('#backdrop').removeClass('my-show')
+            $('input').removeAttr('disabled')
+        }
+
+    </script>
+</body>
+
+</html>
