@@ -22,16 +22,19 @@
                 max-width: 100%;
             }
 
-            #backdrop {
+            #backdrop.my-show {
+                background: rgba(202, 71, 71, 0.5);
                 position: fixed;
                 z-index: 1000;
-                /* height: 100%;
-            width: 100%; */
-                top: 0;
-                left: 0;
-                bottom: 0;
-                right: 0;
-                background: rgba(200, 200, 200, 0.5);
+                height: 100%;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            #backdrop>div {
+                font-size: 100px;
             }
 
             .comment-item {
@@ -43,7 +46,9 @@
         <!-- 主導覽： NAV_CSS + NAV第一層template -->
         <%- include('wedgets/navbar/index') %>
 
-            <div id="backdrop" class="my-noshow"></div>
+            <div id="backdrop" class="my-noshow">
+                <div>讀取中...</div>
+            </div>
             <div class="container pt-2 pb-2">
                 <div>
                     <h1>
@@ -114,20 +119,19 @@
                         //  公用變量
                         let pageData = data
                         let api_comment = '/api/comment'
-                        let selector = '.editor-container'
-                        // 初始化editor
-                        let editor = init_editor(selector)
-                        let $editor = $(selector)
-                        let $commentBtn = $('button.reply')
+                        let commentEditor_pid0 = '.editor-container'
+                        let commentEditor_reply = 'button.reply'
+                        //  用來存放editorIns
+                        let editorList = []
+                        // 初始化根評論editor
+                        let editor = init_editor(commentEditor_pid0)
 
                         //  根評論 handleKeyup => 送出留言
-                        $editor.on('keyup', handleCreator_submitComment(editor))
+                        $(commentEditor_pid0).on('keyup', handleCreator_submitComment(editor))
                         //  子評論 handleClick => 初始化 reply editor
-                        $commentBtn.on('click', initReplyEditor)
+                        $(commentEditor_reply).on('click', initReplyEditor)
 
-                        //  pid=0的editor > handleCreator_submitComment > initReplyEditor > updateComment + renderComment> initReplyEditor
-
-                        //  使留言回覆鈕 綁定 handleClick => 初始化 reply editor
+                        //  留言回覆鈕 綁定 handleClick => 初始化 reply editor
                         function initReplyEditor(e) {
                             let $target = $(e.target)
                             //  找出用來回覆子評論的editor
@@ -163,7 +167,7 @@
                                 let $target = $(e.target)
                                 let htmlStr = editor.getHtml()
                                 let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
-                                let str = htmlStr.replace(reg, '')
+                                let str = htmlStr.replace(reg, '') 
                                 //  撇除空留言
                                 if (!str.trim()) {
                                     editor.setHtml()
@@ -247,7 +251,14 @@
                                     //  若 文章作者 = 留言者，payload加入author: 留言者id，否則undefined
                                     let author = pageData.blog.author.id !== user_id ? pageData.blog.author.id : undefined
                                     let payload = { blog_id, user_id, author, html, p_id }
-                                    return await axios.post(api_comment, payload)
+                                    console.log('editorList => ', editorList)
+                                    loading(editorList)
+                                    console.log('開始axios')
+                                    let res = await axios.post(api_comment, payload)
+                                    await new Promise( r => setTimeout( r, 3000))
+                                    console.log('axios')
+                                    loadEnd(editorList)
+                                    return res
                                 }
                             }
                         }
@@ -277,7 +288,9 @@
                                 selector: container_id,
                                 mode: 'simple'
                             })
-
+                            //  將editor存入editorList
+                            editorList.push(editor)
+                            console.log('@ => ', container_id, editor, editorList)
                             //  為editor的container綁定判斷登入與否的handle
                             $(container_id).click(isLogin)
                             //  確認是否登入
@@ -302,19 +315,25 @@
                             let preview = res ? res.groups.preview : false
                             return preview
                         }
-
                     }
 
                     //  utils ------
                     //  讀取畫面，遮蔽效果
-                    function loading() {
+                    function loading(editorList = []) {
                         $('#backdrop').addClass('my-show')
                         $('input').attr('disabled', true)
+                        console.log('@editorList 隱藏=> ', editorList)
+                        editorList.forEach(editor => editor.disable())
+                        console.log('隱藏完成')
                     }
                     //  讀取完成，取消遮蔽
-                    function loadEnd() {
+                    function loadEnd(editorList = []) {
+                        console.log('開始執行顯示')
                         $('#backdrop').removeClass('my-show')
                         $('input').removeAttr('disabled')
+                        console.log('@editorList 顯示=> ', editorList)
+                        editorList.forEach(editor => editor.enable())
+                        console.log('顯示完成')
                     }
 
                 </script>
