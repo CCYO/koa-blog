@@ -1,301 +1,323 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
 <%- include('wedgets/common/header') %>
 
-<body>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
-    <style>
-        .editor-container {
-            border: 1px solid;
-            height: 20vh;
-        }
+    <body>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
+        <style>
+            .editor-container {
+                border: 1px solid;
+                height: 20vh;
+            }
 
-        .editor-content-view {
-            background-color: rgba(255, 200, 200, .5);
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
+            .editor-content-view {
+                background-color: rgba(255, 200, 200, .5);
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
 
-        .editor-content-view p img {
-            max-width: 100%;
-        }
+            .editor-content-view p img {
+                max-width: 100%;
+            }
 
-        #backdrop {
-            position: fixed;
-            z-index: 1000;
-            /* height: 100%;
+            #backdrop {
+                position: fixed;
+                z-index: 1000;
+                /* height: 100%;
             width: 100%; */
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: rgba(200, 200, 200, 0.5);
-        }
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                background: rgba(200, 200, 200, 0.5);
+            }
 
-        .comment-item {
-            padding: 2%;
-            border: 1px solid;
-        }
-    </style>
+            .comment-item {
+                padding: 2%;
+                border: 1px solid;
+            }
+        </style>
 
-    <!-- 主導覽： NAV_CSS + NAV第一層template -->
-    <%- include('wedgets/navbar/index') %>
+        <!-- 主導覽： NAV_CSS + NAV第一層template -->
+        <%- include('wedgets/navbar/index') %>
 
-    <div id="backdrop" class="my-noshow"></div>
-    <div class="container pt-2 pb-2">
-        <div>
-            <h1>
-                <%= blog.title %>
-            </h1>
-            <div class="editor-content-view">
-                
-            </div>
-        </div>
-        <% if (blog.show) { %>
-        <div id="comment" class="editor-comment">
-            <div class="editor-container"></div>
-            <div class="container-comment-list">
-                <div class="comment-list">
-                    <% if(blog.comments.length){ %>
-                    <%- include('./wedgets/comment/reply-list', { comments: blog.comments }) %>
-                    <% } %>
+            <div id="backdrop" class="my-noshow"></div>
+            <div class="container pt-2 pb-2">
+                <div>
+                    <h1>
+                        <%= blog.title %>
+                    </h1>
+                    <div class="editor-content-view">
+
+                    </div>
                 </div>
+                <% if (blog.show) { %>
+                    <div id="comment" class="editor-comment">
+                        <div class="editor-container"></div>
+                        <div class="container-comment-list">
+                            <div class="comment-list">
+                                <% if(blog.comments.length){ %>
+                                    <%- include('./wedgets/comment/reply-list', { comments: blog.comments }) %>
+                                        <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <% } %>
             </div>
-        </div>
-        <% } %>
-    </div>
 
-    <!-- 當前使用者頁面的使用者資料 -->
-    <div data-my-data="blog">
-        <%- JSON.stringify(blog) %>
-    </div>
+            <!-- 當前使用者頁面的使用者資料 -->
+            <div data-my-data="blog">
+                <%- JSON.stringify(blog) %>
+            </div>
 
-    <!-- JQ AXIOS BS5 -->
-    <%- include('wedgets/cdn') %>
-    <!-- 引入 editor css -->
-    <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
-    <!-- 引入 editor js -->
-    <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
-    <script type="module" defer>
-        //  初始化來自ejs傳入當前頁面所需的數據
-        import initData from '/js/initData.js'
-        //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
-        import initNavbar from '/js/navbar.js'
+            <!-- JQ AXIOS BS5 -->
+            <%- include('wedgets/cdn') %>
+                <!-- 引入 editor css -->
+                <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
+                <!-- 引入 editor js -->
+                <script src="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/index.min.js"></script>
+                <script type="module" defer>
+                    //  初始化來自ejs傳入當前頁面所需的數據
+                    import initData from '/js/initData.js'
+                    //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
+                    import initNavbar from '/js/navbar.js'
 
-        try {
-            //  讀取中，遮蔽畫面
-            loading()
-            //  初始化ejs附帶的數據
-            let pageData = new initData()
-            //  初始化navbar數據
-            await pageData.init(initNavbar)
-            //  確認以上所有初始化已完成，取得彙整後數據
-            let data = await pageData.check()
-            //  初始化頁面功能，並傳入上面彙整後的初始化數據
-            await initPage(data)
-            //  讀取完成，解除遮蔽
-            loadEnd()
-        } catch (e) {
-            console.log('@page error => ', e)
-        }
-
-        async function initPage(data) {
-            //  渲染文章內容
-            $('.editor-content-view').html(data.blog.html)
-            //  若文章是預覽頁，或者非公開的，不需要作評論功能設定
-            if (!isPreview() || !data.blog.show ) {
-                $('#comment').remove()
-                loadEnd()
-                return
-            }
-            //  公用變量
-            let pageData = data
-            let api_comment = '/api/comment'
-            let selector = '.editor-container'
-            // 初始化editor
-            let editor = init_editor(selector)
-            let $editor = $(selector)
-            let $commentBtn = $('button.reply')
-            $editor.on('keyup', handle_keyup(editor))
-            $commentBtn.on('click', initReplyEditor)
-
-            //  pid=0的editor > handle_keyup > initReplyEditor > updateComment + renderComment> initReplyEditor
-
-            function handle_keyup(editor) {
-                return async (e) => {
-                    let isEnter = e.key === 'Enter'
-                    if ((e.shiftKey && isEnter) || !isEnter) {
-                        return
-                    }
-                    let $target = $(e.target)
-                    let htmlStr = editor.getHtml()
-                    let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
-                    let str = htmlStr.replace(reg, '')
-                    if (!str.trim()) {
-                        editor.setHtml()
-                        alert('請填入留言')
-                        return
+                    try {
+                        //  讀取中，遮蔽畫面
+                        loading()
+                        //  初始化ejs附帶的數據
+                        let pageData = new initData()
+                        //  初始化navbar數據
+                        await pageData.init(initNavbar)
+                        //  確認以上所有初始化已完成，取得彙整後數據
+                        let data = await pageData.check()
+                        //  初始化頁面功能，並傳入上面彙整後的初始化數據
+                        await initPage(data)
+                        //  讀取完成，解除遮蔽
+                        loadEnd()
+                    } catch (e) {
+                        console.log('@page error => ', e)
                     }
 
-                    let pid = $target.parents('[data-my-pid]').first().data('myPid')
-                    if (!pid) {
-                        pid = null
-                    }
-                    let { data: { errno, data, msg } } = await postComment(htmlStr, pid)
-
-                    if (errno) {
-                        alert('留言失敗')
-                        console.log(msg)
-                        return
-                    }
-
-                    let { id, p_id, html, time, user } = data
-                    delete data.createdAt
-                    renderComment(data, $target)
-                    updateComment(data)
-                    editor.setHtml()
-                    console.log('ok')
-
-
-                    function updateComment(comment) {
-                        let { id, p_id, html, time, user } = comment
-                        let commentId = pageData.blog.map_commentId
-                        let commentPid = pageData.blog.map_commentPid
-                        commentPid.set(id, [])
-                        let pidList = commentPid.get(p_id)
-                        if (!p_id) {  //文章回覆
-                            pidList.unshift(comment)
-                        } else {  //留言回覆
-                            pidList.push(comment)
+                    async function initPage(data) {
+                        console.log('@pageData => ', data)
+                        //  渲染文章內容
+                        $('.editor-content-view').html(data.blog.html)
+                        //  若文章是預覽頁，或者非公開的，不需要作評論功能設定
+                        if (isPreview() || !data.blog.show) {
+                            $('#comment').remove()
+                            loadEnd()
+                            return
                         }
-                        commentPid.set(p_id, pidList)
-                        commentId.set(id, comment)
-                    }
+                        //  公用變量
+                        let pageData = data
+                        let api_comment = '/api/comment'
+                        let selector = '.editor-container'
+                        // 初始化editor
+                        let editor = init_editor(selector)
+                        let $editor = $(selector)
+                        let $commentBtn = $('button.reply')
 
-                    function renderComment({ id, p_id, html, time, user }, $target) {
-                        let template = templateComment({ id, html, time, user })
-                        let $comment
-                        if (!p_id) {  //  文章留言
-                            //  渲染
-                            $comment = $('.container-comment-list > .comment-list').prepend(template).children('.comment-item').first()
-                        } else { // 留言回覆
-                            $comment = $target.parents('[data-my-pid]').next().append(template).children().last()
+                        //  根評論 handleKeyup => 送出留言
+                        $editor.on('keyup', handleCreator_submitComment(editor))
+                        //  子評論 handleClick => 初始化 reply editor
+                        $commentBtn.on('click', initReplyEditor)
+
+                        //  pid=0的editor > handleCreator_submitComment > initReplyEditor > updateComment + renderComment> initReplyEditor
+
+                        //  使留言回覆鈕 綁定 handleClick => 初始化 reply editor
+                        function initReplyEditor(e) {
+                            let $target = $(e.target)
+                            //  找出用來回覆子評論的editor
+                            let $el_editor = $target.next('.editor-reply')
+                            let editor = $el_editor[0].editor || undefined
+                            if (editor) {   //  若存在，代表非初次觸發
+                                // 顯示editor
+                                $el_editor.show()
+                                editor.focus()
+                                return
+                            }
+                            //  代表初次觸發，初始化回覆用的editor
+                            editor = init_editor($el_editor[0], {
+                                //  若此editor失去焦點，自動隱藏
+                                onBlur() {
+                                    $el_editor.hide()
+                                }
+                            })
+                            //  
+                            // $el_editor[0].editor = editor
+                            // $el_editor.attr('tabindex', 0)
+                            //  為此用來回覆子評論的editor，綁定創建回覆的handle
+                            $el_editor.on('keyup', handleCreator_submitComment(editor))
                         }
-                        $comment.children('.reply').on('click', initReplyEditor)
+                        //  用來為參數 editor 創建 submit handle 的 creatorFuc
+                        function handleCreator_submitComment(editor) {
+                            return async (e) => {
+                                //  判斷是否Enter
+                                let isEnter = e.key === 'Enter'
+                                if ((e.shiftKey && isEnter) || !isEnter) {  //  若是，且不包含Shift
+                                    return
+                                }
+                                let $target = $(e.target)
+                                let htmlStr = editor.getHtml()
+                                let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
+                                let str = htmlStr.replace(reg, '')
+                                //  撇除空留言
+                                if (!str.trim()) {
+                                    editor.setHtml()
+                                    alert('請填入留言')
+                                    return
+                                }
+                                //  取得pid
+                                let pid = $target.parents('[data-my-pid]').first().data('myPid')
+                                if (!pid) {
+                                    pid = null
+                                }
+                                //  送出請求
+                                let { data: { errno, data, msg } } = await postComment(htmlStr, pid)
 
-                        function templateComment({ id, html, time, user }) {
-                            return `
-                    <div id="comment_${id}" class="comment-item">
-                        <div>${html}</div>
-                        <a href="/other/${user.id}">${user.nickname}</a>
-                        <span>${time}</span>
-                        <button class="reply">回覆</button>
-                        <div class="editor-reply" data-my-pid="${id}"></div>
-                        <div class="comment-list"></div>
-                    </div>`
+                                if (errno) {
+                                    alert('留言失敗')
+                                    console.log(msg)
+                                    return
+                                }
+
+                                let { id, p_id, html, time, user } = data
+                                delete data.createdAt
+                                //  渲染此次送出的評論
+                                renderComment(data, $target)
+                                //  更新評論數據
+                                updateComment(data)
+                                //  清空評論框
+                                editor.setHtml()
+
+                                //  更新評論數據
+                                function updateComment(comment) {
+                                    let { id, p_id, html, time, user } = comment
+                                    let commentId = pageData.blog.map_commentId
+                                    let commentPid = pageData.blog.map_commentPid
+                                    //  新建此評論為pid的commentPid
+                                    commentPid.set(id, [])
+                                    //  找出此評論的父評論列
+                                    let pidList = commentPid.get(p_id)
+                                    if (!p_id) {  //    代表此評論的是隸屬根評論列
+                                        pidList.unshift(comment)    //  加入父評論列，且排在該列最前方
+                                    } else {  //    代表此評論隸屬子評論列
+                                        pidList.push(comment)   //  加入子評論列，且排在該列最後方
+                                    }
+                                    //  更新父評論列
+                                    commentPid.set(p_id, pidList)
+                                    //  更新子評論列
+                                    commentId.set(id, comment)
+                                }
+                                //  渲染評論
+                                function renderComment({ id, p_id, html, time, user }, $target) {
+                                    //  創建評論htmlStr
+                                    let template = templateComment({ id, html, time, user })
+                                    let $comment
+                                    if (!p_id) {  //  代表是根留言
+                                        //  渲染
+                                        $comment = $('.container-comment-list > .comment-list').prepend(template).children('.comment-item').first()
+                                    } else { // 代表是子留言
+                                        //  渲染
+                                        $comment = $target.parents('[data-my-pid]').next().append(template).children().last()
+                                    }
+                                    //  使新渲染的子留言回覆鈕 綁定 handleClick => 初始化 reply editor
+                                    $comment.children('.reply').on('click', initReplyEditor)
+                                    //  創建評論
+                                    function templateComment({ id, html, time, user }) {
+                                        return `
+                                        <div id="comment_${id}" class="comment-item">
+                                            <div>${html}</div>
+                                            <a href="/other/${user.id}">${user.nickname}</a>
+                                            <span>${time}</span>
+                                            <button class="reply">回覆</button>
+                                            <div class="editor-reply" data-my-pid="${id}"></div>
+                                            <div class="comment-list"></div>
+                                        </div>`
+                                    }
+
+                                }
+                                //  送出創建評論的請求
+                                async function postComment(html, p_id = null) {
+                                    let blog_id = pageData.blog.id
+                                    let user_id = pageData.me.id
+                                    //  若 文章作者 = 留言者，payload加入author: 留言者id，否則undefined
+                                    let author = pageData.blog.author.id !== user_id ? pageData.blog.author.id : undefined
+                                    let payload = { blog_id, user_id, author, html, p_id }
+                                    return await axios.post(api_comment, payload)
+                                }
+                            }
+                        }
+                        //  初始化editor
+                        function init_editor(container_id, handle) {
+                            //  editor config
+                            const { createEditor } = window.wangEditor
+
+                            //  功能：貼上純文字內容
+                            const customPaste = function (editor, event) {
+                                event.preventDefault()
+                                const text = event.clipboardData.getData('text/plain')
+                                editor.insertText(text)
+                            }
+                            let editorConfig = {
+                                MENU_CONF: {},
+                                customPaste
+                            }
+                            if (handle) {
+                                editorConfig = { ...editorConfig, ...handle }
+                            }
+                            //  editor config : placeholder
+                            editorConfig.placeholder = '我有話要說'
+                            // editor 創建
+                            const editor = createEditor({
+                                config: editorConfig,
+                                selector: container_id,
+                                mode: 'simple'
+                            })
+
+                            //  為editor的container綁定判斷登入與否的handle
+                            $(container_id).click(isLogin)
+                            //  確認是否登入
+                            function isLogin() {
+                                if (pageData.me.id) {   //  若登入，無需動作
+                                    return
+                                }
+                                if (confirm('請先登入')) {  //  未登入，前往登入頁
+                                    location.href = `/login?from=${location.pathname}`
+                                }
+                                return
+                            }
+
+                            return editor
+                        }
+                        //  確認是否為文章預覽頁面
+                        function isPreview() {
+                            let reg = /preview=(?<preview>.+)&?/
+                            let query = window.location.query
+                            let res = reg.exec(query)
+                            console.log('@res => ', res)
+                            let preview = res ? res.groups.preview : false
+                            return preview
                         }
 
                     }
 
-                    async function postComment(html, p_id = null) {
-                        let blog_id = pageData.blog.id
-                        let user_id = pageData.me.id
-                        let author = pageData.blog.author.id !== user_id ? pageData.blog.author.id : undefined
-                        let payload = { blog_id, user_id, author, html, p_id }
-                        return await axios.post(api_comment, payload)
+                    //  utils ------
+                    //  讀取畫面，遮蔽效果
+                    function loading() {
+                        $('#backdrop').addClass('my-show')
+                        $('input').attr('disabled', true)
                     }
-                }
-            }
-            //  初始化子評論的editor
-            function initReplyEditor(e) {
-                let $target = $(e.target)
-                let $el_editor = $target.next('.editor-reply')
-                let editor = $el_editor[0].editor || undefined
-                if (editor) {
-                    $el_editor.show()
-                    editor.focus()
-                    console.log('僅顯示')
-                    return
-                }
-                editor = init_editor($el_editor[0], {
-                    onBlur() {
-                        $el_editor.hide()
+                    //  讀取完成，取消遮蔽
+                    function loadEnd() {
+                        $('#backdrop').removeClass('my-show')
+                        $('input').removeAttr('disabled')
                     }
 
-                })
-                $el_editor[0].editor = editor
-                $el_editor.attr('tabindex', 0)
-                $el_editor.on('keyup', handle_keyup(editor))
-            }
-            //  初始化editor
-            function init_editor(container_id, handle) {
-                //  editor config
-                const { createEditor } = window.wangEditor
+                </script>
+    </body>
 
-                //  功能：貼上純文字內容
-                const customPaste = function (editor, event) {
-                    event.preventDefault()
-                    const text = event.clipboardData.getData('text/plain')
-                    editor.insertText(text)
-                }
-                let editorConfig = {
-                    MENU_CONF: {},
-                    customPaste
-                }
-                if (handle) {
-                    editorConfig = { ...editorConfig, ...handle }
-                }
-                //  editor config : placeholder
-                editorConfig.placeholder = '我有話要說'
-                // editor 創建
-                const editor = createEditor({
-                    config: editorConfig,
-                    selector: container_id,
-                    mode: 'simple'
-                })
-
-                $(container_id).click(handle_click)
-
-                //  要登入才能留言
-                function handle_click() {
-                    if (pageData.me.id) {   //  若登入，無需動作
-                        return
-                    }
-                    if (confirm('請先登入')) {  //  未登入，前往登入頁
-                        location.href = `/login?from=${location.pathname}`
-                    }
-                    return
-                }
-
-                return editor
-            }
-            //  確認是否為文章預覽頁面
-            function isPreview() {
-                let reg = /preview=(?<preview>.+)&?/
-                let query = window.location.query
-                let res = reg.exec(query)
-                console.log('@res => ', res)
-                let preview = res ? res.groups.preview : false
-                return preview
-            }
-        }
-
-
-        //  utils ------
-        //  讀取畫面，遮蔽效果
-        function loading() {
-            $('#backdrop').addClass('my-show')
-            $('input').attr('disabled', true)
-        }
-        //  讀取完成，取消遮蔽
-        function loadEnd() {
-            $('#backdrop').removeClass('my-show')
-            $('input').removeAttr('disabled')
-        }
-
-    </script>
-</body>
-
-</html>
+    </html>
