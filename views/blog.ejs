@@ -106,8 +106,9 @@
                         console.log('@page error => ', e)
                     }
 
+                    //  頁面初始化
                     async function initPage(data) {
-                        console.log('@pageData => ', data)
+                        //  初始化畫面
                         //  渲染文章內容
                         $('.editor-content-view').html(data.blog.html)
                         //  若文章是預覽頁，或者非公開的，不需要作評論功能設定
@@ -116,6 +117,8 @@
                             loadEnd()
                             return
                         }
+
+                        //  初始化頁面功能
                         //  公用變量
                         let pageData = data
                         let api_comment = '/api/comment'
@@ -123,14 +126,15 @@
                         let commentEditor_reply = 'button.reply'
                         //  用來存放editorIns
                         let editorList = []
-                        // 初始化根評論editor
-                        let editor = init_editor(commentEditor_pid0)
 
+                        //  初始化根評論editor
+                        let editor = init_editor(commentEditor_pid0)
                         //  根評論 handleKeyup => 送出留言
                         $(commentEditor_pid0).on('keyup', handleCreator_submitComment(editor))
                         //  子評論 handleClick => 初始化 reply editor
                         $(commentEditor_reply).on('click', initReplyEditor)
 
+                        //  handle
                         //  留言回覆鈕 綁定 handleClick => 初始化 reply editor
                         function initReplyEditor(e) {
                             let $target = $(e.target)
