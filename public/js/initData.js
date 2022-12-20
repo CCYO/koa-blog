@@ -1,5 +1,5 @@
 class My {
-    constructor(){
+    constructor() {
         this.data = initData()
     }
     data = {}
@@ -9,8 +9,8 @@ class My {
             let promise = initData()
             this.promiseAll.push(promise)
             let res = await promise
-            for(let key in res){
-                if(key !== 'news'){
+            for (let key in res) {
+                if (key !== 'news') {
                     this.data = { ...this.data, [key]: res[key] }
                 }
             }
@@ -19,7 +19,7 @@ class My {
             throw e
         }
     }
-    async check(){
+    async check() {
         await Promise.all(this.promiseAll)
         return this.data
     }
@@ -40,25 +40,30 @@ function initData() {
             //  針對blog數據處理
             if (prop === 'blog') {
                 res.blog = initBlog(val)
+            } else if(prop === 'album'){
+                console.log(1)
+                res.album = initAlbum(val)
+                console.log('@res => ', res)
             } else {
+                console.log(2)
                 res[prop] = JSON.parse(val)
             }
-            //  
         } catch (e) {
             throw e
         }
     })
     $(`[data-my-data]`).remove()
     return res
+
+    function initAlbum(data){
+        let { blog, imgs } = JSON.parse(data)   // 整體轉回obj
+        let map_imgs = init_map_imgs(imgs)
+        return { blog, imgs, map_imgs }
+    }
     function initBlog(data) {
         let blog = JSON.parse(data)   // 整體轉回obj
         //  處理blog內的img數據
-        blog.map_imgs = new Map()
-        if (blog.imgs.length) {
-            blog.imgs.forEach((img, index) => {
-                blog.map_imgs.set(img.id, { ...img, index })
-            })
-        }
+        blog.map_imgs = init_map_imgs(blog.imgs)
         //  處理blog內的comment數據
         blog = { ...blog, ...mapComments(blog.comments) }
         //  將存放在後端「百分比編碼格式的blog.html」解析為一般htmlStr
@@ -118,6 +123,14 @@ function initData() {
                 map_commentPid: new Map().set(0, [])
             })
         }
+    }
+
+    function init_map_imgs(imgs) {
+        let map_imgs = new Map()
+        imgs.forEach((img, index) => {
+            map_imgs.set(img.id, { ...img, index })
+        })
+        return map_imgs
     }
 }
 

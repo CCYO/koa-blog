@@ -6,6 +6,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
 
+
     <!-- 主導覽： NAV_CSS + NAV第一層template -->
     <%- include('wedgets/navbar/index') %>
 
@@ -35,104 +36,121 @@
 
     <!-- JQ AXIOS BS5 -->
     <%- include('wedgets/cdn') %>
-    <!-- 初始化來自ejs傳入當前頁面所需的數據 -->
-    <script defer src="/js/initData.js"></script>
+    <script type="module" defer>
+        //  初始化來自ejs傳入當前頁面所需的數據
+        import initData from '/js/initData.js'
+        //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
+        import initNavbar from '/js/navbar.js'
 
-    <!--
-        logout功能 +
-        完整渲染 NAV +
-        取得news +
-        完整渲染 通知下拉選單
-    -->
-    <script defer src="/js/navbar.js"></script>
+        try {
+            //  讀取中，遮蔽畫面
+            loading()
+            //  初始化ejs附帶的數據
+            let pageData = new initData()
+            //  初始化navbar數據
+            await pageData.init(initNavbar)
+            //  確認以上所有初始化已完成，取得彙整後數據
+            let data = await pageData.check()
+            //  初始化頁面功能，並傳入上面彙整後的初始化數據
+            await initPage(data)
+            //  讀取完成，解除遮蔽
+            loadEnd()
+        } catch (e) {
+            console.log('@page error => ', e)
+        }
 
-    <script>
-        $(async function () {
-            try {
-                await window._my.initData()
-                let { blog, imgs } = window.data.album
-                window.data.blog = blog
-                window.data.imgs = imgs
-                await init()
-                console.log('@ album.ejs init OK')
-            } catch (e) {
-                console.log('@ 初始化 發生錯誤 => ', e)
-            }
+        async function initPage(data) {
+            //  公用變量
+            let { me, album } = data
+            let { blog, imgs, map_imgs } = album
 
-            async function init() {
-                window.data.map_imgs = new Map()
-                window.data.imgs.forEach(({ id, ...data }, index) => {
-                    window.data.map_imgs.set(id, { ...data, index })
-                })
-
-                $('li[data-my-photo] > span').click((e) => {
+            //  handle ---
+            //  
+            $('li[data-my-photo] > span').click((e) => {
+                let $span = $(e.target)
+                let $container = $span.parent()
+                $span.toggle().next().toggle().children('input').focus()
+            })
+            $(`[data-my-photo] input`).on('focus', (e) => {
+                setTimeout(() => {
                     let $el = $(e.target)
-                    let $parent = $el.parent()
-                    let blogImg_id = $parent.attr('data-my-photo')
-                    $el.toggle().next().toggle().children('input').focus()
-                })
-                $(`[data-my-photo] input`).on('focus', (e) => {
-                    setTimeout(() => {
-                        let $el = $(e.target)
-                        $el[0].selectionStart = $el.val().length
-                        photoNameIsDiff($el)
-                    }, 0)
-                })
-                // $(`[data-my-photo] input`).on('blur', (e) => {
-                //     let $el = $(e.target)
-                //     let blogImg_id = $el.parents('li').attr('data-my-photo') * 1
-                //     $el.toggle()
-                //     $el.next().hide()
-                //     $(`[data-my-photo=${blogImg_id}] > span`).toggle()
-                // })
-                $(`[data-my-photo] input`).on('input', (e) => {
-                    photoNameIsDiff($(e.target))
-                })
-                $(`[data-my-photo] button`).on('click', async (e) => {
-                    let $el = $(e.target)
-                    let $parent = $el.parents('li')
-                    let alt = $el.prev().val()
-                    let blogImgAlt_id = $parent.attr('data-my-photo') * 1
-                    // axios
-                    let { data: { errno, data, msg } } = await axios.patch('/api/blog/blogImgAlt', { blogImgAlt_id, alt, blog_id: window.data.blog.id })
-                    if (errno) {
-                        console.log('@相片改名失敗')
-                        return
-                    }
-                    window.data.imgs.forEach((img, index, imgs) => {
-                        if (img.id === blogImgAlt_id) {
-                            imgs[index].alt = alt
-                            window.data.map_imgs.set(blogImgAlt_id, {
-                                ...window.data.map_imgs.get(blogImgAlt_id), alt
-                            })
-                        }
-                    })
-                    $parent.children('img').attr('alt', alt)
-                    $parent.children('span').text(alt).toggle()
-                    $parent.children('div').toggle()
-                    $parent.find('input[type=text]').val(alt)
-                })
-                function photoNameIsDiff($el) {
-                    let blogImg_id
-                    let $target
-                    if ($el[0].tagName === 'li') {
-                        $target = $el
-                        blogImg_id = $target.attr('data-my-photo') * 1
-                    } else {
-                        $target = $el.parents('li[data-my-photo]')
-                        blogImg_id = $target.attr('data-my-photo') * 1
-                    }
-                    let $btn = $target.find('button')
-                    console.log($btn)
-                    let curData = window.data.map_imgs.get(blogImg_id)
-                    if ($el.val() === curData.name) {
-                        $btn.prop('disabled', true)
-                        return
-                    }
-                    $btn.prop('disabled', false)
+                    $el[0].selectionStart = $el.val().length
+                    //  確認照片名稱是否為新
+                    toggleUpdateBtn($el)
+                }, 0)
+            })
+            $(`[data-my-photo] input`).on('input', (e) => {
+                //  確認照片名稱是否為新
+                toggleUpdateBtn($(e.target))
+            })
+            $(`[data-my-photo] input`).on('blur', async (e) => {
+                let $el = $(e.target)
+                let $container = $el.parents('li')
+                let blogImgAlt_id = $container.attr('data-my-photo') * 1
+                let alt = map_imgs.get(blogImgAlt_id).alt
+                //  確認照片名稱是否為新
+                let isNewName = toggleUpdateBtn($(e.target))
+                if (!isNewName || confirm('放棄更新嗎?')) {
+                    $container.find('input[type=text]').val(alt)
+                    $container.children('span').toggle()
+                    $container.children('div').toggle()
                 }
+                return
+            })
+            $(`[data-my-photo] button`).on('click', async (e) => {
+                let $btn = $(e.target)
+                let $container = $btn.parents('li')
+                let alt = $btn.prev().val()
+                let blogImgAlt_id = $container.attr('data-my-photo') * 1
+                // 發出請求
+                let { data: { errno, data, msg } } = await axios.patch('/api/blog/blogImgAlt', { blogImgAlt_id, alt, blog_id: blog.id })
+                if (errno) {
+                    console.log('@相片改名失敗')
+                    return
+                }
+                //  更新頁面數據
+                map_imgs.set(blogImgAlt_id, {
+                    ...map_imgs.get(blogImgAlt_id), alt
+                })
+                //  更新畫面
+                $container.children('img').attr('alt', alt)
+                $container.children('span').text(alt).toggle()
+                $container.children('div').toggle()
+                $container.find('input[type=text]').val(alt)
+            })
+
+            //  確認照片名稱是否為新，已辨別是否能夠點擊更新鈕
+            function toggleUpdateBtn($el) {
+                let tagName = $el[0].tagName
+                let $target = tagName === 'li' ? $el : $el.parents('li[data-my-photo]')
+                let alt_id = $target.attr('data-my-photo') * 1
+                let $btn = $target.find('button')
+                let { name } = map_imgs.get(alt_id)
+                let newName = $el.val().trim() !== name
+                $btn.prop('disabled', !newName)
+                return newName
             }
-        })
+        }
+
+        //  utils ------
+        //  讀取畫面，遮蔽效果
+        function loading(editorList = []) {
+            $('#backdrop').addClass('my-show')
+            $('input').attr('disabled', true)
+            console.log('@editorList 隱藏=> ', editorList)
+            editorList.forEach(editor => editor.disable())
+            console.log('隱藏完成')
+        }
+        //  讀取完成，取消遮蔽
+        function loadEnd(editorList = []) {
+            console.log('開始執行顯示')
+            $('#backdrop').removeClass('my-show')
+            $('input').removeAttr('disabled')
+            console.log('@editorList 顯示=> ', editorList)
+            editorList.forEach(editor => editor.enable())
+            console.log('顯示完成')
+        }
+
     </script>
 </body>
 
