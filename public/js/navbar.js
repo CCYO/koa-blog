@@ -14,7 +14,11 @@ async function initNavbar() {
 
 //  初始化 通知列表 功能
 async function initNews(data) {
-    //  公用變量
+    //  初始化渲染  ------
+    //  渲染基本navBar
+    $('#my-navbar-header-register').html(template_nav(data.me.id))
+
+    //  公用變量 ------
     /*  取得 news
     data: {
         newsList: {
@@ -39,7 +43,7 @@ async function initNews(data) {
         limit
     }
     */
-    let { news, me } = data
+    let { news } = data
     //  下拉選單鈕、通知鈕
     let $newsDropdown = $('#newsDropdown')
     //  通知比數span
@@ -49,9 +53,6 @@ async function initNews(data) {
     //  下拉選單內 的 沒有更多提醒
     let $noNews = $('#noNews')
 
-    //  初始化渲染
-    //  渲染基本navBar
-    $('#my-navbar-header-register').html(template_nav(me.id))
     //  初次渲染news
     render_news(news, true)
 
@@ -184,15 +185,11 @@ async function initNews(data) {
     }
     //  渲染通知數據
     function render_news(news, firstRender) {
-        console.log('@news => ', news)
         let { newsList, num } = news
         //  渲染新通知數目
         if (firstRender) {    //初次渲染
-            console.log('first => ', $newsCount, num.unconfirm)
             let x = show($newsCount, num.unconfirm).text( num.unconfirm || '')
-            console.log('@-', $newsCount.text())
         } else {  //readMore觸發的渲染
-            console.log('not first => ', num.unconfirm, count)
             //  DB_unconfirm - 此次 newsList_unconfirm
             let count = num.unconfirm - newsList.unconfirm.length
             show($newsCount, count).text(count || '')
@@ -289,9 +286,7 @@ async function initNews(data) {
                 if (others.length) {
                     otherNotIncludeMe = new Set()
                     others.reduce((initVal, other) => {
-                        console.log('抓之前', other, other.user.id, me)
                         if (other.user.id !== me) {
-                            console.log('抓 => ', other.user.id, other.user.nickname)
                             otherNotIncludeMe.add(other.user.nickname)
                         }
                         return initVal

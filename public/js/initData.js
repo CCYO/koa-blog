@@ -41,11 +41,8 @@ function initData() {
             if (prop === 'blog') {
                 res.blog = initBlog(val)
             } else if(prop === 'album'){
-                console.log(1)
                 res.album = initAlbum(val)
-                console.log('@res => ', res)
             } else {
-                console.log(2)
                 res[prop] = JSON.parse(val)
             }
         } catch (e) {
@@ -79,7 +76,6 @@ function initData() {
                 return ''
             }
             let htmlStr = decodeURI(URI_String)
-            console.log('URI_srting => ', URI_String)
             let reg = /<x-img.+?data-id='(?<id>\w+?)'.+?(data-style='(?<style>.?)')?.*?\/>/g
             //  複製一份
             let _html = htmlStr
