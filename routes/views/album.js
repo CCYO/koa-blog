@@ -25,6 +25,7 @@ router.get('/list/:user_id', async (ctx, next) => {
     }
     console.log(list)
     await ctx.render('albumList', {
+        title: '文章照片列表',
         albumList: {
             author: nickname,
             list

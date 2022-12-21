@@ -188,8 +188,11 @@ async function initNews(data) {
         let { newsList, num } = news
         //  渲染新通知數目
         if (firstRender) {    //初次渲染
-            show($newsCount, num.unconfirm).text(num.unconfirm || '')
+            console.log('first => ', $newsCount, num.unconfirm)
+            let x = show($newsCount, num.unconfirm).text( num.unconfirm || '')
+            console.log('@-', $newsCount.text())
         } else {  //readMore觸發的渲染
+            console.log('not first => ', num.unconfirm, count)
             //  DB_unconfirm - 此次 newsList_unconfirm
             let count = num.unconfirm - newsList.unconfirm.length
             show($newsCount, count).text(count || '')

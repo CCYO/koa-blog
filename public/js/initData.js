@@ -79,7 +79,8 @@ function initData() {
                 return ''
             }
             let htmlStr = decodeURI(URI_String)
-            let reg = /<x-img.+?data-id='(?<id>\w+?)'.+?(data-style='(?<style>.+?)')?.*?\/>/g
+            console.log('URI_srting => ', URI_String)
+            let reg = /<x-img.+?data-id='(?<id>\w+?)'.+?(data-style='(?<style>.?)')?.*?\/>/g
             //  複製一份
             let _html = htmlStr
             //  存放結果
