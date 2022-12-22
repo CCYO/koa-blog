@@ -128,13 +128,6 @@ router.get('/setting', view_check_login, async (ctx, next) => {
     })
 })
 
-/**
- * @description router for square
- */
-router.get('/square', view_check_login, async (ctx, next) => {
-    await ctx.render('square')
-})
-
 router.get('/test', async (ctx) => {
     let keys = ctx.headers
     console.log(keys)

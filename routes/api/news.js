@@ -9,7 +9,7 @@ const {
     readMore
 } = require('../../controller/news')
 
-const { api_check_login, api_check_isMe } = require('../../middleware/check_login')
+const { api_check_login } = require('../../middleware/check_login')
 const { cacheNews, cache_reset } = require('../../middleware/cache')
 
 router.prefix('/api/news')

@@ -9,22 +9,23 @@
 
     <!-- 主導覽： NAV_CSS + NAV第一層template -->
     <%- include('wedgets/navbar/index') %>
-
-    <ul>
-        <% album.imgs.forEach( ({id, img_id, blogImg_id, url, alt}) => { %>
-        <li data-my-photo="<%= id %>">
-            <img src="<%= url %>?blogImgAlt=<%= id %>" alt="<%= alt %>"><br>
-            <span><%= alt %></span>
-            <div class="my-noshow">
-                <input type="text" value="<%= alt %>">
-                <button>更新</button>
-            </div>
-        </li>
-        <% }) %>
-    </ul>
-    <!-- 當前使用者頁面的使用者資料 -->
-    <div data-my-data="album">
-        <%- JSON.stringify(album) %>
+    <div class="container">
+        <ul>
+            <% album.imgs.forEach( ({id, img_id, blogImg_id, url, alt}) => { %>
+            <li data-my-photo="<%= id %>">
+                <img src="<%= url %>?blogImgAlt=<%= id %>" alt="<%= alt %>"><br>
+                <span><%= alt %></span>
+                <div class="my-noshow">
+                    <input type="text" value="<%= alt %>">
+                    <button>更新</button>
+                </div>
+            </li>
+            <% }) %>
+        </ul>
+        <!-- 當前使用者頁面的使用者資料 -->
+        <div data-my-data="album" style="display: none;">
+            <%- JSON.stringify(album) %>
+        </div>
     </div>
     <!-- 引入 xss -->
     <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
@@ -80,7 +81,7 @@
 
             //  handle -----
             //  請求更新imgAlt
-            async function updateImgAlt (e) {
+            async function updateImgAlt(e) {
                 let $btn = $(e.target)
                 let $container = $btn.parents('li')
                 let alt = $btn.prev().val()
@@ -104,7 +105,7 @@
                 $container.find('input[type=text]').val(alt)
             }
             //  確認是否放棄更新
-            async function cancelChangeImgAlt (e) {
+            async function cancelChangeImgAlt(e) {
                 let $el = $(e.target)
                 let $container = $el.parents('li')
                 let blogImgAlt_id = $container.attr('data-my-photo') * 1

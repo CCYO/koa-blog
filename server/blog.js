@@ -146,15 +146,30 @@ async function readBlog({ blog_id }, needComment) {
  * 
  
  */
-async function readBlogList({ user_id, follower_id}) {
-    let where = { user_id }
-    let include = [{
+async function readBlogList({ user_id, follower_id, exclude_id = null}) {
+    let ops = {}
+    let where = {}
+    if(user_id){
+        where.user_id = user_id
+    }
+    if(exclude_id){
+        if(!Array.isArray(exclude_id)){
+            exclude_id = [exclude_id]
+        }
+        where.user_id = { [Op.not]: exclude_id }
+        where.show = true
+    }
+    if(Object.keys(where).length){
+        ops = { where }
+    }
+
+    ops.include = [{
         model: User,
         attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash']
     }]
 
     if (follower_id) {
-        include.push({
+        ops.include.push({
             model: User,
             as: 'FollowBlog_F',
             attributes: [],
@@ -162,11 +177,8 @@ async function readBlogList({ user_id, follower_id}) {
         })
     }
 
-    let blogList = await Blog.findAll({
-        attributes: ['id', 'title', 'show', 'showAt'],
-        where,
-        include
-    })
+    ops.attributes =  ['id', 'title', 'show', 'showAt']
+    let blogList = await Blog.findAll(ops)
 
     return init_blog(blogList)
 }

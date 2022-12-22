@@ -212,10 +212,17 @@ async function getBlogListByUserId(user_id) {
     return new SuccModel(data)
 }
 
+async function getSquareBlogList(exclude_id) {
+    let data = await readBlogList({exclude_id})
+    return new SuccModel(data)
+}
+
 module.exports = {
     addBlog,
     modifyBlog,
     removeBlog,
     getBlog,
-    getBlogListByUserId
+    getBlogListByUserId,
+
+    getSquareBlogList
 }

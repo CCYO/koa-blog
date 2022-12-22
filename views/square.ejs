@@ -12,9 +12,9 @@
     <div class='container p-3'>
         <h1>文章列表</h1>
         <ul class="list-group">
-            <% albumList.list.forEach( ({ id, title }) => { %>
+            <% blogList.forEach( ({ id, title, author }) => { %>
             <li class="list-group-item">
-                <a href="/album/<%= id %>"><%= title %></a>
+                <a href="/blog/<%= id %>"><%= title %></a>
             </li>
             <% }) %>
         </ul>
@@ -36,7 +36,7 @@
             //  初始化navbar數據
             await pageData.init(initNavbar)
             //  確認以上所有初始化已完成，取得彙整後數據
-            let { album } = await pageData.check()
+            let data = await pageData.check()
             //  初始化頁面功能，並傳入上面彙整後的初始化數據
             // await initPage(album)
             //  讀取完成，解除遮蔽

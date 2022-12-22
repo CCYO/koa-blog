@@ -30,6 +30,7 @@ const apiAlbum = require('./routes/api/album')
 const viewUser = require('./routes/views/user')
 const viewBlog = require('./routes/views/blog')
 const viewAlbum = require('./routes/views/album')
+const viewSquare = require('./routes/views/square')
 
 const { isDev } = require('./utils/env')
 const { REDIS_CONF } = require('./conf/constant')
@@ -96,6 +97,8 @@ app.use(apiAlbum.routes(), apiAlbum.allowedMethods())
 app.use(viewUser.routes(), viewUser.allowedMethods())
 app.use(viewBlog.routes(), viewBlog.allowedMethods())
 app.use(viewAlbum.routes(), viewAlbum.allowedMethods())
+app.use(viewSquare.routes(), viewSquare.allowedMethods())
+
 
 app.on('error', (err, ctx) => {
     if (!err.hasOwnProperty('errno')) {   //  完全無預期的錯誤
