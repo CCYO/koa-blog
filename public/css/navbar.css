@@ -30,6 +30,13 @@
     white-space: nowrap;
 }
 
+.nav-link:hover {
+    background: rgba(200, 200, 200, .5);
+    color: #0d6efd !important;
+    border-bottom: 1.5px solid;
+}
+
 .nav-link.active {
-    pointer-events: none
+    pointer-events: none;
+    border-bottom: 1.5px solid;
 }

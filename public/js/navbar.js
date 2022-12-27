@@ -2,7 +2,6 @@ async function initNavbar() {
     try {
         // 取得登入者數據
         let data = await getNews()
-        console.log(555)
         // if (data.me.id) { //  登入狀態
         //  初始化通知列表相關功能
         await initNews(data)
@@ -14,11 +13,10 @@ async function initNavbar() {
 
     //  初始化 通知列表 功能
     async function initNews(data) {
-        console.log(123)
         //  初始化渲染  ------
         //  渲染基本navBar
-        $('#my-navbar-header-register').html(template_nav(data.me.id))
-
+        // $('#my-navbar-header-register').html(template_nav(data.me.id))
+        template_nav(data.me.id)
         //  若未登入，則不需要初始化功能
         if (!data.me.id) {
             return
@@ -80,7 +78,6 @@ async function initNavbar() {
             //  取news
             let news = await getNews(pageData.news)
             pageData.news = renderAndSerializeNewsData(news)
-            console.log('@pageData => ', pageData)
             return
         }
 
@@ -322,52 +319,69 @@ async function initNavbar() {
         }
         //  生成 navbar template
         function template_nav(user_id) {
-            let template_news = `
-                <a class="nav-link dropdown-toggle" href="#" id="newsDropdown"
-                    role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">通知
-                    <span class="position-absolute translate-middle badge rounded-pill bg-danger news-count"></span>
-                </a>
-                <!-- 通知列表 -->
-                <ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="newList">
-                    <!-- 新通知標題 -->
-                    <li class="dropdown-item" id="unconfirm-news-title">新通知</li>
-                    <!-- 先前通知的標頭 -->
-                    <li class="dropdown-item" id="confirm-news-title">先前的通知</li>
-                    <li id="readMore">
-                        <button class="dropdown-item link-primary" type="button">讀取更多</button>
+            let reg_pathname = /^\/(?<pathname>\w+)\/?(?<albumList>list)?/
+            let { pathname, albumList } = reg_pathname.exec(location.pathname).groups
+            if (user_id) {
+                let template_news = `
+                    <a class="nav-link dropdown-toggle" href="#" id="newsDropdown"
+                        role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">通知
+                        <span class="position-absolute translate-middle badge rounded-pill bg-danger news-count"></span>
+                    </a>
+                    <!-- 通知列表 -->
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="newList">
+                        <!-- 新通知標題 -->
+                        <li class="dropdown-item" id="unconfirm-news-title">新通知</li>
+                        <!-- 先前通知的標頭 -->
+                        <li class="dropdown-item" id="confirm-news-title">先前的通知</li>
+                        <li id="readMore">
+                            <button class="dropdown-item link-primary" type="button">讀取更多</button>
+                        </li>
+                        <li class="dropdown-item" id="noNews">
+                            <span>沒有更多了</span>
+                        </li>
+                    </ul>
+                `
+                let template_inOffcanvas = `
+                <ul class="navbar-nav justify-content-around pe-3">
+                    <li class="nav-item">
+                        <a class="nav-link me-3" href="/self">個人頁面</a>
                     </li>
-                    <li class="dropdown-item" id="noNews">
-                        <span>沒有更多了</span>
+                    <li class="nav-item">
+                        <a class="nav-link me-3" href="/album/list/${user_id}">文章相簿</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link me-3" href="/setting">個人設置</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="logout" class="btn btn-outline-success text-nowrap">登出</a>
                     </li>
                 </ul>
-            `
-            let template_noLogin = `
+                `
+                let template_outOffcanvas = `
+                <li class="nav-item dropdown">
+                        ${template_news}
+                </li>
+                `
+                $('#my-navbar-header-register').html(template_outOffcanvas)
+                $('.offcanvas-body').html(template_inOffcanvas)
+                console.log('@ => ', pathname, albumList)
+                if(pathname === 'self'){
+                    $(`.nav-link[href="/self"]`).addClass('active')
+                }else if(pathname === 'setting'){
+                    $(`.nav-link[href="/setting"]`).addClass('active')
+                }else if(albumList){
+                    $(`.nav-link[href^="/album"]`).addClass('active')
+                }
+            } else {               
+                let template_outOffcanvas = `
                 <li class="nav-item">
-                    <a class="nav-link nav-tab" href="/register" data-my-tab="#register">註冊</a>
+                    <a class="nav-link nav-tab ${pathname === 'register' ? 'active' : ''}" href="/register" data-my-tab="#register">註冊</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link nav-tab" href="/login" data-my-tab="#login">登入</a>
-                </li>
-            `
-            let template_login = `
-                <li class="nav-item">
-                    <a class="nav-link me-3" href="/self">個人頁面</a>
-                </li>
-                 <li class="nav-item dropdown">
-                    ${template_news}
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link me-3" href="/album/list/${user_id}">文章相簿</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link me-3" href="/setting">個人設置</a>
-                </li>
-                <li class="nav-item">
-                    <a id="logout" class="btn btn-outline-success text-nowrap">登出</a>
-                </li>
-            `
-            let template = user_id ? template_login : template_noLogin
-            return template
+                    <a class="nav-link nav-tab ${pathname === 'login' ? 'active' : ''}" href="/login" data-my-tab="#login">登入</a>
+                </li>`
+                $('#my-navbar-header-register').html(template_outOffcanvas)
+            }
         }
 
         //  utils ------
