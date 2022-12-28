@@ -1,11 +1,5 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
-<%- include('wedgets/common/header') %>
-
-    <body>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
+<%- include('wedgets/header') %>
         <style>
             #backdrop.my-show {
                 background: rgba(202, 71, 71, 0.5);
@@ -28,8 +22,6 @@
                 min-height: 300px;
             }
         </style>
-        <!-- 主導覽： NAV_CSS + NAV第一層template -->
-        <%- include('wedgets/navbar/index') %>
             <div id='backdrop' class="my-noshow">
                 <div>讀取中...</div>
             </div>

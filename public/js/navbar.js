@@ -328,7 +328,7 @@ async function initNavbar() {
                         <span class="position-absolute translate-middle badge rounded-pill bg-danger news-count"></span>
                     </a>
                     <!-- 通知列表 -->
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="newList">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" id="newList">
                         <!-- 新通知標題 -->
                         <li class="dropdown-item" id="unconfirm-news-title">新通知</li>
                         <!-- 先前通知的標頭 -->
@@ -364,7 +364,6 @@ async function initNavbar() {
                 `
                 $('#my-navbar-header-register').html(template_outOffcanvas)
                 $('.offcanvas-body').html(template_inOffcanvas)
-                console.log('@ => ', pathname, albumList)
                 if(pathname === 'self'){
                     $(`.nav-link[href="/self"]`).addClass('active')
                 }else if(pathname === 'setting'){
@@ -381,6 +380,9 @@ async function initNavbar() {
                     <a class="nav-link nav-tab ${pathname === 'login' ? 'active' : ''}" href="/login" data-my-tab="#login">登入</a>
                 </li>`
                 $('#my-navbar-header-register').html(template_outOffcanvas)
+            }
+            if(pathname === 'square'){
+                $(`.nav-link[href="/square"]`).addClass('active')
             }
         }
 

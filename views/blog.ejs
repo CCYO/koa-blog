@@ -1,10 +1,5 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
-<%- include('wedgets/common/header') %>
-
-<body>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+<%- include('wedgets/header') %>
     <link rel="stylesheet" href="https://www.wangeditor.com/demo/css/view.css">
     <style>
         .editor-container {
@@ -43,9 +38,6 @@
         }
     </style>
 
-    <!-- 主導覽： NAV_CSS + NAV第一層template -->
-    <%- include('wedgets/navbar/index') %>
-
     <div id="backdrop" class="my-noshow">
         <div>讀取中...</div>
     </div>
@@ -64,7 +56,7 @@
             <div class="container-comment-list">
                 <div class="comment-list">
                     <% if(blog.comments.length){ %>
-                    <%- include('./wedgets/comment/reply-list', { comments: blog.comments }) %>
+                    <%- include('./wedgets/common/reply-list', { comments: blog.comments }) %>
                     <% } %>
                 </div>
             </div>
