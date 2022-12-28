@@ -2,168 +2,172 @@
 <%- include('wedgets/header') %>
 
 
-<div class="container">
-    <div class="card-group">
-        <% album.imgs.forEach( ({id, img_id, blogImg_id, url, alt}) => { %>
-        <div class="card" data-my-photo="<%= id %>">
-            <div class="card-img-top" style="background-image: url('<%= url %>?blogImgAlt=<%= id %>'); background-size: 100% auto; background-repeat: no-repeat;background-position: center;padding: 50%;" alt="<%= alt %>"></div><br>
+    <div class="container">
+        <div class="row card-group">
+            <% album.imgs.forEach( ({id, img_id, blogImg_id, url, alt})=> { %>
+                <div class="card col-md-2 col-4" data-my-photo="<%= id %>">
+                    <div class="ratio ratio-1x1">
+                        <img class="card-img-top" src="<%= url %>?blogImgAlt=<%= id %>" alt="<%= alt %>" />
+                    </div>
 
-            <div class="card-body">
-                <p class="card-text"><%= alt %></p>
-                <div class="my-noshow">
-                    <input type="text" value="<%= alt %>">
-                    <button>更新</button>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <%= alt %>
+                        </p>
+                        <div class="my-noshow">
+                            <input type="text" value="<%= alt %>">
+                            <button>更新</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+                <% }) %>
         </div>
-        <% }) %>
+        <!-- 當前使用者頁面的使用者資料 -->
+        <div data-my-data="album" style="display: none;">
+            <%- JSON.stringify(album) %>
+        </div>
     </div>
-    <!-- 當前使用者頁面的使用者資料 -->
-    <div data-my-data="album" style="display: none;">
-        <%- JSON.stringify(album) %>
-    </div>
-</div>
-<!-- 引入 xss -->
-<script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
-<!-- 引入 Ajv -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.11.0/ajv7.min.js"
-    integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
-    crossorigin="anonymous" referrerpolicy="no-referrer">
-    </script>
+    <!-- 引入 xss -->
+    <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
+    <!-- 引入 Ajv -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.11.0/ajv7.min.js"
+        integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+        </script>
 
-<!-- JQ AXIOS BS5 -->
-<%- include('wedgets/cdn') %>
-<script type="module" defer>
-    //  初始化來自ejs傳入當前頁面所需的數據
-    import initData from '/js/initData.js'
-    //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
-    import initNavbar from '/js/navbar.js'
+    <!-- JQ AXIOS BS5 -->
+    <%- include('wedgets/cdn') %>
+        <script type="module" defer>
+            //  初始化來自ejs傳入當前頁面所需的數據
+            import initData from '/js/initData.js'
+            //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
+            import initNavbar from '/js/navbar.js'
 
-    try {
-        //  讀取中，遮蔽畫面
-        loading()
-        //  初始化ejs附帶的數據
-        let pageData = new initData()
-        //  初始化navbar數據
-        await pageData.init(initNavbar)
-        //  確認以上所有初始化已完成，取得彙整後數據
-        let { album } = await pageData.check()
-        //  初始化頁面功能，並傳入上面彙整後的初始化數據
-        await initPage(album)
-        //  讀取完成，解除遮蔽
-        loadEnd()
-    } catch (e) {
-        console.log('@page error => ', e)
-    }
-
-    async function initPage(data) {
-        //  公用變量
-        let { blog, imgs, map_imgs } = data
-
-        //  handle ---
-        //  照片名稱span，handle click => 顯示、聚焦改名表格
-        $('li[data-my-photo] > span').click(showAndFocusChangeImgAlt)
-        //  照片改名表格，handle focus => 游標定位在表格最末位，確認可否更新
-        $(`[data-my-photo] input`).on('focus', focusChangeImgAlt)
-        //  照片改名表格，handle input => 確認可否更新
-        $(`[data-my-photo] input`).on('input', (e) => {
-            //  確認照片名稱是否為新
-            toggleUpdateBtn($(e.target))
-        })
-        //  照片改名表格，handle blur => 確認是否放棄更新
-        // $(`[data-my-photo] input`).on('blur', cancelChangeImgAlt)
-        //  照片名稱更新鈕，handle click => 送出請求
-        $(`[data-my-photo] button`).on('click', updateImgAlt)
-
-        //  handle -----
-        //  請求更新imgAlt
-        async function updateImgAlt(e) {
-            let $btn = $(e.target)
-            let $container = $btn.parents('li')
-            let alt = $btn.prev().val()
-            let blogImgAlt_id = $container.attr('data-my-photo') * 1
-            let payload = { blogImgAlt_id, alt, blog_id: blog.id }
-            // 發出請求
-            let { data: { errno, data, msg } } = await axios.patch('/api/blog/blogImgAlt', payload)
-            if (errno) {    //  更新失敗
-                console.log('@相片改名失敗')
-                return
+            try {
+                //  讀取中，遮蔽畫面
+                loading()
+                //  初始化ejs附帶的數據
+                let pageData = new initData()
+                //  初始化navbar數據
+                await pageData.init(initNavbar)
+                //  確認以上所有初始化已完成，取得彙整後數據
+                let { album } = await pageData.check()
+                //  初始化頁面功能，並傳入上面彙整後的初始化數據
+                await initPage(album)
+                //  讀取完成，解除遮蔽
+                loadEnd()
+            } catch (e) {
+                console.log('@page error => ', e)
             }
-            //  更新成功
-            //  同步頁面數據
-            map_imgs.set(blogImgAlt_id, {
-                ...map_imgs.get(blogImgAlt_id), alt
-            })
-            //  同步畫面
-            $container.children('img').attr('alt', alt)
-            $container.children('span').text(alt).toggle()
-            $container.children('div').toggle()
-            $container.find('input[type=text]').val(alt)
-        }
-        //  確認是否放棄更新
-        async function cancelChangeImgAlt(e) {
-            let $el = $(e.target)
-            let $container = $el.parents('li')
-            let blogImgAlt_id = $container.attr('data-my-photo') * 1
-            let alt = map_imgs.get(blogImgAlt_id).alt
-            //  確認照片名稱是否為新
-            let isNewName = toggleUpdateBtn($(e.target))
-            if (!isNewName || confirm('放棄更新嗎?')) {
-                $container.find('input[type=text]').val(alt)
-                $container.children('span').toggle()
-                $container.children('div').toggle()
+
+            async function initPage(data) {
+                //  公用變量
+                let { blog, imgs, map_imgs } = data
+
+                //  handle ---
+                //  照片名稱span，handle click => 顯示、聚焦改名表格
+                $('li[data-my-photo] > span').click(showAndFocusChangeImgAlt)
+                //  照片改名表格，handle focus => 游標定位在表格最末位，確認可否更新
+                $(`[data-my-photo] input`).on('focus', focusChangeImgAlt)
+                //  照片改名表格，handle input => 確認可否更新
+                $(`[data-my-photo] input`).on('input', (e) => {
+                    //  確認照片名稱是否為新
+                    toggleUpdateBtn($(e.target))
+                })
+                //  照片改名表格，handle blur => 確認是否放棄更新
+                // $(`[data-my-photo] input`).on('blur', cancelChangeImgAlt)
+                //  照片名稱更新鈕，handle click => 送出請求
+                $(`[data-my-photo] button`).on('click', updateImgAlt)
+
+                //  handle -----
+                //  請求更新imgAlt
+                async function updateImgAlt(e) {
+                    let $btn = $(e.target)
+                    let $container = $btn.parents('li')
+                    let alt = $btn.prev().val()
+                    let blogImgAlt_id = $container.attr('data-my-photo') * 1
+                    let payload = { blogImgAlt_id, alt, blog_id: blog.id }
+                    // 發出請求
+                    let { data: { errno, data, msg } } = await axios.patch('/api/blog/blogImgAlt', payload)
+                    if (errno) {    //  更新失敗
+                        console.log('@相片改名失敗')
+                        return
+                    }
+                    //  更新成功
+                    //  同步頁面數據
+                    map_imgs.set(blogImgAlt_id, {
+                        ...map_imgs.get(blogImgAlt_id), alt
+                    })
+                    //  同步畫面
+                    $container.children('img').attr('alt', alt)
+                    $container.children('span').text(alt).toggle()
+                    $container.children('div').toggle()
+                    $container.find('input[type=text]').val(alt)
+                }
+                //  確認是否放棄更新
+                async function cancelChangeImgAlt(e) {
+                    let $el = $(e.target)
+                    let $container = $el.parents('li')
+                    let blogImgAlt_id = $container.attr('data-my-photo') * 1
+                    let alt = map_imgs.get(blogImgAlt_id).alt
+                    //  確認照片名稱是否為新
+                    let isNewName = toggleUpdateBtn($(e.target))
+                    if (!isNewName || confirm('放棄更新嗎?')) {
+                        $container.find('input[type=text]').val(alt)
+                        $container.children('span').toggle()
+                        $container.children('div').toggle()
+                    }
+                    return
+                }
+                //  游標定位在表格最末位，確認可否更新
+                function focusChangeImgAlt(e) {
+                    setTimeout(() => {
+                        let $el = $(e.target)
+                        $el[0].selectionStart = $el.val().length
+                        //  確認照片名稱是否為新
+                        toggleUpdateBtn($el)
+                    }, 0)
+                }
+                //  顯示、聚焦改名表格
+                function showAndFocusChangeImgAlt(e) {
+                    let $span = $(e.target)
+                    let $container = $span.parent()
+                    $span.toggle().next().toggle().children('input').focus()
+                }
+                //  utils -----
+                //  確認照片名稱是否為新，已辨別是否能夠點擊更新鈕
+                function toggleUpdateBtn($el) {
+                    let tagName = $el[0].tagName
+                    let $target = tagName === 'li' ? $el : $el.parents('li[data-my-photo]')
+                    let alt_id = $target.attr('data-my-photo') * 1
+                    let $btn = $target.find('button')
+                    let { alt } = map_imgs.get(alt_id)
+                    let ok = $el.val().trim() !== alt
+                    $btn.prop('disabled', !ok)
+                    return ok
+                }
             }
-            return
-        }
-        //  游標定位在表格最末位，確認可否更新
-        function focusChangeImgAlt(e) {
-            setTimeout(() => {
-                let $el = $(e.target)
-                $el[0].selectionStart = $el.val().length
-                //  確認照片名稱是否為新
-                toggleUpdateBtn($el)
-            }, 0)
-        }
-        //  顯示、聚焦改名表格
-        function showAndFocusChangeImgAlt(e) {
-            let $span = $(e.target)
-            let $container = $span.parent()
-            $span.toggle().next().toggle().children('input').focus()
-        }
-        //  utils -----
-        //  確認照片名稱是否為新，已辨別是否能夠點擊更新鈕
-        function toggleUpdateBtn($el) {
-            let tagName = $el[0].tagName
-            let $target = tagName === 'li' ? $el : $el.parents('li[data-my-photo]')
-            let alt_id = $target.attr('data-my-photo') * 1
-            let $btn = $target.find('button')
-            let { alt } = map_imgs.get(alt_id)
-            let ok = $el.val().trim() !== alt
-            $btn.prop('disabled', !ok)
-            return ok
-        }
-    }
 
-    //  utils ------
-    //  讀取畫面，遮蔽效果
-    function loading(editorList = []) {
-        $('#backdrop').addClass('my-show')
-        $('input').attr('disabled', true)
-        console.log('@editorList 隱藏=> ', editorList)
-        editorList.forEach(editor => editor.disable())
-        console.log('隱藏完成')
-    }
-    //  讀取完成，取消遮蔽
-    function loadEnd(editorList = []) {
-        console.log('開始執行顯示')
-        $('#backdrop').removeClass('my-show')
-        $('input').removeAttr('disabled')
-        console.log('@editorList 顯示=> ', editorList)
-        editorList.forEach(editor => editor.enable())
-        console.log('顯示完成')
-    }
+            //  utils ------
+            //  讀取畫面，遮蔽效果
+            function loading(editorList = []) {
+                $('#backdrop').addClass('my-show')
+                $('input').attr('disabled', true)
+                console.log('@editorList 隱藏=> ', editorList)
+                editorList.forEach(editor => editor.disable())
+                console.log('隱藏完成')
+            }
+            //  讀取完成，取消遮蔽
+            function loadEnd(editorList = []) {
+                console.log('開始執行顯示')
+                $('#backdrop').removeClass('my-show')
+                $('input').removeAttr('disabled')
+                console.log('@editorList 顯示=> ', editorList)
+                editorList.forEach(editor => editor.enable())
+                console.log('顯示完成')
+            }
 
-</script>
-</body>
+        </script>
+        </body>
 
-</html>
+        </html>
