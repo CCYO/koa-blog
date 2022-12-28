@@ -3,9 +3,9 @@
 
 
     <div class="container">
-        <div class="row card-group">
+        <div class="row">
             <% album.imgs.forEach( ({id, img_id, blogImg_id, url, alt})=> { %>
-                <div class="card col-md-2 col-4" data-my-photo="<%= id %>">
+                <div class="card col-4 col-md-2" data-my-photo="<%= id %>">
                     <div class="ratio ratio-1x1">
                         <img class="card-img-top" src="<%= url %>?blogImgAlt=<%= id %>" alt="<%= alt %>" />
                     </div>
