@@ -56,7 +56,7 @@
             <div class="container-comment-list">
                 <div class="comment-list">
                     <% if(blog.comments.length){ %>
-                    <%- include('./wedgets/common/reply-list', { comments: blog.comments }) %>
+                    <%- include('./wedgets/reply-list', { comments: blog.comments }) %>
                     <% } %>
                 </div>
             </div>
@@ -299,7 +299,7 @@
             //  確認是否為文章預覽頁面
             function isPreview() {
                 let reg = /preview=(?<preview>.+)&?/
-                let query = window.location.query
+                let query = window.location.search
                 let res = reg.exec(query)
                 console.log('@res => ', res)
                 let preview = res ? res.groups.preview : false
