@@ -39,10 +39,6 @@
         margin-bottom: .5rem;
     }
 
-    .blogList>* {
-        padding: .5rem
-    }
-
     .blogList-header {
         display: flex;
         justify-content: space-between;
@@ -134,8 +130,8 @@
                     </div>
                 </div>
 
-                <div class="blogList bg-light p-2" data-my-blog-key="show">
-                    <div class="blogList-header">
+                <div class="card blogList bg-light" data-my-blog-key="show">
+                    <div class="card-header blogList-header">
                         <h2>已發布的BLOG</h2>
                         <button type="button"
                             class="btn btn-sm btn-outline-danger <%= blogList.show.length? 'my-show' : 'my-noshow'%>"
