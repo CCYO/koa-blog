@@ -2,63 +2,76 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= locals.title || blog.title %></title>
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <!-- BS5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
-  <!-- MY CSS -->
-  <link rel="stylesheet" href="/css/basic.css" />
-  <link rel="stylesheet" href="/css/navbar.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
-  <style>
-      @media (max-width: 575.98px) { 
-          body {
-            --bs-body-font-size: 0.6rem;
-          }
-          .dropdown-menu {
-              font-size: 0.6rem;
-          }
-      }
-  </style>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= locals.title || blog.title %></title>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <!-- BS5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <!-- MY CSS -->
+    <link rel="stylesheet" href="/css/basic.css" />
+    <link rel="stylesheet" href="/css/navbar.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
+    <style>
+        .dropdown-menu {
+            min-width: 40vw;
+        }
+        @media (max-width: 576px) {
+            body {
+                --bs-body-font-size: 0.6rem;
+            }
+
+            .dropdown-menu {
+                font-size: 0.6rem;
+                max-width: 70vw;
+            }
+        }
+
+        @media (min-width: 577px) {
+            .dropdown-menu {
+                max-width: 40vw;
+            }
+        }
+    </style>
 </head>
 
 <body>
-<nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
-  <div class="container-fluid flex-nowrap">
-      <a class="navbar-brand" href="/square">KOA-BLOG</a>
+    <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+        <div class="container-fluid flex-nowrap">
+            <a class="navbar-brand" href="/square">KOA-BLOG</a>
 
-      <ul class="nav nav-pills ms-auto order-0 order-md-0 flex-grow-1 justify-content-end me-3" id="my-navbar-header-register">
-          
-      </ul>
-      <!-- 收合鈕 navbar-toggler -->
-      <button class="navbar-toggler order-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
-          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-      </button>
-      <!-- 收合內容 navbar-collapse -->
-      <div class="offcanvas offcanvas-start order-md-1 flex-grow-0" id="offcanvasNavbar">
-          <div class="offcanvas-header">
-              <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
-              <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
-                  aria-label="Close"></button>
-          </div>
+            <ul class="nav nav-pills ms-auto order-0 order-md-0 flex-grow-1 justify-content-end me-3"
+                id="my-navbar-header-register">
 
-          <!-- 表單列 -->
-          <div class="offcanvas-body">
-              <ul class="navbar-nav w-100">
-                  <!-- 表單項 -->
-                  <li class="nav-item">
-                      <a class="nav-link" href="/square">Home</a>
-                  </li>
-              </ul>
-          </div>
-      </div>
-  </div>
-</nav>
+            </ul>
+            <!-- 收合鈕 navbar-toggler -->
+            <button class="navbar-toggler order-1" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#offcanvasNavbar" aria-controls="navbarNav" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- 收合內容 navbar-collapse -->
+            <div class="offcanvas offcanvas-start order-md-1 flex-grow-0" id="offcanvasNavbar">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                        aria-label="Close"></button>
+                </div>
+
+                <!-- 表單列 -->
+                <div class="offcanvas-body">
+                    <ul class="navbar-nav w-100">
+                        <!-- 表單項 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/square">Home</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>

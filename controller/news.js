@@ -84,7 +84,7 @@ async function readMore({id, excepts, newsList}) {
     let { newsList: { unconfirm, confirm} } = res
     if(unconfirm.length + confirm.length === 0){
         console.log('@ 純粹作為最後一次readMore確認')
-        cache.news.push(id)
+        // cache.news.push(id)
     }
 
     return new SuccModel(res, cache)

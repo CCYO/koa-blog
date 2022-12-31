@@ -7,8 +7,9 @@ body {
     background: rgb(216, 62, 15);
 }
 
-.container {
-    background: #FFF;
+.main, .footer {
+    background: rgb(219, 159, 159);
+    padding-top: 1rem;
     position  : relative;
     top       : 4rem;
 }

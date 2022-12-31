@@ -1,22 +1,22 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
 <%- include('wedgets/header') %>
 
-<div class="container p-3">
+<div class="container py-3">
     <h1 class="mb-3"><%= title %>的照片列表</h1>
-    <div class="row">
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-1">
         <% album.imgs.forEach( ({id, img_id, blogImg_id, url, alt})=> { %>
-        <div class="col-4 col-md-2 g-1">
-            <div class="card" data-my-photo="<%= id %>">
-                <div class="ratio ratio-1x1">
+        <div>
+            <div class="card border-dark" data-my-photo="<%= id %>">
+                <div class="ratio ratio-1x1 border-bottom border-secondary">
                     <img class="card-img-top" src="<%= url %>?blogImgAlt=<%= id %>" alt="<%= alt %>" />
                 </div>
                 <div class="card-body">
-                    <p class="card-text text-truncate">
+                    <p class="card-text text-truncate mb-0" style="height: 2rem; line-height: 2rem;">
                         <%= alt %>
                     </p>
-                    <div class="my-noshow">
+                    <div class="my-noshow" style="height: 2rem">
                         <input class="inputCardName w-100" type="text" value="<%= alt %>">
-                        <button>更新</button>
+                        <button class="col-auto">更新</button>
                     </div>
                 </div>
             </div>
@@ -102,7 +102,7 @@
             //  同步畫面
             $container.children('img').attr('alt', alt)
             $container.find('.card-text').text(alt).toggle()
-            $container.find('.card-body > div').toggle()
+            $container.find('.card-body > div').removeClass('d-flex')
             $container.find('input[type=text]').val(alt)
         }
         //  確認是否放棄更新
@@ -111,9 +111,13 @@
             let $container = $el.parents('[data-my-photo]')
             let blogImgAlt_id = $container.attr('data-my-photo') * 1
             let { alt } = map_imgs.get(blogImgAlt_id)
+            console.log(alt, $el.val().trim())
             if(alt === $el.val().trim()){
-                $el.parent().toggle()
+                // $el.parent().removeClass('d-flex invalide')
+                // $el.parent().toggle()
                 $container.find('.card-text').toggle()
+                console.log($container.find('.d-flex'))
+                $container.find('.d-flex').toggleClass('d-flex')
             }
             return
         }
@@ -130,7 +134,7 @@
         function showAndFocusChangeImgAlt(e) {
             let $cardText = $(e.target)
             let $container = $cardText.parents('[data-my-photo]')
-            $cardText.toggle().next().toggle().children('input').focus()
+            $cardText.toggle().next().addClass('d-flex').children('.inputCardName').focus()
         }
         //  utils -----
         //  確認照片名稱是否為新，已辨別是否能夠點擊更新鈕

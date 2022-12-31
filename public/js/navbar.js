@@ -257,10 +257,10 @@ async function initNavbar() {
                         return `
                 <!-- 新通知 of fans -->
                 <li class="dropdown-item position-relative news-item">
-                    <a href="/other/${fans.id}${query}" class="stretched-link">
+                    <a href="/other/${fans.id}${query}" class="stretched-link text-wrap ">
                         <div>
                             <span>${fans.nickname}追蹤你囉！</span><br>
-                            <span>${timestamp}</span>
+                            <p class='text-end mb-0'>${timestamp}</span>
                         </div>
                     </a>
                 </li>`
@@ -270,11 +270,11 @@ async function initNavbar() {
                         let query = confirm ? '' : `?anchorType=2&anchorId=${id}`
                         return `
             <li class="dropdown-item  position-relative news-item">
-                <a href="/blog/${blog.id}${query}" class="stretched-link">
+                <a href="/blog/${blog.id}${query}" class="stretched-link text-wrap">
                     <div>
                         <span>${blog.author.nickname} 有新文章唷！</span><br>
                         <span>- ${blog.title}-</span><br>
-                        <span>${timestamp}</span>
+                        <p class='text-end mb-0'>${timestamp}</span>
                     </div>
                 </a>
             </li>
@@ -306,10 +306,10 @@ async function initNavbar() {
                         let query = confirm ? '' : `?anchorType=3&anchorId=${id}`
                         return `
             <li class="dropdown-item  position-relative news-item">
-                <a href="/blog/${comment.blog.id}${query}#comment_${comment.id}" class="stretched-link">
+                <a href="/blog/${comment.blog.id}${query}#comment_${comment.id}" class="stretched-link text-wrap">
                     <div>
                         <span>${nicknames}在${who}的文章「${comment.blog.title}」留言囉！</span><br>
-                        <span>${timestamp}</span>
+                        <p class='text-end mb-0'>${timestamp}</span>
                     </div>
                 </a>
             </li>`
