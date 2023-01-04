@@ -2,7 +2,6 @@ async function initNavbar() {
     try {
         // 取得登入者數據
         let data = await getNews()
-        // if (data.me.id) { //  登入狀態
         //  初始化通知列表相關功能
         await initNews(data)
         // }
@@ -15,7 +14,6 @@ async function initNavbar() {
     async function initNews(data) {
         //  初始化渲染  ------
         //  渲染基本navBar
-        // $('#my-navbar-header-register').html(template_nav(data.me.id))
         template_nav(data.me.id)
         //  若未登入，則不需要初始化功能
         if (!data.me.id) {
@@ -49,37 +47,40 @@ async function initNavbar() {
         */
         let pageData = data
         //  下拉選單鈕、通知鈕
-        let $newsDropdown = $('#newsDropdown')
-        //  通知比數span
+        // let $newsDropdown = $('#newsDropdown')
+        //  新通知筆數的提醒
         let $newsCount = $('.news-count')
         //  下拉選單內 的 readMore鈕                                                                                                                                                                                                
         let $readMore = $('#readMore')
         //  下拉選單內 的 沒有更多提醒
         let $noNews = $('#noNews')
-
+        //  渲染並序列化news數據(初次渲染)
         pageData.news = renderAndSerializeNewsData(pageData.news, true)
 
-        //  更新unconfirm通知數目
-        $newsDropdown.one('click', unconfirmNewsCount)
+        //  更新新通知筆數的提醒
+        // $newsDropdown.one('click', unconfirmNewsCount)
         //  讀取更多
-        $readMore.on('click', moreNewsForReadMore)
+        $readMore.on('click', moreNews)
         //  登出功能
         $('#logout').click(logout)
 
         //  handle -----
-        //  新通知數量
-        function unconfirmNewsCount() {
-            let { num, newsList } = pageData.news
-            let count = num.unconfirm - newsList.unconfirm.num
-            show($newsCount, count).text(count || '')
-        }
-        //  更多通知
-        async function moreNewsForReadMore() {
+        //  請求更多通知
+        async function moreNews() {
             //  取news
             let news = await getNews(pageData.news)
             pageData.news = renderAndSerializeNewsData(news)
             return
         }
+        //  更新新通知筆數的提醒
+        // function unconfirmNewsCount() {
+        //     //  num通知總數統計，newsList前端目前撈取到的通知統計
+        //     let { num, newsList } = pageData.news
+        //     //  前端尚未撈取到的新通知數量 = 通知總數內的新通知總數 - 前端目前撈取到的新通知數量
+        //     let count = num.unconfirm - newsList.unconfirm.num
+        //     //  依count決定是否顯示新通知筆數的提醒
+        //     show($newsCount, count).text(count || '')
+        // }
 
         //  功能 -----
         //  登出
@@ -100,7 +101,8 @@ async function initNavbar() {
         //  渲染 + 序列化 news
         function renderAndSerializeNewsData(news, firstRender = false) {
             //  初次渲染news
-            render_news(news, firstRender)
+            //  使用未序列化的newsData進行渲染
+            renderByDeserializeNewsData(news, firstRender)
             //  渲染readMore
             render_readMore(news)
             //  序列化 news 數據
@@ -108,8 +110,7 @@ async function initNavbar() {
 
             //  序列化 news 數據
             function serialization_news(newsData) {
-                let { newsList } = newsData
-                newsList = serialization_newsList(newsList)
+                let newsList = serialization_newsList(newsData.newsList)
                 let res = { ...newsData, newsList }
                 let excepts = init_excepts(newsList)
                 if (!pageData.news.excepts) {   //  初次渲染
@@ -132,9 +133,9 @@ async function initNavbar() {
                 //  格式化通知數據
                 function serialization_newsList(newsList) {
                     let initNews = { confirm: {}, unconfirm: {} }
-                    for (let key in newsList) {
-                        initNews[key] = { people: [], blogs: [], comments: [], num: 0 }
-                        newsList[key].reduce((init, { type, id }) => {
+                    for (let isConfirm in newsList) {
+                        initNews[isConfirm] = { people: [], blogs: [], comments: [], num: 0 }
+                        newsList[isConfirm].reduce((init, { type, id }) => {
                             switch (type) {
                                 case 1:
                                     init['people'].push(id)
@@ -148,7 +149,7 @@ async function initNavbar() {
                             }
                             init.num++
                             return init
-                        }, initNews[key])
+                        }, initNews[isConfirm])
                     }
                     /* newsList: {
                         unconfirm: { 
@@ -173,14 +174,14 @@ async function initNavbar() {
                         },
                         confirm: { ... }
                     }*/
-                    for (let prop in newsList) {
-                        let map = new Map(Object.entries(newsList[prop]))
-                        map.forEach((list, k) => {
-                            if (k === 'num') {
+                    for (let isConfirm in newsList) {
+                        let map = new Map(Object.entries(newsList[isConfirm]))
+                        map.forEach((list, type) => {
+                            if (type === 'num') {
                                 res.num += list
                                 return
                             }
-                            res[k] = [...res[k], ...list]
+                            res[type] = [...res[type], ...list]
                         })
                     }
                     // { people: [id, ...], blogs: [id, ...], comments: [id, ...], num }
@@ -189,72 +190,78 @@ async function initNavbar() {
             }
             //  渲染 readMore鈕
             function render_readMore({ num, newsList }) {
-                let excepts = pageData.news.excepts && pageData.news.excepts.num || 0
-                //  DB_news_num - 此次響應unconfirm - 此次響應confirm
-                let count = num.total - excepts
-                let more = count !== 0 || newsList.unconfirm.length !== 0
+                //  前端尚未撈取到的通知數 = 通知總筆數 - 前端目前撈取到的新通知數量
+                let count = num.total - pageData.news.excepts.num
+                //  count > 0 || 此次撈取的newsData含有新通知
+                let more = count > 0 || newsList.unconfirm.length !== 0
                 show($readMore, more)
                 show($noNews, !more)
             }
-            //  渲染通知數據
-            function render_news(news, firstRender) {
+            //  使用未序列化的newsData進行渲染
+            function renderByDeserializeNewsData(news, firstRender) {
+                //  num通知總數統計，newsList前端目前撈取到的通知統計
                 let { newsList, num } = news
-                //  渲染新通知數目
-                if (firstRender) {    //初次渲染
-                    let x = show($newsCount, num.unconfirm).text(num.unconfirm || '')
-                } else {  //readMore觸發的渲染
-                    //  DB_unconfirm - 此次 newsList_unconfirm
-                    let count = num.unconfirm - newsList.unconfirm.length
-                    show($newsCount, count).text(count || '')
-                }
-
+                //  渲染新通知筆數的提醒
+                renderUnconfirmNewsCount(newsList, num, firstRender)
                 //  渲染通知列表
-                /*
-                Map {
-                        'unconfirm' => [ { type, id, timestamp, confirm, fans||blog||comment }, ... ]
-                        'confirm' => [...]
-                }*/
-                let map = new Map(Object.entries(newsList))
-                //  list 代表 unconfirmList | confirmList，key 代表 'unconfirm' | 'confirm'
-                map.forEach((list, key) => {
-                    //  通知列表中，對應的title
-                    let $title = $(`#${key}-news-title`)
-                    if (!list.length) { //  list 沒有內容
-                        firstRender && show($title, false) //  初渲染，則隱藏title
-                    } else {    //  若 list 有內容
-                        $title.is(':hidden') && show($title)    //  非初次渲染，若title隱藏，則讓其顯示
-                    }
-                    //  生成 list 的 html
-                    let html_list = template_list(list)
-                    //  對應此通知分纇的item分隔線
-                    let hr = $(`[data-my-hr=${key}-news-hr]`)
-                    if (!hr.length) {   //  無分隔線，代表此纇list為首次渲染
-                        //  渲染在title後方
-                        $title.after(html_list)
-                    } else {    //  有分隔線，代表此纇list非首次渲染
-                        //  在最後一個此纇通知的後方加入item
-                        hr.last().after(html_list)
-                    }
-                })
-
-                function template_list(list) {
-                    return list.reduce((init, cur) => {
-                        let type = cur.type
-                        if (type === 1) {
-                            init += template_fans(cur)
-                        } else if (type === 2) {
-                            init += template_blog(cur)
-                        } else {
-                            init += template_comment(cur)
+                renderNewList(newsList)
+                return
+                //  渲染通知列表
+                function renderNewList(newsList) {
+                    /*  將DeserializeNewsData.newsList 以
+                        key 為 confirm 與 unconfir
+                        val 為 newsItem
+                        進行 map化
+                        Map {
+                            'unconfirm' => [ { type, id, timestamp, confirm, fans||blog||comment }, ... ]
+                            'confirm' => [...]
                         }
-                        let hr = cur.confirm ? `<li data-my-hr="confirm-news-hr">` : `<li data-my-hr="unconfirm-news-hr">`
-                        hr += `<hr class="dropdown-divider"></li>`
-                        return init += hr
-                    }, '')
+                    */
+                    let map = new Map(Object.entries(newsList))
+                    //  針對通知列表進行渲染
+                    //  list 代表 newsItemList，isConfirm 代表 'unconfirm' | 'confirm'
+                    map.forEach((list, isConfirm) => {
+                        //  通知列表內的相應title
+                        let $title = $(`#${isConfirm}-news-title`)
+                        //  判斷newsItemList是否有內容
+                        if (!list.length) { //  newsItemList 沒有內容
+                            firstRender && show($title, false) //  若初渲染，則隱藏title
+                            return
+                        }
+                        //  newsItemList 有內容
+                        //  若title隱藏，則讓其顯示
+                        $title.is(':hidden') && show($title)
+                        //  生成通知列表內的相應html
+                        let htmlStr = template_list(list)
+                        //  相應此通知列表的item分隔線
+                        let hr = $(`[data-my-hr=${isConfirm}-news-hr]`)
+                        if (!hr.length) {   //  無相應的分隔線，代表相應的通知是首次渲染
+                            //  渲染在相應title的後方
+                            $title.after(htmlStr)
+                        } else {    //  有相應的分隔線，代表相應的通知非首次渲染
+                            //  渲染在相應通知列的後方
+                            hr.last().after(htmlStr)
+                        }
+                    })
+                    //  生成通知列表內的相應html
+                    function template_list(newsItemList) {
+                        return newsItemList.reduce((init, newsItem) => {
+                            let type = newsItem.type
+                            if (type === 1) {
+                                init += template_fans(newsItem)
+                            } else if (type === 2) {
+                                init += template_blog(newsItem)
+                            } else {
+                                init += template_comment(newsItem)
+                            }
+                            let hr = newsItem.confirm ? `<li data-my-hr="confirm-news-hr">` : `<li data-my-hr="unconfirm-news-hr">`
+                            hr += `<hr class="dropdown-divider"></li>`
+                            return init += hr
+                        }, '')
 
-                    function template_fans({ confirm, id, fans, timestamp }) {
-                        let query = confirm ? '' : `?anchorType=1&anchorId=${id}`
-                        return `
+                        function template_fans({ confirm, id, fans, timestamp }) {
+                            let query = confirm ? '' : `?anchorType=1&anchorId=${id}`
+                            return `
                 <!-- 新通知 of fans -->
                 <li class="dropdown-item position-relative news-item">
                     <a href="/other/${fans.id}${query}" class="stretched-link text-wrap ">
@@ -264,11 +271,11 @@ async function initNavbar() {
                         </div>
                     </a>
                 </li>`
-                    }
+                        }
 
-                    function template_blog({ confirm, id, blog, timestamp }) {
-                        let query = confirm ? '' : `?anchorType=2&anchorId=${id}`
-                        return `
+                        function template_blog({ confirm, id, blog, timestamp }) {
+                            let query = confirm ? '' : `?anchorType=2&anchorId=${id}`
+                            return `
             <li class="dropdown-item  position-relative news-item">
                 <a href="/blog/${blog.id}${query}" class="stretched-link text-wrap">
                     <div>
@@ -279,32 +286,32 @@ async function initNavbar() {
                 </a>
             </li>
             `
-                    }
-
-                    function template_comment({ confirm, id, comment, timestamp }) {
-                        let { others } = comment
-                        let otherNotIncludeMe = []
-                        if (others.length) {
-                            otherNotIncludeMe = new Set()
-                            others.reduce((initVal, other) => {
-                                if (other.user.id !== pageData.me.id) {
-                                    otherNotIncludeMe.add(other.user.nickname)
-                                }
-                                return initVal
-                            }, otherNotIncludeMe)
-                            otherNotIncludeMe = [...otherNotIncludeMe]
                         }
-                        let count = otherNotIncludeMe.length
-                        let nicknames =
-                            count > 1 ? otherNotIncludeMe.slice(0, 2).join(',') + `${count > 2 ? `與其他${count - 2}人` : ''}` + `，都` :
-                                count > 0 ? otherNotIncludeMe.join(',') :
-                                    comment.user.nickname
 
-                        let who =
-                            count > 1 && comment.blog.author.id === pageData.me.id ? '你' :
-                                comment.blog.author.id === comment.user.id ? '自己' : comment.blog.author.nickname
-                        let query = confirm ? '' : `?anchorType=3&anchorId=${id}`
-                        return `
+                        function template_comment({ confirm, id, comment, timestamp }) {
+                            let { others } = comment
+                            let otherNotIncludeMe = []
+                            if (others.length) {
+                                otherNotIncludeMe = new Set()
+                                others.reduce((initVal, other) => {
+                                    if (other.user.id !== pageData.me.id) {
+                                        otherNotIncludeMe.add(other.user.nickname)
+                                    }
+                                    return initVal
+                                }, otherNotIncludeMe)
+                                otherNotIncludeMe = [...otherNotIncludeMe]
+                            }
+                            let count = otherNotIncludeMe.length
+                            let nicknames =
+                                count > 1 ? otherNotIncludeMe.slice(0, 2).join(',') + `${count > 2 ? `與其他${count - 2}人` : ''}` + `，都` :
+                                    count > 0 ? otherNotIncludeMe.join(',') :
+                                        comment.user.nickname
+
+                            let who =
+                                count > 1 && comment.blog.author.id === pageData.me.id ? '你' :
+                                    comment.blog.author.id === comment.user.id ? '自己' : comment.blog.author.nickname
+                            let query = confirm ? '' : `?anchorType=3&anchorId=${id}`
+                            return `
             <li class="dropdown-item  position-relative news-item">
                 <a href="/blog/${comment.blog.id}${query}#comment_${comment.id}" class="stretched-link text-wrap">
                     <div>
@@ -313,7 +320,19 @@ async function initNavbar() {
                     </div>
                 </a>
             </li>`
+                        }
                     }
+                }
+                //  渲染新通知筆數的提醒
+                function renderUnconfirmNewsCount(newsList, num, firstRender) {
+                    //  計算前端尚未撈取到的新通知筆數
+                    let count = firstRender ?
+                        //  初次請求news
+                        num.unconfirm :
+                        //  非初次請求news，通知總數內的新通知總數 - 前端目前撈取到的新通知數量
+                        num.unconfirm - newsList.unconfirm.length
+                    //  渲染新通知筆數的提醒
+                    show($newsCount, count).text(count || '')
                 }
             }
         }
@@ -364,11 +383,11 @@ async function initNavbar() {
                 `
                 $('#my-navbar-header-register').html(template_outOffcanvas)
                 $('.offcanvas-body').html(template_inOffcanvas)
-                if(pathname === 'self'){
+                if (pathname === 'self') {
                     $(`.nav-link[href="/self"]`).addClass('active')
-                }else if(pathname === 'setting'){
+                } else if (pathname === 'setting') {
                     $(`.nav-link[href="/setting"]`).addClass('active')
-                }else if(albumList){
+                } else if (albumList) {
                     $(`.nav-link[href^="/album"]`).addClass('active')
                 }
             } else {
@@ -388,8 +407,8 @@ async function initNavbar() {
                 //  摺疊nav始終盤排前頭（未登入狀態僅會有Home）
                 $('.offcanvas').removeClass('order-1 order-md-1').addClass('order-0')
             }
-
-            if(pathname === 'square'){
+            //  廣場頁active
+            if (pathname === 'square') {
                 $(`.nav-link[href="/square"]`).addClass('active')
             }
         }
