@@ -371,7 +371,8 @@ async function initNavbar() {
                 }else if(albumList){
                     $(`.nav-link[href^="/album"]`).addClass('active')
                 }
-            } else {               
+            } else {
+                //  未登入
                 let template_outOffcanvas = `
                 <li class="nav-item">
                     <a class="nav-link nav-tab ${pathname === 'register' ? 'active' : ''}" href="/register" data-my-tab="#register">註冊</a>
@@ -380,7 +381,14 @@ async function initNavbar() {
                     <a class="nav-link nav-tab ${pathname === 'login' ? 'active' : ''}" href="/login" data-my-tab="#login">登入</a>
                 </li>`
                 $('#my-navbar-header-register').html(template_outOffcanvas)
+                //  navbar始終展開
+                $('.navbar').removeClass('navbar-expand-sm').addClass('navbar-expand')
+                //  基本nav始終排後面（未登入狀態僅會有 登入/註冊）
+                $('.nav').removeClass('order-0 order-md-0').addClass('order-1')
+                //  摺疊nav始終盤排前頭（未登入狀態僅會有Home）
+                $('.offcanvas').removeClass('order-1 order-md-1').addClass('order-0')
             }
+
             if(pathname === 'square'){
                 $(`.nav-link[href="/square"]`).addClass('active')
             }
