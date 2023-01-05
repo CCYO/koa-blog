@@ -380,27 +380,42 @@
                 let $btn_cancelFollow = $('#cancelFollow')
                 initScroll()
                 function initScroll() {
-                    if(window.ss){
-                        console.log('觸發刪除')
-                        delete window.ss
-                    }
+
+                    // console.log('重置')
+                    window._iscroll = {}
+
                     // 調整粉絲、追蹤列表
                     for (let list of ['#fansList', '#idolList']) {
-                        let $itemList = $(`${list} > ul li`)
-                        if (!$itemList.length) {
-                            continue
-                        }
-                        let item_w = $itemList.first().outerWidth(true)
-                        let width = item_w * $itemList.length
-                        $(`${list} > ul`).width(width)
+                        // console.log('go')
+                        // let $div = $(`${list}`)
+                        // let $items = $(`${list} > ul li`)
+                        // if (!$items.length) {
+                        //     continue
+                        // }
+                        // console.log('gogo')
+                        // let div_w = $div.first().outerWidth()
+                        // let ul_w = $(`${list} > ul`).first().outerWidth()
+                        // // let items_w = $items.first().outerWidth(true) * $items.length
+                        // console.log(div_w, ul_w)
+                        // if (div_w >= ul_w) {
+                        //     continue
+                        // }
+                        // console.log('gogogo')
+                        // // $ul.width(items_w)
+                        // console.log(document.querySelector(list))
+                        window._iscroll[list] = BetterScroll.createBScroll(document.querySelector(list), {
+                            scrollX: true,
+                            scrollY: false,
+                            mouseWheel: true
+                        })
                     }
-                    window.ss = BetterScroll.createBScroll(document.getElementById('fansList'), {
-                        scrollX: true,
-                        scrollY: false,
-                        mouseWheel: true
-                    })
                 }
-                window.onresize = initScroll
+                // window.onresize = function(){
+                //     console.log('重置')
+                //     for (let list of ['#fansList', '#idolList']) {
+                //         window._iscroll[list].refresh()
+                //     }
+                // }
 
                 //  UI
                 if (!isSelf) {  //  非自己的頁面
