@@ -2,9 +2,9 @@ async function initNavbar() {
     try {
         // 取得登入者數據
         let data = await getNews()
+        console.log('initNavbar => ', data)
         //  初始化通知列表相關功能
         await initNews(data)
-        // }
         return data
     } catch (e) {
         throw e
@@ -14,25 +14,36 @@ async function initNavbar() {
     async function initNews(data) {
         //  初始化渲染  ------
         //  渲染基本navBar
-        template_nav(data.me.id)
+        template_nav(data.me)
         //  若未登入，則不需要初始化功能
-        if (!data.me.id) {
-            return
+        if (!data.me) {
+            return 
         }
 
         //  公用變量 ------
+        //  下拉選單鈕、通知鈕
+        // let $newsDropdown = $('#newsDropdown')
+        //  新通知筆數的提醒
+        let $newsCount = $('.news-count')
+        //  下拉選單內 的 readMore鈕                                                                                                                                                                                                
+        let $readMore = $('#readMore')
+        //  下拉選單內 的 沒有更多提醒
+        let $noNews = $('#noNews')
         /*  取得 news
         data: {
-            newsList: {
-                unconfirm: [
-                    { type, id, timestamp, confirm, fans: ... },
-                    { type, id, timestamp, confirm, blog: ... },
-                    { type, id, timestamp, confirm, comment: ... },
-                ... ],
-                confirm: [...]
+            news : {
+                newsList: {
+                    unconfirm: [
+                        { type, id, timestamp, confirm, fans: ... },
+                        { type, id, timestamp, confirm, blog: ... },
+                        { type, id, timestamp, confirm, comment: ... },
+                    ... ],
+                    confirm: [...]
+                },
+                num: { unconfirm, confirm, total },
+                limit
             },
-            num: { unconfirm, confirm, total },
-            limit
+            me: ...
         }
         ↓ initNews 之後
         data: {
@@ -46,19 +57,14 @@ async function initNavbar() {
         }
         */
         let pageData = data
-        //  下拉選單鈕、通知鈕
-        // let $newsDropdown = $('#newsDropdown')
-        //  新通知筆數的提醒
-        let $newsCount = $('.news-count')
-        //  下拉選單內 的 readMore鈕                                                                                                                                                                                                
-        let $readMore = $('#readMore')
-        //  下拉選單內 的 沒有更多提醒
-        let $noNews = $('#noNews')
+        //  賦予 pageData.news.excepts 預設值
+        pageData.news.excepts = { people: [], blogs: [], comments: [], num: 0 }
+        //  賦予 pageData.news.page 預設值
+        pageData.news.page = 0
+
         //  渲染並序列化news數據(初次渲染)
         pageData.news = renderAndSerializeNewsData(pageData.news, true)
 
-        //  更新新通知筆數的提醒
-        // $newsDropdown.one('click', unconfirmNewsCount)
         //  讀取更多
         $readMore.on('click', moreNews)
         //  登出功能
@@ -68,19 +74,10 @@ async function initNavbar() {
         //  請求更多通知
         async function moreNews() {
             //  取news
-            let news = await getNews(pageData.news)
+            let { news } = await getNews(pageData.news)
             pageData.news = renderAndSerializeNewsData(news)
             return
         }
-        //  更新新通知筆數的提醒
-        // function unconfirmNewsCount() {
-        //     //  num通知總數統計，newsList前端目前撈取到的通知統計
-        //     let { num, newsList } = pageData.news
-        //     //  前端尚未撈取到的新通知數量 = 通知總數內的新通知總數 - 前端目前撈取到的新通知數量
-        //     let count = num.unconfirm - newsList.unconfirm.num
-        //     //  依count決定是否顯示新通知筆數的提醒
-        //     show($newsCount, count).text(count || '')
-        // }
 
         //  功能 -----
         //  登出
@@ -113,9 +110,8 @@ async function initNavbar() {
                 let newsList = serialization_newsList(newsData.newsList)
                 let res = { ...newsData, newsList }
                 let excepts = init_excepts(newsList)
-                if (!pageData.news.excepts) {   //  初次渲染
+                if (firstRender) {   //  初次渲染
                     res.excepts = excepts
-                    res.page = 0
                 } else {  //  非初次渲染
                     // { people: [id, ...], blogs: [id, ...], comments: [id, ...], num }
                     for (let key in pageData.news.excepts) {
@@ -164,7 +160,7 @@ async function initNavbar() {
                 }
                 //  格式化要撇除的news（提供給後端使用）
                 function init_excepts(newsList) {
-                    let res = { people: [], blogs: [], comments: [], num: 0 }
+                    let { excepts } = pageData.news
                     /*newsList: {
                         unconfirm: { 
                             people: [ id, ... ],
@@ -178,14 +174,14 @@ async function initNavbar() {
                         let map = new Map(Object.entries(newsList[isConfirm]))
                         map.forEach((list, type) => {
                             if (type === 'num') {
-                                res.num += list
+                                excepts.num += list
                                 return
                             }
-                            res[type] = [...res[type], ...list]
+                            excepts[type] = [...excepts[type], ...list]
                         })
                     }
                     // { people: [id, ...], blogs: [id, ...], comments: [id, ...], num }
-                    return res
+                    return excepts
                 }
             }
             //  渲染 readMore鈕
@@ -194,6 +190,7 @@ async function initNavbar() {
                 let count = num.total - pageData.news.excepts.num
                 //  count > 0 || 此次撈取的newsData含有新通知
                 let more = count > 0 || newsList.unconfirm.length !== 0
+                console.log(num.total, '-', pageData.news.excepts.num, '=', count, more)
                 show($readMore, more)
                 show($noNews, !more)
             }
@@ -337,7 +334,8 @@ async function initNavbar() {
             }
         }
         //  生成 navbar template
-        function template_nav(user_id) {
+        function template_nav(me = {}) {
+            let user_id = me.id ? me.id : undefined
             let reg_pathname = /^\/(?<pathname>\w+)\/?(?<albumList>list)?/
             let { pathname, albumList } = reg_pathname.exec(location.pathname).groups
             if (user_id) {
@@ -423,19 +421,18 @@ async function initNavbar() {
     //  請求 news
     async function getNews(news) {
         let opts = {
-            newsList: { num: 0 },
+            newsListNeedToConfirm: { num: 0 },
             page: 0,
         }
         if (news) {   //  非初次渲染
-            let { newsList: { unconfirm: newsList }, page, excepts } = news
+            let { newsList: { unconfirm: newsListNeedToConfirm }, page, excepts } = news
             opts = {
-                ...opts,
-                newsList,
+                newsListNeedToConfirm,
                 page: ++page,
                 excepts
             }
         }
-        let { data: { errno, data, msg } } = await axios.post(`/api/news`, opts)
+        let { data: { errno, data } } = await axios.post(`/api/news`, opts)
         if (!errno) { //  登入狀態，且成功取得數據
             return data
         }

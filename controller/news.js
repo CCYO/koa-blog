@@ -32,35 +32,33 @@ const {
  * @param {number} userId 
  * @returns {*} resModel
  */
-async function getMeAndTheFirstNews(userId) {
+async function getMeAndTheFirstNews(me) {
     /*
-    {
+    news: {
         newsList: {
-            unconfirm: [
-                { type, id, timestamp, confirm, fans: ... },
-                { type, id, timestamp, confirm, blog: ... },
-                { type, id, timestamp, confirm, comment: ... },
-            ... ],
+            unconfirm: [ { type, id, timestamp, confirm, fans|blog|comment }, ... ],
             confirm: [...]
         },
         num: { unconfirm, confirm, total },
         limit
     }*/
-    let me = await readUser({ id: userId })
-    let news = await readNews({ userId })
+    let news = await readNews({ userId: me.id })
     return new SuccModel({ me, news })
 }
 
-async function readMore({id, excepts, newsList}) {
-    /*excepts: {
+async function readMore({me, excepts, newsListNeedToConfirm}) {
+    /*
+    excepts: {
         people: [ id, ... ],
         blogs: [ id, ... ],
         comments: [ id, ...],
         num: NUMBER
-    }*/
+    },
+    newsListNeedToConfirm: { peopel, blogs, comments, num }
+    */
 
-    if (newsList.num) {
-        let res = await confirmNews(newsList)
+    if (newsListNeedToConfirm.num) {
+        let res = await confirmNews(newsListNeedToConfirm)
         if (res.errno) {
             throw res
         }
@@ -78,16 +76,16 @@ async function readMore({id, excepts, newsList}) {
         num: { unconfirm, confirm, total },
         limit
     }*/
-    let res = await readNews({ userId: id, excepts })
-    console.log('@ res => ', res)
+    let news = await readNews({ userId: me.id, excepts })
+    console.log('@ news => ', news)
     let cache = { news: [] }
-    let { newsList: { unconfirm, confirm} } = res
+    let { newsList: { unconfirm, confirm} } = news
     if(unconfirm.length + confirm.length === 0){
         console.log('@ 純粹作為最後一次readMore確認')
         // cache.news.push(id)
     }
 
-    return new SuccModel(res, cache)
+    return new SuccModel({ news, me }, cache)
 }
 
 async function confirmNews(listOfNewsId) {

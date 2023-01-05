@@ -120,7 +120,7 @@ async function resetBlog(ctx, next) {
 
 //  撈取cacheNews，若沒有或過期，則向DB撈取，並於最後作緩存
 async function cacheNews(ctx, next) {
-    let { page, newsList } = ctx.request.body
+    let { page, newsListNeedToConfirm: { num } } = ctx.request.body
     const { id } = ctx.session.user
     //  是否有新通知要查詢
     let hasNews = await checkNews(id)
@@ -130,27 +130,33 @@ async function cacheNews(ctx, next) {
         ctx.body = ctx.session.news[page]
         return
     }
-
+    //  若沒有緩存
     if (!ctx.session.news[page]) {
         console.log(`@ 因為 user/${id} 的 session.news[${page}] 沒有緩存`)
     }
-
+    //  標記，是否清空session.news
     let clearNews = false
+    //  若有新通知
     if (hasNews) {
         console.log(`@ 因為 user/${id} 有新通知`)
         clearNews = true
+        //  從系統緩存cacheNews中移除當前userId
         await removeRemindNews(id)
     }
-    if (newsList.num) {
+    //  請求若有攜帶需確認的通知
+    if (num) {
         console.log(`@ 因為 請求攜帶需 confirm 的 news`)
         clearNews = true
     }
+    //  請求不是第一頁 && 緩存數據不連續
     if (page && !ctx.session.news[page - 1]) {
         console.log(`@ 因為 緩存session.news數組不完全`)
         clearNews = true
     }
+    //  clearNews標記若為true
     if (clearNews) {
         console.log(`@ 清空 user/${id} 的 session.news`)
+        //  重製page，在下方向BD取得數據，next回來後做緩存時，將會用到
         page = 0
         ctx.session.news = []   //  清空緩存
     }
@@ -167,6 +173,7 @@ async function cacheNews(ctx, next) {
     let { errno, data } = ctx.body
     ctx.session.news[page] = { errno, data }
     console.log(`@ user/${id} 的 session.news[${page}] 完成緩存`)
+    console.log(`@session.news[${page}] => `, ctx.session.news[page])
 }
 
 async function notifiedNews(ctx, next) {
