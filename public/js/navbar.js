@@ -15,8 +15,9 @@ async function initNavbar() {
         //  初始化渲染  ------
         //  渲染基本navBar
         template_nav(data.me)
+        
         //  若未登入，則不需要初始化功能
-        if (!data.me) {
+        if (!data.me.id) {
             return 
         }
 

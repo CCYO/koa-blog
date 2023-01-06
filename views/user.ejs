@@ -10,7 +10,6 @@
         }
 
         .btn-blog-edit>a {
-
             background: #fff;
         }
 
@@ -72,17 +71,51 @@
             font-size: 100px;
         }
 
+        .blogList .text-truncate,
         #fansList .text-truncate,
         #idolList .text-truncate {
             color: #0d6efd
         }
 
+        #fansList:hover,
+        #idolList:hover {
+            background-color: rgba(255, 255, 255, .1);
+        }
+
+        #fansList>ul li,
+        #idolList>ul li {
+            /* min-width: 5rem; */
+            width: 5rem
+        }
+
+        @media (max-width: 575.9px) {
+            .avatar-box {
+                flex-grow: 0;
+                flex-shrink: 0;
+                flex-basis: auto;
+                min-width: 15rem;
+                margin-bottom: -3rem;
+            }
+
+            .card-body {
+                text-align: center;
+
+            }
+
+            .card-title {
+                position: relative;
+                background: rgba(255, 255, 255, .5);
+            }
+        }
+
+
+
         @media (min-width: 576px) {
 
             #fansList>ul li,
             #idolList>ul li {
-                min-width: 5rem;
-                /* width: 5rem */
+                /* min-width: 5rem; */
+                width: 5rem
             }
         }
 
@@ -92,8 +125,8 @@
 
             #fansList>ul li,
             #idolList>ul li {
-                min-width: 6rem;
-                /* width: 6rem; */
+                /* min-width: 6rem; */
+                width: 6rem;
             }
         }
 
@@ -101,22 +134,26 @@
 
             #fansList>ul li,
             #idolList>ul li {
-                min-width: 7rem;
-                /* width: 7rem; */
+                /* min-width: 7rem; */
+                width: 7rem;
             }
         }
     </style>
-
+    <div class="d-sm-none position-fixed top-0 start-0 bg-success text-white" style="z-index: 1080;">xs</div>
+    <div class="d-md-none position-fixed top-0 end-0 bg-success text-white" style="z-index: 1080;">sm</div>
+    <div class="d-lg-none position-fixed bottom-0 start-0 bg-success text-white" style="z-index: 1080;">md</div>
+    <div class="d-xl-none position-fixed bottom-0 end-0 bg-success text-white" style="z-index: 1080;">lg</div>
+    <div class="d-xxl-none position-fixed bottom-50 end-50 bg-success text-white" style="z-index: 1080;">xl</div>
     <div id='backdrop' class="my-noshow">
         <div>讀取中...</div>
     </div>
     <div class="main container-md mb-3">
         <div class="row gx-3">
-            <div class="col-8 border-end">
+            <div class="col-md-8 border-end">
 
                 <div class="card mb-3">
-                    <div class="row align-items-center">
-                        <div class="col-sm-4 text-center">
+                    <div class="user-info row align-items-center justify-content-center">
+                        <div class="avatar-box col-4 text-center">
                             <div class="p-1">
                                 <div class="ratio ratio-1x1 mb-1">
                                     <img src="<%= currentUser.avatar %>" class="img-fluid mb-1"
@@ -126,7 +163,6 @@
                                     class="btn btn-danger btn-sm follow my-noshow">取消追蹤</button>
                                 <button id="follow" type="button"
                                     class="btn btn-success btn-sm follow my-noshow">追蹤</button>
-
                             </div>
                         </div>
                         <div class="col-sm-8">
@@ -182,10 +218,12 @@
                                 <% blogList.show[0].forEach(({id, title})=> { %>
                                     <li
                                         class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
-                                        <a href="/blog/<%= id %>" class="stretched-link">
-                                            <%= title %>
-                                        </a>
-                                        <div class="btn-blog-edit my-noshow">
+                                        <div class="text-truncate me-3">
+                                            <a href="/blog/<%= id %>" class="stretched-link">
+                                                <%= title %>
+                                            </a>
+                                        </div>
+                                        <div class="btn-blog-edit my-noshow flex-shrink-0">
                                             <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
                                             <a class='btn btn-outline-primary btn-sm'
                                                 data-my-remove-blog="<%= id %>">刪除</a>
@@ -216,7 +254,7 @@
                                 <% } %>
                                     <% } else { %>
 
-                                        <p>沒有發布的BLOG</p>
+                                        <p class="p-3">沒有發布的BLOG</p>
 
                                         <% } %>
                     </div>
@@ -233,12 +271,12 @@
                                     <% blogList.hidden[0].forEach(({id, title})=> { %>
                                         <li
                                             class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
-                                            <div>
+                                            <div class="text-truncate me-3">
                                                 <a class="stretched-link" href="/blog/<%= id %>">
                                                     <%= title %>
                                                 </a>
                                             </div>
-                                            <div class="btn-blog-edit">
+                                            <div class="btn-blog-edit flex-shrink-0">
                                                 <a class='btn btn-outline-primary btn-sm'
                                                     href="/blog/edit/<%= id %>">編輯</a>
                                                 <a class='btn btn-outline-primary btn-sm'
@@ -270,20 +308,21 @@
                                     <% } %>
 
                                         <% } else { %>
-                                            <p>沒有編輯中的BLOG</p>
+                                            <p class="p-3">沒有編輯中的BLOG</p>
                                             <% } %>
                         </div>
                         <% } %>
                 </div>
             </div>
-            <div class="col-4">
+            <hr class="d-md-none">
+            <div class="col-md-4">
                 <div>
                     <p>粉絲列表</p>
                     <div id="fansList" class="overflow-hidden">
                         <ul class="d-inline-flex p-0">
                             <!-- <ul id="fansList" class="d-flex w-100 overflow-x p-0"> -->
                             <% fansList.forEach(fans=> { %>
-                                <li class="card follow-box m-1 p-1" data-fans-id="<%= fans.id %>">
+                                <li class="card follow-box flex-shrink-0 me-1 p-1" data-fans-id="<%= fans.id %>">
                                     <div class="ratio ratio-1x1 mb-1">
                                         <img src="<%= fans.avatar %>" class="card-img-top" alt="">
                                     </div>
@@ -304,7 +343,7 @@
                         <ul class="d-inline-flex p-0">
                             <!-- <ul id="fansList" class="d-flex w-100 overflow-x p-0"> -->
                             <% idolList.forEach(idol=> { %>
-                                <li class="card follow-box  m-1 p-1" data-idol-id="<%= idol.id %>">
+                                <li class="card follow-box flex-shrink-0 me-1 p-1" data-idol-id="<%= idol.id %>">
                                     <div class="ratio ratio-1x1 mb-1">
                                         <img src="<%= idol.avatar %>" class="card-img-top" alt="">
                                     </div>
@@ -368,54 +407,22 @@
 
             //  initPage
             async function initPage(data) {
+
                 //  public Var
                 let pageData = data
                 let { currentUser, me = {}, fansList } = pageData
+                //  初始化BetterScroll
+                let relationList = ['#fansList', '#idolList']
+                pageData.map_bs = initBetterScroll(relationList)
+
                 //  存放 文章列表分頁 的數據
                 window.render = { blog: { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } } }
+
                 let isSelf = currentUser.id === me.id
                 //  追蹤鈕
                 let $btn_follow = $('#follow')
                 //  取消追蹤鈕
                 let $btn_cancelFollow = $('#cancelFollow')
-                initScroll()
-                function initScroll() {
-
-                    // console.log('重置')
-                    window._iscroll = {}
-
-                    // 調整粉絲、追蹤列表
-                    for (let list of ['#fansList', '#idolList']) {
-                        // console.log('go')
-                        // let $div = $(`${list}`)
-                        // let $items = $(`${list} > ul li`)
-                        // if (!$items.length) {
-                        //     continue
-                        // }
-                        // console.log('gogo')
-                        // let div_w = $div.first().outerWidth()
-                        // let ul_w = $(`${list} > ul`).first().outerWidth()
-                        // // let items_w = $items.first().outerWidth(true) * $items.length
-                        // console.log(div_w, ul_w)
-                        // if (div_w >= ul_w) {
-                        //     continue
-                        // }
-                        // console.log('gogogo')
-                        // // $ul.width(items_w)
-                        // console.log(document.querySelector(list))
-                        window._iscroll[list] = BetterScroll.createBScroll(document.querySelector(list), {
-                            scrollX: true,
-                            scrollY: false,
-                            mouseWheel: true
-                        })
-                    }
-                }
-                // window.onresize = function(){
-                //     console.log('重置')
-                //     for (let list of ['#fansList', '#idolList']) {
-                //         window._iscroll[list].refresh()
-                //     }
-                // }
 
                 //  UI
                 if (!isSelf) {  //  非自己的頁面
@@ -448,6 +455,7 @@
                 //  文章列表 的 上下頁，綁定翻頁功能
                 $('[data-my-way].page-link').on('click', renderBlogList)
 
+                //  handle -------
                 //  handle => 創建 blog
                 async function handle_createBlog(e) {
                     let title = getBlogTitle($('#blogTitle').val())
@@ -614,61 +622,106 @@
                 function handle_follow(toFollow) {
                     let { fansList, me } = pageData
                     //  若未登入，跳轉到登入頁
-                    if (!me) {
+                    if (!me.id) {
                         return () => {
-                            console.log(location.pathname)
                             alert('請先登入')
                             location.href = `/login?from=${location.pathname}`
                         }
                     }
 
                     let api = toFollow ? '/api/user/follow' : '/api/user/cancelFollow'
+                    //  更新追蹤/退追的瀏覽器數據與頁面渲染
+                    let followOrNot = toFollow ? follow : cancelFollow
 
-                    function UI_follow() {
-                        alert('已追蹤')
-                        //  更新 window.data 追蹤名單
-                        fansList.unshift(me)
-                        //  生成 粉絲htmlStr
-                        let htmlStr = `
-                        <li class="card follow-box m-1" data-fans-id="${me.id}">
-                            <img src="${me.avatar}" class="card-img-top" alt="">
-                            <div class="card-body text-center">
-                                <a href="/other/${me.id}" class="stretched-link">${me.nickname}</a>
-                            </div>
-                        </li>
-                        `
-                        //  在粉絲列表中插入 粉絲htmlStr
-                        $(`ul#fansList`).prepend(htmlStr)
-                    }
-                    function UI_cancelFollow() {
-                        alert('已退追')
-                        //  更新 window.data 追蹤名單
-                        fansList.splice(fansList.indexOf(me.id), 1)
-                        //  同步 頁面的粉絲列表
-                        $(`li[data-fans-id='${me.id}']`).remove()
-                    }
-                    let UI_feedback = toFollow ? UI_follow : UI_cancelFollow
-
-                    return async (e) => {
-                        let id = pageData.currentUser.id
+                    return updateFansList
+                    //  更新FansList
+                    async function updateFansList(e) {
+                        //  當前頁面使用者id
+                        let { id } = pageData.currentUser
+                        //  讀取遮罩
                         loading()
+                        //  請求取消/追蹤
                         const {
                             data: {
                                 errno, data, msg
                             }
                         } = await axios.post(api, { id })
+                        //  關閉讀取遮罩
                         loadEnd()
-                        await delay((errno, msg) => {
-                            if (!errno) {
-                                UI_feedback()
-                                $btn_follow.toggle()
-                                $btn_cancelFollow.toggle()
-                            } else {
-                                alert('操作發生錯誤')
-                                console.log(msg)
-                            }
-                        })
+
+                        if (!errno) {
+                            //  更新追蹤/退追的瀏覽器數據與頁面渲染
+                            followOrNot()
+                            //  重整fansList 的 BetterScroll
+                            recheckBetterScroll(pageData.map_bs, '#fansList')()
+                            //  追蹤/退追鈕的toggle
+                            $btn_follow.toggle()
+                            $btn_cancelFollow.toggle()
+                        } else {
+                            alert('操作發生錯誤')
+                            console.log(msg)
+                        }
                     }
+                    //  處理關於追蹤的瀏覽器數據與頁面渲染
+                    function follow() {
+                        alert('已追蹤')
+                        //  更新追蹤名單
+                        fansList.unshift(me)
+                        //  生成 粉絲htmlStr
+                        let htmlStr = `
+                            <li class="card follow-box flex-shrink-0 me-1 p-1" data-fans-id="${me.id}">
+                                <div class="ratio ratio-1x1 mb-1">
+                                    <img src="${me.avatar}" class="card-img-top" alt="">
+                                </div>
+                                <div class="text-center p-1 text-truncate">
+                                    <a href="/other/${me.id}" class="stretched-link">${me.nickname}</a>
+                                </div>
+                            </li>
+                        `
+                        //  在粉絲列表中插入 粉絲htmlStr
+                        if (fansList.length === 1) {  //  如果追蹤者只有當前的你
+                            //  直接塞入
+                            $(`#fansList > ul`).html(htmlStr)
+                        } else {  //  如果追蹤者不只當前的你
+                            //  插在最前面
+                            $(`#fansList > ul`).prepend(htmlStr)
+                        }
+                    }
+                    //  處理關於退追的瀏覽器數據與頁面渲染
+                    function cancelFollow() {
+                        alert('已退追')
+                        //  更新追蹤名單
+                        fansList.splice(fansList.indexOf(me.id), 1)
+                        //  在粉絲列表中移除 粉絲htmlStr
+                        if (fansList.length > 0) {  //  如果追蹤者不只有當前的你
+                            //  直接移除
+                            $(`li[data-fans-id='${me.id}']`).remove()
+                        } else {    //  如果沒追蹤者
+                            $(`#fansList > ul`).html(`<p class="p-3">目前無人追蹤</p>`)
+                        }
+                    }
+                }
+
+                //  init ----
+                //  init BetterScroll
+                function initBetterScroll(id_list) {
+                    let map_bs = new Map()
+                    // 調整粉絲、追蹤列表
+                    for (let list of id_list) {
+                        let bs = BetterScroll.createBScroll(document.querySelector(list), {
+                            scrollX: true,
+                            scrollY: false,
+                            mouseWheel: true
+                        })
+                        //  儲存bs
+                        map_bs.set(list, bs)
+                        //  檢查bs是否可滾動
+                        recheckBetterScroll(map_bs, list)()
+                        //  當頁面尺寸變動，檢查bs是否可滾動
+                        window.addEventListener('resize', recheckBetterScroll(map_bs, list))
+                    }
+                    return map_bs
+
                 }
 
                 //  utils -----
@@ -682,18 +735,16 @@
                         }
                     } = await axios.delete('/api/blog', { data: { id: blogList } })
                     loadEnd()
-                    await delay((errno, msg) => {
-                        if (!errno) {
-                            alert('已成功刪除該頁文章')
-                            location.href = '/self' //  刷新頁面
-                        } else if (errno === 501) {   //  代表未登入
-                            location.href = '/login'
-                        } else {  //  刪除失敗
-                            alert(msg)
-                        }
+                    if (!errno) {
+                        alert('已成功刪除該頁文章')
+                        location.href = '/self' //  刷新頁面
+                    } else if (errno === 501) {   //  代表未登入
+                        location.href = '/login'
+                    } else {  //  刪除失敗
+                        alert(msg)
                     }
-                    )
                 }
+
             }
 
             //  utils
@@ -708,14 +759,30 @@
                 $('input').removeAttr('disabled')
                 // return new Promise((resolve) => setTimeout(resolve , 200) )
             }
-
-            function delay(fn) {
-                return new Promise((resolve) => setTimeout(() => {
-                    fn()
-                    resolve()
-                }, 200))
+            //  檢查bs是否可滾動
+            function recheckBetterScroll(map_bs, list) {
+                return () => {
+                    //  取出當前bs
+                    let bs = map_bs.get(list)
+                    //  bs的wrapper之width
+                    let $wrapper = $(`${list}`).first().outerWidth()
+                    //  wrapper的content之width(含margin)
+                    let $content = $(`${list} > ul`).first().outerWidth(true)
+                    //  判斷是否需要啟用bs
+                    if ($wrapper >= $content) {
+                        console.log(`${list} dis`)
+                        //  停用bs
+                        bs.disable()
+                    } else {
+                        console.log(`${list} en`)
+                        //  啟用bs
+                        bs.enable()
+                        //  重整bs
+                        bs.refresh()
+                        console.log(`${list} ${bs.enabled}`)
+                    }
+                }
             }
-
         </script>
         </body>
 
