@@ -360,15 +360,15 @@ async function initNavbar() {
                     </ul>
                 `
                 let template_inOffcanvas = `
-                <ul class="navbar-nav justify-content-around pe-3">
+                <ul class="navbar-nav justify-content-around">
                     <li class="nav-item">
-                        <a class="nav-link me-3" href="/self">個人頁面</a>
+                        <a class="nav-link me-2" href="/self">個人頁面</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link me-3" href="/album/list/${user_id}">文章相簿</a>
+                        <a class="nav-link me-2" href="/album/list/${user_id}">文章相簿</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link me-3" href="/setting">個人設置</a>
+                        <a class="nav-link me-2 " href="/setting">個人設置</a>
                     </li>
                     <li class="nav-item">
                         <a id="logout" class="btn btn-outline-success text-nowrap">登出</a>

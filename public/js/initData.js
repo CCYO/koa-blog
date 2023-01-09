@@ -53,17 +53,20 @@ function initData() {
     return res
 
     function initAlbum(data){
-        let { blog, imgs } = JSON.parse(data)   // 整體轉回obj
+        // JSON String → JSON Obj
+        let { blog, imgs } = JSON.parse(data)
+        //  img數據map化
         let map_imgs = init_map_imgs(imgs)
         return { blog, imgs, map_imgs }
     }
     function initBlog(data) {
-        let blog = JSON.parse(data)   // 整體轉回obj
+        // JSON String → JSON Obj
+        let blog = JSON.parse(data)
         //  處理blog內的img數據
         blog.map_imgs = init_map_imgs(blog.imgs)
         //  處理blog內的comment數據
         blog = { ...blog, ...mapComments(blog.comments) }
-        //  將存放在後端「百分比編碼格式的blog.html」解析為一般htmlStr
+        //  將 blog.html(百分比編碼格式) → htmlStr
         blog.html = parseHtml(blog.html)
         return blog //  再將整體轉為字符
 

@@ -716,10 +716,19 @@
                         //  檢查bs是否可滾動
                         recheckBetterScroll(map_bs, list)()
                         //  當頁面尺寸變動，檢查bs是否可滾動
-                        window.addEventListener('resize', recheckBetterScroll(map_bs, list))
+                        window.addEventListener('resize', debounce(recheckBetterScroll(map_bs, list), 150))
                     }
                     return map_bs
-
+                    //  防抖動，刪除指定時間內重複觸發的函數，僅最後一次會成功觸發
+                    function debounce(fuc, ms){
+                        let t
+                        return (e) => {
+                            if(t){
+                                clearTimeout(t)
+                            }
+                            t = setTimeout(() => fuc(e), ms)
+                        }
+                    }
                 }
 
                 //  utils -----
@@ -767,16 +776,13 @@
                     let $content = $(`${list} > ul`).first().outerWidth(true)
                     //  判斷是否需要啟用bs
                     if ($wrapper >= $content) {
-                        console.log(`${list} dis`)
                         //  停用bs
                         bs.disable()
                     } else {
-                        console.log(`${list} en`)
                         //  啟用bs
                         bs.enable()
                         //  重整bs
                         bs.refresh()
-                        console.log(`${list} ${bs.enabled}`)
                     }
                 }
             }
