@@ -33,14 +33,16 @@ class My {
 
 function initData() {
     let res = {}
-    $(`[data-my-data]`).each((index, el) => {
+    //  從el[data-my-data]解析頁面需要的數據
+    $(`[data-my-data]`).each((index, el) => 
+    {
+        //  數據的用途
         let prop = $(el).data('my-data')
         try {
             let val = $(el).html()
-            //  針對blog數據處理
-            if (prop === 'blog') {
+            if (prop === 'blog') {  //  若與blog有關
                 res.blog = initBlog(val)
-            } else if(prop === 'album'){
+            } else if(prop === 'album'){    //  若與album有關
                 res.album = initAlbum(val)
             } else {
                 res[prop] = JSON.parse(val)
@@ -49,9 +51,10 @@ function initData() {
             throw e
         }
     })
-    $(`[data-my-data]`).remove()
+    //  移除所有攜帶數據的元素
+    $(`[data-my-data]`).parent().remove()
     return res
-
+    //  初始化album數據
     function initAlbum(data){
         // JSON String → JSON Obj
         let { blog, imgs } = JSON.parse(data)
@@ -59,6 +62,7 @@ function initData() {
         let map_imgs = init_map_imgs(imgs)
         return { blog, imgs, map_imgs }
     }
+    //  初始化blog數據
     function initBlog(data) {
         // JSON String → JSON Obj
         let blog = JSON.parse(data)

@@ -10,7 +10,6 @@ const { getSquareBlogList } = require('../../controller/blog')
 
 //  廣場頁
 router.get('/square', async (ctx, next) => {
-    console.log('------------------!--------------------')
     let exclude_id = ctx.session.user && ctx.session.user.id || null
     let { data: blogList } = await getSquareBlogList(exclude_id)
     console.log('@blogList => ', blogList)

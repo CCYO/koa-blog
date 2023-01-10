@@ -1,375 +1,391 @@
 <!-- 主導覽： NAV_CSS + NAV第一層template -->
 <!-- favicon + MY_CSS + BS5_CSS -->
 <%- include('wedgets/header') %>
+<style>
+    .btn-blog-edit {
+        z-index: 2;
+    }
 
+    .btn-blog-edit>a {
+        background: #fff;
+    }
 
-    <style>
-        .btn-blog-edit {
-            z-index: 2;
+    .follow-box {
+        /* min-width: 50%; */
+        background: rgba(255, 255, 255, .1);
+        border: none;
+    }
+
+    .follow-box:hover {
+        background: rgba(255, 255, 255, .3);
+    }
+
+    .follow-box a {
+        text-decoration: none;
+        font-size: 0.25rem;
+    }
+
+    .list-group>.btn {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    .blogList {
+        border: 1px solid rgba(0, 0, 0, .3);
+        margin-bottom: .5rem;
+    }
+
+    .blogList-header {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .blogList-header>h5 {
+        margin: 0;
+    }
+
+    .blogList-header>.btn {
+        margin-left: auto;
+        margin-right: 0;
+    }
+
+    .my-disabled>a {
+        pointer-events: none;
+    }
+
+    #backdrop.my-show {
+        background: rgba(202, 71, 71, 0.5);
+        position: fixed;
+        z-index: 1000;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #backdrop>div {
+        font-size: 100px;
+    }
+
+    .blogList .text-truncate,
+    #fansList .text-truncate,
+    #idolList .text-truncate {
+        color: #0d6efd
+    }
+
+    #fansList:hover,
+    #idolList:hover {
+        background-color: rgba(255, 255, 255, .1);
+    }
+
+    #fansList>ul li,
+    #idolList>ul li {
+        /* min-width: 5rem; */
+        width: 5rem
+    }
+
+    @media (max-width: 575.9px) {
+        .avatar-box {
+            flex-grow: 0;
+            flex-shrink: 0;
+            flex-basis: auto;
+            min-width: 15rem;
+            margin-bottom: -3rem;
+        }
+
+        .card-body {
+            text-align: center;
 
         }
 
-        .btn-blog-edit>a {
-            background: #fff;
+        .card-title {
+            position: relative;
+            background: rgba(255, 255, 255, .5);
         }
+    }
 
-        .follow-box {
-            /* min-width: 50%; */
-            background: rgba(255, 255, 255, .1);
-            border: none;
-        }
-
-        .follow-box:hover {
-            background: rgba(255, 255, 255, .3);
-        }
-
-        .follow-box a {
-            text-decoration: none;
-            font-size: 0.25rem;
-        }
-
-        .list-group>.btn {
-            margin-left: auto;
-            margin-right: 0;
-        }
-
-        .blogList {
-            border: 1px solid rgba(0, 0, 0, .3);
-            margin-bottom: .5rem;
-        }
-
-        .blogList-header {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .blogList-header>h5 {
-            margin: 0;
-        }
-
-        .blogList-header>.btn {
-            margin-left: auto;
-            margin-right: 0;
-        }
-
-        .my-disabled>a {
-            pointer-events: none;
-        }
-
-        #backdrop.my-show {
-            background: rgba(202, 71, 71, 0.5);
-            position: fixed;
-            z-index: 1000;
-            height: 100%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #backdrop>div {
-            font-size: 100px;
-        }
-
-        .blogList .text-truncate,
-        #fansList .text-truncate,
-        #idolList .text-truncate {
-            color: #0d6efd
-        }
-
-        #fansList:hover,
-        #idolList:hover {
-            background-color: rgba(255, 255, 255, .1);
-        }
+    @media (min-width: 576px) {
 
         #fansList>ul li,
         #idolList>ul li {
             /* min-width: 5rem; */
             width: 5rem
         }
+    }
 
-        @media (max-width: 575.9px) {
-            .avatar-box {
-                flex-grow: 0;
-                flex-shrink: 0;
-                flex-basis: auto;
-                min-width: 15rem;
-                margin-bottom: -3rem;
-            }
+    @media (min-width: 992px) {
 
-            .card-body {
-                text-align: center;
-
-            }
-
-            .card-title {
-                position: relative;
-                background: rgba(255, 255, 255, .5);
-            }
+        #fansList>ul li,
+        #idolList>ul li {
+            /* min-width: 6rem; */
+            width: 6rem;
         }
+    }
 
+    @media (min-width: 1200px) {
 
-
-        @media (min-width: 576px) {
-
-            #fansList>ul li,
-            #idolList>ul li {
-                /* min-width: 5rem; */
-                width: 5rem
-            }
+        #fansList>ul li,
+        #idolList>ul li {
+            /* min-width: 7rem; */
+            width: 7rem;
         }
+    }
+</style>
+<div class="d-sm-none position-fixed top-0 start-0 bg-success text-white" style="z-index: 1080;">xs</div>
+<div class="d-md-none position-fixed top-0 end-0 bg-success text-white" style="z-index: 1080;">sm</div>
+<div class="d-lg-none position-fixed bottom-0 start-0 bg-success text-white" style="z-index: 1080;">md</div>
+<div class="d-xl-none position-fixed bottom-0 end-0 bg-success text-white" style="z-index: 1080;">lg</div>
+<div class="d-xxl-none position-fixed bottom-50 end-50 bg-success text-white" style="z-index: 1080;">xl</div>
+<div id='backdrop' class="my-noshow">
+    <div>讀取中...</div>
+</div>
+<div class="main container-md mb-3">
+    <div class="row gx-3">
+        <div class="col-md-8 border-end">
 
-        @media (min-width: 768px) {}
-
-        @media (min-width: 992px) {
-
-            #fansList>ul li,
-            #idolList>ul li {
-                /* min-width: 6rem; */
-                width: 6rem;
-            }
-        }
-
-        @media (min-width: 1200px) {
-
-            #fansList>ul li,
-            #idolList>ul li {
-                /* min-width: 7rem; */
-                width: 7rem;
-            }
-        }
-    </style>
-    <div class="d-sm-none position-fixed top-0 start-0 bg-success text-white" style="z-index: 1080;">xs</div>
-    <div class="d-md-none position-fixed top-0 end-0 bg-success text-white" style="z-index: 1080;">sm</div>
-    <div class="d-lg-none position-fixed bottom-0 start-0 bg-success text-white" style="z-index: 1080;">md</div>
-    <div class="d-xl-none position-fixed bottom-0 end-0 bg-success text-white" style="z-index: 1080;">lg</div>
-    <div class="d-xxl-none position-fixed bottom-50 end-50 bg-success text-white" style="z-index: 1080;">xl</div>
-    <div id='backdrop' class="my-noshow">
-        <div>讀取中...</div>
-    </div>
-    <div class="main container-md mb-3">
-        <div class="row gx-3">
-            <div class="col-md-8 border-end">
-
-                <div class="card mb-3">
-                    <div class="user-info row align-items-center justify-content-center">
-                        <div class="avatar-box col-4 text-center">
-                            <div class="p-1">
-                                <div class="ratio ratio-1x1 mb-1">
-                                    <img src="<%= currentUser.avatar %>" class="img-fluid mb-1"
-                                        style="border-radius: 50% 50%;" alt="...">
-                                </div>
-                                <button id="cancelFollow" type="button"
-                                    class="btn btn-danger btn-sm follow my-noshow">取消追蹤</button>
-                                <button id="follow" type="button"
-                                    class="btn btn-success btn-sm follow my-noshow">追蹤</button>
+            <div class="card mb-3">
+                <div class="user-info row align-items-center justify-content-center">
+                    <div class="avatar-box col-4 text-center">
+                        <div class="p-1">
+                            <div class="ratio ratio-1x1 mb-1">
+                                <img src="<%= currentUser.avatar %>" class="img-fluid mb-1"
+                                    style="border-radius: 50% 50%;" alt="...">
                             </div>
+                            <button id="cancelFollow" type="button"
+                                class="btn btn-danger btn-sm follow my-noshow">取消追蹤</button>
+                            <button id="follow" type="button"
+                                class="btn btn-success btn-sm follow my-noshow">追蹤</button>
                         </div>
-                        <div class="col-sm-8">
-                            <div class="card-body">
-                                <h5 class="card-title">主要資料</h5>
-                                <hr>
-                                <p>信箱： <%= currentUser.email %>
-                                </p>
-                                <p>暱稱： <%= currentUser.nickname %>
-                                </p>
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="card-body">
+                            <h5 class="card-title">主要資料</h5>
+                            <hr>
+                            <p>信箱： <%= currentUser.email %>
+                            </p>
+                            <p>暱稱： <%= currentUser.nickname %>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div id="blogs">
+                <!-- Button trigger modal -->
+                <button id="newBlog" type="button" class="btn btn-primary mb-1 my-noshow" data-bs-toggle="modal"
+                    data-bs-target="#exampleModal">
+                    撰寫新文章
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="blogTitle" class="form-label">文章標題</label>
+                                    <input type="text" class="form-control" id="blogTitle" placeholder="文章標題">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消建立文章</button>
+                                <button id="sendBlogTitle" type="button" class="btn btn-primary">建立文章</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <hr>
-                <div id="blogs">
-                    <!-- Button trigger modal -->
-                    <button id="newBlog" type="button" class="btn btn-primary mb-1 my-noshow" data-bs-toggle="modal"
-                        data-bs-target="#exampleModal">
-                        撰寫新文章
-                    </button>
 
-                    <!-- Modal -->
-                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label for="blogTitle" class="form-label">文章標題</label>
-                                        <input type="text" class="form-control" id="blogTitle" placeholder="文章標題">
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
-                                        data-bs-dismiss="modal">取消建立文章</button>
-                                    <button id="sendBlogTitle" type="button" class="btn btn-primary">建立文章</button>
-                                </div>
-                            </div>
-                        </div>
+                <div class="card blogList bg-light" data-my-blog-key="show">
+                    <div class="card-header blogList-header align-items-center">
+                        <h5>已發布的BLOG</h5>
+                        <button type="button"
+                            class="btn btn-sm btn-outline-danger <%= blogList.show.length? 'my-show' : 'my-noshow'%>"
+                            data-my-remove-blogs="show">全部刪除</button>
                     </div>
-
-                    <div class="card blogList bg-light" data-my-blog-key="show">
-                        <div class="card-header blogList-header">
-                            <h5>已發布的BLOG</h5>
-                            <button type="button"
-                                class="btn btn-sm btn-outline-danger <%= blogList.show.length? 'my-show' : 'my-noshow'%>"
-                                data-my-remove-blogs="show">全部刪除</button>
-                        </div>
-                        <% if(blogList.show.length){ %>
-                            <ul class="list-group list-group-flush">
-                                <% blogList.show[0].forEach(({id, title})=> { %>
-                                    <li
-                                        class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
-                                        <div class="text-truncate me-3">
-                                            <a href="/blog/<%= id %>" class="stretched-link">
-                                                <%= title %>
-                                            </a>
-                                        </div>
-                                        <div class="btn-blog-edit my-noshow flex-shrink-0">
-                                            <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
-                                            <a class='btn btn-outline-primary btn-sm'
-                                                data-my-remove-blog="<%= id %>">刪除</a>
-                                        </div>
-                                    </li>
-                                    <% }) %>
-                            </ul>
-                            <% if (blogList.show.length> 1) { %>
-                                <nav aria-label="...">
-                                    <ul class="pagination" id="show-list">
-                                        <li class="page-item my-disabled">
-                                            <a class="page-link" href='#' data-my-way="back">Previous</a>
-                                        </li>
-                                        <% blogList.show.forEach((item, ind, arr)=> { %>
-                                            <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
-                                                <a class="page-link" href="#" data-my-key="show"
-                                                    data-my-ind="<%= ind %>">
-                                                    <%= ind + 1 %>
-                                                </a>
-                                            </li>
-                                            <% }) %>
-
-                                                <li class="page-item">
-                                                    <a class="page-link" href="#" data-my-way="next">Next</a>
-                                                </li>
-                                    </ul>
-                                </nav>
-                                <% } %>
-                                    <% } else { %>
-
-                                        <p class="p-3">沒有發布的BLOG</p>
-
-                                        <% } %>
-                    </div>
-                    <% if(blogList.hidden){ %>
-                        <div class="card blogList bg-light" data-my-blog-key="hidden">
-                            <div class="card-header blogList-header">
-                                <h5>編輯中的BLOG</h5>
-                                <button type="button"
-                                    class="btn btn-sm btn-outline-danger <%= blogList.hidden.length? 'my-show' : 'my-noshow'%>"
-                                    data-my-remove-blogs="hidden">全部刪除</button>
+                    <% if(blogList.show.length){ %>
+                    <ul class="list-group list-group-flush">
+                        <% blogList.show[0].forEach(({id, title})=> { %>
+                        <li
+                            class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+                            <div class="text-truncate me-3">
+                                <a href="/blog/<%= id %>" class="stretched-link">
+                                    <%= title %>
+                                </a>
                             </div>
-                            <% if(blogList.hidden.length){ %>
-                                <ul class="list-group list-group-flush">
-                                    <% blogList.hidden[0].forEach(({id, title})=> { %>
-                                        <li
-                                            class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
-                                            <div class="text-truncate me-3">
-                                                <a class="stretched-link" href="/blog/<%= id %>">
-                                                    <%= title %>
-                                                </a>
-                                            </div>
-                                            <div class="btn-blog-edit flex-shrink-0">
-                                                <a class='btn btn-outline-primary btn-sm'
-                                                    href="/blog/edit/<%= id %>">編輯</a>
-                                                <a class='btn btn-outline-primary btn-sm'
-                                                    data-my-remove-blog="<%= id %>">刪除</a>
-                                            </div>
-                                        </li>
-                                        <% }) %>
-                                </ul>
-                                <% if (blogList.hidden.length> 1) { %>
-                                    <nav aria-label="...">
-                                        <ul class="pagination" id="hidden-list">
-                                            <li class="page-item my-disabled">
-                                                <a class="page-link" href="#" data-my-way="back">Previous</a>
-                                            </li>
-                                            <% blogList.hidden.forEach((item, ind, arr)=> { %>
-                                                <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
-                                                    <a class="page-link" href="#" data-my-key="hidden"
-                                                        data-my-ind="<%= ind %>">
-                                                        <%= ind + 1 %>
-                                                    </a>
-                                                </li>
-                                                <% }) %>
-
-                                                    <li class="page-item">
-                                                        <a class="page-link" href="#" data-my-way="next">Next</a>
-                                                    </li>
-                                        </ul>
-                                    </nav>
-                                    <% } %>
-
-                                        <% } else { %>
-                                            <p class="p-3">沒有編輯中的BLOG</p>
-                                            <% } %>
-                        </div>
+                            <div class="btn-blog-edit my-noshow flex-shrink-0">
+                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
+                                <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%= id %>">刪除</a>
+                            </div>
+                        </li>
+                        <% }) %>
+                        <% if(blogList.show[0].length < 5) {%>
+                        <% for(let i = 5 - blogList.show[0].length; i > 0; i-- ){ %>
+                        <li
+                            class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
+                            <div class="text-truncate me-3">
+                                <span class="invisible">x</span>
+                            </div>
+                            <div class="btn-blog-edit flex-shrink-0 invisible">
+                                <a class='btn btn-outline-primary btn-sm'>編輯</a>
+                                <a class='btn btn-outline-primary btn-sm'>刪除</a>
+                            </div>
+                        </li>
                         <% } %>
-                </div>
-            </div>
-            <hr class="d-md-none">
-            <div class="col-md-4">
-                <div>
-                    <p>粉絲列表</p>
-                    <div id="fansList" class="overflow-hidden">
-                        <ul class="d-inline-flex p-0">
-                            <!-- <ul id="fansList" class="d-flex w-100 overflow-x p-0"> -->
-                            <% fansList.forEach(fans=> { %>
-                                <li class="card follow-box flex-shrink-0 me-1 p-1" data-fans-id="<%= fans.id %>">
-                                    <div class="ratio ratio-1x1 mb-1">
-                                        <img src="<%= fans.avatar %>" class="card-img-top" alt="">
-                                    </div>
-                                    <div class="text-center p-1 text-truncate">
-                                        <a href="/other/<%= fans.id %>" class="stretched-link">
-                                            <%= fans.nickname %>
-                                        </a>
-                                    </div>
-                                </li>
+                        <% } %>
+                    </ul>
+                    <% if (blogList.show.length> 1) { %>
+                    <nav aria-label="...">
+                        <ul class="pagination" id="show-list">
+                            <li class="page-item my-disabled">
+                                <a class="page-link" href='#' data-my-way="back">Previous</a>
+                            </li>
+                            <% blogList.show.forEach((item, ind, arr)=> { %>
+                            <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
+                                <a class="page-link" href="#" data-my-key="show" data-my-ind="<%= ind %>">
+                                    <%= ind + 1 %>
+                                </a>
+                            </li>
+                            <% }) %>
 
-                                <% }) %>
+                            <li class="page-item">
+                                <a class="page-link" href="#" data-my-way="next">Next</a>
+                            </li>
                         </ul>
-                    </div>
-                </div>
-                <div>
-                    <p>追蹤列表</p>
-                    <div id="idolList" class="overflow-hidden">
-                        <ul class="d-inline-flex p-0">
-                            <!-- <ul id="fansList" class="d-flex w-100 overflow-x p-0"> -->
-                            <% idolList.forEach(idol=> { %>
-                                <li class="card follow-box flex-shrink-0 me-1 p-1" data-idol-id="<%= idol.id %>">
-                                    <div class="ratio ratio-1x1 mb-1">
-                                        <img src="<%= idol.avatar %>" class="card-img-top" alt="">
-                                    </div>
-                                    <div class="text-center p-1 text-truncate">
-                                        <a href="/other/<%= idol.id %>" class="stretched-link">
-                                            <%= idol.nickname %>
-                                        </a>
-                                    </div>
-                                </li>
+                    </nav>
+                    <% } %>
+                    <% } else { %>
 
-                                <% }) %>
+                    <p class="p-3">沒有發布的BLOG</p>
+
+                    <% } %>
+                </div>
+                <% if(blogList.hidden){ %>
+                <div class="card blogList bg-light" data-my-blog-key="hidden">
+                    <div class="card-header blogList-header align-items-center">
+                        <h5>編輯中的BLOG</h5>
+                        <button type="button"
+                            class="btn btn-sm btn-outline-danger <%= blogList.hidden.length? 'my-show' : 'my-noshow'%>"
+                            data-my-remove-blogs="hidden">全部刪除</button>
+                    </div>
+                    <% if(blogList.hidden.length){ %>
+                    <ul class="list-group list-group-flush">
+                        <% blogList.hidden[0].forEach(({id, title})=> { %>
+                        <li
+                            class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+                            <div class="text-truncate me-3">
+                                <a class="stretched-link" href="/blog/<%= id %>">
+                                    <%= title %>
+                                </a>
+                            </div>
+                            <div class="btn-blog-edit flex-shrink-0">
+                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
+                                <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%= id %>">刪除</a>
+                            </div>
+                        </li>
+                        <% }) %>
+                        <% if(blogList.hidden[0].length < 5) {%>
+                        <% for(let i = 5 - blogList.hidden[0].length; i > 0; i-- ){ %>
+                        <li
+                            class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
+                            <div class="text-truncate me-3">
+                                <span class="invisible">x</span>
+                            </div>
+                            <div class="btn-blog-edit flex-shrink-0 invisible">
+                                <a class='btn btn-outline-primary btn-sm'>編輯</a>
+                                <a class='btn btn-outline-primary btn-sm'>刪除</a>
+                            </div>
+                        </li>
+                        <% } %>
+                        <% } %>
+                    </ul>
+                    <% if (blogList.hidden.length> 1) { %>
+                    <nav aria-label="...">
+                        <ul class="pagination" id="hidden-list">
+                            <li class="page-item my-disabled">
+                                <a class="page-link" href="#" data-my-way="back">Previous</a>
+                            </li>
+                            <% blogList.hidden.forEach((item, ind, arr)=> { %>
+                            <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
+                                <a class="page-link" href="#" data-my-key="hidden" data-my-ind="<%= ind %>">
+                                    <%= ind + 1 %>
+                                </a>
+                            </li>
+                            <% }) %>
+
+                            <li class="page-item">
+                                <a class="page-link" href="#" data-my-way="next">Next</a>
+                            </li>
                         </ul>
-                    </div>
+                    </nav>
+                    <% } %>
 
+                    <% } else { %>
+                    <p class="p-3">沒有編輯中的BLOG</p>
+                    <% } %>
                 </div>
+                <% } %>
             </div>
-
         </div>
-    </div>
-    </div>
-    <div class="footer container-fluid">
-        Footer
-    </div>
+        <hr class="d-md-none">
+        <div class="col-md-4">
+            <div>
+                <p>粉絲列表</p>
+                <div id="fansList" class="overflow-hidden">
+                    <ul class="d-inline-flex p-0">
+                        <!-- <ul id="fansList" class="d-flex w-100 overflow-x p-0"> -->
+                        <% fansList.forEach(fans=> { %>
+                        <li class="card follow-box flex-shrink-0 me-1 p-1" data-fans-id="<%= fans.id %>">
+                            <div class="ratio ratio-1x1 mb-1">
+                                <img src="<%= fans.avatar %>" class="card-img-top" alt="">
+                            </div>
+                            <div class="text-center p-1 text-truncate">
+                                <a href="/other/<%= fans.id %>" class="stretched-link">
+                                    <%= fans.nickname %>
+                                </a>
+                            </div>
+                        </li>
 
+                        <% }) %>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <p>追蹤列表</p>
+                <div id="idolList" class="overflow-hidden">
+                    <ul class="d-inline-flex p-0">
+                        <!-- <ul id="fansList" class="d-flex w-100 overflow-x p-0"> -->
+                        <% idolList.forEach(idol=> { %>
+                        <li class="card follow-box flex-shrink-0 me-1 p-1" data-idol-id="<%= idol.id %>">
+                            <div class="ratio ratio-1x1 mb-1">
+                                <img src="<%= idol.avatar %>" class="card-img-top" alt="">
+                            </div>
+                            <div class="text-center p-1 text-truncate">
+                                <a href="/other/<%= idol.id %>" class="stretched-link">
+                                    <%= idol.nickname %>
+                                </a>
+                            </div>
+                        </li>
+
+                        <% }) %>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+<div class="footer container-fluid">
+    Footer
+</div>
+
+<div style="display: none;">
     <!-- 當前使用者頁面的使用者資料 -->
-    <div data-my-data="currentUser" style="display: none;">
+    <div data-my-data="currentUser">
         <%- JSON.stringify(currentUser) %>
     </div>
     <div data-my-data="fansList">
@@ -381,219 +397,237 @@
     <div data-my-data="blogList">
         <%- JSON.stringify(blogList) %>
     </div>
+</div>
 
-    <!-- 引入 xss -->
-    <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
+<!-- 引入 xss -->
+<script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
 
-    <!-- JQ AXIOS BS5 -->
-    <%- include('wedgets/cdn') %>
-        <!-- 滾輪 -->
-        <script src="https://unpkg.com/better-scroll@latest/dist/better-scroll.min.js"></script>
-        <script type="module" defer>
-            import initData from '/js/initData.js'
-            import initNavbar from '/js/navbar.js'
-            //  init
-            try {
-                //  讀取畫面，遮蔽效果
-                loading()
-                let pageData = new initData()
-                await pageData.init(initNavbar)
-                await initPage(await pageData.check())
-                //  讀取完成，取消遮蔽
-                await loadEnd()
-            } catch (err) {
-                console.log('@ init 發生錯誤 => ', err)
+<!-- JQ AXIOS BS5 -->
+<%- include('wedgets/cdn') %>
+<!-- 滾輪 -->
+<script src="https://unpkg.com/better-scroll@latest/dist/better-scroll.min.js"></script>
+<script type="module" defer>
+    import initData from '/js/initData.js'
+    import initNavbar from '/js/navbar.js'
+    //  init
+    try {
+        //  讀取畫面，遮蔽效果
+        loading()
+        let pageData = new initData()
+        await pageData.init(initNavbar)
+        await initPage(await pageData.check())
+        //  讀取完成，取消遮蔽
+        await loadEnd()
+    } catch (err) {
+        console.log('@ init 發生錯誤 => ', err)
+    }
+
+    //  initPage
+    async function initPage(data) {
+        //  public Var
+        let pageData = data
+        let { currentUser, me = {}, fansList } = pageData
+        //  初始化BetterScroll
+        let relationList = ['#fansList', '#idolList']
+        pageData.map_bs = initBetterScroll(relationList)
+
+        let isSelf = currentUser.id === me.id
+        //  追蹤鈕
+        let $btn_follow = $('#follow')
+        //  取消追蹤鈕
+        let $btn_cancelFollow = $('#cancelFollow')
+
+        //  UI
+        if (!isSelf) {  //  非自己的頁面
+            //  判端是否為自己的偶像，顯示追蹤/退追鈕
+            let isMyIdol = fansList.some((fans) => fans.id === me.id)
+            $btn_cancelFollow.toggleClass('my-noshow', !isMyIdol)
+            $btn_follow.toggleClass('my-noshow', isMyIdol)
+        } else {  //  自己的頁面
+            //  顯示建立新文章btn
+            $('#newBlog').removeClass('my-noshow')
+            //  顯示編輯文章title
+            $('[data-my-blog-key=hidden]').removeClass('my-noshow')
+            //  隱藏文章編輯/刪除功能
+            $('.btn-blog-edit').removeClass('my-noshow')
+        }
+
+        //  event listener
+        if (isSelf) {
+            //  綁定創建文章功能
+            $('#sendBlogTitle').click(handle_createBlog)
+            //  為刪除文章btn綁定handle
+            $(document).click((e) => {
+                let $target = $(e.target)
+                if ($target.attr('data-my-remove-blog')) {    //  刪除單篇
+                    handle_removeBlog($target)
+                } else if ($target.attr('data-my-remove-blogs')) { //  刪除全部
+                    handle_removeBlogs($target)
+                }
+            })
+        }
+        //  綁定追蹤/退追功能
+        $btn_follow.click(handle_follow(true))
+        $btn_cancelFollow.click(handle_follow(false))
+        //  文章列表 的 頁碼，綁定翻頁功能
+        $('[data-my-key].page-link').on('click', renderBlogList)
+        //  文章列表 的 上下頁，綁定翻頁功能
+        $('[data-my-way].page-link').on('click', renderBlogList)
+
+        //  handle -------
+        //  handle => 創建 blog
+        async function handle_createBlog(e) {
+            let title = getBlogTitle($('#blogTitle').val())
+            if (!title) {
+                alert('標題不能為空')
+                return
+            }
+            loading()
+            const {
+                data: {
+                    errno, data, msg
+                }
+            } = await axios.post('/api/blog', { title })
+            await loadEnd()
+            if (!errno) {
+                alert('BLOG創立完成')
+                location.href = `/blog/edit/${data.id}`
+            } else {
+                alert(`BLOG創立失敗 => ${msg}`)
             }
 
-            //  initPage
-            async function initPage(data) {
-                //  public Var
-                let pageData = data
-                let { currentUser, me = {}, fansList } = pageData
-                //  初始化BetterScroll
-                let relationList = ['#fansList', '#idolList']
-                pageData.map_bs = initBetterScroll(relationList)
-
-                let isSelf = currentUser.id === me.id
-                //  追蹤鈕
-                let $btn_follow = $('#follow')
-                //  取消追蹤鈕
-                let $btn_cancelFollow = $('#cancelFollow')
-
-                //  UI
-                if (!isSelf) {  //  非自己的頁面
-                    //  判端是否為自己的偶像，顯示追蹤/退追鈕
-                    let isMyIdol = fansList.some((fans) => fans.id === me.id)
-                    $btn_cancelFollow.toggleClass('my-noshow', !isMyIdol)
-                    $btn_follow.toggleClass('my-noshow', isMyIdol)
-                } else {  //  自己的頁面
-                    //  顯示建立新文章btn
-                    $('#newBlog').removeClass('my-noshow')
-                    //  顯示編輯文章title
-                    $('[data-my-blog-key=hidden]').removeClass('my-noshow')
-                    //  隱藏文章編輯/刪除功能
-                    $('.btn-blog-edit').removeClass('my-noshow')
+            //  取title值
+            function getBlogTitle(value) {
+                let val = value.trim()
+                if (!val.length) {
+                    return false
                 }
+                return filterXSS(value)
+            }
+        }
+        //  刪除當前頁碼的所有文章
+        async function handle_removeBlogs($target) {
+            //  取得文章列表container
+            let $blogList = $target.parents('[data-my-blog-key]')
+            //  取得當前文章列表的移除鈕
+            let $children = [...$blogList.find('[data-my-remove-blog]')]
+            //  取得所有移除鈕上的文章id
+            let listOfBlogId = $children.reduce((init, cur) => {
+                init.push($(cur).data('my-remove-blog'))
+                return init
+            }, [])
+            removeBlog(listOfBlogId)
+            return
+        }
+        //  刪除單篇文章功能
+        async function handle_removeBlog($target) {
+            if (!confirm('真的要刪掉?')) {
+                return
+            }
+            //  要被刪除的文章id
+            let id = $target.data('my-remove-blog')
+            //  送出刪除命令
+            await removeBlog(id)
+            return
+        }
+        //  渲染文章列表
+        function renderBlogList(e) {
+            e.preventDefault()
+            //  初始化文章列表分頁的htmlStr數據
+            if (!pageData.html_blogList) {
+                //  存放 文章列表分頁 的數據
+                pageData.html_blogList = { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } }
+            }
+            //  觸發handle的el(頁碼紐||上下頁紐)
+            let $btn = $(e.target)
+            //  取得文章列表的性質(公開||隱藏)
+            let pubOrPri = $btn.parents('div.blogList').data('my-blog-key')
+            //  呈現文章列表的ul
+            let $ul = $(`[data-my-blog-key=${pubOrPri}] ul.list-group`)
+            //  pageData內的文章列表htmlStr數據
+            let html_blogList = pageData.html_blogList[pubOrPri]
+            //  pageData內的文章列表數據
+            let data_blogList = pageData.blogList[pubOrPri]
+            //  當前頁碼(從0開始)
+            let curInd = html_blogList.curInd
+            //  目標頁碼(從0開始)
+            let tarInd = getTargetPage()
 
-                //  event listener
-                if (isSelf) {
-                    //  綁定創建文章功能
-                    $('#sendBlogTitle').click(handle_createBlog)
-                    //  為刪除文章btn綁定handle
-                    $(document).click( (e) => {
-                        let $target = $(e.target)
-                        if($target.attr('data-my-remove-blog')){    //  刪除單篇
-                            handle_removeBlog($target)
-                        }else if($target.attr('data-my-remove-blogs')){ //  刪除全部
-                            handle_removeBlogs($target)
-                        }
-                    })
+            //  從 pageData 取得當前列表頁的htmlStr數據
+            let data_curList = html_blogList.html[curInd]
+            if (!data_curList) {   //   若無值
+                //  將當前頁htmlStr存入pageData
+                html_blogList.html[curInd] = $ul.html()
+            }
+            //  從 pageData 取得目標頁的htmlStr數據
+            let html_tarInd = html_blogList.html[tarInd]
+            if (!html_tarInd) {    //   若無值
+                let i = 5
+                //  創建 目標頁 htmlStr
+                let htmlStr = data_blogList[tarInd].reduce((init, { id, title }) => {
+                    init += templateCreator_BlogList(id, title)
+                    i--
+                    return init
+                }, '')
+                if (i > 0) {
+                    for (i; i > 0; i--) {
+                        htmlStr += `<li
+                            class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
+                            <div class="text-truncate me-3">
+                                <span class="invisible">x</span>
+                            </div>
+                            <div class="btn-blog-edit flex-shrink-0 invisible">
+                                <a class='btn btn-outline-primary btn-sm'>編輯</a>
+                                <a class='btn btn-outline-primary btn-sm'>刪除</a>
+                            </div>
+                        </li>`
+                    }
                 }
-                //  綁定追蹤/退追功能
-                $btn_follow.click(handle_follow(true))
-                $btn_cancelFollow.click(handle_follow(false))
-                //  文章列表 的 頁碼，綁定翻頁功能
-                $('[data-my-key].page-link').on('click', renderBlogList)
-                //  文章列表 的 上下頁，綁定翻頁功能
-                $('[data-my-way].page-link').on('click', renderBlogList)
+                //  更新pageData
+                html_blogList.html[tarInd] = htmlStr
+            }
 
-                //  handle -------
-                //  handle => 創建 blog
-                async function handle_createBlog(e) {
-                    let title = getBlogTitle($('#blogTitle').val())
-                    if (!title) {
-                        alert('標題不能為空')
-                        return
-                    }
-                    loading()
-                    const {
-                        data: {
-                            errno, data, msg
-                        }
-                    } = await axios.post('/api/blog', { title })
-                    await loadEnd()
-                    if (!errno) {
-                        alert('BLOG創立完成')
-                        location.href = `/blog/edit/${data.id}`
-                    } else {
-                        alert(`BLOG創立失敗 => ${msg}`)
-                    }
+            //  更新頁碼條UI
+            UI_page()
+            //  渲染 目標頁 htmlStr
+            $ul.html(html_blogList.html[tarInd])
+            //  更新 pageData 的 htmlStr數據
+            html_blogList.curInd = tarInd
 
-                    //  取title值
-                    function getBlogTitle(value) {
-                        let val = value.trim()
-                        if (!val.length) {
-                            return false
-                        }
-                        return filterXSS(value)
-                    }
+            //  UI 頁碼條
+            function UI_page() {
+                //  當前文章列表的container
+                let $list = $(`[data-my-blog-key=${pubOrPri}]`)
+                //  移除 頁碼列 的 .active .my-disable
+                $list.find('li.page-item').removeClass('active my-disabled')
+                //  上一頁btn
+                let $back = $list.find(`li.page-item:first`)
+                //  下一頁btn
+                let $next = $list.find(`li.page-item:last`)
+                //  當前文章列表的最後一頁頁碼(從0開始)
+                let lastPageIndex = data_blogList.length - 1
+                if (tarInd === 0) {   // 若目標頁碼為0(第一頁)
+                    //  上一頁 禁按
+                    $back.addClass('my-disabled')
+                } else if (tarInd === lastPageIndex) { //  //  若目標頁碼為最後一頁
+                    //  下一頁 禁按
+                    $next.addClass('my-disabled')
                 }
-                //  刪除當前頁碼的所有文章
-                async function handle_removeBlogs($target) {
-                    //  取得文章列表container
-                    let $blogList = $target.parents('[data-my-blog-key]')
-                    //  取得當前文章列表的移除鈕
-                    let $children = [...$blogList.find('[data-my-remove-blog]')]
-                    //  取得所有移除鈕上的文章id
-                    let listOfBlogId = $children.reduce((init, cur) => {
-                        init.push($(cur).data('my-remove-blog'))
-                        return init
-                    }, [])
-                    removeBlog(listOfBlogId)
-                    return
-                }
-                //  刪除單篇文章功能
-                async function handle_removeBlog($target) {
-                    if (!confirm('真的要刪掉?')) {
-                        return
-                    }
-                    //  要被刪除的文章id
-                    let id = $target.data('my-remove-blog')
-                    //  送出刪除命令
-                    await removeBlog(id)
-                    return
-                }
-                //  渲染文章列表
-                function renderBlogList(e) {
-                    e.preventDefault()
-                    //  初始化文章列表分頁的htmlStr數據
-                    if (!pageData.html_blogList) {
-                        //  存放 文章列表分頁 的數據
-                        pageData.html_blogList = { show: { html: [], curInd: 0 }, hidden: { html: [], curInd: 0 } }
-                    }
-                    //  觸發handle的el(頁碼紐||上下頁紐)
-                    let $btn = $(e.target)
-                    //  取得文章列表的性質(公開||隱藏)
-                    let pubOrPri = $btn.parents('div.blogList').data('my-blog-key')
-                    //  呈現文章列表的ul
-                    let $ul = $(`[data-my-blog-key=${pubOrPri}] ul.list-group`)
-                    //  pageData內的文章列表htmlStr數據
-                    let html_blogList = pageData.html_blogList[pubOrPri]
-                    //  pageData內的文章列表數據
-                    let data_blogList = pageData.blogList[pubOrPri]
-                    //  當前頁碼(從0開始)
-                    let curInd = html_blogList.curInd
-                    //  目標頁碼(從0開始)
-                    let tarInd = getTargetPage()
-
-                    //  從 pageData 取得當前列表頁的htmlStr數據
-                    let data_curList = html_blogList.html[curInd]
-                    if (!data_curList) {   //   若無值
-                        //  將當前頁htmlStr存入pageData
-                        html_blogList.html[curInd] = $ul.html()
-                    }
-                    //  從 pageData 取得目標頁的htmlStr數據
-                    let html_tarInd = html_blogList.html[tarInd]
-                    if (!html_tarInd) {    //   若無值
-                        //  創建 目標頁 htmlStr
-                        let htmlStr = data_blogList[tarInd].reduce((init, { id, title }) => {
-                            return init += templateCreator_BlogList(id, title)
-                        }, '')
-                        //  更新pageData
-                        html_blogList.html[tarInd] = htmlStr
-                    }
-
-                    //  更新頁碼條UI
-                    UI_page()
-                    //  渲染 目標頁 htmlStr
-                    $ul.html(html_blogList.html[tarInd])
-                    //  更新 pageData 的 htmlStr數據
-                    html_blogList.curInd = tarInd
-
-                    //  UI 頁碼條
-                    function UI_page() {
-                        //  當前文章列表的container
-                        let $list = $(`[data-my-blog-key=${pubOrPri}]`)
-                        //  移除 頁碼列 的 .active .my-disable
-                        $list.find('li.page-item').removeClass('active my-disabled')
-                        //  上一頁btn
-                        let $back = $list.find(`li.page-item:first`)
-                        //  下一頁btn
-                        let $next = $list.find(`li.page-item:last`)
-                        //  當前文章列表的最後一頁頁碼(從0開始)
-                        let lastPageIndex = data_blogList.length - 1
-                        if (tarInd === 0) {   // 若目標頁碼為0(第一頁)
-                            //  上一頁 禁按
-                            $back.addClass('my-disabled')
-                        } else if (tarInd === lastPageIndex) { //  //  若目標頁碼為最後一頁
-                            //  下一頁 禁按
-                            $next.addClass('my-disabled')
-                        }
-                        //  目標頁碼紐的容器
-                        let $tarPage = $list.find(`a.page-link[data-my-ind=${tarInd}]`).parent()
-                        //  顯示為當前頁，並禁止點擊
-                        $tarPage.addClass('active my-disabled')
-                    }
-                    //  創建文章列表 htmlStr
-                    function templateCreator_BlogList(id, title) {
-                        //  依頁面是否為使用者自己的資料，來判斷是否提供文章的編輯/刪除紐
-                        let blogEdit = isSelf ? `
+                //  目標頁碼紐的容器
+                let $tarPage = $list.find(`a.page-link[data-my-ind=${tarInd}]`).parent()
+                //  顯示為當前頁，並禁止點擊
+                $tarPage.addClass('active my-disabled')
+            }
+            //  創建文章列表 htmlStr
+            function templateCreator_BlogList(id, title) {
+                //  依頁面是否為使用者自己的資料，來判斷是否提供文章的編輯/刪除紐
+                let blogEdit = isSelf ? `
                             <div class="btn-blog-edit">
                                 <a class='btn btn-outline-primary btn-sm' href="/blog/edit/${id}">編輯</a>
                                 <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="${id}">刪除</a>
                             </div>` : ''
 
-                        return `                    
+                return `                    
                         <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                             <div>
                                 <a class="stretched-link" href="/blog/${id}">${title}</a>
@@ -601,72 +635,72 @@
                             ${blogEdit}
                         </li>
                     `
-                    }
-                    //  取得目標頁碼
-                    function getTargetPage() {
-                        //  判斷觸發紐是頁碼||上下頁
-                        let typeOfTarget = $btn.attr('data-my-ind') ? 'page' : 'dir'
-                        //  取得目表頁碼
-                        if (typeOfTarget === 'page') {   // 頁碼觸發
-                            //  則觸發紐的[data-my-ind]即為目標頁碼
-                            return $btn.data('my-ind')
-                        } else if (typeOfTarget === 'dir') {   //上下頁觸發
-                            //  則以當前頁碼做計算
-                            return $btn.data('my-way') === 'next' ? curInd + 1 : curInd - 1
-                        }
-                    }
+            }
+            //  取得目標頁碼
+            function getTargetPage() {
+                //  判斷觸發紐是頁碼||上下頁
+                let typeOfTarget = $btn.attr('data-my-ind') ? 'page' : 'dir'
+                //  取得目表頁碼
+                if (typeOfTarget === 'page') {   // 頁碼觸發
+                    //  則觸發紐的[data-my-ind]即為目標頁碼
+                    return $btn.data('my-ind')
+                } else if (typeOfTarget === 'dir') {   //上下頁觸發
+                    //  則以當前頁碼做計算
+                    return $btn.data('my-way') === 'next' ? curInd + 1 : curInd - 1
                 }
-                //  handle 追蹤功能
-                function handle_follow(toFollow) {
-                    let { fansList, me } = pageData
-                    //  若未登入，跳轉到登入頁
-                    if (!me.id) {
-                        return () => {
-                            alert('請先登入')
-                            location.href = `/login?from=${location.pathname}`
-                        }
-                    }
+            }
+        }
+        //  handle 追蹤功能
+        function handle_follow(toFollow) {
+            let { fansList, me } = pageData
+            //  若未登入，跳轉到登入頁
+            if (!me.id) {
+                return () => {
+                    alert('請先登入')
+                    location.href = `/login?from=${location.pathname}`
+                }
+            }
 
-                    let api = toFollow ? '/api/user/follow' : '/api/user/cancelFollow'
+            let api = toFollow ? '/api/user/follow' : '/api/user/cancelFollow'
+            //  更新追蹤/退追的瀏覽器數據與頁面渲染
+            let followOrNot = toFollow ? follow : cancelFollow
+
+            return updateFansList
+            //  更新FansList
+            async function updateFansList(e) {
+                //  當前頁面使用者id
+                let { id } = pageData.currentUser
+                //  讀取遮罩
+                loading()
+                //  請求取消/追蹤
+                const {
+                    data: {
+                        errno, data, msg
+                    }
+                } = await axios.post(api, { id })
+                //  關閉讀取遮罩
+                loadEnd()
+
+                if (!errno) {
                     //  更新追蹤/退追的瀏覽器數據與頁面渲染
-                    let followOrNot = toFollow ? follow : cancelFollow
-
-                    return updateFansList
-                    //  更新FansList
-                    async function updateFansList(e) {
-                        //  當前頁面使用者id
-                        let { id } = pageData.currentUser
-                        //  讀取遮罩
-                        loading()
-                        //  請求取消/追蹤
-                        const {
-                            data: {
-                                errno, data, msg
-                            }
-                        } = await axios.post(api, { id })
-                        //  關閉讀取遮罩
-                        loadEnd()
-
-                        if (!errno) {
-                            //  更新追蹤/退追的瀏覽器數據與頁面渲染
-                            followOrNot()
-                            //  重整fansList 的 BetterScroll
-                            recheckBetterScroll(pageData.map_bs, '#fansList')()
-                            //  追蹤/退追鈕的toggle
-                            $btn_follow.toggle()
-                            $btn_cancelFollow.toggle()
-                        } else {
-                            alert('操作發生錯誤')
-                            console.log(msg)
-                        }
-                    }
-                    //  處理關於追蹤的瀏覽器數據與頁面渲染
-                    function follow() {
-                        alert('已追蹤')
-                        //  更新追蹤名單
-                        fansList.unshift(me)
-                        //  生成 粉絲htmlStr
-                        let htmlStr = `
+                    followOrNot()
+                    //  重整fansList 的 BetterScroll
+                    recheckBetterScroll(pageData.map_bs, '#fansList')()
+                    //  追蹤/退追鈕的toggle
+                    $btn_follow.toggle()
+                    $btn_cancelFollow.toggle()
+                } else {
+                    alert('操作發生錯誤')
+                    console.log(msg)
+                }
+            }
+            //  處理關於追蹤的瀏覽器數據與頁面渲染
+            function follow() {
+                alert('已追蹤')
+                //  更新追蹤名單
+                fansList.unshift(me)
+                //  生成 粉絲htmlStr
+                let htmlStr = `
                             <li class="card follow-box flex-shrink-0 me-1 p-1" data-fans-id="${me.id}">
                                 <div class="ratio ratio-1x1 mb-1">
                                     <img src="${me.avatar}" class="card-img-top" alt="">
@@ -676,117 +710,117 @@
                                 </div>
                             </li>
                         `
-                        //  在粉絲列表中插入 粉絲htmlStr
-                        if (fansList.length === 1) {  //  如果追蹤者只有當前的你
-                            //  直接塞入
-                            $(`#fansList > ul`).html(htmlStr)
-                        } else {  //  如果追蹤者不只當前的你
-                            //  插在最前面
-                            $(`#fansList > ul`).prepend(htmlStr)
-                        }
-                    }
-                    //  處理關於退追的瀏覽器數據與頁面渲染
-                    function cancelFollow() {
-                        alert('已退追')
-                        //  更新追蹤名單
-                        fansList.splice(fansList.indexOf(me.id), 1)
-                        //  在粉絲列表中移除 粉絲htmlStr
-                        if (fansList.length > 0) {  //  如果追蹤者不只有當前的你
-                            //  直接移除
-                            $(`li[data-fans-id='${me.id}']`).remove()
-                        } else {    //  如果沒追蹤者
-                            $(`#fansList > ul`).html(`<p class="p-3">目前無人追蹤</p>`)
-                        }
-                    }
-                }
-
-                //  init ----
-                //  init BetterScroll
-                function initBetterScroll(id_list) {
-                    let map_bs = new Map()
-                    // 調整粉絲、追蹤列表
-                    for (let list of id_list) {
-                        let bs = BetterScroll.createBScroll(document.querySelector(list), {
-                            scrollX: true,
-                            scrollY: false,
-                            mouseWheel: true
-                        })
-                        //  儲存bs
-                        map_bs.set(list, bs)
-                        //  檢查bs是否可滾動
-                        recheckBetterScroll(map_bs, list)()
-                        //  當頁面尺寸變動，檢查bs是否可滾動
-                        window.addEventListener('resize', debounce(recheckBetterScroll(map_bs, list), 150))
-                    }
-                    return map_bs
-                    //  防抖動，刪除指定時間內重複觸發的函數，僅最後一次會成功觸發
-                    function debounce(fuc, ms){
-                        let t
-                        return (e) => {
-                            if(t){
-                                clearTimeout(t)
-                            }
-                            t = setTimeout(() => fuc(e), ms)
-                        }
-                    }
-                }
-
-                //  utils -----
-                //  axios 刪除文章
-                async function removeBlog(blogList) {
-                    //  送出刪除命令
-                    loading()
-                    const {
-                        data: {
-                            errno, data, msg
-                        }
-                    } = await axios.delete('/api/blog', { data: { id: blogList } })
-                    loadEnd()
-                    if (!errno) {
-                        alert('已成功刪除該頁文章')
-                        location.href = '/self' //  刷新頁面
-                    } else if (errno === 501) {   //  代表未登入
-                        location.href = '/login'
-                    } else {  //  刪除失敗
-                        alert(msg)
-                    }
+                //  在粉絲列表中插入 粉絲htmlStr
+                if (fansList.length === 1) {  //  如果追蹤者只有當前的你
+                    //  直接塞入
+                    $(`#fansList > ul`).html(htmlStr)
+                } else {  //  如果追蹤者不只當前的你
+                    //  插在最前面
+                    $(`#fansList > ul`).prepend(htmlStr)
                 }
             }
-
-            //  utils
-            //  讀取畫面，遮蔽效果
-            function loading() {
-                $('#backdrop').addClass('my-show')
-                $('input').attr('disabled', true)
-            }
-            //  讀取完成，取消遮蔽
-            function loadEnd() {
-                $('#backdrop').removeClass('my-show')
-                $('input').removeAttr('disabled')
-                // return new Promise((resolve) => setTimeout(resolve , 200) )
-            }
-            //  檢查bs是否可滾動
-            function recheckBetterScroll(map_bs, list) {
-                return () => {
-                    //  取出當前bs
-                    let bs = map_bs.get(list)
-                    //  bs的wrapper之width
-                    let $wrapper = $(`${list}`).first().outerWidth()
-                    //  wrapper的content之width(含margin)
-                    let $content = $(`${list} > ul`).first().outerWidth(true)
-                    //  判斷是否需要啟用bs
-                    if ($wrapper >= $content) {
-                        //  停用bs
-                        bs.disable()
-                    } else {
-                        //  啟用bs
-                        bs.enable()
-                        //  重整bs
-                        bs.refresh()
-                    }
+            //  處理關於退追的瀏覽器數據與頁面渲染
+            function cancelFollow() {
+                alert('已退追')
+                //  更新追蹤名單
+                fansList.splice(fansList.indexOf(me.id), 1)
+                //  在粉絲列表中移除 粉絲htmlStr
+                if (fansList.length > 0) {  //  如果追蹤者不只有當前的你
+                    //  直接移除
+                    $(`li[data-fans-id='${me.id}']`).remove()
+                } else {    //  如果沒追蹤者
+                    $(`#fansList > ul`).html(`<p class="p-3">目前無人追蹤</p>`)
                 }
             }
-        </script>
-        </body>
+        }
 
-        </html>
+        //  init ----
+        //  init BetterScroll
+        function initBetterScroll(id_list) {
+            let map_bs = new Map()
+            // 調整粉絲、追蹤列表
+            for (let list of id_list) {
+                let bs = BetterScroll.createBScroll(document.querySelector(list), {
+                    scrollX: true,
+                    scrollY: false,
+                    mouseWheel: true
+                })
+                //  儲存bs
+                map_bs.set(list, bs)
+                //  檢查bs是否可滾動
+                recheckBetterScroll(map_bs, list)()
+                //  當頁面尺寸變動，檢查bs是否可滾動
+                window.addEventListener('resize', debounce(recheckBetterScroll(map_bs, list), 150))
+            }
+            return map_bs
+            //  防抖動，刪除指定時間內重複觸發的函數，僅最後一次會成功觸發
+            function debounce(fuc, ms) {
+                let t
+                return (e) => {
+                    if (t) {
+                        clearTimeout(t)
+                    }
+                    t = setTimeout(() => fuc(e), ms)
+                }
+            }
+        }
+
+        //  utils -----
+        //  axios 刪除文章
+        async function removeBlog(blogList) {
+            //  送出刪除命令
+            loading()
+            const {
+                data: {
+                    errno, data, msg
+                }
+            } = await axios.delete('/api/blog', { data: { id: blogList } })
+            loadEnd()
+            if (!errno) {
+                alert('已成功刪除該頁文章')
+                location.href = '/self' //  刷新頁面
+            } else if (errno === 501) {   //  代表未登入
+                location.href = '/login'
+            } else {  //  刪除失敗
+                alert(msg)
+            }
+        }
+    }
+
+    //  utils
+    //  讀取畫面，遮蔽效果
+    function loading() {
+        $('#backdrop').addClass('my-show')
+        $('input').attr('disabled', true)
+    }
+    //  讀取完成，取消遮蔽
+    function loadEnd() {
+        $('#backdrop').removeClass('my-show')
+        $('input').removeAttr('disabled')
+        // return new Promise((resolve) => setTimeout(resolve , 200) )
+    }
+    //  檢查bs是否可滾動
+    function recheckBetterScroll(map_bs, list) {
+        return () => {
+            //  取出當前bs
+            let bs = map_bs.get(list)
+            //  bs的wrapper之width
+            let $wrapper = $(`${list}`).first().outerWidth()
+            //  wrapper的content之width(含margin)
+            let $content = $(`${list} > ul`).first().outerWidth(true)
+            //  判斷是否需要啟用bs
+            if ($wrapper >= $content) {
+                //  停用bs
+                bs.disable()
+            } else {
+                //  啟用bs
+                bs.enable()
+                //  重整bs
+                bs.refresh()
+            }
+        }
+    }
+</script>
+</body>
+
+</html>

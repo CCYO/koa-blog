@@ -191,7 +191,6 @@ async function initNavbar() {
                 let count = num.total - pageData.news.excepts.num
                 //  count > 0 || 此次撈取的newsData含有新通知
                 let more = count > 0 || newsList.unconfirm.length !== 0
-                console.log(num.total, '-', pageData.news.excepts.num, '=', count, more)
                 show($readMore, more)
                 show($noNews, !more)
             }
