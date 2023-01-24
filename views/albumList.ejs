@@ -1,53 +1,64 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
 <%- include('wedgets/header') %>
-    <div class='container p-3'>
-        <h1>文章列表</h1>
-        <ul class="list-group">
-            <% albumList.list.forEach( ({ id, title }) => { %>
-            <li class="list-group-item">
-                <a href="/album/<%= id %>"><%= title %></a>
-            </li>
-            <% }) %>
-        </ul>
+<style>
+    .box-albumList {
+        padding: 1rem;
+    }
+</style>
+<div class='container main'>
+    <h1>文章列表</h1>
+    <div class="box-albumList">
+    <% if(albumList.list.length){ %>
+    <% albumList.list.forEach( ({ id, title }) => { %>
+    <ul class="list-group">
+        <li class="list-group-item">
+            <a href="/album/<%= id %>"><%= title %></a>
+        </li>
+    </ul>
+    <% }) %>
+    <% } else { %>
+    <p>沒有相簿</p>
+    <% } %>
     </div>
-    <!-- JQ AXIOS BS5 -->
-    <%- include('wedgets/cdn') %>
+</div>
+<!-- JQ AXIOS BS5 -->
+<%- include('wedgets/cdn') %>
 
-    <script type="module" defer>
-        //  初始化來自ejs傳入當前頁面所需的數據
-        import initData from '/js/initData.js'
-        //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
-        import initNavbar from '/js/navbar.js'
+<script type="module" defer>
+    //  初始化來自ejs傳入當前頁面所需的數據
+    import initData from '/js/initData.js'
+    //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
+    import initNavbar from '/js/navbar.js'
 
-        try {
-            //  讀取中，遮蔽畫面
-            loading()
-            //  初始化ejs附帶的數據
-            let pageData = new initData()
-            //  初始化navbar數據
-            await pageData.init(initNavbar)
-            //  確認以上所有初始化已完成，取得彙整後數據
-            let { album } = await pageData.check()
-            //  初始化頁面功能，並傳入上面彙整後的初始化數據
-            // await initPage(album)
-            //  讀取完成，解除遮蔽
-            loadEnd()
-        } catch (e) {
-            console.log('@page error => ', e)
-        }
+    try {
+        //  讀取中，遮蔽畫面
+        loading()
+        //  初始化ejs附帶的數據
+        let pageData = new initData()
+        //  初始化navbar數據
+        await pageData.init(initNavbar)
+        //  確認以上所有初始化已完成，取得彙整後數據
+        let { album } = await pageData.check()
+        //  初始化頁面功能，並傳入上面彙整後的初始化數據
+        // await initPage(album)
+        //  讀取完成，解除遮蔽
+        loadEnd()
+    } catch (e) {
+        console.log('@page error => ', e)
+    }
 
-        //  utils ------
-        //  讀取畫面，遮蔽效果
-        function loading() {
-            $('#backdrop').addClass('my-show')
-            $('input').attr('disabled', true)
-        }
-        //  讀取完成，取消遮蔽
-        function loadEnd() {
-            $('#backdrop').removeClass('my-show')
-            $('input').removeAttr('disabled')
-        }
-    </script>
+    //  utils ------
+    //  讀取畫面，遮蔽效果
+    function loading() {
+        $('#backdrop').addClass('my-show')
+        $('input').attr('disabled', true)
+    }
+    //  讀取完成，取消遮蔽
+    function loadEnd() {
+        $('#backdrop').removeClass('my-show')
+        $('input').removeAttr('disabled')
+    }
+</script>
 </body>
 
 </html>

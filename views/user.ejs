@@ -10,21 +10,6 @@
         background: #fff;
     }
 
-    .follow-box {
-        /* min-width: 50%; */
-        background: rgba(255, 255, 255, .1);
-        border: none;
-    }
-
-    .follow-box:hover {
-        background: rgba(255, 255, 255, .3);
-    }
-
-    .follow-box a {
-        text-decoration: none;
-        font-size: 0.25rem;
-    }
-
     .list-group>.btn {
         margin-left: auto;
         margin-right: 0;
@@ -69,20 +54,71 @@
     }
 
     .blogList .text-truncate,
-    #fansList .text-truncate,
-    #idolList .text-truncate {
+    .card>.text-truncate {
         color: #0d6efd
     }
 
-    #fansList:hover,
-    #idolList:hover {
+    .card>.text-truncate {
+        text-align: center;
+        margin-top: 0.25rem;
+    }
+
+    .relationShip-box {
+        padding: 1rem;
+        background-color: rgba(255, 255, 255, .3);
+    }
+
+    .relationShip-box:last-child {
+        margin-top: 1rem;
+    }
+
+    .relationShip-list-box {
+        overflow: hidden;
+    }
+
+    .relationShip-list-box:hover {
         background-color: rgba(255, 255, 255, .1);
     }
 
-    #fansList>ul li,
-    #idolList>ul li {
+    .relationShip-list-box>ul {
+        display: inline-flex;
+        padding: 0;
+        margin: 0;
+    }
+
+    .relationShip-list-box>ul>li {
         /* min-width: 5rem; */
-        width: 5rem
+        width: 5rem;
+        background: rgba(255, 255, 255, .1);
+        border: none;
+        flex-shrink: 0;
+        margin-right: 0.25rem;
+        padding: 0.25rem;
+    }
+
+    .relationShip-list-box>ul>li:last-child {
+        margin-right: 0;
+    }
+
+    .relationShip-list-box>ul>li:hover {
+        background: rgba(255, 255, 255, .3);
+    }
+
+    .relationShip-list-box>ul>li a {
+        text-decoration: none;
+        font-size: 0.25rem;
+    }
+    .avatar-box {
+        padding: 1rem;
+        text-align: center;
+
+    }
+    .ratio > img {
+        border-radius: 50% 50%;
+    }
+
+    .ratio ~ button {
+        margin-top: .25rem
     }
 
     @media (max-width: 575.9px) {
@@ -90,82 +126,89 @@
             flex-grow: 0;
             flex-shrink: 0;
             flex-basis: auto;
-            min-width: 15rem;
-            margin-bottom: -3rem;
+            max-width: 12rem;
+            margin: 0 auto;
         }
 
         .card-body {
             text-align: center;
+        }
 
+        .card-title,
+        .card-body > hr {
+            display: none;
         }
 
         .card-title {
             position: relative;
             background: rgba(255, 255, 255, .5);
         }
+
+        .card-body > p {
+            margin-bottom: 0.25rem
+        }
     }
 
     @media (min-width: 576px) {
-
-        #fansList>ul li,
-        #idolList>ul li {
+        .relationShip-list-box>ul>li {
             /* min-width: 5rem; */
             width: 5rem
         }
     }
 
     @media (min-width: 992px) {
-
-        #fansList>ul li,
-        #idolList>ul li {
+        .relationShip-list-box>ul>li {
             /* min-width: 6rem; */
             width: 6rem;
         }
     }
 
     @media (min-width: 1200px) {
-
-        #fansList>ul li,
-        #idolList>ul li {
+        .relationShip-list-box>ul>li {
             /* min-width: 7rem; */
             width: 7rem;
         }
     }
 </style>
+<!-- 斷點提示 -->
 <div class="d-sm-none position-fixed top-0 start-0 bg-success text-white" style="z-index: 1080;">xs</div>
 <div class="d-md-none position-fixed top-0 end-0 bg-success text-white" style="z-index: 1080;">sm</div>
 <div class="d-lg-none position-fixed bottom-0 start-0 bg-success text-white" style="z-index: 1080;">md</div>
 <div class="d-xl-none position-fixed bottom-0 end-0 bg-success text-white" style="z-index: 1080;">lg</div>
 <div class="d-xxl-none position-fixed bottom-50 end-50 bg-success text-white" style="z-index: 1080;">xl</div>
+<!-- 數據讀取提示 -->
 <div id='backdrop' class="my-noshow">
     <div>讀取中...</div>
 </div>
-<div class="main container-md mb-3">
-    <div class="row gx-3">
-        <div class="col-md-8 border-end">
-
-            <div class="card mb-3">
-                <div class="user-info row align-items-center justify-content-center">
-                    <div class="avatar-box col-4 text-center">
-                        <div class="p-1">
-                            <div class="ratio ratio-1x1 mb-1">
-                                <img src="<%= currentUser.avatar %>" class="img-fluid mb-1"
-                                    style="border-radius: 50% 50%;" alt="...">
+<!-- MAIN -->
+<div class="container-md main">
+    <!-- 使用者資訊 + 文章列表 -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="userInfo">
+                <div class="card">
+                    <div class="row align-items-center justify-content-center">
+                        <div class="col-sm-4">
+                            <div class="avatar-box">
+                                <div class="ratio ratio-1x1">
+                                    <img src="<%= currentUser.avatar %>" class="img-fluid" alt="...">
+                                </div>
+                                <button id="cancelFollow" type="button"
+                                    class="btn btn-danger btn-sm follow my-noshow">取消追蹤</button>
+                                <button id="follow" type="button"
+                                    class="btn btn-success btn-sm follow my-noshow">追蹤</button>
                             </div>
-                            <button id="cancelFollow" type="button"
-                                class="btn btn-danger btn-sm follow my-noshow">取消追蹤</button>
-                            <button id="follow" type="button"
-                                class="btn btn-success btn-sm follow my-noshow">追蹤</button>
+
                         </div>
-                    </div>
-                    <div class="col-sm-8">
-                        <div class="card-body">
-                            <h5 class="card-title">主要資料</h5>
-                            <hr>
-                            <p>信箱： <%= currentUser.email %>
-                            </p>
-                            <p>暱稱： <%= currentUser.nickname %>
-                            </p>
+                        <div class="col-sm-8">
+                            <div class="card-body">
+                                <h5 class="card-title">主要資料</h5>
+                                <hr>
+                                <p>信箱： <%= currentUser.email %>
+                                </p>
+                                <p>暱稱： <%= currentUser.nickname %>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -331,51 +374,56 @@
         </div>
         <hr class="d-md-none">
         <div class="col-md-4">
-            <div>
-                <p>粉絲列表</p>
-                <div id="fansList" class="overflow-hidden">
-                    <ul class="d-inline-flex p-0">
-                        <!-- <ul id="fansList" class="d-flex w-100 overflow-x p-0"> -->
+            <div class="relationShip-container">
+                <div class="relationShip-box">
+                    <h3>粉絲列表</h3>
+                    <div id="fansList" class="relationShip-list-box">
+                        <% if(fansList.length) {%>
                         <% fansList.forEach(fans=> { %>
-                        <li class="card follow-box flex-shrink-0 me-1 p-1" data-fans-id="<%= fans.id %>">
-                            <div class="ratio ratio-1x1 mb-1">
-                                <img src="<%= fans.avatar %>" class="card-img-top" alt="">
-                            </div>
-                            <div class="text-center p-1 text-truncate">
-                                <a href="/other/<%= fans.id %>" class="stretched-link">
-                                    <%= fans.nickname %>
-                                </a>
-                            </div>
-                        </li>
-
+                        <ul>
+                            <li class="card" data-fans-id="<%= fans.id %>">
+                                <div class="ratio ratio-1x1">
+                                    <img src="<%= fans.avatar %>" class="card-img-top" alt="">
+                                </div>
+                                <div class="text-truncate">
+                                    <a href="/other/<%= fans.id %>" class="stretched-link">
+                                        <%= fans.nickname %>
+                                    </a>
+                                </div>
+                            </li>
+                        </ul>
                         <% }) %>
-                    </ul>
+                        <% } else { %>
+                        <p>可憐阿，沒有朋友</p>
+                        <% } %>
+                    </div>
                 </div>
-            </div>
-            <div>
-                <p>追蹤列表</p>
-                <div id="idolList" class="overflow-hidden">
-                    <ul class="d-inline-flex p-0">
-                        <!-- <ul id="fansList" class="d-flex w-100 overflow-x p-0"> -->
+                <div class="relationShip-box">
+                    <h3>追蹤列表</h3>
+                    <div id="idolList" class="relationShip-list-box">
+                        <% if(idolList.length) {%>
                         <% idolList.forEach(idol=> { %>
-                        <li class="card follow-box flex-shrink-0 me-1 p-1" data-idol-id="<%= idol.id %>">
-                            <div class="ratio ratio-1x1 mb-1">
-                                <img src="<%= idol.avatar %>" class="card-img-top" alt="">
-                            </div>
-                            <div class="text-center p-1 text-truncate">
-                                <a href="/other/<%= idol.id %>" class="stretched-link">
-                                    <%= idol.nickname %>
-                                </a>
-                            </div>
-                        </li>
-
+                        <ul>
+                            <li class="card" data-idol-id="<%= idol.id %>">
+                                <div class="ratio ratio-1x1">
+                                    <img src="<%= idol.avatar %>" class="card-img-top" alt="">
+                                </div>
+                                <div class="text-truncate">
+                                    <a href="/other/<%= idol.id %>" class="stretched-link">
+                                        <%= idol.nickname %>
+                                    </a>
+                                </div>
+                            </li>
+                        </ul>
                         <% }) %>
-                    </ul>
-                </div>
+                        <% } else { %>
+                        <p>沒有偶像，你最屌</p>
+                        <% } %>
+                    </div>
 
+                </div>
             </div>
         </div>
-
     </div>
 </div>
 </div>
@@ -700,23 +748,23 @@
                 //  更新追蹤名單
                 fansList.unshift(me)
                 //  生成 粉絲htmlStr
-                let htmlStr = `
-                            <li class="card follow-box flex-shrink-0 me-1 p-1" data-fans-id="${me.id}">
-                                <div class="ratio ratio-1x1 mb-1">
+                let li = `
+                            <li class="card" data-fans-id="${me.id}">
+                                <div class="ratio ratio-1x1">
                                     <img src="${me.avatar}" class="card-img-top" alt="">
                                 </div>
-                                <div class="text-center p-1 text-truncate">
+                                <div class="text-truncate">
                                     <a href="/other/${me.id}" class="stretched-link">${me.nickname}</a>
                                 </div>
                             </li>
                         `
                 //  在粉絲列表中插入 粉絲htmlStr
+                let listBox = $(`#fansList`)
                 if (fansList.length === 1) {  //  如果追蹤者只有當前的你
-                    //  直接塞入
-                    $(`#fansList > ul`).html(htmlStr)
+                    $(`#fansList`).html(`<ul class="d-inline-flex p-0">${li}</ul>`)
                 } else {  //  如果追蹤者不只當前的你
                     //  插在最前面
-                    $(`#fansList > ul`).prepend(htmlStr)
+                    $(`#fansList > ul`).prepend(li)
                 }
             }
             //  處理關於退追的瀏覽器數據與頁面渲染
@@ -729,7 +777,7 @@
                     //  直接移除
                     $(`li[data-fans-id='${me.id}']`).remove()
                 } else {    //  如果沒追蹤者
-                    $(`#fansList > ul`).html(`<p class="p-3">目前無人追蹤</p>`)
+                    $(`#fansList`).html(`<p>可憐阿，沒有朋友</p>`)
                 }
             }
         }
@@ -805,18 +853,21 @@
             //  取出當前bs
             let bs = map_bs.get(list)
             //  bs的wrapper之width
-            let $wrapper = $(`${list}`).first().outerWidth()
+            let $wrapperWidth = $(`${list}`).first().outerWidth()
             //  wrapper的content之width(含margin)
-            let $content = $(`${list} > ul`).first().outerWidth(true)
+            let $contentWidth = $(`${list} > *:first-child`).first().outerWidth(true)
             //  判斷是否需要啟用bs
-            if ($wrapper >= $content) {
+            console.log('$wrapperWidth', $wrapperWidth, '$contentWidth', $contentWidth)
+            if ($wrapperWidth >= $contentWidth) {
                 //  停用bs
                 bs.disable()
+                console.log('停用')
             } else {
                 //  啟用bs
                 bs.enable()
                 //  重整bs
                 bs.refresh()
+                console.log('啟用')
             }
         }
     }

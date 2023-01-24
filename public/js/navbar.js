@@ -340,6 +340,9 @@ async function initNavbar() {
             let { pathname, albumList } = reg_pathname.exec(location.pathname).groups
             if (user_id) {
                 let template_news = `
+                <li class="nav-item">
+                    <a class="nav-link" href="/square">廣場頁</a>
+                </li>   
                     <a class="nav-link dropdown-toggle" href="#" id="newsDropdown"
                         role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">通知
                         <span class="position-absolute translate-middle badge rounded-pill bg-danger news-count"></span>
@@ -361,13 +364,13 @@ async function initNavbar() {
                 let template_inOffcanvas = `
                 <ul class="navbar-nav justify-content-around">
                     <li class="nav-item">
-                        <a class="nav-link me-2" href="/self">個人頁面</a>
+                        <a class="nav-link" href="/self">個人頁面</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link me-2" href="/album/list/${user_id}">文章相簿</a>
+                        <a class="nav-link" href="/album/list/${user_id}">文章相簿</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link me-2 " href="/setting">個人設置</a>
+                        <a class="nav-link" href="/setting">個人設置</a>
                     </li>
                     <li class="nav-item">
                         <a id="logout" class="btn btn-outline-success text-nowrap">登出</a>
@@ -379,8 +382,11 @@ async function initNavbar() {
                         ${template_news}
                 </li>
                 `
-                $('#my-navbar-header-register').html(template_outOffcanvas)
-                $('.offcanvas-body').html(template_inOffcanvas)
+                //  若登入狀態
+                //  #noNeedCollapse-list 內放入 NEWS
+                $('#noNeedCollapse-list').html(template_outOffcanvas)
+                //  #needCollapse-list 之外放入 個人資訊/文章相簿/設置/LOGOUT
+                $('#needCollapse-list').html(template_inOffcanvas)
                 if (pathname === 'self') {
                     $(`.nav-link[href="/self"]`).addClass('active')
                 } else if (pathname === 'setting') {
@@ -390,6 +396,7 @@ async function initNavbar() {
                 }
             } else {
                 //  未登入
+                /*
                 let template_outOffcanvas = `
                 <li class="nav-item">
                     <a class="nav-link nav-tab ${pathname === 'register' ? 'active' : ''}" href="/register" data-my-tab="#register">註冊</a>
@@ -398,12 +405,15 @@ async function initNavbar() {
                     <a class="nav-link nav-tab ${pathname === 'login' ? 'active' : ''}" href="/login" data-my-tab="#login">登入</a>
                 </li>`
                 $('#my-navbar-header-register').html(template_outOffcanvas)
+                */
                 //  navbar始終展開
                 $('.navbar').removeClass('navbar-expand-sm').addClass('navbar-expand')
                 //  基本nav始終排後面（未登入狀態僅會有 登入/註冊）
                 $('.nav').removeClass('order-0 order-md-0').addClass('order-1')
                 //  摺疊nav始終盤排前頭（未登入狀態僅會有Home）
                 $('.offcanvas').removeClass('order-1 order-md-1').addClass('order-0')
+
+                $('.navbar-toggler, .offcanvas').remove()
             }
             //  廣場頁active
             if (pathname === 'square') {

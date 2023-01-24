@@ -1,9 +1,9 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
 <%- include('wedgets/header') %>
 
-<div class="container py-3">
+<div class="container main py-3">
     <h1 class="mb-3"><%= title %>的照片列表</h1>
-    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-1">
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
         <% album.imgs.forEach( ({id, img_id, blogImg_id, url, alt})=> { %>
         <div>
             <div class="card border-dark" data-my-photo="<%= id %>">
@@ -23,9 +23,11 @@
         </div>
         <% }) %>
     </div>
-    <!-- 當前使用者頁面的使用者資料 -->
-    <div data-my-data="album" style="display: none;">
-        <%- JSON.stringify(album) %>
+    <div>
+        <!-- 當前使用者頁面的使用者資料 -->
+        <div data-my-data="album" style="display: none;">
+            <%- JSON.stringify(album) %>
+        </div>
     </div>
 </div>
 <!-- 引入 xss -->
@@ -46,7 +48,7 @@
 
     try {
         //  讀取中，遮蔽畫面
-        loading()
+        // loading()
         //  初始化ejs附帶的數據
         let pageData = new initData()
         //  初始化navbar數據
@@ -64,6 +66,7 @@
     async function initPage(data) {
         //  公用變量
         let { blog, imgs, map_imgs } = data
+        console.log('init ---', data)
 
         //  handle ---
         //  照片名稱span，handle click => 顯示、聚焦改名表格
@@ -112,7 +115,7 @@
             let blogImgAlt_id = $container.attr('data-my-photo') * 1
             let { alt } = map_imgs.get(blogImgAlt_id)
             console.log(alt, $el.val().trim())
-            if(alt === $el.val().trim()){
+            if (alt === $el.val().trim()) {
                 // $el.parent().removeClass('d-flex invalide')
                 // $el.parent().toggle()
                 $container.find('.card-text').toggle()

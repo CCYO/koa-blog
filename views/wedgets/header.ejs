@@ -17,59 +17,45 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300&display=swap" rel="stylesheet">
-    <style>
-        .dropdown-menu {
-            min-width: 40vw;
-        }
-        @media (max-width: 576px) {
-            body {
-                --bs-body-font-size: 0.6rem;
-            }
-
-            .dropdown-menu {
-                font-size: 0.6rem;
-                max-width: 70vw;
-            }
-        }
-
-        @media (min-width: 577px) {
-            .dropdown-menu {
-                max-width: 40vw;
-            }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <nav class="navbar navbar-expand-sm navbar-light bg-light fixed-top">
         <div class="container-fluid flex-nowrap">
+            <!-- 首頁/廣場頁 -->
             <a class="navbar-brand" href="/square">KOA-BLOG</a>
-            <!-- 註冊/登入 -->
-            <ul class="nav nav-pills ms-auto order-0 order-md-0 flex-grow-1 justify-content-end me-3"
-                id="my-navbar-header-register">
-
+            <!-- 廣場頁 + 註冊/登入 -->
+            <ul class="nav ms-auto flex-grow-1 justify-content-end"
+                id="noNeedCollapse-list">
+                <li class="nav-item">
+                    <a class="nav-link" href="/square">廣場頁</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-tab" href="/register" data-my-tab="#register">註冊</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-tab" href="/login" data-my-tab="#login">登入</a>
+                </li>
             </ul>
-            <!-- 收合鈕 navbar-toggler -->
-            <button class="navbar-toggler order-1" type="button" data-bs-toggle="offcanvas"
+            <!-- 收合鈕 -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas"
                 data-bs-target="#offcanvasNavbar" aria-controls="navbarNav" aria-expanded="false"
                 aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <!-- 收合內容 navbar-collapse -->
-            <div class="offcanvas offcanvas-start order-md-1 flex-grow-0" id="offcanvasNavbar">
+            <!-- 收合內容 -->
+            <div class="offcanvas offcanvas-start flex-grow-0" id="offcanvasNavbar">
+                <!-- 收合內容 標題-->
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
                     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
                         aria-label="Close"></button>
                 </div>
 
-                <!-- 表單列 -->
+                <!-- 收合內容 表單列 -->
                 <div class="offcanvas-body">
-                    <ul class="navbar-nav w-100">
-                        <!-- 表單項 -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="/square">Home</a>
-                        </li>
+                    <ul class="navbar-nav w-100" id="needCollapse-list">
                     </ul>
                 </div>
             </div>

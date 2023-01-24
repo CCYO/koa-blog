@@ -1,5 +1,5 @@
 * {
-    font-family: 'Noto Sans TC', 'consolas';
+    font-family: 'Libre Baskerville', 'Noto Sans TC', 'consolas';
     ;
 }
 
@@ -9,9 +9,13 @@ body {
 
 .main, .footer {
     background: rgb(219, 159, 159);
-    padding-top: 1rem;
-    position  : relative;
-    top       : 4rem;
+    padding: 1rem;
+}
+.main {
+    margin-top: 4rem;
+}
+.footer {
+    margin-top: 1rem;
 }
 
 .my-show {
