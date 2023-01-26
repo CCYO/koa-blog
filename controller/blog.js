@@ -217,7 +217,7 @@ async function getBlogListByUserId(user_id) {
             //  移除show屬性
             delete item.show
             if(item.showAt){
-                date.format(new Date(item.showAt), 'YYYY/MM/DD HH:mm:ss')
+                item.showAt = date.format(new Date(item.showAt), 'YYYY/MM/DD HH:mm:ss')
             }
             item.createdAt = date.format(new Date(item.createdAt), 'YYYY/MM/DD HH:mm:ss')
             //  若指定的ArrayItem內已有5筆資料，則該show分纇的頁碼+1，並創建該頁碼的ArrayItem
