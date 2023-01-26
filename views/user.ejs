@@ -2,6 +2,9 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
 <%- include('wedgets/header') %>
 <style>
+    .timestamp {
+        font-size: 0.5rem
+    }
     .btn-blog-edit {
         z-index: 2;
     }
@@ -13,6 +16,10 @@
     .list-group>.btn {
         margin-left: auto;
         margin-right: 0;
+    }
+
+    .blogs-container {
+        margin-top: .5rem;
     }
 
     .blogList {
@@ -108,16 +115,18 @@
         text-decoration: none;
         font-size: 0.25rem;
     }
+
     .avatar-box {
         padding: 1rem;
         text-align: center;
 
     }
-    .ratio > img {
+
+    .ratio>img {
         border-radius: 50% 50%;
     }
 
-    .ratio ~ button {
+    .ratio~button {
         margin-top: .25rem
     }
 
@@ -135,7 +144,7 @@
         }
 
         .card-title,
-        .card-body > hr {
+        .card-body>hr {
             display: none;
         }
 
@@ -144,7 +153,7 @@
             background: rgba(255, 255, 255, .5);
         }
 
-        .card-body > p {
+        .card-body>p {
             margin-bottom: 0.25rem
         }
     }
@@ -213,8 +222,8 @@
                     </div>
                 </div>
             </div>
-            <hr>
-            <div id="blogs">
+
+            <div class="blogs-container">
                 <!-- Button trigger modal -->
                 <button id="newBlog" type="button" class="btn btn-primary mb-1 my-noshow" data-bs-toggle="modal"
                     data-bs-target="#exampleModal">
@@ -248,15 +257,18 @@
                             class="btn btn-sm btn-outline-danger <%= blogList.show.length? 'my-show' : 'my-noshow'%>"
                             data-my-remove-blogs="show">全部刪除</button>
                     </div>
-                    <% if(blogList.show.length){ %>
+                    <% if(blogList.show.length && blogList.show[0].length){ %>
                     <ul class="list-group list-group-flush">
-                        <% blogList.show[0].forEach(({id, title})=> { %>
+                        <% blogList.show[0].forEach(({id, title, showAt})=> { %>
                         <li
                             class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                             <div class="text-truncate me-3">
                                 <a href="/blog/<%= id %>" class="stretched-link">
                                     <%= title %>
                                 </a>
+                            </div>
+                            <div class="d-none d-sm-block">
+                                <span class="timestamp">發佈於<%= showAt %></span>
                             </div>
                             <div class="btn-blog-edit my-noshow flex-shrink-0">
                                 <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
@@ -313,15 +325,18 @@
                             class="btn btn-sm btn-outline-danger <%= blogList.hidden.length? 'my-show' : 'my-noshow'%>"
                             data-my-remove-blogs="hidden">全部刪除</button>
                     </div>
-                    <% if(blogList.hidden.length){ %>
+                    <% if(blogList.hidden.length && blogList.hidden[0].length){ %>
                     <ul class="list-group list-group-flush">
-                        <% blogList.hidden[0].forEach(({id, title})=> { %>
+                        <% blogList.hidden[0].forEach(({id, title, createdAt})=> { %>
                         <li
                             class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                             <div class="text-truncate me-3">
                                 <a class="stretched-link" href="/blog/<%= id %>">
                                     <%= title %>
                                 </a>
+                            </div>
+                            <div class="d-none d-sm-block">
+                                <span class="timestamp">上一次編輯<%= createdAt %></span>
                             </div>
                             <div class="btn-blog-edit flex-shrink-0">
                                 <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
@@ -379,8 +394,8 @@
                     <h3>粉絲列表</h3>
                     <div id="fansList" class="relationShip-list-box">
                         <% if(fansList.length) {%>
-                        <% fansList.forEach(fans=> { %>
                         <ul>
+                            <% fansList.forEach(fans=> { %>
                             <li class="card" data-fans-id="<%= fans.id %>">
                                 <div class="ratio ratio-1x1">
                                     <img src="<%= fans.avatar %>" class="card-img-top" alt="">
@@ -391,8 +406,9 @@
                                     </a>
                                 </div>
                             </li>
+
+                            <% }) %>
                         </ul>
-                        <% }) %>
                         <% } else { %>
                         <p>可憐阿，沒有朋友</p>
                         <% } %>
@@ -402,8 +418,8 @@
                     <h3>追蹤列表</h3>
                     <div id="idolList" class="relationShip-list-box">
                         <% if(idolList.length) {%>
-                        <% idolList.forEach(idol=> { %>
                         <ul>
+                            <% idolList.forEach(idol=> { %>
                             <li class="card" data-idol-id="<%= idol.id %>">
                                 <div class="ratio ratio-1x1">
                                     <img src="<%= idol.avatar %>" class="card-img-top" alt="">
@@ -414,8 +430,8 @@
                                     </a>
                                 </div>
                             </li>
+                            <% }) %>
                         </ul>
-                        <% }) %>
                         <% } else { %>
                         <p>沒有偶像，你最屌</p>
                         <% } %>
@@ -474,6 +490,7 @@
     async function initPage(data) {
         //  public Var
         let pageData = data
+        console.log('@pageData => ', pageData)
         let { currentUser, me = {}, fansList } = pageData
         //  初始化BetterScroll
         let relationList = ['#fansList', '#idolList']

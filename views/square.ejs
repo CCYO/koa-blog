@@ -1,54 +1,79 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
 <%- include('wedgets/header') %>
+<style>
+    .list-group-item>span {
+        font-size: 0.5rem;
+    }
 
-    <div class='container p-3'>
-        <h1>文章列表</h1>
-        <ul class="list-group">
-            <% blogList.forEach( ({ id, title, author }) => { %>
-            <li class="list-group-item">
-                <a href="/blog/<%= id %>"><%= title %></a>
-            </li>
-            <% }) %>
-        </ul>
-    </div>
-    <!-- JQ AXIOS BS5 -->
-    <%- include('wedgets/cdn') %>
+    .list-group-item:hover {
+        background: rgba(255, 255, 255, .9);
+        cursor: pointer;
+    }
+    .list-group-item > span > a:hover {
+        color: green;
+    }
 
-    <script type="module" defer>
-        //  初始化來自ejs傳入當前頁面所需的數據
-        import initData from '/js/initData.js'
-        //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
-        import initNavbar from '/js/navbar.js'
+</style>
 
-        try {
-            //  讀取中，遮蔽畫面
-            loading()
-            //  初始化ejs附帶的數據
-            let pageData = new initData()
-            //  初始化navbar數據
-            await pageData.init(initNavbar)
-            //  確認以上所有初始化已完成，取得彙整後數據
-            let data = await pageData.check()
-            //  初始化頁面功能，並傳入上面彙整後的初始化數據
-            // await initPage(album)
-            //  讀取完成，解除遮蔽
-            loadEnd()
-        } catch (e) {
-            console.log('@page error => ', e)
-        }
+<div class='container-md main'>
+    <h1>文章列表</h1>
+    <ul class="list-group">
+        <% blogList.forEach( ({ id, title, author, showAt }) => { %>
+        <li class="list-group-item">
+            <a href="/blog/<%= id %>"><%= title %></a>
+            <span>by<a href="/other/<%= author.id %>"><%= author.nickname %></a></span>
+            <span>公開於<%= showAt %></span>
+        </li>
+        <% }) %>
+    </ul>
+</div>
+<!-- JQ AXIOS BS5 -->
+<%- include('wedgets/cdn') %>
 
-        //  utils ------
-        //  讀取畫面，遮蔽效果
-        function loading() {
-            $('#backdrop').addClass('my-show')
-            $('input').attr('disabled', true)
-        }
-        //  讀取完成，取消遮蔽
-        function loadEnd() {
-            $('#backdrop').removeClass('my-show')
-            $('input').removeAttr('disabled')
-        }
-    </script>
+<script type="module" defer>
+    //  初始化來自ejs傳入當前頁面所需的數據
+    import initData from '/js/initData.js'
+    //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
+    import initNavbar from '/js/navbar.js'
+
+    try {
+        //  讀取中，遮蔽畫面
+        loading()
+        //  初始化ejs附帶的數據
+        let pageData = new initData()
+        //  初始化navbar數據
+        await pageData.init(initNavbar)
+        //  確認以上所有初始化已完成，取得彙整後數據
+        let data = await pageData.check()
+        //  初始化頁面功能，並傳入上面彙整後的初始化數據
+        await initPage()
+        //  讀取完成，解除遮蔽
+        loadEnd()
+    } catch (e) {
+        console.log('@page error => ', e)
+    }
+
+    async function initPage() {
+        //  點擊list-item也能直接跳轉至文章頁
+        $('.list-group-item').click((e) => {
+            if (e.target !== e.currentTarget) {
+                return
+            }
+            location.pathname = $(e.target).children('a').attr('href')
+        })
+    }
+    //  utils ------
+    //  讀取畫面，遮蔽效果
+    function loading() {
+        $('#backdrop').addClass('my-show')
+        $('input').attr('disabled', true)
+    }
+    //  讀取完成，取消遮蔽
+    function loadEnd() {
+        $('#backdrop').removeClass('my-show')
+        $('input').removeAttr('disabled')
+    }
+</script>
 </body>
 
 </html>

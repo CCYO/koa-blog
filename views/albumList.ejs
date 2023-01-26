@@ -4,21 +4,26 @@
     .box-albumList {
         padding: 1rem;
     }
+
+    .list-group-item>span {
+        font-size: 0.5rem;
+    }
 </style>
-<div class='container main'>
-    <h1>文章列表</h1>
+<div class='container-md main'>
+    <h1>個人文章的相簿列表</h1>
     <div class="box-albumList">
-    <% if(albumList.list.length){ %>
-    <% albumList.list.forEach( ({ id, title }) => { %>
-    <ul class="list-group">
-        <li class="list-group-item">
-            <a href="/album/<%= id %>"><%= title %></a>
-        </li>
-    </ul>
-    <% }) %>
-    <% } else { %>
-    <p>沒有相簿</p>
-    <% } %>
+        <% if(albumList.list.length){ %>
+        <% albumList.list.forEach( ({ id, title, createdAt }) => { %>
+        <ul class="list-group">
+            <li class="list-group-item">
+                <a href="/album/<%= id %>"><%= title %></a>
+                <span>上一次編輯 <%= createdAt %></span>
+            </li>
+        </ul>
+        <% }) %>
+        <% } else { %>
+        <p>沒有相簿</p>
+        <% } %>
     </div>
 </div>
 <!-- JQ AXIOS BS5 -->

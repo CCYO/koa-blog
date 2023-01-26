@@ -17,6 +17,7 @@
     "ajv-formats": "^2.1.1",
     "axios": "^0.26.1",
     "cross-env": "^7.0.3",
+    "date-and-time": "^2.4.2",
     "dateformat": "^5.0.3",
     "debug": "^4.1.1",
     "ejs": "~2.3.3",

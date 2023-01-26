@@ -1,9 +1,8 @@
 .dropdown-menu {
     min-width: 40vw;
 }
-@media (max-width: 576px) {
-    
 
+@media (max-width: 576px) {
     .dropdown-menu {
         font-size: 0.6rem;
         max-width: 70vw;

@@ -339,10 +339,16 @@ async function initNavbar() {
             let reg_pathname = /^\/(?<pathname>\w+)\/?(?<albumList>list)?/
             let { pathname, albumList } = reg_pathname.exec(location.pathname).groups
             if (user_id) {
-                let template_news = `
-                <li class="nav-item">
+                //  摺疊選單外的部份
+                let template_outOfOffcanvas = `
+                <li class="nav-item d-none d-sm-inline-block">
                     <a class="nav-link" href="/square">廣場頁</a>
-                </li>   
+                </li>
+                <!--純粹用作排版-->
+                <li style="flex-grow: 1;">
+                </li> 
+                <!--下拉選單-->
+                <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="newsDropdown"
                         role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">通知
                         <span class="position-absolute translate-middle badge rounded-pill bg-danger news-count"></span>
@@ -360,8 +366,10 @@ async function initNavbar() {
                             <span>沒有更多了</span>
                         </li>
                     </ul>
+                </li>
                 `
-                let template_inOffcanvas = `
+                //  摺疊選單內的部份
+                let template_inOfOffcanvas = `
                 <ul class="navbar-nav justify-content-around">
                     <li class="nav-item">
                         <a class="nav-link" href="/self">個人頁面</a>
@@ -377,16 +385,11 @@ async function initNavbar() {
                     </li>
                 </ul>
                 `
-                let template_outOffcanvas = `
-                <li class="nav-item dropdown">
-                        ${template_news}
-                </li>
-                `
                 //  若登入狀態
                 //  #noNeedCollapse-list 內放入 NEWS
-                $('#noNeedCollapse-list').html(template_outOffcanvas)
+                $('#noNeedCollapse-list').html(template_outOfOffcanvas)
                 //  #needCollapse-list 之外放入 個人資訊/文章相簿/設置/LOGOUT
-                $('#needCollapse-list').html(template_inOffcanvas)
+                $('#needCollapse-list').html(template_inOfOffcanvas)
                 if (pathname === 'self') {
                     $(`.nav-link[href="/self"]`).addClass('active')
                 } else if (pathname === 'setting') {

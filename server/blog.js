@@ -177,7 +177,7 @@ async function readBlogList({ user_id, follower_id, exclude_id = null}) {
         })
     }
 
-    ops.attributes =  ['id', 'title', 'show', 'showAt']
+    ops.attributes =  ['id', 'title', 'show', 'showAt', 'createdAt']
     let blogList = await Blog.findAll(ops)
 
     return init_blog(blogList)

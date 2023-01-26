@@ -1,6 +1,6 @@
 const { Op } = require('sequelize')
 const my_xxs = require('../utils/xss')
-
+const date = require('date-and-time')
 const { set_blog, tellBlogFollower } = require('../server/cache')
 
 const { hash_obj } = require('../utils/crypto')
@@ -191,30 +191,63 @@ async function getBlogListByUserId(user_id) {
 
     let blogList = await readBlogList(param)
 
-    let data = { show: [], hidden: [] }
-
-    let page = { show: 0, hidden: 0 }
-
-    blogList.forEach(item => {
-        let { show } = item
-        let key = show ? 'show' : 'hidden'
+    //  將blog依show分纇
+    blogList = blogList.reduce((initVal, item) => {
+        let key = item.show ? 'show' : 'hidden'
+        //  移除show屬性
         delete item.show
-        if (!data[key][page[key]]) {
-            data[key][page[key]] = []
-        }
-        if (data[key][page[key]].length === 5) {
-            page[key] += 1
-            data[key][page[key]] = []
-        }
-        data[key][page[key]].push(item)
-    })
+        initVal[key].push(item)
+        return initVal
+    }, { show: [], hidden: [] })
 
+    let data = { show: [[]], hidden: [[]] }
+    for(let key in blogList){
+        let blogs = blogList[key]
+        let prop = undefined
+        if(key === 'show'){
+            prop = 'showAt'
+        }else{
+            prop = 'createdAt'
+        }
+        blogs.sort((a, b) => {
+            return new Date(b[prop])- new Date(a[prop])
+        })
+        let page = { show: 0, hidden: 0 }
+        blogs = blogs.reduce((initVal, item) => {
+            //  移除show屬性
+            delete item.show
+            if(item.showAt){
+                date.format(new Date(item.showAt), 'YYYY/MM/DD HH:mm:ss')
+            }
+            item.createdAt = date.format(new Date(item.createdAt), 'YYYY/MM/DD HH:mm:ss')
+            //  若指定的ArrayItem內已有5筆資料，則該show分纇的頁碼+1，並創建該頁碼的ArrayItem
+            if (initVal[page[key]].length === 5) {
+                page[key] += 1
+                initVal[page[key]] = []
+            }
+            initVal[page[key]].push(item)
+            console.log('@=> initVal', initVal)
+            return initVal
+        }, [[]])
+
+        if(blogs[0].length !== 0){
+            data[key] = blogs
+        }
+    }
     return new SuccModel(data)
 }
 
 async function getSquareBlogList(exclude_id) {
-    let data = await readBlogList({exclude_id})
-    return new SuccModel(data)
+    let blogs = await readBlogList({exclude_id})
+    blogs.sort( (a, b) => {
+        return new Date(b.showAt) - new Date(b.showAt)
+    })
+    blogs.map( blog => {
+        blog.showAt = date.format(new Date(blog.showAt), 'YYYY/MM/DD HH:mm:ss')
+        return blog
+    })
+
+    return new SuccModel(blogs)
 }
 
 module.exports = {
