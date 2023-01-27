@@ -1,0 +1,18 @@
+<div class="comment-list">
+<% comments.forEach(comment => { %>
+    <div class="comment-box" data-comment-id="<%=comment.id%>">
+        <div>xxxxx</div>
+        <div class="">
+            By<a href="">作者</a> 於 xxxx 發佈<button>回覆</button>
+        </div>
+
+        <div class="reply-box">
+            <div class="editor-container"></div>
+        </div>
+        <!-- <div class="comment-list"> ... </div> -->
+        <% if(comment.reply.length){ %>
+        <%- include('./comment-list', { comments: comment.reply }) %>
+        <% } %>
+    </div>
+<% }) %>
+</div>

@@ -30,6 +30,11 @@
         </div>
     </div>
 </div>
+<!-- JQ AXIOS BS5 -->
+<%- include('wedgets/cdn') %>
+<!-- 讀取的遮蔽 -->
+<%- include('wedgets/backdrop') %>
+
 <!-- 引入 xss -->
 <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
 <!-- 引入 Ajv -->
@@ -38,8 +43,6 @@
     crossorigin="anonymous" referrerpolicy="no-referrer">
     </script>
 
-<!-- JQ AXIOS BS5 -->
-<%- include('wedgets/cdn') %>
 <script type="module" defer>
     //  初始化來自ejs傳入當前頁面所需的數據
     import initData from '/js/initData.js'
@@ -48,7 +51,7 @@
 
     try {
         //  讀取中，遮蔽畫面
-        // loading()
+        loading()
         //  初始化ejs附帶的數據
         let pageData = new initData()
         //  初始化navbar數據
@@ -149,25 +152,6 @@
             $btn.prop('disabled', !ok)
             return ok
         }
-    }
-
-    //  utils ------
-    //  讀取畫面，遮蔽效果
-    function loading(editorList = []) {
-        $('#backdrop').addClass('my-show')
-        $('input').attr('disabled', true)
-        console.log('@editorList 隱藏=> ', editorList)
-        editorList.forEach(editor => editor.disable())
-        console.log('隱藏完成')
-    }
-    //  讀取完成，取消遮蔽
-    function loadEnd(editorList = []) {
-        console.log('開始執行顯示')
-        $('#backdrop').removeClass('my-show')
-        $('input').removeAttr('disabled')
-        console.log('@editorList 顯示=> ', editorList)
-        editorList.forEach(editor => editor.enable())
-        console.log('顯示完成')
     }
 
 </script>

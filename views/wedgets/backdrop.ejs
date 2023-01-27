@@ -1,0 +1,55 @@
+<!-- 數據讀取提示 -->
+<div class="backdrop my-noshow">
+    <div>讀取中...</div>
+</div>
+
+<script>
+    //  utils ------
+    let _backdrop = backdrop()
+    window.loading = _backdrop.loading
+    window.loadEnd = _backdrop.loadEnd
+    function backdrop() {
+        let needToReset = []
+        return {
+            loading, loadEnd
+        }
+        //  頁面讀取中，禁止任何點擊、tab獲取焦點
+        function loading(editorList = []) {
+            console.log('loading')
+            $('.backdrop').removeClass('my-noshow')
+            $('*').on('keydown', banTab)
+            $('body').css('pointer-events', 'none')
+            $('input').each((index, input) => {
+                let $input = $(input)
+                if (!$input.prop('disabled')) {
+                    needToReset.push($input)
+                    $input.prop('disabled', true)
+                }
+            })
+            if(editorList.length){
+                console.log('@=> ', editorList)
+                editorList.forEach(editor => editor.disable())
+            }
+        }
+        //  頁面讀取完畢，解禁點擊、tab獲取焦點
+        function loadEnd(editorList = []) {
+            console.log('loadEnd')
+            $('.backdrop').addClass('my-noshow')
+            $('*').off('keydown', banTab)
+            $('body').css('pointer-events', 'auto')
+            if (needToReset.length) {
+                needToReset.forEach($input => {
+                    $input.prop('disabled', false)
+                })
+                needToReset = []
+            }
+            if(editorList.length){
+                console.log('@=> ', editorList)
+                editorList.forEach(editor => editor.enable())
+            }
+        }
+        function banTab(e) {
+            e.preventDefault()
+        }
+    }
+</script>

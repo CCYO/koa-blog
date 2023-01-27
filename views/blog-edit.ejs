@@ -1,30 +1,12 @@
 <!-- favicon + MY_CSS + BS5_CSS -->
 <%- include('wedgets/header') %>
 <style>
-    #backdrop.my-show {
-        background: rgba(202, 71, 71, 0.5);
-        position: fixed;
-        z-index: 1000;
-        height: 100%;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    #backdrop>div {
-        font-size: 100px;
-    }
-
     #editor-container {
         border: 1px solid rgba(200, 200, 200, .8);
         height: 400px;
         min-height: 300px;
     }
 </style>
-<div id='backdrop' class="my-noshow">
-    <div>讀取中...</div>
-</div>
 <div class="main container">
     <div id="showBox">
         <input type="text" id="title" name="title" class="form-control" value="<%= blog.id ? blog.title : '' %>">
@@ -53,6 +35,11 @@
         </div>
     </div>
 </div>
+<!-- JQ AXIOS BS5 -->
+<%- include('wedgets/cdn') %>
+<!-- 讀取的遮蔽 -->
+<%- include('wedgets/backdrop') %>
+
 <!-- 引入 Spark-MD5 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
 <!-- 引入 xss -->
@@ -63,8 +50,7 @@
     crossorigin="anonymous" referrerpolicy="no-referrer">
     </script>
 
-<!-- JQ AXIOS BS5 -->
-<%- include('wedgets/cdn') %>
+
 <!-- 引入 editor css -->
 <link href="https://cdn.jsdelivr.net/npm/@wangeditor/editor@latest/dist/css/style.css" rel="stylesheet">
 <!-- 引入 editor js -->
@@ -212,13 +198,13 @@
                 if (!confirm('真的要刪掉?')) {
                     return
                 }
-                loading(editor)
+                loading([editor])
                 const {
                     data: {
                         errno, data, msg
                     }
                 } = await axios.delete(api_blog, { data: { id: pageData.blog.id } })
-                loadEnd(editor)
+                loadEnd([editor])
                 if (!errno) {
                     my_alert('已成功刪除此篇文章')
                     location.href = '/self'
@@ -251,13 +237,13 @@
                 }
                 //  payloadObj 放入 blog_id
                 payloadObj.id = pageData.blog.id
-                loading(editor)
+                loading([editor])
                 const {
                     data: {
                         errno, data, msg
                     }
                 } = await axios.patch(api_blog, payloadObj)
-                loadEnd(editor)
+                loadEnd([editor])
                 if (errno) {
                     my_alert('blog save error!')
                     return
@@ -330,7 +316,7 @@
                     id: pageData.blog.id,
                     title: payload.get('title')
                 }
-                loading(editor)
+                loading([editor])
                 let { data: { errno, msg, data: blog } } = await axios.patch(api_blog, payloadData)
                 if (errno) {
                     my_alert(msg)
@@ -341,7 +327,7 @@
                 //  同步數據
                 pageData.blog.title = blog.title
                 payload.delete('title')
-                loadEnd(editor)
+                loadEnd([editor])
                 my_alert('標題更新完成')
             }
             //  關於 title 輸入新值後，又沒立即更新的相關操作
@@ -538,7 +524,7 @@
                     let { hash, ...other } = await _getHash(img)
                     let res
                     let blog_id = pageData.blog.id
-                    loading(editor)
+                    loading([editor])
                     if (!other.blogImg_id) { // img為新圖，傳給後端建檔
                         //  imgName要作為query參數傳送，必須先作百分比編碼
                         name = encodeURIComponent(name)
@@ -552,7 +538,7 @@
                     } else {    // img為重覆的舊圖，傳給後端新建一個blogImgAlt
                         res = await axios.post(api_createBlogImgAlt, { blog_id, blogImg_id: other.blogImg_id })
                     }
-                    loadEnd(editor)
+                    loadEnd([editor])
                     let {
                         data: {
                             errno, data, msg
@@ -754,25 +740,6 @@
             setTimeout(() => { alert(msg) }, 10)
         }
     }
-
-    //  utils ------
-    //  讀取畫面，遮蔽效果
-    function loading(editor) {
-        $('#backdrop').addClass('my-show')
-        $('input').attr('disabled', true)
-        if (editor) {
-            editor.disable()
-        }
-    }
-    //  讀取完成，取消遮蔽
-    function loadEnd(editor) {
-        $('#backdrop').removeClass('my-show')
-        $('input').removeAttr('disabled')
-        if (editor) {
-            editor.enable()
-        }
-    }
-
 
 </script>
 </body>

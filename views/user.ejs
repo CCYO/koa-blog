@@ -45,21 +45,6 @@
         pointer-events: none;
     }
 
-    #backdrop.my-show {
-        background: rgba(202, 71, 71, 0.5);
-        position: fixed;
-        z-index: 1000;
-        height: 100%;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    #backdrop>div {
-        font-size: 100px;
-    }
-
     .blogList .text-truncate,
     .card>.text-truncate {
         color: #0d6efd
@@ -185,10 +170,7 @@
 <div class="d-lg-none position-fixed bottom-0 start-0 bg-success text-white" style="z-index: 1080;">md</div>
 <div class="d-xl-none position-fixed bottom-0 end-0 bg-success text-white" style="z-index: 1080;">lg</div>
 <div class="d-xxl-none position-fixed bottom-50 end-50 bg-success text-white" style="z-index: 1080;">xl</div>
-<!-- 數據讀取提示 -->
-<div id='backdrop' class="my-noshow">
-    <div>讀取中...</div>
-</div>
+
 <!-- MAIN -->
 <div class="container-md main">
     <!-- 使用者資訊 + 文章列表 -->
@@ -463,11 +445,15 @@
     </div>
 </div>
 
+<!-- 讀取的遮蔽 -->
+<%- include('wedgets/backdrop') %>
+<!-- JQ AXIOS BS5 -->
+<%- include('wedgets/cdn') %>
+
+
 <!-- 引入 xss -->
 <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
 
-<!-- JQ AXIOS BS5 -->
-<%- include('wedgets/cdn') %>
 <!-- 滾輪 -->
 <script src="https://unpkg.com/better-scroll@latest/dist/better-scroll.min.js"></script>
 <script type="module" defer>
@@ -852,18 +838,6 @@
         }
     }
 
-    //  utils
-    //  讀取畫面，遮蔽效果
-    function loading() {
-        $('#backdrop').addClass('my-show')
-        $('input').attr('disabled', true)
-    }
-    //  讀取完成，取消遮蔽
-    function loadEnd() {
-        $('#backdrop').removeClass('my-show')
-        $('input').removeAttr('disabled')
-        // return new Promise((resolve) => setTimeout(resolve , 200) )
-    }
     //  檢查bs是否可滾動
     function recheckBetterScroll(map_bs, list) {
         return () => {

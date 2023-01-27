@@ -2,7 +2,6 @@ async function initNavbar() {
     try {
         // 取得登入者數據
         let data = await getNews()
-        console.log('initNavbar => ', data)
         //  初始化通知列表相關功能
         await initNews(data)
         return data

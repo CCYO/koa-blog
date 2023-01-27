@@ -29,6 +29,8 @@
 </div>
 <!-- JQ AXIOS BS5 -->
 <%- include('wedgets/cdn') %>
+<!-- 讀取的遮蔽 --><!-- 讀取的遮蔽 -->
+<%- include('wedgets/backdrop') %>
 
 <script type="module" defer>
     //  初始化來自ejs傳入當前頁面所需的數據
@@ -61,17 +63,6 @@
             }
             location.pathname = $(e.target).children('a').attr('href')
         })
-    }
-    //  utils ------
-    //  讀取畫面，遮蔽效果
-    function loading() {
-        $('#backdrop').addClass('my-show')
-        $('input').attr('disabled', true)
-    }
-    //  讀取完成，取消遮蔽
-    function loadEnd() {
-        $('#backdrop').removeClass('my-show')
-        $('input').removeAttr('disabled')
     }
 </script>
 </body>
