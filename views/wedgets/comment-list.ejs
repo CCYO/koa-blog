@@ -1,18 +1,17 @@
-<div class="comment-list">
-<% comments.forEach(comment => { %>
-    <div class="comment-box" data-comment-id="<%=comment.id%>">
-        <div>xxxxx</div>
-        <div class="">
-            By<a href="">作者</a> 於 xxxx 發佈<button>回覆</button>
+<% comments.forEach(({ id, html, time, user, reply }) => { %>
+    <div class="comment-box">
+        <div><%- html %> </div>
+        <div>
+            By<a href="/other/<%= user.id %>"><%=user.nickname%></a> 於 <%=time%> 發佈<button>回覆</button>
         </div>
 
-        <div class="reply-box">
+        <div class="reply-box" data-comment-id="<%=id%>">
             <div class="editor-container"></div>
         </div>
-        <!-- <div class="comment-list"> ... </div> -->
-        <% if(comment.reply.length){ %>
-        <%- include('./comment-list', { comments: comment.reply }) %>
-        <% } %>
+        <div class="comment-list">
+            <% if(reply.length){ %>
+            <%- include('./comment-list', { comments: reply }) %>
+            <% } %>
+        </div>
     </div>
 <% }) %>
-</div>
