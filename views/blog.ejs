@@ -160,23 +160,17 @@
                 let commentId = replyBox.dataset.commentId * 1
                 let editorContainer = replyBox.firstElementChild
                 if (editorContainer.children.length) {
-                    $(editorContainer).show()
+                    editorContainer.show()
                     return
-                }else{
-                    
                 }
                 init_editor(editorContainer)
             }
         })
 
         //  初始化editor
-        function init_editor(container_selector) {
+        function init_editor(container) {
             //  editor config
             const { createEditor } = window.wangEditor
-            //  El
-            let selector = typeof container_selector === 'string' ? document.querySelector(container_selector) : container_selector
-
-
 
             //  功能：貼上純文字內容
             const customPaste = function (editor, event) {
@@ -188,10 +182,10 @@
                 MENU_CONF: {},
                 customPaste
             }
-            if (selector.parentElement.dataset.commentId * 1) {
+            if (ele.parentElement.dataset.commentId * 1) {
                 //  若此editor失去焦點，自動隱藏
                 editorConfig.onBlur = function () {
-                    $(selector).hide()
+                    $(container).hide()
                 }
             }
             //  editor config : placeholder
@@ -199,14 +193,18 @@
             // editor 創建
             const editor = createEditor({
                 config: editorConfig,
-                selector,
+                selector: container,
                 mode: 'simple'
             })
             resetEditor()
             return editor
 
             function resetEditor() {
-                let replyBox = editor.replyBox = selector.parentElement
+                container.show = () => {
+                    $(container).show()
+                    editor.focus()
+                }
+                let replyBox = editor.replyBox = container.parentElement
                 let pid = editor.pid = replyBox.dataset.commentId * 1
                 let render = editor.render = (str) => {
                     if (pid) {
@@ -218,8 +216,8 @@
                 //  將editor存入editorList
                 myVar.addEditor(editor)
                 //  為editor的container綁定判斷登入與否的handle
-                selector.addEventListener('click', isLogin)
-                selector.addEventListener('keyup', sendComment)
+                container.addEventListener('click', isLogin)
+                container.addEventListener('keyup', sendComment)
 
                 async function sendComment(e) {
                     if (!isLogin()) {
@@ -248,17 +246,16 @@
                     loading(myVar.getEditorList())
                     //  送出請求
                     let { data: { errno, data, msg } } = await postComment(str, pid)
-                    console.log('data=> ', data)
+                    
                     if (errno) {
                         alert('留言失敗')
                         console.log(msg)
                         return
                     }
                     loadEnd(myVar.getEditorList())
-                    let { id, p_id, html, time, user } = data
 
                     //  渲染此次送出的評論
-                    renderComment(data, render)
+                    renderComment()
                     //  更新評論數據
                     updateComment(data)
                     //  清空評論框
