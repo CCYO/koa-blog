@@ -21,6 +21,7 @@ class My {
     }
     async check() {
         await Promise.all(this.promiseAll)
+        console.log('@pageData => ', this.data)
         return this.data
     }
 }

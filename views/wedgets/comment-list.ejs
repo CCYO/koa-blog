@@ -1,17 +1,27 @@
 <% comments.forEach(({ id, html, time, user, reply }) => { %>
-    <div class="comment-box">
-        <div><%- html %> </div>
-        <div>
-            By<a href="/other/<%= user.id %>"><%=user.nickname%></a> 於 <%=time%> 發佈<button>回覆</button>
-        </div>
+<% if (html || reply.length) { %>
 
-        <div class="reply-box" data-comment-id="<%=id%>">
-            <div class="editor-container"></div>
-        </div>
-        <div class="comment-list">
-            <% if(reply.length){ %>
-            <%- include('./comment-list', { comments: reply }) %>
-            <% } %>
-        </div>
+<div class="comment-box">
+    <div>
+        <% if (!!html) { %>
+        <%- html %>
+        <% } else { %>
+        <p>此留言已刪除</p>
+        <% } %>
     </div>
+    <div>
+        By<a href="/other/<%= user.id %>"><%=user.nickname%></a> 於 <%=time%> 發佈<button>回覆</button><button
+            data-remove="<%=id%>" data-user="<%=user.id%>">刪除</button>
+    </div>
+
+    <div class="reply-box" data-comment-id="<%=id%>">
+        <div class="editor-container"></div>
+    </div>
+    <div class="comment-list">
+        <% if(reply.length){ %>
+        <%- include('./comment-list', { comments: reply }) %>
+        <% } %>
+    </div>
+</div>
+<% } %>
 <% }) %>

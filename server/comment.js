@@ -281,6 +281,15 @@ async function addComment({
     return { comment, cache }
 }
 
+async function deleteComment({ commentId, blog_id }){
+    let res = await Comment.update({ html: ''}, {
+        where: { id: commentId , blog_id}
+    })
+    console.log('res => ', res)
+    return res
+
+}
+
 async function setRelatedComment(comment, { author }) {
     let whereOps_comment = { blog_id: comment.blog_id, p_id: comment.p_id }
     //  查詢與commentIns有關的所有comment
@@ -475,6 +484,7 @@ async function readComment({ id, blog_id, p_id, createdAt }, user_id) {
 
 module.exports = {
     addComment,
+    deleteComment,
     readComment,
     setRelatedComment
 }
