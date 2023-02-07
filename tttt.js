@@ -1,51 +1,12 @@
-let map_allReplyCount = new Map()
-//  整理要檢查的名單
-function getReplyCount(commentList){
-    re(commentList)
-    return map_allReplyCount
-    function re(commentList){
-        commentList.forEach( comment => {
-            console.log(`commentId => ${comment.id}`)
-            countReply(comment)
-            if(comment.reply.length){
-                console.log('@out id ', comment.id)
-                console.log('@out reply ', comment.reply)
-                comment.reply.forEach(countReply)
-            }
-        })
-    }
-    function countReply(comment, pid){
-        let id = pid ? pid : comment.id
-        let _allReplyCount = map_allReplyCount.get(id)
-        _allReplyCount = _allReplyCount ? _allReplyCount : 1
-        map_allReplyCount.set(id, _allReplyCount)
-        
-        let del = cache_deleteCount.get(id)
-        if(!del){
-            del = 0
-        }
-        if(comment.deletedAt){
-            cache_deleteCount.set(id, del + 1)
-        }
-        let reply = comment.reply
-        console.log('@reply ', reply)
-        
-        if(reply.length){
-            map_allReplyCount.set(id, _allReplyCount + reply.length)
-            reply.forEach( c => countReply(c, id) )
-        }
-    }
-}
-
 var list = [
-    { 
+    {
         id: 1, deletedAt: 1, reply: [
             {
                 id: 2, deletedAt: 0, reply: []
             }
         ]
     },
-    { 
+    {
         id: 3, deletedAt: 1, reply: [
             {
                 id: 4, deletedAt: 1, reply: []
@@ -67,4 +28,93 @@ var list = [
         ]
     },
 ]
-getReplyCount(list)
+
+function ff(list) {
+    let commentList = deepCopy(list)
+    count(commentList)
+
+    mapTotal.forEach((num, id) => {
+        if (mapDel.get(id) === num) {
+            // deleteList.push(id)
+            go(commentList, id)
+        }
+        function go(commentList, id) {
+            commentList.some((comment, ind, list) => {
+                if (comment.id === id) {
+                    delete list[ind]
+                    return true
+                } else if (comment.reply.length) {
+                    return go(comment.reply, id)
+                }
+            })
+        }
+    })
+
+    return removeEmpty(commentList)
+
+    function removeEmpty(commentList) {
+        return commentList.filter(comment => {
+            if (comment) {
+                if (comment.reply.length) {
+                    comment.reply = removeEmpty(comment.reply)
+                }
+                return comment
+            }
+        })
+    }
+
+    function count(list) {
+        let box = { mapTotal = new Map(), mapDel = new Map() }
+
+        ccount(list)
+        
+
+        function ccount(list, pid) {
+            list.forEach(comment => {
+                if (comment.deletedAt) {
+                    countDelete(comment, pid)
+                }
+                if (!pid & comment.reply.length) {
+                    ccount(comment.reply)
+                }
+            })
+
+            function countDelete(comment, pid) {
+                let commentId = pid ? pid : comment.id
+                let reply = comment.reply
+                let curReplyCount = box.mapTotal.get(commentId)
+                if (!curReplyCount) {
+                    curReplyCount = 1
+                }
+                curReplyCount += reply.length
+                box.mapTotal.set(commentId, curReplyCount)
+
+                let curDelCount = box.mapDel.get(commentId)
+                if (!pid & !curDelCount) {
+                    box.mapDel.set(commentId, 1)
+                } else if (pid) {
+                    box.mapDel.set(commentId, curDelCount + 1)
+                }
+                if (reply.length) {
+                    count(reply, commentId)
+                }
+            }
+
+        }
+    }
+
+    function deepCopy(inputObject) {
+        if (typeof inputObject !== 'object' || inputObject === null) {
+            return inputObject
+        }
+        let box = Array.isArray(inputObject) ? [] : {}
+        for (let prop in inputObject) {
+            let val = inputObject[prop]
+            box[prop] = deepCopy(val)
+        }
+        return box
+    }
+}
+
+let dd = ff(list)
+console.log(JSON.stringify(dd))
