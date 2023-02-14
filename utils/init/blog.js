@@ -62,7 +62,6 @@ function _init_blog(blog) {
             return initVal
         }, res.imgs)
     }
-
     if(comments && comments.length){
         res.comments = init_comment_4_blog(comments)
     }else{

@@ -205,7 +205,9 @@
                 alert(msg)
                 return
             }
+            let commentBox = 
             replyBox.parentElement.firstElementChild.innerHTML = '<p>此留言已刪除</p>'
+            replyBox.previousElementSibling.innerHTML = ''
         }
         //  初始化editor
         function init_editor(container) {
@@ -277,9 +279,9 @@
                     }
                     let htmlStr = editor.getHtml()
                     let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g
-                    let str = htmlStr.replace(reg, '')
+                    let html = htmlStr.replace(reg, '')
                     //  撇除空留言
-                    if (!str.trim()) {
+                    if (!html.trim()) {
                         editor.setHtml()
                         alert('請填入留言')
                         return
@@ -334,7 +336,9 @@
                                 <div class="comment-box">
                                     <div>${html}</div>
                                     <div>
-                                        By<a href="/other/${user.id}">${user.nickname}</a> 於 ${time} 發佈<button>回覆</button>
+                                        By<a href="/other/${user.id}">${user.nickname}</a> 於 ${time} 發佈
+                                        <button>回覆</button>
+                                        <button data-remove=${id} data-user=${user.id}>刪除</button>
                                     </div>
 
                                     <div class="reply-box" data-comment-id="${id}">
@@ -357,7 +361,7 @@
                             user_id,
                             author,
                             html,
-                            p_id: editor.id
+                            p_id: editor.id ? editor.id : null
                         }
                         return await axios.post(api_comment, payload)
                     }

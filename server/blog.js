@@ -114,7 +114,8 @@ async function readBlog({ blog_id }, needComment) {
     if (needComment) {
         include.push({
             model: Comment,
-            attributes: ['id', 'html', 'p_id', 'createdAt'],
+            attributes: ['id', 'html', 'p_id', 'createdAt', 'deletedAt'],
+            paranoid: false,
             include: {
                 model: User,
                 attributes: ['id', 'email', 'nickname']

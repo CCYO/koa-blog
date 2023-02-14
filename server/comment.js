@@ -282,6 +282,10 @@ async function addComment({
 }
 
 async function deleteComment({ commentId, blog_id }){
+    await Comment.destroy({
+        where: { id: commentId , blog_id}
+    })
+    return
     let res = await Comment.update({ html: ''}, {
         where: { id: commentId , blog_id}
     })
@@ -462,7 +466,7 @@ async function readComment({ id, blog_id, p_id, createdAt }, user_id) {
     }
 
     let res = await Comment.findAll({
-        attributes: ['id', 'html', 'updatedAt', 'createdAt', 'p_id'],
+        attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
         where: whereOps,
         include: [
             {

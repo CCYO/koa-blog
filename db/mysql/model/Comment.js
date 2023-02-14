@@ -21,6 +21,8 @@ let Comment = seq.define('Comment', {
         type: INTEGER,
         allowNull: true
     }
+}, {
+    paranoid: true
 })
 
 module.exports = Comment

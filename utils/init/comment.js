@@ -3,6 +3,8 @@ const moment = require('moment')
 const { init_user } = require('./user')
 // const { init_blog } = require('./blog')
 
+const removeDeletedComment = require('../../ttt')
+
 function init_comment(comment) {
     if (comment instanceof Array) {
         let res = []
@@ -11,7 +13,6 @@ function init_comment(comment) {
             let json = _init_comment(item)
             res.push(json)
         })
-
         return res
     }
 
@@ -20,8 +21,11 @@ function init_comment(comment) {
 
 function _init_comment(comment) {
     let json = comment.toJSON ? comment.toJSON() : comment
-    let { id, html, p_id, createdAt, User: user, Blog: blog } = json
+    let { id, html, p_id, createdAt, deletedAt, User: user, Blog: blog } = json
     time = moment(createdAt).format('YYYY-MM-DD HH:mm')
+    if(deletedAt){
+        deletedAt = moment(deletedAt).format('YYYY-MM-DD HH:mm')
+    }
     p_id = !p_id ? 0 : p_id
     user = init_user(user)
     delete user.email
@@ -30,7 +34,7 @@ function _init_comment(comment) {
         return { id, html, p_id, time, createdAt, user, blog }
     }
     
-    return { id, html, p_id, time, createdAt, user}
+    return { id, html, p_id, time, createdAt, user, deletedAt}
 }
 
 function init_comment_4_blog(comments) {
@@ -41,7 +45,10 @@ function init_comment_4_blog(comments) {
         comments_json = [_init_comment(comments)]
     }
     let x = init_4_browser(comments_json)
-    return x
+    
+    let res = removeDeletedComment(x)
+    
+    return res
 
     function init_4_browser(list) {
         let target
@@ -59,7 +66,6 @@ function init_comment_4_blog(comments) {
         res.sort(function(a, b){
             return b.createdAt - a.createdAt
         })
-
         return res
 
         function findAndPush(list, comment) {
