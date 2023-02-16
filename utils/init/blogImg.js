@@ -1,6 +1,3 @@
-const { init_img } = require('./img')
-const { init_blog } = require('./blog')
-
 function init_blogImg(blogImg) {
     if (blogImg instanceof Array) {
         let res = []

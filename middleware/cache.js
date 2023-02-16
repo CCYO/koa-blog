@@ -5,6 +5,9 @@ const {
     checkNews, removeRemindNews, remindNews
 } = require('../server/cache')
 
+
+const { isNoCache } = require('../utils/env')
+
 const { hash_obj } = require('../utils/crypto')
 const { SuccModel } = require('../model')
 const { CACHE: { BLOG: { EDITOR } }, } = require('../conf/constant')

@@ -13,13 +13,11 @@ const {
     modifyUserInfo    
 } = require('../../controller/user')
 
-const { api_check_login } = require('../../middleware/check_login')
+const { api_check_login, getMe } = require('../../middleware/check_login')
 const { parse_user_data } = require('../../middleware/gcs')
 const { validate_user } = require('../../middleware/validate')
 const { cache_reset } = require('../../middleware/cache')
 const { login, logout } = require('../../middleware/loginAndOut')
-
-const { getMe } = require('../../utils/user')
 
 router.prefix('/api/user')
 

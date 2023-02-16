@@ -2,8 +2,33 @@
  * @description middleware validate login 
  */
 
-const { ErrModel } = require('../model')
+const { SuccModel, ErrModel } = require('../model')
 const { PERMISSION: { NOT_LOGIN, NOT_SELF } } = require('../model/errRes')
+
+const { init_user } = require('../utils/init')
+
+/** Middleware 針對 API 請求，驗證是否登入
+ * @param {*} ctx 
+ * @param {function} next 
+ * @returns {promise<null>}
+ */
+ const api_check_login = async (ctx, next) => {
+    const { session: { user } } = ctx
+    if (user) {
+        await next()
+    } else {
+        ctx.body = new ErrModel(NOT_LOGIN)
+    }
+    return
+}
+
+
+
+async function getMe(ctx){
+    ctx.body = new SuccModel(init_user(ctx.session.user))
+    return
+}
+
 
 /** Middleware 針對 VIEW 請求，驗證是否登入
  * @param {*} ctx 
@@ -31,20 +56,7 @@ async function view_check_isMe(ctx, next) {
     await next()
 }
 
-/** Middleware 針對 API 請求，驗證是否登入
- * @param {*} ctx 
- * @param {function} next 
- * @returns {promise<null>}
- */
-const api_check_login = async (ctx, next) => {
-    const { session: { user } } = ctx
-    if (user) {
-        await next()
-    } else {
-        ctx.body = new ErrModel(NOT_LOGIN)
-    }
-    return
-}
+
 
 const api_check_isMe = async (ctx, next) => {
     const { session: { user } } = ctx
@@ -65,4 +77,5 @@ module.exports = {
     view_check_isMe,
     api_check_login,
     api_check_isMe,
+    getMe
 }
