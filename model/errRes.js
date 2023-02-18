@@ -20,7 +20,7 @@ module.exports = {
         AVATAR_FORMAT_ERR: {errno: 304, msg: 'avatar圖檔格式錯誤，只接受JPG或PNG'}
     },
     PERMISSION: {
-        NOT_LOGIN: {errno: 501, msg: '未登入'},
+        NOT_LOGIN: {errno: 501, msg: '從未登入'},
         NOT_SELF: {errno: 502, msg: '非本人'}
     },
     FORMAT_ERR: { errno: 601},

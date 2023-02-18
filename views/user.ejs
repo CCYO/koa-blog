@@ -5,6 +5,7 @@
     .timestamp {
         font-size: 0.5rem
     }
+
     .btn-blog-edit {
         z-index: 2;
     }
@@ -534,17 +535,12 @@
                 return
             }
             loading()
-            const {
-                data: {
-                    errno, data, msg
-                }
-            } = await axios.post('/api/blog', { title })
+            const res = await axios.post('/api/blog', { title })
             await loadEnd()
-            if (!errno) {
-                alert('BLOG創立完成')
+
+            let data = checkRes(res)
+            if (data) {
                 location.href = `/blog/edit/${data.id}`
-            } else {
-                alert(`BLOG創立失敗 => ${msg}`)
             }
 
             //  取title值
@@ -724,26 +720,21 @@
                 //  讀取遮罩
                 loading()
                 //  請求取消/追蹤
-                const {
-                    data: {
-                        errno, data, msg
-                    }
-                } = await axios.post(api, { id })
+                let res = await axios.post(api, { id })
                 //  關閉讀取遮罩
                 loadEnd()
-
-                if (!errno) {
-                    //  更新追蹤/退追的瀏覽器數據與頁面渲染
-                    followOrNot()
-                    //  重整fansList 的 BetterScroll
-                    recheckBetterScroll(pageData.map_bs, '#fansList')()
-                    //  追蹤/退追鈕的toggle
-                    $btn_follow.toggle()
-                    $btn_cancelFollow.toggle()
-                } else {
-                    alert('操作發生錯誤')
-                    console.log(msg)
+                let data = checkRes(res)
+                if (!data) {
+                    return
                 }
+                //  更新追蹤/退追的瀏覽器數據與頁面渲染
+                followOrNot()
+                //  重整fansList 的 BetterScroll
+                recheckBetterScroll(pageData.map_bs, '#fansList')()
+                //  追蹤/退追鈕的toggle
+                $btn_follow.toggle()
+                $btn_cancelFollow.toggle()
+
             }
             //  處理關於追蹤的瀏覽器數據與頁面渲染
             function follow() {
@@ -821,19 +812,11 @@
         async function removeBlog(blogList) {
             //  送出刪除命令
             loading()
-            const {
-                data: {
-                    errno, data, msg
-                }
-            } = await axios.delete('/api/blog', { data: { id: blogList } })
+            const res = await axios.delete('/api/blog', { data: { id: blogList } })
             loadEnd()
-            if (!errno) {
-                alert('已成功刪除該頁文章')
+            let data = checkRes(res)
+            if (data) {
                 location.href = '/self' //  刷新頁面
-            } else if (errno === 501) {   //  代表未登入
-                location.href = '/login'
-            } else {  //  刪除失敗
-                alert(msg)
             }
         }
     }
@@ -860,6 +843,20 @@
                 bs.refresh()
                 console.log('啟用')
             }
+        }
+    }
+
+    function checkRes(res) {
+        let { data: { errno, msg, data } } = res
+        if (errno === 0) {
+            return data
+        } else if (errno === 501) {
+            alert(msg)
+            location.href = `/login?from=${location.pathname}`
+            return
+        } else {
+            alert(msg)
+            return
         }
     }
 </script>

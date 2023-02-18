@@ -12,11 +12,8 @@ class _Model {
 }
 
 class SuccModel extends _Model {
-    constructor(data, cache){
+    constructor(data){
         super({data})
-        if(cache){
-            this.cache = cache
-        }
     }
 }
 

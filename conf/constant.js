@@ -14,6 +14,11 @@ module.exports = {
         AVATAR: 'avatar'
     },
     CACHE: {
+        TYPE: {
+            BLOG: 'blog',
+            USER: 'user',
+            NEWS: 'newNews'
+        },
         BLOG: {
             EDITOR: 0
         }

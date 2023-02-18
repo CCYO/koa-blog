@@ -14,7 +14,7 @@ const { addBlogImgAlt, modifiedBlogImgAlt, cutImgsWithBlog } = require('../../co
 router.prefix('/api/blog')
 
 //  建立blog
-router.post('/', api_check_login, cache_reset, async (ctx, next) => {
+router.post('/', api_check_login, async (ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { title } = ctx.request.body
     return ctx.body = await addBlog(title, user_id)

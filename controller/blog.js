@@ -38,6 +38,10 @@ const { FollowBlog } = require('../db/mysql/model')
 const { SuccModel, ErrModel } = require('../model')
 const { BLOG, BLOGIMG } = require('../model/errRes')
 
+const { modifyCache } = require('../server/cache')
+
+const { CACHE } = require('../conf/constant')
+
 /** 建立 blog
  * @param { string } title 標題
  * @param { number } userId 使用者ID  
@@ -47,7 +51,8 @@ async function addBlog(title, user_id) {
     try {
         title = my_xxs(title)
         const blog = await createBlog({ title, user_id })
-        return new SuccModel(blog, { user: [ user_id ] })
+        await modifyCache({ [CACHE.TYPE.USER]: [ user_id ]})
+        return new SuccModel(blog)
     } catch (e) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
     }

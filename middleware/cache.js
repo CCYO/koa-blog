@@ -1,8 +1,8 @@
 const {
     set_public, get_public,
-    set_user, del_users, get_user,
-    set_blog, del_blogs, get_blog,
-    checkNews, removeRemindNews, remindNews
+    set_user, get_user,
+    set_blog, get_blog,
+    checkNews, removeRemindNews
 } = require('../server/cache')
 
 
@@ -13,6 +13,27 @@ const { SuccModel } = require('../model')
 const { CACHE: { BLOG: { EDITOR } }, } = require('../conf/constant')
 
 const { readBlog } = require('../server/blog')
+
+//  需要重置的cache數據
+async function cache_reset(ctx, next) {
+    await next()
+
+    //  當前若是 noCache 模式 || SuccessModel.cache 無定義
+    if (isNoCache || !ctx.body.cache) {
+        return
+    }
+
+    let { user = [], blog = [], news = [] } = ctx.body.cache
+
+    await removeCache({ user, blog })
+    await addCacheNews(news)
+
+    //  移除 SuccessModel.cache
+    delete ctx.body.cache
+    return
+}
+
+
 
 async function cachePublic(ctx, next) {
     let path = ctx.path
@@ -193,47 +214,16 @@ async function notifiedNews(ctx, next) {
     return
 }
 
-async function cache_resetUser(ctx, next) {
-    await next()
-    let { cache } = ctx.body
-    if (!cache || !cache.user.length) {
-        return
-    }
-    await del_users(cache.user)
-}
 
-//  需要重置的cache數據
-async function cache_reset(ctx, next) {
-    await next()
 
-    let { cache } = ctx.body
 
-    if (!cache) {
-        return
-    }
-
-    let { user = [], blog = [], news = [] } = cache
-    if (user.length) {
-        console.log(`@ 執行 cache/user 的 reset，user 包含 => ${user}`)
-        await del_users(user)
-    }
-    if (blog.length) {
-        console.log(`@ 執行 cache/blog 的 reset，blog 包含 => ${blog}`)
-        await del_blogs(blog)
-    }
-    if (news.length) {
-        console.log(`@ 執行 cache/news 的 remind，news 包含 => ${news}`)
-        await remindNews(news)
-    }
-    delete ctx.body.cache
-}
 
 module.exports = {
     cacheBlog,
     resetBlog,
     cacheUser,
     cacheSelf,
-    cache_resetUser,
+
     cacheNews,
     notifiedNews,
     cachePublic,

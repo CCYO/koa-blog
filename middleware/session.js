@@ -1,6 +1,7 @@
 const { SuccModel } = require('../model')
 
-async function login(ctx, next) {
+
+async function setLoginSession(ctx, next) {
     await next()
     let { errno, data } = ctx.body
     if (errno) {
@@ -8,19 +9,20 @@ async function login(ctx, next) {
     }
 
     ctx.session.user = data
-    console.log(`@ 設定 user/${data.id} session`)
+    console.log(`@ 設置 user/${data.id} 的 session.user`)
 
     if (!ctx.session.news) {
+        console.log(`@ 初始化 user/${data.id} 的 session.news`)
         ctx.session.news = []
     }
 }
 
-async function logout(ctx, next) {
+async function removeLoginSession(ctx) {
     ctx.session = null
     ctx.body = new SuccModel('成功登出')
 }
 
 module.exports = {
-    login,
-    logout
+    setLoginSession,
+    removeLoginSession
 }

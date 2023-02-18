@@ -16,8 +16,8 @@ const {
 const { api_check_login, getMe } = require('../../middleware/check_login')
 const { parse_user_data } = require('../../middleware/gcs')
 const { validate_user } = require('../../middleware/validate')
-const { cache_reset } = require('../../middleware/cache')
-const { login, logout } = require('../../middleware/loginAndOut')
+
+const { setLoginSession, removeLoginSession } = require('../../middleware/session')
 
 router.prefix('/api/user')
 
@@ -37,30 +37,30 @@ router.post('/register', validate_user, async (ctx, next) => {
 })
 
 //  登入
-router.post('/', validate_user, login, async (ctx, next) => {
+router.post('/', setLoginSession, validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
     ctx.body = await findUser({email, password})
 })
 
 //  追蹤
-router.post('/follow', api_check_login, cache_reset, async (ctx, next) => {
+router.post('/follow', api_check_login, async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await followIdol({fans_id, idol_id})
 })
 
 //  取消追蹤
-router.post('/cancelFollow', api_check_login, cache_reset, async (ctx, next) => {
+router.post('/cancelFollow', api_check_login, async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await cancelFollowIdol({fans_id, idol_id})
 })
 
 //  登出
-router.get('/logout', api_check_login, logout)
+router.get('/logout', api_check_login, removeLoginSession)
 
 //  setting
-router.patch('/', api_check_login, cache_reset, login, parse_user_data, validate_user, async(ctx, next) => {
+router.patch('/', api_check_login, setLoginSession, parse_user_data, validate_user, async(ctx, next) => {
     let { id } = ctx.session.user
     let { body: newData } = ctx.request
     ctx.body = await modifyUserInfo(newData, id)

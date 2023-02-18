@@ -42,8 +42,9 @@ const set = async (key, val, timeout = 60 * 60) => {
     return true
 }
 
-const del = async (key) => {
+const clear = async (key) => {
     await cli.del(key)
+    console.log(`@ 清除系統緩存 --> cache/${key}`)
     return true
 }
 
@@ -64,8 +65,9 @@ const get = async (key) => {
 }
 
 module.exports = {
+    clear,
+
     set,
-    del,
     get,
     initCache
 }

@@ -24,7 +24,11 @@ const {
     readBlogList
 } = require('../server/blog')
 
-const { remindNews, tellPeopleFollower } = require('../server/cache')
+const {
+    modifyCache,
+    
+    tellPeopleFollower
+} = require('../server/cache')
 
 const { ErrModel, SuccModel } = require('../model')
 
@@ -37,6 +41,8 @@ const {
     UPDATE,
     FOLLOW
 } = require('../model/errRes')
+
+const { CACHE: { TYPE: { USER, NEWS }} } = require('../conf/constant')
 const { Blog } = require('../db/mysql/model')
 
 /** 確認信箱是否已被註冊
@@ -47,7 +53,7 @@ async function isEmailExist(email) {
     const res = await readUser({ email })
 
     if (!res) {
-        return new SuccModel('此帳號仍未被使用，歡迎註冊')
+        return new SuccModel()
     } else {
         return new ErrModel(IS_EXIST)
     }
@@ -106,9 +112,10 @@ async function getPeopleById(id) {
 async function followIdol({ fans_id, idol_id }) {
     const ok = await followPeople.addFans({ idol_id, fans_id })
     if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
-    //  用於處理緩存
-    let cache = { user: [fans_id, idol_id], news: [idol_id] }
-    return new SuccModel(undefined, cache)
+    //  處理緩存
+    let cache = { [USER]: [fans_id, idol_id], [NEWS]: [idol_id] }
+    await modifyCache(cache)
+    return new SuccModel(undefined)
 }
 
 /** 取消追蹤
@@ -140,27 +147,31 @@ async function cancelFollowIdol({ fans_id, idol_id }) {
     if (!res) {
         return new ErrModel(FOLLOW.CANCEL_ERR)
     }
-    let cache = { user: [fans_id, idol_id], news: [fans_id, idol_id] }
-    return new SuccModel(undefined, cache)
+    let cache = { [USER]: [fans_id, idol_id], [NEWS]: [fans_id, idol_id] }
+    await modifyCache(cache)
+    return new SuccModel(undefined)
 
 }
 
 //  更新user
 const modifyUserInfo = async (newData, id) => {
     let user = await updateUser({ newData, id })
-    let cache = { user: [ id ]}
+    let cache = { [USER]: id }
     if (newData.nickname || newData.email || newData.avatar) {
         let fans = await followPeople.readFans({ idol_id: id })
         let idols = await followPeople.readIdols({ fans_id: id })
         let people = [...fans, ...idols]
         let blog = await readBlogByAuthor(id)
-        cache.news = people
-        cache.user = [ ...cache.user, ...people]
-        cache.blog = blog
+        cache[NEWS] = people
+        cache[USER] = [ ...cache[USER], ...people]
+        cache[BLOG] = blog
     }
-
-    return new SuccModel(user, cache)
+    await modifyCache(cache)
+    return new SuccModel(user)
 }
+
+
+
 
 //  找出粉絲列表
 async function getFansById(idol_id) {

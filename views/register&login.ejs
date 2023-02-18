@@ -358,11 +358,11 @@
 
         let email = inp.val()
 
-        let { data: { errno, data, msg } } = await axios.post(api_isEmailExist, { email })
+        let { data: { errno, msg } } = await axios.post(api_isEmailExist, { email })
 
         //  後端驗證
         if (!errno) {
-          feedback_UI(inp, true, data)
+          feedback_UI(inp, true, "此帳號仍未被使用，歡迎註冊")
           return true
         } else {
           msg = Array.isArray(msg) ? msg[0].message : msg
