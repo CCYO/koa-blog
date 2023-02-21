@@ -11,12 +11,12 @@ const { FollowBlog } = require('../db/mysql/model')
  * @param {number} fans_id fans id
  * @returns {boolean} 成功 true，失敗 false
  */
-async function deleteFollower({follower_id, blog_id}) {
+async function deleteFollower({ follower_id, blog_id }) {
     let where = { follower_id }
     let isArray = Array.isArray(blog_id)
-    if(isArray){
-        where.blog_id = {[Op.in]: blog_id}
-    }else{
+    if (isArray) {
+        where.blog_id = { [Op.in]: blog_id }
+    } else {
         where.blog_id = blog_id
     }
     const num = await FollowBlog.destroy({
@@ -24,16 +24,16 @@ async function deleteFollower({follower_id, blog_id}) {
         force: true
     })
 
-    if ((isArray && blog_id.length !== num) || (!isArray && !num) ){
+    if ((isArray && blog_id.length !== num) || (!isArray && !num)) {
         return false
-    } 
+    }
     return true
 }
 
-async function createFollowers({blog_id, listOfFollowerId}){
-    let data = listOfFollowerId.map( follower_id => ({ blog_id, follower_id}))
+async function createFollowers({ blog_id, listOfFollowerId }) {
+    let data = listOfFollowerId.map(follower_id => ({ blog_id, follower_id }))
     let res = await FollowBlog.bulkCreate(data)
-    if(listOfFollowerId.length !== res.length){
+    if (listOfFollowerId.length !== res.length) {
         return false
     }
     return true
@@ -42,12 +42,12 @@ async function createFollowers({blog_id, listOfFollowerId}){
 async function hiddenBlog(opt_where) {
     // let { blog_id, confirm } = opts
     let where = { ...opt_where }
-    
+
     let row = await FollowBlog.destroy({ where })
     return row
 }
 
-async function restoreBlog(opt_where){
+async function restoreBlog(opt_where) {
     let where = { ...opt_where }
 
     await FollowBlog.restore(where)
@@ -60,24 +60,15 @@ async function updateFollowBlog(newData, opt_where, options) {
     return row
 }
 
-async function readFollowers(opt_where) {
-    let where = { ...opt_where }
-    
-    let res = await FollowBlog.findAll({
-        attributes: ['follower_id'],
-        where
-    })
-
-    if (!res.length) {
-        return []
+async function readFollowers({ where, attributes }) {
+    let opts = { where }
+    if (attributes) {
+        opts.attributes = attributes
     }
 
-    let followerList = res.map(item => {
-        let { follower_id } = item.toJSON()
-        return follower_id
-    })
+    let followers = await FollowBlog.findAll(opts)
 
-    return followerList
+    return followers.map( follower => follower.toJSON() )
 }
 
 module.exports = {

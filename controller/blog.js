@@ -42,6 +42,8 @@ const { modifyCache } = require('../server/cache')
 
 const { CACHE } = require('../conf/constant')
 
+const { getOnePropValue } = require('../utils/_self')
+
 /** 建立 blog
  * @param { string } title 標題
  * @param { number } userId 使用者ID  
@@ -67,26 +69,29 @@ async function removeBlog(blogList, author) {
         blogList = [blogList]
     }
 
-    //  blog 的 follower
-    let promiseList = blogList.map(async blog_id => {
-        return await readFollowers({ blog_id })
+    //  找出 blog 的 follower
+    let promise_followers = blogList.map(async blog_id => {
+        return await readFollowers({
+            attributes: ['follower_id'],
+            where: { blog_id }
+        })
     })
-    let resList = await Promise.all(promiseList)
-    let cache = { news: [], user: [author] }
+    let followerList = await Promise.all(promise_followers)
 
-    resList.reduce((initVal, curVal) => {
-        let set = new Set([...initVal, ...curVal])
-        return cache.news = [...set]
-    }, cache.news)
+    let followerIdList = getOnePropValue(followers, 'follower_id')
 
-    console.log('cache => ', cache)
+    //  處理cache
+    await modifyCache({ 
+        [CACHE.TYPE.NEWS]: [ followerIdList ],
+        [CACHE.TYPE.USER]: [ author ]
+    })
 
     let res = await deleteBlogs({ blogList_id: blogList })
 
     if (!res) {
         return new ErrModel(BLOG.BLOG_REMOVE_ERR)
     }
-    return new SuccModel(undefined, cache)
+    return new SuccModel()
 }
 
 /** 更新 blog
