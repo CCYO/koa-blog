@@ -21,7 +21,7 @@ router.post('/', api_check_login, async (ctx, next) => {
 })
 
 //  刪除 blog
-router.delete('/', api_check_login, cache_reset, async (ctx, next) => {
+router.delete('/', api_check_login, async (ctx, next) => {
     const author = ctx.session.user.id
     const { id } = ctx.request.body
     ctx.body = await removeBlog(id, author)

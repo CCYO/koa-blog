@@ -53,7 +53,7 @@ async function addBlog(title, user_id) {
     try {
         title = my_xxs(title)
         const blog = await createBlog({ title, user_id })
-        await modifyCache({ [CACHE.TYPE.USER]: [ user_id ]})
+        await modifyCache({ [CACHE.TYPE.USER]: [user_id] })
         return new SuccModel(blog)
     } catch (e) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
@@ -69,21 +69,34 @@ async function removeBlog(blogList, author) {
         blogList = [blogList]
     }
 
+    //  處理cache -----
     //  找出 blog 的 follower
-    let promise_followers = blogList.map(async blog_id => {
-        return await readFollowers({
-            attributes: ['follower_id'],
-            where: { blog_id }
+    console.log('@b ', blogList)
+    let followerList = await Promise.all(
+        blogList.reduce(async ( list, blog_id) => {
+            let arr = await readFollowers({
+                attributes: ['follower_id'],
+                where: { blog_id }
+            })
+            console.log('@arr => ', arr)
+            for( let { follower_id } of arr){
+                list.push(follower_id)
+            }
+            return list
         })
-    })
-    let followerList = await Promise.all(promise_followers)
+    )
+    console.log('@followerList => ', followerList)
 
-    let followerIdList = getOnePropValue(followers, 'follower_id')
+    // let followerIdList = followerList.reduce((list, curList) => {
+    //     for (let { follower_id } of curList) {
+    //         list.push(follower_id)
+    //     }
+    //     return list
+    // }, [])
 
-    //  處理cache
-    await modifyCache({ 
-        [CACHE.TYPE.NEWS]: [ followerIdList ],
-        [CACHE.TYPE.USER]: [ author ]
+    await modifyCache({
+        [CACHE.TYPE.NEWS]: [followerIdList],
+        [CACHE.TYPE.USER]: [author]
     })
 
     let res = await deleteBlogs({ blogList_id: blogList })
@@ -139,7 +152,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     }
 
     //  依show處理更新 BlogFollow
-    if (needUpdateShow) { 
+    if (needUpdateShow) {
         //  存放 blog 要更新的數據
         data.show = show
         if (show) { // 公開blog
@@ -211,22 +224,22 @@ async function getBlogListByUserId(user_id) {
     }, { show: [], hidden: [] })
 
     let data = { show: [[]], hidden: [[]] }
-    for(let key in blogList){
+    for (let key in blogList) {
         let blogs = blogList[key]
         let prop = undefined
-        if(key === 'show'){
+        if (key === 'show') {
             prop = 'showAt'
-        }else{
+        } else {
             prop = 'createdAt'
         }
         blogs.sort((a, b) => {
-            return new Date(b[prop])- new Date(a[prop])
+            return new Date(b[prop]) - new Date(a[prop])
         })
         let page = { show: 0, hidden: 0 }
         blogs = blogs.reduce((initVal, item) => {
             //  移除show屬性
             delete item.show
-            if(item.showAt){
+            if (item.showAt) {
                 item.showAt = date.format(new Date(item.showAt), 'YYYY/MM/DD HH:mm:ss')
             }
             item.createdAt = date.format(new Date(item.createdAt), 'YYYY/MM/DD HH:mm:ss')
@@ -240,7 +253,7 @@ async function getBlogListByUserId(user_id) {
             return initVal
         }, [[]])
 
-        if(blogs[0].length !== 0){
+        if (blogs[0].length !== 0) {
             data[key] = blogs
         }
     }
@@ -248,11 +261,11 @@ async function getBlogListByUserId(user_id) {
 }
 
 async function getSquareBlogList(exclude_id) {
-    let blogs = await readBlogList({exclude_id})
-    blogs.sort( (a, b) => {
+    let blogs = await readBlogList({ exclude_id })
+    blogs.sort((a, b) => {
         return new Date(b.showAt) - new Date(b.showAt)
     })
-    blogs.map( blog => {
+    blogs.map(blog => {
         blog.showAt = date.format(new Date(blog.showAt), 'YYYY/MM/DD HH:mm:ss')
         return blog
     })
