@@ -72,18 +72,20 @@ async function removeBlog(blogList, author) {
     //  處理cache -----
     //  找出 blog 的 follower
     console.log('@b ', blogList)
-    let followerList = await Promise.all(
-        blogList.reduce(async ( list, blog_id) => {
-            let arr = await readFollowers({
-                attributes: ['follower_id'],
-                where: { blog_id }
-            })
-            console.log('@arr => ', arr)
-            for( let { follower_id } of arr){
-                list.push(follower_id)
-            }
-            return list
+    let x = blogList.reduce(async ( list, blog_id) => {
+        let arr = await readFollowers({
+            attributes: ['follower_id'],
+            where: { blog_id }
         })
+        console.log('@arr => ', arr)
+        for( let { follower_id } of arr){
+            list.push(follower_id)
+        }
+        return list
+    }, [])
+    console.log('@x => ', x)
+    let followerList = await Promise.all(
+        x
     )
     console.log('@followerList => ', followerList)
 
