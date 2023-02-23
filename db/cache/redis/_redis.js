@@ -5,24 +5,26 @@
 const redis = require('redis')
 
 const { REDIS_CONF } = require('../../../conf/key/db')
+const { CACHE: { TYPE: { NEWS }}} = require('../../../conf/constant')
 
 const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)
 cli.on('error', (e) => console.log('@Redis Error --> ', e))
 cli.on('connect', () => console.log('@ => Redis cache init -- ok'))
 
-async function initCache(){
+async function init(){
     try{
         await cli.connect()
-        await init_cacheNews()
+        await initNews()
     }catch(e){
-        console.log('@ redis cache init ERR => ', e)
+        console.log('@ redis cache init ERR')
+        throw new Error(e)
     }
 }
 
-async function init_cacheNews(){
-    let news = await get('cacheNews')
+async function initNews(){
+    let news = await get(NEWS)
     if(!news){
-        await set('cacheNews', [])    
+        await set(NEWS, [])    
     }
     return
 }
@@ -69,5 +71,5 @@ module.exports = {
 
     set,
     get,
-    initCache
+    init
 }

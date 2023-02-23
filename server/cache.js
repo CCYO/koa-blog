@@ -49,20 +49,18 @@ async function addNewsCache(users) {
     }
 
     //  取出緩存資料 redis/cacheNews
-    let cache = await get('cacheNews')
+    let cache = await get(NEWS)
     //  將資料設為 Set，以便除去重複值
     let set_people = new Set(cache)
-    //  去除 users 重複值
-    let people = [...new Set(users)]
+    
     //  將 cache 與 user 合併
-    people.forEach((user) => {
+    users.forEach((user) => {
         set_people.add(user)
     })
-    //  轉為 array
-    people = [...set_people]
+    console.log('@ ==> ', [...set_people])
     //  緩存
-    await set([NEWS], people)
-    return people
+    await set(NEWS, [...set_people])
+    return
 }
 
 async function removeCacheBlog(blogList) {

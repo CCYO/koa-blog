@@ -64,44 +64,31 @@ async function addBlog(title, user_id) {
  * @param {number} blog_id 
  * @returns {object} SuccModel || ErrModel
  */
-async function removeBlog(blogList, author) {
-    if (!Array.isArray(blogList)) {
-        blogList = [blogList]
+async function removeBlog(blogIdList, author) {
+    if (!Array.isArray(blogIdList)) {
+        blogIdList = [blogIdList]
     }
 
     //  處理cache -----
     //  找出 blog 的 follower
-    console.log('@b ', blogList)
-    let x = blogList.reduce(async ( list, blog_id) => {
-        let arr = await readFollowers({
+    let followerIdList = await blogIdList.reduce(async ( initArr, blog_id) => {
+        let followerList = await readFollowers({
             attributes: ['follower_id'],
             where: { blog_id }
         })
-        console.log('@arr => ', arr)
-        for( let { follower_id } of arr){
-            list.push(follower_id)
+        let arr = await initArr
+        for( let { follower_id } of followerList){
+            arr.push(follower_id)
         }
-        return list
+        return arr
     }, [])
-    console.log('@x => ', x)
-    let followerList = await Promise.all(
-        x
-    )
-    console.log('@followerList => ', followerList)
-
-    // let followerIdList = followerList.reduce((list, curList) => {
-    //     for (let { follower_id } of curList) {
-    //         list.push(follower_id)
-    //     }
-    //     return list
-    // }, [])
 
     await modifyCache({
-        [CACHE.TYPE.NEWS]: [followerIdList],
+        [CACHE.TYPE.NEWS]: followerIdList,
         [CACHE.TYPE.USER]: [author]
     })
 
-    let res = await deleteBlogs({ blogList_id: blogList })
+    let res = await deleteBlogs({ blogIdList })
 
     if (!res) {
         return new ErrModel(BLOG.BLOG_REMOVE_ERR)

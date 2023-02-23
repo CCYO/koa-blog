@@ -14,9 +14,6 @@ const json = require('koa-json')
 //  連接redis-session
 const store = require('./db/cache/redis/sessionStore')
 
-//  連接redis
-const { initCache } = require('./db/cache/redis/_redis')
-
 const { ErrModel } = require('./model')
 const { SERVER_ERR } = require('./model/errRes')
 
@@ -59,8 +56,6 @@ app.use(async (ctx, next) => {
         return
     }
 })
-
-initCache()
 
 app.use(json())
 app.use(logger())

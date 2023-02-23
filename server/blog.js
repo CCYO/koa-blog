@@ -66,12 +66,12 @@ async function updateBlog(blog_id, newData) {
  * @param {*} needComment 
  * @returns 
  */
-async function deleteBlogs({ blogList_id }) {
+async function deleteBlogs({ blogIdList }) {
     let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('Blogs', {
-        id: { [Op.in]: blogList_id }
+        id: { [Op.in]: blogIdList }
     })
     
-    if(affectedRows !== blogList_id.length ){
+    if(affectedRows !== blogIdList.length ){
         return false
     }
     return true
