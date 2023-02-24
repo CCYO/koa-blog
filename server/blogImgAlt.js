@@ -11,9 +11,19 @@ async function createBlogImgAlt({ blogImg_id, alt }){
     return await readBlogImgAlt({ id: blogImgAlt.dataValues.id })
 }
 
-async function deleteBlogImgAlt(whereOps){
-    let row = await BlogImgAlt.destroy({where: whereOps})
-    if(row !== whereOps.id.length){
+async function deleteBlogImgAlt({ blogImgAlt_list }){
+    // let opts = { where }
+    // let row = await BlogImgAlt.destroy(opts)
+    // if(row !== whereOps.id.length){
+    //     return false
+    // }
+    // return true
+
+    let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('BlogImgAlt', {
+        id: { [Op.in]: blogImgAlt_list }
+    })
+    
+    if(affectedRows !== blogImgAlt_list.length ){
         return false
     }
     return true
@@ -28,22 +38,15 @@ async function updateBlogImgAlt(data, whereOps){
     return true
 }
 
-async function readBlogImgAlt({ id }){
-    let where = { id }
-
-    let blogImgAlt = await BlogImgAlt.findOne({
-        where,
-        include: {
-            model: BlogImg,
-            attributes: ['id', 'blog_id', 'img_id', 'name']
-        }
-    })
-    
-    if(!blogImgAlt){
-        return null
+async function readBlogImgAlt({ where, attributes }){
+    let opts = { where }
+    if (attributes) {
+        opts.attributes = attributes
     }
 
-    return init_blogImgAlt(blogImgAlt)
+    let blogImgAlts = await BlogImgAlt.findAll(opts)
+    
+    return blogImgAlts.map( init_blogImgAlt )
 }
 
 async function courtOfSomeImgInBlog({blog_id, blogImg_id}){

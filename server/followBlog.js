@@ -30,11 +30,11 @@ async function deleteFollower({ follower_id, blog_id }) {
     return true
 }
 
-async function createFollowers({ blog_id, listOfFollowerId }) {
+async function createFollowers({ blog_id, listOfFollowerId, opts}) {
     let data = listOfFollowerId.map(follower_id => ({ blog_id, follower_id }))
-    let res = await FollowBlog.bulkCreate(data)
+    let res = await FollowBlog.bulkCreate(data, opts)
     if (listOfFollowerId.length !== res.length) {
-        return false
+        throw new Error('創建/更新FollowBlog失敗')
     }
     return true
 }

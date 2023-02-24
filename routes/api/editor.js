@@ -32,9 +32,11 @@ router.patch('/', api_check_login, cache_reset, async(ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { id: blog_id, cancelImgs, ...blog_data } = ctx.request.body
     let res
+    //  針對要取消關聯的圖片
     if(cancelImgs){
         res = await cutImgsWithBlog(blog_id, cancelImgs, user_id)
     }
+    //  若有除了blog_id、要取消關聯的圖片 以外的數據
     if(Object.getOwnPropertyNames(blog_data).length){
         res = await modifyBlog(blog_id, blog_data, user_id)
     }

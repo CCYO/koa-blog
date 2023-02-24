@@ -24,6 +24,7 @@ const {
 
 const {
     deleteBlogImgAlt,
+    readBlogImgAlt
 } = require('../server/blogImgAlt')
 
 const {
@@ -36,7 +37,7 @@ const {
 const { FollowBlog } = require('../db/mysql/model')
 
 const { SuccModel, ErrModel } = require('../model')
-const { BLOG, BLOGIMG } = require('../model/errRes')
+const { BLOG, BLOGIMGALT } = require('../model/errRes')
 
 const { modifyCache } = require('../server/cache')
 
@@ -71,13 +72,13 @@ async function removeBlog(blogIdList, author) {
 
     //  處理cache -----
     //  找出 blog 的 follower
-    let followerIdList = await blogIdList.reduce(async ( initArr, blog_id) => {
+    let followerIdList = await blogIdList.reduce(async (initArr, blog_id) => {
         let followerList = await readFollowers({
             attributes: ['follower_id'],
             where: { blog_id }
         })
         let arr = await initArr
-        for( let { follower_id } of followerList){
+        for (let { follower_id } of followerList) {
             arr.push(follower_id)
         }
         return arr
@@ -103,36 +104,51 @@ async function removeBlog(blogIdList, author) {
  * @returns {object} SuccModel || ErrModel
  */
 async function modifyBlog(blog_id, blog_data, author_id) {
-    let { title, cancelImgs, html, show } = blog_data
+    let { title, cancelImgs = [], html, show } = blog_data
+
+    //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
+    await cancelImgs.reduce(async (img) => {
+        let { blogImg_id, blogImgAlt_list } = img
+        //  確認在BlogImgAlt內，同樣BlogImg的條目共有幾條
+        let { length: blogImgCount } = await readBlogImgAlt({ where: { blogImg_id } })
+
+        // let { count } = await BlogImgAlt.findAndCountAll({ where: { blogImg_id } })
+        let res
+        if (blogImgCount === blogImgAlt_list.length) {  //  BlogImg條目 === 要刪除的BlogImgAlt數量，代表該Blog已沒有該張圖片
+            //  刪除整筆 BlogImg
+            res = await deleteBlogImg({ id: blogImg_id })
+        } else {  //  BlogImg條目 !== 要刪除的BlogImgAlt數量，代表該Blog仍有同樣的圖片
+            res = await deleteBlogImgAlt({ blogImgAlt_list })
+        }
+        if (!res) { //  代表刪除不完全
+            throw new Error(BLOGIMGALT.REMOVE_ERR)
+        }
+        return Promise.resolve()
+    })
+
     //  粉絲群的id
-    let listOfFollowerId = []
+    let followerIdList = []
     //  用於更新Blog
     let data = {}
     //  用於緩存處理
     let cache = { blog: [blog_id] }
 
-    // //  文章內沒有的圖片，刪除關聯
-    // if (cancelImgs) {
-    //     let res = await deleteBlogImgAlt({ id: cancelImgs })
-    //     if (!res) {
-    //         return new ErrModel(BLOGIMG.REMOVE_ERR)
-    //     }
-    // }
-
     let needUpdateShow = blog_data.hasOwnProperty('show')
     //  若預更新的數據有 show 或 title
     if (needUpdateShow || title) {
         //  取得粉絲群
-        let followerList = await readFans(author_id)
+        let followers = await readFans({
+            attributes: ['id'],
+            where: { idol_id: author_id }
+        })
         //  取得粉絲群的id
-        followerList.reduce((initVal, { id }) => {
-            initVal.push(id)
-            return initVal
-        }, listOfFollowerId)
+        followerIdList = followers.map( ({id}) => id )
 
         //  提供緩存處理
-        cache.news = listOfFollowerId
-        cache.user = [author_id]
+        await modifyCache({
+            [CACHE.TYPE.NEWS]: followerIdList,
+            [CACHE.TYPE.USER]: [author_id]
+        })
     }
 
     if (title) {
@@ -144,11 +160,12 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     if (needUpdateShow) {
         //  存放 blog 要更新的數據
         data.show = show
-        if (show) { // 公開blog
+        if (show && followerIdList.length) { // 公開blog
             //  要更新的資料
-            let updateDate = listOfFollowerId.map(follower_id => ({ blog_id, follower_id, deletedAt: null }))
+            let Dates = followerIdList.map(follower_id => ({ blog_id, follower_id, deletedAt: null }))
             //  更新資料之 blog_id + follower_id 主鍵對若不存在，則新建，反之更新
-            updateDate.length && await FollowBlog.bulkCreate(updateDate, { updateOnDuplicate: ['deletedAt'] })
+            // await FollowBlog.bulkCreate(updateDate, {  })
+            await createFollowers({ blog_id, listOfFollowerId: followerIdList, opts: { updateOnDuplicate: ['deletedAt'] }})
             //  存放 blog 要更新的數據
             data.showAt = new Date()
         } else if (!show) { // 隱藏blog

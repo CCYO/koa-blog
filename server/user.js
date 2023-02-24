@@ -7,7 +7,8 @@ const { NEWS } = require('../conf/constant')
 
 const {
     User,
-    Blog
+    Blog,
+    FollowPeople
 } = require('../db/mysql/model')
 
 const  { hash }  = require('../utils/crypto')
@@ -59,17 +60,22 @@ const createUser = async ({ password, ...data }) => {
  * @param {string} idol_id 
  * @returns {array} arrItem 代表 fans，若數組為空，表示沒粉絲
  */
-async function readFans(idol_id, opt_attr) {
-    const idol = await User.findByPk(idol_id)
-    
-    let attributes = ['id', 'email', 'age', 'nickname', 'avatar', 'avatar_hash']
-    if(opt_attr){
-        attributes = [...opt_attr]
+async function readFans({where, attributes, idol_id, opt_attr}) {
+    let opts = { where }
+    if(attributes){
+        opts.attributes = attributes
     }
+    // const idol = await User.findByPk(idol_id)
+    
+    // let attributes = ['id', 'email', 'age', 'nickname', 'avatar', 'avatar_hash']
+    // if(opt_attr){
+    //     attributes = [...opt_attr]
+    // }
 
-    const fansList = await idol.getFollowPeople_F({ attributes })
+    const fansList = await FollowPeople.findAll(opts) //idol.getFollowPeople_F({ attributes })
 
     if (!fansList.length) return []
+
     return init_user(fansList)
 }
 

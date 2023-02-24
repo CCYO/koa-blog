@@ -7,8 +7,9 @@ async function createBlogImg({blog_id, img_id, name}){
     return init_blogImg(blogImg)
 }
 
-async function deleteBlogImg({listOfId}){
-    let where = { id: listOfId }
+async function deleteBlogImg({where}){
+    let opts = { where }
+    
     let row = await BlogImg.destroy({where})
     if(listOfId.length !== row){
         return false
