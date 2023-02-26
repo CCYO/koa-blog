@@ -30,6 +30,7 @@ module.exports = {
         NO_UPDATE: { errno: 703, msg: 'BLOG資料更新失敗'},
         UPDATE: {
             ERR_CREATE_BLOGFOLLOW: { errno: 704_1, msg: '創建BlogFollow數目與要求不匹配'},
+            ERR_SOFT_DELETE_BLOGFOLLOW: {errno: 704_2, msg: '軟刪除BlogFollow失敗'}
         },
         UPLOAD_IMG_ERR: { errno: 704 },
         IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上'},

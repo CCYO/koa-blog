@@ -30,21 +30,28 @@ async function deleteFollower({ follower_id, blog_id }) {
     return true
 }
 
-async function createFollowers({ blog_id, listOfFollowerId, opts}) {
-    let data = listOfFollowerId.map(follower_id => ({ blog_id, follower_id }))
-    let res = await FollowBlog.bulkCreate(data, opts)
-    if (listOfFollowerId.length !== res.length) {
-        throw new Error('創建/更新FollowBlog失敗')
+async function createFollowers({ blog_id, listOfFollowerId, updateData, opts}) {
+    let dataList = listOfFollowerId.map(follower_id => {
+        let data = { blog_id, follower_id }
+        if(updateData){
+            data = { ...data, ...updateData }
+        }
+    })
+    let res = await FollowBlog.bulkCreate(dataList, opts)
+    if (dataList.length !== res.length) {
+        return false
     }
     return true
 }
 
-async function hiddenBlog(opt_where) {
+async function hiddenBlog({where}) {
     // let { blog_id, confirm } = opts
-    let where = { ...opt_where }
-
-    let row = await FollowBlog.destroy({ where })
-    return row
+    let opts = { where }
+    let row = await FollowBlog.destroy(opts)
+    if(!row){
+        return false
+    }
+    return true
 }
 
 async function restoreBlog(opt_where) {

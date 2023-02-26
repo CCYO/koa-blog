@@ -162,10 +162,13 @@ async function modifyBlog(blog_id, blog_data, author_id) {
         data.show = show
         if (show && followerIdList.length) { // 公開blog
             //  要更新的資料
-            let Dates = followerIdList.map(follower_id => ({ blog_id, follower_id, deletedAt: null }))
+            // let Dates = followerIdList.map(follower_id => ({ blog_id, follower_id, deletedAt: null }))
             //  更新資料之 blog_id + follower_id 主鍵對若不存在，則新建，反之更新
             // await FollowBlog.bulkCreate(updateDate, {  })
-            await createFollowers({ blog_id, listOfFollowerId: followerIdList, opts: { updateOnDuplicate: ['deletedAt'] }})
+            let ok = await createFollowers({ blog_id, listOfFollowerId: followerIdList, updateData: { deletedAt: null }, opts: { updateOnDuplicate: ['deletedAt'] }})
+            if(!ok){
+                return new Error(BLOG.UPDATE.ERR_CREATE_BLOGFOLLOW)
+            }
             //  存放 blog 要更新的數據
             data.showAt = new Date()
         } else if (!show) { // 隱藏blog

@@ -52,12 +52,14 @@ async function deleteBlog(blog_id) {
  * @param {object} blog_data 要更新的資料
  * @returns {number} 1代表更新成功，0代表失敗
  */
-async function updateBlog(blog_id, newData) {
+async function updateBlog({blog_id: id, newData}) {
     let [row] = await Blog.update(newData, {
-        where: { id: blog_id }
+        where: { id }
     })
-
-    return row
+    if(row){
+        return true
+    }
+    return false
 }
 
 /**批量刪除
@@ -90,6 +92,54 @@ async function deleteBlogs({ blogIdList }) {
  *  ，若找不到則 null
  */
 async function readBlog({ blog_id }, needComment) {
+    let include = [
+        {
+            model: User,
+            attributes: ['id', 'email', 'nickname']
+        },
+        {
+            model: BlogImg,
+            attributes: ['id', 'name'],
+            include: [
+                {
+                    model: Img,
+                    attributes: ['id', 'url', 'hash']
+                },
+                {
+                    model: BlogImgAlt,
+                    attributes: ['id', 'alt']
+                }
+            ]
+        }
+    ]
+
+    if (needComment) {
+        include.push({
+            model: Comment,
+            attributes: ['id', 'html', 'p_id', 'createdAt', 'deletedAt'],
+            paranoid: false,
+            include: {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            }
+        })
+    }
+   
+    let res = await Blog.findByPk(blog_id, {
+        attributes: ['id', 'title', 'html', 'show', 'showAt'],
+        include
+    })
+
+    if (!res) {
+        return null
+    }
+
+    return init_blog(res)
+}
+
+
+async function readBlog({ where }) {
+    let opts = { where }
     let include = [
         {
             model: User,
