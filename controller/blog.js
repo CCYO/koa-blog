@@ -1,9 +1,15 @@
-const { Op } = require('sequelize')
+
+const Opts = require('../utils/seq_findOpts')   //  0228
+const {
+    BLOG,       //  0228
+    BLOGIMGALT
+} = require('../model/errRes')
+const { SuccModel, ErrModel } = require('../model') //  0228
+const Blog = require('../server/blog')  //  0228
+
 const my_xxs = require('../utils/xss')
 const date = require('date-and-time')
-const { set_blog, tellBlogFollower } = require('../server/cache')
 
-const { hash_obj } = require('../utils/crypto')
 const {
     readFans
 } = require('../server/user')
@@ -13,8 +19,7 @@ const {
     deleteBlog,
     deleteBlogs,
     updateBlog,
-    readBlog,
-    readBlogList,
+    readBlog
 } = require('../server/blog')
 
 const {
@@ -34,16 +39,91 @@ const {
     readFollowers
 } = require('../server/followBlog')
 
-const { FollowBlog } = require('../db/mysql/model')
-
-const { SuccModel, ErrModel } = require('../model')
-const { BLOG, BLOGIMGALT } = require('../model/errRes')
-
 const { modifyCache } = require('../server/cache')
 
 const { CACHE } = require('../conf/constant')
 
-const { getOnePropValue } = require('../utils/_self')
+
+
+/** 取得 blogList   0228
+ * @param {number} user_id user id
+ * @param {boolean} is_author 是否作者本人
+ * @returns {object} SuccessModel
+ * { 
+ *  blogList { 
+ *      show: [ 
+ *          blog {
+ *              id, title, showAt, 
+ *              author: { id, email, nickname, age, avatar, avatar_hash }
+ *          }, ...
+ *      ],
+ *      hidden: [ blog, ... ]
+ *  } 
+ * }
+ */
+async function getBlogListByUserId(user_id) {
+    let blogList = await Blog.readBlogs(Opts.findBlogListByAuthorId(user_id))
+
+    //  將blog依show分纇
+    blogList = blogList.reduce((initVal, item) => {
+        let key = item.show ? 'show' : 'hidden'
+        //  移除show屬性
+        delete item.show
+        initVal[key].push(item)
+        return initVal
+    }, { show: [], hidden: [] })
+
+    let data = { show: [[]], hidden: [[]] }
+    for (let key in blogList) {
+        let blogs = blogList[key]
+        let prop = undefined
+        if (key === 'show') {
+            prop = 'showAt'
+        } else {
+            prop = 'createdAt'
+        }
+        blogs.sort((a, b) => {
+            return new Date(b[prop]) - new Date(a[prop])
+        })
+        let page = { show: 0, hidden: 0 }
+        blogs = blogs.reduce((initVal, item) => {
+            //  移除show屬性
+            delete item.show
+            if (item.showAt) {
+                item.showAt = date.format(new Date(item.showAt), 'YYYY/MM/DD HH:mm:ss')
+            }
+            item.createdAt = date.format(new Date(item.createdAt), 'YYYY/MM/DD HH:mm:ss')
+            //  若指定的ArrayItem內已有5筆資料，則該show分纇的頁碼+1，並創建該頁碼的ArrayItem
+            if (initVal[page[key]].length === 5) {
+                page[key] += 1
+                initVal[page[key]] = []
+            }
+            initVal[page[key]].push(item)
+            console.log('@=> initVal', initVal)
+            return initVal
+        }, [[]])
+
+        if (blogs[0].length !== 0) {
+            data[key] = blogs
+        }
+    }
+    return new SuccModel({data})
+}
+
+/** 取得 blog 紀錄  0228
+ * 
+ * @param {number} blog_id blog id
+ * @returns 
+ */
+async function getBlog(blog_id) {
+    let blog = await Blog.readBlog(Opts.findBlog(blog_id))
+    if (blog) {
+        return new SuccModel({ data: blog })
+    } else {
+        return new ErrModel(BLOG.NOT_EXIST)
+    }
+}
+
 
 /** 建立 blog
  * @param { string } title 標題
@@ -188,86 +268,9 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     return new SuccModel(blog, cache)
 }
 
-/** 取得 blog 紀錄
- * 
- * @param {number} blog_id blog id
- * @returns 
- */
-async function getBlog(blog_id, needCommit = false) {
-    let blog = await readBlog({ blog_id }, needCommit)
-    if (blog) {
-        return new SuccModel(blog)
-    } else {
-        return new ErrModel(BLOG.NOT_EXIST)
-    }
-}
 
-/** 取得 blogList
- * @param {number} user_id user id
- * @param {boolean} is_author 是否作者本人
- * @returns {object} SuccessModel
- * { 
- *  blogList { 
- *      show: [ 
- *          blog {
- *              id, title, showAt, 
- *              author: { id, email, nickname, age, avatar, avatar_hash }
- *          }, ...
- *      ],
- *      hidden: [ blog, ... ]
- *  } 
- * }
- */
-async function getBlogListByUserId(user_id) {
-    let param = { user_id }
 
-    let blogList = await readBlogList(param)
 
-    //  將blog依show分纇
-    blogList = blogList.reduce((initVal, item) => {
-        let key = item.show ? 'show' : 'hidden'
-        //  移除show屬性
-        delete item.show
-        initVal[key].push(item)
-        return initVal
-    }, { show: [], hidden: [] })
-
-    let data = { show: [[]], hidden: [[]] }
-    for (let key in blogList) {
-        let blogs = blogList[key]
-        let prop = undefined
-        if (key === 'show') {
-            prop = 'showAt'
-        } else {
-            prop = 'createdAt'
-        }
-        blogs.sort((a, b) => {
-            return new Date(b[prop]) - new Date(a[prop])
-        })
-        let page = { show: 0, hidden: 0 }
-        blogs = blogs.reduce((initVal, item) => {
-            //  移除show屬性
-            delete item.show
-            if (item.showAt) {
-                item.showAt = date.format(new Date(item.showAt), 'YYYY/MM/DD HH:mm:ss')
-            }
-            item.createdAt = date.format(new Date(item.createdAt), 'YYYY/MM/DD HH:mm:ss')
-            //  若指定的ArrayItem內已有5筆資料，則該show分纇的頁碼+1，並創建該頁碼的ArrayItem
-            if (initVal[page[key]].length === 5) {
-                page[key] += 1
-                initVal[page[key]] = []
-            }
-            initVal[page[key]].push(item)
-            console.log('@=> initVal', initVal)
-            return initVal
-        }, [[]])
-
-        if (blogs[0].length !== 0) {
-            data[key] = blogs
-        }
-    }
-    return new SuccModel(data)
-}
 
 async function getSquareBlogList(exclude_id) {
     let blogs = await readBlogList({ exclude_id })
@@ -286,8 +289,8 @@ module.exports = {
     addBlog,
     modifyBlog,
     removeBlog,
-    getBlog,
-    getBlogListByUserId,
+    getSquareBlogList,
 
-    getSquareBlogList
+    getBlog,            //  0228
+    getBlogListByUserId //  0228
 }

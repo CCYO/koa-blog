@@ -8,12 +8,14 @@ let {
     BlogImgAlt
 } = require('./db/mysql/model')
 
-const { readBlog } = require('./server/blog')
+const Opts = require('./utils/seq_findOpts')
+
+// const Blog = require('./server/blog')
 go()
 
 async function go() {
     try {
-        let blog = await readBlog({blog_id: 58})
+        const blog = await Blog.findAll({where: { id: 99}})
         console.log('@blog => ', blog)
     } catch (e) {
         console.log(e)

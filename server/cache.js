@@ -1,66 +1,191 @@
-const {
-    clear,
+const { hash_obj } = require('../utils/crypto')     //  0228
 
-    set, get } = require('../db/cache/redis/_redis')
+const Redis = require('../db/cache/redis/_redis')   //  0228
+
+const {
+    isNoCache   //  0228
+} = require('../utils/env')
+
+const { CACHE: {
+    TYPE: {
+        PAGE,   //  0228
+        NEWS,
+    },
+    HAS_CACHE, NO_IF_NONE_MATCH, IF_NONE_MATCH_IS_NO_FRESH,
+    NO_CACHE    //  0228
+
+
+} } = require('../conf/constant')
+
+
 const { readFollowers } = require('./followBlog')
 const { readFans } = require('./followPeople')
 
-const { CACHE: { TYPE: { BLOG, USER, NEWS }}} = require('../conf/constant')
 
-const { isNoCache } = require('../utils/env')
+const {
+    get     //  0228
+} = require('../db/cache/redis/_redis')
 
+//  0228
+async function setBlog(blog_id, val = undefined) {
+    if (isNoCache) {
+        return
+    }
+    let cacheKey = `${PAGE.BLOG}/${blog_id}`
+
+    if (!val) {
+        await Redis.set(cacheKey, '')
+        return
+    }
+    let etag = hash_obj(val)
+    console.log(`@ 系統緩存 ${cacheKey} 生成 etag => `, etag)
+    await Redis.set(cacheKey, { [etag]: val })
+    console.log(`@ 系統緩存 ${cacheKey} 完成緩存`)
+    return etag
+}
+
+//  0228
+async function getBlog(blog_id, ifNoneMatch) {
+    let res = { exist: NO_CACHE, data: undefined }
+    if (isNoCache) {
+        return res
+    }
+    let cacheKey = `${PAGE.BLOG}/${blog_id}`
+    //  取緩存KV
+    let cachePair = await Redis.get(cacheKey)
+
+    if (!cachePair) {  //    若系統cache沒有資料
+        console.log(`@系統緩存 ${cacheKey} 沒有資料`)
+        return res  //  exist: 1 代表無緩存
+    }
+
+    //  若系統cache有資料
+    let [etag, data] = Object.entries(cachePair)[0]    //  [K, V]
+    res.data = data
+    console.log(`@系統緩存 ${cacheKey} 有資料`)
+    if (!ifNoneMatch) {
+        console.log(`@此次 ${cacheKey} 緩存請求雖未攜帶 if-none-match，但系統有緩存可用，直接使用緩存資料`)
+        res.exist = NO_IF_NONE_MATCH   //  未攜帶 if-none-match
+    } else if (ifNoneMatch !== etag) {
+        console.log('@if-none-match => ', ifNoneMatch)
+        console.log('@etag => ', etag)
+        console.log(`@此次 ${cacheKey} if-none-match !== etag`)
+        res.exist = IF_NONE_MATCH_IS_NO_FRESH   //  if-none-match 已過期
+    } else {
+        console.log(`@此次 ${cacheKey} if-none-match 是最新的`)
+        res.exist = HAS_CACHE  //  if-none-match 仍是最新的
+    }
+    return res
+}
+
+//  向相關使用者通知news有變動，待他們下一次請求時，主動向系統請求數據  0228
+async function _addNewsCache(users) {
+    //  當前若是 noCache 模式
+    if (isNoCache || !users) {
+        return
+    }
+    //  取出緩存資料 redis/cacheNews
+    let cache = await Redis.get(NEWS)
+    //  將資料設為 Set，以便除去重複值
+    let people = new Set(cache)
+
+    //  將 cache 與 user 合併
+    users.forEach((user) => {
+        people.add(user)
+    })
+    //  緩存
+    await Redis.set(NEWS, [...people])
+    console.log(`@ 系統緩存 ==> ${NEWS} :`, [...people])
+    return true
+}
+
+//  0228
+async function _removeCache(obj) {
+    //  當前若是 noCache 模式
+    if (isNoCache || !obj) {
+        return
+    }
+    let kvPairs = Object.entries(obj)
+    let promises = await kvPairs.map(async ([key, list]) => {
+        let arr = []
+        if (list) {
+            list = [...new Set(list)]
+            arr.push(await Promise.all(
+                list.map(async id => await Redis.clear(`${key}/${id}`))
+            ))
+        }
+        return await Promise.all(arr)
+    })
+    await Promise.all(promises)
+    return true
+}
+
+//  0228
 async function modifyCache(cache) {
     //  當前若是 noCache 模式 || SuccessModel.cache 無定義
     if (isNoCache || !cache) {
         return
     }
-    
-    await removeCache({
-        [USER]: cache[USER],
-        [BLOG]: cache[BLOG]
+
+    await _removeCache({
+        [PAGE.USER]: cache[PAGE.USER],
+        [PAGE.BLOG]: cache[PAGE.BLOG]
     })
-    await addNewsCache(cache[NEWS])
+    await _addNewsCache(cache[NEWS])
 
     return
 }
 
-async function removeCache(obj) {
-    let kvPairs = Object.entries(obj)
-    let promiseList = kvPairs.map(async ([key, list]) => {
-        if (!list || !list.length) {
-            return Promise.resolve()
-        }else if( !Array.isArray(list) ){
-            list = [list]
-        }
-        let set = [...new Set(list)]
-        return set.map(async (id) => {
-            return await clear(`${key}/${id}`)
-        })
-    })
-    return Promise.all(promiseList)
+//  0228
+async function setUser(user_id, val = undefined) {
+    if (isNoCache) {
+        return
+    }
+    let cacheKey = `${PAGE.USER}/${user_id}`
+
+    if (!val) {
+        await Redis.set(cacheKey, '')
+        return
+    }
+    let etag = hash_obj(val)
+    console.log(`@ 系統緩存 ${cacheKey} 生成 etag => `, etag)
+    console.log(`@ 系統緩存 ${cacheKey} 完成緩存`)
+    await Redis.set(cacheKey, { [etag]: val })
+    return etag
 }
 
-//  向相關使用者通知news有變動，待他們下一次請求時，主動向系統請求數據
-async function addNewsCache(users) {
-    if(!users || !users.length){
-        return
-    }else if( !Array.isArray(users) ){
-        users = [users]
+//  0228
+async function getUser(user_id, ifNoneMatch) {
+    let res = { exist: NO_CACHE, data: undefined }
+    if (isNoCache) {
+        return res
     }
 
-    //  取出緩存資料 redis/cacheNews
-    let cache = await get(NEWS)
-    //  將資料設為 Set，以便除去重複值
-    let set_people = new Set(cache)
-    
-    //  將 cache 與 user 合併
-    users.forEach((user) => {
-        set_people.add(user)
-    })
-    console.log('@ ==> ', [...set_people])
-    //  緩存
-    await set(NEWS, [...set_people])
-    return
+    let cacheKey = `${PAGE.USER}/${user_id}`
+    //  取緩存KV [[hash, userData]]
+    let cachePair = await Redis.get(cacheKey)
+    if (!cachePair) {  //    若系統cache沒有資料
+        console.log(`@系統緩存 ${cacheKey} 沒有資料`)
+        return res  //  exist: 1 代表無緩存
+    }
+
+    //  若系統cache有資料
+    let [etag, data] = Object.entries(cachePair)[0]    //  [K, V]
+    res.data = data
+    console.log(`@系統緩存 ${cacheKey} 有資料`)
+    if (!ifNoneMatch) {
+        console.log(`@此次 ${cacheKey} 緩存請求未攜帶 if-none-match`)
+        res.exist = NO_IF_NONE_MATCH   //  未攜帶 if-none-match
+    } else if (ifNoneMatch !== etag) {
+        console.log('@if-none-match => ', ifNoneMatch)
+        console.log('@etag => ', etag)
+        console.log(`@此次 ${cacheKey} if-none-match !== etag`)
+        res.exist = IF_NONE_MATCH_IS_NO_FRESH   //  if-none-match 已過期
+    } else {
+        console.log(`@此次 ${cacheKey} if-none-match 是最新的`)
+        res.exist = HAS_CACHE  //  if-none-match 仍是最新的
+    }
+    return res
 }
 
 async function removeCacheBlog(blogList) {
@@ -78,7 +203,6 @@ async function removeCacheBlog(blogList) {
     return await list
 }
 
-
 async function tellBlogFollower(blog_id) {
     let followers = await readFollowers({ blog_id })
     await remindNews(followers)
@@ -94,14 +218,6 @@ async function tellUser(user_id) {
     await remindNews(followers)
 }
 
-async function set_public(string) {
-
-}
-
-async function get_public() {
-
-}
-
 async function checkNews(id) {
     let cacheNews = await get('cacheNews')
     cacheNews = new Set(cacheNews)
@@ -112,7 +228,7 @@ async function checkNews(id) {
 
 
 async function removeRemindNews(id) {
-    let r = await get('cacheNews')
+    let r = await Redis.get('cacheNews')
     let news = new Set(r)
     let listOfUserId = id
     if (!Array.isArray(listOfUserId)) {
@@ -124,124 +240,21 @@ async function removeRemindNews(id) {
         console.log(`@ 從系統緩存 cacheNews 移除 ${item} `)
     })
 
-    await set('cacheNews', [...news])
+    await Redis.set('cacheNews', [...news])
 
     return news
 }
 
-async function set_blog(blog_id, hash = undefined, val = undefined) {
-    if (!hash && !val) {
-        return await set(`blog/${blog_id}`, '')
-    }
-    return await set(`blog/${blog_id}`, [[hash, val]])
-}
-
-
-
-async function get_user(user_id, ifNoneMatch) {
-    //  取緩存KV
-    let user = await get(`user/${user_id}`)
-    let res = { exist: 3, kv: undefined }
-    if (!user) {  //    若系統cache沒有資料
-        console.log(`@系統緩存 user/${user_id} 沒有資料`)
-        return res  //  exist: 3 代表無緩存
-    }
-    //  若系統cache有資料
-    res.kv = [...new Map(user).entries()][0]    //  [K, V]
-    console.log(`@系統緩存 user/${user_id} 有資料`)
-    if (!ifNoneMatch) {
-        console.log(`@此次 user/${user_id} 緩存請求未攜帶 if-none-match → 直接使用系統緩存`)
-        res.exist = 2   //  代表請求未攜帶 if-none-match
-    } else if (ifNoneMatch !== res.kv[0]) {
-        console.log(`@此次 user/${user_id} 緩存請求所攜帶的if-none-match 已過期 → 所以直接使用系統緩存`)
-        console.log('@if-none-match => ', ifNoneMatch)
-        console.log('@etag => ', res.kv[0])
-        res.exist = 1   //  代表請求 if-none-match 已過期
-    } else {
-        console.log(`@此次 user/${user_id} 緩存請求所攜帶的if-none-match 是最新的`)
-        res.exist = 0  //  代表請求 if-none-match 仍是最新的
-    }
-    return res
-}
-
-
-async function get_blog(blog_id, ifNoneMatch) {
-    //  取緩存KV
-    let blog = await get(`blog/${blog_id}`)
-    let res = { exist: 3, kv: undefined }
-    if (!blog) {  //    若系統cache沒有資料
-        console.log(`@ 系統緩存 blog/${blog_id} 沒有資料`)
-        return res  //  exist: 3 代表無緩存
-    }
-    //  若系統cache有資料
-    res.kv = [...new Map(blog).entries()][0]    //  [K, V]
-    console.log(`@ 系統緩存 blog/${blog_id} 有資料`)
-    if (!ifNoneMatch) {
-        console.log(`@ 此次 blog/${blog_id} 緩存請求未攜帶 if-none-match → 直接使用系統緩存`)
-        res.exist = 2   //  代表請求未攜帶 if-none-match
-    } else if (ifNoneMatch !== res.kv[0]) {
-        console.log(`@ 此次 blog/${blog_id} 緩存請求所攜帶的if-none-match 已過期 → 所以直接使用系統緩存`)
-        console.log('@ if-none-match => ', ifNoneMatch)
-        console.log('@ etag => ', res.kv[0])
-        res.exist = 1   //  代表請求 if-none-match 已過期
-    } else {
-        console.log(`@ 此次 blog/${blog_id} 緩存請求所攜帶的if-none-match 是最新的`)
-        res.exist = 0  //  代表請求 if-none-match 仍是最新的
-    }
-    return res
-}
-
-async function set_user(user_id, hash = undefined, val = undefined) {
-    if (!hash && !val) {
-        return await set(`user/${user_id}`, '')
-    }
-    return await set(`user/${user_id}`, [[hash, val]])
-}
-
-
-
-async function get_user(user_id, ifNoneMatch) {
-    //  取緩存KV
-    let user = await get(`user/${user_id}`)
-    let res = { exist: 3, kv: undefined }
-    if (!user) {  //    若系統cache沒有資料
-        console.log(`@系統緩存 user/${user_id} 沒有資料`)
-        return res  //  exist: 1 代表無緩存
-    }
-    //  若系統cache有資料
-    res.kv = [...new Map(user).entries()][0]    //  [K, V]
-    console.log(`@系統緩存 user/${user_id} 有資料`)
-    if (!ifNoneMatch) {
-        console.log(`@此次 user/${user_id} 緩存請求未攜帶 if-none-match → 直接使用系統緩存`)
-        res.exist = 2   //  代表請求未攜帶 if-none-match
-    } else if (ifNoneMatch !== res.kv[0]) {
-        console.log(`@此次 user/${user_id} 緩存請求所攜帶的if-none-match 已過期 → 所以直接使用系統緩存`)
-        console.log('@if-none-match => ', ifNoneMatch)
-        console.log('@etag => ', res.kv[0])
-        res.exist = 1   //  代表請求 if-none-match 已過期
-    } else {
-        console.log(`@此次 user/${user_id} 緩存請求所攜帶的if-none-match 是最新的`)
-        res.exist = 0  //  代表請求 if-none-match 仍是最新的
-    }
-    return res
-}
-
 module.exports = {
-    modifyCache,
-
-    removeCache,
-    addNewsCache,
-
     tellBlogFollower,
     tellPeopleFollower,
-    
+
     removeRemindNews,
     checkNews,
-    set_blog,
 
-    get_blog,
-    set_user,
-
-    get_user,
-    set_public, get_public
+    setBlog,    //  0228
+    getBlog,    //  0228
+    modifyCache,//  0228
+    setUser,    //  0228
+    getUser,    //  0228
 }

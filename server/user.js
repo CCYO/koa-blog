@@ -1,28 +1,52 @@
 /**
  * @description Server User
  */
+
+const {
+    Blog,
+    FollowPeople,
+
+    User            //  0228
+} = require('../db/mysql/model')
+
 const { Op } = require('sequelize')
 
 const { NEWS } = require('../conf/constant')
 
-const {
-    User,
-    Blog,
-    FollowPeople
-} = require('../db/mysql/model')
+
 
 const  { hash }  = require('../utils/crypto')
 
 const { init_user } = require('../utils/init')
 
-/** 查找 User 資料
+
+/** 創建 User   0228
+ * @param {object} param0
+ * @param {string} param0.email - user email
+ * @param {string} param0.password - user 未加密的密碼
+ * @returns {object} object 除了 password 以外的 user 資料
+ */
+const createUser = async ({ password, ...opts }) => {
+    let data = { ...opts }
+    data.password = hash(password)
+    
+    const user = await User.create(data)
+    return init_user(user)
+}
+
+/** 查找 User 資料  0228
  * @param {{ id: number, email: string, password: string }} param0 
  * @param {number} param0.id - user id
  * @param {string} param0.email - user email
  * @param {string} param0.password - user 未加密的密碼
  * @return {} 無資料為null，反之，password 以外的 user 資料
  */
-async function readUser({ id, email, password }){
+async function readUser(opts){
+    let user = await User.findOne(opts)
+    return init_user(user)
+}
+
+async function _readUser({ id, email, password }){
     if (!id && !email && !password){
         return null
     }
@@ -42,37 +66,29 @@ async function readUser({ id, email, password }){
     return init_user(user)
 }
 
-/** 創建 User
- * @param {object} param0
- * @param {string} param0.email - user email
- * @param {string} param0.password - user 未加密的密碼
- * @returns {object} object 除了 password 以外的 user 資料
- */
-const createUser = async ({ password, ...data }) => {
-    let _data = { ...data }
-    _data.password = hash(password)
-    
-    const user = await User.create(_data)
-    return init_user(user)
-}
+
+
 
 /** 查找 Fans
  * @param {string} idol_id 
  * @returns {array} arrItem 代表 fans，若數組為空，表示沒粉絲
  */
-async function readFans({where, attributes, idol_id, opt_attr}) {
-    let opts = { where }
-    if(attributes){
-        opts.attributes = attributes
-    }
+async function readFans(opts) {
+    // let opts = { where }
+    // if(attributes){
+    //     opts.attributes = attributes
+    // }
     // const idol = await User.findByPk(idol_id)
     
     // let attributes = ['id', 'email', 'age', 'nickname', 'avatar', 'avatar_hash']
     // if(opt_attr){
     //     attributes = [...opt_attr]
     // }
+    const user = await User.findOne(opts)
+    const { FollowPeople_F } = user.toJSON()
+    return init_user(FollowPeople_F)
 
-    const fansList = await FollowPeople.findAll(opts) //idol.getFollowPeople_F({ attributes })
+    // const fansList = await FollowPeople.findAll(opts) //idol.getFollowPeople_F({ attributes })
 
     if (!fansList.length) return []
 
@@ -83,7 +99,14 @@ async function readFans({where, attributes, idol_id, opt_attr}) {
  * @param {string} fans_id 
  * @returns {array} arrItem 代表 idol，若數組為空，表示沒偶像
  */
-async function readIdols(fans_id) {
+async function readIdols(opts) {
+    const user = await User.findOne(opts)
+    const { FollowPeople_I } = user.toJSON()
+    return init_user(FollowPeople_I)
+
+
+
+
     const fans = await User.findByPk(fans_id)
 
     const idolList = await fans.getFollowPeople_I({
@@ -112,9 +135,10 @@ const updateUser = async ({newData, id}) => {
 }
 
 module.exports = {
-    createUser,     //  controller user
-    readUser,       //  controller user
     readFans,       //  controller user
     readIdols,      //  controller user
     updateUser,     //  controller user
+
+    createUser,     //  0228
+    readUser        //  0228
 }

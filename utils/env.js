@@ -4,8 +4,10 @@
 
 const ENV = process.env.NODE_ENV
 
+console.log('@ENV => ', ENV)
+
 module.exports = {
-    isNoCache: ENV === 'nocahce',
+    isNoCache: ENV === 'nocache',
     isDev: ENV === 'dev',
     isProd: ENV === 'production'
 }

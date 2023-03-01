@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node bin/www",
-    "nocache": "export GOOGLE_APPLICATION_CREDENTIALS=/home/study4/koa-blog/conf/key/GFB_admin_key.json && cross-env NODE_ENV=nocahce ./node_modules/.bin/nodemon bin/www",
+    "nocache": "export GOOGLE_APPLICATION_CREDENTIALS=/home/study4/koa-blog/conf/key/GFB_admin_key.json && cross-env NODE_ENV=nocache ./node_modules/.bin/nodemon bin/www",
     "dev": "export GOOGLE_APPLICATION_CREDENTIALS=/home/study4/koa-blog/conf/key/GFB_admin_key.json && cross-env NODE_ENV=dev ./node_modules/.bin/nodemon bin/www",
     "prd": "cross-env NODE_ENV=production pm2 start bin/www",
     "test": "echo \"Error: no test specified\" && exit 1"

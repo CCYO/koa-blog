@@ -2,21 +2,11 @@
  * @description Server FollowPeople
  */
 
-const { FollowPeople, FollowBlog } = require('../db/mysql/model')
+const {
+    FollowPeople    //  0228
+} = require('../db/mysql/model')
 
-/** 新增 Fans
- * @param {number} idol_id idol id
- * @param {number} fans_id fans id
- * @returns {boolean} 成功 true，失敗 false
- */
-async function addFans({ idol_id, fans_id }) {
-    const follow = await FollowPeople.create({ idol_id, fans_id })
-
-    if (!follow) return false
-    return true
-}
-
-/** 刪除 Follow_People 紀錄
+/** 刪除 Follow_People 紀錄 0228
  * 
  * @param {number} idol_id idol id
  * @param {number} fans_id fans id
@@ -29,8 +19,22 @@ async function deleteFans({ idol_id, fans_id }) {
     return true
 }
 
+/** 新增 Fans   0228
+ * @param {number} idol_id idol id
+ * @param {number} fans_id fans id
+ * @returns {boolean} 成功 true，失敗 false
+ */
+async function createFans({ idol_id, fans_id }) {
+    const follow = await FollowPeople.create({ idol_id, fans_id })
+
+    if (!follow) return false
+    return true
+}
+
+
+
 async function readFans(opts_where) {
-    let where = {...opts_where}
+    let where = { ...opts_where }
     let res = await FollowPeople.findAll({
         attributes: ['fans_id'],
         where
@@ -49,7 +53,7 @@ async function readFans(opts_where) {
 }
 
 async function readIdols(opts_where) {
-    let where = {...opts_where}
+    let where = { ...opts_where }
     let res = await FollowPeople.findAll({
         attributes: ['idol_id'],
         where
@@ -68,8 +72,9 @@ async function readIdols(opts_where) {
 }
 
 module.exports = {
-    addFans,        //  controller user
-    deleteFans,     //  controller user
     readFans,        //  server cache
-    readIdols
+    readIdols,
+
+    deleteFans, //  0228
+    createFans  //  0228
 }

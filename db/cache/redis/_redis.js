@@ -5,26 +5,26 @@
 const redis = require('redis')
 
 const { REDIS_CONF } = require('../../../conf/key/db')
-const { CACHE: { TYPE: { NEWS }}} = require('../../../conf/constant')
+const { CACHE: { TYPE: { NEWS } } } = require('../../../conf/constant')
 
 const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)
 cli.on('error', (e) => console.log('@Redis Error --> ', e))
 cli.on('connect', () => console.log('@ => Redis cache init -- ok'))
 
-async function init(){
-    try{
+async function init() {
+    try {
         await cli.connect()
         await initNews()
-    }catch(e){
+    } catch (e) {
         console.log('@ redis cache init ERR')
         throw new Error(e)
     }
 }
 
-async function initNews(){
+async function initNews() {
     let news = await get(NEWS)
-    if(!news){
-        await set(NEWS, [])    
+    if (!news) {
+        await set(NEWS, [])
     }
     return
 }
@@ -36,12 +36,15 @@ async function initNews(){
  * @param {number} timeout 過期時間
  */
 const set = async (key, val, timeout = 60 * 60) => {
-    if (typeof val === 'object') {
-        val = JSON.stringify(val)
+    try {
+        if (typeof val === 'object') {
+            val = JSON.stringify(val)
+        }
+        await cli.set(key, val)
+        await cli.expire(key, timeout)
+    }catch(err){
+        throw err
     }
-    await cli.set(key, val)
-    await cli.expire(key, timeout)
-    return true
 }
 
 const clear = async (key) => {

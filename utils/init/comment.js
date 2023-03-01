@@ -38,6 +38,9 @@ function _init_comment(comment) {
 }
 
 function init_comment_4_blog(comments) {
+    if(!comments.length){
+        return comments
+    }
     let comments_json
     if (comments instanceof Array) {
         comments_json = comments.map(_init_comment)

@@ -1,128 +1,108 @@
 const {
-    set_public, get_public,
-    set_user, get_user,
-    set_blog, get_blog,
-    checkNews, removeRemindNews
+    CACHE: {
+        TYPE: {
+            PAGE            //  0228
+        },
+        BLOG: { EDITOR },   //  0228
+        HAS_CACHE,          //  0228
+        NO_IF_NONE_MATCH    //  0228
+    },
+} = require('../conf/constant')
+
+const Cache = require('../server/cache')    //  0228
+
+const {
+    checkNews, removeRemindNews,
 } = require('../server/cache')
 
-
-const { isNoCache } = require('../utils/env')
-
-const { hash_obj } = require('../utils/crypto')
-const { SuccModel } = require('../model')
-const { CACHE: { BLOG: { EDITOR } }, } = require('../conf/constant')
-
-const { readBlog } = require('../server/blog')
-
-//  需要重置的cache數據
-async function cache_reset(ctx, next) {
+//  0228
+async function getBlogCache(ctx, next) {
+    let blog_id = ctx.params.blog_id ? ctx.params.blog_id : EDITOR
+    let ifNoneMatch = ctx.headers['if-none-match']
+    ctx.cache = {}
+    //  向系統cache撈資料
+    let cache = await Cache.getBlog(blog_id, ifNoneMatch)
+    ctx.cache = {
+        [PAGE.BLOG]: cache
+    }
+    
     await next()
 
-    //  當前若是 noCache 模式 || SuccessModel.cache 無定義
-    if (isNoCache || !ctx.body.cache) {
+    if (cache.exist !== HAS_CACHE && cache.exist !== NO_IF_NONE_MATCH) { //  沒有有效緩存
+        //  緩存
+        const etag = await Cache.setBlog(blog_id, ctx.cache[PAGE.BLOG].data)
+        if (etag) {
+            console.log('前端設置etag')
+            ctx.set({
+                etag,
+                ['Cache-Control']: 'no-cache'
+            })
+        }
+    }
+    delete ctx.cache
+    return
+}
+
+//  更新的cache數據 0228
+async function modifiedtCache(ctx, next) {
+    await next()
+
+    //  SuccessModel.cache 無定義
+    if (!ctx.body.cache) {
         return
     }
 
-    let { user = [], blog = [], news = [] } = ctx.body.cache
-
-    await removeCache({ user, blog })
-    await addCacheNews(news)
-
+    await Cache.modifyCache(ctx.body.cache)
     //  移除 SuccessModel.cache
     delete ctx.body.cache
     return
 }
 
-
-
-async function cachePublic(ctx, next) {
-    let path = ctx.path
-}
-
-async function cacheBlog(ctx, next) {
-    let blog_id = ctx.params.blog_id ? ctx.params.blog_id : EDITOR
+//  0228
+async function getOtherCache(ctx, next) {
+    let user_id = ctx.params.id * 1
     let ifNoneMatch = ctx.headers['if-none-match']
-    ctx.cache = {}
-    ctx.cache = await get_blog(blog_id, ifNoneMatch)
-    let { exist, kv } = ctx.cache
-    if (exist === 0) {
-        console.log(`@ blog/${blog_id} 直接使用緩存304`)
-        ctx.status = 304
-        delete ctx.cache
-        return
+
+    //  向系統cache撈資料
+    let cache = await Cache.getUser(user_id, ifNoneMatch)
+    ctx.cache = {
+        [PAGE.USER]: cache
     }
-    if (blog_id === EDITOR) {
-        ctx.cache = { blog: [undefined, { title: '撰寫新文章' }] }
+    if(cache.exist === NO_IF_NONE_MATCH){
+        console.log(`${[PAGE.USER]}/${user_id} 直接使用緩存`)
     }
     await next()
 
-    if (!ctx.cache.blog[0]) {
-        //  計算etag
-        ctx.cache.blog[0] = hash_obj(ctx.cache.blog[1])
-        console.log(`@ blog/${blog_id} 生成 etag => `, ctx.cache.blog[0])
+    if (cache.exist !== HAS_CACHE && cache.exist !== NO_IF_NONE_MATCH) { //  沒有有效緩存
         //  緩存
-        await set_blog(blog_id, ctx.cache.blog[0], ctx.cache.blog[1])
-        console.log(`@ blog/${blog_id} 完成緩存`)
+        const etag = await Cache.setUser(user_id, ctx.cache[PAGE.USER].data)
+        if (etag) {
+            console.log('前端設置etag')
+            ctx.set({
+                etag,
+                ['Cache-Control']: 'no-cache'
+            })
+        }
     }
-
-    ctx.set({
-        etag: ctx.cache.blog[0],
-        ['Cache-Control']: 'no-cache'
-    })
-    console.log(`@ 響應新的etag => ${ctx.cache.blog[0]}`)
     delete ctx.cache
     return
 }
 
-async function cacheUser(ctx, next) {
-    let user_id = ctx.params.id
-    let ifNoneMatch = ctx.headers['if-none-match']
-    ctx.cache = {}
-    ctx.cache = await get_user(user_id, ifNoneMatch)
-    let { exist, kv } = ctx.cache
-    if (exist === 0) {
-        console.log(`@user/${user_id} 直接使用緩存304`)
-        ctx.status = 304
-        delete ctx.cache
-        return
-    }
-    await next()
-
-    if (!ctx.cache.user[0]) {
-        //  計算etag
-        ctx.cache.user[0] = hash_obj(ctx.cache.user[1])
-        console.log(`@user/${user_id} 生成 etag => `, ctx.cache.user[0])
-        //  緩存
-        await set_user(user_id, ctx.cache.user[0], ctx.cache.user[1])
-        console.log(`@user/${user_id} 完成緩存`)
-    }
-
-    ctx.set({
-        etag: ctx.cache.user[0],
-        ['Cache-Control']: 'no-cache'
-    })
-    console.log(`@ 響應新的etag => ${ctx.cache.user[0]}`)
-    delete ctx.cache
-    return
-}
-
-//  self頁 前端不會有緩存資料，所以在後端驗證是本人後，向系統cache查詢個人資料
-async function cacheSelf(ctx, next) {
+//  self頁 前端不會有緩存資料，所以在後端驗證是本人後，向系統cache查詢個人資料  0228
+async function getSelfCache(ctx, next) {
     let user_id = ctx.session.user.id
     //  向系統cache撈資料
-    //  ctx.cache.user = { exist: BOO, kv: [K, V] }
-    ctx.cache = {}
-    ctx.cache = await get_user(user_id)
-
+    let { exist, data } = await Cache.getUser(user_id)
+    ctx.cache = {
+        [PAGE.USER]: {
+            exist, data
+        }
+    }
     await next()
 
-    if (!ctx.cache.user[0]) { //  假使緩存不存在，或是非最新版，存入緩存
-        //  計算etag
-        ctx.cache.user[0] = hash_obj(ctx.cache.user[1])
-        console.log(`@ 系統緩存 user/${user_id} 生成 etag => `, ctx.cache.user[0])
+    if (exist !== HAS_CACHE) { //  沒有有效緩存
         //  緩存
-        await set_user(user_id, ctx.cache.user[0], ctx.cache.user[1])
-        console.log(`@ 系統緩存 user/${user_id} 完成緩存`)
+        await Cache.setUser(user_id, ctx.cache[PAGE.USER].data)
     }
 
     ctx.set({
@@ -130,8 +110,17 @@ async function cacheSelf(ctx, next) {
     })
 
     delete ctx.cache
+
     return
 }
+
+async function cachePublic(ctx, next) {
+    let path = ctx.path
+}
+
+
+
+
 
 async function resetBlog(ctx, next) {
     await next()
@@ -219,13 +208,14 @@ async function notifiedNews(ctx, next) {
 
 
 module.exports = {
-    cacheBlog,
     resetBlog,
-    cacheUser,
-    cacheSelf,
 
     cacheNews,
     notifiedNews,
     cachePublic,
-    cache_reset
+
+    getBlogCache,   //  0228
+    modifiedtCache, //  0228
+    getOtherCache,  //  0228
+    getSelfCache    //  0228
 }

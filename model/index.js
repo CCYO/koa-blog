@@ -3,17 +3,17 @@
  */
 
 class _Model {
-    constructor({errno = 0, msg = undefined, data = undefined}){
+    constructor({errno = 0, msg = undefined, data = undefined, cache = undefined}){
         this.errno = errno
         if(msg) this.msg = msg
         if(data) this.data = data
-
+        if(cache) this.cache = cache
     }
 }
 
 class SuccModel extends _Model {
-    constructor(data){
-        super({data})
+    constructor({data, cache}){
+        super({data, cache})
     }
 }
 

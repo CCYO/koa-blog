@@ -1,3 +1,6 @@
+const Opts = require('../utils/seq_findOpts')
+const Comment = require('../server/comment')
+
 const { SuccModel } = require('../model')
 
 const {
@@ -6,6 +9,11 @@ const {
     readComment,
     deleteComment
 } = require('../server/comment')
+
+async function getCommentsByBlogId(blog_id){
+    let comments = await Comment.readCommentForBlog(Opts.findCommentsByBlogId(blog_id))
+    return new SuccModel({data: comments})
+}
 
 async function createComment({user_id, blog_id, html, p_id, author}){
     let json = await addComment({ user_id, blog_id, html, p_id, author})
@@ -31,5 +39,7 @@ async function removeComment({commentId, blog_id}){
 
 module.exports = {
     createComment,
-    removeComment
+    removeComment,
+
+    getCommentsByBlogId //  02228
 }

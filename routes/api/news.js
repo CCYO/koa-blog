@@ -10,11 +10,11 @@ const {
 } = require('../../controller/news')
 
 const { api_check_login } = require('../../middleware/check_login')
-const { cacheNews, cache_reset } = require('../../middleware/cache')
+const Cache = require('../../middleware/cache')
 
 router.prefix('/api/news')
 
-router.post('/', api_check_login, cache_reset, cacheNews, async (ctx, next) => {
+router.post('/', api_check_login, Cache.modifiedtCache, Cache.cacheNews, async (ctx, next) => {
     
     let { page } = ctx.request.body
     let me = ctx.session.user

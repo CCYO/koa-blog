@@ -43,7 +43,8 @@ async function getMeAndTheFirstNews(me) {
         limit
     }*/
     let news = await readNews({ userId: me.id })
-    return new SuccModel({ me, news })
+    let data = { me, news }
+    return new SuccModel({data})
 }
 
 async function readMore({me, excepts, newsListNeedToConfirm}) {

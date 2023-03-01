@@ -724,7 +724,7 @@
                 //  關閉讀取遮罩
                 loadEnd()
                 let data = checkRes(res)
-                if (!data) {
+                if (res.errno) {
                     return
                 }
                 //  更新追蹤/退追的瀏覽器數據與頁面渲染

@@ -1,21 +1,45 @@
-const { Op } = require('sequelize')
-
 const {
     seq,
     User,
-    Blog,
     Img,
     Comment,
     BlogImg,
     FollowBlog,
-    BlogImgAlt
+    BlogImgAlt,
+
+    Blog        //  0228
 } = require('../db/mysql/model')
+
+const { Op } = require('sequelize')
 
 const {
     init_blog
 } = require('../utils/init')
 
 const { toJSON } = require('../utils/seq')
+
+//  0228
+async function readBlog(opts) {
+    let res = await Blog.findOne(opts)
+    return init_blog(res)
+}
+
+/** 查詢 blogs   0228
+ * @param {object} param0 查詢 blogs 紀錄所需的參數
+ * @param {number} param0.user_id user id
+ * @param {boolean} param0.getAll 是否無視 blog 公開/隱藏，false 僅拿公開，true 全拿
+ * @returns {object} 
+ *  [blog: {
+ *      id, title, show, showAt,
+ *      author: { id, email, nickname, age, avatar, avatar_hash }
+ *  }]
+ * 
+ 
+ */
+async function readBlogs(opts) {
+    let blogList = await Blog.findAll(opts)
+    return init_blog(blogList)
+}
 
 /** 創建Blog
  * @param {string} title 文章表提
@@ -91,7 +115,7 @@ async function deleteBlogs({ blogIdList }) {
  *      }
  *  ，若找不到則 null
  */
-async function readBlog({ blog_id }, needComment) {
+async function _readBlog({ blog_id }, needComment) {
     let include = [
         {
             model: User,
@@ -137,67 +161,7 @@ async function readBlog({ blog_id }, needComment) {
     return init_blog(res)
 }
 
-
-async function readBlog({ where }) {
-    let opts = { where }
-    let include = [
-        {
-            model: User,
-            attributes: ['id', 'email', 'nickname']
-        },
-        {
-            model: BlogImg,
-            attributes: ['id', 'name'],
-            include: [
-                {
-                    model: Img,
-                    attributes: ['id', 'url', 'hash']
-                },
-                {
-                    model: BlogImgAlt,
-                    attributes: ['id', 'alt']
-                }
-            ]
-        }
-    ]
-
-    if (needComment) {
-        include.push({
-            model: Comment,
-            attributes: ['id', 'html', 'p_id', 'createdAt', 'deletedAt'],
-            paranoid: false,
-            include: {
-                model: User,
-                attributes: ['id', 'email', 'nickname']
-            }
-        })
-    }
-   
-    let res = await Blog.findByPk(blog_id, {
-        attributes: ['id', 'title', 'html', 'show', 'showAt'],
-        include
-    })
-
-    if (!res) {
-        return null
-    }
-
-    return init_blog(res)
-}
-
-/** 查詢 blogList
- * @param {object} param0 查詢 blogs 紀錄所需的參數
- * @param {number} param0.user_id user id
- * @param {boolean} param0.getAll 是否無視 blog 公開/隱藏，false 僅拿公開，true 全拿
- * @returns {object} 
- *  [blog: {
- *      id, title, show, showAt,
- *      author: { id, email, nickname, age, avatar, avatar_hash }
- *  }]
- * 
- 
- */
-async function readBlogList({ user_id, follower_id, exclude_id = null}) {
+async function _readBlogList({ user_id, follower_id, exclude_id = null}) {
     let ops = {}
     let where = {}
     if(user_id){
@@ -250,7 +214,9 @@ module.exports = {
     updateBlog,
     deleteBlog,
     deleteBlogs,
-    readBlog,
-    readBlogList,
-    readBlogByAuthor
+    
+    readBlogByAuthor,
+
+    readBlog,           //  0228
+    readBlogs           //  0228
 }

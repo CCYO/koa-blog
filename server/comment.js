@@ -1,19 +1,26 @@
-const { Op, json } = require('sequelize')
-const xss = require('xss')
-
-const { remindNews, del_blog } = require('./cache')
+const {
+    init_comment_4_blog,    //  0228    未整理
+    init_comment            
+} = require('../utils/init')
 
 const {
-    Comment,
+    Comment,        //  0228
     User,
     Blog,
     FollowBlog,
     FollowComment
 } = require('../db/mysql/model')
 
-const { init_comment } = require('../utils/init')
-const { toJSON } = require('../utils/seq')
-const { cache } = require('ejs')
+const { Op } = require('sequelize')
+const xss = require('xss')
+
+const { remindNews, del_blog } = require('./cache')
+
+//  0228
+async function readCommentForBlog(opts){
+    let comments = await Comment.findAll(opts)
+    return init_comment_4_blog(comments)
+}
 
 async function addComment({
     //  創建comment用
@@ -447,7 +454,9 @@ async function setRelatedComment(comment, { author }) {
 
 }
 
-async function readComment({ id, blog_id, p_id, createdAt }, user_id) {
+
+
+async function readCommentForNews({ id, blog_id, p_id, createdAt }, user_id) {
     let whereOps = {}
     if (blog_id) {
         whereOps.blog_id = blog_id
@@ -489,6 +498,8 @@ async function readComment({ id, blog_id, p_id, createdAt }, user_id) {
 module.exports = {
     addComment,
     deleteComment,
-    readComment,
-    setRelatedComment
+    readCommentForNews,
+    setRelatedComment,
+
+    readCommentForBlog  //  0228
 }

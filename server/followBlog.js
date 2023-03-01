@@ -4,27 +4,23 @@
 
 const { Op } = require('sequelize')
 
-const { FollowBlog } = require('../db/mysql/model')
+const {
+    seq,        //  0228
+    FollowBlog
+} = require('../db/mysql/model')
 
-/** 刪除關聯
+/** 刪除關聯    0228
  * @param {number} idol_id idol id
  * @param {number} fans_id fans id
  * @returns {boolean} 成功 true，失敗 false
  */
-async function deleteFollower({ follower_id, blog_id }) {
-    let where = { follower_id }
-    let isArray = Array.isArray(blog_id)
-    if (isArray) {
-        where.blog_id = { [Op.in]: blog_id }
-    } else {
-        where.blog_id = blog_id
-    }
-    const num = await FollowBlog.destroy({
-        where,
-        force: true
+async function deleteFollower({ follower_id, blogList }) {
+    let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('FollowBlog', {
+        blog_id: { [Op.in]: blogList },
+        follower_id
     })
-
-    if ((isArray && blog_id.length !== num) || (!isArray && !num)) {
+    
+    if(affectedRows !== blogIdList.length ){
         return false
     }
     return true
@@ -81,8 +77,10 @@ async function readFollowers({ where, attributes }) {
 module.exports = {
     createFollowers,
     restoreBlog,
-    deleteFollower,
+    
     hiddenBlog,
     updateFollowBlog,
-    readFollowers
+    readFollowers,
+
+    deleteFollower,     //  0228
 }

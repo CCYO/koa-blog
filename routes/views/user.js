@@ -4,68 +4,80 @@
 
 const router = require('koa-router')()
 
-const { view_check_login, view_check_isMe } = require('../../middleware/check_login')
+const { 
+    getBlogListByUserId //  0228
+} = require('../../controller/blog')
 
-const { getBlogListByUserId } = require('../../controller/blog')
+const {
+    
+    getRelationShipByUserId      //   0228
+} = require('../../controller/user')
+
+const {
+    CACHE: {
+        TYPE: {
+            PAGE        //  0228
+        },
+            HAS_CACHE,  //  0228
+            NO_CACHE,    //  0228
+            NO_IF_NONE_MATCH
+    } } = require('../../conf/constant')
+
+const Cache = require('../../middleware/cache') //  0228
+
+const {
+    view_check_isMe,
+
+    view_check_login    //  0228
+} = require('../../middleware/check_login')
 
 const { getNewsByUserId } = require('../../controller/news')
 
-const {
-    getPeopleById
-} = require('../../controller/user')
-
-const { cacheUser, cacheSelf } = require('../../middleware/cache')
 const { confirmFollow } = require('../../middleware/confirmFollow')
 
-//  登入頁
-router.get('/login', async (ctx, next) => {
-    //  若已登入，跳轉到個人頁面
-    if (ctx.session.user) {
-        return ctx.redirect('/self')
-    }
-
-    await ctx.render('register&login', {
-        title: 'LOGIN',
-        //  導覽列數據
-        logging: false,
-        //  導覽列數據 & 卡片Tab 數據
-        active: 'login'
-    })
-})
-
-//  註冊頁
-router.get('/register', async (ctx, next) => {
-    //  若已登入，跳轉到個人頁面
-    if (ctx.session.user) {
-        return ctx.redirect('/self')
-    }
-
-    await ctx.render('register&login', {
-        title: 'REGISTER',
-        //  導覽列數據
-        logging: false,
-        //  導覽列數據 & 卡片Tab 數據
-        active: 'register'
-    })
-})
-
-//  個人頁
-router.get('/self', view_check_login, cacheSelf, async (ctx, next) => {
-    let id = ctx.session.user.id
-
-    //  ctx.cache.user = { exist: 0 || 1 || 2 || 3, kv: [K, V] }
-    let {exist, kv} = ctx.cache
-    if (exist === 3) {
-        let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
+//  他人頁  0228
+router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, async (ctx, next) => {
+    let id = ctx.params.id * 1
+    let cache  = ctx.cache[PAGE.USER]
+    let { exist, data } = cache
+    
+    if (exist === HAS_CACHE) {
+        console.log(`@${PAGE.USER}/${id} 直接使用緩存304`)
+        ctx.status = 304
+    }else if(exist !== NO_IF_NONE_MATCH){
+        let { data: { currentUser, fansList, idolList } } = await getRelationShipByUserId(id)
         let { data: blogList } = await getBlogListByUserId(id)
-        ctx.cache.user = [ undefined, { currentUser, fansList, idolList, blogList }]
-        console.log(`@user/${id} 完成 DB撈取`)
-    }else{
-        let [ etag, user ] = kv
-        ctx.cache.user = [ etag, user ]
+        data = cache.data = { currentUser, fansList, idolList, blogList }
+    }
+    let { currentUser, fansList, idolList, blogList } = data
+
+    //  非文章作者，所以不傳入未公開的文章
+    delete blogList.hidden
+
+    await ctx.render('user', {
+        title: `${currentUser.nickname}的主頁`,
+
+        //  主要資訊數據
+        currentUser,    //  window.data 數據
+        blogList,       //  window.data 數據
+        fansList,       //  window.data 數據
+        idolList,       //  window.data 數據
+    })
+})
+
+//  個人頁  0228
+router.get('/self', view_check_login, Cache.getSelfCache, async (ctx, next) => {
+    let { id } = ctx.session.user
+    let cache  = ctx.cache[PAGE.USER]
+    let { exist, data } = cache
+    
+    if (exist !== HAS_CACHE) {
+        let { data: { currentUser, fansList, idolList } } = await getRelationShipByUserId(id)
+        let { data: blogList } = await getBlogListByUserId(id)
+        data = ctx.data = { currentUser, fansList, idolList, blogList }
     }
 
-    let { currentUser, fansList, idolList, blogList } = ctx.cache.user[1]
+    let { currentUser, fansList, idolList, blogList } = data
 
     if(currentUser.id !== id){
         ctx.body = '你哪位'
@@ -82,33 +94,35 @@ router.get('/self', view_check_login, cacheSelf, async (ctx, next) => {
     })
 })
 
-//  他人頁
-router.get('/other/:id', view_check_isMe, confirmFollow, cacheUser, async (ctx, next) => {
-    const { id } = ctx.params
-    //   = { exist: BOO, kv: [K, V] }
-    let { exist, kv } = ctx.cache
-    if (exist === 3) {
-        let { data: { currentUser, fansList, idolList } } = await getPeopleById(id)
-        let { data: blogList } = await getBlogListByUserId(id)
-        ctx.cache.user =[ undefined, { currentUser, fansList, idolList, blogList } ]
-        console.log(`@user/${id} 完成 DB撈取`)
-    }else{
-        let [ etag, user ] = kv
-        ctx.cache.user = [ etag, user ]
+//  登入頁  0228
+router.get('/login', async (ctx, next) => {
+    //  若已登入，跳轉到個人頁面
+    if (ctx.session.user) {
+        return ctx.redirect('/self')
     }
 
-    let { currentUser, fansList, idolList, blogList } = ctx.cache.user[1]
-    //  非文章作者，所以不傳入未公開的文章
-    blogList.hidden = []
-    
-    await ctx.render('user', {
-        title: `${currentUser.nickname}的主頁`,
+    await ctx.render('register&login', {
+        title: 'LOGIN',
+        //  導覽列數據
+        logging: false,
+        //  導覽列數據 & 卡片Tab 數據
+        active: 'login'
+    })
+})
 
-        //  主要資訊數據
-        currentUser,    //  window.data 數據
-        blogList,       //  window.data 數據
-        fansList,       //  window.data 數據
-        idolList,       //  window.data 數據
+//  註冊頁  0228
+router.get('/register', async (ctx, next) => {
+    //  若已登入，跳轉到個人頁面
+    if (ctx.session.user) {
+        return ctx.redirect('/self')
+    }
+
+    await ctx.render('register&login', {
+        title: 'REGISTER',
+        //  導覽列數據
+        logging: false,
+        //  導覽列數據 & 卡片Tab 數據
+        active: 'register'
     })
 })
 

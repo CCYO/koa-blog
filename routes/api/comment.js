@@ -9,18 +9,18 @@ const {
     removeComment
 } = require('../../controller/comment')
 
-const { cache_reset } = require('../../middleware/cache')
+const Cache = require('../../middleware/cache')
 
 const { api_check_login } = require('../../middleware/check_login')
 
 router.prefix('/api/comment')
 
 //  創建comment
-router.post('/', api_check_login, cache_reset, async (ctx, next) => { 
+router.post('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => { 
     ctx.body = await createComment(ctx.request.body)
 })
 
-router.delete('/', api_check_login, cache_reset, async (ctx, next) => { 
+router.delete('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => { 
     let { commentId, blog_id } = ctx.request.body
     ctx.body = await removeComment({commentId, blog_id})
 })

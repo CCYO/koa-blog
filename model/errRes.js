@@ -5,7 +5,7 @@
 module.exports = {    
     REGISTER: {
         UNEXPECTED: {errno: 199},
-        IS_EXIST: {errno: 101, msg: '此信箱已被登記'},
+        IS_EXIST: {errno: 101, msg: '此信箱已被登記'},  //  0228
         NO_EMAIL: {errno: 102, msg: '信箱未填'},
         NO_PASSWORD: {errno: 103, msg: '密碼未填'}
     },
@@ -26,7 +26,7 @@ module.exports = {
     FORMAT_ERR: { errno: 601},
     BLOG: {
         CREATE_ERR: { errno: 701},
-        NOT_EXIST: { errno: 702, msg: 'BLOG不存在'},
+        NOT_EXIST: { errno: 702, msg: 'BLOG不存在'},        //  0228
         NO_UPDATE: { errno: 703, msg: 'BLOG資料更新失敗'},
         UPDATE: {
             ERR_CREATE_BLOGFOLLOW: { errno: 704_1, msg: '創建BlogFollow數目與要求不匹配'},
@@ -45,9 +45,12 @@ module.exports = {
         REMOVE_ERR: { errno: 903, msg: '文章內的圖片數據初始化失敗'}
     },
     FOLLOW: {
-        FOLLOW_ERR: { errno: 1001, msg: '追蹤失敗'},
-        CANCEL_ERR: { errno: 1002, msg: '取消追蹤失敗'},
+        FOLLOW_ERR: { errno: 1001, msg: '追蹤失敗'},            //  0228
+        CANCEL_ERR: { errno: 1002, msg: '取消追蹤失敗'},        //  0228
         CONFIRM_ERR: { errno: 1003, msg: '確認追蹤消息失敗'}
+    },
+    FOLLOWBLOG: {
+        DEL_ERR: { errno: 1302, msg: '刪除關聯失敗'},        //  0228
     },
     NEWS: {
         FOLLOW_CONFIRM_ERR: { errno: 1101, msg: 'Follow.confirm 更新失敗'},

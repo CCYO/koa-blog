@@ -13,6 +13,8 @@ const { readUser } = require('../../server/user')
 const { readBlog } = require('../../server/blog')
 const { readComment } = require('../../server/comment')
 
+const Opts = require('../../utils/seq_findOpts')
+
 async function readNews({ userId, excepts }) {
     // let { people, blogs, comments } = excepts
     let list = { people: '', blogs: '', comments: ''}
@@ -116,13 +118,13 @@ async function _init_newsItemOfComfirmRoNot(item, userId) {
     let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
     let res = { type, id, timestamp, confirm }
     if (type === 1) {
-        let { id: fans_id, nickname } = await readUser({ id: follow_id })
+        let { id: fans_id, nickname } = await readUser(Opts.findUser(follow_id))
         return { ...res, fans: { id: fans_id, nickname } }
     } else if (type === 2) {
-        let { id: blog_id, title, author } = await readBlog({ blog_id: target_id })
+        let { id: blog_id, title, author } = await readBlog(Opts.findBlog(target_id))
         return { ...res, blog: { id: blog_id, title, author: { id: author.id, nickname: author.nickname } } }
     } else if (type === 3) {
-        let [comment] = await readComment({ id: target_id })
+        let [comment] = await readComment(Opts.findComment(target_id))
         if (!comment) {
             return null
         }

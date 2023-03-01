@@ -1,6 +1,12 @@
-const { SuccModel } = require('../model')
+const { SuccModel } = require('../model')   //  0228
 
+//  移除登入者session   0228
+async function removeLoginSession(ctx) {
+    ctx.session = null
+    ctx.body = new SuccModel('成功登出')
+}
 
+//  設置登入者session   0228
 async function setLoginSession(ctx, next) {
     await next()
     let { errno, data } = ctx.body
@@ -17,12 +23,13 @@ async function setLoginSession(ctx, next) {
     }
 }
 
-async function removeLoginSession(ctx) {
-    ctx.session = null
-    ctx.body = new SuccModel('成功登出')
+//  取得登入者session  0228
+async function getLoginSession(ctx){
+    ctx.body = new SuccModel(init_user(ctx.session.user))
 }
 
 module.exports = {
-    setLoginSession,
-    removeLoginSession
+    removeLoginSession, //  0228
+    setLoginSession,    //  0228
+    getLoginSession,    //  0228
 }
