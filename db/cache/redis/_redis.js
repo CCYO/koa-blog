@@ -7,6 +7,22 @@ const redis = require('redis')
 const { REDIS_CONF } = require('../../../conf/key/db')
 const { CACHE: { TYPE: { NEWS } } } = require('../../../conf/constant')
 
+/** redis get   0228
+ * @param {string} key 鑑
+ */
+ const get = async (key) => {
+    let val = await cli.get(key)
+    if (val === null) {
+        return null
+    }
+    try {
+        return JSON.parse(val)
+    } catch (err) {
+        return val
+    }
+}
+
+
 const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)
 cli.on('error', (e) => console.log('@Redis Error --> ', e))
 cli.on('connect', () => console.log('@ => Redis cache init -- ok'))
@@ -28,6 +44,10 @@ async function initNews() {
     }
     return
 }
+
+
+
+
 
 /**
  * redis set
@@ -53,21 +73,7 @@ const clear = async (key) => {
     return true
 }
 
-/**
- * redis get
- * @param {string} key 鑑
- */
-const get = async (key) => {
-    let val = await cli.get(key)
-    if (val === null) {
-        return null
-    }
-    try {
-        return JSON.parse(val)
-    } catch (err) {
-        return val
-    }
-}
+
 
 module.exports = {
     clear,

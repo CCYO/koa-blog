@@ -1,9 +1,6 @@
 const moment = require('moment')
 
 const { init_user } = require('./user')
-// const { init_blog } = require('./blog')
-
-const removeDeletedComment = require('../../ttt')
 
 function init_comment(comment) {
     if (comment instanceof Array) {
@@ -49,9 +46,7 @@ function init_comment_4_blog(comments) {
     }
     let x = init_4_browser(comments_json)
     
-    let res = removeDeletedComment(x)
-    
-    return res
+    return x
 
     function init_4_browser(list) {
         let target

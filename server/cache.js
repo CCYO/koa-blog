@@ -8,6 +8,7 @@ const {
 
 const { CACHE: {
     TYPE: {
+        API,    //  0228
         PAGE,   //  0228
         NEWS,
     },
@@ -25,6 +26,57 @@ const { readFans } = require('./followPeople')
 const {
     get     //  0228
 } = require('../db/cache/redis/_redis')
+
+//  0228
+async function setComment(blog_id, val = undefined) {
+    if (isNoCache) {
+        return
+    }
+    let cacheKey = `${API.COMMENT}/${blog_id}`
+
+    if (!val) {
+        await Redis.set(cacheKey, '')
+        return
+    }
+    let etag = hash_obj(val)
+    console.log(`@ 系統緩存 ${cacheKey} 生成 etag => `, etag)
+    await Redis.set(cacheKey, { [etag]: val })
+    console.log(`@ 系統緩存 ${cacheKey} 完成緩存`)
+    return etag
+}
+
+async function getComment(blog_id, ifNoneMatch){
+    let res = { exist: NO_CACHE, data: undefined }
+    if (isNoCache) {
+        return res
+    }
+    let cacheKey = `${API.COMMENT}/${blog_id}`
+    //  取緩存KV
+    let cachePair = await Redis.get(cacheKey)
+
+    if (!cachePair) {  //    若系統cache沒有資料
+        console.log(`@系統緩存 ${cacheKey} 沒有資料`)
+        return res  //  exist: 1 代表無緩存
+    }
+
+    //  若系統cache有資料
+    let [etag, data] = Object.entries(cachePair)[0]    //  [K, V]
+    res.data = data
+    console.log(`@系統緩存 ${cacheKey} 有資料`)
+    if (!ifNoneMatch) {
+        console.log(`@此次 ${cacheKey} 緩存請求雖未攜帶 if-none-match，但系統有緩存可用`)
+        res.exist = NO_IF_NONE_MATCH   //  未攜帶 if-none-match
+    } else if (ifNoneMatch !== etag) {
+        console.log('@if-none-match => ', ifNoneMatch)
+        console.log('@etag => ', etag)
+        console.log(`@此次 ${cacheKey} if-none-match !== etag`)
+        res.exist = IF_NONE_MATCH_IS_NO_FRESH   //  if-none-match 已過期
+    } else {
+        console.log(`@此次 ${cacheKey} if-none-match 是最新的`)
+        res.exist = HAS_CACHE  //  if-none-match 仍是最新的
+    }
+    return res
+}
 
 //  0228
 async function setBlog(blog_id, val = undefined) {
@@ -252,6 +304,8 @@ module.exports = {
     removeRemindNews,
     checkNews,
 
+    setComment,
+    getComment,
     setBlog,    //  0228
     getBlog,    //  0228
     modifyCache,//  0228

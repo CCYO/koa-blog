@@ -116,7 +116,7 @@
         //  讀取中，遮蔽畫面
         loading()
         //  初始化ejs附帶的數據
-        let pageData = new initData()
+        let pageData = new initData(axios)
         //  初始化navbar數據
         await pageData.init(initNavbar)
         //  確認以上所有初始化已完成，取得彙整後數據

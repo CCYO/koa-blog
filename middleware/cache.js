@@ -1,6 +1,7 @@
 const {
     CACHE: {
         TYPE: {
+            API,
             PAGE            //  0228
         },
         BLOG: { EDITOR },   //  0228
@@ -14,6 +15,33 @@ const Cache = require('../server/cache')    //  0228
 const {
     checkNews, removeRemindNews,
 } = require('../server/cache')
+
+async function getCommentCache(ctx, next){
+    let blog_id = ctx.params.blog_id ? ctx.params.blog_id : EDITOR
+    let ifNoneMatch = ctx.headers['if-none-match']
+    ctx.cache = {}
+    //  向系統cache撈資料
+    let cache = await Cache.getComment(blog_id, ifNoneMatch)
+    ctx.cache = {
+        [API.COMMENT]: cache
+    }
+    
+    await next()
+
+    if (cache.exist !== HAS_CACHE && cache.exist !== NO_IF_NONE_MATCH) { //  沒有有效緩存
+        //  緩存
+        const etag = await Cache.setComment(blog_id, ctx.cache[API.COMMENT].data)
+        if (etag) {
+            console.log('前端設置etag')
+            ctx.set({
+                etag,
+                ['Cache-Control']: 'no-cache'
+            })
+        }
+    }
+    delete ctx.cache
+    return
+}
 
 //  0228
 async function getBlogCache(ctx, next) {
@@ -214,6 +242,7 @@ module.exports = {
     notifiedNews,
     cachePublic,
 
+    getCommentCache,//  0228
     getBlogCache,   //  0228
     modifiedtCache, //  0228
     getOtherCache,  //  0228

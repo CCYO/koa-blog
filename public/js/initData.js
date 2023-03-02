@@ -1,6 +1,6 @@
 class My {
-    constructor() {
-        this.data = initData()
+    constructor(axios) {
+        this.data = initData(axios)
     }
     data = {}
     promiseAll = []
@@ -32,28 +32,33 @@ class My {
 //     無轉譯 => { "html":"<p>56871139</p>") 會造成<p>直接渲染至頁面
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
 
-function initData() {
+async function initData(axios) {
     let res = {}
     //  從el[data-my-data]解析頁面需要的數據
-    $(`[data-my-data]`).each((index, el) => 
+    let map = $(`[data-my-data]`).map( async (index, el) => 
     {
         //  數據的用途
         let prop = $(el).data('my-data')
         try {
             let val = $(el).html()
             if (prop === 'blog') {  //  若與blog有關
-                res.blog = initBlog(val)
+                // res.blog = await initBlog(val)
+                return { blog: await initBlog(val) }
             } else if(prop === 'album'){    //  若與album有關
-                res.album = initAlbum(val)
+                // res.album = initAlbum(val)
+                return { album: await initAlbum(val) }
             } else {
                 res[prop] = JSON.parse(val)
+                return { [prop]: JSON.parse(val)}
             }
         } catch (e) {
             throw e
         }
     })
+    await Promise.all(map)
     //  移除所有攜帶數據的元素
     $(`[data-my-data]`).parent().remove()
+    console.log('@res => ', res)
     return res
     //  初始化album數據
     function initAlbum(data){
@@ -64,15 +69,18 @@ function initData() {
         return { blog, imgs, map_imgs }
     }
     //  初始化blog數據
-    function initBlog(data) {
+    async function initBlog(data) {
         // JSON String → JSON Obj
         let blog = JSON.parse(data)
         //  處理blog內的img數據
         blog.map_imgs = init_map_imgs(blog.imgs)
         //  處理blog內的comment數據
-        blog = { ...blog, ...mapComments(blog.comments) }
         //  將 blog.html(百分比編碼格式) → htmlStr
         blog.html = parseHtml(blog.html)
+        let { data: { errno, data: comments, msg }} = await axios.get(`/api/comment/${blog.id}`)
+        console.log('@comments => ', comments)
+        console.log('@mapComments => ', mapComments(comments))
+        blog = { ...blog, ...mapComments(blog.comments) }
         return blog //  再將整體轉為字符
 
         //  因為「後端存放的blog.html數據」是以

@@ -6,10 +6,10 @@ const { SuccModel } = require('../model')
 const {
     addComment,
     setRelatedComment,
-    readComment,
     deleteComment
 } = require('../server/comment')
 
+//  0228
 async function getCommentsByBlogId(blog_id){
     let comments = await Comment.readCommentForBlog(Opts.findCommentsByBlogId(blog_id))
     return new SuccModel({data: comments})
@@ -41,5 +41,5 @@ module.exports = {
     createComment,
     removeComment,
 
-    getCommentsByBlogId //  02228
+    getCommentsByBlogId //  0228
 }

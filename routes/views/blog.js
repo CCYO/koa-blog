@@ -26,11 +26,12 @@ router.get('/blog/:blog_id', confirmFollow, Cache.getBlogCache, async (ctx, next
     //   = { exist: BOO, kv: [K, V] }
     let cache = ctx.cache[PAGE.BLOG]
     let { exist, data } = cache
-
+    let cacheKey = `${PAGE.BLOG}/${blog_id}`
     if (exist === HAS_CACHE) {
-        console.log(`@${PAGE.BLOG}/${blog_id} 直接使用緩存304`)
+        console.log(`@ ${cacheKey} -> 304`)
         ctx.status = 304
     } else if(exist === NO_IF_NONE_MATCH){
+        console.log(`@ ${cacheKey} -> 使用系統`)
         return await ctx.render('blog', { blog: data })
     } else {
         const resModel = await Blog.getBlog(blog_id)
@@ -42,7 +43,7 @@ router.get('/blog/:blog_id', confirmFollow, Cache.getBlogCache, async (ctx, next
         if (data.html) {
             data.html = encodeURI(data.html)    //  將html做百分比編碼，前端再自行解碼
         }
-        console.log(`@${PAGE.BLOG}/${blog_id} 完成 DB撈取`)
+        console.log(`@ ${cacheKey} 完成 DB撈取`)
     }
     return await ctx.render('blog', { blog: data })
 })

@@ -21,6 +21,8 @@ module.exports = {
             PAGE: {
                 USER: 'userPage',
                 BLOG: 'blogPage',
+            },
+            API: {
                 COMMENT: 'blogPageComment'
             }
         },
