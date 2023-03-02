@@ -6,7 +6,8 @@ const {
             PAGE            //  0228
         },
         HAS_CACHE,          //  0228
-        NO_IF_NONE_MATCH    //  0228
+        NO_IF_NONE_MATCH,    //  0228
+        IF_NONE_MATCH_IS_NO_FRESH
     },
 } = require('../conf/constant')
 
@@ -57,7 +58,7 @@ async function getBlogCache(ctx, next) {
     
     await next()
 
-    if (cache.exist !== HAS_CACHE && cache.exist !== NO_IF_NONE_MATCH) { //  沒有有效緩存
+    if (cache.exist !== HAS_CACHE || cache.exist === IF_NONE_MATCH_IS_NO_FRESH) { //  沒有有效緩存
         //  緩存
         const etag = await Cache.setBlog(blog_id, ctx.cache[PAGE.BLOG].data)
         if (etag) {
