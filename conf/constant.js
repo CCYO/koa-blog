@@ -9,6 +9,7 @@ module.exports = {
     NEWS: {
         LIMIT: 2
     },
+    BLOG_EDIT_PAGE: 'blogEditPage',
     GCS_ref: {
         BLOG: 'blogImg',
         AVATAR: 'avatar'
@@ -25,10 +26,6 @@ module.exports = {
             API: {
                 COMMENT: 'blogPageComment'
             }
-        },
-        BLOG: {
-            EDITOR: 0,
-
         },
         HAS_CACHE: 0,
         NO_CACHE: 1,

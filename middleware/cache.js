@@ -1,10 +1,10 @@
 const {
     CACHE: {
+        BLOG_EDIT_PAGE,
         TYPE: {
             API,
             PAGE            //  0228
         },
-        BLOG: { EDITOR },   //  0228
         HAS_CACHE,          //  0228
         NO_IF_NONE_MATCH    //  0228
     },
@@ -16,6 +16,7 @@ const {
     checkNews, removeRemindNews,
 } = require('../server/cache')
 
+//  0228
 async function getCommentCache(ctx, next){
     let blog_id = ctx.params.blog_id ? ctx.params.blog_id : EDITOR
     let ifNoneMatch = ctx.headers['if-none-match']
@@ -45,7 +46,7 @@ async function getCommentCache(ctx, next){
 
 //  0228
 async function getBlogCache(ctx, next) {
-    let blog_id = ctx.params.blog_id ? ctx.params.blog_id : EDITOR
+    let blog_id = ctx.params.blog_id ? ctx.params.blog_id : BLOG_EDIT_PAGE
     let ifNoneMatch = ctx.headers['if-none-match']
     ctx.cache = {}
     //  向系統cache撈資料

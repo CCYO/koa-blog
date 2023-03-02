@@ -45,6 +45,7 @@ async function setComment(blog_id, val = undefined) {
     return etag
 }
 
+//  0228
 async function getComment(blog_id, ifNoneMatch){
     let res = { exist: NO_CACHE, data: undefined }
     if (isNoCache) {
@@ -304,8 +305,8 @@ module.exports = {
     removeRemindNews,
     checkNews,
 
-    setComment,
-    getComment,
+    setComment, //  0228
+    getComment, //  0228
     setBlog,    //  0228
     getBlog,    //  0228
     modifyCache,//  0228

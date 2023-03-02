@@ -4,26 +4,40 @@
 
 const router = require('koa-router')()
 const {
+    view_check_login        //  0228
+} = require('../../middleware/check_login')
+const {
     CACHE: {
         TYPE: {
-            PAGE    //  0228
+            PAGE            //  0228
         },
-        HAS_CACHE,
-        NO_IF_NONE_MATCH
+        HAS_CACHE,          //  0228
+        NO_IF_NONE_MATCH    //  0228
     }
 } = require('../../conf/constant')
+const Cache = require('../../middleware/cache') //  0228
+
 const Comment = require('../../controller/comment') //  0228
 const Blog = require('../../controller/blog')   //  0228
-const { view_check_login } = require('../../middleware/check_login')
-const Cache = require('../../middleware/cache')
-const { confirmFollow } = require('../../middleware/confirmFollow')
 
 
+const { confirmFollow } = require('../../middleware/confirmFollow') //  未整理
+
+
+//  撰寫新文章
+router.get('/blog/new', view_check_login, Cache.getBlogCache, async (ctx, next) => {
+    await ctx.render('blog-edit', {
+        blog: {
+            title: '新文章',
+            show: false,
+
+        }
+    })
+})
 
 //  查看文章    0228
 router.get('/blog/:blog_id', confirmFollow, Cache.getBlogCache, async (ctx, next) => {
     const blog_id = ctx.params.blog_id * 1
-    //   = { exist: BOO, kv: [K, V] }
     let cache = ctx.cache[PAGE.BLOG]
     let { exist, data } = cache
     let cacheKey = `${PAGE.BLOG}/${blog_id}`
@@ -38,7 +52,6 @@ router.get('/blog/:blog_id', confirmFollow, Cache.getBlogCache, async (ctx, next
         if(resModel.errno){
             ctx.body = resModel
         }
-        // const commentRes = await Comment.getCommentsByBlogId(blog_id)
         data = cache.data =  resModel.data
         if (data.html) {
             data.html = encodeURI(data.html)    //  將html做百分比編碼，前端再自行解碼
@@ -46,14 +59,6 @@ router.get('/blog/:blog_id', confirmFollow, Cache.getBlogCache, async (ctx, next
         console.log(`@ ${cacheKey} 完成 DB撈取`)
     }
     return await ctx.render('blog', { blog: data })
-})
-
-
-//  撰寫新文章
-router.get('/blog/new', view_check_login, Cache.getBlogCache, async (ctx, next) => {
-    await ctx.render('blog-edit', {
-        blog: ctx.cache.blog[1]
-    })
 })
 
 //  編輯文章

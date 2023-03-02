@@ -1,34 +1,4 @@
-var list = [
-    {
-        id: 1, deletedAt: 1, reply: [
-            {
-                id: 2, deletedAt: 0, reply: []
-            }
-        ]
-    },
-    {
-        id: 3, deletedAt: 1, reply: [
-            {
-                id: 4, deletedAt: 1, reply: []
-            },
-            {
-                id: 5, deletedAt: 1, reply: [
-                    {
-                        id: 6, deletedAt: 0, reply: []
-                    }
-                ]
-            },
-            {
-                id: 7, deletedAt: 1, reply: [
-                    {
-                        id: 8, deletedAt: 1, reply: []
-                    }
-                ]
-            }
-        ]
-    },
-]
-
+//  0228
 function removeDeletedComment(list) {
     //  計算出每串留言串 > (1)共包含幾篇留言 (2)含幾篇已刪除的留言
     let map = getListOfNeedToDelete(list)
@@ -165,4 +135,4 @@ function removeDeletedComment(list) {
 
 
 
-module.exports = removeDeletedComment
+module.exports = removeDeletedComment   //  0228

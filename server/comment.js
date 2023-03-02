@@ -7,7 +7,6 @@ const {
     Comment,        //  0228
     User,
     Blog,
-    FollowBlog,
     FollowComment
 } = require('../db/mysql/model')
 
