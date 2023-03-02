@@ -134,8 +134,9 @@ async function addBlog(title, user_id) {
     try {
         title = my_xxs(title)
         const blog = await createBlog({ title, user_id })
-        await modifyCache({ [CACHE.TYPE.USER]: [user_id] })
-        return new SuccModel(blog)
+        let cache = { [CACHE.TYPE.PAGE.USER]: [user_id] }
+        // await modifyCache({ [CACHE.TYPE.USER]: [user_id] })
+        return new SuccModel({data: blog, cache})
     } catch (e) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
     }
