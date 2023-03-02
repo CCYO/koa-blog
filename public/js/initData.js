@@ -43,10 +43,10 @@ async function initData(axios) {
             let val = $(el).html()
             if (prop === 'blog') {  //  若與blog有關
                 // res.blog = await initBlog(val)
-                return { blog: await initBlog(val) }
+                return await initBlog(val).then( blog => ({blog}) )
             } else if(prop === 'album'){    //  若與album有關
                 // res.album = initAlbum(val)
-                return { album: await initAlbum(val) }
+                return await initAlbum(val).then( album => ({album}))
             } else {
                 res[prop] = JSON.parse(val)
                 return { [prop]: JSON.parse(val)}
@@ -55,7 +55,8 @@ async function initData(axios) {
             throw e
         }
     })
-    await Promise.all(map)
+    let resArr = await Promise.all(map)
+    console.log('@resArr => ', resArr)
     //  移除所有攜帶數據的元素
     $(`[data-my-data]`).parent().remove()
     console.log('@res => ', res)
