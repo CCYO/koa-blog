@@ -218,5 +218,5 @@ module.exports = {
     readBlogByAuthor,
 
     readBlog,           //  0228
-    readBlogs           //  0228
+    readBlogs,           //  0228
 }
