@@ -5,7 +5,7 @@ const {
             API,
             PAGE            //  0228
         },
-        HAS_CACHE,          //  0228
+        HAS_FRESH_CACHE,          //  0228
         NO_IF_NONE_MATCH,    //  0228
         IF_NONE_MATCH_IS_NO_FRESH,
         NO_CACHE
@@ -31,7 +31,7 @@ async function getCommentCache(ctx, next) {
 
     await next()
 
-    if (cache.exist !== HAS_CACHE && cache.exist !== NO_IF_NONE_MATCH) { //  沒有有效緩存
+    if (cache.exist !== HAS_FRESH_CACHE && cache.exist !== NO_IF_NONE_MATCH) { //  沒有有效緩存
         //  緩存
         const etag = await Cache.setComment(blog_id, ctx.cache[API.COMMENT].data)
         if (etag) {
@@ -57,28 +57,18 @@ async function blogEditPageCache(ctx, next) {
     }
     await next()
 
-    let { exist, data } = cache
-    
-    if ( data || exist !== HAS_CACHE ){
-        let etag
-        if (exist === IF_NONE_MATCH_IS_NO_FRESH) {
-            etag = ifNoneMatch
-        } else if (exist === NO_CACHE || exist === IF_NONE_MATCH_IS_NO_FRESH) { //  沒有有效緩存
-            //  緩存
-            etag = await Cache.setBlog(blog_id, ctx.cache[PAGE.BLOG].data)
-            if (etag) {
-                ctx.set({
-                    etag,
-                    ['Cache-Control']: 'no-cache'
-                })
-                console.log(`${PAGE.BLOG}/${blog_id} 設置 etag`)
-            }
-        }
-        ctx.set({
-            etag,
-            ['Cache-Control']: 'no-cache'
-        })
+    let { exist } = cache
+
+
+    let etag
+    if (exist === NO_CACHE) {
+        //  緩存
+        await Cache.setBlog(blog_id, ctx.cache[PAGE.BLOG].data)
     }
+    ctx.set({
+        ['Cache-Control']: 'no-store'
+    })
+
     delete ctx.cache
     return
 }
@@ -95,28 +85,26 @@ async function blogPageCache(ctx, next) {
     }
     await next()
 
-    let { exist, data } = cache
-    
-    if ( data || exist !== HAS_CACHE ){
-        let etag
-        if (exist === IF_NONE_MATCH_IS_NO_FRESH) {
-            etag = ifNoneMatch
-        } else if (exist === NO_CACHE || exist === IF_NONE_MATCH_IS_NO_FRESH) { //  沒有有效緩存
-            //  緩存
-            etag = await Cache.setBlog(blog_id, ctx.cache[PAGE.BLOG].data)
-            if (etag) {
-                ctx.set({
-                    etag,
-                    ['Cache-Control']: 'no-cache'
-                })
-                console.log(`${PAGE.BLOG}/${blog_id} 設置 etag`)
-            }
+    let { exist } = cache
+    let etag
+    if (exist === NO_IF_NONE_MATCH) {
+        etag = ifNoneMatch
+    } else if (exist !== HAS_FRESH_CACHE) {
+        //  緩存
+        etag = await Cache.setBlog(blog_id, ctx.cache[PAGE.BLOG].data)
+        if (etag) {
+            ctx.set({
+                etag,
+                ['Cache-Control']: 'no-cache'
+            })
+            console.log(`${PAGE.BLOG}/${blog_id} 設置 etag`)
         }
-        ctx.set({
-            etag,
-            ['Cache-Control']: 'no-cache'
-        })
     }
+    ctx.set({
+        etag,
+        ['Cache-Control']: 'no-cache'
+    })
+
     delete ctx.cache
     return
 }
@@ -134,7 +122,7 @@ async function getBlogCache(ctx, next) {
 
     await next()
 
-    if (cache.exist !== HAS_CACHE || cache.exist === IF_NONE_MATCH_IS_NO_FRESH) { //  沒有有效緩存
+    if (cache.exist !== HAS_FRESH_CACHE || cache.exist === IF_NONE_MATCH_IS_NO_FRESH) { //  沒有有效緩存
         //  緩存
         const etag = await Cache.setBlog(blog_id, ctx.cache[PAGE.BLOG].data)
         if (etag) {
@@ -185,7 +173,7 @@ async function getOtherCache(ctx, next) {
     }
     await next()
 
-    if (cache.exist !== HAS_CACHE && cache.exist !== NO_IF_NONE_MATCH) { //  沒有有效緩存
+    if (cache.exist !== HAS_FRESH_CACHE && cache.exist !== NO_IF_NONE_MATCH) { //  沒有有效緩存
         //  緩存
         const etag = await Cache.setUser(user_id, ctx.cache[PAGE.USER].data)
         if (etag) {
@@ -212,7 +200,7 @@ async function getSelfCache(ctx, next) {
     }
     await next()
 
-    if (exist !== HAS_CACHE) { //  沒有有效緩存
+    if (exist !== HAS_FRESH_CACHE) { //  沒有有效緩存
         //  緩存
         await Cache.setUser(user_id, ctx.cache[PAGE.USER].data)
     }

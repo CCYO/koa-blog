@@ -12,7 +12,7 @@ const { CACHE: {
         PAGE,   //  0228
         NEWS,
     },
-    HAS_CACHE, NO_IF_NONE_MATCH, IF_NONE_MATCH_IS_NO_FRESH,
+    HAS_FRESH_CACHE, NO_IF_NONE_MATCH, IF_NONE_MATCH_IS_NO_FRESH,
     NO_CACHE    //  0228
 
 
@@ -74,7 +74,7 @@ async function getComment(blog_id, ifNoneMatch){
         res.exist = IF_NONE_MATCH_IS_NO_FRESH   //  if-none-match 已過期
     } else {
         console.log(`@此次 ${cacheKey} if-none-match 是最新的`)
-        res.exist = HAS_CACHE  //  if-none-match 仍是最新的
+        res.exist = HAS_FRESH_CACHE  //  if-none-match 仍是最新的
     }
     return res
 }
@@ -116,7 +116,10 @@ async function getBlog(blog_id, ifNoneMatch) {
     let [etag, data] = Object.entries(cachePair)[0]    //  [K, V]
     res.data = data
     console.log(`@系統緩存 ${cacheKey} 有資料`)
-    if (!ifNoneMatch) {
+    if(etag === ifNoneMatch){
+        console.log(`@此次 ${cacheKey} if-none-match 是最新的`)
+        res.exist = HAS_FRESH_CACHE  //  if-none-match 仍是最新的
+    } else if (!ifNoneMatch) {
         console.log(`@此次 ${cacheKey} 緩存請求雖未攜帶 if-none-match`)
         res.exist = NO_IF_NONE_MATCH   //  未攜帶 if-none-match
     } else if (ifNoneMatch !== etag) {
@@ -124,9 +127,6 @@ async function getBlog(blog_id, ifNoneMatch) {
         console.log('@etag => ', etag)
         console.log(`@此次 ${cacheKey} if-none-match !== etag`)
         res.exist = IF_NONE_MATCH_IS_NO_FRESH   //  if-none-match 已過期
-    } else {
-        console.log(`@此次 ${cacheKey} if-none-match 是最新的`)
-        res.exist = HAS_CACHE  //  if-none-match 仍是最新的
     }
     return res
 }
@@ -236,7 +236,7 @@ async function getUser(user_id, ifNoneMatch) {
         res.exist = IF_NONE_MATCH_IS_NO_FRESH   //  if-none-match 已過期
     } else {
         console.log(`@此次 ${cacheKey} if-none-match 是最新的`)
-        res.exist = HAS_CACHE  //  if-none-match 仍是最新的
+        res.exist = HAS_FRESH_CACHE  //  if-none-match 仍是最新的
     }
     return res
 }

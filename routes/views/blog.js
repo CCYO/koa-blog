@@ -11,7 +11,7 @@ const {
         TYPE: {
             PAGE            //  0228
         },
-        HAS_CACHE,          //  0228
+        HAS_FRESH_CACHE,          //  0228
         NO_IF_NONE_MATCH,    //  0228
         NO_CACHE
     }
@@ -31,7 +31,7 @@ router.get('/blog/edit/:blog_id', view_check_login, Cache.blogEditPageCache, asy
     let cache = ctx.cache[PAGE.BLOG]
     let { exist, data } = cache
     let cacheKey = `${PAGE.BLOG}/${blog_id}`
-    if (exist === NO_CACHE) {
+    if (exist !== HAS_FRESH_CACHE) {
         const resModel = await Blog.getBlog({blog_id})
         data = cache.data =  resModel.data
         if(!data){
@@ -53,7 +53,7 @@ router.get('/blog/:blog_id', confirmFollow, Cache.blogPageCache, async (ctx, nex
     let cache = ctx.cache[PAGE.BLOG]
     let { exist, data } = cache
     let cacheKey = `${PAGE.BLOG}/${blog_id}`
-    if (exist === HAS_CACHE) {
+    if (exist === HAS_FRESH_CACHE) {
         console.log(`@ ${cacheKey} -> 304`)
         ctx.status = 304
     } else if(exist === NO_IF_NONE_MATCH){
