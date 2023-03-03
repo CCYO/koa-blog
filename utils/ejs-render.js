@@ -24,6 +24,9 @@ function _renderFile(fileName, data) {
 
 //  0228
 async function htmlStr_comments(comments){
+    if(!comments.length){
+        return ''
+    }
     return await _renderFile(ejs_comments, { comments })
 }
 

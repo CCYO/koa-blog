@@ -11,13 +11,13 @@ let {
 const Opts = require('./utils/seq_findOpts')
 
 const Comment = require('./controller/comment')
-const Blog = require('./server/blog')
+const Cache = require('./server/cache')
 const hiddenRemovedComments = require('./utils/hiddenRemovedComments')
 go()
 
 async function go() {
     try {
-        let blog = await Blog.readBlog(Opts.findBlogByBlogIdAndAuthorId(44,55))
+        let blog = await Cache.getEtag('blogPage/4')
         console.log('@comments => ', blog)
     } catch (e) {
         console.log(e)

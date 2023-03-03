@@ -17,8 +17,9 @@ const {
         TYPE: {
             API             //  0228
         },
-        HAS_CACHE,          //  0228
-        NO_IF_NONE_MATCH    //  0228
+        NO_CACHE,          //  0228
+        NO_IF_NONE_MATCH,   //  0228
+        IF_NONE_MATCH_IS_NO_FRESH
     }
 } = require('../../conf/constant')
 
@@ -31,21 +32,32 @@ router.prefix('/api/comment')
 //  0228
 router.get('/:blog_id', Cache.getCommentCache, async (ctx, next) => {
     const blog_id = ctx.params.blog_id * 1
-    let cache = ctx.cache[API.COMMENT]
-    let { exist, data: commentModel } = cache
+    let cacheStatus = ctx.cache[API.COMMENT]
+    //  向系統緩存撈資料 { exist: 緩存提取結果, data: resModel{ errno, data: 對應blogPage格式化的comments數據 } || undefined }
+    let { exist, data: resModel } = cacheStatus
     let cacheKey = `${API.COMMENT}/${blog_id}`
-    if (exist === HAS_CACHE || exist === NO_IF_NONE_MATCH) {
-        console.log(`@ ${cacheKey} -> 使用系統緩存`)
-    } else {
-        const commentsRes = await Comment.getCommentsByBlogId(blog_id)
-        commentModel = cache.data = commentsRes
-        console.log(`@ ${cacheKey} 完成 DB撈取`)
-    }
-    let { errno, data } = commentModel
-    let comments = removeDeletedComment(data)
-    let commentsHtmlStr = await htmlStr_comments(comments)
 
-    ctx.body = { errno, data: { comments, commentsHtmlStr} }
+    //  系統沒有緩存數據 || 請求攜帶的 if-None-Match 過期
+    if (exist === NO_CACHE || exist === IF_NONE_MATCH_IS_NO_FRESH) {
+        //  向 DB 提取數據
+        const commentsResModel = await Comment.getCommentsByBlogId(blog_id)
+        //  刪除已軟刪除的comments，且將數據轉換為pid->id的嵌套格式
+        commentsResModel.data = removeDeletedComment(commentsResModel.data)
+        //  將 數據賦予給 ctx.cache
+        resModel = cacheStatus.data = commentsResModel
+        console.log(`@ ${cacheKey} 完成 DB撈取`)
+        //  適用 HAS_FRESH_CACHE, NO_IF_NONE_MATCH
+    } else {
+        console.log(`@ ${cacheKey} -> 使用系統緩存`)
+    }
+    //  複製 resModel
+    let { errno, data: comments } = resModel
+    //  生成 htmlString 的 comments 數據
+    let commentsHtmlStr = await htmlStr_comments(comments)
+    ctx.body = {
+        errno,
+        data: { comments, commentsHtmlStr }
+    }
 })
 
 //  創建comment

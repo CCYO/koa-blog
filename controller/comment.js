@@ -11,7 +11,7 @@ const {
 
 //  0228
 async function getCommentsByBlogId(blog_id){
-    let comments = await Comment.readCommentForBlog(Opts.findCommentsByBlogId(blog_id))
+    let comments = await Comment.readCommentsForBlog(Opts.findCommentsByBlogId(blog_id))
     return new SuccModel({data: comments})
 }
 

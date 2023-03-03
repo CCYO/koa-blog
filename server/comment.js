@@ -16,7 +16,7 @@ const xss = require('xss')
 const { remindNews, del_blog } = require('./cache')
 
 //  0228
-async function readCommentForBlog(opts){
+async function readCommentsForBlog(opts){
     let comments = await Comment.findAll(opts)
     return init_comment_4_blog(comments)
 }
@@ -500,5 +500,5 @@ module.exports = {
     readCommentForNews,
     setRelatedComment,
 
-    readCommentForBlog  //  0228
+    readCommentsForBlog  //  0228
 }
