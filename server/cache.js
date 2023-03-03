@@ -117,7 +117,7 @@ async function getBlog(blog_id, ifNoneMatch) {
     res.data = data
     console.log(`@系統緩存 ${cacheKey} 有資料`)
     if (!ifNoneMatch) {
-        console.log(`@此次 ${cacheKey} 緩存請求雖未攜帶 if-none-match，但系統有緩存可用，直接使用緩存資料`)
+        console.log(`@此次 ${cacheKey} 緩存請求雖未攜帶 if-none-match`)
         res.exist = NO_IF_NONE_MATCH   //  未攜帶 if-none-match
     } else if (ifNoneMatch !== etag) {
         console.log('@if-none-match => ', ifNoneMatch)

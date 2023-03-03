@@ -20,8 +20,8 @@ const { toJSON } = require('../utils/seq')
 
 //  0228
 async function readBlog(opts) {
-    let res = await Blog.findOne(opts)
-    return init_blog(res)
+    let blog = await Blog.findOne(opts)
+    return init_blog(blog)
 }
 
 /** 查詢 blogs   0228

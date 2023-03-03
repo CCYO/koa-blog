@@ -29,9 +29,4 @@ router.post('/', api_check_login, Cache.modifiedtCache, Cache.cacheNews, async (
     ctx.body = res
 })
 
-router.get('/tt', async (ctx) => {
-    ctx.session = null
-    ctx.body = 'ok'
-})
-
 module.exports = router

@@ -3,6 +3,9 @@ const { init_comment_4_blog } = require('./comment')
 const { init_blogImgAlt } = require('./blogImgAlt')
 
 function init_blog(blog) {
+    if(!blog){
+        return null
+    }
     if (blog instanceof Array) {
         let res = []
 

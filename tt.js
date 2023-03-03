@@ -11,15 +11,14 @@ let {
 const Opts = require('./utils/seq_findOpts')
 
 const Comment = require('./controller/comment')
+const Blog = require('./server/blog')
 const hiddenRemovedComments = require('./utils/hiddenRemovedComments')
 go()
 
 async function go() {
     try {
-        const { errno, data } = await Comment.getCommentsByBlogId(4)
-        const comments = hiddenRemovedComments(data)
-
-        console.log('@comments => ', comments[0].reply)
+        let blog = await Blog.readBlog(Opts.findBlogByBlogIdAndAuthorId(44,55))
+        console.log('@comments => ', blog)
     } catch (e) {
         console.log(e)
     }

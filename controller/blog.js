@@ -1,15 +1,19 @@
-
-const Opts = require('../utils/seq_findOpts')   //  0228
 const {
     BLOG,       //  0228
     BLOGIMGALT
 } = require('../model/errRes')
-const { SuccModel, ErrModel } = require('../model') //  0228
-const Blog = require('../server/blog')  //  0228
+const {
+    SuccModel,  //  0228
+    ErrModel    //  0228
+} = require('../model')
+const Opts = require('../utils/seq_findOpts')
+const Blog = require('../server/blog')
 
 const my_xxs = require('../utils/xss')
 const date = require('date-and-time')
+const { set_blog, tellBlogFollower } = require('../server/cache')
 
+const { hash_obj } = require('../utils/crypto')
 const {
     readFans
 } = require('../server/user')
@@ -19,7 +23,8 @@ const {
     deleteBlog,
     deleteBlogs,
     updateBlog,
-    readBlog
+    readBlog,
+    readBlogList,
 } = require('../server/blog')
 
 const {
@@ -39,13 +44,15 @@ const {
     readFollowers
 } = require('../server/followBlog')
 
+
+
 const { modifyCache } = require('../server/cache')
 
 const { CACHE } = require('../conf/constant')
 
+const { getOnePropValue } = require('../utils/_self')
 
-
-/** 取得 blogList   0228
+/** 取得 blogList   //  0303
  * @param {number} user_id user id
  * @param {boolean} is_author 是否作者本人
  * @returns {object} SuccessModel
@@ -61,9 +68,12 @@ const { CACHE } = require('../conf/constant')
  *  } 
  * }
  */
-async function getBlogListByUserId(user_id) {
-    let blogList = await Blog.readBlogs(Opts.findBlogListByAuthorId(user_id))
+ async function getBlogListByUserId(user_id) {
+    // let param = { user_id }
 
+    // let blogList = await readBlogList(param)
+    let blogList = await Blog.readBlogs(Opts.findBlogListByAuthorId(user_id))
+    
     //  將blog依show分纇
     blogList = blogList.reduce((initVal, item) => {
         let key = item.show ? 'show' : 'hidden'
@@ -110,20 +120,19 @@ async function getBlogListByUserId(user_id) {
     return new SuccModel({data})
 }
 
-/** 取得 blog 紀錄  0228
+/** 取得 blog 紀錄  0303
  * 
  * @param {number} blog_id blog id
  * @returns 
  */
-async function getBlog(blog_id) {
-    let blog = await Blog.readBlog(Opts.findBlog(blog_id))
+ async function getBlog({blog_id, author_id}) {
+    let blog = await readBlog(Opts.findBlog({blog_id, author_id}))
     if (blog) {
-        return new SuccModel({ data: blog })
+        return new SuccModel({ data: blog})
     } else {
         return new ErrModel(BLOG.NOT_EXIST)
     }
 }
-
 
 /** 建立 blog
  * @param { string } title 標題
@@ -134,9 +143,8 @@ async function addBlog(title, user_id) {
     try {
         title = my_xxs(title)
         const blog = await createBlog({ title, user_id })
-        let cache = { [CACHE.TYPE.PAGE.USER]: [user_id] }
-        // await modifyCache({ [CACHE.TYPE.USER]: [user_id] })
-        return new SuccModel({data: blog, cache})
+        await modifyCache({ [CACHE.TYPE.USER]: [user_id] })
+        return new SuccModel(blog)
     } catch (e) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
     }
@@ -223,7 +231,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
             where: { idol_id: author_id }
         })
         //  取得粉絲群的id
-        followerIdList = followers.map( ({id}) => id )
+        followerIdList = followers.map(({ id }) => id)
 
         //  提供緩存處理
         await modifyCache({
@@ -241,20 +249,25 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     if (needUpdateShow) {
         //  存放 blog 要更新的數據
         data.show = show
-        if (show && followerIdList.length) { // 公開blog
+        if (show) { // 公開blog
             //  要更新的資料
             // let Dates = followerIdList.map(follower_id => ({ blog_id, follower_id, deletedAt: null }))
             //  更新資料之 blog_id + follower_id 主鍵對若不存在，則新建，反之更新
             // await FollowBlog.bulkCreate(updateDate, {  })
-            let ok = await createFollowers({ blog_id, listOfFollowerId: followerIdList, updateData: { deletedAt: null }, opts: { updateOnDuplicate: ['deletedAt'] }})
-            if(!ok){
-                return new Error(BLOG.UPDATE.ERR_CREATE_BLOGFOLLOW)
+            if (followerIdList.length) {
+                let ok = await createFollowers({ blog_id, listOfFollowerId: followerIdList, updateData: { deletedAt: null }, opts: { updateOnDuplicate: ['deletedAt'] } })
+                if (!ok) {
+                    return new ErrModel(BLOG.UPDATE.ERR_CREATE_BLOGFOLLOW)
+                }
             }
             //  存放 blog 要更新的數據
             data.showAt = new Date()
-        } else if (!show) { // 隱藏blog
+        } else { // 隱藏blog
             //  軟刪除既有的條目
-            await hiddenBlog({ blog_id, confirm: false })
+            let ok = await hiddenBlog({ blog_id, confirm: false })
+            if(!ok){
+                return new ErrModel(BLOG.UPDATE.ERR_SOFT_DELETE_BLOGFOLLOW)
+            }
         }
     }
 
@@ -264,14 +277,18 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     }
 
     //  更新文章
-    await updateBlog(blog_id, data)
-    let blog = await readBlog({ blog_id }, true)
+    let ok = await updateBlog({blog_id, data})
+    if(!ok){
+        return new ErrModel()
+    }
+    // let blog = await readBlog({ blog_id }, true)
+    let blog = await readBlog({
+        attributes: [ 'id', 'title', 'html', ],
+        where: { blog_id },
+
+    })
     return new SuccModel(blog, cache)
 }
-
-
-
-
 
 async function getSquareBlogList(exclude_id) {
     let blogs = await readBlogList({ exclude_id })
@@ -291,7 +308,7 @@ module.exports = {
     modifyBlog,
     removeBlog,
     getSquareBlogList,
-
-    getBlog,            //  0228
-    getBlogListByUserId //  0228
+    
+    getBlogListByUserId,    //  0303
+    getBlog //  0303
 }

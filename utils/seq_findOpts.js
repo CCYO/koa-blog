@@ -8,6 +8,41 @@ const {
 } = require('../db/mysql/model')
 
 //  0228
+function findBlog({blog_id, author_id}) {
+    let where = {}
+    if(blog_id){
+        where.id = blog_id
+    }
+    if(author_id){
+        where.user_id = author_id
+    }
+    return {
+        attributes: ['id', 'title', 'html', 'show', 'showAt'],
+        where,
+        include: [
+            {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            },
+            {
+                model: BlogImg,
+                attributes: ['id', 'name'],
+                include: [
+                    {
+                        model: Img,
+                        attributes: ['id', 'url', 'hash']
+                    },
+                    {
+                        model: BlogImgAlt,
+                        attributes: ['id', 'alt']
+                    }
+                ]
+            }
+        ]
+    }
+}
+
+//  0228
 function findCommentsByBlogId(blog_id) {
     return {
         attributes: ['id', 'html', 'p_id', 'createdAt', 'deletedAt'],
@@ -101,32 +136,7 @@ function findUserByEmail(email) {
 
 
 
-function findBlog(blog_id) {
-    return {
-        attributes: ['id', 'title', 'html', 'show', 'showAt'],
-        where: { id: blog_id },
-        include: [
-            {
-                model: User,
-                attributes: ['id', 'email', 'nickname']
-            },
-            {
-                model: BlogImg,
-                attributes: ['id', 'name'],
-                include: [
-                    {
-                        model: Img,
-                        attributes: ['id', 'url', 'hash']
-                    },
-                    {
-                        model: BlogImgAlt,
-                        attributes: ['id', 'alt']
-                    }
-                ]
-            }
-        ]
-    }
-}
+
 
 
 
@@ -151,9 +161,10 @@ function findComment(comment_id) {
     }
 }
 module.exports = {
-    findBlog,
+    
     findComment,
 
+    findBlog,//  0228
     findCommentsByBlogId,       //  0228
     findBlogsByFollowerShip,    //  0228
     findBlogListByAuthorId,     //  0228
