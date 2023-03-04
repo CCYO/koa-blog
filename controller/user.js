@@ -113,8 +113,8 @@ async function findRelationShipByUserId(user_id) {
     if(currentUser.id !== user_id){
         return new ErrModel(PERMISSION.NOT_SELF)
     }
-    let { data: fansList } = await findFans(id)
-    let { data: idolList } = await findIdols(id)
+    let { data: fansList } = await findFans(user_id)
+    let { data: idolList } = await findIdols(user_id)
     let data = { currentUser, fansList, idolList }
     return new SuccModel({ data })
 }
@@ -122,7 +122,6 @@ async function findRelationShipByUserId(user_id) {
 async function findIdols(fans_id) {
     // user: { id, FollowPeople_I: [{ id, email, nickname, avatar }, ...] }
     let user = await User.readUser(Opts.findIdolsByFansId(fans_id))
-    console.log('@user => ', user)
     let idols = user ? init_user(user.FollowPeople_I) : []
     return new SuccModel({ data: idols })
 }

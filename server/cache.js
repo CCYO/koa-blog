@@ -205,9 +205,9 @@ async function setUser(user_id, val = undefined) {
 
 //  0228
 async function getUser(user_id, ifNoneMatch) {
-    let res = { exist: NO_CACHE, data: undefined }
+    let cacheStatus = { exist: NO_CACHE, data: undefined }
     if (isNoCache) {
-        return res
+        return cacheStatus
     }
 
     let cacheKey = `${PAGE.USER}/${user_id}`
@@ -215,26 +215,26 @@ async function getUser(user_id, ifNoneMatch) {
     let cachePair = await Redis.get(cacheKey)
     if (!cachePair) {  //    若系統cache沒有資料
         console.log(`@系統緩存 ${cacheKey} 沒有資料`)
-        return res  //  exist: 1 代表無緩存
+        return cacheStatus  //  exist: 1 代表無緩存
     }
 
     //  若系統cache有資料
     let [etag, data] = Object.entries(cachePair)[0]    //  [K, V]
-    res.data = data
+    cacheStatus.data = data
     console.log(`@系統緩存 ${cacheKey} 有資料`)
     if (!ifNoneMatch) {
         console.log(`@此次 ${cacheKey} 緩存請求未攜帶 if-none-match`)
-        res.exist = NO_IF_NONE_MATCH   //  未攜帶 if-none-match
+        cacheStatus.exist = NO_IF_NONE_MATCH   //  未攜帶 if-none-match
     } else if (ifNoneMatch !== etag) {
         console.log('@if-none-match => ', ifNoneMatch)
         console.log('@etag => ', etag)
         console.log(`@此次 ${cacheKey} if-none-match !== etag`)
-        res.exist = IF_NONE_MATCH_IS_NO_FRESH   //  if-none-match 已過期
+        cacheStatus.exist = IF_NONE_MATCH_IS_NO_FRESH   //  if-none-match 已過期
     } else {
         console.log(`@此次 ${cacheKey} if-none-match 是最新的`)
-        res.exist = HAS_FRESH_CACHE  //  if-none-match 仍是最新的
+        cacheStatus.exist = HAS_FRESH_CACHE  //  if-none-match 仍是最新的
     }
-    return res
+    return cacheStatus
 }
 
 async function removeCacheBlog(blogList) {

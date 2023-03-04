@@ -31,7 +31,6 @@ async function confirmFollow(ctx, next) {
         throw new Error(`發生異常，FollowPeople/${id}無法更新{ confirm: true}`)
     }
     await remindNews([ctx.session.user.id])
-    console.log('@ => ', ctx.path)
     ctx.redirect(ctx.path)
     return
 }

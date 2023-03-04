@@ -69,9 +69,6 @@ const { getOnePropValue } = require('../utils/_self')
  * }
  */
  async function getBlogListByUserId(user_id) {
-    // let param = { user_id }
-
-    // let blogList = await readBlogList(param)
     let blogList = await Blog.readBlogs(Opts.findBlogListByAuthorId(user_id))
     
     //  將blog依show分纇
@@ -109,7 +106,6 @@ const { getOnePropValue } = require('../utils/_self')
                 initVal[page[key]] = []
             }
             initVal[page[key]].push(item)
-            console.log('@=> initVal', initVal)
             return initVal
         }, [[]])
 

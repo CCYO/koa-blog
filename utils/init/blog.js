@@ -7,23 +7,11 @@ function init_blog(blog) {
         return null
     }
     if (blog instanceof Array) {
-        let res = []
-
         if(!blog.length){
             return []
         }
-
-        blog.forEach(item => {
-            res.push(_init_blog(item))
-        })
-
-        return res
+        return blog.map(item => _init_blog(item) )
     }
-
-    if(!blog.id){
-        return {}
-    }
-    
     return _init_blog(blog)
 }
 

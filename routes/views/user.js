@@ -18,7 +18,7 @@ const {
         TYPE: {
             PAGE        //  0228
         },
-            HAS_CACHE,  //  0228
+            HAS_FRESH_CACHE,  //  0228
             NO_CACHE,    //  0228
             NO_IF_NONE_MATCH
     } } = require('../../conf/constant')
@@ -31,33 +31,41 @@ const {
     view_check_login    //  0228
 } = require('../../middleware/check_login')
 
-const { getNewsByUserId } = require('../../controller/news')
-
 const { confirmFollow } = require('../../middleware/confirmFollow')
 
 //  他人頁  0228
 router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, async (ctx, next) => {
-    let id = ctx.params.id * 1
-    //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: initUser || undefined }
-    let cache  = ctx.cache[PAGE.USER]
-    let { exist, data } = cache
-    
-    if (exist === HAS_CACHE) {
-        console.log(`@${PAGE.USER}/${id} 直接使用緩存304`)
+    let user_id = ctx.params.id * 1
+    //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined }
+    let cacheStatus  = ctx.cache[PAGE.USER]
+    let { exist, data: relationShip } = cacheStatus
+    let cacheKey = `${PAGE.USER}/${user_id}`
+    //  提取到有效的緩存數據
+    if (exist === HAS_FRESH_CACHE) {
+        console.log(`@ ${cacheKey} 響應 304`)
         ctx.status = 304
-    }else if(exist !== NO_IF_NONE_MATCH){
-        let { data: { currentUser, fansList, idolList } } = await findRelationShipByUserId(id)
-        let { data: blogList } = await getBlogListByUserId(id)
-        data = cache.data = { currentUser, fansList, idolList, blogList }
+        //  在沒 if-None-Match 的情況下，取得到系統緩存數據
+    }else if(exist === NO_IF_NONE_MATCH){
+        console.log(`@ ${cacheKey} 響應 系統緩存數據`)
+        //  適用 NO_CACHE, IF_NO_MATCH_IS_NO_FRESH
+    }else {
+        //  向 DB 撈取數據
+        let resModel = await findRelationShipByUserId(user_id)
+        //  DB 沒有相符數據
+        if(resModel.errno){
+            return await ctx.render('page404', {...resModel})
+        }
+        let { data: { currentUser, fansList, idolList }} = resModel
+        //  向 DB 撈取數據
+        let { data: blogList } = await getBlogListByUserId(user_id)
+        //  將 DB 數據賦予給 ctx.cache
+        relationShip = cacheStatus.data = { currentUser, fansList, idolList, blogList }
     }
-    let { currentUser, fansList, idolList, blogList } = data
-
+    let { currentUser, fansList, idolList, blogList } = relationShip
     //  非文章作者，所以不傳入未公開的文章
     delete blogList.hidden
-
     await ctx.render('user', {
         title: `${currentUser.nickname}的主頁`,
-
         //  主要資訊數據
         currentUser,    //  window.data 數據
         blogList,       //  window.data 數據
@@ -74,20 +82,21 @@ router.get('/self', view_check_login, Cache.getSelfCache, async (ctx, next) => {
     let { exist, data: relationShip } = cacheStatus
     
     if (exist === NO_CACHE) {
+        //  向 DB 撈取數據
         let resModel = await findRelationShipByUserId(user_id)
+        //  DB 沒有相符數據
         if(resModel.errno){
             return await ctx.render('page404', {...resModel})
         }
         let { data: { currentUser, fansList, idolList }} = resModel
+        //  向 DB 撈取數據
         let { data: blogList } = await getBlogListByUserId(user_id)
+        //  將 DB 數據賦予給 ctx.cache
         relationShip = cacheStatus.data = { currentUser, fansList, idolList, blogList }
     }
-
     let { currentUser, fansList, idolList, blogList } = relationShip
-
     await ctx.render('user', {
         title: `${currentUser.nickname}的主頁`,
-
         //  主要資訊數據
         currentUser,    //  window.data 數據
         blogList,       //  window.data 數據
