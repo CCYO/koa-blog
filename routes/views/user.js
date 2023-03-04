@@ -10,7 +10,7 @@ const {
 
 const {
     
-    getRelationShipByUserId      //   0228
+    findRelationShipByUserId      //   0228
 } = require('../../controller/user')
 
 const {
@@ -46,7 +46,7 @@ router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, as
         console.log(`@${PAGE.USER}/${id} 直接使用緩存304`)
         ctx.status = 304
     }else if(exist !== NO_IF_NONE_MATCH){
-        let { data: { currentUser, fansList, idolList } } = await getRelationShipByUserId(id)
+        let { data: { currentUser, fansList, idolList } } = await findRelationShipByUserId(id)
         let { data: blogList } = await getBlogListByUserId(id)
         data = cache.data = { currentUser, fansList, idolList, blogList }
     }
@@ -68,22 +68,22 @@ router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, as
 
 //  個人頁  0228
 router.get('/self', view_check_login, Cache.getSelfCache, async (ctx, next) => {
-    let { id } = ctx.session.user
+    let { id: user_id } = ctx.session.user
     //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined }
     let cacheStatus  = ctx.cache[PAGE.USER]
-    let { exist, data } = cacheStatus
+    let { exist, data: relationShip } = cacheStatus
     
-    if (exist !== HAS_CACHE) {
-        let { data: { currentUser, fansList, idolList } } = await getRelationShipByUserId(id)
-        let { data: blogList } = await getBlogListByUserId(id)
-        data = cacheStatus.data = { currentUser, fansList, idolList, blogList }
+    if (exist === NO_CACHE) {
+        let resModel = await findRelationShipByUserId(user_id)
+        if(resModel.errno){
+            return await ctx.render('page404', {...resModel})
+        }
+        let { data: { currentUser, fansList, idolList }} = resModel
+        let { data: blogList } = await getBlogListByUserId(user_id)
+        relationShip = cacheStatus.data = { currentUser, fansList, idolList, blogList }
     }
 
-    let { currentUser, fansList, idolList, blogList } = data
-
-    if(currentUser.id !== id){
-        ctx.body = '你哪位'
-    }
+    let { currentUser, fansList, idolList, blogList } = relationShip
 
     await ctx.render('user', {
         title: `${currentUser.nickname}的主頁`,

@@ -34,6 +34,11 @@ const createUser = async ({ password, ...opts }) => {
     return init_user(user)
 }
 
+async function readUsers(opts){
+    let users = await User.findAll(opts)
+    return init_user(users)
+}
+
 /** 查找 User 資料  0228
  * @param {{ id: number, email: string, password: string }} param0 
  * @param {number} param0.id - user id
@@ -85,7 +90,12 @@ async function readFans(opts) {
     //     attributes = [...opt_attr]
     // }
     const user = await User.findOne(opts)
-    const { FollowPeople_F } = user.toJSON()
+    console.log(user.toJSON())
+    if(user){FollowPeople_F
+        const { FollowPeople_F } = user.toJSON()
+
+    }
+    
     return init_user(FollowPeople_F)
 
     // const fansList = await FollowPeople.findAll(opts) //idol.getFollowPeople_F({ attributes })
@@ -140,5 +150,6 @@ module.exports = {
     updateUser,     //  controller user
 
     createUser,     //  0228
+    readUsers,      //  0304
     readUser        //  0228
 }

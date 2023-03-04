@@ -9,6 +9,10 @@ module.exports = {
         NO_EMAIL: {errno: 102, msg: '信箱未填'},
         NO_PASSWORD: {errno: 103, msg: '密碼未填'}
     },
+    LOGIN: {
+        DATA_IS_INCOMPLETE: { errno: 104, msg: '未提供email或password'},
+        NO_USER: { errno: 105, msg: '查無此人，email或password有誤'}
+    },
     READ: {
         NOT_EXIST: {errno: 201, msg: '沒有相符的使用者資料'}
     },

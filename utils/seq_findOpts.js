@@ -8,12 +8,12 @@ const {
 } = require('../db/mysql/model')
 
 //  0228
-function findBlog({blog_id, author_id}) {
+function findBlog({ blog_id, author_id }) {
     let where = {}
-    if(blog_id){
+    if (blog_id) {
         where.id = blog_id
     }
-    if(author_id){
+    if (author_id) {
         where.user_id = author_id
     }
     return {
@@ -93,9 +93,22 @@ function findIdols(fans_id) {
         }
     }
 }
-
+//  0304
+function findIdolsByFansId(fans_id) {
+    return {
+        attributes: ['id'],
+        where: { id: fans_id },
+        include: {
+            association: 'FollowPeople_I',
+            attributes: ['id', 'email', 'nickname', 'avatar'],
+            through: {
+                attributes: []
+            }
+        }
+    }
+}
 //  0228
-function findFans(idol_id) {
+function findFansByIdolId(idol_id) {
     return {
         attributes: ['id'],
         where: { id: idol_id },
@@ -110,10 +123,21 @@ function findFans(idol_id) {
 }
 
 //  0228
-function findUser(user_id) {
+function findUser(user) {
+    let isLoginData = user.password ? true : false
+    //  以 login 需求向 DB 讀取數據
+    if (isLoginData) {
+        let { password, email } = user
+        password = hash(password)
+        return {
+            attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash'],
+            where: { email, password }
+        }
+    }
+    //  單純以 id 向 DB 讀取數據
     return {
         attributes: ['id', 'email', 'nickname', 'avatar'],
-        where: { id: user_id }
+        where: { id: user }
     }
 }
 
@@ -161,7 +185,7 @@ function findComment(comment_id) {
     }
 }
 module.exports = {
-    
+
     findComment,
 
     findBlog,//  0228
@@ -170,7 +194,8 @@ module.exports = {
     findBlogListByAuthorId,     //  0228
     findUser,                   //  0228
     findIdols,                  //  0228
-    findFans,                   //  0228
+    findIdolsByFansId,          //  0303
+    findFansByIdolId,           //  0228
     login,                      //  0228
     findUserByEmail,            //  0228
 }

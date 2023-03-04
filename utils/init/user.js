@@ -22,20 +22,20 @@ function init_user(user) {
 }
 
 function init_users(user) {
-    let json_user = user.toJSON ? user.toJSON() : user
+    let json = user.toJSON ? user.toJSON() : user
 
-    const { email, nickname, avatar } = json_user
+    const { email, nickname, avatar } = json
 
     if (!nickname && email) {
         let regex = /^([\w]+)@/
         let [_, target] = regex.exec(email)
-        json_user.nickname = target
+        json.nickname = target
     }
-    if(json_user.hasOwnProperty('avatar') && !avatar){
-        json_user.avatar = AVATAR
+    if(json.hasOwnProperty('avatar') && !avatar){
+        json.avatar = AVATAR
     }
-    delete json_user.password
-    return json_user
+    delete json.password
+    return json
 }
 
 module.exports = {

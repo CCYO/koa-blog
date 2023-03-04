@@ -4,6 +4,7 @@
 
 const ejs = require('ejs')
 
+const { init_user } = require('../utils/init')
 const {
     CACHE: {
         TYPE: {
@@ -27,6 +28,8 @@ const {
     UPDATE,
     FOLLOW,
 
+    PERMISSION,     //  0304
+    LOGIN,          //  0304
     FOLLOWBLOG,     //  0228
     READ,           //  0228
     REGISTER: {
@@ -40,7 +43,7 @@ const { getBlogListByUserId } = require('../controller/blog')
 
 const {
     readUser,
-    readFans,
+    // readFans,
     readIdols,
     updateUser
 } = require('../server/user')
@@ -71,7 +74,7 @@ async function cancelFollowIdol({ fans_id, idol_id }) {
     }
 
     let blogs = await Blog.readBlogs(Opts.findBlogsByFollowerShip({ idol_id, fans_id }))
-    let blogList = blogs.map(({ id }) => id)    
+    let blogList = blogs.map(({ id }) => id)
     if (blogList.length) {
         //  刪除關聯
         let ok = await FollowBlog.deleteFollower({ blogList, follower_id: fans_id })
@@ -100,13 +103,45 @@ async function followIdol({ fans_id, idol_id }) {
  * @param {number} user_id 
  * @returns {{ currentUser: { id, email, nickname, avatar, age }, fansList: [{ id, avatar, email, nickname }], idolList: [{ id, avatar, email, nickname }]}}
  */
-async function getRelationShipByUserId(id) {
-    let data = {}
-    data.currentUser = await User.readUser(Opts.findUser(id))
-    data.fansList = await User.readFans(Opts.findFans(id))
-    data.idolList = await User.readIdols(Opts.findIdols(id))
+async function findRelationShipByUserId(user_id) {
+    let resModel = await findUser(user_id)
+    let { errno, data: currentUser } = resModel
+    //  結果不如預期
+    if (errno) {
+        return resModel
+    }
+    if(currentUser.id !== user_id){
+        return new ErrModel(PERMISSION.NOT_SELF)
+    }
+    let { data: fansList } = await findFans(id)
+    let { data: idolList } = await findIdols(id)
+    let data = { currentUser, fansList, idolList }
     return new SuccModel({ data })
 }
+//  0304
+async function findIdols(fans_id) {
+    // user: { id, FollowPeople_I: [{ id, email, nickname, avatar }, ...] }
+    let user = await User.readUser(Opts.findIdolsByFansId(fans_id))
+    console.log('@user => ', user)
+    let idols = user ? init_user(user.FollowPeople_I) : []
+    return new SuccModel({ data: idols })
+}
+//  0304
+async function findFans(idol_id) {
+    // user: { id, FollowPeople_F: [{ id, email, nickname, avatar }, ...] }
+    let user = await User.readUser(Opts.findFansByIdolId(idol_id))
+    let fans = user ? init_user(user.FollowPeople_F) : []
+    return new SuccModel({ data: fans })
+}
+//  0304
+async function findUser(id) {
+    const user = await User.readUser(Opts.findUser(id))
+    if (!user) {
+        return new ErrModel(READ.NOT_EXIST)
+    }
+    return new SuccModel({ data: user })
+}
+
 
 /** 註冊 0228
  * @param {string} email - user 的信箱
@@ -120,7 +155,7 @@ const register = async (email, password) => {
         return new ErrModel(NO_EMAIL)
     }
 
-    const checkModel = await User.isEmailExist(email)
+    const checkModel = await isEmailExist(email)
 
     if (checkModel.errno) {
         return new ErrModel(checkModel)
@@ -135,10 +170,13 @@ const register = async (email, password) => {
  * @param {string} password user 的未加密密碼
  * @returns resModel
  */
-const login = async (email, password) => {
-    const user = await User.readUser(Opts.login({ email, password }))
-    if (!user) {
-        return new ErrModel(READ.NOT_EXIST)
+async function login(email, password){
+    if(!email || !password){
+        return new ErrModel(LOGIN.DATA_IS_INCOMPLETE)
+    }
+    const { errno, data: user } = await findUser({ email, password })
+    if (!errno) {
+        return new ErrModel(LOGIN.NO_USER)
     }
     return new SuccModel({ data: user })
 }
@@ -186,7 +224,7 @@ async function getUserViewData(user_id) {
  * @param {string} password user 的未加密密碼
  * @returns resModel
  */
-const findUser = async ({ id, email, password }) => {
+const _findUser = async ({ id, email, password }) => {
     const res = await readUser({ id, email, password })
     if (!res) {
         return new ErrModel(READ.NOT_EXIST)
@@ -238,7 +276,9 @@ module.exports = {
     getIdolsById,
     getUserViewData,
 
-    getRelationShipByUserId,    //  0228
+    findFans,
+    findIdols,
+    findRelationShipByUserId,    //  0228
     register,               //  0228
     login,                  //  0228
     isEmailExist,           //  0228

@@ -1,6 +1,6 @@
 let { Op } = require('sequelize')
 let { 
-    User,
+    // User,
     // Comment,
     FollowComment,
     // Blog,
@@ -10,15 +10,15 @@ let {
 
 const Opts = require('./utils/seq_findOpts')
 
-const Comment = require('./controller/comment')
-const Cache = require('./server/cache')
+const User = require('./controller/user')
+// const User = require('./server/user')
 const hiddenRemovedComments = require('./utils/hiddenRemovedComments')
 go()
 
 async function go() {
     try {
-        let blog = await Cache.getEtag('blogPage/4')
-        console.log('@comments => ', blog)
+        let idols = await User.findRelationShipByUserId(1)
+        console.log('@idols => ', idols)
     } catch (e) {
         console.log(e)
     }
