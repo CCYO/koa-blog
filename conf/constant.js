@@ -9,7 +9,12 @@ module.exports = {
     NEWS: {
         LIMIT: 2
     },
-    BLOG_EDIT_PAGE: 'blogEditPage',
+    BLOG: {
+        PRIVATE: 'hidden',
+        PUBLIC: 'show',
+        PAGINATION: 5,
+        TIME_FORMAT: 'YYYY/MM/DD HH:mm:ss'
+    },
     GCS_ref: {
         BLOG: 'blogImg',
         AVATAR: 'avatar'

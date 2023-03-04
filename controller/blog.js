@@ -11,6 +11,7 @@ const Blog = require('../server/blog')
 
 const my_xxs = require('../utils/xss')
 const date = require('date-and-time')
+const go = require('../utils/sort')
 const { set_blog, tellBlogFollower } = require('../server/cache')
 
 const { hash_obj } = require('../utils/crypto')
@@ -50,8 +51,6 @@ const { modifyCache } = require('../server/cache')
 
 const { CACHE } = require('../conf/constant')
 
-const { getOnePropValue } = require('../utils/_self')
-
 /** 取得 blogList   //  0303
  * @param {number} user_id user id
  * @param {boolean} is_author 是否作者本人
@@ -70,7 +69,7 @@ const { getOnePropValue } = require('../utils/_self')
  */
  async function getBlogListByUserId(user_id) {
     let blogList = await Blog.readBlogs(Opts.findBlogListByAuthorId(user_id))
-    
+    return go(blogList)
     //  將blog依show分纇
     blogList = blogList.reduce((initVal, item) => {
         let key = item.show ? 'show' : 'hidden'
