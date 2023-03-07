@@ -1,33 +1,34 @@
 /**
  * @description API commond相關
  */
-
-const router = require('koa-router')()
-
-const Comment = require('../../controller/comment') //  0228
-
-const {
-    htmlStr_comments    //  0228
-} = require('../../utils/ejs-render')
-
+const { api_check_login } = require('../../middleware/check_login')         //  0228
+const router = require('koa-router')()                                      //  0228
+const Comment = require('../../controller/comment')                         //  0228
+const { htmlStr_comments } = require('../../utils/ejs-render')              //  0228
 const removeDeletedComment = require('../../utils/hiddenRemovedComments')   //  0228
-
 const {
     CACHE: {
         TYPE: {
-            API             //  0228
+            API                                 //  0228
         },
-        NO_CACHE,          //  0228
-        NO_IF_NONE_MATCH,   //  0228
-        IF_NONE_MATCH_IS_NO_FRESH
+        NO_CACHE,                               //  0228
+        IF_NONE_MATCH_IS_NO_FRESH               //  0228
     }
 } = require('../../conf/constant')
-
 const Cache = require('../../middleware/cache') //  0228
-
-const { api_check_login } = require('../../middleware/check_login')
-
 router.prefix('/api/comment')
+
+//  創建comment
+router.post('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
+    ctx.body = await Comment.createComment(ctx.request.body)
+})
+
+router.delete('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
+    let { commentId, blog_id } = ctx.request.body
+    ctx.body = await Comment.removeComment({ commentId, blog_id })
+})
+
+
 
 //  0228
 router.get('/:blog_id', Cache.getCommentCache, async (ctx, next) => {
@@ -58,16 +59,6 @@ router.get('/:blog_id', Cache.getCommentCache, async (ctx, next) => {
         errno,
         data: { comments, commentsHtmlStr }
     }
-})
-
-//  創建comment
-router.post('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
-    ctx.body = await Comment.createComment(ctx.request.body)
-})
-
-router.delete('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
-    let { commentId, blog_id } = ctx.request.body
-    ctx.body = await Comment.removeComment({ commentId, blog_id })
 })
 
 module.exports = router

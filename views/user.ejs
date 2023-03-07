@@ -538,8 +538,8 @@
             const res = await axios.post('/api/blog', { title })
             await loadEnd()
 
-            let data = checkRes(res)
-            if (data) {
+            let { errno, data } = checkRes(res)
+            if (!errno) {
                 location.href = `/blog/edit/${data.id}`
             }
 

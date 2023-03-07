@@ -1,37 +1,29 @@
 /**
  * @description Router/Views user
  */
+const { confirmFollow } = require('../../middleware/confirmFollow')
 
-const router = require('koa-router')()
 
-const { 
-    getBlogListByUserId //  0228
-} = require('../../controller/blog')
-
-const {
-    
-    findRelationShipByUserId      //   0228
-} = require('../../controller/user')
+const router = require('koa-router')()          //  0228
+const Blog = require('../../controller/blog')   //  0228
+const User = require('../../controller/user')   //  0228
 
 const {
     CACHE: {
         TYPE: {
-            PAGE        //  0228
+            PAGE                                //  0228
         },
-            HAS_FRESH_CACHE,  //  0228
-            NO_CACHE,    //  0228
-            NO_IF_NONE_MATCH
+            HAS_FRESH_CACHE,                    //  0228
+            NO_CACHE,                           //  0228
+            NO_IF_NONE_MATCH                    //  0228
     } } = require('../../conf/constant')
-
 const Cache = require('../../middleware/cache') //  0228
-
 const {
-    view_check_isMe,
-
+    view_check_isMe,    //  0228
     view_check_login    //  0228
 } = require('../../middleware/check_login')
 
-const { confirmFollow } = require('../../middleware/confirmFollow')
+
 
 //  他人頁  0228
 router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, async (ctx, next) => {
@@ -50,14 +42,14 @@ router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, as
         //  適用 NO_CACHE, IF_NO_MATCH_IS_NO_FRESH
     }else {
         //  向 DB 撈取數據
-        let resModel = await findRelationShipByUserId(user_id)
+        let resModel = await User.findRelationShipByUserId(user_id)
         //  DB 沒有相符數據
         if(resModel.errno){
             return await ctx.render('page404', {...resModel})
         }
         let { data: { currentUser, fansList, idolList }} = resModel
         //  向 DB 撈取數據
-        let { data: blogList } = await getBlogListByUserId(user_id)
+        let { data: blogList } = await Blog.getBlogListByUserId(user_id)
         
         //  將 DB 數據賦予給 ctx.cache
         relationShip = cacheStatus.data = { currentUser, fansList, idolList, blogList }
@@ -84,14 +76,14 @@ router.get('/self', view_check_login, Cache.getSelfCache, async (ctx, next) => {
     
     if (exist === NO_CACHE) {
         //  向 DB 撈取數據
-        let resModel = await findRelationShipByUserId(user_id)
+        let resModel = await User.findRelationShipByUserId(user_id)
         //  DB 沒有相符數據
         if(resModel.errno){
             return await ctx.render('page404', {...resModel})
         }
         let { data: { currentUser, fansList, idolList }} = resModel
         //  向 DB 撈取數據
-        let { data: blogList } = await getBlogListByUserId(user_id)
+        let { data: blogList } = await Blog.getBlogListByUserId(user_id)
         //  將 DB 數據賦予給 ctx.cache
         relationShip = cacheStatus.data = { currentUser, fansList, idolList, blogList }
     }

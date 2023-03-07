@@ -2,9 +2,8 @@
  * @description Router/Views Square
  */
 
-const router = require('koa-router')()
-
-const Blog = require('../../controller/blog')
+const router = require('koa-router')()          //  0228
+const Blog = require('../../controller/blog')   //  0228
 
 //  廣場頁  0303
 router.get('/square', async (ctx, next) => {

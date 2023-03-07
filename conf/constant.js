@@ -10,11 +10,20 @@ module.exports = {
         LIMIT: 2
     },
     BLOG: {
-        PRIVATE: 'hidden',  //  0303
-        PUBLIC: 'show',     //  0303
         PAGINATION: 5,      //  0303
         TIME_FORMAT: 'YYYY/MM/DD HH:mm:ss', //  0303
-        SORT_BY: {'hidden': 'createdAt', 'show': 'showAt'}  //  0303
+        // SORT_BY: { 'hidden': 'createdAt', 'show': 'showAt' },  //  0303
+        ORGANIZED: {
+            TARGET_PROP: 'show',
+            TIME: {
+                POSITIVE: 'showAt',
+                NEGATIVE: 'createdAt'
+            },
+            TYPE: {
+                POSITIVE: 'show',
+                NEGATIVE: 'hidden'
+            }
+        }
     },
     GCS_ref: {
         BLOG: 'blogImg',

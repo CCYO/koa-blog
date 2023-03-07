@@ -1,7 +1,7 @@
 const FollowBlog = require('../server/followBlog')
 const {
-    organizedList,
-    initTimeFormatAndSort
+    organizedList,  //  0303    
+    initTimeFormatAndSort   //  0303
 } = require('../utils/sort')
 const {
     BLOG,       //  0228
@@ -11,10 +11,10 @@ const {
     SuccModel,  //  0228
     ErrModel    //  0228
 } = require('../model')
-const Opts = require('../utils/seq_findOpts')
-const Blog = require('../server/blog')
+const Opts = require('../utils/seq_findOpts')   //  0303
+const Blog = require('../server/blog')          //  0303
 
-const my_xxs = require('../utils/xss')
+const my_xxs = require('../utils/xss')          //  0303
 
 const {
     readFans
@@ -48,7 +48,7 @@ const { CACHE } = require('../conf/constant')
 //  0303
 async function getSquareBlogList(exclude_id) {
     let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
-    blogs = initTimeFormatAndSort(blogs, 'showAt')
+    blogs = initTimeFormatAndSort(blogs)
     return new SuccModel({ data: blogs})
 }
 /** 刪除 blogs  0303
@@ -239,11 +239,11 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
 
 module.exports = {
-    addBlog,
     modifyBlog,
 
     getSquareBlogList,      //  0303
     removeBlogs,            //  0303
     getBlogListByUserId,    //  0303
-    getBlog                 //  0303
+    getBlog,                 //  0303
+    addBlog
 }

@@ -1,11 +1,10 @@
 /**
  * @description Router/Views blog
  */
+const { confirmFollow } = require('../../middleware/confirmFollow') //  未整理
 
-const router = require('koa-router')()
-const {
-    view_check_login        //  0228
-} = require('../../middleware/check_login')
+const router = require('koa-router')()                                  //  0228
+const { view_check_login } = require('../../middleware/check_login')    //  0228
 const {
     CACHE: {
         TYPE: {
@@ -18,8 +17,6 @@ const {
 } = require('../../conf/constant')
 const Cache = require('../../middleware/cache') //  0228
 const Blog = require('../../controller/blog')   //  0228
-
-const { confirmFollow } = require('../../middleware/confirmFollow') //  未整理
 
 //  編輯文章
 router.get('/blog/edit/:blog_id', view_check_login, Cache.blogEditPageCache, async (ctx, next) => {
