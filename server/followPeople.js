@@ -31,8 +31,6 @@ async function createFans({ idol_id, fans_id }) {
     return true
 }
 
-
-
 async function readFans(opts_where) {
     let where = { ...opts_where }
     let res = await FollowPeople.findAll({

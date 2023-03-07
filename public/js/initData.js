@@ -53,6 +53,7 @@ async function initData() {
                 obj = await initAlbum(val).then( album => ({album}))
             } else {
                 obj = { [prop]: JSON.parse(val)}
+                console.log(prop, obj[prop])
             }
             let accumulatorRes = await accumulator
             return { ...accumulatorRes, ...obj }

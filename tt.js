@@ -17,9 +17,9 @@ go()
 
 async function go() {
     try {
-        let idols = await Blog.getBlogListByUserId(5)
+        let blogs = await Blog.getSquareBlogList(1)
         
-        console.log('@idols => ', idols)
+        console.log('@blogs => ', blogs)
     } catch (e) {
         console.log(e)
     }

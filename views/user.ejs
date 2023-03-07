@@ -242,7 +242,7 @@
                     </div>
                     <% if(blogList.show.length && blogList.show[0].length){ %>
                     <ul class="list-group list-group-flush">
-                        <% blogList.show[0].forEach(({id, title, showAt})=> { %>
+                        <% blogList.show[0].forEach(({id, title, time})=> { %>
                         <li
                             class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                             <div class="text-truncate me-3">
@@ -251,7 +251,7 @@
                                 </a>
                             </div>
                             <div class="d-none d-sm-block">
-                                <span class="timestamp">發佈於<%= showAt %></span>
+                                <span class="timestamp">發佈於<%= time %></span>
                             </div>
                             <div class="btn-blog-edit my-noshow flex-shrink-0">
                                 <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
@@ -310,7 +310,7 @@
                     </div>
                     <% if(blogList.hidden.length && blogList.hidden[0].length){ %>
                     <ul class="list-group list-group-flush">
-                        <% blogList.hidden[0].forEach(({id, title, createdAt})=> { %>
+                        <% blogList.hidden[0].forEach(({id, title, time})=> { %>
                         <li
                             class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                             <div class="text-truncate me-3">
@@ -319,7 +319,7 @@
                                 </a>
                             </div>
                             <div class="d-none d-sm-block">
-                                <span class="timestamp">上一次編輯<%= createdAt %></span>
+                                <span class="timestamp">上一次編輯<%= time %></span>
                             </div>
                             <div class="btn-blog-edit flex-shrink-0">
                                 <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>">編輯</a>
@@ -611,8 +611,8 @@
             if (!html_tarInd) {    //   若無值
                 let i = 5
                 //  創建 目標頁 htmlStr
-                let htmlStr = data_blogList[tarInd].reduce((init, { id, title }) => {
-                    init += templateCreator_BlogList(id, title)
+                let htmlStr = data_blogList[tarInd].reduce((init, {id, title, time, show}) => {
+                    init += templateCreator_BlogList({id, title, time, show})
                     i--
                     return init
                 }, '')
@@ -666,7 +666,8 @@
                 $tarPage.addClass('active my-disabled')
             }
             //  創建文章列表 htmlStr
-            function templateCreator_BlogList(id, title) {
+            function templateCreator_BlogList({id, title, time, show}) {
+                let editOrShow = show ? '發佈於' : '上一次編輯'
                 //  依頁面是否為使用者自己的資料，來判斷是否提供文章的編輯/刪除紐
                 let blogEdit = isSelf ? `
                             <div class="btn-blog-edit">
@@ -678,6 +679,9 @@
                         <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                             <div>
                                 <a class="stretched-link" href="/blog/${id}">${title}</a>
+                            </div>
+                            <div class="d-none d-sm-block">
+                                <span class="timestamp">${editOrShow} ${time}</span>
                             </div>
                             ${blogEdit}
                         </li>
@@ -814,8 +818,8 @@
             loading()
             const res = await axios.delete('/api/blog', { data: { id: blogList } })
             loadEnd()
-            let data = checkRes(res)
-            if (data) {
+            let { errno, data, msg } = checkRes(res)
+            if (!errno) {
                 location.href = '/self' //  刷新頁面
             }
         }
@@ -849,14 +853,14 @@
     function checkRes(res) {
         let { data: { errno, msg, data } } = res
         if (errno === 0) {
-            return data
+            return { errno, data }
         } else if (errno === 501) {
             alert(msg)
             location.href = `/login?from=${location.pathname}`
             return
         } else {
             alert(msg)
-            return
+            return { errno, msg }
         }
     }
 </script>

@@ -137,6 +137,7 @@ async function getOtherCache(ctx, next) {
 
     //  判斷是否將數據存入系統緩存
     let { exist, data } = ctx.cache[PAGE.USER]
+    let etag
     //  系統無有效的緩存數據
     if (exist === NO_CACHE || exist === IF_NONE_MATCH_IS_NO_FRESH) {
         //  將blog存入系統緩存

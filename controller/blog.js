@@ -1,3 +1,8 @@
+const FollowBlog = require('../server/followBlog')
+const {
+    organizedList,
+    initTimeFormatAndSort
+} = require('../utils/sort')
 const {
     BLOG,       //  0228
     BLOGIMGALT
@@ -10,27 +15,18 @@ const Opts = require('../utils/seq_findOpts')
 const Blog = require('../server/blog')
 
 const my_xxs = require('../utils/xss')
-const date = require('date-and-time')
-const go = require('../utils/sort')
-const { set_blog, tellBlogFollower } = require('../server/cache')
 
-const { hash_obj } = require('../utils/crypto')
 const {
     readFans
 } = require('../server/user')
 
 const {
-    createBlog,
-    deleteBlog,
-    deleteBlogs,
     updateBlog,
-    readBlog,
-    readBlogList,
+    readBlog
 } = require('../server/blog')
 
 const {
-    deleteBlogImg,
-    updateBulkBlogImg
+    deleteBlogImg
 } = require('../server/blogImg')
 
 const {
@@ -40,9 +36,7 @@ const {
 
 const {
     createFollowers,
-    restoreBlog,
-    hiddenBlog,
-    readFollowers
+    hiddenBlog
 } = require('../server/followBlog')
 
 
@@ -51,6 +45,44 @@ const { modifyCache } = require('../server/cache')
 
 const { CACHE } = require('../conf/constant')
 
+//  0303
+async function getSquareBlogList(exclude_id) {
+    let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
+    blogs = initTimeFormatAndSort(blogs, 'showAt')
+    return new SuccModel({ data: blogs})
+}
+/** 刪除 blogs  0303
+ * @param {number} blog_id 
+ * @returns {object} SuccModel || ErrModel
+ */
+async function removeBlogs(blogIdList, authorId) {
+    if (!Array.isArray(blogIdList)) {
+        blogIdList = [blogIdList]
+    }
+
+    //  處理cache -----
+    //  找出 blog 的 follower
+    let blogFollowerIdList = await blogIdList.reduce(async (acc, blog_id) => {
+        let followers = await FollowBlog.readFollowers(Opts.findBlogFollowersByBlogId(blog_id))
+        followeridList = await acc
+        for (let { follower_id } of followers) {
+            followeridList.push(follower_id)
+        }
+        return followeridList
+    }, [])
+
+    let cache = {
+        [CACHE.TYPE.NEWS]: blogFollowerIdList,
+        [CACHE.TYPE.PAGE.USER]: [authorId]
+    }
+
+    let ok = await Blog.deleteBlogs({ blogIdList, authorId })
+
+    if (!ok) {
+        return new ErrModel(BLOG.BLOG_REMOVE_ERR)
+    }
+    return new SuccModel({cache})
+}
 /** 取得 blogList   //  0303
  * @param {number} user_id user id
  * @param {boolean} is_author 是否作者本人
@@ -69,67 +101,22 @@ const { CACHE } = require('../conf/constant')
  */
  async function getBlogListByUserId(user_id) {
     let blogList = await Blog.readBlogs(Opts.findBlogListByAuthorId(user_id))
-    return go(blogList)
-    //  將blog依show分纇
-    blogList = blogList.reduce((initVal, item) => {
-        let key = item.show ? 'show' : 'hidden'
-        //  移除show屬性
-        delete item.show
-        initVal[key].push(item)
-        return initVal
-    }, { show: [], hidden: [] })
-
-    let data = { show: [[]], hidden: [[]] }
-    for (let key in blogList) {
-        let blogs = blogList[key]
-        let prop = undefined
-        if (key === 'show') {
-            prop = 'showAt'
-        } else {
-            prop = 'createdAt'
-        }
-        blogs.sort((a, b) => {
-            return new Date(b[prop]) - new Date(a[prop])
-        })
-        let page = { show: 0, hidden: 0 }
-        blogs = blogs.reduce((initVal, item) => {
-            //  移除show屬性
-            delete item.show
-            if (item.showAt) {
-                item.showAt = date.format(new Date(item.showAt), 'YYYY/MM/DD HH:mm:ss')
-            }
-            item.createdAt = date.format(new Date(item.createdAt), 'YYYY/MM/DD HH:mm:ss')
-            //  若指定的ArrayItem內已有5筆資料，則該show分纇的頁碼+1，並創建該頁碼的ArrayItem
-            if (initVal[page[key]].length === 5) {
-                page[key] += 1
-                initVal[page[key]] = []
-            }
-            initVal[page[key]].push(item)
-            return initVal
-        }, [[]])
-
-        if (blogs[0].length !== 0) {
-            data[key] = blogs
-        }
-    }
-    return new SuccModel({data})
+    return new SuccModel({ data: organizedList(blogList) })
 }
-
 /** 取得 blog 紀錄  0303
  * 
  * @param {number} blog_id blog id
  * @returns 
  */
  async function getBlog({blog_id, author_id}) {
-    let blog = await readBlog(Opts.findBlog({blog_id, author_id}))
+    let blog = await Blog.readBlog(Opts.findBlog({blog_id, author_id}))
     if (blog) {
         return new SuccModel({ data: blog})
     } else {
         return new ErrModel(BLOG.NOT_EXIST)
     }
 }
-
-/** 建立 blog
+/** 建立 blog   0303
  * @param { string } title 標題
  * @param { number } userId 使用者ID  
  * @returns SuccModel for { data: { id, title, html, show, showAt, createdAt, updatedAt }} || ErrModel
@@ -137,49 +124,14 @@ const { CACHE } = require('../conf/constant')
 async function addBlog(title, user_id) {
     try {
         title = my_xxs(title)
-        const blog = await createBlog({ title, user_id })
-        await modifyCache({ [CACHE.TYPE.USER]: [user_id] })
-        return new SuccModel(blog)
+        const blog = await Blog.createBlog({ title, user_id })
+        const cache = { [CACHE.TYPE.PAGE.USER]: [user_id] }
+        return new SuccModel({data: blog, cache})
     } catch (e) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
     }
 }
 
-/** 刪除 blog
- * @param {number} blog_id 
- * @returns {object} SuccModel || ErrModel
- */
-async function removeBlog(blogIdList, author) {
-    if (!Array.isArray(blogIdList)) {
-        blogIdList = [blogIdList]
-    }
-
-    //  處理cache -----
-    //  找出 blog 的 follower
-    let followerIdList = await blogIdList.reduce(async (initArr, blog_id) => {
-        let followerList = await readFollowers({
-            attributes: ['follower_id'],
-            where: { blog_id }
-        })
-        let arr = await initArr
-        for (let { follower_id } of followerList) {
-            arr.push(follower_id)
-        }
-        return arr
-    }, [])
-
-    await modifyCache({
-        [CACHE.TYPE.NEWS]: followerIdList,
-        [CACHE.TYPE.USER]: [author]
-    })
-
-    let res = await deleteBlogs({ blogIdList })
-
-    if (!res) {
-        return new ErrModel(BLOG.BLOG_REMOVE_ERR)
-    }
-    return new SuccModel()
-}
 
 /** 更新 blog
  * 
@@ -285,25 +237,13 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     return new SuccModel(blog, cache)
 }
 
-async function getSquareBlogList(exclude_id) {
-    let blogs = await readBlogList({ exclude_id })
-    blogs.sort((a, b) => {
-        return new Date(b.showAt) - new Date(b.showAt)
-    })
-    blogs.map(blog => {
-        blog.showAt = date.format(new Date(blog.showAt), 'YYYY/MM/DD HH:mm:ss')
-        return blog
-    })
-
-    return new SuccModel(blogs)
-}
 
 module.exports = {
     addBlog,
     modifyBlog,
-    removeBlog,
-    getSquareBlogList,
-    
+
+    getSquareBlogList,      //  0303
+    removeBlogs,            //  0303
     getBlogListByUserId,    //  0303
-    getBlog //  0303
+    getBlog                 //  0303
 }

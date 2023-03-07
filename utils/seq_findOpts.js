@@ -1,3 +1,5 @@
+
+const { Op } = require('sequelize')
 const { hash } = require('../utils/crypto')   //  0228
 
 const {
@@ -7,6 +9,27 @@ const {
     BlogImgAlt
 } = require('../db/mysql/model')
 
+//  0303
+function findPublicBlogListByExcludeId(exclude_id) {
+    return {
+        attributes: ['id', 'title', 'show', 'showAt', 'createdAt'],
+        where: {
+            show: true,
+            user_id: { [Op.not]: exclude_id }
+        },
+        include: {
+            model: User,
+            attributes: ['id', 'email', 'nickname']
+        }
+    }
+}
+//  0303
+function findBlogFollowersByBlogId(blog_id) {
+    return {
+        attributes: ['follower_id'],
+        where: { blog_id }
+    }
+}
 //  0228
 function findBlog({ blog_id, author_id }) {
     let where = {}
@@ -188,7 +211,9 @@ module.exports = {
 
     findComment,
 
-    findBlog,//  0228
+    findPublicBlogListByExcludeId,    //  0303
+    findBlogFollowersByBlogId,  //  0303
+    findBlog,                   //  0228
     findCommentsByBlogId,       //  0228
     findBlogsByFollowerShip,    //  0228
     findBlogListByAuthorId,     //  0228

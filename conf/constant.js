@@ -10,10 +10,11 @@ module.exports = {
         LIMIT: 2
     },
     BLOG: {
-        PRIVATE: 'hidden',
-        PUBLIC: 'show',
-        PAGINATION: 5,
-        TIME_FORMAT: 'YYYY/MM/DD HH:mm:ss'
+        PRIVATE: 'hidden',  //  0303
+        PUBLIC: 'show',     //  0303
+        PAGINATION: 5,      //  0303
+        TIME_FORMAT: 'YYYY/MM/DD HH:mm:ss', //  0303
+        SORT_BY: {'hidden': 'createdAt', 'show': 'showAt'}  //  0303
     },
     GCS_ref: {
         BLOG: 'blogImg',
@@ -21,8 +22,6 @@ module.exports = {
     },
     CACHE: {
         TYPE: {
-            BLOG: 'blog',
-            USER: 'user',
             NEWS: 'newNews',
             PAGE: {
                 USER: 'userPage',

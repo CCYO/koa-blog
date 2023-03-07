@@ -9,14 +9,19 @@ const {
     FollowBlog
 } = require('../db/mysql/model')
 
+async function readFollowers(opts) {
+    let followers = await FollowBlog.findAll(opts)
+    return followers.map( follower => follower.toJSON() )
+}
+
 /** 刪除關聯    0228
  * @param {number} idol_id idol id
  * @param {number} fans_id fans id
  * @returns {boolean} 成功 true，失敗 false
  */
-async function deleteFollower({ follower_id, blogList }) {
-    let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('FollowBlog', {
-        blog_id: { [Op.in]: blogList },
+async function deleteFollower({ follower_id, blogIdList }) {
+    let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('FollowBlogs', {
+        blog_id: { [Op.in]: blogIdList },
         follower_id
     })
     
@@ -63,16 +68,7 @@ async function updateFollowBlog(newData, opt_where, options) {
     return row
 }
 
-async function readFollowers({ where, attributes }) {
-    let opts = { where }
-    if (attributes) {
-        opts.attributes = attributes
-    }
 
-    let followers = await FollowBlog.findAll(opts)
-
-    return followers.map( follower => follower.toJSON() )
-}
 
 module.exports = {
     createFollowers,

@@ -3,17 +3,8 @@
  */
 
 const {
-    Blog,
-    FollowPeople,
-
     User            //  0228
 } = require('../db/mysql/model')
-
-const { Op } = require('sequelize')
-
-const { NEWS } = require('../conf/constant')
-
-
 
 const  { hash }  = require('../utils/crypto')
 

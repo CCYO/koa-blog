@@ -14,9 +14,6 @@ const json = require('koa-json')
 //  連接redis-session
 const store = require('./db/cache/redis/sessionStore')
 
-const { ErrModel } = require('./model')
-const { SERVER_ERR } = require('./model/errRes')
-
 //  router - API
 const apiUser = require('./routes/api/user')
 const apiEditor = require('./routes/api/editor')

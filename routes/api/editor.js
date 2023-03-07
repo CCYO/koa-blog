@@ -8,23 +8,23 @@ const { api_check_login } = require('../../middleware/check_login')
 const Cache = require('../../middleware/cache')
 const { uploadImg } = require('../../middleware/blogImg')
 
-const { addBlog, removeBlog, modifyBlog } = require('../../controller/blog')
+const { addBlog, removeBlogs, modifyBlog } = require('../../controller/blog')
 const { addBlogImgAlt, modifiedBlogImgAlt, cutImgsWithBlog } = require('../../controller/blogImgAlt')
 
 router.prefix('/api/blog')
 
-//  建立blog
+//  建立blog    0303
 router.post('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { title } = ctx.request.body
     return ctx.body = await addBlog(title, user_id)
 })
 
-//  刪除 blog
-router.delete('/', api_check_login, async (ctx, next) => {
-    const author = ctx.session.user.id
+//  刪除 blogs  0303
+router.delete('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
+    const authorId = ctx.session.user.id
     const { id } = ctx.request.body
-    ctx.body = await removeBlog(id, author)
+    ctx.body = await removeBlogs(id, authorId)
 })
 
 //  更新 blog 資料

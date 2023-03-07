@@ -13,7 +13,6 @@ async function setLoginSession(ctx, next) {
     if (errno) {
         return
     }
-
     ctx.session.user = data
     console.log(`@ 設置 user/${data.id} 的 session.user`)
 

@@ -58,6 +58,7 @@ router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, as
         let { data: { currentUser, fansList, idolList }} = resModel
         //  向 DB 撈取數據
         let { data: blogList } = await getBlogListByUserId(user_id)
+        
         //  將 DB 數據賦予給 ctx.cache
         relationShip = cacheStatus.data = { currentUser, fansList, idolList, blogList }
     }

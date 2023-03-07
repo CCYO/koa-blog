@@ -55,6 +55,7 @@ router.get('/logout', api_check_login, removeLoginSession)
 //  登入    0228
 router.post('/', setLoginSession, validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
+    console.log(email, password)
     ctx.body = await login(email, password)
 })
 

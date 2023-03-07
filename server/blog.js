@@ -1,12 +1,5 @@
 const {
     seq,
-    User,
-    Img,
-    Comment,
-    BlogImg,
-    FollowBlog,
-    BlogImgAlt,
-
     Blog        //  0228
 } = require('../db/mysql/model')
 
@@ -16,7 +9,23 @@ const {
     init_blog
 } = require('../utils/init')
 
-const { toJSON } = require('../utils/seq')
+/**批量刪除 0303
+ * 
+ * @param {*} blog_id 
+ * @param {*} needComment 
+ * @returns 
+ */
+async function deleteBlogs({ blogIdList, authorId: user_id }) {
+    let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('Blogs', {
+        user_id,
+        id: { [Op.in]: blogIdList }
+    })
+    
+    if(affectedRows !== blogIdList.length ){
+        return false
+    }
+    return true
+}
 
 //  0228
 async function readBlog(opts) {
@@ -41,7 +50,7 @@ async function readBlogs(opts) {
     return init_blog(blogList)
 }
 
-/** 創建Blog
+/** 創建Blog    0303
  * @param {string} title 文章表提
  * @param {number} user_id 作者id
  * @returns {object} blog 資訊 { id, title, html, show, showAt, createdAt, updatedAt }
@@ -49,26 +58,6 @@ async function readBlogs(opts) {
 async function createBlog({ title, user_id }) {
     let blog = await Blog.create({ title, user_id })
     return init_blog(blog)
-}
-
-/** 刪除 blog
- * 
- * @param {number} blog_id 
- * @returns {number} 0 代表失敗，1 代表成功
- */
-async function deleteBlog(blog_id) {
-    let followerList = await FollowBlog.findAll({
-        where: { blog_id },
-        attributes: ['follower_id']
-    })
-
-    let followerIdList = toJSON(followerList).map( follower => follower.follower_id )
-
-    let row = await Blog.destroy({ where: { id: blog_id } })
-    if (!row) {
-        return null
-    }
-    return {}
 }
 
 /** 更新blog
@@ -86,137 +75,11 @@ async function updateBlog({blog_id: id, newData}) {
     return false
 }
 
-/**批量刪除
- * 
- * @param {*} blog_id 
- * @param {*} needComment 
- * @returns 
- */
-async function deleteBlogs({ blogIdList }) {
-    let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('Blogs', {
-        id: { [Op.in]: blogIdList }
-    })
-    
-    if(affectedRows !== blogIdList.length ){
-        return false
-    }
-    return true
-}
-
-/** 查找 blog 紀錄
- * 
- * @param {number} blog_id 
- * @returns {object|null} 
- *  若有找到
- *      blog {
- *          id, title, html, show, showAt,
- *          imgs: [ { blogImg_id, name, id, url, hash }, ... ],
- *          author: { id, email, nickname, age, avatar, avatar_hash }
- *      }
- *  ，若找不到則 null
- */
-async function _readBlog({ blog_id }, needComment) {
-    let include = [
-        {
-            model: User,
-            attributes: ['id', 'email', 'nickname']
-        },
-        {
-            model: BlogImg,
-            attributes: ['id', 'name'],
-            include: [
-                {
-                    model: Img,
-                    attributes: ['id', 'url', 'hash']
-                },
-                {
-                    model: BlogImgAlt,
-                    attributes: ['id', 'alt']
-                }
-            ]
-        }
-    ]
-
-    if (needComment) {
-        include.push({
-            model: Comment,
-            attributes: ['id', 'html', 'p_id', 'createdAt', 'deletedAt'],
-            paranoid: false,
-            include: {
-                model: User,
-                attributes: ['id', 'email', 'nickname']
-            }
-        })
-    }
-   
-    let res = await Blog.findByPk(blog_id, {
-        attributes: ['id', 'title', 'html', 'show', 'showAt'],
-        include
-    })
-
-    if (!res) {
-        return null
-    }
-
-    return init_blog(res)
-}
-
-async function _readBlogList({ user_id, follower_id, exclude_id = null}) {
-    let ops = {}
-    let where = {}
-    if(user_id){
-        where.user_id = user_id
-    }
-    if(exclude_id){
-        if(!Array.isArray(exclude_id)){
-            exclude_id = [exclude_id]
-        }
-        where.user_id = { [Op.not]: exclude_id }
-        where.show = true
-    }
-    if(Object.keys(where).length){
-        ops = { where }
-    }
-
-    ops.include = [{
-        model: User,
-        attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash']
-    }]
-
-    if (follower_id) {
-        ops.include.push({
-            model: User,
-            as: 'FollowBlog_F',
-            attributes: [],
-            where: { id: follower_id }
-        })
-    }
-
-    ops.attributes =  ['id', 'title', 'show', 'showAt', 'createdAt']
-    let blogList = await Blog.findAll(ops)
-
-    return init_blog(blogList)
-}
-
-async function readBlogByAuthor(author_id, opts = { where: {}, attributes: [] }){
-    let { where, attributes } = opts
-    where.user_id = author_id
-    attributes.push('id')
-    let blogList = await Blog.findAll( {
-        where,
-        attributes
-    })
-    return init_blog(blogList).map( ({id}) => id)
-}
-
 module.exports = {
-    createBlog,
     updateBlog,
-    deleteBlog,
-    deleteBlogs,
-    
-    readBlogByAuthor,
 
+    deleteBlogs,
+    createBlog,         //  0303
     readBlog,           //  0228
-    readBlogs,           //  0228
+    readBlogs          //  0228
 }

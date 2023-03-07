@@ -1,4 +1,4 @@
-const { BlogImgAlt, BlogImg } = require('../db/mysql/model')
+const { BlogImgAlt } = require('../db/mysql/model')
 
 const { init_blogImgAlt } = require('../utils/init/blogImgAlt')
 

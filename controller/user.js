@@ -110,7 +110,7 @@ async function findRelationShipByUserId(user_id) {
     if (errno) {
         return resModel
     }
-    if(currentUser.id !== user_id){
+    if (currentUser.id !== user_id) {
         return new ErrModel(PERMISSION.NOT_SELF)
     }
     let { data: fansList } = await findFans(user_id)
@@ -140,8 +140,6 @@ async function findUser(id) {
     }
     return new SuccModel({ data: user })
 }
-
-
 /** 註冊 0228
  * @param {string} email - user 的信箱
  * @param {string} password - user 未加密的密碼
@@ -163,23 +161,21 @@ const register = async (email, password) => {
     const user = await User.createUser({ email, password })
     return new SuccModel({ data: user })
 }
-
 /** 登入 user   0228
  * @param {string} email user 的信箱
  * @param {string} password user 的未加密密碼
  * @returns resModel
  */
-async function login(email, password){
-    if(!email || !password){
+async function login(email, password) {
+    if (!email || !password) {
         return new ErrModel(LOGIN.DATA_IS_INCOMPLETE)
     }
-    const { errno, data: user } = await findUser({ email, password })
-    if (!errno) {
+    const user = await User.readUser(Opts.findUser({ email, password }))
+    if (!user) {
         return new ErrModel(LOGIN.NO_USER)
     }
     return new SuccModel({ data: user })
 }
-
 /** 確認信箱是否已被註冊 0228
  * @param {string} email 信箱 
  * @returns {object} resModel
@@ -218,21 +214,6 @@ async function getUserViewData(user_id) {
 
 
 
-/** 查找 user
- * @param {string} email user 的信箱
- * @param {string} password user 的未加密密碼
- * @returns resModel
- */
-const _findUser = async ({ id, email, password }) => {
-    const res = await readUser({ id, email, password })
-    if (!res) {
-        return new ErrModel(READ.NOT_EXIST)
-    }
-    return new SuccModel(res)
-}
-
-
-
 
 //  更新user
 const modifyUserInfo = async (newData, id) => {
@@ -254,30 +235,14 @@ const modifyUserInfo = async (newData, id) => {
 
 
 
-//  找出粉絲列表
-async function getFansById(idol_id) {
-    const fans = await readFans(idol_id)
-    return new SuccModel(fans)
-}
-
-//  找出偶像列表
-async function getIdolsById(idol_id) {
-    const fans = await readIdols(idol_id)
-    return new SuccModel(fans)
-}
-
 module.exports = {
-    findUser,
-    followIdol,         // api user
-    cancelFollowIdol,   // api user
     modifyUserInfo,     //  api user
-    getFansById,
-    getIdolsById,
     getUserViewData,
 
-    findFans,
-    findIdols,
+    cancelFollowIdol,       //  0303
+    followIdol,             //  0303
     findRelationShipByUserId,    //  0228
+    findUser,               //  0303
     register,               //  0228
     login,                  //  0228
     isEmailExist,           //  0228

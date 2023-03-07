@@ -23,7 +23,6 @@ function init_user(user) {
 
 function init_users(user) {
     let json = user.toJSON ? user.toJSON() : user
-
     const { email, nickname, avatar } = json
 
     if (!nickname && email) {
