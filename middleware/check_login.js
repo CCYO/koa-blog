@@ -17,6 +17,20 @@ const {
     ErrModel    //  0228
 } = require('../model')
 
+
+//  0308
+async function view_must_be_Self(ctx, next){
+    let currentUser = ctx.session && ctx.session.user
+    if(!currentUser){
+        await ctx.redirect(`/login?from=${encodeURIComponent(ctx.href)}`)
+    }else if(ctx.params.userId * 1 !== currentUser.id){
+        await ctx.render('page404', new ErrModel(NOT_SELF))
+    }else {
+        await next()
+    }
+    return
+}
+
 //  0228
 const view_check_isMe = async (ctx, next) => {
     let me = ctx.session.user ? ctx.session.user.id : undefined
@@ -24,7 +38,7 @@ const view_check_isMe = async (ctx, next) => {
 
     //  若是自己的ID，跳轉到個人頁面
     if (me === currentUser) {
-        return ctx.redirect('/self')
+        return ctx.redirect('/self', new ErrModel())
     }
     await next()
 }
@@ -78,10 +92,12 @@ const api_check_isMe = async (ctx, next) => {
 }
 
 module.exports = {
+    
     view_check_login,
     
     api_check_isMe,
 
+    view_must_be_Self,  //  0308
     view_check_isMe,    //  0228
     api_check_login,    //  0228
 }

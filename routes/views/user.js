@@ -19,11 +19,24 @@ const {
     } } = require('../../conf/constant')
 const Cache = require('../../middleware/cache') //  0228
 const {
+    view_must_be_Self,       //  0308
     view_check_isMe,    //  0228
     view_check_login    //  0228
 } = require('../../middleware/check_login')
 
-
+//  個資更新頁  //  0228
+router.get('/setting/:userId', view_must_be_Self, async (ctx, next) => {
+    let currentUser = ctx.session.user
+    //  不允許前端緩存
+    ctx.set({
+        ['Cache-Control']: 'no-store'
+    })
+    await ctx.render('setting', {
+        title: `${currentUser.nickname}的個資`,
+        //  window.data 數據
+        currentUser
+    })
+})
 
 //  他人頁  0228
 router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, async (ctx, next) => {
@@ -68,7 +81,7 @@ router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, as
 })
 
 //  個人頁  0228
-router.get('/self', view_check_login, Cache.getSelfCache, async (ctx, next) => {
+router.get('/self', view_check_isMe, Cache.getSelfCache, async (ctx, next) => {
     let { id: user_id } = ctx.session.user
     //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined }
     let cacheStatus  = ctx.cache[PAGE.USER]
@@ -128,49 +141,6 @@ router.get('/register', async (ctx, next) => {
         //  導覽列數據 & 卡片Tab 數據
         active: 'register'
     })
-})
-
-//  個資更新頁
-router.get('/setting', view_check_login, async (ctx, next) => {
-    const { user: currentUser } = ctx.session
-
-    //  導覽列數據
-    // let { data: newsList } = await getNewsByUserId(me.id)
-
-    await ctx.render('setting', {
-        title: `${currentUser.nickname}的個資`,
-        
-
-        //  window.data 數據
-        currentUser
-    })
-})
-
-router.get('/test', async (ctx) => {
-    let keys = ctx.headers
-    console.log(keys)
-    console.log(ctx.headers['if-none-match'])
-    let etag = ctx.headers.hasOwnProperty('if-none-match') ? JSON.parse(ctx.headers['if-none-match']) : undefined
-
-    if (etag && etag === 'test08242320') {
-        console.log(304)
-        // ctx.set({
-        //     etag: JSON.stringify('test08242320'),
-        //     ['Cache-Control']: 'no-cache'
-        // })
-        ctx.status = 304
-        console.log(ctx.message)
-        ctx.message = 'Not Modified'
-        console.log(ctx.message)
-        return
-    }
-    console.log(456)
-    let str = JSON.stringify('test08242320')
-    ctx.set({
-        etag: str,
-        ['Cache-Control']: 'no-cache'
-    })
-    ctx.body = { a: 'A' }
 })
 
 module.exports = router

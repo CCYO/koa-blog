@@ -2,9 +2,11 @@
  * @description Controller user相關
  */
 
-const ejs = require('ejs')
+const { readBlogByAuthor } = require('../server/blog')
+const { modifyCache } = require('../server/cache')
 
-const { init_user } = require('../utils/init')
+const BlogController = require('../controller/blog')
+const { init_user } = require('../utils/init')          //  0228
 const {
     CACHE: {
         TYPE: {
@@ -13,54 +15,48 @@ const {
         }
     }
 } = require('../conf/constant')
-const Blog = require('../server/blog')
+const Blog = require('../server/blog')                  //  0228
 const FollowPeople = require('../server/followPeople')  //  0228
-let User = require('../server/user')    //  0228
+const User = require('../server/user')                  //  0228
+const { ErrModel, SuccModel } = require('../model')     //  0228
+const Opts = require('../utils/seq_findOpts')           //  0228
 
 const {
-    ErrModel,   //  0228
-    SuccModel   //  0228
-} = require('../model')
-
-const Opts = require('../utils/seq_findOpts')   //  0228
-
-const {
-    UPDATE,
-    FOLLOW,
-
-    PERMISSION,     //  0304
-    LOGIN,          //  0304
-    FOLLOWBLOG,     //  0228
-    READ,           //  0228
+    FOLLOW,             //  0304
+    PERMISSION,         //  0304
+    LOGIN,              //  0304
+    FOLLOWBLOG,         //  0228
+    READ,               //  0228
     REGISTER: {
         NO_PASSWORD,    //  0228
-        NO_EMAIL,    //  0228
-        IS_EXIST,   //  0228
+        NO_EMAIL,       //  0228
+        IS_EXIST,       //  0228
     },
 } = require('../model/errRes')
+const FollowBlog = require('../server/followBlog')      //  0228
 
-const { getBlogListByUserId } = require('../controller/blog')
 
-const {
-    readUser,
-    // readFans,
-    readIdols,
-    updateUser
-} = require('../server/user')
+//  更新user
+async function modifyUserInfo(newData, userId) {
+    let cache = { [PAGE.USER]: [userId] }
+    if (newData.nickname || newData.email || newData.avatar) {
+        let res = await findRelationShipByUserId(userId)
+        if (res.errno) {
+            return res
+        }
+        let { currentUser, fansList, idolList } = res.data
+        let people = [...fansList, ...idolList]
 
-const FollowBlog = require('../server/followBlog')  //  0228
-const Cache = require('../server/cache')
-const {
-    readBlogByAuthor
-} = require('../server/blog')
-
-const {
-    modifyCache,
-
-    tellPeopleFollower
-} = require('../server/cache')
-
-const { isNoCache } = require('../utils/env')
+        let { data: blogs } = await BlogController.getBlogListByUserId(userId, false)
+        let blogList = blogs.map((blog) => blog.id)
+        
+        cache[NEWS] = people
+        cache[PAGE.USER] = [...cache[PAGE.USER], ...people]
+        cache[PAGE.BLOG] = blogList
+    }
+    let user = await User.updateUser({ newData, id: userId })
+    return new SuccModel({data: user, cache})
+}
 
 /** 取消追蹤    0228
  * @param {number} fans_id 
@@ -109,9 +105,6 @@ async function findRelationShipByUserId(user_id) {
     //  結果不如預期
     if (errno) {
         return resModel
-    }
-    if (currentUser.id !== user_id) {
-        return new ErrModel(PERMISSION.NOT_SELF)
     }
     let { data: fansList } = await findFans(user_id)
     let { data: idolList } = await findIdols(user_id)
@@ -190,54 +183,8 @@ async function isEmailExist(email) {
     }
 }
 
-
-async function getUserViewData(user_id) {
-
-    let { exist, kv } = await Cache.get_user(user_id)
-
-    let data = {}
-    if (exist !== HAS_CACHE) {
-        let currentUser = await User.readUser({ id: user_id })
-        let fansList = await User.readFans(Opts.findFans(user_id))
-        let idolList = await User.readIdols(Opts.findIdols(user_id))
-        let { data: blogList } = await getBlogListByUserId(user_id)
-        data = { currentUser, fansList, idolList, blogList }
-        if (!isNoCache) {
-            await Cache.set_user(user_id, data)
-        }
-    } else {
-        data = kv[1]
-    }
-
-    return new SuccModel(data)
-}
-
-
-
-
-//  更新user
-const modifyUserInfo = async (newData, id) => {
-    let user = await updateUser({ newData, id })
-    let cache = { [USER]: id }
-    if (newData.nickname || newData.email || newData.avatar) {
-        let fans = await followPeople.readFans({ idol_id: id })
-        let idols = await followPeople.readIdols({ fans_id: id })
-        let people = [...fans, ...idols]
-        let blog = await readBlogByAuthor(id)
-        cache[NEWS] = people
-        cache[USER] = [...cache[USER], ...people]
-        cache[BLOG] = blog
-    }
-    await modifyCache(cache)
-    return new SuccModel(user)
-}
-
-
-
-
 module.exports = {
     modifyUserInfo,     //  api user
-    getUserViewData,
 
     cancelFollowIdol,       //  0303
     followIdol,             //  0303

@@ -12,7 +12,6 @@ module.exports = {
     BLOG: {
         PAGINATION: 5,      //  0303
         TIME_FORMAT: 'YYYY/MM/DD HH:mm:ss', //  0303
-        // SORT_BY: { 'hidden': 'createdAt', 'show': 'showAt' },  //  0303
         ORGANIZED: {
             TARGET_PROP: 'show',
             TIME: {

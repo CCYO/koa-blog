@@ -99,9 +99,12 @@ async function removeBlogs(blogIdList, authorId) {
  *  } 
  * }
  */
- async function getBlogListByUserId(user_id) {
+ async function getBlogListByUserId(user_id, beOrganized = true) {
     let blogList = await Blog.readBlogs(Opts.findBlogListByAuthorId(user_id))
-    return new SuccModel({ data: organizedList(blogList) })
+    if(beOrganized){
+        blogList = organizedList(blogList)
+    }
+    return new SuccModel({ data: blogList })
 }
 /** 取得 blog 紀錄  0303
  * 

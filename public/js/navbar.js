@@ -377,7 +377,7 @@ async function initNavbar() {
                         <a class="nav-link" href="/album/list/${user_id}">文章相簿</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/setting">個人設置</a>
+                        <a class="nav-link" href="/setting/${user_id}">個人設置</a>
                     </li>
                     <li class="nav-item">
                         <a id="logout" class="btn btn-outline-success text-nowrap">登出</a>

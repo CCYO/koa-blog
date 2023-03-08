@@ -12,7 +12,7 @@ const Session = require('../../middleware/session')                 //  0228
 router.prefix('/api/user')
 
 //  setting
-router.patch('/', api_check_login, Session.setLoginSession, parse_user_data, validate_user, async(ctx, next) => {
+router.patch('/', api_check_login, Session.setLoginSession, Cache.modifiedtCache, parse_user_data, validate_user, async(ctx, next) => {
     let { id } = ctx.session.user
     let { body: newData } = ctx.request
     ctx.body = await User.modifyUserInfo(newData, id)
