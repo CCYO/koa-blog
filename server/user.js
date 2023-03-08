@@ -42,82 +42,6 @@ async function readUser(opts){
     return init_user(user)
 }
 
-async function _readUser({ id, email, password }){
-    if (!id && !email && !password){
-        return null
-    }
-
-    const where = {}
-    
-    if (id) where.id = id
-    if (email) where.email = email
-    if (password) where.password = hash(password)
-
-    const user = await User.findOne({ 
-        where,
-        attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash']
-    })
-    if (!user) return null
-    
-    return init_user(user)
-}
-
-
-
-
-/** 查找 Fans
- * @param {string} idol_id 
- * @returns {array} arrItem 代表 fans，若數組為空，表示沒粉絲
- */
-async function readFans(opts) {
-    // let opts = { where }
-    // if(attributes){
-    //     opts.attributes = attributes
-    // }
-    // const idol = await User.findByPk(idol_id)
-    
-    // let attributes = ['id', 'email', 'age', 'nickname', 'avatar', 'avatar_hash']
-    // if(opt_attr){
-    //     attributes = [...opt_attr]
-    // }
-    const user = await User.findOne(opts)
-    console.log(user.toJSON())
-    if(user){FollowPeople_F
-        const { FollowPeople_F } = user.toJSON()
-
-    }
-    
-    return init_user(FollowPeople_F)
-
-    // const fansList = await FollowPeople.findAll(opts) //idol.getFollowPeople_F({ attributes })
-
-    if (!fansList.length) return []
-
-    return init_user(fansList)
-}
-
-/** 查找 Idols
- * @param {string} fans_id 
- * @returns {array} arrItem 代表 idol，若數組為空，表示沒偶像
- */
-async function readIdols(opts) {
-    const user = await User.findOne(opts)
-    const { FollowPeople_I } = user.toJSON()
-    return init_user(FollowPeople_I)
-
-
-
-
-    const fans = await User.findByPk(fans_id)
-
-    const idolList = await fans.getFollowPeople_I({
-        attributes: ['id', 'email', 'age', 'nickname', 'avatar', 'avatar_hash']
-    })
-
-    if (!idolList.length) return []
-    return init_user(idolList)
-}
-
 //  更新user數據
 const updateUser = async ({newData, id}) => {
     let data = { ...newData }
@@ -136,8 +60,6 @@ const updateUser = async ({newData, id}) => {
 }
 
 module.exports = {
-    readFans,       //  controller user
-    readIdols,      //  controller user
     updateUser,     //  controller user
 
     createUser,     //  0228

@@ -11,13 +11,12 @@ const { api_check_login } = require('../../middleware/check_login') //  0228
 const Session = require('../../middleware/session')                 //  0228
 router.prefix('/api/user')
 
-//  setting
+//  setting 0309
 router.patch('/', api_check_login, Session.setLoginSession, Cache.modifiedtCache, parse_user_data, validate_user, async(ctx, next) => {
     let { id } = ctx.session.user
     let { body: newData } = ctx.request
     ctx.body = await User.modifyUserInfo(newData, id)
 })
-
 //  取消追蹤    0228
 router.post('/cancelFollow', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
     const { id: idol_id } = ctx.request.body

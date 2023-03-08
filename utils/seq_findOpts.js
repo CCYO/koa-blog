@@ -9,6 +9,27 @@ const {
     BlogImgAlt
 } = require('../db/mysql/model')
 
+//  0309
+function findCommentById(comment_id) {
+    return {
+        attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
+        where: { id: comment_id },
+        include: [
+            {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            },
+            // {
+            //     model: Blog,
+            //     attributes: ['id', 'title'],
+            //     include: {
+            //         model: User,
+            //         attributes: ['nickname', 'id']
+            //     }
+            // }
+        ]
+    }
+}
 //  0303
 function findPublicBlogListByExcludeId(exclude_id) {
     return {
@@ -181,36 +202,9 @@ function findUserByEmail(email) {
     }
 }
 
-
-
-
-
-
-
-function findComment(comment_id) {
-    return {
-        attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
-        where: { id: comment_id },
-        include: [
-            {
-                model: User,
-                attributes: ['id', 'email', 'nickname']
-            },
-            {
-                model: Blog,
-                attributes: ['id', 'title'],
-                include: {
-                    model: User,
-                    attributes: ['nickname', 'id']
-                }
-            }
-        ]
-    }
-}
 module.exports = {
 
-    findComment,
-
+    findCommentById,                //  0309
     findPublicBlogListByExcludeId,    //  0303
     findBlogFollowersByBlogId,  //  0303
     findBlog,                   //  0228

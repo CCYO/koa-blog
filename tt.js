@@ -10,14 +10,14 @@ let {
 
 const Opts = require('./utils/seq_findOpts')
 
-const Blog = require('./controller/blog')
+const comment = require('./controller/comment')
 // const User = require('./server/user')
 const hiddenRemovedComments = require('./utils/hiddenRemovedComments')
 go()
 
 async function go() {
     try {
-        let blogs = await Blog.getSquareBlogList(1)
+        let blogs = await comment.getCommentsByBlogId(9)
         
         console.log('@blogs => ', blogs)
     } catch (e) {

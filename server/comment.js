@@ -21,7 +21,7 @@ async function readCommentsForBlog(opts){
     return init_comment_4_blog(comments)
 }
 
-async function addComment({
+async function createComment({
     //  創建comment用
     user_id, blog_id, html, p_id,
     //  串主id
@@ -37,9 +37,8 @@ async function addComment({
     }
 
     //  建立 comment
-    let commentIns = await Comment.create(data)
-    let json_comment = commentIns.toJSON()
-    return json_comment
+    let ccomment = await Comment.create(data)
+    return init_comment_4_blog(ccomment)
 
 
     let whereOps_comment = { blog_id, p_id }
@@ -495,10 +494,10 @@ async function readCommentForNews({ id, blog_id, p_id, createdAt }, user_id) {
 }
 
 module.exports = {
-    addComment,
     deleteComment,
     readCommentForNews,
     setRelatedComment,
 
+    createComment,
     readCommentsForBlog  //  0228
 }

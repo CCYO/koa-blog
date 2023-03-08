@@ -18,18 +18,6 @@ const {
 const Cache = require('../../middleware/cache') //  0228
 router.prefix('/api/comment')
 
-//  創建comment
-router.post('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
-    ctx.body = await Comment.createComment(ctx.request.body)
-})
-
-router.delete('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
-    let { commentId, blog_id } = ctx.request.body
-    ctx.body = await Comment.removeComment({ commentId, blog_id })
-})
-
-
-
 //  0228
 router.get('/:blog_id', Cache.getCommentCache, async (ctx, next) => {
     const blog_id = ctx.params.blog_id * 1
@@ -41,7 +29,7 @@ router.get('/:blog_id', Cache.getCommentCache, async (ctx, next) => {
     //  系統沒有緩存數據 || 請求攜帶的 if-None-Match 過期
     if (exist === NO_CACHE || exist === IF_NONE_MATCH_IS_NO_FRESH) {
         //  向 DB 提取數據
-        const commentsResModel = await Comment.getCommentsByBlogId(blog_id)
+        const commentsResModel = await Comment.findCommentsByBlogId(blog_id)
         //  刪除已軟刪除的comments，且將數據轉換為pid->id的嵌套格式
         commentsResModel.data = removeDeletedComment(commentsResModel.data)
         //  將 數據賦予給 ctx.cache
@@ -60,5 +48,18 @@ router.get('/:blog_id', Cache.getCommentCache, async (ctx, next) => {
         data: { comments, commentsHtmlStr }
     }
 })
+//  創建comment
+router.post('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
+    ctx.body = await Comment.addComment(ctx.request.body)
+})
+
+router.delete('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
+    let { commentId, blog_id } = ctx.request.body
+    ctx.body = await Comment.removeComment({ commentId, blog_id })
+})
+
+
+
+
 
 module.exports = router

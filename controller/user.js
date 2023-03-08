@@ -5,7 +5,8 @@
 const { readBlogByAuthor } = require('../server/blog')
 const { modifyCache } = require('../server/cache')
 
-const BlogController = require('../controller/blog')
+const CommentController = require('../controller/comment')  //  0309
+const BlogController = require('../controller/blog')    //  0309
 const { init_user } = require('../utils/init')          //  0228
 const {
     CACHE: {
@@ -23,7 +24,6 @@ const Opts = require('../utils/seq_findOpts')           //  0228
 
 const {
     FOLLOW,             //  0304
-    PERMISSION,         //  0304
     LOGIN,              //  0304
     FOLLOWBLOG,         //  0228
     READ,               //  0228
@@ -36,28 +36,28 @@ const {
 const FollowBlog = require('../server/followBlog')      //  0228
 
 
-//  更新user
+//  更新user    0309
 async function modifyUserInfo(newData, userId) {
     let cache = { [PAGE.USER]: [userId] }
     if (newData.nickname || newData.email || newData.avatar) {
-        let res = await findRelationShipByUserId(userId)
-        if (res.errno) {
-            return res
+        let resModel = await findRelationShipByUserId(userId)
+        if (resModel.errno) {
+            return resModel
         }
-        let { currentUser, fansList, idolList } = res.data
-        let people = [...fansList, ...idolList].map( person => person.id )
+        let { fansList, idolList } = resModel.data
+        let people = [...fansList, ...idolList].map(person => person.id)
 
         let { data: blogs } = await BlogController.getBlogListByUserId(userId, false)
         let blogList = blogs.map((blog) => blog.id)
         
+        // await CommentController.getCommentsByBlogId()
         cache[NEWS] = people
         cache[PAGE.USER] = [...cache[PAGE.USER], ...people]
         cache[PAGE.BLOG] = blogList
     }
     let user = await User.updateUser({ newData, id: userId })
-    return new SuccModel({data: user, cache})
+    return new SuccModel({ data: user, cache })
 }
-
 /** 取消追蹤    0228
  * @param {number} fans_id 
  * @param {number} idol_id 
@@ -81,7 +81,6 @@ async function cancelFollowIdol({ fans_id, idol_id }) {
     let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [fans_id, idol_id] }
     return new SuccModel({ cache })
 }
-
 /** 追蹤    0228
  * @param {number} fans_id 
  * @param {number} idol_id 
@@ -94,7 +93,6 @@ async function followIdol({ fans_id, idol_id }) {
     let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [idol_id] }
     return new SuccModel({ cache })
 }
-
 /** 藉由 userID 找到 當前頁面使用者的資訊，以及(被)追蹤的關係   0228
  * @param {number} user_id 
  * @returns {{ currentUser: { id, email, nickname, avatar, age }, fansList: [{ id, avatar, email, nickname }], idolList: [{ id, avatar, email, nickname }]}}
@@ -148,7 +146,7 @@ const register = async (email, password) => {
     const checkModel = await isEmailExist(email)
 
     if (checkModel.errno) {
-        return new ErrModel(checkModel)
+        return checkModel
     }
 
     const user = await User.createUser({ email, password })
@@ -184,13 +182,12 @@ async function isEmailExist(email) {
 }
 
 module.exports = {
-    modifyUserInfo,     //  api user
-
-    cancelFollowIdol,       //  0303
-    followIdol,             //  0303
-    findRelationShipByUserId,    //  0228
-    findUser,               //  0303
-    register,               //  0228
-    login,                  //  0228
-    isEmailExist,           //  0228
+    modifyUserInfo,             //  0309
+    cancelFollowIdol,           //  0303
+    followIdol,                 //  0303
+    findRelationShipByUserId,   //  0228
+    findUser,                   //  0303
+    register,                   //  0228
+    login,                      //  0228
+    isEmailExist                //  0228
 }
