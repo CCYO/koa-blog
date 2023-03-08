@@ -45,7 +45,7 @@ async function modifyUserInfo(newData, userId) {
             return res
         }
         let { currentUser, fansList, idolList } = res.data
-        let people = [...fansList, ...idolList]
+        let people = [...fansList, ...idolList].map( person => person.id )
 
         let { data: blogs } = await BlogController.getBlogListByUserId(userId, false)
         let blogList = blogs.map((blog) => blog.id)
