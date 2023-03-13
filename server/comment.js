@@ -15,6 +15,12 @@ const xss = require('xss')
 
 const { remindNews, del_blog } = require('./cache')
 
+
+//  0313
+async function readComment(opts){
+    let comments = await Comment.findAll(opts)
+    return init_comment(comments)
+}
 //  0228
 async function readCommentsForBlog(opts){
     let comments = await Comment.findAll(opts)
@@ -38,6 +44,7 @@ async function createComment({
 
     //  建立 comment
     let ccomment = await Comment.create(data)
+    
     return init_comment_4_blog(ccomment)
 
 
@@ -499,5 +506,7 @@ module.exports = {
     setRelatedComment,
 
     createComment,
-    readCommentsForBlog  //  0228
+
+    readComment,        //  0313 
+    readCommentsForBlog //  0228
 }

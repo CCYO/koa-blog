@@ -9,6 +9,40 @@ const {
     BlogImgAlt
 } = require('../db/mysql/model')
 
+function findFollowCommentsByTargets(targetIds){
+    return {
+        attributes: ['id', 'follower_id', 'comment_id'],
+        where: {
+            comment_id: { [Op.in]: targetIds }
+        },
+        include: {
+            model: User,
+            attributes: ['id']
+        }
+    }
+}
+
+function findChidCommentsByPid(p_id){
+    return {
+        attributes: ['id'],
+        where: { p_id },
+        include: {
+            model: User,
+            attributes: ['id']
+        }
+    }
+}
+function findRootCommentsByBlogId(blog_id) {
+    return {
+        attributes: ['id'],
+        where: { blog_id, p_id: null },
+        include: {
+            model: User,
+            attributes: ['id']
+        }
+    }
+}
+
 //  0309
 function findCommentById(comment_id) {
     return {
@@ -203,7 +237,9 @@ function findUserByEmail(email) {
 }
 
 module.exports = {
-
+    findFollowCommentsByTargets,             //  0313
+    findChidCommentsByPid,          //  0313
+    findRootCommentsByBlogId,       //  0313
     findCommentById,                //  0309
     findPublicBlogListByExcludeId,    //  0303
     findBlogFollowersByBlogId,  //  0303
