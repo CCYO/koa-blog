@@ -14,10 +14,6 @@ function findFollowCommentsByTargets(targetIds){
         attributes: ['id', 'follower_id', 'comment_id'],
         where: {
             comment_id: { [Op.in]: targetIds }
-        },
-        include: {
-            model: User,
-            attributes: ['id']
         }
     }
 }
