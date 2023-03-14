@@ -9,19 +9,23 @@ const {
     BlogImgAlt
 } = require('../db/mysql/model')
 
-function findFollowCommentsByTargets(targetIds){
+function findFollowCommentsByTargets(targetIds, user_id){
     return {
         attributes: ['id', 'follower_id', 'comment_id'],
         where: {
-            comment_id: { [Op.in]: targetIds }
+            comment_id: { [Op.in]: targetIds },
+            follower_id: { [Op.not]: user_id}
         }
     }
 }
 
-function findChidCommentsByPid(p_id){
+function findChidCommentsByPid(blog_id, p_id){
     return {
         attributes: ['id'],
-        where: { p_id },
+        where: {
+            blog_id,
+            [Op.or]: [{id: p_id}, { p_id }] 
+        },
         include: {
             model: User,
             attributes: ['id']

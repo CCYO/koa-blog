@@ -369,11 +369,10 @@
                                     //  若 文章作者 = 留言者，payload加入author: 留言者id，否則undefined
 
                                     
-                                    let author = pageData.blog.author.id !== user_id ? pageData.blog.author.id : undefined
                                     let payload = {
                                         blog_id,
-                                        user_id,
-                                        author,     //  當前留言者 = 文章作者 => author: undefined
+                                        commenter_id: user_id,    //  留言者
+                                        author_id: pageData.blog.author.id,     //  文章作者
                                         html,
                                         p_id: editor.id ? editor.id : null  //  editor 若為 0，代表根評論
                                     }

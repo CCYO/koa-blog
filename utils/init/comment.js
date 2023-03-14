@@ -18,6 +18,7 @@ function init_comment(comment) {
 
 function _init_comment(comment) {
     let json = comment.toJSON ? comment.toJSON() : comment
+    console.log('@json => ', json)
     let { id, html, p_id, createdAt, deletedAt, User: user, Blog: blog } = json
     time = moment(createdAt).format('YYYY-MM-DD HH:mm')
     if(deletedAt){
@@ -25,7 +26,7 @@ function _init_comment(comment) {
     }
     p_id = !p_id ? 0 : p_id
     user = init_user(user)
-    delete user.email
+    // delete user.email
     if(blog){
         blog = { author: blog.User, title: blog.title, id: blog.id }
         return { id, html, p_id, time, createdAt, user, blog }
@@ -35,13 +36,16 @@ function _init_comment(comment) {
 }
 
 function init_comment_4_blog(comments) {
-    if(!comments.length){
-        return comments
-    }
     let comments_json
     if (comments instanceof Array) {
+        if(!comments.length){
+            return comments
+        }
         comments_json = comments.map(_init_comment)
     } else {
+        if(!comments){
+            return [ ]
+        }
         comments_json = [_init_comment(comments)]
     }
     let x = init_4_browser(comments_json)

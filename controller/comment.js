@@ -1,4 +1,4 @@
-const { CACHE: { TYPE: { PAGE, NEWS, API }} } = require('../conf/constant')
+const { CACHE: { TYPE: { PAGE, NEWS, API } } } = require('../conf/constant')
 const Opts = require('../utils/seq_findOpts')
 const Comment = require('../server/comment')
 
@@ -18,65 +18,83 @@ async function findCommentsByBlogId(blog_id) {
     return new SuccModel({ data: comments })
 }
 
-async function addComment({ user_id, blog_id, html, p_id, author }) {
-    let cache = { [PAGE.API]: [blog_id] }
+async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
+    let cache = { [API.COMMENT]: [blog_id] }
     //  找出相關comment
-    let comments
-    //  根評論 p_id = null
+    let relatedComments
+    //  留言為根評論
     if (!p_id) {
-        comments = await Comment.readComment(Opts.findRootCommentsByBlogId(blog_id))
-        //  子留言串comment_id = p_id
+        relatedComments = await Comment.readComment(Opts.findRootCommentsByBlogId(blog_id))
+        //  留言為子留言串
     } else {
-        comments = await Comment.readComment(Opts.findChidCommentsByPid(p_id))
+        relatedComments = await Comment.readComment(Opts.findChidCommentsByPid(blog_id, p_id))
     }
 
-    //  撈出目前相關commenterId
-    let followerIds = comments.map(({ user }) => user.id)
-    //  author也是commenter
-    if(author !== user_id ){
-        followerIds.push(author)
-    }
-    cache[NEWS] = [followerIds]
-    //  撈出目前相關commentId
-    let targetIds = comments.map(({ id }) => id)
-    console.log('@targetIds => ', targetIds)
-    //  撈出FollowComment內，targets相符的所有條目
-    let followComments = await FollowComment.readFollowComment(Opts.findFollowCommentsByTargets(targetIds))
-    console.log('@followComments => ', followComments)
-    let { needCreate, needUpdate } = followComments.reduce((acc, { id, follower_id }) => {
-        if (follower_id === author) {
-            return acc
-        }
-        //  不在followers_in_followComment之中，卻存在此次相關commenter.followerIds行列之中，必須為該commenter建立FollowComment
-        if (!followerIds.includs(follower_id)) {
-            acc.needCreate.push({ follower_id })
-            //  存在followers_in_followComment之中，且存在此次相關commenter.followerIds行列之中，必須為該followComment更新數據
+    //  撈出相關comments的commenters
+    let relatedCommenterIds = relatedComments.map(({ user }) => {
+        if (user.id !== commenter_id) {
+            return user.id
         } else {
-            acc.needUpdate.push({ id, confirm: false })
+            return null
         }
-        return acc
-    }, { needCreate: [], needUpdate: [] })
-
-    console.log(needCreate, needUpdate)
-    return 
-
-    // //  創建Comment
-    // let newComment = await Comment.createComment({ user_id, blog_id, html, p_id, author })
-    // if(!newComment){
-    //     throw new Error('創建Comment失敗')
-    // }
-    // let [comment] = await Comment.readCommentsForBlog(Opts.findCommentById(newComment.id))
-
-    // let { id, createdAt } = comment
-    // //  創建FollowComment
-    // let resCreate = FollowComment.createFollowComments( needCreate.map( item => ({...item, id, createdAt }) ) )
-    // if(!resCreate){
-    //     return new ErrModel()
-    // }
-    // let resUpdate = FollowComment.updateFollowComments( needUpdate.map( item => ({...item, target_id: id, updatedAt: createdAt})))
-    // if(!resUpdate){
-    //     return new ErrModel()
-    // }
+    }).filter(id => id)
+    //  author也是相關commenter
+    if (author_id !== commenter_id) {
+        relatedCommenterIds.push(author_id)
+    }
+    relatedCommenterIds = [ ...new Set(relatedCommenterIds)]
+    console.log('@ relatedCommenterIds => ', relatedCommenterIds)
+    if(relatedCommenterIds.length){
+        cache[NEWS] = relatedCommenterIds
+    }
+    //  撈出目前相關commentId
+    let relatedCommentIds = relatedComments.map(({ id }) => id)
+    console.log('@relatedCommentIds => ', relatedCommentIds)
+    //  撈出FollowComment內，target_id包含在relactiveCommentIds的所有條目
+    let followComments = await FollowComment.readFollowComment(Opts.findFollowCommentsByTargets(relatedCommentIds, commenter_id))
+    console.log('@followComments => ', followComments)
+    let acculumator = { create: [], update: [] }
+    if (followComments.length) {
+        acculumator.create = relatedCommenterIds.map(id => ({ follower_id: id }))
+    } else {
+        acculumator = followComments.reduce((acc, { id, follower_id }) => {
+            //  不在followers_in_followComment之中，卻存在此次相關commenter.followerIds行列之中，必須為該commenter建立FollowComment
+            if (!followerIds.includs(follower_id)) {
+                acc.create.push({ follower_id })
+                //  存在followers_in_followComment之中，且存在此次相關commenter.followerIds行列之中，必須為該followComment更新數據
+            } else {
+                acc.update.push({ id, confirm: false })
+            }
+            return acc
+        }, acculumator)
+    }
+    console.log('@ acculumator => ', acculumator)
+    console.log('@ cache => ', cache)
+    
+    //  創建Comment
+    let newComment = await Comment.createComment({ user_id: commenter_id, blog_id, html, p_id })
+    console.log('@ newComment => ', newComment)
+    if (!newComment) {
+        throw new Error('創建Comment失敗')
+    }
+    
+    let [comment] = await Comment.readCommentsForBlog(Opts.findCommentById(newComment.id))
+    console.log('@ newComment for blog=> ', comment)
+    let { id, createdAt } = comment
+    let { create, update } = acculumator
+    //  創建FollowComment
+    if (create.length) {
+        let resCreate = FollowComment.createFollowComments(create.map(item => ({ ...item, id, createdAt })))
+        if (!resCreate) {
+            return new ErrModel()
+        }
+    }
+    if (update.length) {
+        let resUpdate = FollowComment.updateFollowComments(needUpdate.map(item => ({ ...item, target_id: id, updatedAt: createdAt })))
+        if (!resUpdate) {
+            return new ErrModel()
+        }
+    }
 
     return new SuccModel({ data: comment, cache })
 
@@ -103,7 +121,7 @@ async function addComment({ user_id, blog_id, html, p_id, author }) {
     // let x = await readComment({ id: json.id })
     // console.log(x)
     // let [ comment ] = x
-   
+
 }
 
 async function removeComment({ commentId, blog_id }) {

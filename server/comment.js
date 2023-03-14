@@ -29,11 +29,7 @@ async function readCommentsForBlog(opts){
 
 async function createComment({
     //  創建comment用
-    user_id, blog_id, html, p_id,
-    //  串主id
-    // commenterOfPid,
-    //  文章作者id
-    author
+    user_id, blog_id, html, p_id
 }) {
     let data = {
         html: xss(html),
@@ -44,7 +40,7 @@ async function createComment({
 
     //  建立 comment
     let ccomment = await Comment.create(data)
-    
+    console.log('@ ccomment => ', ccomment)
     return init_comment_4_blog(ccomment)
 
 
