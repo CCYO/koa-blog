@@ -1,3 +1,4 @@
+const Controller_FollowComment = require('./followComment')
 const { CACHE: { TYPE: { PAGE, NEWS, API } } } = require('../conf/constant')
 const Opts = require('../utils/seq_findOpts')
 const Comment = require('../server/comment')
@@ -6,10 +7,8 @@ const { SuccModel, ErrModel } = require('../model')
 
 const {
     createComment,
-    setRelatedComment,
     deleteComment
 } = require('../server/comment')
-const { Op } = require('sequelize')
 const FollowComment = require('../server/followComment')
 
 //  0228
@@ -19,39 +18,26 @@ async function findCommentsByBlogId(blog_id) {
 }
 
 async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
-    let cache = { [API.COMMENT]: [blog_id] }
+    
     //  找出相關comment
-    let relatedComments
-    //  留言為根評論
-    if (!p_id) {
-        relatedComments = await Comment.readComment(Opts.findRootCommentsByBlogId(blog_id))
-        //  留言為子留言串
-    } else {
-        relatedComments = await Comment.readComment(Opts.findChidCommentsByPid(blog_id, p_id))
-    }
-
-    //  撈出相關comments的commenters
+    let relatedComments = await Comment.readComment(Opts.Comment.findRelatedComments({blog_id, p_id}))
+    //  撈出相關comments的commenters(不含curCommenter)
     let relatedCommenterIds = relatedComments.map(({ user }) => {
-        if (user.id !== commenter_id) {
-            return user.id
-        } else {
+        if (user.id === commenter_id) {
             return null
-        }
-    }).filter(id => id)
+        } 
+        return user.id
+    }).filter(commenterId => commenterId)
     //  author也是相關commenter
     if (author_id !== commenter_id) {
         relatedCommenterIds.push(author_id)
     }
+    //  刪去重複的commenterId
     relatedCommenterIds = [ ...new Set(relatedCommenterIds)]
-    console.log('@ relatedCommenterIds => ', relatedCommenterIds)
-    if(relatedCommenterIds.length){
-        cache[NEWS] = relatedCommenterIds
-    }
     //  撈出目前相關commentId
     let relatedCommentIds = relatedComments.map(({ id }) => id)
-    console.log('@relatedCommentIds => ', relatedCommentIds)
-    //  撈出FollowComment內，target_id包含在relactiveCommentIds的所有條目
-    let followComments = await FollowComment.readFollowComment(Opts.findFollowCommentsByTargets(relatedCommentIds, commenter_id))
+    //  撈出FollowComment內，target_id符合relactiveCommentIds的所有條目
+    let { data: followComments } = await Controller_FollowComment.findItemsByTargetsAndExcludeTheFollowers({comment_ids: relatedCommentIds, follower_ids: [author_id]})
     console.log('@followComments => ', followComments)
     let acculumator = { create: [], update: [] }
     if (followComments.length) {
@@ -69,14 +55,11 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
         }, acculumator)
     }
     console.log('@ acculumator => ', acculumator)
-    console.log('@ cache => ', cache)
+    
     
     //  創建Comment
     let newComment = await Comment.createComment({ user_id: commenter_id, blog_id, html, p_id })
     console.log('@ newComment => ', newComment)
-    if (!newComment) {
-        throw new Error('創建Comment失敗')
-    }
     
     let [comment] = await Comment.readCommentsForBlog(Opts.findCommentById(newComment.id))
     console.log('@ newComment for blog=> ', comment)
@@ -84,18 +67,24 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     let { create, update } = acculumator
     //  創建FollowComment
     if (create.length) {
-        let resCreate = FollowComment.createFollowComments(create.map(item => ({ ...item, id, createdAt })))
-        if (!resCreate) {
-            return new ErrModel()
-        }
+        let datas = create.map(item => ({ ...item, id, createdAt }))
+        await Controller_FollowComment.addFollowComments(datas)
     }
     if (update.length) {
-        let resUpdate = FollowComment.updateFollowComments(needUpdate.map(item => ({ ...item, target_id: id, updatedAt: createdAt })))
-        if (!resUpdate) {
-            return new ErrModel()
+        let datas = update.map(item => ({ ...item, target_id: id, updatedAt: createdAt }))
+        let resUpdate = Controller_FollowComment.modifyFollowComments(datas)
+        if (resUpdate.errno) {
+            return resUpdate
         }
     }
 
+    //  刷新 comment 的系統緩存
+    let cache = { [API.COMMENT]: [blog_id] }
+    //  relatedCommenter有新通知
+    if(relatedCommenterIds.length){
+        cache[NEWS] = relatedCommenterIds
+    }
+    console.log('@ cache => ', cache)
     return new SuccModel({ data: comment, cache })
 
     //  要通知誰

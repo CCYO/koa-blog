@@ -56,6 +56,9 @@ module.exports = {
     FOLLOWBLOG: {
         DEL_ERR: { errno: 1302, msg: '刪除關聯失敗'},        //  0228
     },
+    FOLLOWCOMMENT: {
+        UPDATE_ERR: { errno: 1401, msg: 'FollowComment更新失敗'}
+    },
     NEWS: {
         FOLLOW_CONFIRM_ERR: { errno: 1101, msg: 'Follow.confirm 更新失敗'},
         BLOG_FANS_CONFIRM_ERR: { errno: 1102, msg: 'Blog_Fans.confirm 更新失敗'},

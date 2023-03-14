@@ -9,36 +9,33 @@ const {
     BlogImgAlt
 } = require('../db/mysql/model')
 
-function findFollowCommentsByTargets(targetIds, user_id){
-    return {
-        attributes: ['id', 'follower_id', 'comment_id'],
-        where: {
-            comment_id: { [Op.in]: targetIds },
-            follower_id: { [Op.not]: user_id}
+let FollowComment = {
+    findItemsByTargetsAndExcludeTheFollowers: ({comment_ids, follower_ids}) => {
+        return {
+            attributes: ['id', 'follower_id', 'comment_id'],
+            where: {
+                comment_id: { [Op.in]: comment_ids },
+                follower_id: { [Op.notIn]: follower_ids }
+            }
         }
     }
 }
 
-function findChidCommentsByPid(blog_id, p_id){
-    return {
-        attributes: ['id'],
-        where: {
-            blog_id,
-            [Op.or]: [{id: p_id}, { p_id }] 
-        },
-        include: {
-            model: User,
-            attributes: ['id']
+let Comment = {
+    findRelatedComments: ({blog_id, p_id}) => {
+        let where = { blog_id }
+        if (!p_id) {
+            where.p_id = p_id
+        } else {
+            where[Op.or] = [{ id: p_id }, { p_id }]
         }
-    }
-}
-function findRootCommentsByBlogId(blog_id) {
-    return {
-        attributes: ['id'],
-        where: { blog_id, p_id: null },
-        include: {
-            model: User,
-            attributes: ['id']
+        return {
+            attributes: ['id'],
+            where,
+            include: {
+                model: User,
+                attributes: ['id']
+            }
         }
     }
 }
@@ -237,9 +234,9 @@ function findUserByEmail(email) {
 }
 
 module.exports = {
-    findFollowCommentsByTargets,             //  0313
-    findChidCommentsByPid,          //  0313
-    findRootCommentsByBlogId,       //  0313
+    FollowComment,
+    Comment,
+    
     findCommentById,                //  0309
     findPublicBlogListByExcludeId,    //  0303
     findBlogFollowersByBlogId,  //  0303

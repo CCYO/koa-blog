@@ -37,6 +37,7 @@ function _init_comment(comment) {
 
 function init_comment_4_blog(comments) {
     let comments_json
+    
     if (comments instanceof Array) {
         if(!comments.length){
             return comments
@@ -44,10 +45,11 @@ function init_comment_4_blog(comments) {
         comments_json = comments.map(_init_comment)
     } else {
         if(!comments){
-            return [ ]
+            return comments
         }
         comments_json = [_init_comment(comments)]
     }
+    console.log('@ comments_json => ', comments_json)
     let x = init_4_browser(comments_json)
     
     return x
@@ -61,10 +63,13 @@ function init_comment_4_blog(comments) {
             if (!item.p_id) {
                 item.p_id = 0
                 res.push(item)
-            } else {
+            } else if(list.length === 1){
+                res.push(item)
+            }else{
                 findAndPush(res, item)
             }
         })
+        console.log('@ res => ', res)
         res.sort(function(a, b){
             return b.createdAt - a.createdAt
         })

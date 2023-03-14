@@ -178,7 +178,8 @@ async function modifyCache(cache) {
 
     await _removeCache({
         [PAGE.USER]: cache[PAGE.USER],
-        [PAGE.BLOG]: cache[PAGE.BLOG]
+        [PAGE.BLOG]: cache[PAGE.BLOG],
+        [API.COMMENT]: cache[API.COMMENT]
     })
     await _addNewsCache(cache[NEWS])
 
