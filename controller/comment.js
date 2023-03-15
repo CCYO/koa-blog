@@ -21,11 +21,11 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     //  找出相關comment
     let relatedComments = await Comment.readComment(Opts.Comment.findRelatedComments({ blog_id, p_id }))
     //  撈出相關comments的commenters(不含curCommenter)
-    let relatedCommenterIds = relatedComments.map(({ user }) => {
-        if (user.id === commenter_id) {
+    let relatedCommenterIds = relatedComments.map(({ commenter }) => {
+        if (commenter.id === commenter_id) {
             return null
         }
-        return user.id
+        return commenter.id
     }).filter(commenterId => commenterId)
     //  author也是相關commenter
     if (author_id !== commenter_id) {
@@ -84,7 +84,6 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     if (relatedCommenterIds.length) {
         cache[NEWS] = relatedCommenterIds
     }
-    console.log('@ cache => ', cache)
     return new SuccModel({ data: comment, cache })
 }
 

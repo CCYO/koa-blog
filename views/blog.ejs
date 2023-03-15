@@ -343,14 +343,14 @@
                                     //  渲染
                                     editor.render(template)
                                     //  創建評論
-                                    function templateComment({ id, html, time, user }) {
+                                    function templateComment({ id, html, createdAt, commenter }) {
                                         return `
                                 <div class="comment-box">
                                     <div>${html}</div>
                                     <div>
-                                        By<a href="/other/${user.id}">${user.nickname}</a> 於 ${time} 發佈
+                                        By<a href="/other/${commenter.id}">${commenter.nickname}</a> 於 ${createdAt} 發佈
                                         <button>回覆</button>
-                                        <button data-remove=${id} data-user=${user.id}>刪除</button>
+                                        <button data-remove=${id} data-user=${commenter.id}>刪除</button>
                                     </div>
 
                                     <div class="reply-box" data-comment-id="${id}">

@@ -1,6 +1,6 @@
 const {
-    init_comment_4_blog,    //  0228    未整理
-    init_comment
+    initComment,    //  0228    未整理
+    initCommentsForBrowser
 } = require('../utils/init')
 
 const {
@@ -19,12 +19,12 @@ const { remindNews, del_blog } = require('./cache')
 //  0313
 async function readComment(opts) {
     let comments = await Comment.findAll(opts)
-    return init_comment(comments)
+    return initComment(comments)
 }
 //  0228
 async function readCommentsForBlog(opts) {
-    let comments = await Comment.findAll(opts)
-    return init_comment_4_blog(comments)
+    let comments = await readComment(opts)
+    return initCommentsForBrowser(comments)
 }
 
 async function createComment({
@@ -40,9 +40,8 @@ async function createComment({
         }
 
         //  建立 comment
-        let newComment = await Comment.create(data)
-        let [comment] = init_comment_4_blog(newComment)
-        return comment
+        let comment = await Comment.create(data)
+        return initComment(comment)
     } catch (err) {
         throw new Error(err)
     }

@@ -1,99 +1,101 @@
-const moment = require('moment')
+const date = require('date-and-time')
+const { BLOG: { TIME_FORMAT } } = require('../../conf/constant')
 
 const { init_user } = require('./user')
 
-function init_comment(comment) {
-    if (comment instanceof Array) {
-        let res = []
-
-        comment.forEach(item => {
-            let json = _init_comment(item)
-            res.push(json)
-        })
-        return res
-    }
-
-    return _init_comment(comment)
-}
-
-function _init_comment(comment) {
-    let json = comment.toJSON ? comment.toJSON() : comment
-    console.log('@json => ', json)
-    let { id, html, p_id, createdAt, deletedAt, User: user, Blog: blog } = json
-    time = moment(createdAt).format('YYYY-MM-DD HH:mm')
-    if(deletedAt){
-        deletedAt = moment(deletedAt).format('YYYY-MM-DD HH:mm')
-    }
-    p_id = !p_id ? 0 : p_id
-    user = init_user(user)
-    // delete user.email
-    if(blog){
-        blog = { author: blog.User, title: blog.title, id: blog.id }
-        return { id, html, p_id, time, createdAt, user, blog }
-    }
-    
-    return { id, html, p_id, time, createdAt, user, deletedAt}
-}
-
-function init_comment_4_blog(comments) {
-    let comments_json
-    
+function initComment(comments) {
     if (comments instanceof Array) {
-        if(!comments.length){
-            return comments
-        }
-        comments_json = comments.map(_init_comment)
-    } else {
-        if(!comments){
-            return comments
-        }
-        comments_json = [_init_comment(comments)]
+        return comments.reduce((acc, item) => {
+            acc.push(_initComment(item))
+            return acc
+        }, [])
     }
-    console.log('@ comments_json => ', comments_json)
-    let x = init_4_browser(comments_json)
-    
-    return x
+    if (!comments) {
+        return comments
+    }
+    let res = _initComment(comments)
+    return res
 
-    function init_4_browser(list) {
-        let target
-        let res = []
-
-        list.forEach(item => {
-            item.reply = []
-            if (!item.p_id) {
-                item.p_id = 0
-                res.push(item)
-            } else if(list.length === 1){
-                res.push(item)
-            }else{
-                findAndPush(res, item)
+    function _initComment(comment) {
+        let json = comment.toJSON()
+        let { id, html, p_id, createdAt, deletedAt, updatedAt, User: commenter, Blog: blog } = json
+        if (p_id === null) {
+            p_id = 0
+        }
+        if (commenter) {
+            commenter = init_user(commenter)
+        }
+        if (blog) {
+            blog = { author: blog.User, title: blog.title, id: blog.id }
+        }
+        let res = { id, html, p_id }
+        let obj = { createdAt, updatedAt, deletedAt, commenter, blog }
+        for (let prop in obj) {
+            if (obj[prop]) {
+                res[prop] = obj[prop]
             }
-        })
-        console.log('@ res => ', res)
-        res.sort(function(a, b){
-            return b.createdAt - a.createdAt
-        })
+        }
         return res
+    }
+}
 
-        function findAndPush(list, comment) {
-            list.some((item, ind) => {
-                target = list[ind]
-                if(item.id === item.p_id){
-                    return 1
+function initCommentsForBrowser(initComments) {
+    let res
+    if (initComments instanceof Array) {
+        if (!initComments.length) {
+            return []
+        }
+    } else {
+        if (!comments) {
+            return []
+        }
+        initComments = [initComments]
+    }
+    return _initCommentForBrowser(initComments)
+
+    function _initCommentForBrowser(comments) {
+        let commentList = []
+        for (let comment of comments) {
+            comment.reply = []
+            if (!comment.p_id || comments.length === 1) {
+                commentList.push(comment)
+            } else {
+                nestComments(commentList, comment)
+            }
+        }
+        let res = sortAndTimeFomat(commentList)
+         return res
+        function sortAndTimeFomat(list) {
+            return list.sort(function (a, b) {
+                return b.createdAt - a.createdAt
+            }).map(item => {
+                for (let prop of ['createdAt', 'updatedAt', 'deletedAt']) {
+                    let time = item[prop]
+                    if (!time) {
+                        continue
+                    }
+                    item[prop] = date.format(time, TIME_FORMAT)
                 }
-                if (item.id === comment.p_id) {
-                    return target.reply.push(comment)
-                }
-                if (target.reply.length) {
-                    target = target.reply
-                    findAndPush(target, comment)
-                }
+                return item
             })
+        }
+
+        function nestComments(commentList, item) {
+            for (let index in commentList) {
+                let targetComment = commentList[index]
+                console.log(item.p_id, targetComment.id)
+                if (item.p_id === targetComment.id) {
+                    targetComment.reply.push(item)
+                    break
+                } else if (targetComment.reply.length) {
+                    nestComments(targetComment.reply, item)
+                }
+            }
         }
     }
 }
 
 module.exports = {
-    init_comment,
-    init_comment_4_blog
+    initComment,
+    initCommentsForBrowser
 }

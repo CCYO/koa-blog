@@ -1,4 +1,4 @@
-<% comments.forEach(({ id, html, time, user, reply, deletedAt}) => { %>
+<% comments.forEach(({ id, html, time, commenter, reply, deletedAt}) => { %>
 <% if (html || reply.length) { %>
 
 <div class="comment-box">
@@ -8,16 +8,16 @@
             <p>此留言已刪除</p>
         </div>
         <div>
-            By<a href="/other/<%= user.id %>"><%=user.nickname%></a> 於 <%= deletedAt %> 刪除
+            By<a href="/other/<%= commenter.id %>"><%=commenter.nickname%></a> 於 <%= deletedAt %> 刪除
         </div>
         <% } else { %>
         <div>
             <%- html %>
         </div>
         <div>
-            By<a href="/other/<%= user.id %>"><%=user.nickname%></a> 於 <%=time%> 發佈
+            By<a href="/other/<%= commenter.id %>"><%=commenter.nickname%></a> 於 <%=time%> 發佈
             <button>回覆</button>
-            <button data-remove="<%=id%>" data-user="<%=user.id%>">刪除</button>
+            <button data-remove="<%=id%>" data-user="<%=commenter.id%>">刪除</button>
         </div>
         <% } %>
     

@@ -1,7 +1,6 @@
 const {
-    init_comment,
-
-    init_comment_4_blog //  0228
+    initComment,
+    initCommentsForBrowser
 } = require('./comment')
 
 const { init_user } = require('./user')
@@ -11,13 +10,13 @@ const { init_blogImg } = require('./blogImg')
 const { init_newsOfFollowId, init_excepts} = require('./news')
 
 module.exports = {
+    initComment,
+    initCommentsForBrowser,
+
     init_user,
-    init_comment,
     init_blog,
     init_img,
     init_blogImg,
     init_newsOfFollowId,
-    init_excepts,
-
-    init_comment_4_blog     //  0228
+    init_excepts
 }
