@@ -10,19 +10,26 @@ const {
 } = require('../db/mysql/model')
 
 let FollowComment = {
-    findItemsByTargetsAndExcludeTheFollowers: ({comment_ids, follower_ids}) => {
+    findItems: ({ comment_ids }, { exclude }) => {
+        let where = {
+            comment_id: { [Op.in]: comment_ids }
+        }
+        if (exclude) {
+            let kvPairs = Object.entries(exclude)
+            for (let [key, val] of kvPairs) {
+                where[key] = { [Op.notIn]: val }
+            }
+        }
+        console.log('@where => ', where)
         return {
             attributes: ['id', 'follower_id', 'comment_id'],
-            where: {
-                comment_id: { [Op.in]: comment_ids },
-                follower_id: { [Op.notIn]: follower_ids }
-            }
+            where
         }
     }
 }
 
 let Comment = {
-    findRelatedComments: ({blog_id, p_id}) => {
+    findRelatedComments: ({ blog_id, p_id }) => {
         let where = { blog_id }
         if (!p_id) {
             where.p_id = p_id
@@ -37,28 +44,27 @@ let Comment = {
                 attributes: ['id']
             }
         }
-    }
-}
-
-//  0309
-function findCommentById(comment_id) {
-    return {
-        attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
-        where: { id: comment_id },
-        include: [
-            {
-                model: User,
-                attributes: ['id', 'email', 'nickname']
-            },
-            // {
-            //     model: Blog,
-            //     attributes: ['id', 'title'],
-            //     include: {
-            //         model: User,
-            //         attributes: ['nickname', 'id']
-            //     }
-            // }
-        ]
+    },
+    //  0309
+    findCommentById: (comment_id) => {
+        return {
+            attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
+            where: { id: comment_id },
+            include: [
+                {
+                    model: User,
+                    attributes: ['id', 'email', 'nickname']
+                },
+                // {
+                //     model: Blog,
+                //     attributes: ['id', 'title'],
+                //     include: {
+                //         model: User,
+                //         attributes: ['nickname', 'id']
+                //     }
+                // }
+            ]
+        }
     }
 }
 //  0303
@@ -236,8 +242,7 @@ function findUserByEmail(email) {
 module.exports = {
     FollowComment,
     Comment,
-    
-    findCommentById,                //  0309
+
     findPublicBlogListByExcludeId,    //  0303
     findBlogFollowersByBlogId,  //  0303
     findBlog,                   //  0228

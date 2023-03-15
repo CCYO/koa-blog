@@ -3,8 +3,11 @@ const { FOLLOWCOMMENT } = require('../model/errRes')
 const Opts = require('../utils/seq_findOpts')
 const FollowComment = require('../server/followComment');
 
-async function findItemsByTargetsAndExcludeTheFollowers({ comment_ids, follower_ids }) {
-    let items = await FollowComment.readFollowComment(Opts.FollowComment.findItemsByTargetsAndExcludeTheFollowers({ comment_ids, follower_ids }))
+async function findItemsByTargets({ comment_ids }, opts) {
+    let data = { comment_ids }
+    let exclude = opts ? opts.exclude : undefined
+        
+    let items = await FollowComment.readFollowComment(Opts.FollowComment.findItems(data, { exclude }))
     return new SuccModel({ data: items.map(item => item.toJSON()) })
 }
 
@@ -23,6 +26,6 @@ async function modifyFollowComments(datas){
 
 module.exports = {
     modifyFollowComments,
+    findItemsByTargets,
     addFollowComments,
-    findItemsByTargetsAndExcludeTheFollowers
 }

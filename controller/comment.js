@@ -18,14 +18,13 @@ async function findCommentsByBlogId(blog_id) {
 }
 
 async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
-    
     //  找出相關comment
-    let relatedComments = await Comment.readComment(Opts.Comment.findRelatedComments({blog_id, p_id}))
+    let relatedComments = await Comment.readComment(Opts.Comment.findRelatedComments({ blog_id, p_id }))
     //  撈出相關comments的commenters(不含curCommenter)
     let relatedCommenterIds = relatedComments.map(({ user }) => {
         if (user.id === commenter_id) {
             return null
-        } 
+        }
         return user.id
     }).filter(commenterId => commenterId)
     //  author也是相關commenter
@@ -33,12 +32,17 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
         relatedCommenterIds.push(author_id)
     }
     //  刪去重複的commenterId
-    relatedCommenterIds = [ ...new Set(relatedCommenterIds)]
+    relatedCommenterIds = [...new Set(relatedCommenterIds)]
     //  撈出目前相關commentId
     let relatedCommentIds = relatedComments.map(({ id }) => id)
-    //  撈出FollowComment內，target_id符合relactiveCommentIds的所有條目
-    let { data: followComments } = await Controller_FollowComment.findItemsByTargetsAndExcludeTheFollowers({comment_ids: relatedCommentIds, follower_ids: [author_id]})
-    console.log('@followComments => ', followComments)
+    //  撈出FollowComment內，target_id符合relactiveCommentIds的所有條目(且不包含curCommenter)
+    let { data: followComments } = await Controller_FollowComment.findItemsByTargets(
+        { comment_ids: relatedCommentIds },
+        { exclude: { follower_id: [commenter_id] } }
+    )
+    
+    //  relatedCommenterId 不符合 followComments.follower_id，則需創建 followComment 追蹤通知
+    //  relatedCommenterId 符合 followComments.follower_id，則需更新 followComment 追蹤通知
     let acculumator = { create: [], update: [] }
     if (followComments.length) {
         acculumator.create = relatedCommenterIds.map(id => ({ follower_id: id }))
@@ -54,14 +58,10 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
             return acc
         }, acculumator)
     }
-    console.log('@ acculumator => ', acculumator)
-    
-    
     //  創建Comment
     let newComment = await Comment.createComment({ user_id: commenter_id, blog_id, html, p_id })
-    console.log('@ newComment => ', newComment)
-    
-    let [comment] = await Comment.readCommentsForBlog(Opts.findCommentById(newComment.id))
+    //  讀取符合Blog格式數據格式的新Comment
+    let [comment] = await Comment.readCommentsForBlog(Opts.Comment.findCommentById(newComment.id))
     console.log('@ newComment for blog=> ', comment)
     let { id, createdAt } = comment
     let { create, update } = acculumator
@@ -81,36 +81,11 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     //  刷新 comment 的系統緩存
     let cache = { [API.COMMENT]: [blog_id] }
     //  relatedCommenter有新通知
-    if(relatedCommenterIds.length){
+    if (relatedCommenterIds.length) {
         cache[NEWS] = relatedCommenterIds
     }
     console.log('@ cache => ', cache)
     return new SuccModel({ data: comment, cache })
-
-    //  要通知誰
-    //  有pid => 舊留言串 => 文章作者 + 串主 + 串中所有留言者
-    //  查詢串頭 => pid = id
-    //  查詢串中留言者 => pid = pid
-    //  更新 FollowComment
-    //  查詢所有留言串 => 
-    //  無pid => 新留言串 => 文章作者
-
-    //  是否通知文章作者
-    //  作者 != 留言者
-
-
-    // let newComment = await Comment.createComment({ user_id, blog_id, html, p_id, author })
-    // let [comment] = await Comment.readCommentsForBlog(Opts.findCommentById(newComment.id))
-    //  找出討論串相關的使用者
-
-
-    // let cacheNews = await setRelatedComment(json, { author })
-
-    // let cache = { news: cacheNews, blog: [ blog_id ] }
-    // let x = await readComment({ id: json.id })
-    // console.log(x)
-    // let [ comment ] = x
-
 }
 
 async function removeComment({ commentId, blog_id }) {
