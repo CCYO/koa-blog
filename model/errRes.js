@@ -48,6 +48,9 @@ module.exports = {
         UPDATE_ERR: { errno: 902, msg: '更新失敗'},
         REMOVE_ERR: { errno: 903, msg: '文章內的圖片數據初始化失敗'}
     },
+    COMMENT: {
+        REMOVE_ERR: { errno: 1101, msg: '文章刪除失敗'}
+    },
     FOLLOW: {
         FOLLOW_ERR: { errno: 1001, msg: '追蹤失敗'},            //  0228
         CANCEL_ERR: { errno: 1002, msg: '取消追蹤失敗'},        //  0228

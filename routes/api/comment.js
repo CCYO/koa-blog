@@ -54,8 +54,8 @@ router.post('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
 })
 
 router.delete('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
-    let { commentId, blog_id } = ctx.request.body
-    ctx.body = await Comment.removeComment({ commentId, blog_id })
+    let { author_id, commenter_id, commentId, blog_id, p_id } = ctx.request.body
+    ctx.body = await Comment.removeComment({ author_id, commenter_id, commentId, blog_id, p_id })
 })
 
 

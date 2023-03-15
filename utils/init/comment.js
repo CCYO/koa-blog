@@ -58,7 +58,8 @@ function initCommentsForBrowser(initComments) {
         for (let comment of comments) {
             comment.reply = []
             if (!comment.p_id || comments.length === 1) {
-                commentList.push(comment)
+                
+                commentList.push(initTime(comment))
             } else {
                 nestComments(commentList, comment)
             }
@@ -68,16 +69,18 @@ function initCommentsForBrowser(initComments) {
         function sortAndTimeFomat(list) {
             return list.sort(function (a, b) {
                 return b.createdAt - a.createdAt
-            }).map(item => {
-                for (let prop of ['createdAt', 'updatedAt', 'deletedAt']) {
-                    let time = item[prop]
-                    if (!time) {
-                        continue
-                    }
-                    item[prop] = date.format(time, TIME_FORMAT)
-                }
-                return item
             })
+        }
+        function initTime(item){
+            for (let prop of ['createdAt', 'updatedAt', 'deletedAt']) {
+                let time = item[prop]
+                if (!time) {
+                    continue
+                }
+                let timeProp = `_${prop}`
+                item[timeProp] = date.format(time, TIME_FORMAT)
+            }
+            return item
         }
 
         function nestComments(commentList, item) {
@@ -85,7 +88,7 @@ function initCommentsForBrowser(initComments) {
                 let targetComment = commentList[index]
                 console.log(item.p_id, targetComment.id)
                 if (item.p_id === targetComment.id) {
-                    targetComment.reply.push(item)
+                    targetComment.reply.push(initTime(item))
                     break
                 } else if (targetComment.reply.length) {
                     nestComments(targetComment.reply, item)

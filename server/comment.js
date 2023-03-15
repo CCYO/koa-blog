@@ -15,6 +15,13 @@ const xss = require('xss')
 
 const { remindNews, del_blog } = require('./cache')
 
+async function deleteComment({ commentId, blog_id }) {
+    let num = await Comment.destroy({
+        where: { id: commentId, blog_id }
+    })
+    if (!num) return false
+    return true
+}
 
 //  0313
 async function readComment(opts) {
@@ -45,19 +52,6 @@ async function createComment({
     } catch (err) {
         throw new Error(err)
     }
-}
-
-async function deleteComment({ commentId, blog_id }) {
-    await Comment.destroy({
-        where: { id: commentId, blog_id }
-    })
-    return
-    let res = await Comment.update({ html: '' }, {
-        where: { id: commentId, blog_id }
-    })
-    console.log('res => ', res)
-    return res
-
 }
 
 async function setRelatedComment(comment, { author }) {

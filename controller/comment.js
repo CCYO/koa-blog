@@ -1,15 +1,52 @@
+const { COMMENT: { REMOVE_ERR } } = require('../model/errRes')
 const Controller_FollowComment = require('./followComment')
 const { CACHE: { TYPE: { PAGE, NEWS, API } } } = require('../conf/constant')
 const Opts = require('../utils/seq_findOpts')
 const Comment = require('../server/comment')
 
 const { SuccModel, ErrModel } = require('../model')
-
-const {
-    createComment,
-    deleteComment
-} = require('../server/comment')
 const FollowComment = require('../server/followComment')
+
+async function removeComment({ author_id, commenter_id, commentId, blog_id, p_id }) {
+    //  整理出要通知的使用者
+    //  找出相關comment
+    let relatedComments = await Comment.readComment(Opts.Comment.findRelatedComments({ blog_id, p_id }))
+    console.log('@relatedComments => ', relatedComments)
+    //  撈出相關comments的commenters(不含curCommenter)
+    let relatedCommenterIds = relatedComments.map(({ commenter }) => {
+        if (commenter.id === commenter_id) {
+            return null
+        }
+        return commenter.id
+    }).filter(commenterId => commenterId)
+    console.log('@relatedCommenterIds => ', relatedCommenterIds)
+    //  author也是相關commenter
+    if (author_id !== commenter_id) {
+        relatedCommenterIds.push(author_id)
+    }
+console.log('@relatedCommenterIds => ', relatedCommenterIds)
+    let cache = {
+        [API.COMMENT]: [blog_id]
+    }
+    if (relatedCommenterIds.length) {
+        cache[NEWS] = relatedCommenterIds
+    }
+    console.log('@cache => ', cache)
+    return 
+
+    let ok = await Comment.deleteComment({ commentId, blog_id })
+    if (!ok) {
+        return new ErrModel(REMOVE_ERR)
+    }
+
+
+    
+    // let cacheNews = await setRelatedComment(json, { author })
+
+    // let cache = { news: cacheNews, blog: [ blog_id ] }
+    // let [ comment ] = await readComment({ id: json.id })
+    return new SuccModel(res, cache)
+}
 
 //  0228
 async function findCommentsByBlogId(blog_id) {
@@ -40,7 +77,7 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
         { comment_ids: relatedCommentIds },
         { exclude: { follower_id: [commenter_id] } }
     )
-    
+
     //  relatedCommenterId 不符合 followComments.follower_id，則需創建 followComment 追蹤通知
     //  relatedCommenterId 符合 followComments.follower_id，則需更新 followComment 追蹤通知
     let acculumator = { create: [], update: [] }
@@ -87,18 +124,9 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     return new SuccModel({ data: comment, cache })
 }
 
-async function removeComment({ commentId, blog_id }) {
-    let res = await deleteComment({ commentId, blog_id })
-    let cache = { blog: [blog_id] }
-    // let cacheNews = await setRelatedComment(json, { author })
 
-    // let cache = { news: cacheNews, blog: [ blog_id ] }
-    // let [ comment ] = await readComment({ id: json.id })
-    return new SuccModel(res, cache)
-}
 
 module.exports = {
-    createComment,
     removeComment,
 
     addComment,
