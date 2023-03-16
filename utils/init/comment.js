@@ -86,7 +86,6 @@ function initCommentsForBrowser(initComments) {
         function nestComments(commentList, item) {
             for (let index in commentList) {
                 let targetComment = commentList[index]
-                console.log(item.p_id, targetComment.id)
                 if (item.p_id === targetComment.id) {
                     targetComment.reply.push(initTime(item))
                     break

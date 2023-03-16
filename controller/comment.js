@@ -7,56 +7,13 @@ const Comment = require('../server/comment')
 const { SuccModel, ErrModel } = require('../model')
 const FollowComment = require('../server/followComment')
 
-async function removeComment({ author_id, commenter_id, commentId, blog_id, p_id }) {
-    //  整理出要通知的使用者
-    //  找出相關comment
-    let relatedComments = await Comment.readComment(Opts.Comment.findRelatedComments({ blog_id, p_id }))
-    console.log('@relatedComments => ', relatedComments)
-    //  撈出相關comments的commenters(不含curCommenter)
-    let relatedCommenterIds = relatedComments.map(({ commenter }) => {
-        if (commenter.id === commenter_id) {
-            return null
-        }
-        return commenter.id
-    }).filter(commenterId => commenterId)
-    console.log('@relatedCommenterIds => ', relatedCommenterIds)
-    //  author也是相關commenter
-    if (author_id !== commenter_id) {
-        relatedCommenterIds.push(author_id)
+//  0316
+async function _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id}){
+    let relatedComments = await Comment.readComments(Opts.Comment.findBlogCommentsRelatedPid({ blog_id, p_id }))
+    if(!author_id && !commenter_id){
+        return new SuccModel({ data: relatedComments })
     }
-console.log('@relatedCommenterIds => ', relatedCommenterIds)
-    let cache = {
-        [API.COMMENT]: [blog_id]
-    }
-    if (relatedCommenterIds.length) {
-        cache[NEWS] = relatedCommenterIds
-    }
-    console.log('@cache => ', cache)
-    return 
-
-    let ok = await Comment.deleteComment({ commentId, blog_id })
-    if (!ok) {
-        return new ErrModel(REMOVE_ERR)
-    }
-
-
-    
-    // let cacheNews = await setRelatedComment(json, { author })
-
-    // let cache = { news: cacheNews, blog: [ blog_id ] }
-    // let [ comment ] = await readComment({ id: json.id })
-    return new SuccModel(res, cache)
-}
-
-//  0228
-async function findCommentsByBlogId(blog_id) {
-    let comments = await Comment.readCommentsForBlog(Opts.findCommentsByBlogId(blog_id))
-    return new SuccModel({ data: comments })
-}
-
-async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
-    //  找出相關comment
-    let relatedComments = await Comment.readComment(Opts.Comment.findRelatedComments({ blog_id, p_id }))
+    //  若有 author_id，則代表希望整理相關數據
     //  撈出相關comments的commenters(不含curCommenter)
     let relatedCommenterIds = relatedComments.map(({ commenter }) => {
         if (commenter.id === commenter_id) {
@@ -72,6 +29,41 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     relatedCommenterIds = [...new Set(relatedCommenterIds)]
     //  撈出目前相關commentId
     let relatedCommentIds = relatedComments.map(({ id }) => id)
+    let data = {
+        comments: relatedComments,
+        commenterIds: relatedCommenterIds,
+        commentIds: relatedCommentIds
+    }
+    return new SuccModel({ data })
+}
+
+async function removeComment({ author_id, commenter_id, commentId, blog_id, p_id }) {
+    //  整理出要通知的 commenters
+    let { data: { commenterIds } } = await _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id})
+    
+    let cache = {
+        [API.COMMENT]: [blog_id]
+    }
+    if (commenterIds.length) {
+        cache[NEWS] = commenterIds
+    }
+
+    let ok = await Comment.deleteComment({ commentId, blog_id })
+    if (!ok) {
+        return new ErrModel(REMOVE_ERR)
+    }
+    return new SuccModel({cache})
+}
+
+//  0316
+async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
+    //  找出相關comment
+    let { data } = await _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id})
+
+    let {
+        commenterIds: relatedCommenterIds,
+        commentIds: relatedCommentIds
+    } = data
     //  撈出FollowComment內，target_id符合relactiveCommentIds的所有條目(且不包含curCommenter)
     let { data: followComments } = await Controller_FollowComment.findItemsByTargets(
         { comment_ids: relatedCommentIds },
@@ -99,7 +91,6 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     let newComment = await Comment.createComment({ user_id: commenter_id, blog_id, html, p_id })
     //  讀取符合Blog格式數據格式的新Comment
     let [comment] = await Comment.readCommentsForBlog(Opts.Comment.findCommentById(newComment.id))
-    console.log('@ newComment for blog=> ', comment)
     let { id, createdAt } = comment
     let { create, update } = acculumator
     //  創建FollowComment
@@ -124,11 +115,14 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     return new SuccModel({ data: comment, cache })
 }
 
-
+//  0228
+async function findCommentsByBlogId(blog_id) {
+    let comments = await Comment.readCommentsForBlog(Opts.Comment.findCommentsByBlogId(blog_id))
+    return new SuccModel({ data: comments })
+}
 
 module.exports = {
     removeComment,
-
-    addComment,
-    findCommentsByBlogId //  0228
+    addComment,             //  0316
+    findCommentsByBlogId    //  0228
 }

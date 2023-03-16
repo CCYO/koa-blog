@@ -20,7 +20,6 @@ let FollowComment = {
                 where[key] = { [Op.notIn]: val }
             }
         }
-        console.log('@where => ', where)
         return {
             attributes: ['id', 'follower_id', 'comment_id'],
             where
@@ -29,10 +28,13 @@ let FollowComment = {
 }
 
 let Comment = {
-    findRelatedComments: ({ blog_id, p_id }) => {
+    findBlogCommentsRelatedPid: ({ blog_id, p_id }) => {
+        //  找尋指定 blogId
         let where = { blog_id }
+        //  根評論，找同樣是 pid = null 的根評論即可
         if (!p_id) {
             where.p_id = p_id
+            //  子評論，找id=pid的父評論 and pid=pid 的兄弟評論
         } else {
             where[Op.or] = [{ id: p_id }, { p_id }]
         }
@@ -64,6 +66,18 @@ let Comment = {
                 //     }
                 // }
             ]
+        }
+    },
+    //  0228
+    findCommentsByBlogId: (blog_id) => {
+        return {
+            attributes: ['id', 'html', 'p_id', 'createdAt', 'deletedAt'],
+            where: { blog_id },
+            paranoid: false,    //  包含已軟刪除的條目
+            include: {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            }
         }
     }
 }
@@ -120,19 +134,6 @@ function findBlog({ blog_id, author_id }) {
                 ]
             }
         ]
-    }
-}
-
-//  0228
-function findCommentsByBlogId(blog_id) {
-    return {
-        attributes: ['id', 'html', 'p_id', 'createdAt', 'deletedAt'],
-        where: { blog_id },
-        paranoid: false,    //  包含已軟刪除的條目
-        include: {
-            model: User,
-            attributes: ['id', 'email', 'nickname']
-        }
     }
 }
 
@@ -246,7 +247,6 @@ module.exports = {
     findPublicBlogListByExcludeId,    //  0303
     findBlogFollowersByBlogId,  //  0303
     findBlog,                   //  0228
-    findCommentsByBlogId,       //  0228
     findBlogsByFollowerShip,    //  0228
     findBlogListByAuthorId,     //  0228
     findUser,                   //  0228

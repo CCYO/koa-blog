@@ -24,13 +24,13 @@ async function deleteComment({ commentId, blog_id }) {
 }
 
 //  0313
-async function readComment(opts) {
+async function readComments(opts) {
     let comments = await Comment.findAll(opts)
     return initComment(comments)
 }
 //  0228
 async function readCommentsForBlog(opts) {
-    let comments = await readComment(opts)
+    let comments = await readComments(opts)
     return initCommentsForBrowser(comments)
 }
 
@@ -249,12 +249,12 @@ async function readCommentForNews({ id, blog_id, p_id, createdAt }, user_id) {
 }
 
 module.exports = {
-    deleteComment,
+    
     readCommentForNews,
     setRelatedComment,
 
+    deleteComment,
     createComment,
-
-    readComment,        //  0313 
+    readComments,        //  0313 
     readCommentsForBlog //  0228
 }
