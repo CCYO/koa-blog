@@ -24,6 +24,11 @@ module.exports = {
             }
         }
     },
+    COMMENT: {
+        TIME_FORMAT: 'YYYY/MM/DD HH:mm:ss', //  0303
+        SORT_BY: 'createdAt',
+        CHECK_IS_DELETED: 'isDeleted'
+    },
     GCS_ref: {
         BLOG: 'blogImg',
         AVATAR: 'avatar'

@@ -198,16 +198,18 @@
                     })
 
                     async function removeComment(replyBox) {
-                        editor
                         let { commentId } = replyBox.dataset
-                        let { data: { errno, data, msg } } = await axios.delete('/api/comment', {
-                            data: {
+                        let payload = {
                                 author_id: pageData.blog.author.id,
                                 commenter_id: pageData.me.id,
                                 commentId,
                                 blog_id: pageData.blog.id,
                                 p_id: $(replyBox).parents('.comment-list').first().prev().first().data('commentId')
                             }
+                            console.log('# => ', payload)
+                            
+                        let { data: { errno, data, msg } } = await axios.delete('/api/comment', {
+                            data: payload
                         })
                         if (errno) {
                             alert(msg)

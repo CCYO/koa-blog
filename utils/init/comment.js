@@ -1,5 +1,5 @@
+const { COMMENT: { CHECK_IS_DELETED, SORT_BY, TIME_FORMAT }} = require('../../conf/constant')
 const date = require('date-and-time')
-const { BLOG: { TIME_FORMAT } } = require('../../conf/constant')
 
 const { init_user } = require('./user')
 
@@ -58,28 +58,31 @@ function initCommentsForBrowser(initComments) {
         for (let comment of comments) {
             comment.reply = []
             if (!comment.p_id || comments.length === 1) {
-                
                 commentList.push(initTime(comment))
             } else {
                 nestComments(commentList, comment)
             }
         }
-        let res = sortAndTimeFomat(commentList)
-         return res
+        let list = sortAndTimeFomat(commentList)
+        // let res = removeDeletedComment(list)
+        // console.log('@res => ', res[0].reply)
+        return list
         function sortAndTimeFomat(list) {
             return list.sort(function (a, b) {
-                return b.createdAt - a.createdAt
+                return b[SORT_BY] - a[SORT_BY]
             })
         }
-        function initTime(item){
-            for (let prop of ['createdAt', 'updatedAt', 'deletedAt']) {
-                let time = item[prop]
-                if (!time) {
-                    continue
-                }
-                let timeProp = `_${prop}`
-                item[timeProp] = date.format(time, TIME_FORMAT)
+        function initTime(item) {
+            item[SORT_BY] = item.createdAt
+            item[CHECK_IS_DELETED] = item.deletedAt ? true : false
+            if (item[CHECK_IS_DELETED]) {
+                console.log('@ d => ', item)
+                item.time = date.format(item.deletedAt, TIME_FORMAT)
+            } else {
+                item.time = date.format(item.createdAt, TIME_FORMAT)
             }
+            delete item.createdAt
+            delete item.deletedAt
             return item
         }
 

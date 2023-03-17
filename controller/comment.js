@@ -9,6 +9,8 @@ const FollowComment = require('../server/followComment')
 
 //  0316
 async function _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id}){
+    console.log('@pid => ', p_id)
+    
     let relatedComments = await Comment.readComments(Opts.Comment.findBlogCommentsRelatedPid({ blog_id, p_id }))
     if(!author_id && !commenter_id){
         return new SuccModel({ data: relatedComments })

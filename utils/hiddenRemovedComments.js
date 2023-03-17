@@ -1,3 +1,4 @@
+const { COMMENT: { CHECK_IS_DELETED, SORT_BY }} = require('../conf/constant')
 //  0228
 function removeDeletedComment(list) {
     //  計算出每串留言串 > (1)共包含幾篇留言 (2)含幾篇已刪除的留言
@@ -43,8 +44,10 @@ function removeDeletedComment(list) {
         }
         //  針對已被刪除的 comment 進行統計，並將統計的結果記錄在 opts.map
         commentList.forEach(comment => {
+            delete comment[SORT_BY]
             //  若 comment 已被刪除，則將其數據存入map
-            if (comment.deletedAt) {
+            // if (comment.deletedAt) {
+            if (comment[CHECK_IS_DELETED]) {
                 statisticsByMap(comment, opts)
             }
             //  若沒有p_id，代表這次的list是一次新的循環，且擁有留言串，則再將留言串放入統計函數中

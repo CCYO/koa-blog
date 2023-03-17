@@ -33,7 +33,7 @@ let Comment = {
         let where = { blog_id }
         //  根評論，找同樣是 pid = null 的根評論即可
         if (!p_id) {
-            where.p_id = p_id
+            where.p_id = null
             //  子評論，找id=pid的父評論 and pid=pid 的兄弟評論
         } else {
             where[Op.or] = [{ id: p_id }, { p_id }]
