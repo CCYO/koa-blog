@@ -1,7 +1,7 @@
 /**
  * @description API commond相關
  */
-const { api_check_login } = require('../../middleware/check_login')         //  0228
+const Check = require('../../middleware/check_login')         //  0228
 const router = require('koa-router')()                                      //  0228
 const Comment = require('../../controller/comment')                         //  0228
 const { htmlStr_comments } = require('../../utils/ejs-render')              //  0228
@@ -49,11 +49,11 @@ router.get('/:blog_id', Cache.getCommentCache, async (ctx, next) => {
     }
 })
 //  創建comment
-router.post('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
+router.post('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
     ctx.body = await Comment.addComment(ctx.request.body)
 })
-
-router.delete('/', api_check_login, Cache.modifiedtCache, async (ctx, next) => {
+//  0318
+router.delete('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
     let { author_id, commenter_id, commentId, blog_id, p_id } = ctx.request.body
     ctx.body = await Comment.removeComment({ author_id, commenter_id, commentId, blog_id, p_id })
 })

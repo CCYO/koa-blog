@@ -1,29 +1,29 @@
 class My {
     constructor() {
-        this.promiseAll.push( initData().then( res => this.data = { ...this.data, ...res} ) )
+        //  初始化EJS放在頁面元素內的純字符數據，放入 promiseAll
+        this.addOtherInitFn(initEJSData)
     }
     data = {}
     promiseAll = []
-    async init(initData) {
+    //  添加初始化EJS數據以外的initFn
+    async addOtherInitFn(otherInitFn) {
         try {
-            let promise = initData()
+            let promise = otherInitFn()
             this.promiseAll.push(promise)
-            let res = await promise
-            console.log('@在init內 => ', this.data)
-            for (let key in res) {
-                if (key !== 'news') {
-                    this.data = { ...this.data, [key]: res[key] }
-                }
-            }
-            return res
         } catch (e) {
             throw e
         }
     }
-    async check() {
-        await Promise.all(this.promiseAll)
-        console.log('@pageData => ', this.data)
-        return this.data
+    async render(renderPage) {
+        let allRes = await Promise.all(this.promiseAll)
+        for( let res of allRes ){
+            this.data = { ...this.data, ...res }
+        }
+        console.log('@ 完成頁面數據 初始化 => ', this.data)
+        if(renderPage){
+            await renderPage(this.data)   
+        }
+        console.log('@ 完成頁面 初渲染')
     }
 }
 
@@ -33,27 +33,23 @@ class My {
 //     無轉譯 => { "html":"<p>56871139</p>") 會造成<p>直接渲染至頁面
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
 
-async function initData() {
+//  將ejs傳入el[data-my-data]的純字符數據，轉化為物件數據
+async function initEJSData() {
     //  從el[data-my-data]解析頁面需要的數據
     let eles = []
-    $(`[data-my-data]`).each( (index, el) => eles.push(el))
-    console.log('@eles => ', eles)
-    let res = await eles.reduce( async (accumulator, el) => {
+    $(`[data-my-data]`).each((index, el) => eles.push(el))
+    let res = await eles.reduce(async (accumulator, el) => {
         //  數據的用途
         let prop = $(el).data('my-data')
         try {
             let obj
             let val = $(el).html()
             if (prop === 'blog') {  //  若與blog有關
-                // res.blog = await initBlog(val)
-                obj = await initBlog(val).then( blog => ({blog}) )
-                console.log('obj => ', obj)
-            } else if(prop === 'album'){    //  若與album有關
-                // res.album = initAlbum(val)
-                obj = await initAlbum(val).then( album => ({album}))
+                obj = { blog: await initBlog(val) }
+            } else if (prop === 'album') {    //  若與album有關
+                obj = { album: await initAlbum(val) }
             } else {
-                obj = { [prop]: JSON.parse(val)}
-                console.log(prop, obj[prop])
+                obj = { [prop]: JSON.parse(val) }
             }
             let accumulatorRes = await accumulator
             return { ...accumulatorRes, ...obj }
@@ -63,10 +59,9 @@ async function initData() {
     }, {})
     //  移除所有攜帶數據的元素
     $(`[data-my-data]`).parent().remove()
-    console.log('@res => ', res)
     return res
     //  初始化album數據
-    function initAlbum(data){
+    function initAlbum(data) {
         // JSON String → JSON Obj
         let { blog, imgs } = JSON.parse(data)
         //  img數據map化
@@ -82,8 +77,15 @@ async function initData() {
         //  處理blog內的comment數據
         //  將 blog.html(百分比編碼格式) → htmlStr
         blog.html = parseHtml(blog.html)
-        let { errno, data: { comments, commentsHtmlStr }, msg } = await fetch(`/api/comment/${blog.id}`).then( res => res.json() )
+        let res = await axios.get(`/api/comment/${blog.id}`)
+        let { data: { errno, data: responseData } } = res
+        if (errno) {
+            alert('ERR')
+            return
+        }
+        let { comments, commentsHtmlStr } = responseData
         blog = { ...blog, comments, commentsHtmlStr, ...mapComments(comments) }
+
         return blog //  再將整體轉為字符
 
         //  因為「後端存放的blog.html數據」是以

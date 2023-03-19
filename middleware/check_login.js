@@ -1,44 +1,40 @@
 /**
  * @description middleware validate login 
  */
-
-
-const { 
+const {
     PERMISSION: {
         NOT_SELF,
-
         NOT_LOGIN   //  0228
     }
 } = require('../model/errRes')
 
 const {
-    SuccModel,
-
     ErrModel    //  0228
 } = require('../model')
 
 
 //  0308
-async function view_must_be_Self(ctx, next){
+//  頁面必須是當前登入者所有
+async function view_mustBeSelf(ctx, next) {
     let currentUser = ctx.session && ctx.session.user
-    if(!currentUser){
+    if (!currentUser) {
         await ctx.redirect(`/login?from=${encodeURIComponent(ctx.href)}`)
-    }else if(ctx.params.userId * 1 !== currentUser.id){
+    } else if (ctx.params.userId * 1 !== currentUser.id) {
         await ctx.render('page404', new ErrModel(NOT_SELF))
-    }else {
+    } else {
         await next()
     }
     return
 }
 
 //  0228
-const view_check_isMe = async (ctx, next) => {
+async function view_isSelf(ctx, next) {
     let me = ctx.session.user ? ctx.session.user.id : undefined
     let currentUser = ctx.params.id * 1
 
     //  若是自己的ID，跳轉到個人頁面
     if (me === currentUser) {
-        return ctx.redirect('/self', new ErrModel())
+        return ctx.redirect('/self')
     }
     await next()
 }
@@ -48,7 +44,7 @@ const view_check_isMe = async (ctx, next) => {
  * @param {function} next 
  * @returns {promise<null>}
  */
-const api_check_login = async (ctx, next) => {
+const api_logining = async (ctx, next) => {
     const { session: { user } } = ctx
     if (user) {
         await next()
@@ -63,7 +59,7 @@ const api_check_login = async (ctx, next) => {
  * @param {function} next 
  * @returns {promise<null>}
  */
-const view_check_login = async (ctx, next) => {
+const view_logining = async (ctx, next) => {
     const { session: { user } } = ctx
     if (user) {
         await next()
@@ -73,31 +69,9 @@ const view_check_login = async (ctx, next) => {
     return
 }
 
-
-
-
-
-const api_check_isMe = async (ctx, next) => {
-    const { session: { user } } = ctx
-    if (!user) {
-        ctx.body = new ErrModel(NOT_LOGIN)
-        return
-    }
-    let { user_id } = ctx.request.body
-    if( user_id !== user.id ){
-        ctx.body = new ErrModel(NOT_ME)
-        return
-    }
-    await next()
-}
-
 module.exports = {
-    
-    view_check_login,
-    
-    api_check_isMe,
-
-    view_must_be_Self,  //  0308
-    view_check_isMe,    //  0228
-    api_check_login,    //  0228
+    view_logining,      //  0318
+    view_mustBeSelf,    //  0308
+    view_isSelf,        //  0228
+    api_logining,       //  0228
 }

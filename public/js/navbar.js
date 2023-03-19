@@ -4,7 +4,8 @@ async function initNavbar() {
         let data = await getNews()
         //  初始化通知列表相關功能
         await initNews(data)
-        return data
+        let { news, me } = data
+        return { me }
     } catch (e) {
         throw e
     }

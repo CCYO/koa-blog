@@ -2,12 +2,9 @@
  * @description Router/Views user
  */
 const { confirmFollow } = require('../../middleware/confirmFollow')
-
-
 const router = require('koa-router')()          //  0228
 const Blog = require('../../controller/blog')   //  0228
 const User = require('../../controller/user')   //  0228
-
 const {
     CACHE: {
         TYPE: {
@@ -18,14 +15,10 @@ const {
             NO_IF_NONE_MATCH                    //  0228
     } } = require('../../conf/constant')
 const Cache = require('../../middleware/cache') //  0228
-const {
-    view_must_be_Self,       //  0308
-    view_check_isMe,    //  0228
-    view_check_login    //  0228
-} = require('../../middleware/check_login')
+const Check = require('../../middleware/check_login')
 
 //  個資更新頁  //  0228
-router.get('/setting/:userId', view_must_be_Self, async (ctx, next) => {
+router.get('/setting/:userId', Check.view_mustBeSelf, async (ctx, next) => {
     let currentUser = ctx.session.user
     //  不允許前端緩存
     ctx.set({
@@ -39,7 +32,7 @@ router.get('/setting/:userId', view_must_be_Self, async (ctx, next) => {
 })
 
 //  他人頁  0228
-router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, async (ctx, next) => {
+router.get('/other/:id', Check.view_isSelf, confirmFollow, Cache.getOtherCache, async (ctx, next) => {
     let user_id = ctx.params.id * 1
     //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined }
     let cacheStatus  = ctx.cache[PAGE.USER]
@@ -62,7 +55,7 @@ router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, as
         }
         let { data: { currentUser, fansList, idolList }} = resModel
         //  向 DB 撈取數據
-        let { data: blogList } = await Blog.getBlogListByUserId(user_id)
+        let { data: blogList } = await Blog.findBlogListByUserId(user_id)
         
         //  將 DB 數據賦予給 ctx.cache
         relationShip = cacheStatus.data = { currentUser, fansList, idolList, blogList }
@@ -81,7 +74,7 @@ router.get('/other/:id', view_check_isMe, confirmFollow, Cache.getOtherCache, as
 })
 
 //  個人頁  0228
-router.get('/self', view_check_isMe, Cache.getSelfCache, async (ctx, next) => {
+router.get('/self', Check.view_isSelf, Cache.getSelfCache, async (ctx, next) => {
     let { id: user_id } = ctx.session.user
     //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined }
     let cacheStatus  = ctx.cache[PAGE.USER]
@@ -96,7 +89,7 @@ router.get('/self', view_check_isMe, Cache.getSelfCache, async (ctx, next) => {
         }
         let { data: { currentUser, fansList, idolList }} = resModel
         //  向 DB 撈取數據
-        let { data: blogList } = await Blog.getBlogListByUserId(user_id)
+        let { data: blogList } = await Blog.findBlogListByUserId(user_id)
         //  將 DB 數據賦予給 ctx.cache
         relationShip = cacheStatus.data = { currentUser, fansList, idolList, blogList }
     }

@@ -45,32 +45,26 @@
 
 <script type="module" defer>
     //  初始化來自ejs傳入當前頁面所需的數據
-    import initData from '/js/initData.js'
+    import initPageFn from '/js/initData.js'
     //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
     import initNavbar from '/js/navbar.js'
-
     try {
         //  讀取中，遮蔽畫面
         loading()
         //  初始化ejs附帶的數據
-        let pageData = new initData()
+        let initPage = new initPageFn()
         //  初始化navbar數據
-        await pageData.init(initNavbar)
-        //  確認以上所有初始化已完成，取得彙整後數據
-        let { album } = await pageData.check()
-        //  初始化頁面功能，並傳入上面彙整後的初始化數據
-        await initPage(album)
+        await initPage.addOtherInitFn(initNavbar)
+        await initPage.render(renderPage)
         //  讀取完成，解除遮蔽
         loadEnd()
     } catch (e) {
         console.log('@page error => ', e)
     }
 
-    async function initPage(data) {
+    async function renderPage(data) {
         //  公用變量
-        let { blog, imgs, map_imgs } = data
-        console.log('init ---', data)
-
+        let { blog, imgs, map_imgs } = data.album
         //  handle ---
         //  照片名稱span，handle click => 顯示、聚焦改名表格
         $('p.card-text').click(showAndFocusChangeImgAlt)

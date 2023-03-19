@@ -24,6 +24,9 @@ module.exports = {
             }
         }
     },
+    ALBUM: {
+        PAGINATION: 10
+    },
     COMMENT: {
         TIME_FORMAT: 'YYYY/MM/DD HH:mm:ss', //  0303
         SORT_BY: 'createdAt',

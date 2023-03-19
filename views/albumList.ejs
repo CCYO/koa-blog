@@ -10,19 +10,37 @@
     }
 </style>
 <div class='container-md main'>
-    <h1>個人文章的相簿列表</h1>
+    <h1><a href="/other/<%=user.id%>"><%=user.nickname%></a>的相簿列表</h1>
     <div class="box-albumList">
-        <% if(albumList.list.length){ %>
-        <% albumList.list.forEach( ({ id, title, createdAt }) => { %>
+        <h3>公開的文章相簿</h3>
+        <% if(albumList.show.length){ %>
+        <% albumList.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
         <ul class="list-group">
             <li class="list-group-item">
                 <a href="/album/<%= id %>"><%= title %></a>
-                <span>上一次編輯 <%= createdAt %></span>
+                <span>創建於 <%= time %></span>
             </li>
         </ul>
-        <% }) %>
+        <% }) }) %>
         <% } else { %>
         <p>沒有相簿</p>
+        <% } %>
+    </div>
+    <div class="box-albumList">
+        <% if(isAuthor){ %>
+        <h3>未公開的文章相簿</h3>
+        <% if(albumList.hidden && albumList.hidden.length){ %>
+        <% albumList.hidden.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
+        <ul class="list-group">
+            <li class="list-group-item">
+                <a href="/album/<%= id %>"><%= title %></a>
+                <span>創建於 <%= time %></span>
+            </li>
+        </ul>
+        <% }) }) %>
+        <% } else { %>
+        <p>沒有相簿</p>
+        <% } %>
         <% } %>
     </div>
 </div>
@@ -31,21 +49,17 @@
 
 <script type="module" defer>
     //  初始化來自ejs傳入當前頁面所需的數據
-    import initData from '/js/initData.js'
+    import initPageFn from '/js/initData.js'
     //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
     import initNavbar from '/js/navbar.js'
-
     try {
         //  讀取中，遮蔽畫面
         loading()
         //  初始化ejs附帶的數據
-        let pageData = new initData()
+        let initPage = new initPageFn()
         //  初始化navbar數據
-        await pageData.init(initNavbar)
-        //  確認以上所有初始化已完成，取得彙整後數據
-        let { album } = await pageData.check()
-        //  初始化頁面功能，並傳入上面彙整後的初始化數據
-        // await initPage(album)
+        await initPage.addOtherInitFn(initNavbar)
+        await initPage.render()
         //  讀取完成，解除遮蔽
         loadEnd()
     } catch (e) {

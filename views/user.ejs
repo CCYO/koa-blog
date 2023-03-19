@@ -458,26 +458,27 @@
 <!-- 滾輪 -->
 <script src="https://unpkg.com/better-scroll@latest/dist/better-scroll.min.js"></script>
 <script type="module" defer>
-    import initData from '/js/initData.js'
+    //  初始化來自ejs傳入當前頁面所需的數據
+    import initPageFn from '/js/initData.js'
+    //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
     import initNavbar from '/js/navbar.js'
-    //  init
     try {
-        //  讀取畫面，遮蔽效果
+        //  讀取中，遮蔽畫面
         loading()
-        let pageData = new initData()
-        await pageData.init(initNavbar)
-        await initPage(await pageData.check())
-        //  讀取完成，取消遮蔽
-        await loadEnd()
-    } catch (err) {
-        console.log('@ init 發生錯誤 => ', err)
+        //  初始化ejs附帶的數據
+        let initPage = new initPageFn()
+        //  初始化navbar數據
+        await initPage.addOtherInitFn(initNavbar)
+        await initPage.render(renderPage)
+        //  讀取完成，解除遮蔽
+        loadEnd()
+    } catch (e) {
+        console.log('@page error => ', e)
     }
 
-    //  initPage
-    async function initPage(data) {
+    async function renderPage(data) {
         //  public Var
         let pageData = data
-        console.log('@pageData => ', pageData)
         let { currentUser, me = {}, fansList } = pageData
         //  初始化BetterScroll
         let relationList = ['#fansList', '#idolList']

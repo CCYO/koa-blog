@@ -4,7 +4,7 @@
 const { confirmFollow } = require('../../middleware/confirmFollow') //  未整理
 
 const router = require('koa-router')()                                  //  0228
-const { view_check_login } = require('../../middleware/check_login')    //  0228
+const Check = require('../../middleware/check_login')    //  0228
 const {
     CACHE: {
         TYPE: {
@@ -19,7 +19,7 @@ const Cache = require('../../middleware/cache') //  0228
 const Blog = require('../../controller/blog')   //  0228
 
 //  編輯文章
-router.get('/blog/edit/:blog_id', view_check_login, Cache.blogEditPageCache, async (ctx, next) => {
+router.get('/blog/edit/:blog_id', Check.view_logining, Cache.blogEditPageCache, async (ctx, next) => {
     const blog_id = ctx.params.blog_id * 1
     //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: initBlog || undefined }
     let cacheStatus = ctx.cache[PAGE.BLOG]
@@ -28,7 +28,7 @@ router.get('/blog/edit/:blog_id', view_check_login, Cache.blogEditPageCache, asy
     //  系統沒有緩存數據
     if (exist === NO_CACHE) {
         //  向 DB 撈取數據
-        const resModel = await Blog.getBlog({ blog_id })
+        const resModel = await Blog.findBlog({ blog_id })
         //  將 DB 數據賦予給 ctx.cache
         cacheStatus.data = resModel.data
         //  DB 沒有相符數據
@@ -64,7 +64,7 @@ router.get('/blog/:blog_id', confirmFollow, Cache.blogPageCache, async (ctx, nex
         //  適用 NO_CACHE, IF_NO_MATCH_IS_NO_FRESH
     } else {
         //  向 DB 提取數據
-        let resModel = await Blog.getBlog({ blog_id })
+        let resModel = await Blog.findBlog({ blog_id })
         //  將 DB 數據賦予給 ctx.cache
         cacheStatus.data = resModel.data
         //  DB 沒有相符數據

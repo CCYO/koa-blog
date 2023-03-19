@@ -205,25 +205,6 @@ function findFansByIdolId(idol_id) {
 }
 
 //  0228
-function findUser(user) {
-    let isLoginData = user.password ? true : false
-    //  以 login 需求向 DB 讀取數據
-    if (isLoginData) {
-        let { password, email } = user
-        password = hash(password)
-        return {
-            attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash'],
-            where: { email, password }
-        }
-    }
-    //  單純以 id 向 DB 讀取數據
-    return {
-        attributes: ['id', 'email', 'nickname', 'avatar'],
-        where: { id: user }
-    }
-}
-
-//  0228
 function login({ email, password: pwd }) {
     let password = hash(pwd)
     return {
@@ -232,11 +213,66 @@ function login({ email, password: pwd }) {
     }
 }
 
-//  0228
-function findUserByEmail(email) {
-    return {
-        attributes: ['id'],
-        where: { email }
+const User = {
+    //  0228
+    findUserByEmail: (email) => {
+        return {
+            attributes: ['id'],
+            where: { email }
+        }
+    },
+    //  0228
+    findUser: (user) => {
+        let map = new Map(Object.entries(user))
+        let hasEmail = map.has('email')
+        let hasPwd = map.has('password')
+        let hasId = map.has('id')
+        function getType(hasEmail, hasPwd, hasId){
+            let type = {
+                'getSession': 0,
+                'isEmailExist': 1,
+                'basicInfo': 2,
+                'allInfo': 3,
+                'settingInfo': 5
+            }
+            let condition = undefined
+            if(hasEmail && !hasPwd && !hasId){
+                condition = type['isEmailExist']
+            }else if(hasId && !hasEmail && !hasPwd){
+                
+            }
+            switch(){
+
+            }
+        }
+        let type = {
+
+        }
+        if(hasEmail && !hasPwd && !hasId){
+            return {
+                attributes: ['id'],
+                where: { email }
+            }
+        }
+        let where = {}
+        if(hasPwd){
+            where.password = hash(user.password)
+        }
+        let loginCheck = user.password ? true : false
+        //  以 login 需求向 DB 讀取數據
+        if (loginCheck) {
+            let { password, email } = user
+            password = hash(password)
+            return {
+                attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash'],
+                where: { email, password }
+            }
+        }
+        //  單純以 id 向 DB 讀取數據
+        return {
+            attributes: ['id', 'email', 'nickname', 'avatar'],
+            where: { id: user }
+        }
     }
 }
 
@@ -254,5 +290,4 @@ module.exports = {
     findIdolsByFansId,          //  0303
     findFansByIdolId,           //  0228
     login,                      //  0228
-    findUserByEmail,            //  0228
 }

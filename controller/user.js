@@ -35,6 +35,34 @@ const {
 } = require('../model/errRes')
 const FollowBlog = require('../server/followBlog')      //  0228
 
+/** 登入 user   0228
+ * @param {string} email user 的信箱
+ * @param {string} password user 的未加密密碼
+ * @returns resModel
+ */
+ async function login(email, password) {
+    if (!email || !password) {
+        return new ErrModel(LOGIN.DATA_IS_INCOMPLETE)
+    }
+    const user = await User.readUser(Opts.findUser({ email, password }))
+    if (!user) {
+        return new ErrModel(LOGIN.NO_USER)
+    }
+    return new SuccModel({ data: user })
+}
+/** 確認信箱是否已被註冊 0228
+ * @param {string} email 信箱 
+ * @returns {object} resModel
+ */
+async function isEmailExist(email) {
+    const exist = await User.readUser(Opts.findUserByEmail(email))
+
+    if (!exist) {
+        return new SuccModel()
+    } else {
+        return new ErrModel(IS_EXIST)
+    }
+}
 
 //  更新user    0309
 async function modifyUserInfo(newData, userId) {
@@ -125,6 +153,7 @@ async function findFans(idol_id) {
 }
 //  0304
 async function findUser(id) {
+    console.log('@id =>', id)
     const user = await User.readUser(Opts.findUser(id))
     if (!user) {
         return new ErrModel(READ.NOT_EXIST)
@@ -151,34 +180,6 @@ const register = async (email, password) => {
 
     const user = await User.createUser({ email, password })
     return new SuccModel({ data: user })
-}
-/** 登入 user   0228
- * @param {string} email user 的信箱
- * @param {string} password user 的未加密密碼
- * @returns resModel
- */
-async function login(email, password) {
-    if (!email || !password) {
-        return new ErrModel(LOGIN.DATA_IS_INCOMPLETE)
-    }
-    const user = await User.readUser(Opts.findUser({ email, password }))
-    if (!user) {
-        return new ErrModel(LOGIN.NO_USER)
-    }
-    return new SuccModel({ data: user })
-}
-/** 確認信箱是否已被註冊 0228
- * @param {string} email 信箱 
- * @returns {object} resModel
- */
-async function isEmailExist(email) {
-    const exist = await User.readUser(Opts.findUserByEmail(email))
-
-    if (!exist) {
-        return new SuccModel()
-    } else {
-        return new ErrModel(IS_EXIST)
-    }
 }
 
 module.exports = {
