@@ -119,7 +119,7 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
 
 //  0228
 async function findCommentsByBlogId(blog_id) {
-    let comments = await Comment.readCommentsForBlog(Opts.Comment.findCommentsByBlogId(blog_id))
+    let comments = await Comment.readCommentsForBlog(Opts.COMMENT.findCommentsByBlogId(blog_id))
     return new SuccModel({ data: comments })
 }
 

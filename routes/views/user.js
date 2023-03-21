@@ -48,7 +48,7 @@ router.get('/other/:id', Check.view_isSelf, confirmFollow, Cache.getOtherCache, 
         //  適用 NO_CACHE, IF_NO_MATCH_IS_NO_FRESH
     }else {
         //  向 DB 撈取數據
-        let resModel = await User.findRelationShipByUserId(user_id)
+        let resModel = await User.findRelationShip(user_id)
         //  DB 沒有相符數據
         if(resModel.errno){
             return await ctx.render('page404', {...resModel})
@@ -82,7 +82,7 @@ router.get('/self', Check.view_isSelf, Cache.getSelfCache, async (ctx, next) => 
     
     if (exist === NO_CACHE) {
         //  向 DB 撈取數據
-        let resModel = await User.findRelationShipByUserId(user_id)
+        let resModel = await User.findRelationShip(user_id)
         //  DB 沒有相符數據
         if(resModel.errno){
             return await ctx.render('page404', {...resModel})

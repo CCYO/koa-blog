@@ -53,13 +53,14 @@ const updateUser = async ({newData, id}) => {
     }
 
     let user = await User.findByPk(id)
-    
+    console.log()
     user = await user.update(data)
     
     return init_user(user)
 }
 
 module.exports = {
+    
     updateUser,     //  controller user
 
     createUser,     //  0228

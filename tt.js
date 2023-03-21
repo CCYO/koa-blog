@@ -1,25 +1,32 @@
 let { Op } = require('sequelize')
-let { 
-    // User,
-    // Comment,
-    FollowComment,
-    // Blog,
-    BlogImg,
-    BlogImgAlt
-} = require('./db/mysql/model')
 
-const Opts = require('./utils/seq_findOpts')
+const { User, Blog } = require('./db/mysql/model')
+// const Opts = require('./utils/seq_findOpts')
+const { init_user } = require('./utils/init')
 
-const comment = require('./controller/comment')
-// const User = require('./server/user')
+
+
 const hiddenRemovedComments = require('./utils/hiddenRemovedComments')
 go()
 
 async function go() {
     try {
-        let blogs = await comment.addComment({ user_id: 5, blog_id: 9, author: 2})
-        
-        // console.log('@blogs => ', blogs)
+        let user = await User.findAll({
+            attributes: ['id'],
+            include: {
+                where: { follower_id: 3},
+                attributes: ['id'],
+                association: 'FollowPeople_F',
+                include: {
+                    association: 'FollowBlog_B',
+                    attributes: ['id'],
+                    through: {
+                        where: { user_id: 1 }
+                    }
+                }
+            }
+        })
+        console.log(user)
     } catch (e) {
         console.log(e)
     }

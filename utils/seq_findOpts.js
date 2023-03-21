@@ -9,7 +9,7 @@ const {
     BlogImgAlt
 } = require('../db/mysql/model')
 
-let FollowComment = {
+const FOLLOWCOMMENT = {
     findItems: ({ comment_ids }, { exclude }) => {
         let where = {
             comment_id: { [Op.in]: comment_ids }
@@ -27,7 +27,7 @@ let FollowComment = {
     }
 }
 
-let Comment = {
+const COMMENT = {
     findBlogCommentsRelatedPid: ({ blog_id, p_id }) => {
         //  找尋指定 blogId
         let where = { blog_id }
@@ -136,10 +136,23 @@ function findBlog({ blog_id, author_id }) {
         ]
     }
 }
-
-//  0228
-function findBlogsByFollowerShip({ idol_id, fans_id }) {
-    return {
+const FOLLOWBLOG = {
+    
+}
+const BLOG = {
+    findBlogByFollowPeopleShip: ({ idol_id, fans_id }) => ({
+        attributes: ['id'],
+        where: { user_id: idol_id },
+        include: {
+            attributes: ['id'],
+            association: 'FollowBlog_F',
+            where: { id: fans_id },
+            through: {
+                attributes: ['id'],
+            }
+        }
+    }),
+    findBlogsByFollowShip: ({ idol_id, fans_id }) => ({
         attributes: ['id'],
         where: {
             user_id: idol_id
@@ -150,7 +163,7 @@ function findBlogsByFollowerShip({ idol_id, fans_id }) {
             attributes: [],
             where: { id: fans_id }
         }
-    }
+    })
 }
 
 //  0228
@@ -161,133 +174,74 @@ function findBlogListByAuthorId(author_id) {
     }
 }
 
-//  0228
-function findIdols(fans_id) {
-    return {
-        attributes: ['id'],
-        where: { id: fans_id },
-        include: {
-            association: 'FollowPeople_I',
-            attributes: ['id', 'email', 'nickname', 'avatar'],
-            through: {
-                attributes: []
-            }
-        }
-    }
-}
-//  0304
-function findIdolsByFansId(fans_id) {
-    return {
-        attributes: ['id'],
-        where: { id: fans_id },
-        include: {
-            association: 'FollowPeople_I',
-            attributes: ['id', 'email', 'nickname', 'avatar'],
-            through: {
-                attributes: []
-            }
-        }
-    }
-}
-//  0228
-function findFansByIdolId(idol_id) {
-    return {
-        attributes: ['id'],
-        where: { id: idol_id },
-        include: {
-            association: 'FollowPeople_F',
-            attributes: ['id', 'email', 'nickname', 'avatar'],
-            through: {
-                attributes: []
-            }
-        }
-    }
+const FOLLOWPEOPLE = {
+
 }
 
 //  0228
-function login({ email, password: pwd }) {
-    let password = hash(pwd)
-    return {
-        attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash'],
-        where: { email, password }
-    }
-}
-
-const User = {
-    //  0228
-    findUserByEmail: (email) => {
+const USER = {
+    //  0304
+    findIdols: (fans_id) => {
         return {
             attributes: ['id'],
-            where: { email }
+            where: { id: fans_id },
+            include: {
+                association: 'FollowPeople_I',
+                attributes: ['id', 'email', 'nickname', 'avatar'],
+                through: {
+                    attributes: []
+                }
+            }
         }
     },
     //  0228
-    findUser: (user) => {
-        let map = new Map(Object.entries(user))
-        let hasEmail = map.has('email')
-        let hasPwd = map.has('password')
-        let hasId = map.has('id')
-        function getType(hasEmail, hasPwd, hasId){
-            let type = {
-                'getSession': 0,
-                'isEmailExist': 1,
-                'basicInfo': 2,
-                'allInfo': 3,
-                'settingInfo': 5
-            }
-            let condition = undefined
-            if(hasEmail && !hasPwd && !hasId){
-                condition = type['isEmailExist']
-            }else if(hasId && !hasEmail && !hasPwd){
-                
-            }
-            switch(){
-
+    findFans: (idol_id) => {
+        return {
+            attributes: ['id'],
+            where: { id: idol_id },
+            include: {
+                association: 'FollowPeople_F',
+                attributes: ['id', 'email', 'nickname', 'avatar'],
+                through: {
+                    attributes: []
+                }
             }
         }
-        let type = {
-
-        }
-        if(hasEmail && !hasPwd && !hasId){
-            return {
-                attributes: ['id'],
-                where: { email }
-            }
-        }
-        let where = {}
-        if(hasPwd){
-            where.password = hash(user.password)
-        }
-        let loginCheck = user.password ? true : false
-        //  以 login 需求向 DB 讀取數據
-        if (loginCheck) {
-            let { password, email } = user
-            password = hash(password)
-            return {
-                attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash'],
-                where: { email, password }
-            }
-        }
-        //  單純以 id 向 DB 讀取數據
+    },
+    //  0228
+    findUser: (id) => {
         return {
             attributes: ['id', 'email', 'nickname', 'avatar'],
-            where: { id: user }
+            where: { id }
+        }
+    },
+    login: ({ email, password: pwd }) => {
+        let password = hash(pwd)
+        return {
+            attributes: ['id', 'email', 'nickname', 'age', 'avatar', 'avatar_hash'],
+            where: { email, password }
+        }
+    },
+    //  0228
+    isEmailExist: (email) => {
+        return {
+            attributes: ['id'],
+            where: { email }
         }
     }
 }
 
 module.exports = {
-    FollowComment,
-    Comment,
+    BLOG,
+    USER,
+    FOLLOWCOMMENT,
+    COMMENT,
+    FOLLOWPEOPLE,
+    FOLLOWBLOG,
 
     findPublicBlogListByExcludeId,    //  0303
     findBlogFollowersByBlogId,  //  0303
     findBlog,                   //  0228
-    findBlogsByFollowerShip,    //  0228
     findBlogListByAuthorId,     //  0228
-    findUser,                   //  0228
-    findIdols,                  //  0228
-    findIdolsByFansId,          //  0303
-    findFansByIdolId,           //  0228
-    login,                      //  0228
+
 }

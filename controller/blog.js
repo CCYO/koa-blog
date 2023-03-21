@@ -1,4 +1,4 @@
-const { ALBUM } = require('../conf/constant')
+const Opts = require('../utils/seq_findOpts')
 const FollowBlog = require('../server/followBlog')
 const {
     organizedList,  //  0303    
@@ -12,39 +12,28 @@ const {
     SuccModel,  //  0228
     ErrModel    //  0228
 } = require('../model')
-const Opts = require('../utils/seq_findOpts')   //  0303
+
 const Blog = require('../server/blog')          //  0303
-
 const my_xxs = require('../utils/xss')          //  0303
-
-const {
-    readFans
-} = require('../server/user')
-
-const {
-    updateBlog,
-    readBlog
-} = require('../server/blog')
-
-const {
-    deleteBlogImg
-} = require('../server/blogImg')
-
-const {
-    deleteBlogImgAlt,
-    readBlogImgAlt
-} = require('../server/blogImgAlt')
-
+const BlogImg = require('../server/blogImg')
+const BlogImgAlt = require('../server/blogImgAlt')
 const {
     createFollowers,
     hiddenBlog
 } = require('../server/followBlog')
-
-
-
 const { modifyCache } = require('../server/cache')
-
 const { CACHE } = require('../conf/constant')
+
+async function findFollowByFollowPeopleShip({ idol_id, fans_id }){
+    let blogs = await Blog.readBlogs(Opts.BLOG.findBlogByFollowPeopleShip({ idol_id, fans_id }))
+    let followIds = blogs.reduce( (acc, { FollowBlog_F } ) => {
+        let [ fans ] = FollowBlog_F
+        acc.push(fans.FollowBlog.id)
+        return acc
+    } ,[] )
+
+    return followIds
+}
 
 //  0303
 async function findSquareBlogList(exclude_id) {
@@ -153,15 +142,15 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     await cancelImgs.reduce(async (img) => {
         let { blogImg_id, blogImgAlt_list } = img
         //  確認在BlogImgAlt內，同樣BlogImg的條目共有幾條
-        let { length: blogImgCount } = await readBlogImgAlt({ where: { blogImg_id } })
+        let { length: blogImgCount } = await BlogImgAlt.readBlogImgAlt({ where: { blogImg_id } })
 
         // let { count } = await BlogImgAlt.findAndCountAll({ where: { blogImg_id } })
         let res
         if (blogImgCount === blogImgAlt_list.length) {  //  BlogImg條目 === 要刪除的BlogImgAlt數量，代表該Blog已沒有該張圖片
             //  刪除整筆 BlogImg
-            res = await deleteBlogImg({ id: blogImg_id })
+            res = await BlogImg.deleteBlogImg({ id: blogImg_id })
         } else {  //  BlogImg條目 !== 要刪除的BlogImgAlt數量，代表該Blog仍有同樣的圖片
-            res = await deleteBlogImgAlt({ blogImgAlt_list })
+            res = await BlogImgAlt.deleteBlogImgAlt({ blogImgAlt_list })
         }
         if (!res) { //  代表刪除不完全
             throw new Error(BLOGIMGALT.REMOVE_ERR)
@@ -231,12 +220,12 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     }
 
     //  更新文章
-    let ok = await updateBlog({ blog_id, data })
+    let ok = await Blog.updateBlog({ blog_id, data })
     if (!ok) {
         return new ErrModel()
     }
-    // let blog = await readBlog({ blog_id }, true)
-    let blog = await readBlog({
+    
+    let blog = await Blog.readBlog({
         attributes: ['id', 'title', 'html',],
         where: { blog_id },
 
@@ -246,6 +235,8 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
 
 module.exports = {
+    findFollowByFollowPeopleShip,
+
     modifyBlog,
     findSquareBlogList,      //  0303
     removeBlogs,            //  0303

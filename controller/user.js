@@ -2,9 +2,6 @@
  * @description Controller user相關
  */
 
-const { readBlogByAuthor } = require('../server/blog')
-const { modifyCache } = require('../server/cache')
-
 const CommentController = require('../controller/comment')  //  0309
 const BlogController = require('../controller/blog')    //  0309
 const { init_user } = require('../utils/init')          //  0228
@@ -16,8 +13,8 @@ const {
         }
     }
 } = require('../conf/constant')
-const Blog = require('../server/blog')                  //  0228
-const FollowPeople = require('../server/followPeople')  //  0228
+
+
 const User = require('../server/user')                  //  0228
 const { ErrModel, SuccModel } = require('../model')     //  0228
 const Opts = require('../utils/seq_findOpts')           //  0228
@@ -34,129 +31,70 @@ const {
     },
 } = require('../model/errRes')
 const FollowBlog = require('../server/followBlog')      //  0228
+const { Blog } = require('../db/mysql/model')
 
-/** 登入 user   0228
- * @param {string} email user 的信箱
- * @param {string} password user 的未加密密碼
- * @returns resModel
- */
- async function login(email, password) {
-    if (!email || !password) {
-        return new ErrModel(LOGIN.DATA_IS_INCOMPLETE)
-    }
-    const user = await User.readUser(Opts.findUser({ email, password }))
-    if (!user) {
-        return new ErrModel(LOGIN.NO_USER)
-    }
-    return new SuccModel({ data: user })
-}
-/** 確認信箱是否已被註冊 0228
- * @param {string} email 信箱 
- * @returns {object} resModel
- */
-async function isEmailExist(email) {
-    const exist = await User.readUser(Opts.findUserByEmail(email))
-
-    if (!exist) {
-        return new SuccModel()
-    } else {
-        return new ErrModel(IS_EXIST)
-    }
-}
-
-//  更新user    0309
-async function modifyUserInfo(newData, userId) {
-    let cache = { [PAGE.USER]: [userId] }
-    if (newData.nickname || newData.email || newData.avatar) {
-        let resModel = await findRelationShipByUserId(userId)
-        if (resModel.errno) {
-            return resModel
+async function findReaderByPeopleShip({ idol_id, fans_id }) {
+    await User.findUser({
+        attributes: ['id'],
+        where: {
+            id: fans_id
+        },
+        include: {
+            association: 'FollowBlog_F',
+            attributes: ['id'],
+            include: {
+                model: 'Blog',
+                where: { id: idol_id }
+            }
         }
-        let { fansList, idolList } = resModel.data
-        let people = [...fansList, ...idolList].map(person => person.id)
-
-        let { data: blogs } = await BlogController.getBlogListByUserId(userId, false)
-        let blogList = blogs.map((blog) => blog.id)
-        
-        // await CommentController.getCommentsByBlogId()
-        cache[NEWS] = people
-        cache[PAGE.USER] = [...cache[PAGE.USER], ...people]
-        cache[PAGE.BLOG] = blogList
-    }
-    let user = await User.updateUser({ newData, id: userId })
-    return new SuccModel({ data: user, cache })
+    })
 }
-/** 取消追蹤    0228
- * @param {number} fans_id 
- * @param {number} idol_id 
- * @returns {object} SuccessModel | ErrorModel
- */
-async function cancelFollowIdol({ fans_id, idol_id }) {
-    let ok = await FollowPeople.deleteFans({ idol_id, fans_id })
-    if (!ok) {
-        return new ErrModel(FOLLOW.CANCEL_ERR)
+async function findRelationShip(userId) {
+    let userRes = await findUser(userId)
+    if (userRes.errno) {
+        return userRes
     }
-
-    let blogs = await Blog.readBlogs(Opts.findBlogsByFollowerShip({ idol_id, fans_id }))
-    let blogList = blogs.map(({ id }) => id)
-    if (blogList.length) {
-        //  刪除關聯
-        let ok = await FollowBlog.deleteFollower({ blogList, follower_id: fans_id })
-        if (!ok) {
-            return new ErrModel(FOLLOWBLOG.DEL_ERR)
-        }
-    }
-    let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [fans_id, idol_id] }
-    return new SuccModel({ cache })
-}
-/** 追蹤    0228
- * @param {number} fans_id 
- * @param {number} idol_id 
- * @returns {object} SuccessModel { Follow_People Ins { id, idol_id, fans_id }} | ErrorModel
- */
-async function followIdol({ fans_id, idol_id }) {
-    const ok = await FollowPeople.createFans({ idol_id, fans_id })
-    if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
-    //  處理緩存
-    let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [idol_id] }
-    return new SuccModel({ cache })
-}
-/** 藉由 userID 找到 當前頁面使用者的資訊，以及(被)追蹤的關係   0228
- * @param {number} user_id 
- * @returns {{ currentUser: { id, email, nickname, avatar, age }, fansList: [{ id, avatar, email, nickname }], idolList: [{ id, avatar, email, nickname }]}}
- */
-async function findRelationShipByUserId(user_id) {
-    let resModel = await findUser(user_id)
-    let { errno, data: currentUser } = resModel
-    //  結果不如預期
-    if (errno) {
-        return resModel
-    }
-    let { data: fansList } = await findFans(user_id)
-    let { data: idolList } = await findIdols(user_id)
-    let data = { currentUser, fansList, idolList }
+    let { data: currentUser } = userRes
+    let { data: idolList } = await findIdols(userId)
+    let { data: fansList } = await findFans(userId)
+    let data = { currentUser, idolList, fansList }
     return new SuccModel({ data })
 }
+
 //  0304
 async function findIdols(fans_id) {
     // user: { id, FollowPeople_I: [{ id, email, nickname, avatar }, ...] }
-    let user = await User.readUser(Opts.findIdolsByFansId(fans_id))
+    let user = await User.readUser(Opts.USER.findIdols(fans_id))
     let idols = user ? init_user(user.FollowPeople_I) : []
     return new SuccModel({ data: idols })
 }
 //  0304
 async function findFans(idol_id) {
     // user: { id, FollowPeople_F: [{ id, email, nickname, avatar }, ...] }
-    let user = await User.readUser(Opts.findFansByIdolId(idol_id))
+    let user = await User.readUser(Opts.USER.findFans(idol_id))
     let fans = user ? init_user(user.FollowPeople_F) : []
     return new SuccModel({ data: fans })
 }
 //  0304
 async function findUser(id) {
-    console.log('@id =>', id)
-    const user = await User.readUser(Opts.findUser(id))
+    const user = await User.readUser(Opts.USER.findUser(id))
     if (!user) {
         return new ErrModel(READ.NOT_EXIST)
+    }
+    return new SuccModel({ data: user })
+}
+/** 登入 user   0228
+ * @param {string} email user 的信箱
+ * @param {string} password user 的未加密密碼
+ * @returns resModel
+ */
+async function login(email, password) {
+    if (!email || !password) {
+        return new ErrModel(LOGIN.DATA_IS_INCOMPLETE)
+    }
+    const user = await User.readUser(Opts.USER.login({ email, password }))
+    if (!user) {
+        return new ErrModel(LOGIN.NO_USER)
     }
     return new SuccModel({ data: user })
 }
@@ -165,7 +103,7 @@ async function findUser(id) {
  * @param {string} password - user 未加密的密碼
  * @returns {object} SuccessMode || ErrModel Instance
  */
-const register = async (email, password) => {
+async function register(email, password) {
     if (!password) {
         return new ErrModel(NO_PASSWORD)
     } else if (!email) {
@@ -181,12 +119,46 @@ const register = async (email, password) => {
     const user = await User.createUser({ email, password })
     return new SuccModel({ data: user })
 }
+/** 確認信箱是否已被註冊 0228
+ * @param {string} email 信箱 
+ * @returns {object} resModel
+ */
+async function isEmailExist(email) {
+    const exist = await User.readUser(Opts.USER.isEmailExist(email))
+    if (exist) {
+        return new ErrModel(IS_EXIST)
+    }
+    return new SuccModel()
+}
+
+
+//  更新user    0309
+async function modifyUserInfo(newData, userId) {
+    let cache = { [PAGE.USER]: [userId] }
+    if (newData.nickname || newData.email || newData.avatar) {
+        let resModel = await findRelationShipByUserId(userId)
+        if (resModel.errno) {
+            return resModel
+        }
+        let { fansList, idolList } = resModel.data
+        let people = [...fansList, ...idolList].map(person => person.id)
+
+        let { data: blogs } = await BlogController.getBlogListByUserId(userId, false)
+        let blogList = blogs.map((blog) => blog.id)
+
+        // await CommentController.getCommentsByBlogId()
+        cache[NEWS] = people
+        cache[PAGE.USER] = [...cache[PAGE.USER], ...people]
+        cache[PAGE.BLOG] = blogList
+    }
+    let user = await User.updateUser({ newData, id: userId })
+    return new SuccModel({ data: user, cache })
+}
 
 module.exports = {
+    findRelationShip,
+
     modifyUserInfo,             //  0309
-    cancelFollowIdol,           //  0303
-    followIdol,                 //  0303
-    findRelationShipByUserId,   //  0228
     findUser,                   //  0303
     register,                   //  0228
     login,                      //  0228

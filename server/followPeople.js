@@ -6,14 +6,15 @@ const {
     FollowPeople    //  0228
 } = require('../db/mysql/model')
 
+
 /** 刪除 Follow_People 紀錄 0228
  * 
  * @param {number} idol_id idol id
  * @param {number} fans_id fans id
  * @returns {boolean} 成功 true，失敗 false
  */
-async function deleteFans({ idol_id, fans_id }) {
-    const num = await FollowPeople.destroy({ where: { idol_id, fans_id } })
+ async function deleteFollow({ idol_id, fans_id }) {
+    const num = await FollowPeople.destroy(opts)
 
     if (!num) return false
     return true
@@ -24,7 +25,7 @@ async function deleteFans({ idol_id, fans_id }) {
  * @param {number} fans_id fans id
  * @returns {boolean} 成功 true，失敗 false
  */
-async function createFans({ idol_id, fans_id }) {
+async function createFollow({ idol_id, fans_id }) {
     const follow = await FollowPeople.create({ idol_id, fans_id })
 
     if (!follow) return false
@@ -70,9 +71,9 @@ async function readIdols(opts_where) {
 }
 
 module.exports = {
+    deleteFollow,
+    createFollow,
+
     readFans,        //  server cache
     readIdols,
-
-    deleteFans, //  0228
-    createFans  //  0228
 }

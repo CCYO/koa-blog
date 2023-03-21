@@ -19,13 +19,19 @@ async function readFollowers(opts) {
  * @param {number} fans_id fans id
  * @returns {boolean} 成功 true，失敗 false
  */
-async function deleteFollower({ follower_id, blogIdList }) {
-    let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('FollowBlogs', {
-        blog_id: { [Op.in]: blogIdList },
-        follower_id
+async function deleteFollow(ids) {
+    let time = new Date()
+    let data = ids.map( id => ({ id, deletedAt: time }) )
+    let row = FollowBlogs.bulkCreate( data, {
+        updateOnDuplicate: ['id']
     })
-    
-    if(affectedRows !== blogIdList.length ){
+    // let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('FollowBlogs', {
+    //     id: { [Op.in]: id }
+    // })
+    // if(affectedRows !== blogIdList.length ){
+    //     return false
+    // }
+    if(ids.length !== row){
         return false
     }
     return true
@@ -71,6 +77,8 @@ async function updateFollowBlog(newData, opt_where, options) {
 
 
 module.exports = {
+    deleteFollow,     //  0228
+    
     createFollowers,
     restoreBlog,
     
@@ -78,5 +86,5 @@ module.exports = {
     updateFollowBlog,
     readFollowers,
 
-    deleteFollower,     //  0228
+    
 }

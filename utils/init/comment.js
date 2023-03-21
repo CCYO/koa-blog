@@ -63,9 +63,7 @@ function initCommentsForBrowser(initComments) {
                 nestComments(commentList, comment)
             }
         }
-        let list = sortAndTimeFomat(commentList)
-        // let res = removeDeletedComment(list)
-        // console.log('@res => ', res[0].reply)
+        let list = sortAndTimeFomat(commentList)        
         return list
         function sortAndTimeFomat(list) {
             return list.sort(function (a, b) {
@@ -76,7 +74,6 @@ function initCommentsForBrowser(initComments) {
             item[SORT_BY] = item.createdAt
             item[CHECK_IS_DELETED] = item.deletedAt ? true : false
             if (item[CHECK_IS_DELETED]) {
-                console.log('@ d => ', item)
                 item.time = date.format(item.deletedAt, TIME_FORMAT)
             } else {
                 item.time = date.format(item.createdAt, TIME_FORMAT)

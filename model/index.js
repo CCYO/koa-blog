@@ -12,8 +12,8 @@ class _Model {
 }
 
 class SuccModel extends _Model {
-    constructor({data, cache}){
-        super({data, cache})
+    constructor(obj = {data: undefined , cache: undefined }){
+        super(obj)
     }
 }
 
