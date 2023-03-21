@@ -24,17 +24,6 @@ const {
 const { modifyCache } = require('../server/cache')
 const { CACHE } = require('../conf/constant')
 
-async function findFollowByFollowPeopleShip({ idol_id, fans_id }){
-    let blogs = await Blog.readBlogs(Opts.BLOG.findBlogByFollowPeopleShip({ idol_id, fans_id }))
-    let followIds = blogs.reduce( (acc, { FollowBlog_F } ) => {
-        let [ fans ] = FollowBlog_F
-        acc.push(fans.FollowBlog.id)
-        return acc
-    } ,[] )
-
-    return followIds
-}
-
 //  0303
 async function findSquareBlogList(exclude_id) {
     let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
@@ -235,7 +224,6 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
 
 module.exports = {
-    findFollowByFollowPeopleShip,
 
     modifyBlog,
     findSquareBlogList,      //  0303

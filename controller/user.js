@@ -2,8 +2,8 @@
  * @description Controller user相關
  */
 
-const CommentController = require('../controller/comment')  //  0309
-const BlogController = require('../controller/blog')    //  0309
+
+const BlogController = require('./blog')    //  0309
 const { init_user } = require('../utils/init')          //  0228
 const {
     CACHE: {
@@ -33,22 +33,6 @@ const {
 const FollowBlog = require('../server/followBlog')      //  0228
 const { Blog } = require('../db/mysql/model')
 
-async function findReaderByPeopleShip({ idol_id, fans_id }) {
-    await User.findUser({
-        attributes: ['id'],
-        where: {
-            id: fans_id
-        },
-        include: {
-            association: 'FollowBlog_F',
-            attributes: ['id'],
-            include: {
-                model: 'Blog',
-                where: { id: idol_id }
-            }
-        }
-    })
-}
 async function findRelationShip(userId) {
     let userRes = await findUser(userId)
     if (userRes.errno) {

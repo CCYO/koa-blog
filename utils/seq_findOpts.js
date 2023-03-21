@@ -5,6 +5,7 @@ const { hash } = require('../utils/crypto')   //  0228
 const {
     User,
     Img,
+    Blog,
     BlogImg,
     BlogImgAlt
 } = require('../db/mysql/model')
@@ -28,6 +29,24 @@ const FOLLOWCOMMENT = {
 }
 
 const COMMENT = {
+    findCommentForNews: (comment_id) => ({
+        attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
+        where: { id: comment_id },
+        include: [
+            {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            },
+            {
+                model: Blog,
+                attributes: ['id', 'title'],
+                include: {
+                    model: User,
+                    attributes: ['nickname', 'id']
+                }
+            }
+        ]
+    }),
     findBlogCommentsRelatedPid: ({ blog_id, p_id }) => {
         //  找尋指定 blogId
         let where = { blog_id }
@@ -102,68 +121,58 @@ function findBlogFollowersByBlogId(blog_id) {
         where: { blog_id }
     }
 }
-//  0228
-function findBlog({ blog_id, author_id }) {
-    let where = {}
-    if (blog_id) {
-        where.id = blog_id
-    }
-    if (author_id) {
-        where.user_id = author_id
-    }
-    return {
-        attributes: ['id', 'title', 'html', 'show', 'showAt'],
-        where,
-        include: [
-            {
-                model: User,
-                attributes: ['id', 'email', 'nickname']
-            },
-            {
-                model: BlogImg,
-                attributes: ['id', 'name'],
-                include: [
-                    {
-                        model: Img,
-                        attributes: ['id', 'url', 'hash']
-                    },
-                    {
-                        model: BlogImgAlt,
-                        attributes: ['id', 'alt']
-                    }
-                ]
-            }
-        ]
-    }
-}
+
 const FOLLOWBLOG = {
-    
+
 }
 const BLOG = {
-    findBlogByFollowPeopleShip: ({ idol_id, fans_id }) => ({
-        attributes: ['id'],
-        where: { user_id: idol_id },
-        include: {
-            attributes: ['id'],
-            association: 'FollowBlog_F',
-            where: { id: fans_id },
-            through: {
-                attributes: ['id'],
-            }
+    //  0228
+    findBlog: ({ blog_id, author_id }) => {
+        let where = {}
+        if (blog_id) {
+            where.id = blog_id
         }
-    }),
-    findBlogsByFollowShip: ({ idol_id, fans_id }) => ({
-        attributes: ['id'],
-        where: {
-            user_id: idol_id
-        },
-        include: {
-            model: User,
-            as: 'FollowBlog_F',
-            attributes: [],
-            where: { id: fans_id }
+        if (author_id) {
+            where.user_id = author_id
         }
-    })
+        return {
+            attributes: ['id', 'title', 'html', 'show', 'showAt'],
+            where,
+            include: [
+                {
+                    model: User,
+                    attributes: ['id', 'email', 'nickname']
+                },
+                {
+                    model: BlogImg,
+                    attributes: ['id', 'name'],
+                    include: [
+                        {
+                            model: Img,
+                            attributes: ['id', 'url', 'hash']
+                        },
+                        {
+                            model: BlogImgAlt,
+                            attributes: ['id', 'alt']
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    
+    // findBlogsByFollowShip: ({ idol_id, fans_id }) => ({
+    //     attributes: ['id'],
+    //     where: {
+    //         user_id: idol_id
+    //     },
+    //     include: {
+    //         model: User,
+    //         as: 'FollowBlog_F',
+    //         attributes: [],
+    //         where: { id: fans_id }
+    //     }
+    // })
 }
 
 //  0228
@@ -180,6 +189,30 @@ const FOLLOWPEOPLE = {
 
 //  0228
 const USER = {
+    findArticleReaderByIdolFans: ({ idol_id, fans_id }) => ({
+        attributes: ['id'],
+        where: { id: idol_id },
+        include: {
+            association: 'FollowPeople_F',
+            attributes: ['id'],
+            where: {
+                id: fans_id
+            },
+            through: {
+                attributes: [],
+                paranoid: false
+            },
+            include: {
+                attributes: ['id'],
+                association: 'FollowBlog_B',
+                where: { user_id: idol_id },
+                through: {
+                    attributes: ['id'],
+                    paranoid: false
+                }
+            }
+        }
+    }),
     //  0304
     findIdols: (fans_id) => {
         return {
@@ -241,7 +274,6 @@ module.exports = {
 
     findPublicBlogListByExcludeId,    //  0303
     findBlogFollowersByBlogId,  //  0303
-    findBlog,                   //  0228
     findBlogListByAuthorId,     //  0228
 
 }

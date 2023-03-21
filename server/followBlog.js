@@ -9,6 +9,28 @@ const {
     FollowBlog
 } = require('../db/mysql/model')
 
+async function createFollows(objs) {
+    let datas = []
+    if(Array.isArray(objs)){
+        datas = [...objs]
+    }else{
+        datas = [objs]
+    }
+    
+    console.log(datas)
+    
+    datas = datas.map( data => ({ ...data, deletedAt: null }) )
+    let keys = Object.keys(datas[0])
+    console.log(keys)
+    let follows = await FollowBlog.bulkCreate(datas, {
+        updateOnDuplicate: [...keys]
+    })
+    if (datas.length !== follows.length) {
+        return false
+    }
+    return true
+}
+
 async function readFollowers(opts) {
     let followers = await FollowBlog.findAll(opts)
     return followers.map( follower => follower.toJSON() )
@@ -19,37 +41,28 @@ async function readFollowers(opts) {
  * @param {number} fans_id fans id
  * @returns {boolean} 成功 true，失敗 false
  */
-async function deleteFollow(ids) {
-    let time = new Date()
-    let data = ids.map( id => ({ id, deletedAt: time }) )
-    let row = FollowBlogs.bulkCreate( data, {
-        updateOnDuplicate: ['id']
+async function deleteFollow(ids, time) {
+    let datas = []
+    if(Array.isArray(ids)){
+        datas = [...ids]
+    }else{
+        datas = [ids]
+    }
+    datas = ids.map( id => ({ id, deletedAt: time }) )
+    let follows = await FollowBlog.bulkCreate( datas, {
+        updateOnDuplicate: ['id', 'deletedAt'],
+        // paranoid: false
     })
-    // let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('FollowBlogs', {
-    //     id: { [Op.in]: id }
-    // })
-    // if(affectedRows !== blogIdList.length ){
-    //     return false
-    // }
-    if(ids.length !== row){
+    console.log('#follows => ', follows)
+    let x = await FollowBlog.findByPk(ids[0])
+    console.log('x => ',x)
+    if(datas.length !== follows.length){
         return false
     }
     return true
 }
 
-async function createFollowers({ blog_id, listOfFollowerId, updateData, opts}) {
-    let dataList = listOfFollowerId.map(follower_id => {
-        let data = { blog_id, follower_id }
-        if(updateData){
-            data = { ...data, ...updateData }
-        }
-    })
-    let res = await FollowBlog.bulkCreate(dataList, opts)
-    if (dataList.length !== res.length) {
-        return false
-    }
-    return true
-}
+
 
 async function hiddenBlog({where}) {
     // let { blog_id, confirm } = opts
@@ -79,7 +92,7 @@ async function updateFollowBlog(newData, opt_where, options) {
 module.exports = {
     deleteFollow,     //  0228
     
-    createFollowers,
+    createFollows,
     restoreBlog,
     
     hiddenBlog,

@@ -22,7 +22,7 @@ router.post('/cancelFollow', Check.api_logining, Cache.modifiedtCache, async (ct
 router.post('/follow', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
-    ctx.body = await FollowPeople.follow({fans_id, idol_id})
+    ctx.body = await FollowPeople.addFollow({fans_id, idol_id})
 })
 //  驗證信箱是否已被註冊    0228
 router.post('/isEmailExist', validate_user, async (ctx, next) => {

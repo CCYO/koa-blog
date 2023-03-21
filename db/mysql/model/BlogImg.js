@@ -2,30 +2,28 @@
  * @description Sequelize Model
  */
 const seq = require('../seq')
-const { INTEGER, BOO } = require('../types')
+const { STRING, INTEGER } = require('../types')
 
 
-const FollowPeople = seq.define('FollowPeople', {
+const BlogImg = seq.define('BlogImg', {
     id: {
         type: INTEGER,
         primaryKey: true,
         allowNull: false,
         autoIncrement: true
     },
-    idol_id: {
+    imgId: {
         type: INTEGER,
         allowNull: false,
     },
-    fans_id: {
+    blogId: {
         type: INTEGER,
         allowNull: false,
     },
-    confirm: {
-        type: BOO,
-        defaultValue: false
+    name: {
+        type: STRING,
+        allowNull: true
     }
-},{
-    paranoid: true
 })
 
-module.exports = FollowPeople
+module.exports = BlogImg

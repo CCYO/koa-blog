@@ -11,7 +11,7 @@ const { seq } = require('./model')
 
 const { readUser } = require('../../server/user')
 const { readBlog } = require('../../server/blog')
-const { readComment } = require('../../server/comment')
+const { readCommentForNews } = require('../../server/comment')
 
 const Opts = require('../../utils/seq_findOpts')
 
@@ -118,19 +118,19 @@ async function _init_newsItemOfComfirmRoNot(item, userId) {
     let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
     let res = { type, id, timestamp, confirm }
     if (type === 1) {
-        let { id: fans_id, nickname } = await readUser(Opts.findUser(follow_id))
+        let { id: fans_id, nickname } = await readUser(Opts.USER.findUser(follow_id))
         return { ...res, fans: { id: fans_id, nickname } }
     } else if (type === 2) {
-        let { id: blog_id, title, author } = await readBlog(Opts.findBlog(target_id))
+        let { id: blog_id, title, author } = await readBlog(Opts.BLOG.findBlog({blog_id: target_id}))
         return { ...res, blog: { id: blog_id, title, author: { id: author.id, nickname: author.nickname } } }
     } else if (type === 3) {
-        let [comment] = await readComment(Opts.findComment(target_id))
+        let [comment] = await readCommentForNews(Opts.COMMENT.findCommentForNews(target_id))
         if (!comment) {
             return null
         }
         let { id: comment_id, time, user, blog } = comment
         //  獲取早前未確認到的comment資訊
-        let other_comments = await readComment({ blog_id: blog.id, createdAt }, userId)
+        let other_comments = await readCommentForNews({ blog_id: blog.id, createdAt }, userId)
         let others = other_comments.length ? other_comments.filter(({user}) => user.nickname) : []
         
         return { ...res, comment: { id: comment_id, user, blog, time, others } }

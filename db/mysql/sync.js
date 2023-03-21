@@ -1,9 +1,9 @@
 // const { seq } = require('./model')
-const { seq } = require('./model')
+const { seq, FollowPeople } = require('./model')
 
 const sync = async () => {    
     try{
-        await seq.sync({
+        await FollowPeople.sync({
             // force: true,
             alter: true
         })

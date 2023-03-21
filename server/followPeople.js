@@ -13,10 +13,28 @@ const {
  * @param {number} fans_id fans id
  * @returns {boolean} 成功 true，失敗 false
  */
- async function deleteFollow({ idol_id, fans_id }) {
-    const num = await FollowPeople.destroy(opts)
-
-    if (!num) return false
+ async function deleteFollow(objs, time) {
+    let datas = []
+    if(Array.isArray(objs)){
+        datas = [...objs]
+    }else{
+        datas = [objs]
+    }
+    
+    
+    console.log('@ datas => ', datas)
+    
+    datas = datas.map( data => ({ ...data, deletedAt: time }) )
+    let keys = Object.keys(datas[0])
+    console.log('@keys => ', keys)
+    let follows = await FollowPeople.bulkCreate( datas, {
+        updateOnDuplicate: [...keys]
+    })
+    console.log('@follows => ', follows)
+    
+    if(datas.length !== follows.length){
+        return false
+    }
     return true
 }
 
@@ -26,8 +44,8 @@ const {
  * @returns {boolean} 成功 true，失敗 false
  */
 async function createFollow({ idol_id, fans_id }) {
-    const follow = await FollowPeople.create({ idol_id, fans_id })
-
+    const follow = await FollowPeople.bulkCreate([{ idol_id, fans_id, deletedAt: null}], {updateOnDuplicate: ['idol_id', 'fans_id', 'deletedAt']})
+    console.log('@createFollowPeople => ', follow)
     if (!follow) return false
     return true
 }
