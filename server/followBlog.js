@@ -1,27 +1,39 @@
 /**
  * @description Server FollowBlog
  */
+const { FollowBlog } = require('../db/mysql/model')
 
-const { Op } = require('sequelize')
-
-const {
-    seq,        //  0228
-    FollowBlog
-} = require('../db/mysql/model')
-
-async function createFollows(objs) {
+/** 刪除關聯    0322
+ * @param {number} idol_id idol id
+ * @param {number} fans_id fans id
+ * @returns {boolean} 成功 true，失敗 false
+ */
+ async function deleteFollows(data) {
     let datas = []
-    if(Array.isArray(objs)){
-        datas = [...objs]
+    if(Array.isArray(data)){
+        datas = [...data]
     }else{
-        datas = [objs]
+        datas = [data]
     }
-    
-    console.log(datas)
-    
-    datas = datas.map( data => ({ ...data, deletedAt: null }) )
-    let keys = Object.keys(datas[0])
-    console.log(keys)
+    let keys = [ ...Object.keys(datas[0]), 'updatedAt']
+    let follows = await FollowBlog.bulkCreate( datas, {
+        updateOnDuplicate: [...keys]
+    })
+    if(datas.length !== follows.length){
+        return false
+    }
+    return true
+}
+//  0322
+async function createFollows(data) {
+    let datas = []
+    if(Array.isArray(data)){
+        datas = [...data]
+    }else{
+        datas = [data]
+    }
+    datas = datas.map( item => ({ ...item, deletedAt: null }) )
+    let keys = [ ...Object.keys(datas[0]), 'updatedAt']
     let follows = await FollowBlog.bulkCreate(datas, {
         updateOnDuplicate: [...keys]
     })
@@ -35,34 +47,6 @@ async function readFollowers(opts) {
     let followers = await FollowBlog.findAll(opts)
     return followers.map( follower => follower.toJSON() )
 }
-
-/** 刪除關聯    0228
- * @param {number} idol_id idol id
- * @param {number} fans_id fans id
- * @returns {boolean} 成功 true，失敗 false
- */
-async function deleteFollow(ids, time) {
-    let datas = []
-    if(Array.isArray(ids)){
-        datas = [...ids]
-    }else{
-        datas = [ids]
-    }
-    datas = ids.map( id => ({ id, deletedAt: time }) )
-    let follows = await FollowBlog.bulkCreate( datas, {
-        updateOnDuplicate: ['id', 'deletedAt'],
-        // paranoid: false
-    })
-    console.log('#follows => ', follows)
-    let x = await FollowBlog.findByPk(ids[0])
-    console.log('x => ',x)
-    if(datas.length !== follows.length){
-        return false
-    }
-    return true
-}
-
-
 
 async function hiddenBlog({where}) {
     // let { blog_id, confirm } = opts
@@ -90,7 +74,7 @@ async function updateFollowBlog(newData, opt_where, options) {
 
 
 module.exports = {
-    deleteFollow,     //  0228
+    deleteFollows,     //  0228
     
     createFollows,
     restoreBlog,

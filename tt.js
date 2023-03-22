@@ -11,31 +11,25 @@ go()
 
 async function go() {
     try {
-        let user = await User.findOne({
-            attributes: ['id'],
-            where: { id: 2 },
-            include: {
-                association: 'FollowPeople_F',
-                attributes: ['id'],
-                where: {
-                    id: 3
-                },
-                through: {
-                    attributes: [],
-                    // paranoid: false
-                },
-                // include: {
-                //     attributes: ['id'],
-                //     association: 'FollowBlog_B',
-                //     where: { user_id: 1 },
-                //     through: {
-                //         attributes: ['id']
-                //     }
-                // }
-            }
-        })
-        user = user.toJSON()
-        console.log(user)
+        let password = 'f058cbde71eec7a368d8b5ce7da9a78c'
+        let opts = {
+            // ignoreDuplicates: true,
+            updateOnDuplicate: ['id','email','password', 'updatedAt']
+        }
+        let user = await User.bulkCreate(
+            [
+                { id: 9, email: '99999@gmail.com', password }, 
+                { id: 10, email: '101010@gmail.com', password },
+                { id: 11, email: '111111@gmail.com', password }
+            ],
+            opts
+        )
+        console.log('x => ', user)
+        let json = user.map( _ => _.toJSON())
+        console.log('@ => ', json)
+        users = await User.findAll({ where: { id: { [Op.in]: [9, 10]}}})
+        json = users.map( _ => _.toJSON())
+        console.log('@@ => ', json)
         // let follower = user.FollowPeople_F[0]
         // // console.log('@followers => ', followers)
         // let follows = follower.FollowBlog_B.map(({FollowBlog}) => FollowBlog.id)

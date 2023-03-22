@@ -2,7 +2,7 @@
  * @description Controller user相關
  */
 
-
+const CommentController = require('./comment')
 const BlogController = require('./blog')    //  0309
 const { init_user } = require('../utils/init')          //  0228
 const {
@@ -33,27 +33,49 @@ const {
 const FollowBlog = require('../server/followBlog')      //  0228
 const { Blog } = require('../db/mysql/model')
 
+//  更新user    0309
+async function modifyUserInfo(newData, userId) {
+    let cache = { [PAGE.USER]: [userId] }
+    if (newData.nickname || newData.email || newData.avatar) {
+        let resModel = await findRelationShip(userId)
+        if (resModel.errno) {
+            return resModel
+        }
+        let { fansList, idolList } = resModel.data
+        let people = [...fansList, ...idolList].map(({ id }) => id)
+
+        let { data: blogs } = await BlogController.findBlogListByUserId(userId, { beOrganized: false })
+        let blogList = blogs.map(({id}) => id)
+        //  找出曾留過言的Blog
+        await CommentController.findBlogsOfhasBeenComment(user_id)
+        cache[NEWS] = people
+        cache[PAGE.USER] = [...cache[PAGE.USER], ...people]
+        cache[PAGE.BLOG] = blogList
+    }
+    let user = await User.updateUser({ newData, id: userId })
+    return new SuccModel({ data: user, cache })
+}
+//  0322
 async function findRelationShip(userId) {
     let userRes = await findUser(userId)
     if (userRes.errno) {
         return userRes
     }
     let { data: currentUser } = userRes
-    let { data: idolList } = await findIdols(userId)
-    let { data: fansList } = await findFans(userId)
+    let { data: idolList } = await _findIdols(userId)
+    let { data: fansList } = await _findFans(userId)
     let data = { currentUser, idolList, fansList }
     return new SuccModel({ data })
 }
-
 //  0304
-async function findIdols(fans_id) {
+async function _findIdols(fans_id) {
     // user: { id, FollowPeople_I: [{ id, email, nickname, avatar }, ...] }
     let user = await User.readUser(Opts.USER.findIdols(fans_id))
     let idols = user ? init_user(user.FollowPeople_I) : []
     return new SuccModel({ data: idols })
 }
 //  0304
-async function findFans(idol_id) {
+async function _findFans(idol_id) {
     // user: { id, FollowPeople_F: [{ id, email, nickname, avatar }, ...] }
     let user = await User.readUser(Opts.USER.findFans(idol_id))
     let fans = user ? init_user(user.FollowPeople_F) : []
@@ -113,30 +135,6 @@ async function isEmailExist(email) {
         return new ErrModel(IS_EXIST)
     }
     return new SuccModel()
-}
-
-
-//  更新user    0309
-async function modifyUserInfo(newData, userId) {
-    let cache = { [PAGE.USER]: [userId] }
-    if (newData.nickname || newData.email || newData.avatar) {
-        let resModel = await findRelationShipByUserId(userId)
-        if (resModel.errno) {
-            return resModel
-        }
-        let { fansList, idolList } = resModel.data
-        let people = [...fansList, ...idolList].map(person => person.id)
-
-        let { data: blogs } = await BlogController.getBlogListByUserId(userId, false)
-        let blogList = blogs.map((blog) => blog.id)
-
-        // await CommentController.getCommentsByBlogId()
-        cache[NEWS] = people
-        cache[PAGE.USER] = [...cache[PAGE.USER], ...people]
-        cache[PAGE.BLOG] = blogList
-    }
-    let user = await User.updateUser({ newData, id: userId })
-    return new SuccModel({ data: user, cache })
 }
 
 module.exports = {

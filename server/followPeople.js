@@ -13,24 +13,19 @@ const {
  * @param {number} fans_id fans id
  * @returns {boolean} 成功 true，失敗 false
  */
- async function deleteFollow(objs, time) {
+ async function deleteFollows(data) {
     let datas = []
-    if(Array.isArray(objs)){
-        datas = [...objs]
+    if(Array.isArray(data)){
+        datas = [...data]
     }else{
-        datas = [objs]
+        datas = [data]
     }
-    
-    
     console.log('@ datas => ', datas)
-    
-    datas = datas.map( data => ({ ...data, deletedAt: time }) )
-    let keys = Object.keys(datas[0])
+    let keys = [ ...Object.keys(datas[0]), 'updatedAt']
     console.log('@keys => ', keys)
     let follows = await FollowPeople.bulkCreate( datas, {
         updateOnDuplicate: [...keys]
     })
-    console.log('@follows => ', follows)
     
     if(datas.length !== follows.length){
         return false
@@ -43,10 +38,23 @@ const {
  * @param {number} fans_id fans id
  * @returns {boolean} 成功 true，失敗 false
  */
-async function createFollow({ idol_id, fans_id }) {
-    const follow = await FollowPeople.bulkCreate([{ idol_id, fans_id, deletedAt: null}], {updateOnDuplicate: ['idol_id', 'fans_id', 'deletedAt']})
-    console.log('@createFollowPeople => ', follow)
-    if (!follow) return false
+async function createFollow(data) {
+    let datas = []
+    if(Array.isArray(data)){
+        datas = [...data]
+    }else{
+        datas = [data]
+    }
+    
+    datas = datas.map( item => ({ ...item, deletedAt: null }) )
+    let keys = [ ...Object.keys(datas[0]), 'updatedAt']
+    console.log(keys)
+    const follows = await FollowPeople.bulkCreate(datas, {
+        updateOnDuplicate: [...keys]
+    })
+    if (datas.length !== follows.length) {
+        return false
+    }
     return true
 }
 
@@ -89,7 +97,7 @@ async function readIdols(opts_where) {
 }
 
 module.exports = {
-    deleteFollow,
+    deleteFollows,
     createFollow,
 
     readFans,        //  server cache

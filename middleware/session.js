@@ -24,7 +24,9 @@ async function setLoginSession(ctx, next) {
 
 //  取得登入者session  0228
 async function getLoginSession(ctx){
-    ctx.body = new SuccModel(init_user(ctx.session.user))
+    console.log('@取得登入資料')
+    let data = ctx.session.user
+    ctx.body = new SuccModel({data})
 }
 
 module.exports = {

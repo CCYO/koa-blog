@@ -6,7 +6,13 @@ const Comment = require('../server/comment')
 
 const { SuccModel, ErrModel } = require('../model')
 const FollowComment = require('../server/followComment')
-
+//  0303
+async function findBlogsOfCommented(commenterId){
+    let comments = await Comment.readComments(Opts.COMMENT.findBlogsOfhasBeenComment(commenterId))
+    let data = comments.map(({blog_id}) => blog_id )
+    data = [...new Set(data)]
+    return new SuccModel({data})
+}
 //  0316
 async function _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id}){
     console.log('@pid => ', p_id)
@@ -124,6 +130,8 @@ async function findCommentsByBlogId(blog_id) {
 }
 
 module.exports = {
+    findBlogsOfCommented,  //  0303
+
     removeComment,
     addComment,             //  0316
     findCommentsByBlogId    //  0228

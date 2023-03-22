@@ -12,6 +12,12 @@ const Check = require('../../middleware/check_login') //  0228
 const Session = require('../../middleware/session')                 //  0228
 router.prefix('/api/user')
 
+//  setting 0309
+router.patch('/', Check.api_logining, Session.setLoginSession, Cache.modifiedtCache, parse_user_data, validate_user, async(ctx, next) => {
+    let { id } = ctx.session.user
+    let { body: newData } = ctx.request
+    ctx.body = await User.modifyUserInfo(newData, id)
+})
 //  取消追蹤    0228
 router.post('/cancelFollow', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
@@ -34,22 +40,13 @@ router.post('/register', validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
     ctx.body = await User.register(email, password)
 })
-
-//  setting 0309
-router.patch('/', Check.api_logining, Session.setLoginSession, Cache.modifiedtCache, parse_user_data, validate_user, async(ctx, next) => {
-    let { id } = ctx.session.user
-    let { body: newData } = ctx.request
-    ctx.body = await User.modifyUserInfo(newData, id)
-})
-
 //  取得登入資料 0228
-router.get('/', Check.api_logining, Session.getLoginSession)
+// router.get('/', Check.api_logining, Session.getLoginSession)
 //  登出    0228
 router.get('/logout', Check.api_logining, Session.removeLoginSession)
 //  登入    0228
 router.post('/', Session.setLoginSession, validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
-    console.log(email, password)
     ctx.body = await User.login(email, password)
 })
 

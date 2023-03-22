@@ -24,6 +24,33 @@ const {
 const { modifyCache } = require('../server/cache')
 const { CACHE } = require('../conf/constant')
 
+/** 取得 blogList   //  0303
+ * @param {number} user_id user id
+ * @param {boolean} is_author 是否作者本人
+ * @returns {object} SuccessModel
+ * { 
+ *  blogList { 
+ *      show: [ 
+ *          blog {
+ *              id, title, showAt, 
+ *              author: { id, email, nickname, age, avatar, avatar_hash }
+ *          }, ...
+ *      ],
+ *      hidden: [ blog, ... ]
+ *  } 
+ * }
+ */
+ async function findBlogListByUserId(user_id, options) {
+    let blogList = await Blog.readBlogs(Opts.findBlogListByAuthorId(user_id))
+    let opts = options ? options : { beOrganized: true }
+    if (opts.beOrganized === false) {
+        return new SuccModel({ data: blogList })
+    }
+    delete opts.beOrganized
+    blogList = organizedList(blogList, opts)
+    return new SuccModel({ data: blogList })
+}
+
 //  0303
 async function findSquareBlogList(exclude_id) {
     let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
@@ -61,32 +88,6 @@ async function removeBlogs(blogIdList, authorId) {
         return new ErrModel(BLOG.BLOG_REMOVE_ERR)
     }
     return new SuccModel({ cache })
-}
-/** 取得 blogList   //  0303
- * @param {number} user_id user id
- * @param {boolean} is_author 是否作者本人
- * @returns {object} SuccessModel
- * { 
- *  blogList { 
- *      show: [ 
- *          blog {
- *              id, title, showAt, 
- *              author: { id, email, nickname, age, avatar, avatar_hash }
- *          }, ...
- *      ],
- *      hidden: [ blog, ... ]
- *  } 
- * }
- */
-async function findBlogListByUserId(user_id, options) {
-    let blogList = await Blog.readBlogs(Opts.findBlogListByAuthorId(user_id))
-    let opts = options ? options : { beOrganized: true }
-    if (opts.beOrganized === false) {
-        return new SuccModel({ data: blogList })
-    }
-    delete opts.beOrganized
-    blogList = organizedList(blogList, opts)
-    return new SuccModel({ data: blogList })
 }
 /** 取得 blog 紀錄  0303
  * 
