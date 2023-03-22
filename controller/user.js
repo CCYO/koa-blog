@@ -47,7 +47,8 @@ async function modifyUserInfo(newData, userId) {
         let { data: blogs } = await BlogController.findBlogListByUserId(userId, { beOrganized: false })
         let blogList = blogs.map(({id}) => id)
         //  找出曾留過言的Blog
-        await CommentController.findBlogsOfhasBeenComment(user_id)
+        let { data } = await CommentController.findBlogsOfhasBeenComment(user_id)
+        blogList = [ ...blogList, ...data]
         cache[NEWS] = people
         cache[PAGE.USER] = [...cache[PAGE.USER], ...people]
         cache[PAGE.BLOG] = blogList
