@@ -18,7 +18,7 @@ function initComment(comments) {
 
     function _initComment(comment) {
         let json = comment.toJSON()
-        let { id, html, p_id, createdAt, deletedAt, updatedAt, User: commenter, Blog: blog } = json
+        let { id, html, p_id, blog_id, createdAt, deletedAt, updatedAt, User: commenter, Blog: blog } = json
         if (p_id === null) {
             p_id = 0
         }
@@ -28,8 +28,8 @@ function initComment(comments) {
         if (blog) {
             blog = { author: blog.User, title: blog.title, id: blog.id }
         }
-        let res = { id, html, p_id }
-        let obj = { createdAt, updatedAt, deletedAt, commenter, blog }
+        let res = {  }
+        let obj = { id, html, p_id, blog_id, createdAt, updatedAt, deletedAt, commenter, blog }
         for (let prop in obj) {
             if (obj[prop]) {
                 res[prop] = obj[prop]

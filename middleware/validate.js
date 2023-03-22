@@ -3,8 +3,6 @@
  */
 
 const { validator_user } = require('../utils/validator')
-const { ErrModel } = require('../model')
-const { FORMAT_ERR } = require('../model/errRes')
 
 /** Middleware - 校驗 USER 資料
  * @param {*} ctx 

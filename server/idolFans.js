@@ -1,9 +1,9 @@
 /**
- * @description Server FollowPeople
+ * @description Server IdolFans
  */
 
 const {
-    FollowPeople    //  0228
+    IdolFans    //  0228
 } = require('../db/mysql/model')
 
 
@@ -23,7 +23,7 @@ const {
     console.log('@ datas => ', datas)
     let keys = [ ...Object.keys(datas[0]), 'updatedAt']
     console.log('@keys => ', keys)
-    let follows = await FollowPeople.bulkCreate( datas, {
+    let follows = await IdolFans.bulkCreate( datas, {
         updateOnDuplicate: [...keys]
     })
     
@@ -49,7 +49,7 @@ async function createFollow(data) {
     datas = datas.map( item => ({ ...item, deletedAt: null }) )
     let keys = [ ...Object.keys(datas[0]), 'updatedAt']
     console.log(keys)
-    const follows = await FollowPeople.bulkCreate(datas, {
+    const follows = await IdolFans.bulkCreate(datas, {
         updateOnDuplicate: [...keys]
     })
     if (datas.length !== follows.length) {
@@ -60,7 +60,7 @@ async function createFollow(data) {
 
 async function readFans(opts_where) {
     let where = { ...opts_where }
-    let res = await FollowPeople.findAll({
+    let res = await IdolFans.findAll({
         attributes: ['fans_id'],
         where
     })
@@ -79,7 +79,7 @@ async function readFans(opts_where) {
 
 async function readIdols(opts_where) {
     let where = { ...opts_where }
-    let res = await FollowPeople.findAll({
+    let res = await IdolFans.findAll({
         attributes: ['idol_id'],
         where
     })

@@ -20,7 +20,7 @@ const { CACHE: {
 
 
 const { readFollowers } = require('./followBlog')
-const { readFans } = require('./followPeople')
+const { readFans } = require('./idolFans')
 //  0303
 async function getEtag(cacheKey){
     //  取緩存數據 { etag: resModel }

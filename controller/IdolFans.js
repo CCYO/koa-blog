@@ -1,8 +1,8 @@
-const { CACHE: { TYPE: { PAGE, NEWS } }} = require('../conf/constant')
+const idolFans = require('../server/idolFans')  //  0228
 
+const { CACHE: { TYPE: { PAGE, NEWS } }} = require('../conf/constant')
 const FollowBlogController = require('./followBlog')  //  0309
 const FollowBlog = require('../server/followBlog')
-const FollowPeople = require('../server/followPeople')  //  0228
 const { FOLLOW } = require('../model/errRes')
 const { SuccModel, ErrModel } = require('../model')
 /** 取消追蹤    0322
@@ -21,7 +21,7 @@ const { SuccModel, ErrModel } = require('../model')
             return new ErrModel(FOLLOWBLOG.DEL_ERR)
         }
     }
-    let ok = await FollowPeople.deleteFollows({ idol_id, fans_id, deletedAt })
+    let ok = await idolFans.deleteFollows({ idol_id, fans_id, deletedAt })
     if (!ok) {
         return new ErrModel(FOLLOW.CANCEL_ERR)
     }
@@ -43,7 +43,7 @@ async function addFollow({ fans_id, idol_id }) {
             return new ErrModel(FOLLOWBLOG.DEL_ERR)
         }
     }
-    const ok = await FollowPeople.createFollow({ idol_id, fans_id })
+    const ok = await idolFans.createFollow({ idol_id, fans_id })
     if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
     //  處理緩存
     let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [idol_id] }

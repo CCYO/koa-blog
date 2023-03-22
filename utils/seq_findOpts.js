@@ -29,7 +29,7 @@ const FOLLOWCOMMENT = {
 }
 
 const COMMENT = {
-    findBlogsOfhasBeenComment: (commenter_id) => ({
+    findBlogsOfCommented: (commenter_id) => ({
         attributes: ['blog_id'],
         where: {
             user_id: commenter_id

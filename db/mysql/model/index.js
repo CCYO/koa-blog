@@ -1,12 +1,12 @@
+const IdolFans = require('./IdolFans')
 const seq = require('../seq')
+
 const User = require('./User')
 const Blog = require('./Blog')
 const Img = require('./Img')
 const Comment = require('./Comment')
 const BlogImg = require('./relation-Blog&Img')
 const BlogImgAlt = require('./BlogImgAlt')
-
-const FollowPeople = require('./FollowPeople')
 const FollowBlog = require('./FollowBlog')
 const FollowComment = require('./FollowComment')
 
@@ -61,8 +61,8 @@ Comment.hasMany(Comment, { as: 'Comment_F', foreignKey: 'p_id', sourceKey: 'id'}
 
 //  SourceModel 作為 foreignKey 的來源，
 //  as 是 TargetModel 的別名，
-User.belongsToMany(User, { as: 'FollowPeople_I', through: FollowPeople, foreignKey: 'fans_id', targetKey: 'id'})
-User.belongsToMany(User, { as: 'FollowPeople_F', through: FollowPeople, foreignKey: 'idol_id', targetKey: 'id'})
+User.belongsToMany(User, { as: 'idol', through: IdolFans, foreignKey: 'follow', targetKey: 'id'})
+User.belongsToMany(User, { as: 'fans', through: IdolFans, foreignKey: 'target', targetKey: 'id'})
 // Follow_People.belongsTo(User, {as: 'People_Fans', foreignKey: 'fans_id', targetKey: 'id'})
 // Follow_People.belongsTo(User, {as: 'People_Idol', foreignKey: 'idol_id', targetKey: 'id'})
 // User.hasMany(User_Follow, {foreignKey: 'fans_id', targetKey: 'id'})
@@ -87,12 +87,12 @@ User.belongsToMany(Comment, { as: 'FollowComment_T', through: FollowComment, for
 Comment.belongsToMany(User, { as: 'FollowComment_F', through: FollowComment, foreignKey: 'comment_id',targetKey: 'id'})
 
 module.exports = {
+    IdolFans,                   //  0322
+    seq,                        //  0322
+
     User, Blog, Img, Comment,
     BlogImg, BlogImgAlt,
-    
-    FollowPeople,
     FollowBlog,
     FollowComment,
-    
-    News, seq
+    News, 
 }

@@ -1,6 +1,6 @@
 const {
     initComment,    //  0228    未整理
-    initCommentsForBrowser
+    initCommentsForBrowser  //  0303
 } = require('../utils/init')
 
 const {
@@ -12,8 +12,6 @@ const {
 
 const { Op } = require('sequelize')
 const xss = require('xss')
-
-const { remindNews, del_blog } = require('./cache')
 
 async function deleteComment({ commentId, blog_id }) {
     let num = await Comment.destroy({

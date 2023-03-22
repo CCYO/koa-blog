@@ -8,6 +8,7 @@ const { init_user } = require('../utils/init')          //  0228
 const {
     CACHE: {
         TYPE: {
+            API,
             PAGE,   //  0228
             NEWS    //  0228
         }
@@ -20,9 +21,7 @@ const { ErrModel, SuccModel } = require('../model')     //  0228
 const Opts = require('../utils/seq_findOpts')           //  0228
 
 const {
-    FOLLOW,             //  0304
     LOGIN,              //  0304
-    FOLLOWBLOG,         //  0228
     READ,               //  0228
     REGISTER: {
         NO_PASSWORD,    //  0228
@@ -47,11 +46,12 @@ async function modifyUserInfo(newData, userId) {
         let { data: blogs } = await BlogController.findBlogListByUserId(userId, { beOrganized: false })
         let blogList = blogs.map(({id}) => id)
         //  找出曾留過言的Blog
-        let { data } = await CommentController.findBlogsOfhasBeenComment(user_id)
-        blogList = [ ...blogList, ...data]
+        let { data: blogsIncludeUsersComments } = await CommentController.findBlogsOfCommented(userId)
+        
         cache[NEWS] = people
         cache[PAGE.USER] = [...cache[PAGE.USER], ...people]
         cache[PAGE.BLOG] = blogList
+        cache[API.COMMENT] = blogsIncludeUsersComments
     }
     let user = await User.updateUser({ newData, id: userId })
     return new SuccModel({ data: user, cache })
@@ -139,9 +139,8 @@ async function isEmailExist(email) {
 }
 
 module.exports = {
-    findRelationShip,
-
     modifyUserInfo,             //  0309
+    findRelationShip,           //  0322
     findUser,                   //  0303
     register,                   //  0228
     login,                      //  0228

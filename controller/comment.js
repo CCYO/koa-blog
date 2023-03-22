@@ -1,14 +1,12 @@
 const { COMMENT: { REMOVE_ERR } } = require('../model/errRes')
 const Controller_FollowComment = require('./followComment')
-const { CACHE: { TYPE: { PAGE, NEWS, API } } } = require('../conf/constant')
+const { CACHE: { TYPE: { NEWS, API } } } = require('../conf/constant')
 const Opts = require('../utils/seq_findOpts')
 const Comment = require('../server/comment')
-
 const { SuccModel, ErrModel } = require('../model')
-const FollowComment = require('../server/followComment')
 //  0303
 async function findBlogsOfCommented(commenterId){
-    let comments = await Comment.readComments(Opts.COMMENT.findBlogsOfhasBeenComment(commenterId))
+    let comments = await Comment.readComments(Opts.COMMENT.findBlogsOfCommented(commenterId))
     let data = comments.map(({blog_id}) => blog_id )
     data = [...new Set(data)]
     return new SuccModel({data})
@@ -131,7 +129,6 @@ async function findCommentsByBlogId(blog_id) {
 
 module.exports = {
     findBlogsOfCommented,  //  0303
-
     removeComment,
     addComment,             //  0316
     findCommentsByBlogId    //  0228
