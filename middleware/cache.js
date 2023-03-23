@@ -17,6 +17,64 @@ const {
     checkNews, removeRemindNews,
 } = require('../server/cache')
 
+//  取得/設置other頁的緩存  0322
+async function getOtherCache(ctx, next) {
+    let userId = ctx.params.id * 1
+    let ifNoneMatch = ctx.headers['if-none-match']
+    //  向系統cache撈資料 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined } }
+    let cacheStatus = await Cache.getUser(userId, ifNoneMatch)
+    ctx.cache = {
+        [PAGE.USER]: cacheStatus
+    }
+    await next()
+
+    //  判斷是否將數據存入系統緩存
+    let { exist, data } = ctx.cache[PAGE.USER]
+    let etag
+    //  系統無有效的緩存數據
+    if (exist === NO_CACHE || exist === IF_NONE_MATCH_IS_NO_FRESH) {
+        //  將blog存入系統緩存
+        etag = await Cache.setUser(userId, data)
+        //  系統緩存有資料，但請求未攜帶if-None-Match  
+    } else if (exist === NO_IF_NONE_MATCH) {
+        //  直接拿系統緩存的 etag
+        etag = await Cache.getEtag(`${PAGE.USER}/${userId}`)
+    }
+    //  將etag傳給前端做緩存
+    if (etag) {
+        ctx.set({
+            etag,
+            ['Cache-Control']: 'no-cache'
+        })
+        console.log(`${PAGE.USER}/${userId} 提供前端 etag 做緩存`)
+    }
+    delete ctx.cache
+    return
+}
+//  取得/設置self頁的緩存  0322
+async function getSelfCache(ctx, next) {
+    let userId = ctx.session.user.id * 1
+    //  向系統cache撈資料 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined } }
+    let cacheStatus = await Cache.getUser(userId)
+    ctx.cache = {
+        [PAGE.USER]: cacheStatus
+    }
+    await next()
+    //  系統沒有應對的緩存資料
+    let { exist, data } = ctx.cache[PAGE.USER]
+    if (exist === NO_CACHE) {
+        //  將user存入系統緩存
+        await Cache.setUser(userId, data)
+    }
+    //  不允許前端緩存
+    ctx.set({
+        ['Cache-Control']: 'no-store'
+    })
+    console.log(`不允許前端緩存 ${ctx.request.path} 響應的數據`)
+    delete ctx.cache
+    return
+}
+
 //  0228
 async function getCommentCache(ctx, next) {
     let blog_id = ctx.params.blog_id * 1
@@ -124,65 +182,6 @@ async function modifiedtCache(ctx, next) {
     delete ctx.body.cache
     return
 }
-//  0228
-async function getOtherCache(ctx, next) {
-    let user_id = ctx.params.id * 1
-    let ifNoneMatch = ctx.headers['if-none-match']
-    //  向系統cache撈資料 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined } }
-    let cacheStatus = await Cache.getUser(user_id, ifNoneMatch)
-    ctx.cache = {
-        [PAGE.USER]: cacheStatus
-    }
-    await next()
-
-    //  判斷是否將數據存入系統緩存
-    let { exist, data } = ctx.cache[PAGE.USER]
-    let etag
-    //  系統無有效的緩存數據
-    if (exist === NO_CACHE || exist === IF_NONE_MATCH_IS_NO_FRESH) {
-        //  將blog存入系統緩存
-        etag = await Cache.setUser(user_id, data)
-        //  系統緩存有資料，但請求未攜帶if-None-Match  
-    } else if (exist === NO_IF_NONE_MATCH) {
-        //  直接拿系統緩存的 etag
-        etag = await Cache.getEtag(`${PAGE.USER}/${user_id}`)
-    }
-    //  將etag傳給前端做緩存
-    if (etag) {
-        ctx.set({
-            etag,
-            ['Cache-Control']: 'no-cache'
-        })
-        console.log(`${PAGE.USER}/${user_id} 提供前端 etag 做緩存`)
-    }
-    delete ctx.cache
-    return
-}
-//  self頁 前端不會有緩存資料，所以在後端驗證是本人後，向系統cache查詢個人資料  0228
-async function getSelfCache(ctx, next) {
-    let user_id = ctx.session.user.id * 1
-    //  向系統cache撈資料 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined } }
-    let cacheStatus = await Cache.getUser(user_id)
-    ctx.cache = {
-        [PAGE.USER]: cacheStatus
-    }
-    await next()
-    //  系統沒有應對的緩存資料
-    let { exist, data } = ctx.cache[PAGE.USER]
-    if (exist === NO_CACHE) {
-        //  將user存入系統緩存
-        await Cache.setUser(user_id, data)
-    }
-    //  不允許前端緩存
-    ctx.set({
-        ['Cache-Control']: 'no-store'
-    })
-    console.log(`不允許前端緩存 ${ctx.request.path} 響應的數據`)
-    delete ctx.cache
-    return
-}
-
-
 async function resetBlog(ctx, next) {
     await next()
     let { cache } = ctx.body
@@ -269,14 +268,14 @@ async function notifiedNews(ctx, next) {
 
 
 module.exports = {
-    resetBlog,
-    cacheNews,
-    notifiedNews,
+    getOtherCache,      //  0323
+    getSelfCache,       //  0323
 
     blogEditPageCache,  //  0303
     blogPageCache,      //  0228
     getCommentCache,    //  0228
     modifiedtCache,     //  0228
-    getOtherCache,      //  0228
-    getSelfCache        //  0228
+    resetBlog,
+    cacheNews,
+    notifiedNews,
 }

@@ -6,46 +6,43 @@ const {
     User            //  0228
 } = require('../db/mysql/model')
 
-const  { hash }  = require('../utils/crypto')
+const { hash } = require('../utils/crypto')
 
-const { init_user } = require('../utils/init')
+const Init = require('../utils/init')
 
-
-/** 創建 User   0228
+/** 創建 User   0323
  * @param {object} param0
  * @param {string} param0.email - user email
  * @param {string} param0.password - user 未加密的密碼
  * @returns {object} object 除了 password 以外的 user 資料
  */
-const createUser = async ({ password, ...opts }) => {
+async function createUser({ password, ...opts }){
     let data = { ...opts }
     data.password = hash(password)
-    
     const user = await User.create(data)
-    return init_user(user)
+    return Init.user(user)
 }
-
-async function readUsers(opts){
-    let users = await User.findAll(opts)
-    return init_user(users)
-}
-
-/** 查找 User 資料  0228
+/** 查找 User 資料  0323
  * @param {{ id: number, email: string, password: string }} param0 
  * @param {number} param0.id - user id
  * @param {string} param0.email - user email
  * @param {string} param0.password - user 未加密的密碼
  * @return {} 無資料為null，反之，password 以外的 user 資料
  */
-async function readUser(opts){
+async function readUser(opts) {
     let user = await User.findOne(opts)
-    return init_user(user)
+    return Init.user(user)
+}
+
+async function readUsers(opts) {
+    let users = await User.findAll(opts)
+    return Init.user(users)
 }
 
 //  更新user數據
-const updateUser = async ({newData, id}) => {
+const updateUser = async ({ newData, id }) => {
     let data = { ...newData }
-    if(data.hasOwnProperty('age')){
+    if (data.hasOwnProperty('age')) {
         newData.age *= 1
     }
     if (data.hasOwnProperty('password')) {
@@ -55,15 +52,14 @@ const updateUser = async ({newData, id}) => {
     let user = await User.findByPk(id)
     console.log()
     user = await user.update(data)
-    
-    return init_user(user)
+
+    return Init.user(user)
 }
 
 module.exports = {
-    
-    updateUser,     //  controller user
+    createUser,     //  0323
+    readUser,       //  0323
 
-    createUser,     //  0228
+    updateUser,     //  controller user
     readUsers,      //  0304
-    readUser        //  0228
 }

@@ -70,7 +70,8 @@ const view_logining = async (ctx, next) => {
 }
 
 module.exports = {
-    view_logining,      //  0318
+    view_logining,      //  0323
+    
     view_mustBeSelf,    //  0308
     view_isSelf,        //  0228
     api_logining,       //  0228

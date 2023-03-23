@@ -10,6 +10,61 @@ const {
     BlogImgAlt
 } = require('../db/mysql/model')
 
+const BLOG = {
+    //  0322
+    findBlogsForUserPage: (author_id) => ({
+        attributes: ['id', 'title', 'show', 'showAt', 'createdAt'],
+        where: { user_id: author_id }
+    }),
+    //  0228
+    findBlog: ({ blog_id, author_id }) => {
+        let where = {}
+        if (blog_id) {
+            where.id = blog_id
+        }
+        if (author_id) {
+            where.user_id = author_id
+        }
+        return {
+            attributes: ['id', 'title', 'html', 'show', 'showAt'],
+            where,
+            include: [
+                {
+                    model: User,
+                    attributes: ['id', 'email', 'nickname']
+                },
+                {
+                    model: BlogImg,
+                    attributes: ['id', 'name'],
+                    include: [
+                        {
+                            model: Img,
+                            attributes: ['id', 'url', 'hash']
+                        },
+                        {
+                            model: BlogImgAlt,
+                            attributes: ['id', 'alt']
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+
+    // findBlogsByFollowShip: ({ idol_id, fans_id }) => ({
+    //     attributes: ['id'],
+    //     where: {
+    //         user_id: idol_id
+    //     },
+    //     include: {
+    //         model: User,
+    //         as: 'FollowBlog_F',
+    //         attributes: [],
+    //         where: { id: fans_id }
+    //     }
+    // })
+}
+
 const FOLLOWCOMMENT = {
     findItems: ({ comment_ids }, { exclude }) => {
         let where = {
@@ -132,63 +187,9 @@ function findBlogFollowersByBlogId(blog_id) {
 const FOLLOWBLOG = {
 
 }
-const BLOG = {
-    //  0228
-    findBlog: ({ blog_id, author_id }) => {
-        let where = {}
-        if (blog_id) {
-            where.id = blog_id
-        }
-        if (author_id) {
-            where.user_id = author_id
-        }
-        return {
-            attributes: ['id', 'title', 'html', 'show', 'showAt'],
-            where,
-            include: [
-                {
-                    model: User,
-                    attributes: ['id', 'email', 'nickname']
-                },
-                {
-                    model: BlogImg,
-                    attributes: ['id', 'name'],
-                    include: [
-                        {
-                            model: Img,
-                            attributes: ['id', 'url', 'hash']
-                        },
-                        {
-                            model: BlogImgAlt,
-                            attributes: ['id', 'alt']
-                        }
-                    ]
-                }
-            ]
-        }
-    },
-    
-    // findBlogsByFollowShip: ({ idol_id, fans_id }) => ({
-    //     attributes: ['id'],
-    //     where: {
-    //         user_id: idol_id
-    //     },
-    //     include: {
-    //         model: User,
-    //         as: 'FollowBlog_F',
-    //         attributes: [],
-    //         where: { id: fans_id }
-    //     }
-    // })
-}
 
-//  0228
-function findBlogListByAuthorId(author_id) {
-    return {
-        attributes: ['id', 'title', 'show', 'showAt', 'createdAt'],
-        where: { user_id: author_id }
-    }
-}
+
+
 
 const FOLLOWPEOPLE = {
 
@@ -226,7 +227,7 @@ const USER = {
             attributes: ['id'],
             where: { id: fans_id },
             include: {
-                association: 'FollowPeople_I',
+                association: 'idol',
                 attributes: ['id', 'email', 'nickname', 'avatar'],
                 through: {
                     attributes: []
@@ -240,7 +241,7 @@ const USER = {
             attributes: ['id'],
             where: { id: idol_id },
             include: {
-                association: 'FollowPeople_F',
+                association: 'fans',
                 attributes: ['id', 'email', 'nickname', 'avatar'],
                 through: {
                     attributes: []
@@ -262,7 +263,7 @@ const USER = {
             where: { email, password }
         }
     },
-    //  0228
+    //  0323
     isEmailExist: (email) => {
         return {
             attributes: ['id'],
@@ -273,7 +274,8 @@ const USER = {
 
 module.exports = {
     BLOG,
-    USER,
+    USER,           //0323
+
     FOLLOWCOMMENT,
     COMMENT,
     FOLLOWPEOPLE,
@@ -281,6 +283,5 @@ module.exports = {
 
     findPublicBlogListByExcludeId,    //  0303
     findBlogFollowersByBlogId,  //  0303
-    findBlogListByAuthorId,     //  0228
 
 }

@@ -2,47 +2,42 @@
  * @description 數據格式化
  */
 
-const { init } = require('mysql2/typings/mysql/lib/Connection')
 const { USER: { AVATAR } } = require('../../conf/constant')
-
-function go(user){
-    if(Array.isArray(user)){
-        return init_users(user)
-    }else{
-        return init_user(user)
-    }
-}
 
 function init_user(user) {
     if (!user) {
         return null
     }
-    return init(user)
+    return _init(user)
 }
 
 function init_users(users) {
     if (!users.length) {
         return []
     }
-    return users.map( user => init_user(user) )
+    return users.map(user => init_user(user))
 }
 
-function init(user) {
+function _init(user) {
     let json = user.toJSON
-    const { email, nickname, avatar } = json
-
-    if (!nickname && email) {
+    let map = new Map(Object.entries(json))
+    //  設置默認的nickname
+    if (map.has('nickname') && !map.get('nickname')) {
         let regex = /^([\w]+)@/
-        let [_, target] = regex.exec(email)
+        let [_, target] = regex.exec(map.get('email'))
         json.nickname = target
     }
-    if (json.hasOwnProperty('avatar') && !avatar) {
+    //  設置默認的avatar
+    if (map.has('avatar') && !map.get('avatar')) {
         json.avatar = AVATAR
     }
-    delete json.password
     return json
 }
 
-module.exports = {
-    init_user
+module.exports = (user) => {
+    if (Array.isArray(user)) {
+        return init_users(user)
+    } else {
+        return init_user(user)
+    }
 }

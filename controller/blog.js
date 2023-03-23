@@ -40,15 +40,10 @@ const { CACHE } = require('../conf/constant')
  *  } 
  * }
  */
- async function findBlogListByUserId(user_id, options) {
-    let blogList = await Blog.readBlogs(Opts.findBlogListByAuthorId(user_id))
-    let opts = options ? options : { beOrganized: true }
-    if (opts.beOrganized === false) {
-        return new SuccModel({ data: blogList })
-    }
-    delete opts.beOrganized
-    blogList = organizedList(blogList, opts)
-    return new SuccModel({ data: blogList })
+ async function findBlogsForUserPage(userId, options) {
+    let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsForUserPage(userId))
+    let data = organizedList(blogs, options)
+    return new SuccModel({ data })
 }
 
 //  0303
@@ -225,11 +220,11 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
 
 module.exports = {
+    findBlogsForUserPage,   //  0323
 
     modifyBlog,
     findSquareBlogList,      //  0303
     removeBlogs,            //  0303
-    findBlogListByUserId,    //  0303
     findBlog,                 //  0303
     addBlog
 }
