@@ -27,10 +27,10 @@ async function readNews({ userId, excepts }) {
     let query = `
     SELECT type, id, target_id, follow_id, confirm, createdAt
     FROM (
-        SELECT 1 as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt
-        FROM FollowPeople
+        SELECT 1 as type, id , target as target_id , follow as follow_id, confirm, createdAt
+        FROM IdolFans
         WHERE 
-            idol_id=${userId}
+            target=${userId}
             ${list.people}
 
         UNION
@@ -67,9 +67,9 @@ async function count({ userId }) {
         COUNT(*) as total
     FROM (
         SELECT 1 as type, id, confirm
-        FROM FollowPeople
+        FROM IdolFans
         WHERE
-            idol_id=${userId} 
+            target=${userId} 
         UNION
 
         SELECT 2 as type, id, confirm

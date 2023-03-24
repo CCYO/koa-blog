@@ -1,10 +1,11 @@
 /**
  * @description Controller user相關
  */
+ const Init = require('../utils/init')          //  0324
 
 const CommentController = require('./comment')
 const BlogController = require('./blog')    //  0309
-const { init_user } = require('../utils/init')          //  0228
+
 const {
     CACHE: {
         TYPE: {
@@ -30,6 +31,55 @@ const {
     },
 } = require('../model/errRes')
 
+//  0324
+async function findInfoForUserPage(userId) {
+    //  向 DB 撈取數據  
+    let resModel = await findRelationShip(userId)
+    if (resModel.errno) {
+        return resModel
+    }
+    //  DB 沒有相符數據
+    let { data: { currentUser, fansList, idolList } } = resModel
+    //  向 DB 撈取數據
+    let { data: blogList } = await BlogController.findBlogsForUserPage(userId)
+    let data = { currentUser, fansList, idolList, blogList }
+    return new SuccModel({ data })
+}
+
+//  0324
+async function findRelationShip(userId) {
+    let userRes = await findUser(userId)
+    if (userRes.errno) {
+        return userRes
+    }
+    let { data: currentUser } = userRes
+    let { data: idolList } = await _findIdols(userId)
+    let { data: fansList } = await _findFans(userId)
+    let data = { currentUser, idolList, fansList }
+    return new SuccModel({ data })
+}
+//  0324
+async function _findIdols(fans_id) {
+    // user: { id, FollowPeople_I: [{ id, email, nickname, avatar }, ...] }
+    let user = await User.readUser(Opts.USER.findIdols(fans_id))
+    let idols = user ? Init.user(user.idols) : []
+    return new SuccModel({ data: idols })
+}
+//  0324
+async function _findFans(idol_id) {
+    // user: { id, FollowPeople_F: [{ id, email, nickname, avatar }, ...] }
+    let user = await User.readUser(Opts.USER.findFans(idol_id))
+    let fans = user ? Init.user(user.fans) : []
+    return new SuccModel({ data: fans })
+}
+//  0324
+async function findUser(id) {
+    const user = await User.readUser(Opts.USER.findUser(id))
+    if (!user) {
+        return new ErrModel(READ.NOT_EXIST)
+    }
+    return new SuccModel({ data: user })
+}
 /** 註冊 0323
  * @param {string} email - user 的信箱
  * @param {string} password - user 未加密的密碼
@@ -59,20 +109,6 @@ async function isEmailExist(email) {
     }
     return new SuccModel()
 }
-//  0323
-async function findInfoForUserPage(userId) {
-    //  向 DB 撈取數據  
-    let resModel = await findRelationShip(userId)
-    if (resModel.errno) {
-        return resModel
-    }
-    //  DB 沒有相符數據
-    let { data: { currentUser, fansList, idolList } } = resModel
-    //  向 DB 撈取數據
-    let { data: blogList } = await BlogController.findBlogsForUserPage(userId)
-    let data = { currentUser, fansList, idolList, blogList }
-    return new SuccModel({ data })
-}
 
 //  更新user    0309
 async function modifyUserInfo(newData, userId) {
@@ -98,40 +134,7 @@ async function modifyUserInfo(newData, userId) {
     let user = await User.updateUser({ newData, id: userId })
     return new SuccModel({ data: user, cache })
 }
-//  0322
-async function findRelationShip(userId) {
-    let userRes = await findUser(userId)
-    if (userRes.errno) {
-        return userRes
-    }
-    let { data: currentUser } = userRes
-    let { data: idolList } = await _findIdols(userId)
-    let { data: fansList } = await _findFans(userId)
-    let data = { currentUser, idolList, fansList }
-    return new SuccModel({ data })
-}
-//  0304
-async function _findIdols(fans_id) {
-    // user: { id, FollowPeople_I: [{ id, email, nickname, avatar }, ...] }
-    let user = await User.readUser(Opts.USER.findIdols(fans_id))
-    let idols = user ? init_user(user.idol) : []
-    return new SuccModel({ data: idols })
-}
-//  0304
-async function _findFans(idol_id) {
-    // user: { id, FollowPeople_F: [{ id, email, nickname, avatar }, ...] }
-    let user = await User.readUser(Opts.USER.findFans(idol_id))
-    let fans = user ? init_user(user.fans) : []
-    return new SuccModel({ data: fans })
-}
-//  0304
-async function findUser(id) {
-    const user = await User.readUser(Opts.USER.findUser(id))
-    if (!user) {
-        return new ErrModel(READ.NOT_EXIST)
-    }
-    return new SuccModel({ data: user })
-}
+
 /** 登入 user   0228
  * @param {string} email user 的信箱
  * @param {string} password user 的未加密密碼

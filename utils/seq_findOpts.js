@@ -11,7 +11,7 @@ const {
 } = require('../db/mysql/model')
 
 const BLOG = {
-    //  0322
+    //  0324
     findBlogsForUserPage: (author_id) => ({
         attributes: ['id', 'title', 'show', 'showAt', 'createdAt'],
         where: { user_id: author_id }
@@ -201,7 +201,7 @@ const USER = {
         attributes: ['id'],
         where: { id: idol_id },
         include: {
-            association: 'FollowPeople_F',
+            association: 'fans',
             attributes: ['id'],
             where: {
                 id: fans_id
@@ -227,7 +227,7 @@ const USER = {
             attributes: ['id'],
             where: { id: fans_id },
             include: {
-                association: 'idol',
+                association: 'idols',
                 attributes: ['id', 'email', 'nickname', 'avatar'],
                 through: {
                     attributes: []

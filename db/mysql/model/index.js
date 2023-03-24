@@ -61,7 +61,7 @@ Comment.hasMany(Comment, { as: 'Comment_F', foreignKey: 'p_id', sourceKey: 'id'}
 
 //  SourceModel 作為 foreignKey 的來源，
 //  as 是 TargetModel 的別名，
-User.belongsToMany(User, { as: 'idol', through: IdolFans, foreignKey: 'follow', targetKey: 'id'})
+User.belongsToMany(User, { as: 'idols', through: IdolFans, foreignKey: 'follow', targetKey: 'id'})
 User.belongsToMany(User, { as: 'fans', through: IdolFans, foreignKey: 'target', targetKey: 'id'})
 // Follow_People.belongsTo(User, {as: 'People_Fans', foreignKey: 'fans_id', targetKey: 'id'})
 // Follow_People.belongsTo(User, {as: 'People_Idol', foreignKey: 'idol_id', targetKey: 'id'})

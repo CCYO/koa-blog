@@ -1,9 +1,11 @@
-const Opts = require('../utils/seq_findOpts')
-const FollowBlog = require('../server/followBlog')
+const Blog = require('../server/blog')              //  0324
+const Opts = require('../utils/seq_findOpts')       //  0324
 const {
-    organizedList,  //  0303    
+    organizedList,          //  0324    
     initTimeFormatAndSort   //  0303
 } = require('../utils/sort')
+const FollowBlog = require('../server/followBlog')
+
 const {
     BLOG,       //  0228
     BLOGIMGALT
@@ -13,7 +15,7 @@ const {
     ErrModel    //  0228
 } = require('../model')
 
-const Blog = require('../server/blog')          //  0303
+
 const my_xxs = require('../utils/xss')          //  0303
 const BlogImg = require('../server/blogImg')
 const BlogImgAlt = require('../server/blogImgAlt')
@@ -24,7 +26,7 @@ const {
 const { modifyCache } = require('../server/cache')
 const { CACHE } = require('../conf/constant')
 
-/** 取得 blogList   //  0303
+/** 取得 blogList   0324
  * @param {number} user_id user id
  * @param {boolean} is_author 是否作者本人
  * @returns {object} SuccessModel
@@ -40,7 +42,7 @@ const { CACHE } = require('../conf/constant')
  *  } 
  * }
  */
- async function findBlogsForUserPage(userId, options) {
+async function findBlogsForUserPage(userId, options) {
     let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsForUserPage(userId))
     let data = organizedList(blogs, options)
     return new SuccModel({ data })
@@ -209,7 +211,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
     if (!ok) {
         return new ErrModel()
     }
-    
+
     let blog = await Blog.readBlog({
         attributes: ['id', 'title', 'html',],
         where: { blog_id },
@@ -220,7 +222,7 @@ async function modifyBlog(blog_id, blog_data, author_id) {
 
 
 module.exports = {
-    findBlogsForUserPage,   //  0323
+    findBlogsForUserPage,   //  0324
 
     modifyBlog,
     findSquareBlogList,      //  0303

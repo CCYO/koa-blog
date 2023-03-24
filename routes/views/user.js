@@ -16,22 +16,7 @@ const {
     } } = require('../../conf/constant')
 const Cache = require('../../middleware/cache') //  0228
 const Check = require('../../middleware/check_login')
-
-//  個資更新頁  //  0228
-router.get('/setting/:userId', Check.view_mustBeSelf, async (ctx, next) => {
-    let currentUser = ctx.session.user
-    //  不允許前端緩存
-    ctx.set({
-        ['Cache-Control']: 'no-store'
-    })
-    await ctx.render('setting', {
-        title: `${currentUser.nickname}的個資`,
-        //  window.data 數據
-        currentUser
-    })
-})
-
-//  他人頁  0323
+//  他人頁  0324
 router.get('/other/:id', Check.view_isSelf, confirmFollow, Cache.getOtherCache, async (ctx, next) => {
     let userId = ctx.params.id * 1
     //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined }
@@ -67,7 +52,7 @@ router.get('/other/:id', Check.view_isSelf, confirmFollow, Cache.getOtherCache, 
         idolList,       //  window.data 數據
     })
 })
-//  個人頁  0323
+//  個人頁  0324
 router.get('/self', Check.view_logining, Cache.getSelfCache, async (ctx, next) => {
     let { id: userId } = ctx.session.user
     //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined }
@@ -92,7 +77,7 @@ router.get('/self', Check.view_logining, Cache.getSelfCache, async (ctx, next) =
         idolList,       //  window.data 數據
     })
 })
-//  登入頁  0228
+//  登入頁  0324
 router.get('/login', async (ctx, next) => {
     //  若已登入，跳轉到個人頁面
     if (ctx.session.user) {
@@ -106,7 +91,7 @@ router.get('/login', async (ctx, next) => {
         active: 'login'
     })
 })
-//  註冊頁  0228
+//  註冊頁  0324
 router.get('/register', async (ctx, next) => {
     //  若已登入，跳轉到個人頁面
     if (ctx.session.user) {
@@ -121,4 +106,18 @@ router.get('/register', async (ctx, next) => {
     })
 })
 
+
+//  個資更新頁  //  0228
+router.get('/setting/:userId', Check.view_mustBeSelf, async (ctx, next) => {
+    let currentUser = ctx.session.user
+    //  不允許前端緩存
+    ctx.set({
+        ['Cache-Control']: 'no-store'
+    })
+    await ctx.render('setting', {
+        title: `${currentUser.nickname}的個資`,
+        //  window.data 數據
+        currentUser
+    })
+})
 module.exports = router

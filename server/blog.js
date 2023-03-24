@@ -9,6 +9,23 @@ const {
     init_blog
 } = require('../utils/init')
 
+/** 查詢 blogs   0324
+ * @param {object} param0 查詢 blogs 紀錄所需的參數
+ * @param {number} param0.user_id user id
+ * @param {boolean} param0.getAll 是否無視 blog 公開/隱藏，false 僅拿公開，true 全拿
+ * @returns {object} 
+ *  [blog: {
+ *      id, title, show, showAt,
+ *      author: { id, email, nickname, age, avatar, avatar_hash }
+ *  }]
+ * 
+ 
+ */
+ async function readBlogs(opts) {
+    let blogs = await Blog.findAll(opts)
+    return init_blog(blogs)
+}
+
 /**批量刪除 0303
  * 
  * @param {*} blog_id 
@@ -31,23 +48,6 @@ async function deleteBlogs({ blogIdList, authorId: user_id }) {
 async function readBlog(opts) {
     let blog = await Blog.findOne(opts)
     return init_blog(blog)
-}
-
-/** 查詢 blogs   0228
- * @param {object} param0 查詢 blogs 紀錄所需的參數
- * @param {number} param0.user_id user id
- * @param {boolean} param0.getAll 是否無視 blog 公開/隱藏，false 僅拿公開，true 全拿
- * @returns {object} 
- *  [blog: {
- *      id, title, show, showAt,
- *      author: { id, email, nickname, age, avatar, avatar_hash }
- *  }]
- * 
- 
- */
-async function readBlogs(opts) {
-    let blogList = await Blog.findAll(opts)
-    return init_blog(blogList)
 }
 
 /** 創建Blog    0303

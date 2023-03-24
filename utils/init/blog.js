@@ -3,20 +3,36 @@ const { init_comment_4_blog } = require('./comment')
 const { init_blogImgAlt } = require('./blogImgAlt')
 
 function init_blog(blog) {
-    if(!blog){
+    if (!blog) {
         return null
     }
-    if (blog instanceof Array) {
-        if(!blog.length){
-            return []
-        }
-        return blog.map(item => _init_blog(item) )
-    }
-    return _init_blog(blog)
+    return _init(blog)
 }
 
-function _init_blog(blog) {
-    let json = blog.toJSON ? blog.toJSON() : blog
+function init_blogs(blogs) {
+    if (!blogs.length) {
+        return []
+    }
+    return blogs.map(blog => init_blog(blog))
+}
+
+// function init_blog(blog) {
+//     if(!blog){
+//         return null
+//     }
+//     if (blog instanceof Array) {
+//         if(!blog.length){
+//             return []
+//         }
+//         return blog.map(item => _init_blog(item) )
+//     }
+//     return _init_blog(blog)
+// }
+
+function _init(blog) {
+    let json = blog.toJSON()
+    // let map = new Map(Object.entries(json))
+    return json
     //  { Img, User, Comment, ...blog}
     let { BlogImgs: blogImgs, User: author, Comments: comments, ...data } = json
 
@@ -62,6 +78,10 @@ function _init_blog(blog) {
     return res
 }
 
-module.exports = {
-    init_blog
+module.exports = (blog) => {
+    if (Array.isArray(blog)) {
+        return init_blogs(blog)
+    } else {
+        return init_blog(blog)
+    }
 }

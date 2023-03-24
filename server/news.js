@@ -2,8 +2,8 @@ const { NEWS: { LIMIT } } = require('../conf/constant')
 
 const {
     FollowBlog,
-    FollowPeople,
-    FollowComment
+    FollowComment,
+    IdolFans
 } = require('../db/mysql/model')
 
 const rawQuery = require('../db/mysql/query')
@@ -41,7 +41,7 @@ async function updateBlogFansComfirm(list, data = { confirm: true }) {
 async function updateNews({ people, blogs, comments }) {
     let data = {}
     if (people.length) {
-        let [rowOfPeople] = await FollowPeople.update({ confirm: true }, { where: { id: people } })
+        let [rowOfPeople] = await IdolFans.update({ confirm: true }, { where: { id: people } })
         data.rowOfPeople = rowOfPeople
     } else {
         data.rowOfPeople = 0
