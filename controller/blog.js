@@ -104,11 +104,11 @@ async function findBlog({ blog_id, author_id }) {
  * @param { number } userId 使用者ID  
  * @returns SuccModel for { data: { id, title, html, show, showAt, createdAt, updatedAt }} || ErrModel
  */
-async function addBlog(title, user_id) {
+async function addBlog(title, authorId) {
     try {
         title = my_xxs(title)
-        const blog = await Blog.createBlog({ title, user_id })
-        const cache = { [CACHE.TYPE.PAGE.USER]: [user_id] }
+        const blog = await Blog.createBlog({ title, authorId })
+        const cache = { [CACHE.TYPE.PAGE.USER]: [authorId] }
         return new SuccModel({ data: blog, cache })
     } catch (e) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })

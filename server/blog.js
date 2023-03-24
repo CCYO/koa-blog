@@ -53,8 +53,8 @@ async function readBlog(opts) {
  * @param {number} user_id 作者id
  * @returns {object} blog 資訊 { id, title, html, show, showAt, createdAt, updatedAt }
  */
-async function createBlog({ title, user_id }) {
-    let blog = await Blog.create({ title, user_id })
+async function createBlog({ title, authorId }) {
+    let blog = await Blog.create({ title, user_id: authorId })
     return Init.blog(blog)
 }
 

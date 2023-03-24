@@ -39,7 +39,6 @@ function init_data(data, _init) {
 function initComment(data){
     return init(data, go)
     function go(comment) {
-        console.log( '@@ => ', comment)
         let data = { ...comment }
         let map = new Map(Object.entries(data))
         if(map.has('p_id')){
@@ -50,14 +49,12 @@ function initComment(data){
             let commenter = init_user(map.get('User'))
             delete data.User
             data.commenter = commenter
-            console.log('@ => ', commenter)
         }
         if (map.has('Blog')) {
             let blog = map.get('Blog')
             delete data.Blog
             data.blog = { author: init_user(blog.User), title: blog.title, id: blog.id }
         }
-        console.log('@ => ', data)
         return data
     }
 }

@@ -28,8 +28,8 @@ const News = require('./News')
 
 
 //  User : Blog = 1 : N
-Blog.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id', onDelete: 'CASCADE' })
-User.hasMany(Blog, { foreignKey: 'user_id', sourceKey: 'id'})
+Blog.belongsTo(User, { as: 'author', foreignKey: 'user_id', targetKey: 'id', onDelete: 'CASCADE' })
+User.hasMany(Blog, { as: 'blogs', foreignKey: 'user_id', sourceKey: 'id'})
 
 //  Blog : BlogImg = 1 : N
 BlogImg.belongsTo(Blog, { foreignKey: 'blog_id', targetKey: 'id', onDelete: 'CASCADE' })

@@ -234,7 +234,8 @@ async function readCommentForNews({ id, blog_id, p_id, createdAt }, user_id) {
                 model: Blog,
                 attributes: ['id', 'title'],
                 include: {
-                    model: User,
+                    association: 'author',
+                    // model: User,
                     attributes: ['nickname', 'id']
                 }
             }

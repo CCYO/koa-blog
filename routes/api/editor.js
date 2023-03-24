@@ -14,9 +14,9 @@ router.prefix('/api/blog')
 
 //  建立blog    0303
 router.post('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
-    const { id: user_id } = ctx.session.user
+    const authorId = ctx.session.user.id
     const { title } = ctx.request.body
-    return ctx.body = await Blog.addBlog(title, user_id)
+    return ctx.body = await Blog.addBlog(title, authorId)
 })
 //  刪除 blogs  0303
 router.delete('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
