@@ -20,9 +20,7 @@ const {
     }else{
         datas = [data]
     }
-    console.log('@ datas => ', datas)
     let keys = [ ...Object.keys(datas[0]), 'updatedAt']
-    console.log('@keys => ', keys)
     let follows = await IdolFans.bulkCreate( datas, {
         updateOnDuplicate: [...keys]
     })
@@ -48,7 +46,6 @@ async function createFollow(data) {
     
     datas = datas.map( item => ({ ...item, deletedAt: null }) )
     let keys = [ ...Object.keys(datas[0]), 'updatedAt']
-    console.log(keys)
     const follows = await IdolFans.bulkCreate(datas, {
         updateOnDuplicate: [...keys]
     })

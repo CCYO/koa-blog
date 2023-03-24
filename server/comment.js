@@ -1,7 +1,4 @@
-const {
-    initComment,    //  0228    未整理
-    initCommentsForBrowser  //  0303
-} = require('../utils/init')
+const Init = require('../utils/init')
 
 const {
     Comment,        //  0228
@@ -243,7 +240,7 @@ async function readCommentForNews({ id, blog_id, p_id, createdAt }, user_id) {
             }
         ]
     })
-    return init_comment(res)
+    return Init.comment(res)
 }
 
 module.exports = {

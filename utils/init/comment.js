@@ -1,43 +1,5 @@
-const { COMMENT: { CHECK_IS_DELETED, SORT_BY, TIME_FORMAT }} = require('../../conf/constant')
+const { COMMENT: { CHECK_IS_DELETED, SORT_BY, TIME_FORMAT } } = require('../../conf/constant')
 const date = require('date-and-time')
-
-const { init_user } = require('./user')
-
-function initComment(comments) {
-    if (comments instanceof Array) {
-        return comments.reduce((acc, item) => {
-            acc.push(_initComment(item))
-            return acc
-        }, [])
-    }
-    if (!comments) {
-        return comments
-    }
-    let res = _initComment(comments)
-    return res
-
-    function _initComment(comment) {
-        let json = comment.toJSON()
-        let { id, html, p_id, blog_id, createdAt, deletedAt, updatedAt, User: commenter, Blog: blog } = json
-        if (p_id === null) {
-            p_id = 0
-        }
-        if (commenter) {
-            commenter = init_user(commenter)
-        }
-        if (blog) {
-            blog = { author: blog.User, title: blog.title, id: blog.id }
-        }
-        let res = {  }
-        let obj = { id, html, p_id, blog_id, createdAt, updatedAt, deletedAt, commenter, blog }
-        for (let prop in obj) {
-            if (obj[prop]) {
-                res[prop] = obj[prop]
-            }
-        }
-        return res
-    }
-}
 
 function initCommentsForBrowser(initComments) {
     let res
@@ -63,7 +25,7 @@ function initCommentsForBrowser(initComments) {
                 nestComments(commentList, comment)
             }
         }
-        let list = sortAndTimeFomat(commentList)        
+        let list = sortAndTimeFomat(commentList)
         return list
         function sortAndTimeFomat(list) {
             return list.sort(function (a, b) {
@@ -98,6 +60,5 @@ function initCommentsForBrowser(initComments) {
 }
 
 module.exports = {
-    initComment,
     initCommentsForBrowser
 }

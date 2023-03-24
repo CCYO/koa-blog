@@ -55,7 +55,6 @@ async function readNews({ userId, excepts }) {
     LIMIT ${LIMIT}
     `
     let newsList = await seq.query(query, { type: QueryTypes.SELECT })
-
     return await _init_newsOfComfirmRoNot(newsList, userId)
 }
 
@@ -128,12 +127,18 @@ async function _init_newsItemOfComfirmRoNot(item, userId) {
         if (!comment) {
             return null
         }
-        let { id: comment_id, time, user, blog } = comment
+        console.log('ccc => ', comment)
+        let { id: comment_id, time, commenter, blog, html } = comment
         //  獲取早前未確認到的comment資訊
         let other_comments = await readCommentForNews({ blog_id: blog.id, createdAt }, userId)
-        let others = other_comments.length ? other_comments.filter(({user}) => user.nickname) : []
-        
-        return { ...res, comment: { id: comment_id, user, blog, time, others } }
+        let others = other_comments.length ? other_comments.map(comment => { 
+            let { commenter } = comment
+            return commenter
+        }) : []
+        console.log('others => ', others)
+        let x =  { ...res, comment: { id: comment_id, commenter, html, blog, time, others } }
+        console.log('x => ', x)
+        return x
     }
 }
 

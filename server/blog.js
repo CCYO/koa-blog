@@ -21,7 +21,7 @@ const Init = require('../utils/init')
  */
  async function readBlogs(opts) {
     let blogs = await Blog.findAll(opts)
-    return init_blog(blogs)
+    return Init.blog(blogs)
 }
 
 /**批量刪除 0303
@@ -55,7 +55,7 @@ async function readBlog(opts) {
  */
 async function createBlog({ title, user_id }) {
     let blog = await Blog.create({ title, user_id })
-    return init_blog(blog)
+    return Init.blog(blog)
 }
 
 /** 更新blog

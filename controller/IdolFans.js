@@ -1,4 +1,4 @@
-const idolFans = require('../server/idolFans')  //  0228
+const IdolFans = require('../server/idolFans')  //  0228
 
 const { CACHE: { TYPE: { PAGE, NEWS } }} = require('../conf/constant')
 const FollowBlogController = require('./followBlog')  //  0309
@@ -10,8 +10,8 @@ const { SuccModel, ErrModel } = require('../model')
  * @param {number} idol_id 
  * @returns {object} SuccessModel | ErrorModel
  */
- async function cancelFollow({ fans_id, idol_id}) {
-    let { data: follows } = await FollowBlogController.findFollowsByIdolFans({idol_id, fans_id})
+ async function cancelFollow({ fansId, idolId}) {
+    let { data: follows } = await FollowBlogController.findFollowsByIdolFans({idolId, fansId})
     let deletedAt = new Date()
     if (follows.length) {
         //  刪除關聯
@@ -21,11 +21,11 @@ const { SuccModel, ErrModel } = require('../model')
             return new ErrModel(FOLLOWBLOG.DEL_ERR)
         }
     }
-    let ok = await idolFans.deleteFollows({ idol_id, fans_id, deletedAt })
+    let ok = await IdolFans.deleteFollows({ target: idolId, follow: fansId, deletedAt })
     if (!ok) {
         return new ErrModel(FOLLOW.CANCEL_ERR)
     }
-    let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [fans_id, idol_id] }
+    let cache = { [PAGE.USER]: [fansId, idolId], [NEWS]: [fansId, idolId] }
     return new SuccModel({ cache })
 }
 /** 追蹤    0322
@@ -33,8 +33,8 @@ const { SuccModel, ErrModel } = require('../model')
  * @param {number} idol_id 
  * @returns {object} SuccessModel { Follow_People Ins { id, idol_id, fans_id }} | ErrorModel
  */
-async function addFollow({ fans_id, idol_id }) {
-    let { data: follows } = await FollowBlogController.findFollowsByIdolFans({idol_id, fans_id})
+async function addFollow({ fansId, idolId }) {
+    let { data: follows } = await FollowBlogController.findFollowsByIdolFans({idolId, fansId})
     if (follows.length) {
         //  刪除關聯
         let datas = follows.map( id => ({id, deletedAt: null}))
@@ -43,10 +43,10 @@ async function addFollow({ fans_id, idol_id }) {
             return new ErrModel(FOLLOWBLOG.DEL_ERR)
         }
     }
-    const ok = await idolFans.createFollow({ idol_id, fans_id })
+    const ok = await IdolFans.createFollow({ target: idolId, follow: fansId })
     if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
     //  處理緩存
-    let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [idol_id] }
+    let cache = { [PAGE.USER]: [fansId, idolId], [NEWS]: [idolId] }
     return new SuccModel({ cache })
 }
 

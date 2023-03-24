@@ -1,13 +1,13 @@
 let { Op } = require('sequelize')
 
 const { User, Blog, FollowBlog } = require('./db/mysql/model')
-const C_User = require('./controller/user')
+const C_Blog = require('./controller/blog')
 
 go()
 
 async function go() {
     try {
-        let a = await C_User.login('0324@gmail.com','tt309091238')
+        let a = await C_Blog.findBlogsForUserPage(1)
         console.log(a)
     } catch (e) {
         console.log(e)

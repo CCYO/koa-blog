@@ -197,14 +197,14 @@ const FOLLOWPEOPLE = {
 
 //  0228
 const USER = {
-    findArticleReaderByIdolFans: ({ idol_id, fans_id }) => ({
+    findArticleReaderByIdolFans: ({ idolId, fansId }) => ({
         attributes: ['id'],
-        where: { id: idol_id },
+        where: { id: idolId },
         include: {
             association: 'fans',
             attributes: ['id'],
             where: {
-                id: fans_id
+                id: fansId
             },
             through: {
                 attributes: [],
@@ -213,7 +213,7 @@ const USER = {
             include: {
                 attributes: ['id'],
                 association: 'FollowBlog_B',
-                where: { user_id: idol_id },
+                where: { user_id: idolId },
                 through: {
                     attributes: ['id'],
                     paranoid: false

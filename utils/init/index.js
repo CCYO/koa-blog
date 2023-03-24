@@ -3,7 +3,6 @@ const init_alt = require('./blogImgAlt')
 const init_user = require('./user')
 
 const {
-    initComment,
     initCommentsForBrowser
 } = require('./comment')
 const _blog = require('./blog')
@@ -15,7 +14,7 @@ function init(data, _init) {
     if (Array.isArray(data)) {
         return init_datas(data, _init)
     } else {
-        return init_data(user, _init)
+        return init_data(data, _init)
     }
 }
 
@@ -30,24 +29,54 @@ function init_data(data, _init) {
     if (!data) {
         return null
     }
-    let res = data.toJSON ? data.toJSON() : res
+    let res = data.toJSON ? data.toJSON() : data
     if (_init) {
         res = _init(res)
     }
     return res
 }
 
+function initComment(data){
+    return init(data, go)
+    function go(comment) {
+        console.log( '@@ => ', comment)
+        let data = { ...comment }
+        let map = new Map(Object.entries(data))
+        if(map.has('p_id')){
+            let pid = map.get('p_id')
+            data.p_id = pid === null ? 0 : pid
+        }
+        if (map.has('User')) {
+            let commenter = init_user(map.get('User'))
+            delete data.User
+            data.commenter = commenter
+            console.log('@ => ', commenter)
+        }
+        if (map.has('Blog')) {
+            let blog = map.get('Blog')
+            delete data.Blog
+            data.blog = { author: init_user(blog.User), title: blog.title, id: blog.id }
+        }
+        console.log('@ => ', data)
+        return data
+    }
+}
+
 function initBlog(data) {
-    let json = { ...data }
-    let map = new Map(Object.entries(json))
-    if (map.has('author')) {
-        let author = map.get('author')
-        json.author = initUser(author)
+    return init(data, go)
+    function go(data) {
+        let json = { ...data }
+        let map = new Map(Object.entries(json))
+        if (map.has('author')) {
+            let author = map.get('author')
+            json.author = initUser(author)
+        }
+        if (map.has('BlogImgs')) {
+            json.blogImgs = _initImg(map.get('BlogImgs'))
+        }
+        return json
     }
-    if (map.has('BlogImgs')) {
-        json.blogImgs = _initImg(map.get('BlogImgs'))
-    }
-    return json
+
 }
 function _initAlt(alts) {
     return init(alts, init_alt)
@@ -86,7 +115,6 @@ function _initImg(blogImg) {
         }, res.imgs)
     }
 }
-
 function initUser(data) {
     return init(data, init_user)
 }
@@ -96,8 +124,7 @@ function initUser(data) {
 module.exports = {
     user: initUser,
     blog: initBlog,
-
-    initComment,
+    comment: initComment,
     initCommentsForBrowser,
     init_blogImg,
     init_newsOfFollowId,

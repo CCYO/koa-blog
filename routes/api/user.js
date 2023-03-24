@@ -20,15 +20,15 @@ router.patch('/', Check.api_logining, Session.setLoginSession, Cache.modifiedtCa
 })
 //  取消追蹤    0228
 router.post('/cancelFollow', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
-    const { id: idol_id } = ctx.request.body
-    const { id: fans_id } = ctx.session.user
-    ctx.body = await idolFans.cancelFollow({fans_id, idol_id})
+    const { id: idolId } = ctx.request.body
+    const { id: fansId } = ctx.session.user
+    ctx.body = await IdolFans.cancelFollow({fansId, idolId})
 })
 //  追蹤    0228
 router.post('/follow', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
-    const { id: idol_id } = ctx.request.body
-    const { id: fans_id } = ctx.session.user
-    ctx.body = await idolFans.addFollow({fans_id, idol_id})
+    const { id: idolId } = ctx.request.body
+    const { id: fansId } = ctx.session.user
+    ctx.body = await IdolFans.addFollow({fansId, idolId})
 })
 //  登出    0228
 router.get('/logout', Check.api_logining, Session.removeLoginSession)
