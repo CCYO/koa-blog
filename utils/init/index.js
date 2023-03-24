@@ -1,3 +1,5 @@
+// const init_img = require('./img')
+const init_alt = require('./blogImgAlt')
 const init_user = require('./user')
 
 const {
@@ -5,7 +7,7 @@ const {
     initCommentsForBrowser
 } = require('./comment')
 const _blog = require('./blog')
-const { init_img } = require('./img')
+
 const { init_blogImg } = require('./blogImg')
 const { init_newsOfFollowId, init_excepts } = require('./news')
 
@@ -37,45 +39,52 @@ function init_data(data, _init) {
 
 function initBlog(data) {
     let json = { ...data }
-    let map = Object.entries(json)
+    let map = new Map(Object.entries(json))
     if (map.has('author')) {
         let author = map.get('author')
         json.author = initUser(author)
     }
-    if (map.has('imgs')) {
-        let blogImgs = map.get('imgs')
-        let imgs = blogImgs.reduce( blogImg => {
-
-        }, [])
-        if (blogImgs && blogImgs.length) {
-            let imgList = blogImgs.map(blogimg => {
-                let {
-                    name,
-                    id: blogImg_id,
-                    Img: {
-                        id: img_id,
-                        hash,
-                        url
-                    },
-                    BlogImgAlts
-                } = blogimg
-                let blogImgAltList = init_blogImgAlt(BlogImgAlts)   // [{ id, alt },...]
-                return { img_id, hash, url, blogImg_id, name, blogImgAltList }
-            })
-            imgList.reduce((initVal, { blogImgAltList, ...imgData }) => {
-                blogImgAltList.forEach(blogImgAlt => {
-                    let img = { ...blogImgAlt, ...imgData }
-                    if (!img.alt) {
-                        img.alt = img.name
-                    }
-                    initVal.push(img)
-                })
-                return initVal
-            }, res.imgs)
-        }
-        json.blogImgs = initUser(blogImgs)
+    if (map.has('BlogImgs')) {
+        json.blogImgs = _initImg(map.get('BlogImgs'))
     }
     return json
+}
+function _initAlt(alts) {
+    return init(alts, init_alt)
+}
+function _initImg(blogImg) {
+    return init(blogImg, go)
+    function go(blogImg) {
+        let {
+            name,
+            id: blogImg_id,
+            Img: {
+                id: img_id,
+                hash,
+                url
+            },
+            BlogImgAlts: blogImgAltList
+        } = blogImg
+        blogImgAltList = _initAlt(blogImgAltList)
+        // return { }
+        // let alts = _init_alts(BlogImgAlts)   // [{ id, alt },...]
+        return { img_id, hash, url, blogImg_id, name, blogImgAltList }
+    }
+    if (blogImgs && blogImgs.length) {
+        let imgList = blogImgs.map(blogimg => {
+
+        })
+        imgList.reduce((initVal, { blogImgAltList, ...imgData }) => {
+            blogImgAltList.forEach(blogImgAlt => {
+                let img = { ...blogImgAlt, ...imgData }
+                if (!img.alt) {
+                    img.alt = img.name
+                }
+                initVal.push(img)
+            })
+            return initVal
+        }, res.imgs)
+    }
 }
 
 function initUser(data) {
@@ -90,7 +99,6 @@ module.exports = {
 
     initComment,
     initCommentsForBrowser,
-    init_img,
     init_blogImg,
     init_newsOfFollowId,
     init_excepts

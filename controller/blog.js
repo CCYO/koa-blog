@@ -92,7 +92,7 @@ async function removeBlogs(blogIdList, authorId) {
  * @returns 
  */
 async function findBlog({ blog_id, author_id }) {
-    let blog = await Blog.readBlog(Opts.findBlog({ blog_id, author_id }))
+    let blog = await Blog.readBlog(Opts.BLOG.findBlog({ blog_id, author_id }))
     if (blog) {
         return new SuccModel({ data: blog })
     } else {

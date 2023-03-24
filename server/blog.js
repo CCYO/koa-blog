@@ -5,9 +5,7 @@ const {
 
 const { Op } = require('sequelize')
 
-const {
-    init_blog
-} = require('../utils/init')
+const Init = require('../utils/init')
 
 /** 查詢 blogs   0324
  * @param {object} param0 查詢 blogs 紀錄所需的參數
@@ -47,7 +45,7 @@ async function deleteBlogs({ blogIdList, authorId: user_id }) {
 //  0228
 async function readBlog(opts) {
     let blog = await Blog.findOne(opts)
-    return init_blog(blog)
+    return Init.blog(blog)
 }
 
 /** 創建Blog    0303
