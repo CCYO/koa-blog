@@ -21,12 +21,12 @@ async function deleteComment({ commentId, blog_id }) {
 //  0313
 async function readComments(opts) {
     let comments = await Comment.findAll(opts)
-    return initComment(comments)
+    return Init.comment(comments)
 }
 //  0228
 async function readCommentsForBlog(opts) {
     let comments = await readComments(opts)
-    return initCommentsForBrowser(comments)
+    return Init.browser.comment(comments)
 }
 
 async function createComment({

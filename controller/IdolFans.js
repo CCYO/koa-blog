@@ -36,7 +36,7 @@ const { SuccModel, ErrModel } = require('../model')
 async function addFollow({ fansId, idolId }) {
     let { data: follows } = await FollowBlogController.findFollowsByIdolFans({idolId, fansId})
     if (follows.length) {
-        //  刪除關聯
+        //  創建關聯
         let datas = follows.map( id => ({id, deletedAt: null}))
         let ok = await FollowBlog.createFollows(datas)
         if (!ok) {

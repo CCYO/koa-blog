@@ -54,7 +54,7 @@ async function findRelationShip(userId) {
     }
     let { data: currentUser } = userRes
     let { data: idolList } = await _findIdols(userId)
-    let { data: fansList } = await _findFans(userId)
+    let { data: fansList } = await findFans(userId)
     let data = { currentUser, idolList, fansList }
     return new SuccModel({ data })
 }
@@ -66,7 +66,7 @@ async function _findIdols(fans_id) {
     return new SuccModel({ data: idols })
 }
 //  0324
-async function _findFans(idol_id) {
+async function findFans(idol_id) {
     // user: { id, FollowPeople_F: [{ id, email, nickname, avatar }, ...] }
     let user = await User.readUser(Opts.USER.findFans(idol_id))
     let fans = user ? Init.user(user.fans) : []
@@ -157,6 +157,7 @@ module.exports = {
     findInfoForUserPage,        //  0323
     modifyUserInfo,             //  0309
     findRelationShip,           //  0322
+    findFans,                   //  0326
     findUser,                   //  0303
     login,                      //  0228
 }

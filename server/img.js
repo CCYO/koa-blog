@@ -1,6 +1,16 @@
 const { Img } = require('../db/mysql/model')
 
-const { init_img, init_blogImg } = require('../utils/init')
+const init = require('../utils/init')
+
+async function readImg(opts){
+    let img = await Img.findOne(opts)
+    return init.img(img)
+}
+
+async function createImg({url, hash}){
+    let img = await Img.create({url, hash})
+    return init.img(img)
+}
 
 /** 查找 img 紀錄
  * @param {object} data 查找 img 所需的 where

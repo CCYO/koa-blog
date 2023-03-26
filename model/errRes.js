@@ -3,6 +3,24 @@
  */
 
 module.exports = {
+    FOLLOWBLOG: {
+        CREATE_ERROR: { errno: 1301, msg: 'FollowBlog 創建失敗'},
+        DEL_ERR: { errno: 1302, msg: '刪除關聯失敗' },        //  0228
+    },
+    BLOGIMGALT: {
+        REMOVE_ERR: { errno: 903, msg: 'BlogImgAlt刪除失敗' },    //  0326
+        CREATE_ERR: { errno: 901, msg: 'BlogImgAlt創建失敗'},           //  0326
+        NOT_EXIST: { errno: 902, msg: '不存在任何相符的 BlogImgAlt'},    //  0326
+        UPDATE_ERR: { errno: 902, msg: '更新失敗' },
+    },
+    BLOG: {
+        CREATE_ERR: { errno: 701, msg: 'Blog創建失敗' },                //  0326
+        UPLOAD_IMG_ERR: { errno: 704, msg: 'Blog內文圖片上傳失敗' },    //  0326
+        NOT_EXIST: { errno: 702, msg: 'BLOG不存在' },        //  0228
+        UPDATE_ERR: { errno: 703, msg: 'BLOG資料更新失敗' },                //  0326
+        IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上' },
+        BLOG_REMOVE_ERR: { errno: 706, msg: '刪除Blog失敗' }
+    },
     REGISTER: {
         NO_EMAIL: { errno: 102, msg: '信箱未填' },          //  0323
         NO_PASSWORD: { errno: 103, msg: '密碼未填' },       //  0323
@@ -32,25 +50,11 @@ module.exports = {
         NOT_SELF: { errno: 502, msg: '非本人' }
     },
     FORMAT_ERR: { errno: 601 },
-    BLOG: {
-        CREATE_ERR: { errno: 701 },
-        NOT_EXIST: { errno: 702, msg: 'BLOG不存在' },        //  0228
-        NO_UPDATE: { errno: 703, msg: 'BLOG資料更新失敗' },
-        UPDATE: {
-            ERR_CREATE_BLOGFOLLOW: { errno: 704_1, msg: '創建BlogFollow數目與要求不匹配' },
-            ERR_SOFT_DELETE_BLOGFOLLOW: { errno: 704_2, msg: '軟刪除BlogFollow失敗' }
-        },
-        UPLOAD_IMG_ERR: { errno: 704 },
-        IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上' },
-        BLOG_REMOVE_ERR: { errno: 706, msg: '刪除Blog失敗' }
-    },
+    
     BLOGIMG: {
-        REMOVE_ERR: { errno: 801, msg: '刪除BlogImg時，數量對不上' },
-        UPDATE_ERR: { errno: 802, msg: '更新失敗' }
-    },
-    BLOGIMGALT: {
-        UPDATE_ERR: { errno: 902, msg: '更新失敗' },
-        REMOVE_ERR: { errno: 903, msg: '文章內的圖片數據初始化失敗' }
+        REMOVE_ERR: { errno: 801, msg: '刪除 BlogImg 失敗' },
+        UPDATE_ERR: { errno: 802, msg: '更新失敗' },
+        CREATE_ERR: { errno: 803, msg: '創建失敗'}
     },
     COMMENT: {
         REMOVE_ERR: { errno: 1101, msg: '文章刪除失敗' }
@@ -60,9 +64,7 @@ module.exports = {
         CANCEL_ERR: { errno: 1002, msg: '取消追蹤失敗' },        //  0228
         CONFIRM_ERR: { errno: 1003, msg: '確認追蹤消息失敗' }
     },
-    FOLLOWBLOG: {
-        DEL_ERR: { errno: 1302, msg: '刪除關聯失敗' },        //  0228
-    },
+    
     FOLLOWCOMMENT: {
         UPDATE_ERR: { errno: 1401, msg: 'FollowComment更新失敗' }
     },

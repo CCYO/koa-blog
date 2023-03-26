@@ -1,3 +1,8 @@
+const User = require('../server/user')
+
+const { BLOG: { NOT_EXIST, UPDATE_ERR } } = require('../model/errRes')
+const Controller_FollowBlog = require('./followBlog')   //  0326
+const Controller_BlogImgAlt = require('./blogImgAlt')
 const Blog = require('../server/blog')              //  0324
 const Opts = require('../utils/seq_findOpts')       //  0324
 const {
@@ -6,10 +11,7 @@ const {
 } = require('../utils/sort')
 const FollowBlog = require('../server/followBlog')
 
-const {
-    BLOG,       //  0228
-    BLOGIMGALT
-} = require('../model/errRes')
+
 const {
     SuccModel,  //  0228
     ErrModel    //  0228
@@ -17,44 +19,9 @@ const {
 
 
 const my_xxs = require('../utils/xss')          //  0303
-const BlogImg = require('../server/blogImg')
-const BlogImgAlt = require('../server/blogImgAlt')
-const {
-    createFollowers,
-    hiddenBlog
-} = require('../server/followBlog')
-const { modifyCache } = require('../server/cache')
 const { CACHE } = require('../conf/constant')
 
-/** 取得 blogList   0324
- * @param {number} user_id user id
- * @param {boolean} is_author 是否作者本人
- * @returns {object} SuccessModel
- * { 
- *  blogList { 
- *      show: [ 
- *          blog {
- *              id, title, showAt, 
- *              author: { id, email, nickname, age, avatar, avatar_hash }
- *          }, ...
- *      ],
- *      hidden: [ blog, ... ]
- *  } 
- * }
- */
-async function findBlogsForUserPage(userId, options) {
-    let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsForUserPage(userId))
-    let data = organizedList(blogs, options)
-    return new SuccModel({ data })
-}
-
-//  0303
-async function findSquareBlogList(exclude_id) {
-    let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
-    blogs = initTimeFormatAndSort(blogs)
-    return new SuccModel({ data: blogs })
-}
-/** 刪除 blogs  0303
+/** 刪除 blogs  0326
  * @param {number} blog_id 
  * @returns {object} SuccModel || ErrModel
  */
@@ -86,6 +53,90 @@ async function removeBlogs(blogIdList, authorId) {
     }
     return new SuccModel({ cache })
 }
+//  移除blog內的圖片
+async function removeImgs(cancelImgs) {
+    let resModel
+    for (let { blogImg_id, blogImgAlt_list } of cancelImgs) {
+        let resModel = await Controller_BlogImgAlt.cancelWithBlog(blogImg_id, blogImgAlt_list)
+        if (resModel.errno) {
+            break
+        }
+    }
+    return resModel
+}
+/** 更新 blog
+ * 
+ * @param {number} blog_id blog id
+ * @param {object} blog_data 要更新的資料
+ * @returns {object} SuccModel || ErrModel
+ */
+async function modifyBlog(author_id, blog_id, blog_data) {
+    // let { title, cancelImgs = [], html, show } = blog_data
+    let map = new Map(Object.entries(blog_data))
+    let cache = { [CACHE.TYPE.PAGE.BLOG]: blog_id }
+    let fans = []
+    if (map.has('title') || map.has('show')) {
+        //  取得粉絲群
+        let { data: fans } = await _findFansIds(author_id)
+        //  提供緩存處理
+        cache[CACHE.TYPE.NEWS] = fans
+        cache[CACHE.TYPE.PAGE.USER] = [author_id]
+    }
+    //  存放 blog 要更新的數據
+    let newData = {}
+    if (map.has('title')) {
+        //  存放 blog 要更新的數據
+        newData.title = my_xxs(blog_data.title)
+    }
+    if (map.has('html')) {
+        //  存放 blog 要更新的數據
+        newData.html = my_xxs(blog_data.html)
+    }
+    //  依show處理更新 BlogFollow
+    if (map.has('show')) {
+        let show = blog_data.show
+        //  存放 blog 要更新的數據
+        newData.show = show
+        // 公開blog
+        if (show) {
+            newData.showAt = new Date()
+            if (fans.length) {
+                let resModel = await Controller_FollowBlog.addSubscribers({ blog_id, fans })
+                if (resModel.errno) {
+                    return resModel
+                }
+            }
+            // 隱藏blog
+        } else if (!show) {
+            newData.showAt = null
+            let resModel = await Controller_FollowBlog.removeSubscribers(blog_id)
+            //  軟刪除既有的條目
+            if (resModel.errno) {
+                return resModel
+            }
+        }
+    }
+    //  更新文章
+    let ok = await Blog.updateBlog({ blog_id, newData })
+    if (!ok) {
+        return new ErrModel(UPDATE_ERR)
+    }
+    //  刪除圖片
+    if (map.has('cancelImgs')) {
+        let cancelImgs = map.get('cancelImgs')
+        //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
+        let resModel = await removeImgs(cancelImgs)
+        if (resModel.errno) {
+            return resModel
+        }
+    }
+    let resModel = await findBlog({ blog_id, author_id })
+    if (resModel.errno) {
+        return resModel
+    }
+    let data = resModel.data
+    return new SuccModel({ data, cache })
+}
 /** 取得 blog 紀錄  0303
  * 
  * @param {number} blog_id blog id
@@ -96,7 +147,7 @@ async function findBlog({ blog_id, author_id }) {
     if (blog) {
         return new SuccModel({ data: blog })
     } else {
-        return new ErrModel(BLOG.NOT_EXIST)
+        return new ErrModel(NOT_EXIST)
     }
 }
 /** 建立 blog   0303
@@ -114,110 +165,44 @@ async function addBlog(title, authorId) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
     }
 }
-
-
-/** 更新 blog
- * 
- * @param {number} blog_id blog id
- * @param {object} blog_data 要更新的資料
- * @returns {object} SuccModel || ErrModel
+/** 取得 blogList   0324
+ * @param {number} user_id user id
+ * @param {boolean} is_author 是否作者本人
+ * @returns {object} SuccessModel
+ * { 
+ *  blogList { 
+ *      show: [ 
+ *          blog {
+ *              id, title, showAt, 
+ *              author: { id, email, nickname, age, avatar, avatar_hash }
+ *          }, ...
+ *      ],
+ *      hidden: [ blog, ... ]
+ *  } 
+ * }
  */
-async function modifyBlog(blog_id, blog_data, author_id) {
-    let { title, cancelImgs = [], html, show } = blog_data
+async function findBlogsForUserPage(userId, options) {
+    let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsForUserPage(userId))
+    let data = organizedList(blogs, options)
+    return new SuccModel({ data })
+}
+//  0303
+async function findSquareBlogList(exclude_id) {
+    let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
+    blogs = initTimeFormatAndSort(blogs)
+    return new SuccModel({ data: blogs })
+}
 
-    //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
-    await cancelImgs.reduce(async (img) => {
-        let { blogImg_id, blogImgAlt_list } = img
-        //  確認在BlogImgAlt內，同樣BlogImg的條目共有幾條
-        let { length: blogImgCount } = await BlogImgAlt.readBlogImgAlt({ where: { blogImg_id } })
 
-        // let { count } = await BlogImgAlt.findAndCountAll({ where: { blogImg_id } })
-        let res
-        if (blogImgCount === blogImgAlt_list.length) {  //  BlogImg條目 === 要刪除的BlogImgAlt數量，代表該Blog已沒有該張圖片
-            //  刪除整筆 BlogImg
-            res = await BlogImg.deleteBlogImg({ id: blogImg_id })
-        } else {  //  BlogImg條目 !== 要刪除的BlogImgAlt數量，代表該Blog仍有同樣的圖片
-            res = await BlogImgAlt.deleteBlogImgAlt({ blogImgAlt_list })
-        }
-        if (!res) { //  代表刪除不完全
-            throw new Error(BLOGIMGALT.REMOVE_ERR)
-        }
-        return Promise.resolve()
-    })
 
-    //  粉絲群的id
-    let followerIdList = []
-    //  用於更新Blog
-    let data = { user_id: author_id }
-    //  用於緩存處理
-    let cache = { blog: [blog_id] }
 
-    let needUpdateShow = blog_data.hasOwnProperty('show')
-    //  若預更新的數據有 show 或 title
-    if (needUpdateShow || title) {
-        //  取得粉絲群
-        let followers = await readFans({
-            attributes: ['id'],
-            where: { idol_id: author_id }
-        })
-        //  取得粉絲群的id
-        followerIdList = followers.map(({ id }) => id)
 
-        //  提供緩存處理
-        await modifyCache({
-            [CACHE.TYPE.NEWS]: followerIdList,
-            [CACHE.TYPE.USER]: [author_id]
-        })
-    }
-
-    if (title) {
-        //  存放 blog 要更新的數據
-        data.title = my_xxs(title)
-    }
-
-    //  依show處理更新 BlogFollow
-    if (needUpdateShow) {
-        //  存放 blog 要更新的數據
-        data.show = show
-        if (show) { // 公開blog
-            //  要更新的資料
-            // let Dates = followerIdList.map(follower_id => ({ blog_id, follower_id, deletedAt: null }))
-            //  更新資料之 blog_id + follower_id 主鍵對若不存在，則新建，反之更新
-            // await FollowBlog.bulkCreate(updateDate, {  })
-            if (followerIdList.length) {
-                let ok = await createFollowers({ blog_id, listOfFollowerId: followerIdList, updateData: { deletedAt: null }, opts: { updateOnDuplicate: ['deletedAt'] } })
-                if (!ok) {
-                    return new ErrModel(BLOG.UPDATE.ERR_CREATE_BLOGFOLLOW)
-                }
-            }
-            //  存放 blog 要更新的數據
-            data.showAt = new Date()
-        } else { // 隱藏blog
-            //  軟刪除既有的條目
-            let ok = await hiddenBlog({ blog_id, confirm: false })
-            if (!ok) {
-                return new ErrModel(BLOG.UPDATE.ERR_SOFT_DELETE_BLOGFOLLOW)
-            }
-        }
-    }
-
-    if (html) {
-        //  存放 blog 要更新的數據
-        data.html = my_xxs(html)
-    }
-
-    //  更新文章
-    let ok = await Blog.updateBlog({ blog_id, data })
-    if (!ok) {
-        return new ErrModel()
-    }
-
-    let blog = await Blog.readBlog({
-        attributes: ['id', 'title', 'html',],
-        where: { blog_id },
-
-    })
-    return new SuccModel(blog, cache)
+//  0324    若是從Controller取，會造成迴圈，不得已在這邊創建
+async function _findFansIds(idol_id) {
+    // user: { id, FollowPeople_F: [{ id, email, nickname, avatar }, ...] }
+    let user = await User.readUser(Opts.USER.findFans(idol_id))
+    let fans = user ? user.fans.map(({ id }) => id) : []
+    return new SuccModel({ data: fans })
 }
 
 

@@ -102,9 +102,6 @@ async function parse(ctx) {
 
     let prefix = blog_id ? BLOG : AVATAR
     let res = {}
-
-
-
     let bar = { ref: undefined }
 
     if (hash) {

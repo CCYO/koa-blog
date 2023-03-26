@@ -16,7 +16,7 @@ module.exports = {
             TARGET_PROP: 'show',
             TIME: {
                 POSITIVE: 'showAt',
-                NEGATIVE: 'createdAt'
+                NEGATIVE: 'updatedAt'
             },
             TYPE: {
                 POSITIVE: 'show',

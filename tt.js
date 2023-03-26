@@ -7,7 +7,7 @@ go()
 
 async function go() {
     try {
-        let a = await C_Blog.findBlogsForUserPage(1)
+        let a = await C_Blog.removeBlogs([16], 1)
         console.log(a)
     } catch (e) {
         console.log(e)

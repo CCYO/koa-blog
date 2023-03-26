@@ -1,7 +1,21 @@
 const { BlogImgAlt } = require('../db/mysql/model')
 
-const { init_blogImgAlt } = require('../utils/init/blogImgAlt')
-
+//  0326
+async function deleteBlogImgAlts(ids){
+    let row = await BlogImgAlt.destroy({
+        where: { id: { [Op.in]: ids }}
+    })
+    if(ids.length !== row){
+        return false
+    }
+    return true
+}
+//  0326
+async function count(opt){
+    let { count } = await BlogImgAlt.findAndCountAll(opts)
+    return count
+}
+//  0326
 async function createBlogImgAlt({ blogImg_id, alt }){
     let data = { blogImg_id }
     if(alt){
@@ -9,24 +23,6 @@ async function createBlogImgAlt({ blogImg_id, alt }){
     }
     let blogImgAlt = await BlogImgAlt.create(data)
     return await readBlogImgAlt({ id: blogImgAlt.dataValues.id })
-}
-
-async function deleteBlogImgAlt({ blogImgAlt_list }){
-    // let opts = { where }
-    // let row = await BlogImgAlt.destroy(opts)
-    // if(row !== whereOps.id.length){
-    //     return false
-    // }
-    // return true
-
-    let [{affectedRows}] = await seq.getQueryInterface().bulkDelete('BlogImgAlt', {
-        id: { [Op.in]: blogImgAlt_list }
-    })
-    
-    if(affectedRows !== blogImgAlt_list.length ){
-        return false
-    }
-    return true
 }
 
 async function updateBlogImgAlt(data, whereOps){
@@ -38,16 +34,6 @@ async function updateBlogImgAlt(data, whereOps){
     return true
 }
 
-async function readBlogImgAlt({ where, attributes }){
-    let opts = { where }
-    if (attributes) {
-        opts.attributes = attributes
-    }
-
-    let blogImgAlts = await BlogImgAlt.findAll(opts)
-    
-    return blogImgAlts.map( init_blogImgAlt )
-}
 
 async function courtOfSomeImgInBlog({blog_id, blogImg_id}){
     let {} = await BlogImgAlt.findAndCountAll({
@@ -56,8 +42,8 @@ async function courtOfSomeImgInBlog({blog_id, blogImg_id}){
 }
 
 module.exports = {
-    createBlogImgAlt,
-    deleteBlogImgAlt,
+    deleteBlogImgAlts,  //  0326
+    count,              //  0326
+    createBlogImgAlt,   //  0326
     updateBlogImgAlt,
-    readBlogImgAlt
 }

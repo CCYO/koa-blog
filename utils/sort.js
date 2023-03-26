@@ -38,7 +38,7 @@ function initTimeFormatAndSort(list, options) {
     })
     //  指定時間格式
     return resList.map(item => {
-        item.time = date.format(item[markTime], timeFormat)
+        item.time = item[markTime]
         delete item[POSITIVE]
         delete item[NEGATIVE]
         return item

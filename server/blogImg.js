@@ -1,20 +1,21 @@
 const { BlogImg, BlogImgAlt } = require('../db/mysql/model')
 
-const { init_blogImg } = require('../utils/init/blogImg')
+const Init = require('../utils/init')
 
-async function createBlogImg({blog_id, img_id, name}){
-    let blogImg = await BlogImg.create({blog_id, img_id, name})
-    return init_blogImg(blogImg)
-}
-
-async function deleteBlogImg({where}){
-    let opts = { where }
-    
-    let row = await BlogImg.destroy({where})
-    if(listOfId.length !== row){
+//  0326
+async function deleteBlogImg(id){
+    let row = await BlogImg.destroy({
+        where: { id }
+    })
+    if(!row){
         return false
     }
     return true
+}
+//  0326
+async function createBlogImg({blog_id, img_id, name}){
+    let blogImg = await BlogImg.create({blog_id, img_id, name})
+    return Init.blogImg(blogImg)
 }
 
 async function updateBlogImg({id, data}){
@@ -56,8 +57,9 @@ async function readBlogImg( whereOps , needBlogImgAlt = false){
 }
 
 module.exports = {
-    createBlogImg,
-    deleteBlogImg,
+    deleteBlogImg,      //  0326
+    createBlogImg,      //  0326
+    
     updateBlogImg,
     updateBulkBlogImg,
     readBlogImg

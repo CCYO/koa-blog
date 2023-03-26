@@ -23,8 +23,9 @@
         <label> <input type="checkbox" id="show" name='show' />公開文章</label>
         <% if (blog.show) { %>
         <p>已於 <%= blog.showAt %> 發佈</p>
+        <% } else { %>
+        <p>最近一次於 <%= blog.updatedAt %> 編輯</p>
         <% } %>
-
         <button id="save">存檔</button>
         <button id="remove">刪除此篇文章</button>
     </div>

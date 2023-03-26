@@ -1,15 +1,9 @@
-// const init_img = require('./img')
-const init_alt = require('./blogImgAlt')
+const { BLOG: { TIME_FORMAT } } = require('../../conf/constant')
+const date = require('date-and-time')
 const init_user = require('./user')
-
-const {
-    initCommentsForBrowser
-} = require('./comment')
-const _blog = require('./blog')
-
-const { init_blogImg } = require('./blogImg')
+const init_commentForBrowser = require('./comment')
 const { init_newsOfFollowId, init_excepts } = require('./news')
-
+//  0326
 function init(data, _init) {
     if (Array.isArray(data)) {
         return init_datas(data, _init)
@@ -17,14 +11,14 @@ function init(data, _init) {
         return init_data(data, _init)
     }
 }
-
+//  0326
 function init_datas(datas, _init) {
     if (!datas.length) {
         return []
     }
     return datas.map(data => init_data(data, _init))
 }
-
+//  0326
 function init_data(data, _init) {
     if (!data) {
         return null
@@ -35,13 +29,13 @@ function init_data(data, _init) {
     }
     return res
 }
-
-function initComment(data){
+//  0326
+function initComment(data) {
     return init(data, go)
     function go(comment) {
         let data = { ...comment }
         let map = new Map(Object.entries(data))
-        if(map.has('p_id')){
+        if (map.has('p_id')) {
             let pid = map.get('p_id')
             data.p_id = pid === null ? 0 : pid
         }
@@ -58,60 +52,62 @@ function initComment(data){
         return data
     }
 }
-
+//  0326
+function initCommentsForBrowser(data) {
+    let comments = initComment(data)
+    return init_commentForBrowser(comments)
+}
+//  0326
 function initBlog(data) {
-    return init(data, go)
+    let res = init(data, go)
+    return res
     function go(data) {
-        let json = { ...data }
-        let map = new Map(Object.entries(json))
+        let blog = { ...data }
+        let map = new Map(Object.entries(blog))
         if (map.has('author')) {
             let author = map.get('author')
-            json.author = initUser(author)
+            blog.author = initUser(author)
+        }
+        if (map.has('show')) {
+            if (map.get('show')) {
+                blog.showAt = date.format(blog.showAt, TIME_FORMAT)
+            } else {
+                blog.updatedAt = date.format(blog.updatedAt, TIME_FORMAT)
+            }
         }
         if (map.has('BlogImgs')) {
-            json.blogImgs = _initImg(map.get('BlogImgs'))
+            delete blog.BlogImgs
+            let imgs = _initBlogImg(map.get('BlogImgs'))
+            blog.imgs = imgs.flat()
         }
-        return json
+        return blog
     }
-
 }
-function _initAlt(alts) {
-    return init(alts, init_alt)
-}
-function _initImg(blogImg) {
+//  0326
+function _initBlogImg(blogImg) {
     return init(blogImg, go)
     function go(blogImg) {
-        let {
-            name,
-            id: blogImg_id,
-            Img: {
-                id: img_id,
-                hash,
-                url
-            },
-            BlogImgAlts: blogImgAltList
-        } = blogImg
-        blogImgAltList = _initAlt(blogImgAltList)
-        // return { }
-        // let alts = _init_alts(BlogImgAlts)   // [{ id, alt },...]
-        return { img_id, hash, url, blogImg_id, name, blogImgAltList }
-    }
-    if (blogImgs && blogImgs.length) {
-        let imgList = blogImgs.map(blogimg => {
-
-        })
-        imgList.reduce((initVal, { blogImgAltList, ...imgData }) => {
-            blogImgAltList.forEach(blogImgAlt => {
-                let img = { ...blogImgAlt, ...imgData }
-                if (!img.alt) {
-                    img.alt = img.name
+        let { blogImg_id, name, ...otherData } = blogImg
+        let res = { blogImg_id, name }
+        let map = new Map(Object.entries(otherData))
+        if (map.has('Img')) {
+            let img = init(map.get('Img'))
+            res = { ...res, ...img }
+        }
+        if (map.has('BlogImgAlts')) {
+            let alts = init(map.get('BlogImgAlts'))
+            res = alts.map(item => {
+                if (!item.alt) {
+                    item.alt = name
                 }
-                initVal.push(img)
+                return { ...res, ...item }
             })
-            return initVal
-        }, res.imgs)
+        }
+        //  { id, alt, blogImg_id, name, img_id, url, hash}
+        return res
     }
 }
+//  0326
 function initUser(data) {
     return init(data, init_user)
 }
@@ -119,11 +115,14 @@ function initUser(data) {
 
 
 module.exports = {
-    user: initUser,
-    blog: initBlog,
-    comment: initComment,
-    initCommentsForBrowser,
-    init_blogImg,
+    blogImg: init,          //  0326
+    img: init,              //  0326
+    user: initUser,         //  0326
+    blog: initBlog,         //  0326
+    comment: initComment,   //  0326
+    browser: {
+        comment: initCommentsForBrowser //  0326
+    },
     init_newsOfFollowId,
     init_excepts
 }

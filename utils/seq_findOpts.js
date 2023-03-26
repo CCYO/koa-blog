@@ -10,10 +10,22 @@ const {
     BlogImgAlt
 } = require('../db/mysql/model')
 
+const BLOGIMGALT = {
+    count: (blogImg_id) => ({
+        attributes: ['id'],
+        where: { blogImg_id }  
+    })
+}
+const IMG = {
+    findImgThenEditBlog: (hash) => ({
+        attributes: ['id', 'url', 'hash'],
+        where: { hash }
+    })
+}
 const BLOG = {
     //  0324
     findBlogsForUserPage: (author_id) => ({
-        attributes: ['id', 'title', 'show', 'showAt', 'createdAt'],
+        attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
         where: { user_id: author_id }
     }),
     //  0228
@@ -26,20 +38,20 @@ const BLOG = {
             where.user_id = author_id
         }
         return {
-            attributes: ['id', 'title', 'html', 'show', 'showAt'],
+            attributes: ['id', 'title', 'html', 'show', 'showAt', 'updatedAt'],
             where,
             include: [
                 {
-                    model: User,
+                    association: 'author',
                     attributes: ['id', 'email', 'nickname']
                 },
                 {
                     model: BlogImg,
-                    attributes: ['id', 'name'],
+                    attributes: [[ 'id', 'blogImg_id'], 'name'],
                     include: [
                         {
                             model: Img,
-                            attributes: ['id', 'url', 'hash']
+                            attributes: [['id', 'img_id'], 'url', 'hash']
                         },
                         {
                             model: BlogImgAlt,
@@ -273,6 +285,8 @@ const USER = {
 }
 
 module.exports = {
+    BLOGIMGALT,     //  0326
+    IMG,            //  0326
     BLOG,
     USER,           //0323
 
