@@ -12,6 +12,12 @@ const Cache = require('../../middleware/cache')
 const Blog = require('../../controller/blog')
 router.prefix('/api/blog')
 
+//  刪除 blogs  0326
+router.delete('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
+    const authorId = ctx.session.user.id
+    const { id } = ctx.request.body
+    ctx.body = await Blog.removeBlogs(id, authorId)
+})
 //  更新 blog 資料  0326
 router.patch('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
     const author_id = ctx.session.user.id
@@ -35,12 +41,7 @@ router.post('/blogImgAlt', Check.api_logining, Cache.modifiedtCache, async (ctx,
     let { blogImg_id, blog_id } = ctx.request.body
     ctx.body = await addBlogImgAlt(blogImg_id, blog_id)
 })
-//  刪除 blogs  0303
-router.delete('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
-    const authorId = ctx.session.user.id
-    const { id } = ctx.request.body
-    ctx.body = await Blog.removeBlogs(id, authorId)
-})
+
 
 
 

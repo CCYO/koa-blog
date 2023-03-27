@@ -1,7 +1,6 @@
 /**
- * @description Server FollowBlog
- */
-const { FollowBlog } = require('../db/mysql/model')
+ * @description ServePubScr*/
+const { PubScr } = require('../db/mysql/model')
 
 /** 刪除關聯    0322
  * @param {number} idol_id idol id
@@ -16,7 +15,7 @@ const { FollowBlog } = require('../db/mysql/model')
         datas = [data]
     }
     let keys = [ ...Object.keys(datas[0]), 'updatedAt']
-    let follows = await FollowBlog.bulkCreate( datas, {
+    let follows = await PubScr.bulkCreate( datas, {
         updateOnDuplicate: [...keys]
     })
     if(datas.length !== follows.length){
@@ -34,7 +33,7 @@ async function createFollows(data) {
     }
     datas = datas.map( item => ({ ...item, deletedAt: null }) )
     let keys = [ ...Object.keys(datas[0]), 'updatedAt']
-    let follows = await FollowBlog.bulkCreate(datas, {
+    let follows = await PubScr.bulkCreate(datas, {
         updateOnDuplicate: [...keys]
     })
     if (datas.length !== follows.length) {
@@ -44,14 +43,14 @@ async function createFollows(data) {
 }
 
 async function readFollowers(opts) {
-    let followers = await FollowBlog.findAll(opts)
+    let followers = await PubScr.findAll(opts)
     return followers.map( follower => follower.toJSON() )
 }
 
 async function hiddenBlog({where}) {
     // let { blog_id, confirm } = opts
     let opts = { where }
-    let row = await FollowBlog.destroy(opts)
+    let row = await PubScr.destroy(opts)
     if(!row){
         return false
     }
@@ -61,15 +60,10 @@ async function hiddenBlog({where}) {
 async function restoreBlog(opt_where) {
     let where = { ...opt_where }
 
-    await FollowBlog.restore(where)
+    await PubScr.restore(where)
 }
 
-async function updateFollowBlog(newData, opt_where, options) {
-    let where = { ...opt_where }
-    let opts = { where, ...options }
-    const [row] = await FollowBlog.update(newData, opts)
-    return row
-}
+
 
 
 
@@ -80,7 +74,6 @@ module.exports = {
     restoreBlog,
     
     hiddenBlog,
-    updateFollowBlog,
     readFollowers,
 
     

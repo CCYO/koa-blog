@@ -1,6 +1,6 @@
 const User = require('../server/user')
 
-const { BLOG: { NOT_EXIST, UPDATE_ERR } } = require('../model/errRes')
+const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR } } = require('../model/errRes')
 const Controller_FollowBlog = require('./followBlog')   //  0326
 const Controller_BlogImgAlt = require('./blogImgAlt')
 const Blog = require('../server/blog')              //  0324
@@ -32,24 +32,26 @@ async function removeBlogs(blogIdList, authorId) {
 
     //  處理cache -----
     //  找出 blog 的 follower
-    let blogFollowerIdList = await blogIdList.reduce(async (acc, blog_id) => {
+    let subscripters = await blogIdList.reduce(async (acc, blog_id) => {
         let followers = await FollowBlog.readFollowers(Opts.findBlogFollowersByBlogId(blog_id))
-        followeridList = await acc
-        for (let { follower_id } of followers) {
-            followeridList.push(follower_id)
+        followers = followers.map( ({id}) => id )
+        let res = await acc
+        for (let id of followers) {
+            res.push(id)
         }
-        return followeridList
+        return res
     }, [])
 
     let cache = {
-        [CACHE.TYPE.NEWS]: blogFollowerIdList,
+        [CACHE.TYPE.NEWS]: subscripters,
         [CACHE.TYPE.PAGE.USER]: [authorId]
     }
 
-    let ok = await Blog.deleteBlogs({ blogIdList, authorId })
+    let datas = blogIdList.map( id => ({ id, user_id: authorId }))
+    let ok = await Blog.deleteBlogs(datas)
 
     if (!ok) {
-        return new ErrModel(BLOG.BLOG_REMOVE_ERR)
+        return new ErrModel(REMOVE_ERR)
     }
     return new SuccModel({ cache })
 }

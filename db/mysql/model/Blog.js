@@ -25,6 +25,8 @@ const Blog = seq.define('Blog', {
         type: DATE,
         allowNull: true
     }
+},{
+    paranoid: true
 })
 
 module.exports = Blog

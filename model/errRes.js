@@ -19,7 +19,7 @@ module.exports = {
         NOT_EXIST: { errno: 702, msg: 'BLOG不存在' },        //  0228
         UPDATE_ERR: { errno: 703, msg: 'BLOG資料更新失敗' },                //  0326
         IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上' },
-        BLOG_REMOVE_ERR: { errno: 706, msg: '刪除Blog失敗' }
+        REMOVE_ERR: { errno: 706, msg: '刪除Blog失敗' }
     },
     REGISTER: {
         NO_EMAIL: { errno: 102, msg: '信箱未填' },          //  0323

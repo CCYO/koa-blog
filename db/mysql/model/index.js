@@ -92,7 +92,7 @@ module.exports = {
 
     User, Blog, Img, Comment,
     BlogImg, BlogImgAlt,
-    FollowBlog,
+    PubScr: FollowBlog,
     FollowComment,
     News, 
 }
