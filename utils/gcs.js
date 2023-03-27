@@ -1,7 +1,8 @@
 /**
  * @description middleware of upload to GCS by Formidable
  */
-
+const { UPDATE: { AVATAR_FORMAT_ERR } } = require('../model/errRes')
+const { ErrModel } = require('../model')
 const formidable = require('formidable')
 
 const { storage } = require('../db/firebase')
@@ -96,7 +97,7 @@ const _gen_formidable = (bar) => {
  */
 async function parse(ctx) {
     let { ext, hash, blog_id } = ctx.query
-    if (hash && ext !== 'jpg' && ext !== 'png') {
+    if (hash && ext !== 'JPG' && ext !== 'PNG') {
         throw new ErrModel(AVATAR_FORMAT_ERR)
     }
 

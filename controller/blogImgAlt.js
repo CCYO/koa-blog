@@ -8,12 +8,16 @@ const BlogImgAlt = require('../server/blogImgAlt')
 async function cancelWithBlog(blogImg_id, blogImgAlt_list){
     let count = await BlogImgAlt.count(Opts.BLOGIMGALT.count(blogImg_id))
     if(!count){
+        console.log('沒有count')
         return new ErrModel(NOT_EXIST)
     }
+
     //  既存數量 = 要刪除的數量，刪除整筆 blogImg
     if(count === blogImgAlt_list.length){
-        return await Controller_BlogImg.removeBlogImg(blogImgId)
+        console.log('刪除整筆')
+        return await Controller_BlogImg.removeBlogImg(blogImg_id)
     }
+    console.log('刪除個別')
     //  各別刪除 blogImgAlt
     return await removeBlogImgAlts(blogImgAlt_list)
 }
@@ -26,7 +30,7 @@ async function removeBlogImgAlts(blogImgAlt_list){
     return new SuccModel()
 }
 
-async function addBlogImgAlt(blogImg_id, blog_id) {
+async function addBlogImgAlt({blogImg_id, blog_id}) {
     let blogImgAlt = await BlogImgAlt.createBlogImgAlt({ blogImg_id })
     if(!blogImgAlt){
         return new ErrModel(CREATE_ERR)

@@ -183,7 +183,7 @@ function findPublicBlogListByExcludeId(exclude_id) {
             user_id: { [Op.not]: exclude_id }
         },
         include: {
-            model: User,
+            association: 'author',
             attributes: ['id', 'email', 'nickname']
         }
     }

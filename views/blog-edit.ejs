@@ -512,7 +512,9 @@
                 async function customUpload(img, insertFn) {
                     let nameAndExt = getNameAndExt(img.name)
                     let { name, ext } = nameAndExt
-                    if (ext !== 'png' && ext !== 'jpg') {
+                    name = name.trim().toUpperCase()
+                    ext = ext.trim().toUpperCase()
+                    if (ext !== 'PNG' && ext !== 'JPG') {
                         alert('只能提供png與jpg的圖檔類型')
                         return
                     }

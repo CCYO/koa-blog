@@ -1,3 +1,4 @@
+const Init = require('../utils/init')
 const { BlogImgAlt } = require('../db/mysql/model')
 
 //  0326
@@ -12,7 +13,7 @@ async function deleteBlogImgAlts(ids){
 }
 //  0326
 async function count(opt){
-    let { count } = await BlogImgAlt.findAndCountAll(opts)
+    let { count } = await BlogImgAlt.findAndCountAll(opt)
     return count
 }
 //  0326
@@ -22,7 +23,10 @@ async function createBlogImgAlt({ blogImg_id, alt }){
         data.alt = alt
     }
     let blogImgAlt = await BlogImgAlt.create(data)
-    return await readBlogImgAlt({ id: blogImgAlt.dataValues.id })
+    if(!blogImgAlt){
+        return false
+    }
+    return Init.blogImgAlt(blogImgAlt)
 }
 
 async function updateBlogImgAlt(data, whereOps){

@@ -1,26 +1,20 @@
 const User = require('../server/user')
-
 const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR } } = require('../model/errRes')
 const Controller_FollowBlog = require('./followBlog')   //  0326
 const Controller_BlogImgAlt = require('./blogImgAlt')
 const Blog = require('../server/blog')              //  0324
 const Opts = require('../utils/seq_findOpts')       //  0324
-const {
-    organizedList,          //  0324    
-    initTimeFormatAndSort   //  0303
-} = require('../utils/sort')
-const FollowBlog = require('../server/followBlog')
-
-
-const {
-    SuccModel,  //  0228
-    ErrModel    //  0228
-} = require('../model')
-
-
+const { organizedList, initTimeFormatAndSort } = require('../utils/sort')   //  0326
+const FollowBlog = require('../server/followBlog')  //  0326
+const { SuccModel, ErrModel } = require('../model') //  0326
 const my_xxs = require('../utils/xss')          //  0303
 const { CACHE } = require('../conf/constant')
-
+//  0326
+async function findSquareBlogList(exclude_id) {
+    let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
+    blogs = initTimeFormatAndSort(blogs)
+    return new SuccModel({ data: blogs })
+}
 /** 刪除 blogs  0326
  * @param {number} blog_id 
  * @returns {object} SuccModel || ErrModel
@@ -34,7 +28,7 @@ async function removeBlogs(blogIdList, authorId) {
     //  找出 blog 的 follower
     let subscripters = await blogIdList.reduce(async (acc, blog_id) => {
         let followers = await FollowBlog.readFollowers(Opts.findBlogFollowersByBlogId(blog_id))
-        followers = followers.map( ({id}) => id )
+        followers = followers.map(({ id }) => id)
         let res = await acc
         for (let id of followers) {
             res.push(id)
@@ -47,7 +41,7 @@ async function removeBlogs(blogIdList, authorId) {
         [CACHE.TYPE.PAGE.USER]: [authorId]
     }
 
-    let datas = blogIdList.map( id => ({ id, user_id: authorId }))
+    let datas = blogIdList.map(id => ({ id, user_id: authorId }))
     let ok = await Blog.deleteBlogs(datas)
 
     if (!ok) {
@@ -59,7 +53,7 @@ async function removeBlogs(blogIdList, authorId) {
 async function removeImgs(cancelImgs) {
     let resModel
     for (let { blogImg_id, blogImgAlt_list } of cancelImgs) {
-        let resModel = await Controller_BlogImgAlt.cancelWithBlog(blogImg_id, blogImgAlt_list)
+        resModel = await Controller_BlogImgAlt.cancelWithBlog(blogImg_id, blogImgAlt_list)
         if (resModel.errno) {
             break
         }
@@ -118,10 +112,12 @@ async function modifyBlog(author_id, blog_id, blog_data) {
             }
         }
     }
-    //  更新文章
-    let ok = await Blog.updateBlog({ blog_id, newData })
-    if (!ok) {
-        return new ErrModel(UPDATE_ERR)
+    if (Object.getOwnPropertyNames(newData).length) {
+        //  更新文章
+        let ok = await Blog.updateBlog({ blog_id, newData })
+        if (!ok) {
+            return new ErrModel(UPDATE_ERR)
+        }
     }
     //  刪除圖片
     if (map.has('cancelImgs')) {
@@ -188,17 +184,6 @@ async function findBlogsForUserPage(userId, options) {
     let data = organizedList(blogs, options)
     return new SuccModel({ data })
 }
-//  0303
-async function findSquareBlogList(exclude_id) {
-    let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
-    blogs = initTimeFormatAndSort(blogs)
-    return new SuccModel({ data: blogs })
-}
-
-
-
-
-
 //  0324    若是從Controller取，會造成迴圈，不得已在這邊創建
 async function _findFansIds(idol_id) {
     // user: { id, FollowPeople_F: [{ id, email, nickname, avatar }, ...] }
@@ -207,11 +192,9 @@ async function _findFansIds(idol_id) {
     return new SuccModel({ data: fans })
 }
 
-
 module.exports = {
     findBlogsForUserPage,   //  0324
-
-    modifyBlog,
+    modifyBlog,             //  0326
     findSquareBlogList,      //  0303
     removeBlogs,            //  0303
     findBlog,                 //  0303

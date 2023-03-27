@@ -115,6 +115,7 @@ function initUser(data) {
 
 
 module.exports = {
+    blogImgAlt: init,       //  0326
     blogImg: init,          //  0326
     img: init,              //  0326
     user: initUser,         //  0326

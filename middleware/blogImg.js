@@ -12,18 +12,20 @@ const { parse } = require('../utils/gcs')
     let { blog_id, hash, name } = ctx.query
     //  查找img紀錄，若有則代表GCS內已有圖檔，直接將該img紀錄與blog作連結
     let { data: img } = await Controller_img.findImgThenEditBlog(hash)
+    let img_id
+    let url
     //  找不到，創建img
     if(!img){
         console.log('@GCS無圖檔，直接創建img且作BlogImg關聯')
         let res = await parse(ctx)
-        let { blogImg: url } = res
+        url = res.blogImg
         let resModel = await Controller_img.addImg({hash, url})
         if(resModel.errno){
             return res
         }
-        img = resModel.data
+        img_id = resModel.data.id
     }
-    let resModel = await Controller_img.associateWithBlog({ blog_id, hash, name })
+    let resModel = await Controller_img.associateWithBlog({ img_id, blog_id, hash, name })
     if(resModel.errno){
         return resModel
     }

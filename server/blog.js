@@ -62,7 +62,6 @@ async function readBlogs(opts) {
 //  0228
 async function readBlog(opts) {
     let blog = await Blog.findOne(opts)
-    console.log('x => ', blog)
     return Init.blog(blog)
 }
 

@@ -44,8 +44,8 @@ async function associateWithBlog({ img_id, blog_id, name }) {
     }
     let { id: blogImg_id } = res_blogImg.data
     //  創建blogImgAlt
-    let res_blogImgAlt = await Controller_BlogImgAlt.createBlogImgAlt({ blogImg_id })
-    if (res_blogImgALt.errno) {
+    let res_blogImgAlt = await Controller_BlogImgAlt.addBlogImgAlt({ blogImg_id })
+    if (res_blogImgAlt.errno) {
         return res_blogImgAlt
     }
     let { id: alt_id, alt } = res_blogImgAlt.data
