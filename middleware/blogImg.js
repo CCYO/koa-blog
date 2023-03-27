@@ -1,3 +1,4 @@
+const { GCS_ref: { BLOG} } = require('../conf/constant')
 const { CACHE: { TYPE: { PAGE } } } = require('../conf/constant')
 const { SuccModel } = require('../model')
 const Controller_img = require('../controller/img')
@@ -12,18 +13,21 @@ const { parse } = require('../utils/gcs')
     let { blog_id, hash, name } = ctx.query
     //  查找img紀錄，若有則代表GCS內已有圖檔，直接將該img紀錄與blog作連結
     let { data: img } = await Controller_img.findImgThenEditBlog(hash)
-    let img_id
-    let url
+    let img_id = img ? img.id : undefined
+    let url = img ? img.url : undefined
     //  找不到，創建img
     if(!img){
         console.log('@GCS無圖檔，直接創建img且作BlogImg關聯')
-        let res = await parse(ctx)
-        url = res.blogImg
-        let resModel = await Controller_img.addImg({hash, url})
-        if(resModel.errno){
-            return res
+        let updateRes = await parse(ctx)
+        if(updateRes.errno){
+            return updateRes
         }
-        img_id = resModel.data.id
+        url = updateRes[BLOG]
+        let imgRes = await Controller_img.addImg({hash, url})
+        if(imgRes.errno){
+            return imgRes
+        }
+        img_id = imgRes.data.id
     }
     let resModel = await Controller_img.associateWithBlog({ img_id, blog_id, hash, name })
     if(resModel.errno){

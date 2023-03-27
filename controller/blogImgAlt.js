@@ -30,7 +30,7 @@ async function removeBlogImgAlts(blogImgAlt_list){
     return new SuccModel()
 }
 
-async function addBlogImgAlt({blogImg_id, blog_id}) {
+async function addBlogImgAlt({ blogImg_id }) {
     let blogImgAlt = await BlogImgAlt.createBlogImgAlt({ blogImg_id })
     if(!blogImgAlt){
         return new ErrModel(CREATE_ERR)

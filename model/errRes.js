@@ -43,7 +43,10 @@ module.exports = {
         UNEXPECTED: { errno: 399 },
         VALICATE_ERR: { errno: 302 },
         NO_THIS_ONE: { errno: 303, msg: '沒有這個人' },
-        AVATAR_FORMAT_ERR: { errno: 304, msg: 'avatar圖檔格式錯誤，只接受JPG或PNG' }
+        AVATAR_FORMAT_ERR: { errno: 304, msg: 'avatar圖檔格式錯誤，只接受JPG或PNG' },
+        NO_HASH: { errno: 305, msg: '少了hash數據'},
+        FORMIDABLE_ERR: { errno: 306, msg: 'formidable 解析發生錯誤'},
+        UPDATE_GCE_ERR: { errno: 307, msg: 'upload file to GCS 發生錯誤'}
     },
     PERMISSION: {
         NOT_LOGIN: { errno: 501, msg: '從未登入' },

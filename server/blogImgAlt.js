@@ -1,3 +1,4 @@
+const { Op } = require('sequelize')
 const Init = require('../utils/init')
 const { BlogImgAlt } = require('../db/mysql/model')
 

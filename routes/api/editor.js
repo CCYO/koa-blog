@@ -39,7 +39,7 @@ router.post('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => 
 //  為Blog既存圖片建立alt數據
 router.post('/blogImgAlt', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
     let { blogImg_id, blog_id } = ctx.request.body
-    ctx.body = await addBlogImgAlt(blogImg_id, blog_id)
+    ctx.body = await addBlogImgAlt({blogImg_id})
 })
 
 

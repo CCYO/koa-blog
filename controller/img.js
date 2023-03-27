@@ -43,14 +43,16 @@ async function associateWithBlog({ img_id, blog_id, name }) {
         return res_blogImg
     }
     let { id: blogImg_id } = res_blogImg.data
+    console.log('@ 完成 blogImg創建 => ', res_blogImg.data)
     //  創建blogImgAlt
     let res_blogImgAlt = await Controller_BlogImgAlt.addBlogImgAlt({ blogImg_id })
     if (res_blogImgAlt.errno) {
         return res_blogImgAlt
     }
-    let { id: alt_id, alt } = res_blogImgAlt.data
+    let { id, alt } = res_blogImgAlt.data
+    console.log('@ 完成 alt創建 => ', res_blogImgAlt.data)
     let data = {
-        blog_id, blogImg_id, name, alt_id, alt
+        blog_id, blogImg_id, name, id, alt
     }
     return new SuccModel({data})
 }

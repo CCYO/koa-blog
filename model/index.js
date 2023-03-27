@@ -23,7 +23,16 @@ class ErrModel extends _Model {
     }
 }
 
+class MyErr extends Error {
+    constructor({errno, msg, err}){
+        super(err)
+        this.errno = errno
+        this.msg = msg
+    }
+}
+
 module.exports = {
     SuccModel,
-    ErrModel
+    ErrModel,
+    MyErr
 }

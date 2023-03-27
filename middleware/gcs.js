@@ -14,17 +14,14 @@ const { GCS_ref: { AVATAR } } = require('../conf/constant')
 
 
 async function parse_user_data(ctx, next) {    
-    let res = await parse(ctx)
-
-    if(!res){
-        throw new ErrModel(AVATAR_FORMAT_ERR)
-        return                                                                                                                                                                                                                                                  
+    let resModel = await parse(ctx)
+    if(resModel.errno){
+        return resModel
     }
-
-    if(res.age){
-        res.age = Number.parseInt(res.age)
+    if(resModel.age){
+        resModel.age = Number.parseInt(res.age)
     }
-    res = {...res, avatar_hash: ctx.query.hash}
+    let res = {...resModel, avatar_hash: ctx.query.hash}
     ctx.request.body = res
     await next()
     return
