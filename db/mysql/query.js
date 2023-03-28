@@ -3,28 +3,30 @@ const Controller_Blog = require('../../controller/blog')
 const Controller_Comment = require('../../controller/comment')
 const { QueryTypes } = require('sequelize')
 const moment = require('moment')
-
 const {
     NEWS: {
         LIMIT
     }
 } = require('../../conf/constant')
-
 const { seq } = require('./model')
 
-const { readUser } = require('../../server/user')
-const { readBlog } = require('../../server/blog')
-const { readCommentForNews } = require('../../server/comment')
+async function _initFollows(follows, userId) {
+    let newsList = await Promise.all( follows.map(follow => _initFollow(follow, userId)) )
 
-const Opts = require('../../utils/seq_findOpts')
-const { MyErr } = require('../../model')
-
-async function _initNewsItem(item, userId) {
+    let res = newsList.reduce((acc, news) => {
+        if(news.confirm){
+            acc.confirm.push(news)
+        }else{
+            acc.unconfirm.push(news)
+        }
+        return acc
+    }, { unconfirm: [], confirm: [] } )
+    return res
+}
+async function _initFollow(item, userId) {
     let { type, id, target_id, follow_id, confirm, createdAt } = item
     let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
     let res = { type, id, timestamp, confirm }
-    let resModel
-
     if (type === 1) {
         let resModel = await Controller_User.findUser(follow_id)
         if (resModel.errno) {
@@ -42,22 +44,22 @@ async function _initNewsItem(item, userId) {
         if (resModel.errno) {
             throw resModel
         }
-        let {  } = resModel.data
-        let { ...res, id: comment_id, time, commenter, blog, html } = comment
+        let { id, p_id, time, commenter, blog, html } = resModel.data
         //  獲取早前未確認到的comment資訊
-        let other_comments = await Controller_Comment. readCommentForNews({ blog_id: blog.id, createdAt }, userId)
-        // let other_comments = await readCommentForNews({ blog_id: blog.id, createdAt }, userId)
-        let others = other_comments.length ? other_comments.map(comment => {
-            let { commenter } = comment
-            return commenter
-        }) : []
+        let { data: others } = await Controller_User.findOthersInSomeBlogAndPid({commenter_id: commenter.id , p_id, blog_id: blog.id, createdAt})
+        console.log('@others => ', others)
+        others = others.reduce( (acc, { nickname, comments }) => {
+            acc.commenters.push(nickname)
+            for( let id of comments){
+                acc.comments.push(id)
+            }
+            return acc
+        }, { commenters: [], comments: []})
         console.log('others => ', others)
+        return { ...res, comment: { id, commenter, html, time, blog, others}}
         let x = { ...res, comment: { id: comment_id, commenter, html, blog, time, others } }
-        console.log('x => ', x)
-        return x
     }
 }
-
 async function readNews({ userId, excepts }) {
     // let { people, blogs, comments } = excepts
     let list = { people: '', blogs: '', comments: '' }
@@ -97,8 +99,11 @@ async function readNews({ userId, excepts }) {
     ORDER BY confirm=1, createdAt DESC
     LIMIT ${LIMIT}
     `
-    let newsList = await seq.query(query, { type: QueryTypes.SELECT })
-    return await _init_newsOfComfirmRoNot(newsList, userId)
+    let follows = await seq.query(query, { type: QueryTypes.SELECT })
+    let x = await _initFollows(follows, userId)
+
+    console.log(x.unconfirm[1].comment)
+    return x
 }
 
 async function count({ userId }) {
@@ -131,30 +136,6 @@ async function count({ userId }) {
 
     return { num: { unconfirm, confirm, total } }
 }
-
-async function _init_newsOfComfirmRoNot(newsList, userId) {
-    let res = { unconfirm: [], confirm: [] }
-
-    if (!newsList.length) {
-        return res
-    }
-
-    let listOfPromise = newsList.map(news => _initNewsItem(news, userId))
-
-    listOfPromise = await Promise.all(listOfPromise)
-
-    res = listOfPromise.reduce((initVal, currVal) => {
-        if (!currVal) {
-            return initVal
-        }
-        let { confirm } = currVal
-        confirm && initVal.confirm.push(currVal) || initVal.unconfirm.push(currVal)
-        return initVal
-    }, res)
-
-    return res
-}
-
 
 
 async function countNewsTotalAndUnconfirm({ userId, options }) {

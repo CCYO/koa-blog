@@ -1,6 +1,5 @@
-const { BLOG: { TIME_FORMAT } } = require('../../conf/constant')
+const { USER: { AVATAR }, BLOG: { TIME_FORMAT } } = require('../../conf/constant')
 const date = require('date-and-time')
-const init_user = require('./user')
 const init_commentForBrowser = require('./comment')
 const { init_newsOfFollowId, init_excepts } = require('./news')
 //  0326
@@ -29,6 +28,32 @@ function init_data(data, _init) {
     }
     return res
 }
+
+//  0326
+function initUser(data) {
+    return init(data, go)
+
+    function go(json) {
+        let data = { ...json }
+        let map = new Map(Object.entries(data))
+        //  設置默認的nickname
+        if (map.has('nickname') && !map.get('nickname')) {
+            let regex = /^([\w]+)@/
+            let [_, target] = regex.exec(map.get('email'))
+            data.nickname = target
+        }
+        //  設置默認的avatar
+        if (map.has('avatar') && !map.get('avatar')) {
+            data.avatar = AVATAR
+        }
+        if (map.has('Comments') && data.Comments.length) {
+            let comments = data.Comments
+            delete data.Comments
+            data.comments = comments
+        }
+        return data
+    }
+}
 //  0326
 function initComment(data) {
     return init(data, go)
@@ -40,14 +65,14 @@ function initComment(data) {
             data.p_id = pid === null ? 0 : pid
         }
         if (map.has('User')) {
-            let commenter = init_user(map.get('User'))
+            let commenter = initUser(map.get('User'))
             delete data.User
             data.commenter = commenter
         }
         if (map.has('Blog')) {
             let blog = map.get('Blog')
             delete data.Blog
-            data.blog = { author: init_user(blog.author), title: blog.title, id: blog.id }
+            data.blog = { author: initUser(blog.author), title: blog.title, id: blog.id }
         }
         return data
     }
@@ -107,10 +132,7 @@ function _initBlogImg(blogImg) {
         return res
     }
 }
-//  0326
-function initUser(data) {
-    return init(data, init_user)
-}
+
 
 
 

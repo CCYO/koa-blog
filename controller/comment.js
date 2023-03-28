@@ -19,37 +19,6 @@ async function findBlogsOfCommented(commenterId){
     data = [...new Set(data)]
     return new SuccModel({data})
 }
-//  0316
-async function _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id}){
-    console.log('@pid => ', p_id)
-    
-    let relatedComments = await Comment.readComments(Opts.COMMENT.findBlogCommentsRelatedPid({ blog_id, p_id }))
-    if(!author_id && !commenter_id){
-        return new SuccModel({ data: relatedComments })
-    }
-    //  若有 author_id，則代表希望整理相關數據
-    //  撈出相關comments的commenters(不含curCommenter)
-    let relatedCommenterIds = relatedComments.map(({ commenter }) => {
-        if (commenter.id === commenter_id) {
-            return null
-        }
-        return commenter.id
-    }).filter(commenterId => commenterId)
-    //  author也是相關commenter
-    if (author_id !== commenter_id) {
-        relatedCommenterIds.push(author_id)
-    }
-    //  刪去重複的commenterId
-    relatedCommenterIds = [...new Set(relatedCommenterIds)]
-    //  撈出目前相關commentId
-    let relatedCommentIds = relatedComments.map(({ id }) => id)
-    let data = {
-        comments: relatedComments,
-        commenterIds: relatedCommenterIds,
-        commentIds: relatedCommentIds
-    }
-    return new SuccModel({ data })
-}
 //  0328
 async function removeComment({ author_id, commenter_id, commentId, blog_id, p_id }) {
     //  整理出要通知的 commenters
@@ -86,7 +55,7 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     //  relatedCommenterId 不符合 followComments.follower_id，則需創建 followComment 追蹤通知
     //  relatedCommenterId 符合 followComments.follower_id，則需更新 followComment 追蹤通知
     let acculumator = { create: [], update: [] }
-    if (followComments.length) {
+    if (!followComments.length) {
         acculumator.create = relatedCommenterIds.map(id => ({ follower_id: id }))
     } else {
         acculumator = followComments.reduce((acc, { id, follower_id }) => {
@@ -101,14 +70,11 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
         }, acculumator)
     }
     //  創建Comment
-    let newComment = await Comment.createComment({ user_id: commenter_id, blog_id, html, p_id })
-    //  讀取符合Blog格式數據格式的新Comment
-    let [comment] = await Comment.readCommentsForBlog(Opts.COMMENT.findCommentById(newComment.id))
-    let { id, createdAt } = comment
+    let { id: commentId, createdAt } = await Comment.createComment({ user_id: commenter_id, blog_id, html, p_id })
     let { create, update } = acculumator
     //  創建FollowComment
     if (create.length) {
-        let datas = create.map(item => ({ ...item, id, createdAt }))
+        let datas = create.map(item => ({ ...item, id: commentId, createdAt }))
         await Controller_FollowComment.addFollowComments(datas)
     }
     if (update.length) {
@@ -125,7 +91,38 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     if (relatedCommenterIds.length) {
         cache[NEWS] = relatedCommenterIds
     }
+    //  讀取符合Blog格式數據格式的新Comment
+    let [comment] = await Comment.readCommentsForBlog(Opts.COMMENT.findCommentById(commentId))
     return new SuccModel({ data: comment, cache })
+}
+//  0316
+async function _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id}){
+    let relatedComments = await Comment.readComments(Opts.COMMENT.findBlogCommentsRelatedPid({ blog_id, p_id }))
+    // if(!author_id && !commenter_id){
+    //     return new SuccModel({ data: relatedComments })
+    // }
+    //  若有 author_id，則代表希望整理相關數據
+    //  撈出相關comments的commenters(不含curCommenter)
+    let relatedCommenterIds = relatedComments.map(({ commenter }) => {
+        if (commenter.id === commenter_id) {
+            return null
+        }
+        return commenter.id
+    }).filter(commenterId => commenterId)
+    //  author也是相關commenter
+    if (author_id !== commenter_id) {
+        relatedCommenterIds.push(author_id)
+    }
+    //  刪去重複的commenterId
+    relatedCommenterIds = [...new Set(relatedCommenterIds)]
+    //  撈出目前相關commentId
+    let relatedCommentIds = relatedComments.map(({ id }) => id)
+    let data = {
+        comments: relatedComments,
+        commenterIds: relatedCommenterIds,
+        commentIds: relatedCommentIds
+    }
+    return new SuccModel({ data })
 }
 //  0228
 async function findCommentsByBlogId(blog_id) {

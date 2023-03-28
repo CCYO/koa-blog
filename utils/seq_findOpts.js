@@ -3,6 +3,7 @@ const { Op } = require('sequelize')
 const { hash } = require('../utils/crypto')   //  0228
 
 const {
+    Comment,
     User,
     Img,
     Blog,
@@ -102,13 +103,6 @@ const FOLLOWCOMMENT = {
 }
 
 const COMMENT = {
-    findCommentersInSomeBlogAndPid: ({comment_id, p_id, blog_id, author_id}) => ({
-        attributes: ['id'],
-        where: {
-            p_id,
-            
-        }
-    }),
     findCommentForNews: (comment_id) => ({
         attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
         where: { id: comment_id },
@@ -222,6 +216,22 @@ const FOLLOWPEOPLE = {
 
 //  0228
 const USER = {
+    findOthersInSomeBlogAndPid: ({commenter_id, p_id, blog_id, createdAt}) => {
+        p_id = p_id ? p_id : 0
+        return {
+            attributes: ['id', 'email', 'nickname'],
+            where: { id: { [Op.not]: commenter_id }},
+            include: {
+                model: Comment,
+                attributes: ['id'],
+                where: {
+                    p_id,
+                    blog_id,
+                    createdAt: { [Op.gt]: createdAt }
+                }
+            }
+        }
+    },
     findArticleReaderByIdolFans: ({ idolId, fansId }) => ({
         attributes: ['id'],
         where: { id: idolId },

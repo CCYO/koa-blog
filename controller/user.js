@@ -31,12 +31,10 @@ const {
     },
 } = require('../model/errRes')
 
-async function findCommentersInSomeBlogAndPid(pid){
-    let comments = await Comment.readComments(Opts.COMMENT.findCommentersInSomeBlogAndPid({comment_id, p_id, blog_id, author_id}))
-    if(!comment){
-        return new ErrModel(NOT_EXIST)
-    }
-    return new SuccModel({ data: comment })
+async function findOthersInSomeBlogAndPid({commenter_id, p_id, blog_id, createdAt}){
+    //  [ { id, nickname, email, comments: [id, ...] }, ... ]
+    let commenters = await User.readUsers(Opts.USER.findOthersInSomeBlogAndPid({commenter_id, p_id, blog_id, createdAt}))
+    return new SuccModel({ data: commenters })
 }
 //  0324
 async function findInfoForUserPage(userId) {
@@ -158,6 +156,7 @@ async function login(email, password) {
     return new SuccModel({ data: user })
 }
 module.exports = {
+    findOthersInSomeBlogAndPid, //  0328
     register,                   //  0323
     isEmailExist,               //  0323
 

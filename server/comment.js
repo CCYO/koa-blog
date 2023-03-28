@@ -1,3 +1,4 @@
+const { COMMENT: { CREATE_ERR }} = require('../model/errRes')
 const Init = require('../utils/init')
 
 const {
@@ -9,6 +10,7 @@ const {
 
 const { Op } = require('sequelize')
 const xss = require('xss')
+const { MyErr } = require('../model')
 
 async function readOtherCommentsInPid(){
     
@@ -18,7 +20,7 @@ async function readCommentForNews(opts) {
     if(!comment){
         return false
     }
-    return Init.comment(comment)
+    return Init.browser.comment(comment)
 
     let res = await Comment.findAll({
         attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
@@ -77,7 +79,7 @@ async function createComment({
         let comment = await Comment.create(data)
         return Init.comment(comment)
     } catch (err) {
-        throw new Error(err)
+        throw new MyErr({...CREATE_ERR, err})
     }
 }
 

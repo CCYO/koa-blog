@@ -2,6 +2,9 @@ const { COMMENT: { CHECK_IS_DELETED, SORT_BY, TIME_FORMAT } } = require('../../c
 const date = require('date-and-time')
 
 function initCommentsForBrowser(comments) {
+    if(!Array.isArray(comments)){
+        return initTime(comments)
+    }
     let commentList = []
     for (let comment of comments) {
         comment.reply = []
