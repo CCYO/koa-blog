@@ -6,6 +6,23 @@ const Blog = require('../../controller/blog')
 
 router.prefix('/album')
 //  0318
+router.get('/:blog_id', async (ctx, next) => {
+    let blog_id = ctx.params.blog_id * 1
+    let res = await Blog.findBlog({blog_id})
+    let { errno, data } = res
+    if (errno) {
+        await ctx.render('page404', res)
+    }
+    let { id, title, imgs } = data
+    await ctx.render('album', {
+        title,
+        album: {
+            blog: { id, title },
+            imgs
+        }
+    })
+})
+//  0318
 router.get('/list/:user_id', async (ctx, next) => {
     let user_id = ctx.params.user_id * 1
     let isAuthor = false
@@ -26,23 +43,6 @@ router.get('/list/:user_id', async (ctx, next) => {
         title: '文章照片列表',
         user,
         albumList
-    })
-})
-//  0318
-router.get('/:blog_id', async (ctx, next) => {
-    let blog_id = ctx.params.blog_id * 1
-    let res = await Blog.findBlog(blog_id)
-    let { errno, data } = res
-    if (errno) {
-        await ctx.render('page404', res)
-    }
-    let { id, title, imgs } = data
-    await ctx.render('album', {
-        title,
-        album: {
-            blog: { id, title },
-            imgs
-        }
     })
 })
 module.exports = router

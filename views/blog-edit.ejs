@@ -495,7 +495,7 @@
                     let blogImgAlt_id = res_reg[1] * 1
                     let blog_id = pageData.blog.id
                     alt = my_xss(alt)
-                    let { data: { errno, msg } } = await axios.patch('/api/blog/blogImgAlt', { blog_id, blogImgAlt_id, alt })
+                    let { data: { errno, msg } } = await axios.patch('/api/album', { blog_id, blogImgAlt_id, alt })
                     if (errno) {
                         return msg
                     }

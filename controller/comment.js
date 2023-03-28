@@ -15,7 +15,7 @@ async function findBlogsOfCommented(commenterId){
 async function _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id}){
     console.log('@pid => ', p_id)
     
-    let relatedComments = await Comment.readComments(Opts.Comment.findBlogCommentsRelatedPid({ blog_id, p_id }))
+    let relatedComments = await Comment.readComments(Opts.COMMENT.findBlogCommentsRelatedPid({ blog_id, p_id }))
     if(!author_id && !commenter_id){
         return new SuccModel({ data: relatedComments })
     }
@@ -96,7 +96,7 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     //  創建Comment
     let newComment = await Comment.createComment({ user_id: commenter_id, blog_id, html, p_id })
     //  讀取符合Blog格式數據格式的新Comment
-    let [comment] = await Comment.readCommentsForBlog(Opts.Comment.findCommentById(newComment.id))
+    let [comment] = await Comment.readCommentsForBlog(Opts.COMMENT.findCommentById(newComment.id))
     let { id, createdAt } = comment
     let { create, update } = acculumator
     //  創建FollowComment

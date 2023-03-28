@@ -7,7 +7,7 @@ async function findItemsByTargets({ comment_ids }, opts) {
     let data = { comment_ids }
     let exclude = opts ? opts.exclude : undefined
         
-    let items = await FollowComment.readFollowComment(Opts.FollowComment.findItems(data, { exclude }))
+    let items = await FollowComment.readFollowComment(Opts.FOLLOWCOMMENT.findItems(data, { exclude }))
     return new SuccModel({ data: items.map(item => item.toJSON()) })
 }
 

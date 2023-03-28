@@ -89,7 +89,7 @@
             let blogImgAlt_id = $container.attr('data-my-photo') * 1
             let payload = { blogImgAlt_id, alt, blog_id: blog.id }
             // 發出請求
-            let { data: { errno, data, msg } } = await axios.patch('/api/blog/blogImgAlt', payload)
+            let { data: { errno, data, msg } } = await axios.patch('/api/album', payload)
             if (errno) {    //  更新失敗
                 console.log('@相片改名失敗')
                 return

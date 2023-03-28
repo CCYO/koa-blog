@@ -2,6 +2,14 @@ const { Op } = require('sequelize')
 const Init = require('../utils/init')
 const { BlogImgAlt } = require('../db/mysql/model')
 
+async function updateBlogImgAlts(data, opts){
+    console.log(data, opts)
+    let [row] = await BlogImgAlt.update(data, opts)
+    if(!row){
+        return false
+    }
+    return true
+}
 //  0326
 async function deleteBlogImgAlts(ids){
     let row = await BlogImgAlt.destroy({
@@ -30,15 +38,6 @@ async function createBlogImgAlt({ blogImg_id, alt }){
     return Init.blogImgAlt(blogImgAlt)
 }
 
-async function updateBlogImgAlt(data, whereOps){
-    let options = { where: { ...whereOps }}
-    let [row] = await BlogImgAlt.update(data, options)
-    if(!row){
-        return false
-    }
-    return true
-}
-
 
 async function courtOfSomeImgInBlog({blog_id, blogImg_id}){
     let {} = await BlogImgAlt.findAndCountAll({
@@ -47,8 +46,8 @@ async function courtOfSomeImgInBlog({blog_id, blogImg_id}){
 }
 
 module.exports = {
+    updateBlogImgAlts,  //  0328
     deleteBlogImgAlts,  //  0326
     count,              //  0326
     createBlogImgAlt,   //  0326
-    updateBlogImgAlt,
 }

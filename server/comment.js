@@ -43,7 +43,7 @@ async function createComment({
 
         //  建立 comment
         let comment = await Comment.create(data)
-        return initComment(comment)
+        return Init.comment(comment)
     } catch (err) {
         throw new Error(err)
     }

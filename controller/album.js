@@ -10,11 +10,9 @@ async function findAlbumList(userId) {
         return userRes
     }
     let user = userRes.data
-    let { data: albumList } = await Blog.findBlogListByUserId(userId, { pagination: ALBUM.PAGINATION })
+    let { data: albumList } = await Blog.findBlogsForUserPage(userId, { pagination: ALBUM.PAGINATION })
     let data = { user, albumList }
     return new SuccModel({ data })
-
-
 }
 
 module.exports = {

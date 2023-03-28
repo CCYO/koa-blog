@@ -11,6 +11,12 @@ const {
 } = require('../db/mysql/model')
 
 const BLOGIMGALT = {
+    modify: ({id, alt}) => ({
+        data: { alt },
+        opts: {
+            where: { id }
+        }
+    }),
     count: (blogImg_id) => ({
         attributes: ['id'],
         where: { blogImg_id }  

@@ -1,9 +1,20 @@
+const { CACHE: { TYPE: { PAGE } }} = require('../conf/constant')
 const Controller_BlogImg = require('./blogImg')
-const { BLOGIMGALT: { REMOVE_ERR ,NOT_EXIST, CREATE_ERR } } = require('../model/errRes')
+const { BLOGIMGALT: { UPDATE_ERR, REMOVE_ERR ,NOT_EXIST, CREATE_ERR } } = require('../model/errRes')
 const { SuccModel, ErrModel } = require('../model')
 const Opts = require('../utils/seq_findOpts')
 const BlogImgAlt = require('../server/blogImgAlt')
 
+//  0328
+async function modifyBlogImgAlt({id, blog_id, alt}) {
+    let { opts , data } = Opts.BLOGIMGALT.modify({id, alt})
+    let ok = await BlogImgAlt.updateBlogImgAlts(data, opts)
+    if (!ok) {
+        return new ErrModel(UPDATE_ERR)
+    }
+    let cache = { [PAGE.BLOG]: [ blog_id ] }
+    return new SuccModel({cache})
+}
 //  0326
 async function cancelWithBlog(blogImg_id, blogImgAlt_list){
     let count = await BlogImgAlt.count(Opts.BLOGIMGALT.count(blogImg_id))
@@ -38,16 +49,8 @@ async function addBlogImgAlt({ blogImg_id }) {
     return new SuccModel({ data: blogImgAlt})
 }
 
-async function modifiedBlogImgAlt(id, blog_id, alt) {
-    let ok = await BlogImgAlt.updateBlogImgAlt({ alt }, { id })
-    if (!ok) {
-        return new ErrModel(BLOGIMGALT.UPDATE_ERR)
-    }
-    return new SuccModel(null, { blog: [blog_id] })
-}
-
 module.exports = {
+    modifyBlogImgAlt,   //  0328
     cancelWithBlog,     //  0326
     addBlogImgAlt,      //  0326
-    modifiedBlogImgAlt,
 }
