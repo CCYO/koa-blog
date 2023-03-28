@@ -60,6 +60,7 @@ module.exports = {
         CREATE_ERR: { errno: 803, msg: '創建失敗'}
     },
     COMMENT: {
+        NOT_EXIST: { errno: 1102, msg: '評論不存在'},
         REMOVE_ERR: { errno: 1101, msg: '文章刪除失敗' }
     },
     FOLLOW: {

@@ -10,6 +10,38 @@ const {
 const { Op } = require('sequelize')
 const xss = require('xss')
 
+async function readOtherCommentsInPid(){
+    
+}
+async function readCommentForNews(opts) {
+    let comment = await Comment.findOne(opts)
+    if(!comment){
+        return false
+    }
+    return Init.comment(comment)
+
+    let res = await Comment.findAll({
+        attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
+        where: whereOps,
+        include: [
+            {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            },
+            {
+                model: Blog,
+                attributes: ['id', 'title'],
+                include: {
+                    association: 'author',
+                    // model: User,
+                    attributes: ['nickname', 'id']
+                }
+            }
+        ]
+    })
+    return Init.comment(res)
+}
+
 async function deleteComment({ commentId, blog_id }) {
     let num = await Comment.destroy({
         where: { id: commentId, blog_id }
@@ -202,51 +234,9 @@ async function setRelatedComment(comment, { author }) {
 
 }
 
-
-
-async function readCommentForNews({ id, blog_id, p_id, createdAt }, user_id) {
-    let whereOps = {}
-    if (blog_id) {
-        whereOps.blog_id = blog_id
-    }
-    if (id) {
-        whereOps.id = id
-    }
-    if (p_id) {
-        whereOps.p_id = p_id
-    }
-    if (createdAt) {
-        whereOps.createdAt = { [Op.gt]: createdAt }
-    }
-    if (user_id) {
-        whereOps.user_id = { [Op.not]: user_id }
-    }
-
-    let res = await Comment.findAll({
-        attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
-        where: whereOps,
-        include: [
-            {
-                model: User,
-                attributes: ['id', 'email', 'nickname']
-            },
-            {
-                model: Blog,
-                attributes: ['id', 'title'],
-                include: {
-                    association: 'author',
-                    // model: User,
-                    attributes: ['nickname', 'id']
-                }
-            }
-        ]
-    })
-    return Init.comment(res)
-}
-
 module.exports = {
-    
-    readCommentForNews,
+    readCommentForNews, //  0328
+
     setRelatedComment,
 
     deleteComment,

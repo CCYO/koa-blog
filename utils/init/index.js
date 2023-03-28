@@ -47,7 +47,7 @@ function initComment(data) {
         if (map.has('Blog')) {
             let blog = map.get('Blog')
             delete data.Blog
-            data.blog = { author: init_user(blog.User), title: blog.title, id: blog.id }
+            data.blog = { author: init_user(blog.author), title: blog.title, id: blog.id }
         }
         return data
     }

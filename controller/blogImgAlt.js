@@ -30,23 +30,23 @@ async function cancelWithBlog(blogImg_id, blogImgAlt_list){
     }
     console.log('刪除個別')
     //  各別刪除 blogImgAlt
-    return await removeBlogImgAlts(blogImgAlt_list)
+    return await _removeBlogImgAlts(blogImgAlt_list)
 }
 //  0326
-async function removeBlogImgAlts(blogImgAlt_list){
-    let ok = await BlogImgAlt.deleteBlogImgAlts(blogImgAlt_list)
-    if(!ok){
-        return new ErrModel(REMOVE_ERR)
-    }
-    return new SuccModel()
-}
-
 async function addBlogImgAlt({ blogImg_id }) {
     let blogImgAlt = await BlogImgAlt.createBlogImgAlt({ blogImg_id })
     if(!blogImgAlt){
         return new ErrModel(CREATE_ERR)
     }
     return new SuccModel({ data: blogImgAlt})
+}
+//  0326
+async function _removeBlogImgAlts(blogImgAlt_list){
+    let ok = await BlogImgAlt.deleteBlogImgAlts(blogImgAlt_list)
+    if(!ok){
+        return new ErrModel(REMOVE_ERR)
+    }
+    return new SuccModel()
 }
 
 module.exports = {

@@ -1,9 +1,17 @@
-const { COMMENT: { REMOVE_ERR } } = require('../model/errRes')
+const { COMMENT: { NOT_EXIST, REMOVE_ERR } } = require('../model/errRes')
 const Controller_FollowComment = require('./followComment')
 const { CACHE: { TYPE: { NEWS, API } } } = require('../conf/constant')
 const Opts = require('../utils/seq_findOpts')
 const Comment = require('../server/comment')
 const { SuccModel, ErrModel } = require('../model')
+
+async function findCommentForNews(commentId){
+    let comment = await Comment.readCommentForNews(Opts.COMMENT.findCommentForNews(commentId))
+    if(!comment){
+        return new ErrModel(NOT_EXIST)
+    }
+    return new SuccModel({ data: comment })
+}
 //  0303
 async function findBlogsOfCommented(commenterId){
     let comments = await Comment.readComments(Opts.COMMENT.findBlogsOfCommented(commenterId))
@@ -42,7 +50,7 @@ async function _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id
     }
     return new SuccModel({ data })
 }
-
+//  0328
 async function removeComment({ author_id, commenter_id, commentId, blog_id, p_id }) {
     //  整理出要通知的 commenters
     let { data: { commenterIds } } = await _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id})
@@ -60,7 +68,6 @@ async function removeComment({ author_id, commenter_id, commentId, blog_id, p_id
     }
     return new SuccModel({cache})
 }
-
 //  0316
 async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     //  找出相關comment
@@ -120,7 +127,6 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     }
     return new SuccModel({ data: comment, cache })
 }
-
 //  0228
 async function findCommentsByBlogId(blog_id) {
     let comments = await Comment.readCommentsForBlog(Opts.COMMENT.findCommentsByBlogId(blog_id))
@@ -128,6 +134,7 @@ async function findCommentsByBlogId(blog_id) {
 }
 
 module.exports = {
+    findCommentForNews,     //  0328
     findBlogsOfCommented,  //  0303
     removeComment,
     addComment,             //  0316

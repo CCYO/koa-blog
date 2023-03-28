@@ -18,7 +18,7 @@ const {
 
 
 const User = require('../server/user')                  //  0228
-const { ErrModel, SuccModel } = require('../model')     //  0228
+const { ErrModel, SuccModel, MyErr } = require('../model')     //  0228
 const Opts = require('../utils/seq_findOpts')           //  0228
 
 const {
@@ -31,6 +31,13 @@ const {
     },
 } = require('../model/errRes')
 
+async function findCommentersInSomeBlogAndPid(pid){
+    let comments = await Comment.readComments(Opts.COMMENT.findCommentersInSomeBlogAndPid({comment_id, p_id, blog_id, author_id}))
+    if(!comment){
+        return new ErrModel(NOT_EXIST)
+    }
+    return new SuccModel({ data: comment })
+}
 //  0324
 async function findInfoForUserPage(userId) {
     //  向 DB 撈取數據  

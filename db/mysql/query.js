@@ -1,3 +1,6 @@
+const Controller_User = require('../../controller/user')
+const Controller_Blog = require('../../controller/blog')
+const Controller_Comment = require('../../controller/comment')
 const { QueryTypes } = require('sequelize')
 const moment = require('moment')
 
@@ -14,12 +17,52 @@ const { readBlog } = require('../../server/blog')
 const { readCommentForNews } = require('../../server/comment')
 
 const Opts = require('../../utils/seq_findOpts')
+const { MyErr } = require('../../model')
+
+async function _initNewsItem(item, userId) {
+    let { type, id, target_id, follow_id, confirm, createdAt } = item
+    let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+    let res = { type, id, timestamp, confirm }
+    let resModel
+
+    if (type === 1) {
+        let resModel = await Controller_User.findUser(follow_id)
+        if (resModel.errno) {
+            throw resModel
+        }
+        return { ...res, fans: resModel.data }
+    } else if (type === 2) {
+        let resModel = await Controller_Blog.findBlog({ blog_id: target_id })
+        if (resModel.errno) {
+            throw resModel
+        }
+        return { ...res, blog: resModel.data }
+    } else if (type === 3) {
+        let resModel = await Controller_Comment.findCommentForNews(target_id)
+        if (resModel.errno) {
+            throw resModel
+        }
+        let {  } = resModel.data
+        let { ...res, id: comment_id, time, commenter, blog, html } = comment
+        //  獲取早前未確認到的comment資訊
+        let other_comments = await Controller_Comment. readCommentForNews({ blog_id: blog.id, createdAt }, userId)
+        // let other_comments = await readCommentForNews({ blog_id: blog.id, createdAt }, userId)
+        let others = other_comments.length ? other_comments.map(comment => {
+            let { commenter } = comment
+            return commenter
+        }) : []
+        console.log('others => ', others)
+        let x = { ...res, comment: { id: comment_id, commenter, html, blog, time, others } }
+        console.log('x => ', x)
+        return x
+    }
+}
 
 async function readNews({ userId, excepts }) {
     // let { people, blogs, comments } = excepts
-    let list = { people: '', blogs: '', comments: ''}
-    if(excepts){
-        for( key in list ){
+    let list = { people: '', blogs: '', comments: '' }
+    if (excepts) {
+        for (key in list) {
             list[key] = excepts[key].length && ` AND id NOT IN (${excepts[key].join(',')})` || ''
         }
     }
@@ -85,7 +128,7 @@ async function count({ userId }) {
     ) AS X
     `
     let [{ unconfirm, confirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })
-    
+
     return { num: { unconfirm, confirm, total } }
 }
 
@@ -96,7 +139,7 @@ async function _init_newsOfComfirmRoNot(newsList, userId) {
         return res
     }
 
-    let listOfPromise = newsList.map( news => _init_newsItemOfComfirmRoNot(news, userId))
+    let listOfPromise = newsList.map(news => _initNewsItem(news, userId))
 
     listOfPromise = await Promise.all(listOfPromise)
 
@@ -108,39 +151,11 @@ async function _init_newsOfComfirmRoNot(newsList, userId) {
         confirm && initVal.confirm.push(currVal) || initVal.unconfirm.push(currVal)
         return initVal
     }, res)
-    
+
     return res
 }
 
-async function _init_newsItemOfComfirmRoNot(item, userId) {
-    let { type, id, target_id, follow_id, confirm, createdAt } = item
-    let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-    let res = { type, id, timestamp, confirm }
-    if (type === 1) {
-        let { id: fans_id, nickname } = await readUser(Opts.USER.findUser(follow_id))
-        return { ...res, fans: { id: fans_id, nickname } }
-    } else if (type === 2) {
-        let { id: blog_id, title, author } = await readBlog(Opts.BLOG.findBlog({blog_id: target_id}))
-        return { ...res, blog: { id: blog_id, title, author: { id: author.id, nickname: author.nickname } } }
-    } else if (type === 3) {
-        let [comment] = await readCommentForNews(Opts.COMMENT.findCommentForNews(target_id))
-        if (!comment) {
-            return null
-        }
-        console.log('ccc => ', comment)
-        let { id: comment_id, time, commenter, blog, html } = comment
-        //  獲取早前未確認到的comment資訊
-        let other_comments = await readCommentForNews({ blog_id: blog.id, createdAt }, userId)
-        let others = other_comments.length ? other_comments.map(comment => { 
-            let { commenter } = comment
-            return commenter
-        }) : []
-        console.log('others => ', others)
-        let x =  { ...res, comment: { id: comment_id, commenter, html, blog, time, others } }
-        console.log('x => ', x)
-        return x
-    }
-}
+
 
 async function countNewsTotalAndUnconfirm({ userId, options }) {
     let { markTime, fromFront } = options

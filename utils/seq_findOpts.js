@@ -102,12 +102,12 @@ const FOLLOWCOMMENT = {
 }
 
 const COMMENT = {
-    findBlogsOfCommented: (commenter_id) => ({
-        attributes: ['blog_id'],
+    findCommentersInSomeBlogAndPid: ({comment_id, p_id, blog_id, author_id}) => ({
+        attributes: ['id'],
         where: {
-            user_id: commenter_id
-        },
-        paranoid: false
+            p_id,
+            
+        }
     }),
     findCommentForNews: (comment_id) => ({
         attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
@@ -121,11 +121,18 @@ const COMMENT = {
                 model: Blog,
                 attributes: ['id', 'title'],
                 include: {
-                    model: User,
-                    attributes: ['nickname', 'id']
+                    association: 'author',
+                    attributes: ['id', 'email', 'nickname']
                 }
             }
         ]
+    }),
+    findBlogsOfCommented: (commenter_id) => ({
+        attributes: ['blog_id'],
+        where: {
+            user_id: commenter_id
+        },
+        paranoid: false
     }),
     findBlogCommentsRelatedPid: ({ blog_id, p_id }) => {
         //  找尋指定 blogId

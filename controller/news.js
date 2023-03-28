@@ -3,30 +3,13 @@
  */
 
 const { htmlStr_newsList } = require('../utils/ejs-render')
-const { init_newsOfFollowId, init_excepts } = require('../utils/init')
-
-const { NEWS: { LIMIT } } = require('../conf/constant')
-const { readUser } = require('../server/user')
+const Init = require('../utils/init')
 const {
     readNews,
     updateNews,
 } = require('../server/news')
-
 const { ErrModel, SuccModel } = require('../model')
-const { removeRemindNews } = require('../server/cache')
-
-const {
-    REGISTER: {
-        UNEXPECTED,
-        IS_EXIST,
-        NO_EMAIL,
-        NO_PASSWORD
-    },
-    READ,
-    UPDATE,
-    FOLLOW,
-    NEWS
-} = require('../model/errRes')
+const { NEWS } = require('../model/errRes')
 
 /** 藉由 userID 取得 news
  * @param {number} userId 
@@ -111,7 +94,7 @@ async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront 
     let count = newsList.confirm.length + newsList.unconfirm.length
     let htmlStr = await htmlStr_newsList(newsList)
 
-    let { confirm, unconfirm } = init_newsOfFollowId(newsList)
+    let { confirm, unconfirm } = Init.init_newsOfFollowId(newsList)
 
     let res = {
         numOfUnconfirm,
