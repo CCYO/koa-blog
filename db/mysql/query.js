@@ -10,8 +10,8 @@ const {
 } = require('../../conf/constant')
 const { seq } = require('./model')
 
-async function _initFollows(follows, userId) {
-    let newsList = await Promise.all( follows.map(follow => _initFollow(follow, userId)) )
+async function _initFollows(follows) {
+    let newsList = await Promise.all( follows.map(follow => _initFollow(follow)) )
 
     let res = newsList.reduce((acc, news) => {
         if(news.confirm){
@@ -23,7 +23,7 @@ async function _initFollows(follows, userId) {
     }, { unconfirm: [], confirm: [] } )
     return res
 }
-async function _initFollow(item, userId) {
+async function _initFollow(item) {
     let { type, id, target_id, follow_id, confirm, createdAt } = item
     let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
     let res = { type, id, timestamp, confirm }
@@ -47,7 +47,6 @@ async function _initFollow(item, userId) {
         let { id, p_id, time, commenter, blog, html } = resModel.data
         //  獲取早前未確認到的comment資訊
         let { data: others } = await Controller_User.findOthersInSomeBlogAndPid({commenter_id: commenter.id , p_id, blog_id: blog.id, createdAt})
-        console.log('@others => ', others)
         others = others.reduce( (acc, { nickname, comments }) => {
             acc.commenters.push(nickname)
             for( let id of comments){
@@ -100,7 +99,7 @@ async function readNews({ userId, excepts }) {
     LIMIT ${LIMIT}
     `
     let follows = await seq.query(query, { type: QueryTypes.SELECT })
-    let x = await _initFollows(follows, userId)
+    let x = await _initFollows(follows)
 
     console.log(x.unconfirm[1].comment)
     return x

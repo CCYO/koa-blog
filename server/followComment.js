@@ -1,8 +1,11 @@
-const { cache } = require('ejs')
+const Init = require('../utils/init')
+const { FOLLOWCOMMENT: { CREATE_ERR } } = require('../model/errRes')
 const { FollowComment } = require('../db/mysql/model')
+const { MyErr, ErrModel } = require('../model')
 
 async function updateFollowComments(datas) {
-    let followComments = await FollowComment.bulkCreate(datas, { updateOnDuplicate: ['id'] })
+    let keys = Object.keys(datas)
+    let followComments = await FollowComment.bulkCreate(datas, { updateOnDuplicate: [...keys, 'updatedAt'] })
     let json = followComments.map(item => item.toJSON())
     if(json.length !== datas.length){
         return false
@@ -15,9 +18,12 @@ async function updateFollowComments(datas) {
 async function createFollowComments(datas) {
     try {
         let followComments = await FollowComment.bulkCreate(datas)
-        return followComments.map(item => item.toJSON())
+        if(followComments.length !== datas.length){
+            return false
+        }
+        return Init.followComment(followComments)
     }catch(err){
-        throw new Error(err)
+        throw new MyErr({...CREATE_ERR, err})
     }
 }
 

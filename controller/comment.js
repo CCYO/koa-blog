@@ -25,12 +25,9 @@ async function removeComment({ author_id, commenter_id, commentId, blog_id, p_id
     let { data: { commenterIds } } = await _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id})
     
     let cache = {
-        [API.COMMENT]: [blog_id]
+        [API.COMMENT]: [blog_id],
+        [NEWS]: commenterIds
     }
-    if (commenterIds.length) {
-        cache[NEWS] = commenterIds
-    }
-
     let ok = await Comment.deleteComment({ commentId, blog_id })
     if (!ok) {
         return new ErrModel(REMOVE_ERR)
@@ -70,15 +67,18 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
         }, acculumator)
     }
     //  創建Comment
-    let { id: commentId, createdAt } = await Comment.createComment({ user_id: commenter_id, blog_id, html, p_id })
+    let { id: comment_id, createdAt } = await Comment.createComment({ user_id: commenter_id, blog_id, html, p_id })
     let { create, update } = acculumator
     //  創建FollowComment
     if (create.length) {
-        let datas = create.map(item => ({ ...item, id: commentId, createdAt }))
-        await Controller_FollowComment.addFollowComments(datas)
+        let datas = create.map(item => ({ ...item, id: comment_id, createdAt }))
+        let resModel = await Controller_FollowComment.addFollowComments(datas)
+        if(resModel.errno){
+            return resModel
+        }
     }
     if (update.length) {
-        let datas = update.map(item => ({ ...item, target_id: id, updatedAt: createdAt }))
+        let datas = update.map(item => ({ ...item, comment_id, createdAt }))
         let resUpdate = Controller_FollowComment.modifyFollowComments(datas)
         if (resUpdate.errno) {
             return resUpdate
@@ -92,7 +92,7 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
         cache[NEWS] = relatedCommenterIds
     }
     //  讀取符合Blog格式數據格式的新Comment
-    let [comment] = await Comment.readCommentsForBlog(Opts.COMMENT.findCommentById(commentId))
+    let [comment] = await Comment.readCommentsForBlog(Opts.COMMENT.findCommentById(comment_id))
     return new SuccModel({ data: comment, cache })
 }
 //  0316

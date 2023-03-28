@@ -12,8 +12,11 @@ async function findItemsByTargets({ comment_ids }, opts) {
 }
 
 async function addFollowComments(datas) {
-    let items = await FollowComment.createFollowComments(datas)
-    return new SuccModel({ data: items.map(item => item.toJSON()) })
+    let followComments = await FollowComment.createFollowComments(datas)
+    if(!followComments){
+        return new ErrModel(FOLLOWCOMMENT.CREATE_ERR)
+    }
+    return new SuccModel({ data: followComments })
 }
 
 async function modifyFollowComments(datas){
