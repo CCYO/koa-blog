@@ -21,9 +21,9 @@ function organizeByTargetProp(list, options) {
 }
 
 //  格式化時間數據 + 排序
-function initTimeFormatAndSort(list, options) {
+function sort(list, options) {
     let opts = _resetOptions(options)
-    let { markProp, timeType, timeFormat } = opts
+    let { markProp, timeType } = opts
     if (!list.length) {
         return []
     }
@@ -36,6 +36,7 @@ function initTimeFormatAndSort(list, options) {
         //  從新到舊排序
         return new Date(B[markTime]) - new Date(A[markTime])
     })
+    return resList
     //  指定時間格式
     return resList.map(item => {
         item.time = item[markTime]
@@ -45,6 +46,33 @@ function initTimeFormatAndSort(list, options) {
     })
 }
 
+function initTimeFormat(list, options){
+    let opts = _resetOptions(options)
+    let { markProp, timeType, timeFormat } = opts
+    let boo = list[0][markProp]
+    let { POSITIVE, NEGATIVE } = timeType
+    let markTime = boo ? POSITIVE : NEGATIVE
+    return list.map(item => {
+        item.time = date.format(item[markTime], timeFormat)
+        if(item.hasOwnProperty('createdAt')){
+            item.createdAt = date.format(item.createdAt, timeFormat)
+        }
+        if(item.hasOwnProperty(POSITIVE)){
+            delete item[POSITIVE]
+        }
+        if(item.hasOwnProperty(NEGATIVE)){
+            delete item[NEGATIVE]
+        }
+        return item
+    })
+}
+
+function sortAndInitTimeFormat(list, opts){
+    console.log('@list => ', list)
+    let resList = sort(list, opts)
+    console.log('@ resList => ', resList )
+    return initTimeFormat(resList, opts)
+}
 //  
 function pagination(list, options) {
     let opts = _resetOptions(options)
@@ -64,12 +92,14 @@ function pagination(list, options) {
 function organizedList(list, options) {
     let opts = _resetOptions(options)
     let organize = organizeByTargetProp(list, opts)
+    console.log('or => ', organize)
     for (let type in organize) {
         let items = organize[type]
-        items = initTimeFormatAndSort(items, opts)
+        if(items.length){
+            items = sortAndInitTimeFormat(items, opts)
+        }
         organize[type] = pagination(items, opts)
     }
-    
     return organize
 }
 
@@ -97,5 +127,5 @@ function _resetOptions(options){
 
 module.exports = {
     organizedList,
-    initTimeFormatAndSort
+    sortAndInitTimeFormat
 }

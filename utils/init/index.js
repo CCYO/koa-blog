@@ -84,21 +84,14 @@ function initCommentsForBrowser(data) {
 }
 //  0326
 function initBlog(data) {
-    let res = init(data, go)
-    return res
+    return init(data, go)
+    
     function go(data) {
         let blog = { ...data }
         let map = new Map(Object.entries(blog))
         if (map.has('author')) {
             let author = map.get('author')
             blog.author = initUser(author)
-        }
-        if (map.has('show')) {
-            if (map.get('show')) {
-                blog.showAt = date.format(blog.showAt, TIME_FORMAT)
-            } else {
-                blog.updatedAt = date.format(blog.updatedAt, TIME_FORMAT)
-            }
         }
         if (map.has('BlogImgs')) {
             delete blog.BlogImgs
@@ -112,18 +105,23 @@ function initBlog(data) {
 function _initBlogImg(blogImg) {
     return init(blogImg, go)
     function go(blogImg) {
-        let { blogImg_id, name, ...otherData } = blogImg
-        let res = { blogImg_id, name }
-        let map = new Map(Object.entries(otherData))
+        let res = {}
+        let map = new Map( Object.entries(blogImg) )
+        if(map.has('blogImg_id')){
+            res.blogImg_id = blogImg.blogImg_id
+        }
+        if(map.has('name')){
+            res.name = blogImg.name
+        }
         if (map.has('Img')) {
-            let img = init(map.get('Img'))
-            res = { ...res, ...img }
+            let img = init(blogImg.Img)
+            res = { ...res, ...img}
         }
         if (map.has('BlogImgAlts')) {
-            let alts = init(map.get('BlogImgAlts'))
+            let alts = init(blogImg.BlogImgAlts)
             res = alts.map(item => {
                 if (!item.alt) {
-                    item.alt = name
+                    item.alt = res.name
                 }
                 return { ...res, ...item }
             })

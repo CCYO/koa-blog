@@ -11,19 +11,20 @@ const {
 const { seq } = require('./model')
 
 async function _initFollows(follows) {
-    let newsList = await Promise.all( follows.map(follow => _initFollow(follow)) )
+    let newsList = await Promise.all(follows.map(follow => _initFollow(follow)))
 
     let res = newsList.reduce((acc, news) => {
-        if(news.confirm){
+        if (news.confirm) {
             acc.confirm.push(news)
-        }else{
+        } else {
             acc.unconfirm.push(news)
         }
         return acc
-    }, { unconfirm: [], confirm: [] } )
+    }, { unconfirm: [], confirm: [] })
     return res
 }
 async function _initFollow(item) {
+    console.log('@item => ', item)
     let { type, id, target_id, follow_id, confirm, createdAt } = item
     let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
     let res = { type, id, timestamp, confirm }
@@ -46,16 +47,16 @@ async function _initFollow(item) {
         }
         let { id, p_id, time, commenter, blog, html } = resModel.data
         //  獲取早前未確認到的comment資訊
-        let { data: others } = await Controller_User.findOthersInSomeBlogAndPid({commenter_id: commenter.id , p_id, blog_id: blog.id, createdAt})
-        others = others.reduce( (acc, { nickname, comments }) => {
+        let { data: others } = await Controller_User.findOthersInSomeBlogAndPid({ commenter_id: commenter.id, p_id, blog_id: blog.id, createdAt })
+        others = others.reduce((acc, { nickname, comments }) => {
             acc.commenters.push(nickname)
-            for( let id of comments){
+            for (let id of comments) {
                 acc.comments.push(id)
             }
             return acc
-        }, { commenters: [], comments: []})
+        }, { commenters: [], comments: [] })
         console.log('others => ', others)
-        return { ...res, comment: { id, commenter, html, time, blog, others}}
+        return { ...res, comment: { id, commenter, html, time, blog, others } }
         let x = { ...res, comment: { id: comment_id, commenter, html, blog, time, others } }
     }
 }
@@ -92,6 +93,7 @@ async function readNews({ userId, excepts }) {
         FROM FollowComments
         WHERE 
             follower_id=${userId}
+            AND deletedAt IS NULL
             ${list.comments}
 
     ) AS X
@@ -100,8 +102,6 @@ async function readNews({ userId, excepts }) {
     `
     let follows = await seq.query(query, { type: QueryTypes.SELECT })
     let x = await _initFollows(follows)
-
-    console.log(x.unconfirm[1].comment)
     return x
 }
 
@@ -129,6 +129,7 @@ async function count({ userId }) {
         FROM FollowComments
         WHERE
             follower_id=${userId}
+            AND deletedAt IS NULL 
     ) AS X
     `
     let [{ unconfirm, confirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })

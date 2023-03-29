@@ -30,6 +30,15 @@ const IMG = {
     })
 }
 const BLOG = {
+    findBlogsHasPhoto: (user_id) => ({
+        attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
+        where: { user_id },
+        include: {
+            model: BlogImg,
+            attributes: [],
+            required: true
+        }
+    }),
     //  0324
     findBlogsForUserPage: (author_id) => ({
         attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],

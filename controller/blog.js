@@ -4,7 +4,7 @@ const Controller_FollowBlog = require('./followBlog')   //  0326
 const Controller_BlogImgAlt = require('./blogImgAlt')
 const Blog = require('../server/blog')              //  0324
 const Opts = require('../utils/seq_findOpts')       //  0324
-const { organizedList, initTimeFormatAndSort } = require('../utils/sort')   //  0326
+const { organizedList, sortAndInitTimeFormat } = require('../utils/sort')   //  0326
 const FollowBlog = require('../server/followBlog')  //  0326
 const { SuccModel, ErrModel } = require('../model') //  0326
 const my_xxs = require('../utils/xss')          //  0303
@@ -12,7 +12,7 @@ const { CACHE } = require('../conf/constant')
 //  0326
 async function findSquareBlogList(exclude_id) {
     let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
-    blogs = initTimeFormatAndSort(blogs)
+    blogs = sortAndInitTimeFormat(blogs)
     return new SuccModel({ data: blogs })
 }
 /** 刪除 blogs  0326
@@ -184,6 +184,13 @@ async function findBlogsForUserPage(userId, options) {
     let data = organizedList(blogs, options)
     return new SuccModel({ data })
 }
+async function findBlogsHasPhoto(userId, options) {
+    let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsHasPhoto(userId))
+    console.log('@blog => ', blogs)
+    let data = organizedList(blogs, options)
+
+    return new SuccModel({ data })
+}
 //  0324    若是從Controller取，會造成迴圈，不得已在這邊創建
 async function _findFansIds(idol_id) {
     // user: { id, FollowPeople_F: [{ id, email, nickname, avatar }, ...] }
@@ -193,6 +200,7 @@ async function _findFansIds(idol_id) {
 }
 
 module.exports = {
+    findBlogsHasPhoto,      //  0328
     findBlogsForUserPage,   //  0324
     modifyBlog,             //  0326
     findSquareBlogList,      //  0303

@@ -2,27 +2,39 @@ const { COMMENT: { CHECK_IS_DELETED, SORT_BY, TIME_FORMAT } } = require('../../c
 const date = require('date-and-time')
 
 function initCommentsForBrowser(comments) {
-    if(!Array.isArray(comments)){
-        return initTime(comments)
+    console.log('@comments => ', comments)
+    if(!comments){
+        return 
     }
+    let readyInitTime = []
     let commentList = []
-    for (let comment of comments) {
-        comment.reply = []
-        if (!comment.p_id || comments.length === 1) {
-            commentList.push(initTime(comment))
-        } else {
-            nestComments(commentList, comment)
+    if (!Array.isArray(comments)) {
+        readyInitTime.push(comments)
+    } else {
+        for (let comment of comments) {
+            comment.reply = []
+            if (!comment.p_id || comments.length === 1) {
+                readyInitTime.push(comment)
+                commentList.push(comment)
+            } else {
+                readyInitTime.push(comment)
+                nestComments(commentList, comment)
+            }
         }
     }
-    let list = sortAndTimeFomat(commentList)
-    return list
-    function sortAndTimeFomat(list) {
+    if (!commentList.length) {
+        return initTime(readyInitTime)[0]
+    }
+    let list = sort(commentList)
+    return list.map(initTime)
+
+
+    function sort(list) {
         return list.sort(function (a, b) {
             return b[SORT_BY] - a[SORT_BY]
         })
     }
     function initTime(item) {
-        item[SORT_BY] = item.createdAt
         item[CHECK_IS_DELETED] = item.deletedAt ? true : false
         if (item[CHECK_IS_DELETED]) {
             item.time = date.format(item.deletedAt, TIME_FORMAT)

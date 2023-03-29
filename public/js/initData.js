@@ -16,12 +16,12 @@ class My {
     }
     async render(renderPage) {
         let allRes = await Promise.all(this.promiseAll)
-        for( let res of allRes ){
+        for (let res of allRes) {
             this.data = { ...this.data, ...res }
         }
         console.log('@ 完成頁面數據 初始化 => ', this.data)
-        if(renderPage){
-            await renderPage(this.data)   
+        if (renderPage) {
+            await renderPage(this.data)
         }
         console.log('@ 完成頁面 初渲染')
     }
@@ -77,15 +77,21 @@ async function initEJSData() {
         //  處理blog內的comment數據
         //  將 blog.html(百分比編碼格式) → htmlStr
         blog.html = parseHtml(blog.html)
-        let res = await axios.get(`/api/comment/${blog.id}`)
-        let { data: { errno, data: responseData } } = res
-        if (errno) {
-            alert('ERR')
-            return
+        //  確認是否為blogEdit頁
+        let reg_blogEdit = /^\/blog\/edit\/\d+/
+        let isBlogEditPage = reg_blogEdit.test(location.pathname)
+        let reg_blogPreview = /\?preview=true/
+        let isBlogPreview = reg_blogPreview.test(location.search)
+        if (!isBlogEditPage && !isBlogPreview) {
+            let res = await axios.get(`/api/comment/${blog.id}`)
+            let { data: { errno, data: responseData } } = res
+            if (errno) {
+                alert('ERR')
+                return
+            }
+            let { comments, commentsHtmlStr } = responseData
+            blog = { ...blog, comments, commentsHtmlStr, ...mapComments(comments) }
         }
-        let { comments, commentsHtmlStr } = responseData
-        blog = { ...blog, comments, commentsHtmlStr, ...mapComments(comments) }
-
         return blog //  再將整體轉為字符
 
         //  因為「後端存放的blog.html數據」是以
