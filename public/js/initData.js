@@ -82,6 +82,8 @@ async function initEJSData() {
         let isBlogEditPage = reg_blogEdit.test(location.pathname)
         let reg_blogPreview = /\?preview=true/
         let isBlogPreview = reg_blogPreview.test(location.search)
+        console.log('@isBlogEditPage', isBlogEditPage)
+        console.log('@isBlogPreview', isBlogPreview)
         if (!isBlogEditPage && !isBlogPreview) {
             let res = await axios.get(`/api/comment/${blog.id}`)
             let { data: { errno, data: responseData } } = res

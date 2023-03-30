@@ -60,6 +60,7 @@ router.get('/self', Check.view_logining, Cache.getSelfCache, async (ctx, next) =
     let { exist, data: relationShip } = cacheStatus
     if (exist === NO_CACHE) {
         //  向 DB 撈取數據
+        console.log('@ user => ', ctx.session.user)
         let resModel = await User.findInfoForUserPage(userId)
         if(resModel.errno){
             return await ctx.render('page404', {...resModel})

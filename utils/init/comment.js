@@ -2,27 +2,25 @@ const { COMMENT: { CHECK_IS_DELETED, SORT_BY, TIME_FORMAT } } = require('../../c
 const date = require('date-and-time')
 
 function initCommentsForBrowser(comments) {
-    let readyInitTime = []
-    let commentList = []
-    if (!Array.isArray(comments)) {
-        readyInitTime.push(comments)
-    } else{
+    let list
+    if (Array.isArray(comments)) {
+        let commentList = []
         for (let comment of comments) {
             comment.reply = []
             if (!comment.p_id || comments.length === 1) {
-                readyInitTime.push(comment)
                 commentList.push(comment)
             } else {
-                readyInitTime.push(comment)
                 nestComments(commentList, comment)
             }
         }
+        list = sort(commentList)
+    } else {
+        list = comments
     }
-    if (!commentList.length) {
-        return initTime(readyInitTime)[0]
+    for(let comment of comments){
+        initTime(comment)
     }
-    let list = sort(commentList)
-    return list.map(initTime)
+    return list
 
 
     function sort(list) {
@@ -46,7 +44,7 @@ function initCommentsForBrowser(comments) {
         for (let index in commentList) {
             let targetComment = commentList[index]
             if (item.p_id === targetComment.id) {
-                targetComment.reply.push(initTime(item))
+                targetComment.reply.push(item)
                 break
             } else if (targetComment.reply.length) {
                 nestComments(targetComment.reply, item)

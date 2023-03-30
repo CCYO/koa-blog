@@ -214,7 +214,6 @@ async function setRelatedComment(comment, { author }) {
 
     //  新增follow
     if (initVal.addList.length) {
-        console.log('@ initVal.addList => ', initVal.addList)
         await FollowComment.bulkCreate(initVal.addList)
     }
     //  更新的follow

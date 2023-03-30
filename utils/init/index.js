@@ -6,12 +6,20 @@ const init_commentForBrowser = require('./comment')
 const { init_newsOfFollowId, init_excepts } = require('./news')
 
 //  0326
-function toJSON(data, ...fns){
-    let _fns = [seq._model.toJSON, ...fns]
+function init(data, ...fns) {
+    let _fns = [toJSON, ...fns]
+
     return filterEmpty(data, ..._fns)
 }
 
-let init = toJSON
+function init(data, ...fns) {
+    let _fns = [toJSON, ...fns]
+    return filterEmpty(data, ..._fns)
+
+    function toJSON(data) {
+        return data.toJSON ? data.toJSON() : data
+    }
+}
 
 //  0326
 function initUser(data) {
@@ -40,7 +48,8 @@ function initUser(data) {
 }
 //  0326
 function initComment(data) {
-    return init(data, go)
+    let s = init(data, go)
+    return s
     function go(comment) {
         let data = { ...comment }
         let map = new Map(Object.entries(data))
@@ -63,15 +72,17 @@ function initComment(data) {
 }
 //  0326
 function initCommentsForBrowser(data) {
-    // return initComment(data, init_commentForBrowser)
-    let comments = initComment(data)
-    return init( comments, init_commentForBrowser)
-    // return init_commentForBrowser(comments)
+     let comments = initComment(data)
+     if(Array.isArray(comments)){
+        return !comments.length ? [] : init_commentForBrowser(comments) 
+     }else{
+        return !comments ? null : init_commentForBrowser(comments)
+     }
 }
 //  0326
 function initBlog(data) {
     return init(data, go)
-    
+
     function go(data) {
         let blog = { ...data }
         let map = new Map(Object.entries(blog))
@@ -92,16 +103,16 @@ function _initBlogImg(blogImg) {
     return init(blogImg, go)
     function go(blogImg) {
         let res = {}
-        let map = new Map( Object.entries(blogImg) )
-        if(map.has('blogImg_id')){
+        let map = new Map(Object.entries(blogImg))
+        if (map.has('blogImg_id')) {
             res.blogImg_id = blogImg.blogImg_id
         }
-        if(map.has('name')){
+        if (map.has('name')) {
             res.name = blogImg.name
         }
         if (map.has('Img')) {
             let img = init(blogImg.Img)
-            res = { ...res, ...img}
+            res = { ...res, ...img }
         }
         if (map.has('BlogImgAlts')) {
             let alts = init(blogImg.BlogImgAlts)

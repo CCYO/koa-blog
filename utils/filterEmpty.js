@@ -7,14 +7,14 @@ function initData(data, fn){
     }
     return fn(data)
 }
-function initDatas(data, fn){
-    if(!data.length){
+function initDatas(datas, fn){
+    if(!datas.length){
         return []
     }
     if(!fn){
-        return data
+        return datas
     }
-    return data.map(fn)
+    return datas.map( data => initData(data, fn) )
 }
 function init(data, fn){
     let res
@@ -26,12 +26,12 @@ function init(data, fn){
     return res
 }
 function filterEmpty(data, ...fns){
-    let res
+    let res = data
     if(!fns.length){
         res = init(data)
     }
     for(let fn of fns){
-        res = re(data, fn)
+        res = init(res, fn)
     }
     return res
 }
