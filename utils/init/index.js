@@ -1,33 +1,17 @@
+const filterEmpty = require('../filterEmpty')
+const { seq } = require('../../db/mysql/model')
 const { USER: { AVATAR }, BLOG: { TIME_FORMAT } } = require('../../conf/constant')
 const date = require('date-and-time')
 const init_commentForBrowser = require('./comment')
 const { init_newsOfFollowId, init_excepts } = require('./news')
+
 //  0326
-function init(data, _init) {
-    if (Array.isArray(data)) {
-        return init_datas(data, _init)
-    } else {
-        return init_data(data, _init)
-    }
+function toJSON(data, ...fns){
+    let _fns = [seq._model.toJSON, ...fns]
+    return filterEmpty(data, ..._fns)
 }
-//  0326
-function init_datas(datas, _init) {
-    if (!datas.length) {
-        return []
-    }
-    return datas.map(data => init_data(data, _init))
-}
-//  0326
-function init_data(data, _init) {
-    if (!data) {
-        return null
-    }
-    let res = data.toJSON ? data.toJSON() : data
-    if (_init) {
-        res = _init(res)
-    }
-    return res
-}
+
+let init = toJSON
 
 //  0326
 function initUser(data) {
@@ -79,8 +63,10 @@ function initComment(data) {
 }
 //  0326
 function initCommentsForBrowser(data) {
+    // return initComment(data, init_commentForBrowser)
     let comments = initComment(data)
-    return init_commentForBrowser(comments)
+    return init( comments, init_commentForBrowser)
+    // return init_commentForBrowser(comments)
 }
 //  0326
 function initBlog(data) {

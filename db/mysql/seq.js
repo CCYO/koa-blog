@@ -7,7 +7,6 @@ const { MYSQL_CONF } = require('../../conf/key/db')
 
 let seqOps = { ...MYSQL_CONF, logging: false}
 const seq = new Sequelize(seqOps)
-
 const test = async () => {
     try {
         await seq.authenticate()
