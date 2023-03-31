@@ -1,10 +1,11 @@
+const Init = require('../utils/init')
 const User = require('../server/user')
 const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR } } = require('../model/errRes')
 const Controller_FollowBlog = require('./followBlog')   //  0326
 const Controller_BlogImgAlt = require('./blogImgAlt')
 const Blog = require('../server/blog')              //  0324
 const Opts = require('../utils/seq_findOpts')       //  0324
-const { organizedList, sortAndInitTimeFormat } = require('../utils/sort')   //  0326
+// const { organizedList, sortAndInitTimeFormat } = require('../utils/init/blog')   //  0326
 const FollowBlog = require('../server/followBlog')  //  0326
 const { SuccModel, ErrModel } = require('../model') //  0326
 const my_xxs = require('../utils/xss')          //  0303
@@ -12,7 +13,7 @@ const { CACHE } = require('../conf/constant')
 //  0326
 async function findSquareBlogList(exclude_id) {
     let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
-    blogs = sortAndInitTimeFormat(blogs)
+    blogs = Init.browser.blog.sortAndInitTimeFormat(blogs)
     return new SuccModel({ data: blogs })
 }
 /** 刪除 blogs  0326
@@ -181,13 +182,12 @@ async function addBlog(title, authorId) {
  */
 async function findBlogsForUserPage(userId, options) {
     let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsForUserPage(userId))
-    let data = organizedList(blogs, options)
+    let data = Init.browser.blog.organizedList(blogs, options)
     return new SuccModel({ data })
 }
 async function findBlogsHasPhoto(userId, options) {
     let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsHasPhoto(userId))
-    console.log('@blog => ', blogs)
-    let data = organizedList(blogs, options)
+    let data = Init.browser.blog.organizedList(blogs, options)
 
     return new SuccModel({ data })
 }

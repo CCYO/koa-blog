@@ -16,6 +16,16 @@ function initDatas(datas, fn){
     }
     return datas.map( data => initData(data, fn) )
 }
+function initDatasForArray(datas, fn){
+    if(!datas.length){
+        return []
+    }
+    if(!fn){
+        return datas
+    }
+    return fn(datas)
+}
+
 function init(data, fn){
     let res
     if(Array.isArray(data)){
@@ -25,7 +35,16 @@ function init(data, fn){
     }
     return res
 }
-function filterEmpty(data, ...fns){
+function initForArray(data, fn){
+    let res
+    if(Array.isArray(data)){
+        res = initDatasForArray(data, fn)
+    }else{
+        res = initData(data, fn)
+    }
+    return res
+}
+function filterEmptyAndFranferFns(data, ...fns){
     let res = data
     if(!fns.length){
         res = init(data)
@@ -35,5 +54,18 @@ function filterEmpty(data, ...fns){
     }
     return res
 }
+function filterEmptyAndFranferFnsForArray(data, ...fns){
+    let res = data
+    if(!fns.length){
+        res = initForArray(data)
+    }
+    for(let fn of fns){
+        res = initForArray(res, fn)
+    }
+    return res
+}
 
-module.exports = filterEmpty
+module.exports = {
+    filterEmptyAndFranferFns,
+    filterEmptyAndFranferFnsForArray
+}

@@ -1,26 +1,42 @@
-const filterEmpty = require('../filterEmpty')
-const { seq } = require('../../db/mysql/model')
-const { USER: { AVATAR }, BLOG: { TIME_FORMAT } } = require('../../conf/constant')
-const date = require('date-and-time')
-const init_commentForBrowser = require('./comment')
+const { resetOptions, sort, initTimeFormat, pagination, organizeByTargetProp } = require('./blog')
+const { filterEmptyAndFranferFns, filterEmptyAndFranferFnsForArray } = require('../filterEmpty')
+const { USER: { AVATAR } } = require('../../conf/constant')
+const { init_commentForBrowser, initTime: initTimeForComment } = require('./comment')
 const { init_newsOfFollowId, init_excepts } = require('./news')
 
+function organizedList(list, options) {
+    let opts = resetOptions(options)
+    let _pagination = (list) => pagination(list, opts)
+    let organize = organizeByTargetProp(list, opts)
+    for (let type in organize) {
+        let items = organize[type]
+        if (items.length) {
+            items = sortAndInitTimeFormat(items, opts)
+        }
+        organize[type] = filterEmptyAndFranferFnsForArray(items, _pagination)
+    }
+    return organize
+}
+
+function sortAndInitTimeFormat(datas, opts) {
+    let _sort = (blogs) => sort( blogs, opts)
+    let list = filterEmptyAndFranferFnsForArray(datas, _sort)
+    console.log('@ list => ', list)
+    let gg = filterEmptyAndFranferFns(list, initTimeFormat)
+    console.log('@gg => ', gg)
+    return gg
+    let resList = sort(list, opts)
+    return initTimeFormat(resList, opts)
+}
 //  0326
 function init(data, ...fns) {
     let _fns = [toJSON, ...fns]
-
-    return filterEmpty(data, ..._fns)
-}
-
-function init(data, ...fns) {
-    let _fns = [toJSON, ...fns]
-    return filterEmpty(data, ..._fns)
+    return filterEmptyAndFranferFns(data, ..._fns)
 
     function toJSON(data) {
         return data.toJSON ? data.toJSON() : data
     }
 }
-
 //  0326
 function initUser(data) {
     return init(data, go)
@@ -73,11 +89,9 @@ function initComment(data) {
 //  0326
 function initCommentsForBrowser(data) {
      let comments = initComment(data)
-     if(Array.isArray(comments)){
-        return !comments.length ? [] : init_commentForBrowser(comments) 
-     }else{
-        return !comments ? null : init_commentForBrowser(comments)
-     }
+     comments = filterEmptyAndFranferFnsForArray(comments, init_commentForBrowser)
+     filterEmptyAndFranferFns(data, initTimeForComment)
+     return comments
 }
 //  0326
 function initBlog(data) {
@@ -128,9 +142,6 @@ function _initBlogImg(blogImg) {
     }
 }
 
-
-
-
 module.exports = {
     followComment: init,    //  0328
     blogImgAlt: init,       //  0326
@@ -140,7 +151,11 @@ module.exports = {
     blog: initBlog,         //  0326
     comment: initComment,   //  0326
     browser: {
-        comment: initCommentsForBrowser //  0326
+        comment: initCommentsForBrowser, //  0326
+        blog: {
+            organizedList,
+            sortAndInitTimeFormat
+        }
     },
     init_newsOfFollowId,
     init_excepts

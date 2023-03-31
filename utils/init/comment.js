@@ -17,9 +17,6 @@ function initCommentsForBrowser(comments) {
     } else {
         list = comments
     }
-    for(let comment of comments){
-        initTime(comment)
-    }
     return list
 
 
@@ -27,17 +24,6 @@ function initCommentsForBrowser(comments) {
         return list.sort(function (a, b) {
             return b[SORT_BY] - a[SORT_BY]
         })
-    }
-    function initTime(item) {
-        item[CHECK_IS_DELETED] = item.deletedAt ? true : false
-        if (item[CHECK_IS_DELETED]) {
-            item.time = date.format(item.deletedAt, TIME_FORMAT)
-        } else {
-            item.time = date.format(item.createdAt, TIME_FORMAT)
-        }
-        delete item.createdAt
-        delete item.deletedAt
-        return item
     }
 
     function nestComments(commentList, item) {
@@ -52,6 +38,18 @@ function initCommentsForBrowser(comments) {
         }
     }
 }
-
-
-module.exports = initCommentsForBrowser
+function initTime(item) {
+    item[CHECK_IS_DELETED] = item.deletedAt ? true : false
+    if (item[CHECK_IS_DELETED]) {
+        item.time = date.format(item.deletedAt, TIME_FORMAT)
+    } else {
+        item.time = date.format(item.createdAt, TIME_FORMAT)
+    }
+    delete item.createdAt
+    delete item.deletedAt
+    return item
+}
+module.exports = {
+    initTime,
+    initCommentsForBrowser
+}
