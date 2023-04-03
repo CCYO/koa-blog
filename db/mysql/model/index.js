@@ -48,43 +48,27 @@ BlogImgAlt.belongsTo(BlogImg, { foreignKey: 'blogImg_id', targetKey: 'id', onDel
 BlogImg.hasMany(BlogImgAlt, { foreignKey: 'blogImg_id', sourceKey: 'id'})
 
 //  Blog : Comment = 1 : N
-Comment.belongsTo(Blog, { foreignKey: 'blog_id', targetKey: 'id', onDelete: 'CASCADE'})
-Blog.hasMany(Comment, { foreignKey: 'blog_id', sourceKey: 'id'})
+Comment.belongsTo(Blog, { as: 'article', foreignKey: 'blog_id', targetKey: 'id', onDelete: 'CASCADE'})
+Blog.hasMany(Comment, { as: 'replys', foreignKey: 'blog_id', sourceKey: 'id'})
 
 //  User : Comment = 1 : N
-Comment.belongsTo(User, { foreignKey: 'user_id', targetKey: 'id', onDelete: 'CASCADE' })
-User.hasMany(Comment, { foreignKey: 'user_id', sourceKey: 'id'})
+Comment.belongsTo(User, { as: 'commenter', foreignKey: 'user_id', targetKey: 'id', onDelete: 'CASCADE' })
+User.hasMany(Comment, { as: 'comments', foreignKey: 'user_id', sourceKey: 'id'})
 
 //  Comment : Comment = 1 : N
-Comment.belongsTo(Comment, { as: 'Comment_T', foreignKey: 'p_id', targetKey: 'id', onDelete: 'CASCADE' })
-Comment.hasMany(Comment, { as: 'Comment_F', foreignKey: 'p_id', sourceKey: 'id'})
+Comment.belongsTo(Comment, { as: 'parentComment', foreignKey: 'p_id', targetKey: 'id', onDelete: 'CASCADE' })   //  Comment_T
+Comment.hasMany(Comment, { as: 'childComments', foreignKey: 'p_id', sourceKey: 'id'})   //  Comment_F
 
 //  SourceModel 作為 foreignKey 的來源，
 //  as 是 TargetModel 的別名，
 User.belongsToMany(User, { as: 'idols', through: IdolFans, foreignKey: 'follow', targetKey: 'id'})
 User.belongsToMany(User, { as: 'fans', through: IdolFans, foreignKey: 'target', targetKey: 'id'})
-// Follow_People.belongsTo(User, {as: 'People_Fans', foreignKey: 'fans_id', targetKey: 'id'})
-// Follow_People.belongsTo(User, {as: 'People_Idol', foreignKey: 'idol_id', targetKey: 'id'})
-// User.hasMany(User_Follow, {foreignKey: 'fans_id', targetKey: 'id'})
-// User.hasMany(User_Follow, {foreignKey: 'idol_id', targetKey: 'id'})
 
-// Follow 上的 idol 有很多 blog
-// Follow.hasMany(Blog, { foreignKey: 'user_id', targetKey: 'idol_id'})
+Blog.belongsToMany(User, { as: 'reader', through: PubScr, foreignKey: 'blog_id', targetKey: 'id'})    //  FollowBlog_F
+User.belongsToMany(Blog, { as: 'publications', through: PubScr, foreignKey: 'follower_id', targetKey: 'id'})    //  FollowBlog_B
 
-Blog.belongsToMany(User, { as: 'FollowBlog_F', through: FollowBlog, foreignKey: 'blog_id', targetKey: 'id'})
-User.belongsToMany(Blog, { as: 'FollowBlog_B', through: FollowBlog, foreignKey: 'follower_id', targetKey: 'id'})
-// Blog_Follow.belongsTo(Blog, { foreignKey: 'blog_id', targetKey: 'id'})
-// Blog_Follow.belongsTo(User, { foreignKey: 'fans_id', targetKey: 'id'})
-// Blog.hasMany(Blog_Follow, { foreignKey: 'blog_id', targetKey: 'id'})
-// User.hasMany(Blog_Follow, { foreignKey: 'fans_id', targetKey: 'id'})
-
-// Blog_Follow.hasMany(News, { foreignKey: 'news_id', sourceKey: 'id'})
-// User_Follow.hasMany(News, { foreignKey: 'news_id', sourceKey: 'id'})
-// News.belongsTo(Blog_Follow, { foreignKey: 'news_id', targetKey: 'id'})
-// News.belongsTo(User_Follow, { foreignKey: 'news_id', targetKey: 'id'})
-
-User.belongsToMany(Comment, { as: 'FollowComment_T', through: FollowComment, foreignKey: 'follower_id',targetKey: 'id'})
-Comment.belongsToMany(User, { as: 'FollowComment_F', through: FollowComment, foreignKey: 'comment_id',targetKey: 'id'})
+User.belongsToMany(Comment, { as: 'messages', through: FollowComment, foreignKey: 'follower_id',targetKey: 'id'})    //  FollowComment_T
+Comment.belongsToMany(User, { as: 'receivers', through: FollowComment, foreignKey: 'comment_id',targetKey: 'id'}) //  FollowComment_F
 
 module.exports = {
     IdolFans,                   //  0322

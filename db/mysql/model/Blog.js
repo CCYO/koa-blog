@@ -26,7 +26,12 @@ const Blog = seq.define('Blog', {
         allowNull: true
     }
 },{
-    paranoid: true
+    paranoid: true,
+    hooks:{
+        async afterDestroy(blog){
+            await blog.get 
+        }
+    }
 })
 
 module.exports = Blog

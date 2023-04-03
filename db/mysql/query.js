@@ -69,7 +69,6 @@ async function _initFollows(follows) {
     return res
 
     async function _initFollow(item) {
-        console.log('@initFollow => ', item)
         let { type, id, target_id, follow_id, confirm, createdAt } = item
         let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
         let res = { type, id, timestamp, confirm }
@@ -86,6 +85,7 @@ async function _initFollows(follows) {
             }
             return { ...res, blog: resModel.data }
         } else if (type === 3) {
+            console.log('@item => ', item)
             let resModel = await Controller_Comment.findCommentForNews(target_id)
             if (resModel.errno) {
                 throw resModel

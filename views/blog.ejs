@@ -377,6 +377,7 @@
                             html,
                             p_id: editor.id ? editor.id : null  //  editor 若為 0，代表根評論
                         }
+                        
                         return await axios.post(api_comment, payload)
                     }
                 }

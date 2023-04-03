@@ -75,7 +75,7 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     let { create, update } = acculumator
     //  創建FollowComment
     if (create.length) {
-        let datas = create.map(item => ({ ...item, id: comment_id, createdAt }))
+        let datas = create.map(item => ({ ...item, comment_id, createdAt }))
         let resModel = await Controller_FollowComment.addFollowComments(datas)
         if(resModel.errno){
             return resModel
