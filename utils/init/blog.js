@@ -1,26 +1,57 @@
+const { filterEmptyAndFranferFns, filterEmptyAndFranferFnsForArray } = require('../filterEmpty')
 const date = require('date-and-time')
 const { BLOG: { PAGINATION, TIME_FORMAT, ORGANIZED: { TARGET_PROP, TYPE, TIME } } } = require('../../conf/constant')
 
-//  分纇為 { [PUBLIC]: blogs, [PRIVATE]: blogs }
-function organizeByTargetProp(list, options) {
+//  分類 + 排序 + 分頁 + 時間序列化
+function organizedList(list, options) {
     let opts = resetOptions(options)
-    let { markProp, organizeTypes } = opts
-    let { POSITIVE, NEGATIVE } = organizeTypes
-    let organize = { [POSITIVE]: [], [NEGATIVE]: [] }
-    if (!list.length) {
-        return organize
+    let organize = organizeByTargetProp(list, opts)
+    for (let type in organize) {
+        let items = organize[type]
+        if (items.length) {
+            let _sort = (blogs) => sort(blogs, opts)
+            let _pagination = (list) => pagination(list, opts)
+            organize[type] = filterEmptyAndFranferFnsForArray(items, _sort, _pagination)
+        }
     }
-    //  依公開與否分纇
-    return list.reduce((acc, item) => {
-        let boo = item[markProp]
-        let status = boo ? POSITIVE : NEGATIVE
-
-        acc[status].push(item)
-        return acc
-    }, organize)
+    filterEmptyAndFranferFns(list, initTimeFormat)
+    return organize
 }
-
-//  格式化時間數據 + 排序
+//  時間序列化
+function initTimeFormat(item, options) {
+    let opts = resetOptions(options)
+    let { markProp, timeType, timeFormat } = opts
+    let boo = item[markProp]
+    let { POSITIVE, NEGATIVE } = timeType
+    let markTime = boo ? POSITIVE : NEGATIVE
+    item.time = date.format(item[markTime], timeFormat)
+    if (item.hasOwnProperty('createdAt')) {
+        item.createdAt = date.format(item.createdAt, timeFormat)
+    }
+    if (item.hasOwnProperty(POSITIVE)) {
+        delete item[POSITIVE]
+    }
+    if (item.hasOwnProperty(NEGATIVE)) {
+        delete item[NEGATIVE]
+    }
+    return item
+}
+//  分頁
+function pagination(list, options) {
+    let opts = resetOptions(options)
+    let { pagination } = opts
+    return list.reduce((acc, item) => {
+        let page = acc.length - 1
+        let countInPage = acc[page].length
+        if (countInPage < pagination) {
+            acc[page].push(item)
+        } else {
+            acc.push([item])
+        }
+        return acc
+    }, [[]])
+}
+//  排序
 function sort(list, options) {
     let opts = resetOptions(options)
     let { markProp, timeType } = opts
@@ -45,59 +76,24 @@ function sort(list, options) {
         return item
     })
 }
-
-function initTimeFormat(item, options) {
+//  分纇 { [PUBLIC]: blogs, [PRIVATE]: blogs }
+function organizeByTargetProp(list, options) {
     let opts = resetOptions(options)
-    let { markProp, timeType, timeFormat } = opts
-    let boo = item[markProp]
-    let { POSITIVE, NEGATIVE } = timeType
-    let markTime = boo ? POSITIVE : NEGATIVE
-    item.time = date.format(item[markTime], timeFormat)
-    if (item.hasOwnProperty('createdAt')) {
-        item.createdAt = date.format(item.createdAt, timeFormat)
+    let { markProp, organizeTypes } = opts
+    let { POSITIVE, NEGATIVE } = organizeTypes
+    let organize = { [POSITIVE]: [], [NEGATIVE]: [] }
+    if (!list.length) {
+        return organize
     }
-    if (item.hasOwnProperty(POSITIVE)) {
-        delete item[POSITIVE]
-    }
-    if (item.hasOwnProperty(NEGATIVE)) {
-        delete item[NEGATIVE]
-    }
-    return item
-}
-
-function sortAndInitTimeFormat(list, opts) {
-    let resList = sort(list, opts)
-    return initTimeFormat(resList, opts)
-}
-//  
-function pagination(list, options) {
-    let opts = resetOptions(options)
-    let { pagination } = opts
+    //  依公開與否分纇
     return list.reduce((acc, item) => {
-        let page = acc.length - 1
-        let countInPage = acc[page].length
-        if (countInPage < pagination) {
-            acc[page].push(item)
-        } else {
-            acc.push([item])
-        }
+        let boo = item[markProp]
+        let status = boo ? POSITIVE : NEGATIVE
+
+        acc[status].push(item)
         return acc
-    }, [[]])
+    }, organize)
 }
-
-function organizedList(list, options) {
-    let opts = resetOptions(options)
-    let organize = organizeByTargetProp(list, opts)
-    for (let type in organize) {
-        let items = organize[type]
-        if (items.length) {
-            items = sortAndInitTimeFormat(items, opts)
-        }
-        organize[type] = pagination(items, opts)
-    }
-    return organize
-}
-
 //  若有傳入 opts，則將相應的屬性覆蓋
 function resetOptions(options) {
     let opts = {
@@ -119,13 +115,19 @@ function resetOptions(options) {
     }
     return opts
 }
-
+//  排序 + 序列化時間
+function sortAndInitTimeFormat(datas, opts) {
+    let _sort = (blogs) => sort( blogs, opts)
+    let list = filterEmptyAndFranferFnsForArray(datas, _sort)
+    filterEmptyAndFranferFns(list, initTimeFormat)
+    return list
+}
 module.exports = {
-    // organizedList,
-    // sortAndInitTimeFormat
-    resetOptions,
-    sort,
-    initTimeFormat,
-    pagination,
-    organizeByTargetProp
+    organizedList,
+    sortAndInitTimeFormat
+    // resetOptions,
+    // sort,
+    // initTimeFormat,
+    // pagination,
+    // organizeByTargetProp
 }

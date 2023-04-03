@@ -1,7 +1,15 @@
+const { filterEmptyAndFranferFns, filterEmptyAndFranferFnsForArray } = require('../filterEmpty')
 const { COMMENT: { CHECK_IS_DELETED, SORT_BY, TIME_FORMAT } } = require('../../conf/constant')
 const date = require('date-and-time')
 
-function initCommentsForBrowser(comments) {
+//  0326
+function initCommentsForBrowser(data) {
+    let comments = filterEmptyAndFranferFnsForArray(data, nestAndSort)
+    filterEmptyAndFranferFns(data, initTime)
+    return comments
+}
+//  nest + sort
+function nestAndSort(comments) {
     let list
     if (Array.isArray(comments)) {
         let commentList = []
@@ -38,6 +46,7 @@ function initCommentsForBrowser(comments) {
         }
     }
 }
+//  時間序列化
 function initTime(item) {
     item[CHECK_IS_DELETED] = item.deletedAt ? true : false
     if (item[CHECK_IS_DELETED]) {

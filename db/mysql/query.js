@@ -1,8 +1,8 @@
+const moment = require('moment')
 const Controller_User = require('../../controller/user')
 const Controller_Blog = require('../../controller/blog')
 const Controller_Comment = require('../../controller/comment')
 const { QueryTypes } = require('sequelize')
-const moment = require('moment')
 const {
     NEWS: {
         LIMIT
@@ -10,56 +10,6 @@ const {
 } = require('../../conf/constant')
 const { seq } = require('./model')
 
-async function _initFollows(follows) {
-    let newsList = await Promise.all(follows.map(follow => _initFollow(follow)))
-
-    let res = newsList.reduce((acc, news) => {
-        if (news.confirm) {
-            acc.confirm.push(news)
-        } else {
-            acc.unconfirm.push(news)
-        }
-        return acc
-    }, { unconfirm: [], confirm: [] })
-    return res
-}
-async function _initFollow(item) {
-    console.log('@item => ', item)
-    let { type, id, target_id, follow_id, confirm, createdAt } = item
-    let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-    let res = { type, id, timestamp, confirm }
-    if (type === 1) {
-        let resModel = await Controller_User.findUser(follow_id)
-        if (resModel.errno) {
-            throw resModel
-        }
-        return { ...res, fans: resModel.data }
-    } else if (type === 2) {
-        let resModel = await Controller_Blog.findBlog({ blog_id: target_id })
-        if (resModel.errno) {
-            throw resModel
-        }
-        return { ...res, blog: resModel.data }
-    } else if (type === 3) {
-        let resModel = await Controller_Comment.findCommentForNews(target_id)
-        if (resModel.errno) {
-            throw resModel
-        }
-        let { id, p_id, time, commenter, blog, html } = resModel.data
-        //  獲取早前未確認到的comment資訊
-        let { data: others } = await Controller_User.findOthersInSomeBlogAndPid({ commenter_id: commenter.id, p_id, blog_id: blog.id, createdAt })
-        others = others.reduce((acc, { nickname, comments }) => {
-            acc.commenters.push(nickname)
-            for (let id of comments) {
-                acc.comments.push(id)
-            }
-            return acc
-        }, { commenters: [], comments: [] })
-        console.log('others => ', others)
-        return { ...res, comment: { id, commenter, html, time, blog, others } }
-        let x = { ...res, comment: { id: comment_id, commenter, html, blog, time, others } }
-    }
-}
 async function readNews({ userId, excepts }) {
     // let { people, blogs, comments } = excepts
     let list = { people: '', blogs: '', comments: '' }
@@ -105,6 +55,55 @@ async function readNews({ userId, excepts }) {
     return x
 }
 
+async function _initFollows(follows) {
+    let newsList = await Promise.all(follows.map(_initFollow))
+
+    let res = newsList.reduce((acc, news) => {
+        if (news.confirm) {
+            acc.confirm.push(news)
+        } else {
+            acc.unconfirm.push(news)
+        }
+        return acc
+    }, { unconfirm: [], confirm: [] })
+    return res
+
+    async function _initFollow(item) {
+        console.log('@initFollow => ', item)
+        let { type, id, target_id, follow_id, confirm, createdAt } = item
+        let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+        let res = { type, id, timestamp, confirm }
+        if (type === 1) {
+            let resModel = await Controller_User.findUser(follow_id)
+            if (resModel.errno) {
+                throw resModel
+            }
+            return { ...res, fans: resModel.data }
+        } else if (type === 2) {
+            let resModel = await Controller_Blog.findBlog({ blog_id: target_id })
+            if (resModel.errno) {
+                throw resModel
+            }
+            return { ...res, blog: resModel.data }
+        } else if (type === 3) {
+            let resModel = await Controller_Comment.findCommentForNews(target_id)
+            if (resModel.errno) {
+                throw resModel
+            }
+            let { id, p_id, time, commenter, blog, html } = resModel.data
+            //  獲取早前未確認到的comment資訊
+            let { data: others } = await Controller_User.findOthersInSomeBlogAndPid({ commenter_id: commenter.id, p_id, blog_id: blog.id, createdAt })
+            others = others.reduce((acc, { nickname, comments }) => {
+                acc.commenters.push(nickname)
+                for (let id of comments) {
+                    acc.comments.push(id)
+                }
+                return acc
+            }, { commenters: [], comments: [] })
+            return { ...res, comment: { id, commenter, html, time, blog, others } }
+        }
+    }
+}
 async function count({ userId }) {
     let query = `
     SELECT
@@ -136,8 +135,6 @@ async function count({ userId }) {
 
     return { num: { unconfirm, confirm, total } }
 }
-
-
 async function countNewsTotalAndUnconfirm({ userId, options }) {
     let { markTime, fromFront } = options
 

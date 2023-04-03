@@ -3,8 +3,6 @@ const Init = require('../utils/init')
 
 const {
     Comment,        //  0228
-    User,
-    Blog,
     FollowComment
 } = require('../db/mysql/model')
 
@@ -12,36 +10,12 @@ const { Op } = require('sequelize')
 const xss = require('xss')
 const { MyErr } = require('../model')
 
-async function readOtherCommentsInPid(){
-    
-}
-async function readCommentForNews(opts) {
+async function readComment(opts) {
     let comment = await Comment.findOne(opts)
     if(!comment){
-        return false
+        return null
     }
-    return Init.browser.comment(comment)
-
-    let res = await Comment.findAll({
-        attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
-        where: whereOps,
-        include: [
-            {
-                model: User,
-                attributes: ['id', 'email', 'nickname']
-            },
-            {
-                model: Blog,
-                attributes: ['id', 'title'],
-                include: {
-                    association: 'author',
-                    // model: User,
-                    attributes: ['nickname', 'id']
-                }
-            }
-        ]
-    })
-    return Init.comment(res)
+    return Init.comment(comment)
 }
 
 async function deleteComment({ commentId, blog_id }) {
@@ -51,16 +25,10 @@ async function deleteComment({ commentId, blog_id }) {
     if (!num) return false
     return true
 }
-
 //  0313
 async function readComments(opts) {
     let comments = await Comment.findAll(opts)
     return Init.comment(comments)
-}
-//  0228
-async function readCommentsForBlog(opts) {
-    let comments = await readComments(opts)
-    return Init.browser.comment(comments)
 }
 
 async function createComment({
@@ -236,12 +204,9 @@ async function setRelatedComment(comment, { author }) {
 }
 
 module.exports = {
-    readCommentForNews, //  0328
-
+    readComment, //  0328
     setRelatedComment,
-
     deleteComment,
     createComment,
-    readComments,        //  0313 
-    readCommentsForBlog //  0228
+    readComments        //  0313 
 }

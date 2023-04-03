@@ -4,13 +4,15 @@ const { CACHE: { TYPE: { NEWS, API } } } = require('../conf/constant')
 const Opts = require('../utils/seq_findOpts')
 const Comment = require('../server/comment')
 const { SuccModel, ErrModel } = require('../model')
+const Init = require('../utils/init')
 
 async function findCommentForNews(commentId){
-    let comment = await Comment.readCommentForNews(Opts.COMMENT.findCommentForNews(commentId))
+    let comment = await Comment.readComment(Opts.COMMENT.findCommentForNews(commentId))
     if(!comment){
         return new ErrModel(NOT_EXIST)
     }
-    return new SuccModel({ data: comment })
+    let data = Init.browser.comment(comment)
+    return new SuccModel({ data })
 }
 //  0303
 async function findBlogsOfCommented(commenterId){
@@ -37,12 +39,12 @@ async function removeComment({ author_id, commenter_id, commentId, blog_id, p_id
 //  0316
 async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     //  找出相關comment
-    let { data } = await _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id})
+    let resModel = await _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id})
 
     let {
-        commenterIds: relatedCommenterIds,
+        commenterIds: relatedCommenterIds,  //  
         commentIds: relatedCommentIds
-    } = data
+    } = resModel.data
     //  撈出FollowComment內，target_id符合relactiveCommentIds的所有條目(且不包含curCommenter)
     let { data: followComments } = await Controller_FollowComment.findItemsByTargets(
         { comment_ids: relatedCommentIds },
@@ -52,7 +54,9 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
     //  relatedCommenterId 不符合 followComments.follower_id，則需創建 followComment 追蹤通知
     //  relatedCommenterId 符合 followComments.follower_id，則需更新 followComment 追蹤通知
     let acculumator = { create: [], update: [] }
+    //  沒有相關的評論
     if (!followComments.length) {
+        //  紀錄
         acculumator.create = relatedCommenterIds.map(id => ({ follower_id: id }))
     } else {
         acculumator = followComments.reduce((acc, { id, follower_id }) => {
@@ -92,8 +96,20 @@ async function addComment({ commenter_id, blog_id, html, p_id, author_id }) {
         cache[NEWS] = relatedCommenterIds
     }
     //  讀取符合Blog格式數據格式的新Comment
-    let [comment] = await Comment.readCommentsForBlog(Opts.COMMENT.findCommentById(comment_id))
-    return new SuccModel({ data: comment, cache })
+    let resModel_NewComment = await _findCommentForBlog(comment_id)
+    if(resModel_NewComment.errno){
+        return resModel_NewComment
+    }
+    let data = resModel_NewComment.data
+    return new SuccModel({ data, cache })
+}
+async function _findCommentForBlog(comment_id){
+    let comment = await Comment.readComment(Opts.COMMENT.findCommentById(comment_id))
+    if(!comment){
+        return ErrModel(NOT_EXIST)
+    }
+    let data = Init.browser.comment(comment)
+    return new SuccModel({data})
 }
 //  0316
 async function _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id}){
@@ -126,8 +142,9 @@ async function _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id
 }
 //  0228
 async function findCommentsByBlogId(blog_id) {
-    let comments = await Comment.readCommentsForBlog(Opts.COMMENT.findCommentsByBlogId(blog_id))
-    return new SuccModel({ data: comments })
+    let comments = await Comment.readComments(Opts.COMMENT.findCommentsByBlogId(blog_id))
+    let data = Init.browser.comment(comments)
+    return new SuccModel({ data })
 }
 
 module.exports = {
@@ -135,5 +152,7 @@ module.exports = {
     findBlogsOfCommented,  //  0303
     removeComment,
     addComment,             //  0316
-    findCommentsByBlogId    //  0228
+    findCommentsByBlogId,    //  0228
+
+    _findCommentsRelatedToPid
 }

@@ -13,16 +13,16 @@
 
 function init_newsOfFollowId(newsList) {
     let res = {
-        confirm: { people: [], blogs: [] , comments: []},
-        unconfirm: { people: [], blogs: [] , comments: []}
+        confirm: { people: [], blogs: [], comments: [] },
+        unconfirm: { people: [], blogs: [], comments: [] }
     }
 
     for (confirmRoNot in newsList) {
         let list = newsList[confirmRoNot]
         let target = res[confirmRoNot]
-        if(!list.length){
+        if (!list.length) {
             continue
-        } 
+        }
         list.forEach(({ type, id }) => {
             type === 1 && target.people.push(id)
             type === 2 && target.blogs.push(id)
@@ -33,8 +33,8 @@ function init_newsOfFollowId(newsList) {
     return res
 }
 
-function init_excepts(excepts){
-	let res = { people: [], blogs: [], comments: [], num: 0}
+function init_excepts(excepts) {
+    let res = { people: [], blogs: [], comments: [], num: 0 }
     /*excepts: {
         unconfirm: { 
             people: [ id, ... ],
@@ -44,14 +44,14 @@ function init_excepts(excepts){
         },
         confirm: { ... }
     }*/
-	for(key in excepts){
-		let map = new Map(Object.entries(excepts[key]))
-    	map.forEach((list, k) => {
-            if(k === 'num'){
+    for (key in excepts) {
+        let map = new Map(Object.entries(excepts[key]))
+        map.forEach((list, k) => {
+            if (k === 'num') {
                 res.num += list
                 return
             }
-    		res[k] = [...res[k], ...list]
+            res[k] = [...res[k], ...list]
         })
     }
     return res

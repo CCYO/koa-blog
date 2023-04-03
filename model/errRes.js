@@ -69,7 +69,9 @@ module.exports = {
         CANCEL_ERR: { errno: 1002, msg: '取消追蹤失敗' },        //  0228
         CONFIRM_ERR: { errno: 1003, msg: '確認追蹤消息失敗' }
     },
-    
+    PUB_SUB: {
+        REMOVE_ERR: { errno: 1101, msg: 'PUB_SUB 刪除失敗'}
+    },
     FOLLOWCOMMENT: {
         UPDATE_ERR: { errno: 1401, msg: 'FollowComment更新失敗' }
     },

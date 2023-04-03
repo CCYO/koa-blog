@@ -1,6 +1,6 @@
 const Init = require('../utils/init')
 const User = require('../server/user')
-const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR } } = require('../model/errRes')
+const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR },  PUB_SUB} = require('../model/errRes')
 const Controller_FollowBlog = require('./followBlog')   //  0326
 const Controller_BlogImgAlt = require('./blogImgAlt')
 const Blog = require('../server/blog')              //  0324
@@ -74,7 +74,9 @@ async function modifyBlog(author_id, blog_id, blog_data) {
     let fans = []
     if (map.has('title') || map.has('show')) {
         //  取得粉絲群
-        let { data: fans } = await _findFansIds(author_id)
+        let resModel = await _findFansIds(author_id)
+        console.log('@resModel.data => ', resModel.data)
+        fans = resModel.data
         //  提供緩存處理
         cache[CACHE.TYPE.NEWS] = fans
         cache[CACHE.TYPE.PAGE.USER] = [author_id]
@@ -106,10 +108,11 @@ async function modifyBlog(author_id, blog_id, blog_data) {
             // 隱藏blog
         } else if (!show) {
             newData.showAt = null
-            let resModel = await Controller_FollowBlog.removeSubscribers(blog_id)
+            await Controller_FollowBlog.removeSubscribers(blog_id)
+            let { data: stillHaveFans } = Controller_FollowBlog.count(blog_id)
             //  軟刪除既有的條目
-            if (resModel.errno) {
-                return resModel
+            if (stillHaveFans) {
+                return new ErrModel(PUB_SUB.REMOVE_ERR)
             }
         }
     }

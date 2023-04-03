@@ -4,13 +4,18 @@ const Opts = require('../utils/seq_findOpts')
 const User = require("../server/user")
 const { SuccModel, ErrModel } = require('../model')
 
+
+async function count(blog_id){
+    let data = await FollowBlog.count(Opts.PUB_SCR.count(blog_id))
+    return new SuccModel({ data })
+}
 async function removeSubscribers(blog_id) {
-    let deletedAt = new Date()
-    let data = { blog_id, deletedAt }
-    let ok = await FollowBlog.deleteFollows(data)
-    if(!ok){
-        return new ErrModel(FOLLOWBLOG.CREATE_ERROR)
-    }
+    // let deletedAt = new Date()
+    // let data = { blog_id, deletedAt }
+    let ok = await FollowBlog.deleteFollows(blog_id)
+    // if(!ok){
+    //     return new ErrModel(FOLLOWBLOG.CREATE_ERROR)
+    // }
     return new SuccModel()
 }
 async function addSubscribers({ blog_id, fans }) {
@@ -35,6 +40,7 @@ async function findFollowsByIdolFans({ idolId, fansId }) {
 }
 
 module.exports = {
+    count, 
     removeSubscribers,      //  0326
     addSubscribers,         //  0326
     findFollowsByIdolFans   //  0326

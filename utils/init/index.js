@@ -1,33 +1,10 @@
-const { resetOptions, sort, initTimeFormat, pagination, organizeByTargetProp } = require('./blog')
-const { filterEmptyAndFranferFns, filterEmptyAndFranferFnsForArray } = require('../filterEmpty')
-const { USER: { AVATAR } } = require('../../conf/constant')
-const { init_commentForBrowser, initTime: initTimeForComment } = require('./comment')
 const { init_newsOfFollowId, init_excepts } = require('./news')
+const { organizedList, sortAndInitTimeFormat } = require('./blog')
+const { filterEmptyAndFranferFns } = require('../filterEmpty')
+const { USER: { AVATAR } } = require('../../conf/constant')
+const { initCommentsForBrowser } = require('./comment')
 
-function organizedList(list, options) {
-    let opts = resetOptions(options)
-    let _pagination = (list) => pagination(list, opts)
-    let organize = organizeByTargetProp(list, opts)
-    for (let type in organize) {
-        let items = organize[type]
-        if (items.length) {
-            items = sortAndInitTimeFormat(items, opts)
-        }
-        organize[type] = filterEmptyAndFranferFnsForArray(items, _pagination)
-    }
-    return organize
-}
 
-function sortAndInitTimeFormat(datas, opts) {
-    let _sort = (blogs) => sort( blogs, opts)
-    let list = filterEmptyAndFranferFnsForArray(datas, _sort)
-    console.log('@ list => ', list)
-    let gg = filterEmptyAndFranferFns(list, initTimeFormat)
-    console.log('@gg => ', gg)
-    return gg
-    let resList = sort(list, opts)
-    return initTimeFormat(resList, opts)
-}
 //  0326
 function init(data, ...fns) {
     let _fns = [toJSON, ...fns]
@@ -87,13 +64,6 @@ function initComment(data) {
     }
 }
 //  0326
-function initCommentsForBrowser(data) {
-     let comments = initComment(data)
-     comments = filterEmptyAndFranferFnsForArray(comments, init_commentForBrowser)
-     filterEmptyAndFranferFns(data, initTimeForComment)
-     return comments
-}
-//  0326
 function initBlog(data) {
     return init(data, go)
 
@@ -141,6 +111,7 @@ function _initBlogImg(blogImg) {
         return res
     }
 }
+
 
 module.exports = {
     followComment: init,    //  0328

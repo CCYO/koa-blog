@@ -10,7 +10,6 @@ const router = require('koa-router')()
 const Check = require('../../middleware/check_login')
 const Cache = require('../../middleware/cache')
 const Blog = require('../../controller/blog')
-const { blogImgAlt } = require('../../utils/init')
 router.prefix('/api/blog')
 
 //  刪除 blogs  0326

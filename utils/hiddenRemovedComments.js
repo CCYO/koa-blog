@@ -1,8 +1,9 @@
 const { COMMENT: { CHECK_IS_DELETED, SORT_BY }} = require('../conf/constant')
+const { filterEmptyAndFranferFnsForArray } = require('./filterEmpty')
 //  0228
 function removeDeletedComment(list) {
     //  計算出每串留言串 > (1)共包含幾篇留言 (2)含幾篇已刪除的留言
-    let map = getListOfNeedToDelete(list)
+    let map = filterEmptyAndFranferFnsForArray(list, getListOfNeedToDelete)
     return filterFromMap(list, map)
 
     function filterFromMap(_list, map) {
@@ -52,6 +53,7 @@ function removeDeletedComment(list) {
             }
             //  若沒有p_id，代表這次的list是一次新的循環，且擁有留言串，則再將留言串放入統計函數中
             if (!opts.p_id && comment.reply.length) {
+                
                 getListOfNeedToDelete(comment.reply, opts)
             }
         })
@@ -134,8 +136,5 @@ function removeDeletedComment(list) {
         return box
     }
 }
-
-
-
 
 module.exports = removeDeletedComment   //  0228

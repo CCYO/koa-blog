@@ -8,11 +8,12 @@ const {
     Img,
     Blog,
     BlogImg,
-    BlogImgAlt
+    BlogImgAlt,
+    PubScr
 } = require('../db/mysql/model')
 
 const BLOGIMGALT = {
-    modify: ({id, alt}) => ({
+    modify: ({ id, alt }) => ({
         data: { alt },
         opts: {
             where: { id }
@@ -20,7 +21,7 @@ const BLOGIMGALT = {
     }),
     count: (blogImg_id) => ({
         attributes: ['id'],
-        where: { blogImg_id }  
+        where: { blogImg_id }
     })
 }
 const IMG = {
@@ -63,7 +64,7 @@ const BLOG = {
                 },
                 {
                     model: BlogImg,
-                    attributes: [[ 'id', 'blogImg_id'], 'name'],
+                    attributes: [['id', 'blogImg_id'], 'name'],
                     include: [
                         {
                             model: Img,
@@ -92,7 +93,11 @@ const BLOG = {
     //     }
     // })
 }
-
+const PUB_SCR = {
+    count: (blog_id) => ({
+        where: { blog_id }
+    })
+}
 const FOLLOWCOMMENT = {
     findItems: ({ comment_ids }, { exclude }) => {
         let where = {
@@ -161,20 +166,10 @@ const COMMENT = {
         return {
             attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
             where: { id: comment_id },
-            include: [
-                {
-                    model: User,
-                    attributes: ['id', 'email', 'nickname']
-                },
-                // {
-                //     model: Blog,
-                //     attributes: ['id', 'title'],
-                //     include: {
-                //         model: User,
-                //         attributes: ['nickname', 'id']
-                //     }
-                // }
-            ]
+            include: {
+                model: User,
+                attributes: ['id', 'email', 'nickname']
+            }
         }
     },
     //  0228
@@ -212,24 +207,13 @@ function findBlogFollowersByBlogId(blog_id) {
     }
 }
 
-const FOLLOWBLOG = {
-
-}
-
-
-
-
-const FOLLOWPEOPLE = {
-
-}
-
 //  0228
 const USER = {
-    findOthersInSomeBlogAndPid: ({commenter_id, p_id, blog_id, createdAt}) => {
+    findOthersInSomeBlogAndPid: ({ commenter_id, p_id, blog_id, createdAt }) => {
         p_id = p_id ? p_id : 0
         return {
             attributes: ['id', 'email', 'nickname'],
-            where: { id: { [Op.not]: commenter_id }},
+            where: { id: { [Op.not]: commenter_id } },
             include: {
                 model: Comment,
                 attributes: ['id'],
@@ -317,6 +301,7 @@ const USER = {
 }
 
 module.exports = {
+    PUB_SCR,
     BLOGIMGALT,     //  0326
     IMG,            //  0326
     BLOG,
@@ -324,8 +309,6 @@ module.exports = {
 
     FOLLOWCOMMENT,
     COMMENT,
-    FOLLOWPEOPLE,
-    FOLLOWBLOG,
 
     findPublicBlogListByExcludeId,    //  0303
     findBlogFollowersByBlogId,  //  0303
