@@ -12,11 +12,11 @@ const BlogImg = seq.define('BlogImg', {
         allowNull: false,
         autoIncrement: true
     },
-    imgId: {
+    img_id: {
         type: INTEGER,
         allowNull: false,
     },
-    blogId: {
+    blog_id: {
         type: INTEGER,
         allowNull: false,
     },

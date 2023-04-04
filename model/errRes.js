@@ -3,14 +3,47 @@
  */
 
 module.exports = {
+    //  0404
+    PERMISSION: {
+        //  0404
+        NO_LOGIN: { errno: 20001, msg: '尚未登入' },
+
+        NOT_SELF: { errno: 502, msg: '非本人' },
+    },
+    //  
+    USER: {
+        //  0404
+        READ: {
+            //  0404
+            NO_DATA: { errno: 12001, msg: 'USER 無相關數據'}
+        },
+        //  0404
+        LOGIN: {
+            //  0404
+            NO_USER: { errno: 11002, msg: '查無此人，email或password有誤' },
+            //  0404
+            DATA_INCOMPLETE: { errno: 11001, msg: '未提供email或password' }
+        },
+        //  0404
+        REGISTER: {
+            //  0404
+            CREATE: { errno: 10004, msg: 'USER 創建失敗' },
+            //  0404
+            NO_PASSWORD: { errno: 10003, msg: '密碼未填' },
+            //  0404
+            NO_EMAIL: { errno: 10002, msg: '信箱未填' },
+            //  0404
+            IS_EXIST: { errno: 10001, msg: '此信箱已被登記' }
+        },
+    },
     FOLLOWBLOG: {
-        CREATE_ERROR: { errno: 1301, msg: 'FollowBlog 創建失敗'},
+        CREATE_ERROR: { errno: 1301, msg: 'FollowBlog 創建失敗' },
         DEL_ERR: { errno: 1302, msg: '刪除關聯失敗' },        //  0228
     },
     BLOGIMGALT: {
         REMOVE_ERR: { errno: 903, msg: 'BlogImgAlt刪除失敗' },    //  0326
-        CREATE_ERR: { errno: 901, msg: 'BlogImgAlt創建失敗'},           //  0326
-        NOT_EXIST: { errno: 902, msg: '不存在任何相符的 BlogImgAlt'},    //  0326
+        CREATE_ERR: { errno: 901, msg: 'BlogImgAlt創建失敗' },           //  0326
+        NOT_EXIST: { errno: 902, msg: '不存在任何相符的 BlogImgAlt' },    //  0326
         UPDATE_ERR: { errno: 902, msg: '更新失敗' },
     },
     BLOG: {
@@ -21,20 +54,7 @@ module.exports = {
         IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上' },
         REMOVE_ERR: { errno: 706, msg: '刪除Blog失敗' }
     },
-    REGISTER: {
-        NO_EMAIL: { errno: 102, msg: '信箱未填' },          //  0323
-        NO_PASSWORD: { errno: 103, msg: '密碼未填' },       //  0323
-        IS_EXIST: { errno: 101, msg: '此信箱已被登記' },    //  0323
 
-        UNEXPECTED: { errno: 199 },
-
-
-
-    },
-    LOGIN: {
-        DATA_IS_INCOMPLETE: { errno: 104, msg: '未提供email或password' },
-        NO_USER: { errno: 105, msg: '查無此人，email或password有誤' }
-    },
     READ: {
         NOT_EXIST: { errno: 201, msg: '沒有相符的使用者資料' }
     },
@@ -44,24 +64,20 @@ module.exports = {
         VALICATE_ERR: { errno: 302 },
         NO_THIS_ONE: { errno: 303, msg: '沒有這個人' },
         AVATAR_FORMAT_ERR: { errno: 304, msg: 'avatar圖檔格式錯誤，只接受JPG或PNG' },
-        NO_HASH: { errno: 305, msg: '少了hash數據'},
-        FORMIDABLE_ERR: { errno: 306, msg: 'formidable 解析發生錯誤'},
-        UPDATE_GCE_ERR: { errno: 307, msg: 'upload file to GCS 發生錯誤'}
-    },
-    PERMISSION: {
-        NOT_LOGIN: { errno: 501, msg: '從未登入' },
-        NOT_SELF: { errno: 502, msg: '非本人' }
+        NO_HASH: { errno: 305, msg: '少了hash數據' },
+        FORMIDABLE_ERR: { errno: 306, msg: 'formidable 解析發生錯誤' },
+        UPDATE_GCE_ERR: { errno: 307, msg: 'upload file to GCS 發生錯誤' }
     },
     FORMAT_ERR: { errno: 601 },
-    
+
     BLOGIMG: {
         REMOVE_ERR: { errno: 801, msg: '刪除 BlogImg 失敗' },
         UPDATE_ERR: { errno: 802, msg: '更新失敗' },
-        CREATE_ERR: { errno: 803, msg: '創建失敗'}
+        CREATE_ERR: { errno: 803, msg: '創建失敗' }
     },
     COMMENT: {
-        CREATE_ERR: { errno: 1103, msg: 'COMMENT 創建失敗'},
-        NOT_EXIST: { errno: 1102, msg: '評論不存在'},
+        CREATE_ERR: { errno: 1103, msg: 'COMMENT 創建失敗' },
+        NOT_EXIST: { errno: 1102, msg: '評論不存在' },
         REMOVE_ERR: { errno: 1101, msg: '文章刪除失敗' }
     },
     FOLLOW: {
@@ -70,7 +86,7 @@ module.exports = {
         CONFIRM_ERR: { errno: 1003, msg: '確認追蹤消息失敗' }
     },
     PUB_SUB: {
-        REMOVE_ERR: { errno: 1101, msg: 'PUB_SUB 刪除失敗'}
+        REMOVE_ERR: { errno: 1101, msg: 'PUB_SUB 刪除失敗' }
     },
     FOLLOWCOMMENT: {
         UPDATE_ERR: { errno: 1401, msg: 'FollowComment更新失敗' }

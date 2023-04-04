@@ -4,8 +4,8 @@
 const seq = require('../seq')
 const { INTEGER, BOO } = require('../types')
 
-const FollowComment = seq.define(
-    'FollowComment',
+const MsgReceiver = seq.define(
+    'MsgReceiver',
     {
         id: {
             type: INTEGER,
@@ -13,11 +13,11 @@ const FollowComment = seq.define(
             allowNull: false,
             autoIncrement: true
         },
-        comment_id: {
+        msg_id: {
             type: INTEGER,
             allowNull: false
         },
-        follower_id: {
+        receiver_id: {
             type: INTEGER,
             allowNull: false
         },
@@ -31,4 +31,4 @@ const FollowComment = seq.define(
     }
 )
 
-module.exports = FollowComment
+module.exports = MsgReceiver

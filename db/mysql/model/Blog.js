@@ -10,8 +10,9 @@ const Blog = seq.define('Blog', {
         type: STRING,
         allowNull: false
     },
-    user_id: {
-        type: INTEGER
+    author_id: {
+        type: INTEGER,
+        allowNull: false
     },
     html: {
         type: TEXT,
@@ -26,12 +27,7 @@ const Blog = seq.define('Blog', {
         allowNull: true
     }
 },{
-    paranoid: true,
-    hooks:{
-        async afterDestroy(blog){
-            await blog.get 
-        }
-    }
+    paranoid: true
 })
 
 module.exports = Blog

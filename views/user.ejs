@@ -399,10 +399,10 @@
                 </div>
                 <div class="relationShip-box">
                     <h3>追蹤列表</h3>
-                    <div id="idolList" class="relationShip-list-box">
-                        <% if(idolList.length) {%>
+                    <div id="idols" class="relationShip-list-box">
+                        <% if(idols.length) {%>
                         <ul>
-                            <% idolList.forEach(idol=> { %>
+                            <% idols.forEach(idol=> { %>
                             <li class="card" data-idol-id="<%= idol.id %>">
                                 <div class="ratio ratio-1x1">
                                     <img src="<%= idol.avatar %>" class="card-img-top" alt="">
@@ -438,8 +438,8 @@
     <div data-my-data="fansList">
         <%- JSON.stringify(fansList) %>
     </div>
-    <div data-my-data="idolList">
-        <%- JSON.stringify(idolList) %>
+    <div data-my-data="idols">
+        <%- JSON.stringify(idols) %>
     </div>
     <div data-my-data="blogList">
         <%- JSON.stringify(blogList) %>
@@ -481,7 +481,7 @@
         let pageData = data
         let { currentUser, me = {}, fansList } = pageData
         //  初始化BetterScroll
-        let relationList = ['#fansList', '#idolList']
+        let relationList = ['#fansList', '#idols']
         pageData.map_bs = initBetterScroll(relationList)
 
         let isSelf = currentUser.id === me.id

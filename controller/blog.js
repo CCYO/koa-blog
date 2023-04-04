@@ -1,6 +1,29 @@
+//  0404
+/** 取得 blogList
+ * @param {number} user_id user id
+ * @param {boolean} is_author 是否作者本人
+ * @returns {object} SuccessModel
+ * { 
+ *  blogList { 
+ *      show: [ 
+ *          blog {
+ *              id, title, showAt, 
+ *              author: { id, email, nickname, age, avatar, avatar_hash }
+ *          }, ...
+ *      ],
+ *      hidden: [ blog, ... ]
+ *  } 
+ * }
+ */
+async function findListForUserPage(userId, options) {
+    let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsForUserPage(userId))
+    let data = Init.browser.blog.organizedList(blogs, options)
+    return new SuccModel({ data })
+}
+
 const Init = require('../utils/init')
 const User = require('../server/user')
-const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR },  PUB_SUB} = require('../model/errRes')
+const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR }, PUB_SUB } = require('../model/errRes')
 const Controller_FollowBlog = require('./followBlog')   //  0326
 const Controller_BlogImgAlt = require('./blogImgAlt')
 const Blog = require('../server/blog')              //  0324
@@ -167,27 +190,7 @@ async function addBlog(title, authorId) {
         return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
     }
 }
-/** 取得 blogList   0324
- * @param {number} user_id user id
- * @param {boolean} is_author 是否作者本人
- * @returns {object} SuccessModel
- * { 
- *  blogList { 
- *      show: [ 
- *          blog {
- *              id, title, showAt, 
- *              author: { id, email, nickname, age, avatar, avatar_hash }
- *          }, ...
- *      ],
- *      hidden: [ blog, ... ]
- *  } 
- * }
- */
-async function findBlogsForUserPage(userId, options) {
-    let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsForUserPage(userId))
-    let data = Init.browser.blog.organizedList(blogs, options)
-    return new SuccModel({ data })
-}
+
 async function findBlogsHasPhoto(userId, options) {
     let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsHasPhoto(userId))
     let data = Init.browser.blog.organizedList(blogs, options)

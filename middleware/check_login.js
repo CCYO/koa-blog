@@ -1,16 +1,39 @@
 /**
  * @description middleware validate login 
  */
-const {
-    PERMISSION: {
-        NOT_SELF,
-        NOT_LOGIN   //  0228
+const { PERMISSION } = require('../model/errRes')   //  0404
+const { ErrModel } = require('../model')    //  0404
+//  0404
+/** Middleware 針對 VIEW 請求，驗證是否登入
+ * @param {*} ctx 
+ * @param {function} next 
+ * @returns {promise<null>}
+ */
+ const view_logining = async (ctx, next) => {
+    if (ctx.session.user) {
+        await next()
+    } else {
+        ctx.redirect(`/login?from=${encodeURIComponent(ctx.href)}`)
     }
-} = require('../model/errRes')
+    return
+}
+//  0404
+/** Middleware 針對 API 請求，驗證是否登入
+ * @param {*} ctx 
+ * @param {function} next 
+ * @returns {promise<null>}
+ */
+const api_logining = async (ctx, next) => {
+    if (ctx.session.user) {
+        await next()
+    } else {
+        ctx.body = new ErrModel(PERMISSION.NO_LOGIN)
+    }
+    return
+}
 
-const {
-    ErrModel    //  0228
-} = require('../model')
+
+
 
 
 //  0308
@@ -39,40 +62,17 @@ async function view_isSelf(ctx, next) {
     await next()
 }
 
-/** Middleware 針對 API 請求，驗證是否登入  0228
- * @param {*} ctx 
- * @param {function} next 
- * @returns {promise<null>}
- */
-const api_logining = async (ctx, next) => {
-    const { session: { user } } = ctx
-    if (user) {
-        await next()
-    } else {
-        ctx.body = new ErrModel(NOT_LOGIN)
-    }
-    return
-}
 
-/** Middleware 針對 VIEW 請求，驗證是否登入
- * @param {*} ctx 
- * @param {function} next 
- * @returns {promise<null>}
- */
-const view_logining = async (ctx, next) => {
-    const { session: { user } } = ctx
-    if (user) {
-        await next()
-    } else {
-        ctx.redirect(`/login?from=${encodeURIComponent(ctx.href)}`)
-    }
-    return
-}
 
 module.exports = {
-    view_logining,      //  0323
+    //  0404
+    view_logining,
+    //  0404
+    api_logining,
+
+
     
     view_mustBeSelf,    //  0308
     view_isSelf,        //  0228
-    api_logining,       //  0228
+
 }

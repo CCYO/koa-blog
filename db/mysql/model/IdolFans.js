@@ -12,11 +12,11 @@ const IdolFans = seq.define('IdolFans', {
         allowNull: false,
         autoIncrement: true
     },
-    target: {
+    idol_id: {
         type: INTEGER,
         allowNull: false,
     },
-    follow: {
+    fans_id: {
         type: INTEGER,
         allowNull: false,
     },

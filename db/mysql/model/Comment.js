@@ -9,15 +9,15 @@ let Comment = seq.define('Comment', {
         type: STRING,
         defaultValue: ''
     },
-    user_id: {
+    commenter_id: {
         type: INTEGER,
         allowNull: false
     },
-    blog_id: {
+    article_id: {
         type: INTEGER,
         allowNull: false
     },
-    p_id: {
+    pid: {
         type: INTEGER,
         allowNull: true
     }

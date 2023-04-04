@@ -1,11 +1,33 @@
-const {
-    seq,
-    Blog        //  0228
-} = require('../db/mysql/model')
+const Init = require('../utils/init')           //  0404
+const { Blog } = require('../db/mysql/model')   //  0404
 
-const { Op } = require('sequelize')
+//  0404
+/** 查詢 blogs
+ * @param {object} param0 查詢 blogs 紀錄所需的參數
+ * @param {number} param0.user_id user id
+ * @param {boolean} param0.getAll 是否無視 blog 公開/隱藏，false 僅拿公開，true 全拿
+ * @returns {object} 
+ *  [blog: {
+ *      id, title, show, showAt,
+ *      author: { id, email, nickname, age, avatar, avatar_hash }
+ *  }]
+ * 
+ */
+async function readList(opts) {
+    let blogs = await Blog.findAll(opts)
+    return Init.blog(blogs)
+}
 
-const Init = require('../utils/init')
+module.exports = {
+    //  0440
+    readList,
+
+    deleteBlogs,        //  0327
+    updateBlog,         //  0326
+    createBlog,         //  0303
+    readBlog,           //  0228
+
+}
 
 /**批量刪除 0327
  * 
@@ -14,16 +36,16 @@ const Init = require('../utils/init')
  * @returns 
  */
 async function deleteBlogs(datas) {
-    try{
-        for(data of datas){
+    try {
+        for (data of datas) {
             let row = await Blog.destroy({
                 where: { ...data }
             })
-            if(!row){
+            if (!row) {
                 throw new Error()
             }
         }
-    }catch(e){
+    } catch (e) {
         return false
     }
     return true
@@ -42,22 +64,7 @@ async function updateBlog({ blog_id, newData }) {
     }
     return false
 }
-/** 查詢 blogs   0324
- * @param {object} param0 查詢 blogs 紀錄所需的參數
- * @param {number} param0.user_id user id
- * @param {boolean} param0.getAll 是否無視 blog 公開/隱藏，false 僅拿公開，true 全拿
- * @returns {object} 
- *  [blog: {
- *      id, title, show, showAt,
- *      author: { id, email, nickname, age, avatar, avatar_hash }
- *  }]
- * 
- 
- */
-async function readBlogs(opts) {
-    let blogs = await Blog.findAll(opts)
-    return Init.blog(blogs)
-}
+
 
 //  0228
 async function readBlog(opts) {
@@ -75,10 +82,4 @@ async function createBlog({ title, authorId }) {
     return Init.blog(blog)
 }
 
-module.exports = {
-    deleteBlogs,        //  0327
-    updateBlog,         //  0326
-    createBlog,         //  0303
-    readBlog,           //  0228
-    readBlogs,          //  0228
-}
+

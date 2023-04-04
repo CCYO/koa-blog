@@ -2,11 +2,15 @@
  * @description Sequelize Ins
  */
 const { Sequelize, DataTypes } = require('sequelize')
-
+const cls = require('cls-hooked')
 const { MYSQL_CONF } = require('../../conf/key/db')
-
 let seqOps = { ...MYSQL_CONF, logging: false}
+
+const namespace = cls.createNamespace('seq-namespace')
+Sequelize.useCLS(namespace)
+
 const seq = new Sequelize(seqOps)
+seq.namespace = namespace
 const test = async () => {
     try {
         await seq.authenticate()

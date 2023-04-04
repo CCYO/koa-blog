@@ -1,4 +1,4 @@
-const { seq, User, IdolFans, Blog, PubScr, Comment, FollowComment } = require('./model')
+const { seq, News } = require('./model')
 
 const sync = async () => {    
     try{

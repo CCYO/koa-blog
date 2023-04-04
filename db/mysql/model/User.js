@@ -49,6 +49,8 @@ const User = seq.define('User', {
         type: STRING,
         allowNull: true,
     }
+}, {
+    paranoid: true
 })
 
 module.exports = User

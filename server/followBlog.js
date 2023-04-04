@@ -1,8 +1,7 @@
 /**
- * @description ServePubScr*/
+ * @description ServeArticleReader*/
 const { PUB_SUB } = require('../model/errRes')
-const { PubScr } = require('../db/mysql/model')
-const FollowBlog = require('../db/mysql/model/FollowBlog')
+const { ArticleReader } = require('../db/mysql/model')
 const { MyErr } = require('../model')
 
 async function count(opts) {
@@ -22,11 +21,11 @@ async function deleteFollows(blog_id) {
     //     datas = [data]
     // }
     // let keys = [ ...Object.keys(datas[0]), 'updatedAt']
-    // let follows = await PubScr.bulkCreate( datas, {
+    // let follows = await ArticleReader.bulkCreate( datas, {
     //     updateOnDuplicate: [...keys]
     // })
     try {
-        let row = await PubScr.destroy({ where: { blog_id } })
+        let row = await ArticleReader.destroy({ where: { blog_id } })
         console.log('@row => ', row)
         return row
     } catch (err) {
@@ -43,7 +42,7 @@ async function createFollows(data) {
     }
     datas = datas.map(item => ({ ...item, deletedAt: null }))
     let keys = [...Object.keys(datas[0]), 'updatedAt']
-    let follows = await PubScr.bulkCreate(datas, {
+    let follows = await ArticleReader.bulkCreate(datas, {
         updateOnDuplicate: [...keys],
     })
     if (datas.length !== follows.length) {
@@ -53,14 +52,14 @@ async function createFollows(data) {
 }
 
 async function readFollowers(opts) {
-    let followers = await PubScr.findAll(opts)
+    let followers = await ArticleReader.findAll(opts)
     return followers.map(follower => follower.toJSON())
 }
 
 async function hiddenBlog({ where }) {
     // let { blog_id, confirm } = opts
     let opts = { where }
-    let row = await PubScr.destroy(opts)
+    let row = await ArticleReader.destroy(opts)
     if (!row) {
         return false
     }
@@ -70,7 +69,7 @@ async function hiddenBlog({ where }) {
 async function restoreBlog(opt_where) {
     let where = { ...opt_where }
 
-    await PubScr.restore(where)
+    await ArticleReader.restore(where)
 }
 
 

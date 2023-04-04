@@ -4,10 +4,16 @@
 
 module.exports = {
     USER: {
+        //  0404
         AVATAR: 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
     },
     NEWS: {
-        LIMIT: 2
+        LIMIT: 2,
+        TYPE: {
+            USER: 1,
+            BLOG: 2,
+            COMMENT: 3
+        }
     },
     BLOG: {
         PAGINATION: 5,      //  0303

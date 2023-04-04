@@ -10,10 +10,9 @@ const bodyparser = require('koa-bodyparser')
 const logger = require('koa-logger')
 //  提高終端顯示數據的可讀性
 const json = require('koa-json')
-
 //  連接redis-session
 const store = require('./db/cache/redis/sessionStore')
-
+const { seq } = require('./db/mysql/model')
 //  router - API
 const apiUser = require('./routes/api/user')
 const apiEditor = require('./routes/api/editor')
@@ -28,7 +27,6 @@ const viewSquare = require('./routes/views/square')
 
 const { isDev } = require('./utils/env')
 const { REDIS_CONF } = require('./conf/constant')
-const { cachePublic } = require('./middleware/cache')
 
 const app = new Koa()
 
@@ -36,7 +34,9 @@ const app = new Koa()
 //  負責捕捉意外的錯誤（預期可能發生的邏輯問題，已預先以ErrModel處理）
 app.use(async (ctx, next) => {
     try {
-        await next()
+        await seq.transaction( async (t) => {
+            await next()
+        })
     } catch (error) {
         if (isDev && error.hasOwnProperty('errno')) {	//  不希望發生的錯誤
             if (!/^\/api\//.test(ctx.path)) {   //  針對 VIEW 的錯誤

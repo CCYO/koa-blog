@@ -1,16 +1,21 @@
+const { NEWS: { TYPE }} = require('./conf/constant')
 let { Op } = require('sequelize')
-const rawQuery = require('./db/mysql/query')
-const { User, Blog, BlogImgAlt, FollowComment, seq } = require('./db/mysql/model')
-const C_comment = require('./controller/comment')
-const C_FollowComment = require('./controller/followComment')
+const {
+    seq,
+    User,
+    Blog,
+    Comment,
+    News
+} = require('./db/mysql/model')
+const C_U = require('./controller/user')
 const Init = require('./utils/init')
 
 go()
 
 async function go() {
     try {
-        let re = await C_FollowComment.findItemsByTargets({ comment_ids: [1]}, { exclude: { follower_id: [2] }} )
-        console.log(re)
+        let list = await C_U.findRelationShip(1)
+        console.log('@fansList => ', list)
     } catch (e) {
         console.log(e)
     }
