@@ -1,15 +1,13 @@
+const { MyErr } = require('../../model')
+const C_Comment = require('../../controller/comment')
+const C_Blog = require('../../controller/blog')
+const C_User = require('../../controller/user')
 const moment = require('moment')
-const Controller_User = require('../../controller/user')
-const Controller_Blog = require('../../controller/blog')
-const Controller_Comment = require('../../controller/comment')
 const { QueryTypes } = require('sequelize')
-const {
-    NEWS: {
-        LIMIT
-    }
-} = require('../../conf/constant')
 const { seq } = require('./model')
+const { NEWS } = require('../../conf/constant')
 
+//  0404
 async function readNews({ userId, excepts }) {
     // let { people, blogs, comments } = excepts
     let list = { people: '', blogs: '', comments: '' }
@@ -22,43 +20,42 @@ async function readNews({ userId, excepts }) {
     let query = `
     SELECT type, id, target_id, follow_id, confirm, createdAt
     FROM (
-        SELECT 1 as type, id , target as target_id , follow as follow_id, confirm, createdAt
+        SELECT ${NEWS.TYPE.IDOL_FANS} as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt
         FROM IdolFans
         WHERE 
-            target=${userId}
+            idol_id=${userId}
             ${list.people}
 
         UNION
 
-        SELECT 2 as type, id, blog_id as target_id, follower_id as follow_id, confirm, createdAt 
+        SELECT ${NEWS.TYPE.ARTICLE_READER} as type, id, article_id as target_id, reader_id as follow_id, confirm, createdAt 
         FROM FollowBlogs
         WHERE 
-            follower_id=${userId}
+            reader_id=${userId}
             AND deletedAt IS NULL
             ${list.blogs}
 
         UNION
 
-        SELECT 3 as type, id, comment_id as target_id, follower_id as follow_id, confirm, createdAt 
+        SELECT ${NEWS.TYPE.MSG_RECEIVER} as type, id, msg_id as target_id, receiver_id as follow_id, confirm, createdAt 
         FROM FollowComments
         WHERE 
-            follower_id=${userId}
+            receiver_id=${userId}
             AND deletedAt IS NULL
             ${list.comments}
 
     ) AS X
     ORDER BY confirm=1, createdAt DESC
-    LIMIT ${LIMIT}
+    LIMIT ${NEWS.LIMIT}
     `
-    let follows = await seq.query(query, { type: QueryTypes.SELECT })
-    let x = await _initFollows(follows)
-    return x
+    let newsList = await seq.query(query, { type: QueryTypes.SELECT })
+    return await initNews(newsList)
 }
-
-async function _initFollows(follows) {
-    let newsList = await Promise.all(follows.map(_initFollow))
-
-    let res = newsList.reduce((acc, news) => {
+//  0404
+async function initNews(newsList) {
+    let list = await Promise.all(newsList.map(findNews))
+    //  分為 讀過/未讀過
+    return list.reduce((acc, news) => {
         if (news.confirm) {
             acc.confirm.push(news)
         } else {
@@ -66,33 +63,34 @@ async function _initFollows(follows) {
         }
         return acc
     }, { unconfirm: [], confirm: [] })
-    return res
+    
 
-    async function _initFollow(item) {
-        let { type, id, target_id, follow_id, confirm, createdAt } = item
+    async function findNews(news) {
+        let { type, id, target_id, follow_id, confirm, createdAt } = news
+        //  序列化時間數據
         let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
+        //  結果的預設值
         let res = { type, id, timestamp, confirm }
-        if (type === 1) {
-            let resModel = await Controller_User.findUser(follow_id)
+        if (type === NEWS.TYPE.IDOL_FANS) {
+            let resModel = await C_User.find(follow_id)
             if (resModel.errno) {
-                throw resModel
+                throw new MyErr({ ...resModel }) 
             }
             return { ...res, fans: resModel.data }
-        } else if (type === 2) {
-            let resModel = await Controller_Blog.findBlog({ blog_id: target_id })
+        } else if (type === NEWS.TYPE.ARTICLE_READER) {
+            let resModel = await C_Blog.find(target_id)
             if (resModel.errno) {
-                throw resModel
+                throw new MyErr({ ...resModel }) 
             }
             return { ...res, blog: resModel.data }
-        } else if (type === 3) {
-            console.log('@item => ', item)
-            let resModel = await Controller_Comment.findCommentForNews(target_id)
+        } else if (type === NEWS.TYPE.MSG_RECEIVER) {
+            let resModel = await C_Comment.findInfoForNews(target_id)
             if (resModel.errno) {
-                throw resModel
+                throw new MyErr({ ...resModel }) 
             }
-            let { id, p_id, time, commenter, blog, html } = resModel.data
+            let { id, pid, html, time, commenter, article} = resModel.data
             //  獲取早前未確認到的comment資訊
-            let { data: others } = await Controller_User.findOthersInSomeBlogAndPid({ commenter_id: commenter.id, p_id, blog_id: blog.id, createdAt })
+            let { data: others } = await C_User.findOthersInSomeBlogAndPid({ commenter_id: commenter.id, p_id, blog_id: blog.id, createdAt })
             others = others.reduce((acc, { nickname, comments }) => {
                 acc.commenters.push(nickname)
                 for (let id of comments) {

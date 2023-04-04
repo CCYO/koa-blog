@@ -1,19 +1,39 @@
-const { COMMENT: { NOT_EXIST, REMOVE_ERR } } = require('../model/errRes')
-const Controller_FollowComment = require('./followComment')
-const { CACHE: { TYPE: { NEWS, API } } } = require('../conf/constant')
-const Opts = require('../utils/seq_findOpts')
-const Comment = require('../server/comment')
-const { SuccModel, ErrModel } = require('../model')
-const Init = require('../utils/init')
 
-async function findCommentForNews(commentId){
-    let comment = await Comment.readComment(Opts.COMMENT.findCommentForNews(commentId))
+const { SuccModel, ErrModel } = require('../model') //  0404
+const Opts = require('../utils/seq_findOpts')       //  0404
+const Comment = require('../server/comment')        //  0404
+
+//  0404
+async function findInfoForNews(commentId){
+    let comment = await Comment.read(Opts.COMMENT.findWholeInfo(commentId))
     if(!comment){
         return new ErrModel(NOT_EXIST)
     }
     let data = Init.browser.comment(comment)
     return new SuccModel({ data })
 }
+
+module.exports = {
+    //  0404
+    findInfoForNews,
+    
+    findBlogsOfCommented,  //  0303
+    removeComment,
+    addComment,             //  0316
+    findCommentsByBlogId,    //  0228
+
+    _findCommentsRelatedToPid
+}
+
+const { COMMENT: { NOT_EXIST, REMOVE_ERR } } = require('../model/errRes')
+const Controller_FollowComment = require('./followComment')
+const { CACHE: { TYPE: { NEWS, API } } } = require('../conf/constant')
+
+
+
+const Init = require('../utils/init')
+
+
 //  0303
 async function findBlogsOfCommented(commenterId){
     let comments = await Comment.readComments(Opts.COMMENT.findBlogsOfCommented(commenterId))
@@ -147,12 +167,3 @@ async function findCommentsByBlogId(blog_id) {
     return new SuccModel({ data })
 }
 
-module.exports = {
-    findCommentForNews,     //  0328
-    findBlogsOfCommented,  //  0303
-    removeComment,
-    addComment,             //  0316
-    findCommentsByBlogId,    //  0228
-
-    _findCommentsRelatedToPid
-}

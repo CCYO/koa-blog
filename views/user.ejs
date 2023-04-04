@@ -237,12 +237,12 @@
                     <div class="card-header blogList-header align-items-center">
                         <h5>已發布的BLOG</h5>
                         <button type="button"
-                            class="btn btn-sm btn-outline-danger <%= blogList.show.length? 'my-show' : 'my-noshow'%>"
+                            class="btn btn-sm btn-outline-danger <%= blogs.show.length? 'my-show' : 'my-noshow'%>"
                             data-my-remove-blogs="show">全部刪除</button>
                     </div>
-                    <% if(blogList.show.length && blogList.show[0].length){ %>
+                    <% if(blogs.show.length && blogs.show[0].length){ %>
                     <ul class="list-group list-group-flush">
-                        <% blogList.show[0].forEach(({id, title, time})=> { %>
+                        <% blogs.show[0].forEach(({id, title, time})=> { %>
                         <li
                             class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                             <div class="text-truncate me-3">
@@ -259,8 +259,8 @@
                             </div>
                         </li>
                         <% }) %>
-                        <% if(blogList.show[0].length < 5) {%>
-                        <% for(let i = 5 - blogList.show[0].length; i > 0; i-- ){ %>
+                        <% if(blogs.show[0].length < 5) {%>
+                        <% for(let i = 5 - blogs.show[0].length; i > 0; i-- ){ %>
                         <li
                             class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
                             <div class="text-truncate me-3">
@@ -274,13 +274,13 @@
                         <% } %>
                         <% } %>
                     </ul>
-                    <% if (blogList.show.length> 1) { %>
+                    <% if (blogs.show.length> 1) { %>
                     <nav aria-label="...">
                         <ul class="pagination" id="show-list">
                             <li class="page-item my-disabled">
                                 <a class="page-link" href='#' data-my-way="back">Previous</a>
                             </li>
-                            <% blogList.show.forEach((item, ind, arr)=> { %>
+                            <% blogs.show.forEach((item, ind, arr)=> { %>
                             <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
                                 <a class="page-link" href="#" data-my-key="show" data-my-ind="<%= ind %>">
                                     <%= ind + 1 %>
@@ -300,17 +300,17 @@
 
                     <% } %>
                 </div>
-                <% if(blogList.hidden){ %>
+                <% if(blogs.hidden){ %>
                 <div class="card blogList bg-light" data-my-blog-key="hidden">
                     <div class="card-header blogList-header align-items-center">
                         <h5>編輯中的BLOG</h5>
                         <button type="button"
-                            class="btn btn-sm btn-outline-danger <%= blogList.hidden.length? 'my-show' : 'my-noshow'%>"
+                            class="btn btn-sm btn-outline-danger <%= blogs.hidden.length? 'my-show' : 'my-noshow'%>"
                             data-my-remove-blogs="hidden">全部刪除</button>
                     </div>
-                    <% if(blogList.hidden.length && blogList.hidden[0].length){ %>
+                    <% if(blogs.hidden.length && blogs.hidden[0].length){ %>
                     <ul class="list-group list-group-flush">
-                        <% blogList.hidden[0].forEach(({id, title, time})=> { %>
+                        <% blogs.hidden[0].forEach(({id, title, time})=> { %>
                         <li
                             class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
                             <div class="text-truncate me-3">
@@ -327,8 +327,8 @@
                             </div>
                         </li>
                         <% }) %>
-                        <% if(blogList.hidden[0].length < 5) {%>
-                        <% for(let i = 5 - blogList.hidden[0].length; i > 0; i-- ){ %>
+                        <% if(blogs.hidden[0].length < 5) {%>
+                        <% for(let i = 5 - blogs.hidden[0].length; i > 0; i-- ){ %>
                         <li
                             class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
                             <div class="text-truncate me-3">
@@ -342,13 +342,13 @@
                         <% } %>
                         <% } %>
                     </ul>
-                    <% if (blogList.hidden.length> 1) { %>
+                    <% if (blogs.hidden.length> 1) { %>
                     <nav aria-label="...">
                         <ul class="pagination" id="hidden-list">
                             <li class="page-item my-disabled">
                                 <a class="page-link" href="#" data-my-way="back">Previous</a>
                             </li>
-                            <% blogList.hidden.forEach((item, ind, arr)=> { %>
+                            <% blogs.hidden.forEach((item, ind, arr)=> { %>
                             <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
                                 <a class="page-link" href="#" data-my-key="hidden" data-my-ind="<%= ind %>">
                                     <%= ind + 1 %>
@@ -441,8 +441,8 @@
     <div data-my-data="idols">
         <%- JSON.stringify(idols) %>
     </div>
-    <div data-my-data="blogList">
-        <%- JSON.stringify(blogList) %>
+    <div data-my-data="blogs">
+        <%- JSON.stringify(blogs) %>
     </div>
 </div>
 

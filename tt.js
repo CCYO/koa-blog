@@ -14,7 +14,7 @@ go()
 
 async function go() {
     try {
-        let list = await C_U.findRelationShip(1)
+        let list = await User.findAll({ where: {}})
         console.log('@fansList => ', list)
     } catch (e) {
         console.log(e)

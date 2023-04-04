@@ -10,9 +10,9 @@ module.exports = {
     NEWS: {
         LIMIT: 2,
         TYPE: {
-            USER: 1,
-            BLOG: 2,
-            COMMENT: 3
+            IDOL_FANS: 1,
+            ARTICLE_READER: 2,
+            MSG_RECEIVER: 3
         }
     },
     BLOG: {

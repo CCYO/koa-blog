@@ -3,6 +3,23 @@
  */
 
 module.exports = {
+    
+    //  0404
+    BLOG: {
+        //  0404
+        READ: {
+            //  0404
+            NOT_EXIST: { errno:30002, msg: 'BLOG不存在' },
+            //  0404
+            NO_DATA: { errno: 30001, msg: '查詢 BLOG 卻沒提供查詢參數'}
+        },
+        CREATE_ERR: { errno: 701, msg: 'Blog創建失敗' },                //  0326
+        UPLOAD_IMG_ERR: { errno: 704, msg: 'Blog內文圖片上傳失敗' },    //  0326
+        
+        UPDATE_ERR: { errno: 703, msg: 'BLOG資料更新失敗' },                //  0326
+        IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上' },
+        REMOVE_ERR: { errno: 706, msg: '刪除Blog失敗' }
+    },
     //  0404
     PERMISSION: {
         //  0404
@@ -36,6 +53,13 @@ module.exports = {
             IS_EXIST: { errno: 10001, msg: '此信箱已被登記' }
         },
     },
+    NEWS: {
+        
+
+        FOLLOW_CONFIRM_ERR: { errno: 1101, msg: 'Follow.confirm 更新失敗' },
+        BLOG_FANS_CONFIRM_ERR: { errno: 1102, msg: 'Blog_Fans.confirm 更新失敗' },
+        FOLLOW_COMMENT_CONFIRM_ERR: { errno: 1103, msg: 'Blog_Fans.confirm 更新失敗' }
+    },
     FOLLOWBLOG: {
         CREATE_ERROR: { errno: 1301, msg: 'FollowBlog 創建失敗' },
         DEL_ERR: { errno: 1302, msg: '刪除關聯失敗' },        //  0228
@@ -46,14 +70,7 @@ module.exports = {
         NOT_EXIST: { errno: 902, msg: '不存在任何相符的 BlogImgAlt' },    //  0326
         UPDATE_ERR: { errno: 902, msg: '更新失敗' },
     },
-    BLOG: {
-        CREATE_ERR: { errno: 701, msg: 'Blog創建失敗' },                //  0326
-        UPLOAD_IMG_ERR: { errno: 704, msg: 'Blog內文圖片上傳失敗' },    //  0326
-        NOT_EXIST: { errno: 702, msg: 'BLOG不存在' },        //  0228
-        UPDATE_ERR: { errno: 703, msg: 'BLOG資料更新失敗' },                //  0326
-        IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上' },
-        REMOVE_ERR: { errno: 706, msg: '刪除Blog失敗' }
-    },
+    
 
     READ: {
         NOT_EXIST: { errno: 201, msg: '沒有相符的使用者資料' }
@@ -91,10 +108,6 @@ module.exports = {
     FOLLOWCOMMENT: {
         UPDATE_ERR: { errno: 1401, msg: 'FollowComment更新失敗' }
     },
-    NEWS: {
-        FOLLOW_CONFIRM_ERR: { errno: 1101, msg: 'Follow.confirm 更新失敗' },
-        BLOG_FANS_CONFIRM_ERR: { errno: 1102, msg: 'Blog_Fans.confirm 更新失敗' },
-        FOLLOW_COMMENT_CONFIRM_ERR: { errno: 1103, msg: 'Blog_Fans.confirm 更新失敗' }
-    },
+    
     SERVER_ERR: { errno: 9999, msg: '伺服器錯誤' }
 }

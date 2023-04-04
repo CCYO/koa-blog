@@ -1,10 +1,35 @@
-const { USER: { AVATAR } } = require('../../conf/constant')     //  0404
-const { filterEmptyAndFranferFns, filterEmptyAndFranferFnsForArray } = require('../filterEmpty')  //  0404
+const { 
+    //  0404
+    pageTable,
 
-//  0326
+    sortAndInitTimeFormat
+} = require('./blog')
+const { filterEmptyAndFranferFns, filterEmptyAndFranferFnsForArray } = require('../filterEmpty')  //  0404
+const { USER: { AVATAR } } = require('../../conf/constant')     //  0404
+
+//  0404
+function initComment(data) {
+    return init(data, go)
+    function go(comment) {
+        let data = { ...comment }
+        let map = new Map(Object.entries(data))
+        if (map.has('pid')) {
+            data.pid = comment.pid === null ? 0 : pid
+        }
+        if (map.has('commenter')) {
+            data.commenter = initUser(data.commenter)
+        }
+        if (map.has('article')) {
+            if(data.article.author){
+                data.article.author = initUser(data.article.author) 
+            }
+        }
+        return data
+    }
+}
+//  0404
 function initBlog(data) {
     return init(data, go)
-
     function go(data) {
         let blog = { ...data }
         let map = new Map(Object.entries(blog))
@@ -12,22 +37,21 @@ function initBlog(data) {
             blog.author = initUser(blog.author)
         }
         if (map.has('BlogImgs')) {
-
             delete blog.BlogImgs
-            let imgs = _initBlogImg(map.get('BlogImgs'))
-            blog.imgs = imgs.flat()
+            blog.imgs = _initBlogImg(data.BlogImgs)
         }
         return blog
     }
 }
-//  0326
+//  0404
 function _initBlogImg(blogImgs) {
     //  正常來說，blogImgs會是arr
     return initArr(blogImgs, go)
     function go(blogImgs) {
-        blogImgs.map(blogImg => {
-            let res = {}
+        let container = []
+        for (let blogImg of blogImgs) {
             let map = new Map(Object.entries(blogImg))
+            let res = {}
             if (map.has('blogImg_id')) {
                 res.blogImg_id = blogImg.blogImg_id
             }
@@ -40,16 +64,18 @@ function _initBlogImg(blogImgs) {
             }
             if (map.has('BlogImgAlts')) {
                 let imgAlts = init(blogImg.BlogImgAlts)
-                res = imgAlts.map(imgAlt => {
+                for (let imgAlt of imgAlts) {
                     if (!imgAlt.alt) {
                         imgAlt.alt = res.name
                     }
-                    return { ...res, ...item }
-                })
+                    container.push({ ...res, ...imgAlt})
+                }
+                continue
             }
+            container.push(res)
             //  { id, alt, blogImg_id, name, img_id, url, hash}
-            return res
-        })
+        }
+        return container
     }
 }
 //  0404
@@ -78,7 +104,7 @@ function initUser(data) {
 //  0404
 function initArr(data, ...fns) {
     let arr = init(data)
-    return filterEmptyAndFranferFnsForArray(data, ...fns)
+    return filterEmptyAndFranferFnsForArray(arr, ...fns)
 }
 //  0404
 function init(data, ...fns) {
@@ -91,56 +117,38 @@ function init(data, ...fns) {
 }
 
 const { init_newsOfFollowId, init_excepts } = require('./news')
-const { organizedList, sortAndInitTimeFormat } = require('./blog')
-
-
 const { initCommentsForBrowser } = require('./comment')
-
-
-
-
-//  0326
-function initComment(data) {
-    let s = init(data, go)
-    return s
-    function go(comment) {
-        let data = { ...comment }
-        let map = new Map(Object.entries(data))
-        if (map.has('p_id')) {
-            let pid = map.get('p_id')
-            data.p_id = pid === null ? 0 : pid
-        }
-        if (map.has('User')) {
-            let commenter = initUser(map.get('User'))
-            delete data.User
-            data.commenter = commenter
-        }
-        if (map.has('Blog')) {
-            let blog = map.get('Blog')
-            delete data.Blog
-            data.blog = { author: initUser(blog.author), title: blog.title, id: blog.id }
-        }
-        return data
-    }
-}
-
-
-
 module.exports = {
+    //  0404
+    comment: initComment,
+    browser: {
+        //  0404
+        blog: {
+            //  0404
+            pageTable,
+
+            sortAndInitTimeFormat
+        },
+        comment: initCommentsForBrowser,
+    },
+    //  0404
+    user: initUser,
+    //  0404
+    blog: initBlog,
+
     followComment: init,    //  0328
     blogImgAlt: init,       //  0326
     blogImg: init,          //  0326
     img: init,              //  0326
-    user: initUser,         //  0326
-    blog: initBlog,         //  0326
-    comment: initComment,   //  0326
-    browser: {
-        comment: initCommentsForBrowser, //  0326
-        blog: {
-            organizedList,
-            sortAndInitTimeFormat
-        }
-    },
+    
+    
+    
     init_newsOfFollowId,
     init_excepts
 }
+
+
+
+
+
+

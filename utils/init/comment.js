@@ -1,32 +1,57 @@
-const { filterEmptyAndFranferFns, filterEmptyAndFranferFnsForArray } = require('../filterEmpty')
-const { COMMENT: { CHECK_IS_DELETED, SORT_BY, TIME_FORMAT } } = require('../../conf/constant')
-const date = require('date-and-time')
+const { filterEmptyAndFranferFns, filterEmptyAndFranferFnsForArray } = require('../filterEmpty')    //  0404
 
-//  0326
+//  0404
 function initCommentsForBrowser(data) {
+    //  排序 + 時間數據序列化
     let comments = filterEmptyAndFranferFnsForArray(data, nestAndSort)
     filterEmptyAndFranferFns(data, initTime)
     return comments
 }
-//  nest + sort
+
+//  0404
 function nestAndSort(comments) {
     let list
     if (Array.isArray(comments)) {
+        //  存放 nest 結果的數據
         let commentList = []
         for (let comment of comments) {
+            //  每個 comment 都新增 reply 屬性，用來 nest commentChildren
             comment.reply = []
-            if (!comment.p_id || comments.length === 1) {
+            //  屬於 commentParent || 只有一條 comment 數據
+            if (!comment.pid || comments.length === 1) {
+                //  存入 nest 結果
                 commentList.push(comment)
             } else {
+                //  執行 nest
                 nestComments(commentList, comment)
             }
         }
+
+
+
+        
+        //  排序
         list = sort(commentList)
+        //  非數組，直接返回
     } else {
         list = comments
     }
     return list
-
+    //  nest
+    function nestComments(commentList, item) {
+        //  迭代處理 存放在 nest 結果的數據，
+        for (let comment of commentList) {
+            //  要處理的數據pid === 當前迭代數據的id
+            if (item.p_id === comment.id) {
+                //  將要處理的數據，存放進當前迭代數據的reply
+                comment.reply.push(item)
+                break
+                //  若當前迭代數據的reply內仍有數據，則向內執行 nest
+            } else if (comment.reply.length) {
+                nestComments(comment.reply, item)
+            }
+        }
+    }
 
     function sort(list) {
         return list.sort(function (a, b) {
@@ -34,18 +59,15 @@ function nestAndSort(comments) {
         })
     }
 
-    function nestComments(commentList, item) {
-        for (let index in commentList) {
-            let targetComment = commentList[index]
-            if (item.p_id === targetComment.id) {
-                targetComment.reply.push(item)
-                break
-            } else if (targetComment.reply.length) {
-                nestComments(targetComment.reply, item)
-            }
-        }
-    }
+    
 }
+
+
+const { COMMENT: { CHECK_IS_DELETED, SORT_BY, TIME_FORMAT } } = require('../../conf/constant')
+const date = require('date-and-time')
+
+
+
 //  時間序列化
 function initTime(item) {
     item[CHECK_IS_DELETED] = item.deletedAt ? true : false

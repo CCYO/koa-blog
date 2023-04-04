@@ -20,12 +20,12 @@ router.get('/self', Check.view_logining, Cache.getSelfCache, async (ctx, next) =
         //  將 DB 數據賦予給 ctx.cache
         relationShip = cacheStatus.data = resModel.data
     }
-    let { currentUser, fansList, idols, blogList } = relationShip
+    let { currentUser, fansList, idols, blogs } = relationShip
     await ctx.render('user', {
         title: `${currentUser.nickname}的主頁`,
         //  主要資訊數據
         currentUser,    //  window.data 數據
-        blogList,       //  window.data 數據
+        blogs,       //  window.data 數據
         fansList,       //  window.data 數據
         idols,       //  window.data 數據
     })

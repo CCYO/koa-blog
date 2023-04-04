@@ -12,13 +12,13 @@ async function findInfoForUserPage(userId) {
     let resModel = await findRelationShip(userId)
     let { data: { currentUser, fansList, idols } } = resModel
     //  向 DB 撈取數據
-    let { data: blogs } = await C_Blog.findBlogsForUserPage(userId)
-    let data = { currentUser, fansList, idolList, blogList }
+    let { data: blogs } = await C_Blog.findListForUserPage(userId)
+    let data = { currentUser, fansList, idols, blogs }
     return new SuccModel({ data })
 }
 //  0404
 async function findRelationShip(userId) {
-    let userModel = await findUser(userId)
+    let userModel = await find(userId)
     if (userModel.errno) {
         throw new MyErr({ ...userModel })
     }
@@ -39,7 +39,7 @@ async function findFansList(idol_id) {
     return new SuccModel({ data })
 }
 //  0404
-async function findUser(id) {
+async function find(id) {
     const data = await User.read(Opts.USER.find(id))
     if (!data) {
         return new ErrModel(ErrRes.USER.READ.NO_DATA)
@@ -94,6 +94,30 @@ async function isEmailExist(email) {
     return new SuccModel()
 }
 
+module.exports = {
+    //  0404
+    findInfoForUserPage,
+    //  0404
+    findRelationShip,
+    //  0404
+    findFansList,
+    //  0404
+    find,
+    //  0404
+    login,
+    //  0404
+    register,
+    //  0404
+    isEmailExist,
+    
+
+    findOthersInSomeBlogAndPid, //  0328
+    modifyUserInfo,             //  0309
+}
+
+
+
+
 const CommentController = require('./comment')
 
 
@@ -146,26 +170,3 @@ async function modifyUserInfo(newData, userId) {
 }
 
 
-module.exports = {
-    //  0404
-    findRelationShip,
-    //  0404
-    findFansList,
-    //  0404
-    findUser,
-    //  0404
-    login,
-    //  0404
-    register,
-    //  0404
-    isEmailExist,
-    
-
-    findOthersInSomeBlogAndPid, //  0328
-    
-
-    findInfoForUserPage,        //  0323
-    modifyUserInfo,             //  0309
-
-    
-}

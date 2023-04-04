@@ -1,22 +1,31 @@
-const { COMMENT: { CREATE_ERR }} = require('../model/errRes')
-const Init = require('../utils/init')
-
+const Init = require('../utils/init')   //  0404
 const {
-    Comment,        //  0228
+    //  0404
+    Comment,
+
     FollowComment
 } = require('../db/mysql/model')
 
+
+async function read(opts) {
+    let comment = await Comment.findOne(opts)
+    return Init.comment(comment)
+}
+
+module.exports = {
+    //  0404
+    read,
+    
+    setRelatedComment,
+    deleteComment,
+    createComment,
+    readComments        //  0313 
+}
+
+const { COMMENT: { CREATE_ERR }} = require('../model/errRes')
 const { Op } = require('sequelize')
 const xss = require('xss')
 const { MyErr } = require('../model')
-
-async function readComment(opts) {
-    let comment = await Comment.findOne(opts)
-    if(!comment){
-        return null
-    }
-    return Init.comment(comment)
-}
 
 async function deleteComment({ commentId, blog_id }) {
     let num = await Comment.destroy({
@@ -201,12 +210,4 @@ async function setRelatedComment(comment, { author }) {
 
     return cacheNews
 
-}
-
-module.exports = {
-    readComment, //  0328
-    setRelatedComment,
-    deleteComment,
-    createComment,
-    readComments        //  0313 
 }
