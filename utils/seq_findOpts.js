@@ -3,6 +3,20 @@ module.exports = {
     //  0404
     COMMENT: {
         //  0404
+        findRelativeUnconfirmList: ({ commenter_id, pid, article_id, createdAt }) => ({
+            attributes: ['id'],
+            where: {
+                article_id,
+                pid
+            },
+            include: {
+                as: 'commenter',
+                where: {
+                    commenter_id: { [Op.not]: commenter_id }
+                }
+            }
+        })
+        //  0404
         findWholeInfo: (id) => ({
             attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
             where: { id },

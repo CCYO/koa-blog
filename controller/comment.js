@@ -3,6 +3,9 @@ const { SuccModel, ErrModel } = require('../model') //  0404
 const Opts = require('../utils/seq_findOpts')       //  0404
 const Comment = require('../server/comment')        //  0404
 
+async function findRelativeUnconfirmList({ commenter_id, pid, article_id, createdAt }){
+    let comments = awiat Comment.readList(Opts.COMMENT.findRelativeUnconfirmList({ commenter_id, pid, article_id, createdAt }))
+}
 //  0404
 async function findInfoForNews(commentId){
     let comment = await Comment.read(Opts.COMMENT.findWholeInfo(commentId))
