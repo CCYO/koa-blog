@@ -3,8 +3,11 @@ const { SuccModel, ErrModel } = require('../model') //  0404
 const Opts = require('../utils/seq_findOpts')       //  0404
 const Comment = require('../server/comment')        //  0404
 
-async function findRelativeUnconfirmList({ commenter_id, pid, article_id, createdAt }){
-    let comments = awiat Comment.readList(Opts.COMMENT.findRelativeUnconfirmList({ commenter_id, pid, article_id, createdAt }))
+//  0404
+async function findRelativeUnconfirmList({ pid, article_id, createdAt }){
+    let comments = await Comment.readList(Opts.COMMENT.findRelativeUnconfirmList({ pid, article_id, createdAt }))
+    let data = Init.comment(comments)
+    return new SuccModel({ data })
 }
 //  0404
 async function findInfoForNews(commentId){
@@ -17,6 +20,8 @@ async function findInfoForNews(commentId){
 }
 
 module.exports = {
+    //  0404
+    findRelativeUnconfirmList,
     //  0404
     findInfoForNews,
     
@@ -35,6 +40,7 @@ const { CACHE: { TYPE: { NEWS, API } } } = require('../conf/constant')
 
 
 const Init = require('../utils/init')
+const { Comment } = require('../db/mysql/model')
 
 
 //  0303

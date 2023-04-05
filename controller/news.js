@@ -2,15 +2,18 @@
  * @description Controller news相關
  */
 
-const { htmlStr_newsList } = require('../utils/ejs-render')
-const Init = require('../utils/init')
+const { 
+    //  0404
+    SuccModel,
+    ErrModel
+} = require('../model')
 const {
+    //  0404
     readNews,
     updateNews,
 } = require('../server/news')
-const { ErrModel, SuccModel } = require('../model')
-const { NEWS } = require('../model/errRes')
 
+//  0404
 /** 藉由 userID 取得 news
  * @param {number} userId 
  * @returns {*} resModel
@@ -30,6 +33,18 @@ async function getMeAndTheFirstNews(me) {
     return new SuccModel({data})
 }
 
+module.exports = {
+    //  0404
+    getMeAndTheFirstNews,
+
+    readMoreByUserId,   //  api news
+    confirmNews,         //  api news
+    readMore
+}
+
+const { htmlStr_newsList } = require('../utils/ejs-render')
+const Init = require('../utils/init')
+const { NEWS } = require('../model/errRes')
 async function readMore({me, excepts, newsListNeedToConfirm}) {
     /*
     excepts: {
@@ -123,9 +138,3 @@ async function readMoreByUserId(userId, markTime, listOfexceptNewsId, fromFront 
     return new SuccModel(res)
 }
 
-module.exports = {
-    getMeAndTheFirstNews,    //  view user
-    readMoreByUserId,   //  api news
-    confirmNews,         //  api news
-    readMore
-}

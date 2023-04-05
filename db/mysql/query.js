@@ -8,6 +8,38 @@ const { seq } = require('./model')
 const { NEWS } = require('../../conf/constant')
 
 //  0404
+async function count({ userId }) {
+    let query = `
+    SELECT
+        COUNT(if(confirm < 1, true, null)) as unconfirm, 
+        COUNT(if(confirm = 1, true, null)) as confirm, 
+        COUNT(*) as total
+    FROM (
+        SELECT ${NEWS.TYPE.IDOL_FANS} as type, id, confirm
+        FROM IdolFans
+        WHERE
+            idol_id=${userId} 
+        UNION
+
+        SELECT ${NEWS.TYPE.ARTICLE_READER} as type, id, confirm
+        FROM ArticleReader
+        WHERE 
+            reader_id=${userId}
+            AND deletedAt IS NULL 
+        UNION
+
+        SELECT ${NEWS.TYPE.MSG_RECEIVER} as type, id, confirm
+        FROM MsgReceiver
+        WHERE
+            receiver_id=${userId}
+            AND deletedAt IS NULL 
+    ) AS X
+    `
+    let [{ unconfirm, confirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })
+
+    return { num: { unconfirm, confirm, total } }
+}
+//  0404
 async function readNews({ userId, excepts }) {
     // let { people, blogs, comments } = excepts
     let list = { people: '', blogs: '', comments: '' }
@@ -29,7 +61,7 @@ async function readNews({ userId, excepts }) {
         UNION
 
         SELECT ${NEWS.TYPE.ARTICLE_READER} as type, id, article_id as target_id, reader_id as follow_id, confirm, createdAt 
-        FROM FollowBlogs
+        FROM ArticleReader
         WHERE 
             reader_id=${userId}
             AND deletedAt IS NULL
@@ -38,7 +70,7 @@ async function readNews({ userId, excepts }) {
         UNION
 
         SELECT ${NEWS.TYPE.MSG_RECEIVER} as type, id, msg_id as target_id, receiver_id as follow_id, confirm, createdAt 
-        FROM FollowComments
+        FROM MsgReceiver
         WHERE 
             receiver_id=${userId}
             AND deletedAt IS NULL
@@ -64,7 +96,7 @@ async function initNews(newsList) {
         return acc
     }, { unconfirm: [], confirm: [] })
     
-
+    //  0404
     async function findNews(news) {
         let { type, id, target_id, follow_id, confirm, createdAt } = news
         //  序列化時間數據
@@ -88,52 +120,36 @@ async function initNews(newsList) {
             if (resModel.errno) {
                 throw new MyErr({ ...resModel }) 
             }
-            let { id, pid, html, time, commenter, article} = resModel.data
+            let { id, pid, html, commenter, article} = resModel.data
             //  獲取早前未確認到的comment資訊
-            //  同樣Pid + 早於 time(createdAt) + 不同 commenter 的 comment（包含commenter）
-            let { data: others } = await C_User.findOthersInSomeBlogAndPid({ commenter_id: commenter.id, pid, article_id: article.id, createdAt })
-            others = others.reduce((acc, { nickname, comments }) => {
-                acc.commenters.push(nickname)
-                for (let id of comments) {
-                    acc.comments.push(id)
+            //  同樣Pid + 晚於 time(createdAt) 的 comment資料
+            let { data } = await C_Comment.findRelativeUnconfirmList({ pid, article_id: article.id, createdAt })
+            //  分類為 commenter (不重複 + 非此 msg 留言者 ) + commentId 
+            let otherComments = data.reduce((acc, comment) => {
+                let { id, commenter } = comment
+                let commenterIsExist = acc.commenters.includes( ({id}) => id === commenter.id )
+                if(!commenterIsExist){
+                    let { id, nickname } = commenter
+                    //  commenters 僅存入 id + nickname
+                    acc.commenters.push({ id, nickname })
                 }
+                //  comments 僅存入 id
+                acc.comments.push(id)
                 return acc
             }, { commenters: [], comments: [] })
-            return { ...res, comment: { id, commenter, html, time, blog, others } }
+            return { ...res, comment: { id, html, commenter, article, otherComments } }
         }
     }
 }
-async function count({ userId }) {
-    let query = `
-    SELECT
-        COUNT(if(confirm < 1, true, null)) as unconfirm, 
-        COUNT(if(confirm = 1, true, null)) as confirm, 
-        COUNT(*) as total
-    FROM (
-        SELECT 1 as type, id, confirm
-        FROM IdolFans
-        WHERE
-            target=${userId} 
-        UNION
 
-        SELECT 2 as type, id, confirm
-        FROM FollowBlogs
-        WHERE 
-            follower_id=${userId}
-            AND deletedAt IS NULL 
-        UNION
-
-        SELECT 3 as type, id, confirm
-        FROM FollowComments
-        WHERE
-            follower_id=${userId}
-            AND deletedAt IS NULL 
-    ) AS X
-    `
-    let [{ unconfirm, confirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })
-
-    return { num: { unconfirm, confirm, total } }
+module.exports = {
+    //  0404
+    count,
+    //  0404
+    readNews,
+    countNewsTotalAndUnconfirm
 }
+
 async function countNewsTotalAndUnconfirm({ userId, options }) {
     let { markTime, fromFront } = options
 
@@ -171,8 +187,4 @@ async function countNewsTotalAndUnconfirm({ userId, options }) {
     return { numOfUnconfirm, total }
 }
 
-module.exports = {
-    readNews,
-    count,
-    countNewsTotalAndUnconfirm
-}
+

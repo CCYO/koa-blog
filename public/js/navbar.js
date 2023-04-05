@@ -286,28 +286,31 @@ async function initNavbar() {
                         }
 
                         function template_comment({ confirm, id, comment, timestamp }) {
-                            let { others } = comment
-                            let otherNotIncludeMe = []
-                            if (others.length) {
-                                otherNotIncludeMe = new Set()
-                                others.reduce((initVal, other) => {
-                                    if (other.id !== pageData.me.id) {
-                                        otherNotIncludeMe.add(other.nickname)
-                                    }
-                                    return initVal
-                                }, otherNotIncludeMe)
-                                otherNotIncludeMe = [...otherNotIncludeMe]
-                            }
+                            let { otherComments } = comment
+                            // let otherNotIncludeMe = []
+                            // if (others.length) {
+                            //     otherNotIncludeMe = new Set()
+                            //     others.reduce((initVal, other) => {
+                            //         if (other.id !== pageData.me.id) {
+                            //             otherNotIncludeMe.add(other.nickname)
+                            //         }
+                            //         return initVal
+                            //     }, otherNotIncludeMe)
+                            //     otherNotIncludeMe = [...otherNotIncludeMe]
+                            // }
                             
-                            let count = otherNotIncludeMe.length
-                            let nicknames =
-                                count > 1 ? otherNotIncludeMe.slice(0, 2).join(',') + `${count > 2 ? `與其他${count - 2}人` : ''}` + `，都` :
-                                    count > 0 ? otherNotIncludeMe.join(',') :
-                                        comment.commenter.nickname
+                            // let count = otherNotIncludeMe.length
+                            let count = otherComments.commenters.length
+                            let others = otherComments.map(({nickname}) => nickname)
+                            let nicknames = comment.commenter.nickname + 
+                                count > 1 ? 
+                                others.slice(0, 2).join(',') + ( count > 2 ? `與其他${count - 2}人`  : '' + `，都` ) :
+                                count === 1 ?
+                                others[0] : ''
                             
                             let who =
-                                count > 1 && comment.blog.author.id === pageData.me.id ? '你' :
-                                    comment.blog.author.id === comment.commenter.id ? '自己' : comment.blog.author.nickname
+                                comment.article.author.id === pageData.me.id ? '你' :
+                                comment.blog.author.id === comment.commenter.id ? '自己' : comment.blog.author.nickname
                             let query = confirm ? '' : `?anchorType=3&anchorId=${id}`
                             return `
             <li class="dropdown-item  position-relative news-item">
