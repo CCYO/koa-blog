@@ -6,6 +6,11 @@ const { ErrRes, ErrModel, SuccModel, MyErr } = require('../model')  //  0404
 const Opts = require('../utils/seq_findOpts')                       //  0404
 const User = require('../server/user')                              //  0404
 
+async function findOthersInSomeBlogAndPid({ commenter_id, p_id, blog_id, createdAt }) {
+    //  [ { id, nickname, email, comments: [id, ...] }, ... ]
+    let commenters = await User.readUsers(Opts.USER.findOthersInSomeBlogAndPid({ commenter_id, p_id, blog_id, createdAt }))
+    return new SuccModel({ data: commenters })
+}
 //  0404
 async function findInfoForUserPage(userId) {
     //  向 DB 撈取數據  
@@ -96,6 +101,8 @@ async function isEmailExist(email) {
 
 module.exports = {
     //  0404
+    findOthersInSomeBlogAndPid,
+    //  0404
     findInfoForUserPage,
     //  0404
     findRelationShip,
@@ -111,7 +118,7 @@ module.exports = {
     isEmailExist,
     
 
-    findOthersInSomeBlogAndPid, //  0328
+    
     modifyUserInfo,             //  0309
 }
 
@@ -133,11 +140,7 @@ const {
 
 
 
-async function findOthersInSomeBlogAndPid({ commenter_id, p_id, blog_id, createdAt }) {
-    //  [ { id, nickname, email, comments: [id, ...] }, ... ]
-    let commenters = await User.readUsers(Opts.USER.findOthersInSomeBlogAndPid({ commenter_id, p_id, blog_id, createdAt }))
-    return new SuccModel({ data: commenters })
-}
+
 
 
 
