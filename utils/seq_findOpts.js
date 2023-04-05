@@ -9,10 +9,10 @@ module.exports = {
             include: [
                 {
                     association: 'commenter',
-                    attributes: ['id', 'email', 'nickname']
+                    attributes: ['id', 'email', 'nickname'],
                 },
                 {
-                    model: 'article',
+                    association: 'article',
                     attributes: ['id', 'title'],
                     include: {
                         association: 'author',

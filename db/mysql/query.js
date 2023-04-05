@@ -90,7 +90,8 @@ async function initNews(newsList) {
             }
             let { id, pid, html, time, commenter, article} = resModel.data
             //  獲取早前未確認到的comment資訊
-            let { data: others } = await C_User.findOthersInSomeBlogAndPid({ commenter_id: commenter.id, p_id, blog_id: blog.id, createdAt })
+            //  同樣Pid + 早於 time(createdAt) + 不同 commenter 的 comment（包含commenter）
+            let { data: others } = await C_User.findOthersInSomeBlogAndPid({ commenter_id: commenter.id, pid, article_id: article.id, createdAt })
             others = others.reduce((acc, { nickname, comments }) => {
                 acc.commenters.push(nickname)
                 for (let id of comments) {
