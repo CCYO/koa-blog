@@ -22,14 +22,14 @@ async function count({ userId }) {
         UNION
 
         SELECT ${NEWS.TYPE.ARTICLE_READER} as type, id, confirm
-        FROM ArticleReader
+        FROM ArticleReaders
         WHERE 
             reader_id=${userId}
             AND deletedAt IS NULL 
         UNION
 
         SELECT ${NEWS.TYPE.MSG_RECEIVER} as type, id, confirm
-        FROM MsgReceiver
+        FROM MsgReceivers
         WHERE
             receiver_id=${userId}
             AND deletedAt IS NULL 
@@ -61,7 +61,7 @@ async function readNews({ userId, excepts }) {
         UNION
 
         SELECT ${NEWS.TYPE.ARTICLE_READER} as type, id, article_id as target_id, reader_id as follow_id, confirm, createdAt 
-        FROM ArticleReader
+        FROM ArticleReaders
         WHERE 
             reader_id=${userId}
             AND deletedAt IS NULL
@@ -70,7 +70,7 @@ async function readNews({ userId, excepts }) {
         UNION
 
         SELECT ${NEWS.TYPE.MSG_RECEIVER} as type, id, msg_id as target_id, receiver_id as follow_id, confirm, createdAt 
-        FROM MsgReceiver
+        FROM MsgReceivers
         WHERE 
             receiver_id=${userId}
             AND deletedAt IS NULL

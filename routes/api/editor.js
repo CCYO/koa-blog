@@ -1,16 +1,23 @@
 /**
  * @description API editor 相關
  */
+const Blog = require('../../controller/blog')           //  0406
+const Cache = require('../../middleware/cache')         //  未整理
+const Check = require('../../middleware/check_login')   //  0406
+const router = require('koa-router')()                  //  0406
+router.prefix('/api/blog')                              //  0406
 
+//  0406
+//  建立blog
+router.post('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
+    const { title } = ctx.request.body
+    return ctx.body = await Blog.addBlog(title, ctx.session.user.id)
+})
 const { uploadImg } = require('../../middleware/blogImg')
 const { addBlogImgAlt, modifiedBlogImgAlt, cutImgsWithBlog } = require('../../controller/blogImgAlt')
 
-//  ↓0303
-const router = require('koa-router')()
-const Check = require('../../middleware/check_login')
-const Cache = require('../../middleware/cache')
-const Blog = require('../../controller/blog')
-router.prefix('/api/blog')
+
+
 
 //  刪除 blogs  0326
 router.delete('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
@@ -27,12 +34,7 @@ router.patch('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) =>
 })
 //  上傳圖片    0326
 router.post('/img', Check.api_logining, Cache.modifiedtCache, uploadImg)
-//  建立blog    0303
-router.post('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
-    const authorId = ctx.session.user.id
-    const { title } = ctx.request.body
-    return ctx.body = await Blog.addBlog(title, authorId)
-})
+
 
 
 

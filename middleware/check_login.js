@@ -9,7 +9,7 @@ const { ErrModel } = require('../model')    //  0404
  * @param {function} next 
  * @returns {promise<null>}
  */
- const view_logining = async (ctx, next) => {
+async function view_logining(ctx, next) {
     if (ctx.session.user) {
         await next()
     } else {
@@ -23,7 +23,7 @@ const { ErrModel } = require('../model')    //  0404
  * @param {function} next 
  * @returns {promise<null>}
  */
-const api_logining = async (ctx, next) => {
+async function api_logining(ctx, next) {
     if (ctx.session.user) {
         await next()
     } else {
@@ -32,7 +32,18 @@ const api_logining = async (ctx, next) => {
     return
 }
 
+module.exports = {
+    //  0404
+    view_logining,
+    //  0404
+    api_logining,
 
+
+
+    view_mustBeSelf,    //  0308
+    view_isSelf,        //  0228
+
+}
 
 
 
@@ -64,15 +75,3 @@ async function view_isSelf(ctx, next) {
 
 
 
-module.exports = {
-    //  0404
-    view_logining,
-    //  0404
-    api_logining,
-
-
-    
-    view_mustBeSelf,    //  0308
-    view_isSelf,        //  0228
-
-}

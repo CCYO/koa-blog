@@ -1,32 +1,48 @@
+const { CACHE } = require('../conf/constant')                       //  0406
+const my_xxs = require('../utils/xss')                              //  0406
 const { MyErr,
-    ErrRes, ErrModel, SuccModel } = require('../model')  //  0404
+    ErrRes, ErrModel, SuccModel } = require('../model')             //  0404
 const Init = require('../utils/init')                               //  0404
 const Opts = require('../utils/seq_findOpts')                       //  0404
 const Blog = require('../server/blog')                              //  0404
+//  0406
+/** 建立 blog
+ * @param { string } title 標題
+ * @param { number } userId 使用者ID  
+ * @returns SuccModel for { data: { id, title, html, show, showAt, createdAt, updatedAt }} || ErrModel
+ */
+async function addBlog(title, author_id) {
+    const data = await Blog.create({
+        title: my_xxs(title),
+        author_id
+    })
+    const cache = { [CACHE.TYPE.PAGE.USER]: [author_id] }
+    return new SuccModel({ data, cache })
+}
 //  0404
 /** 取得 blog 紀錄
  * 
  * @param {number} blog_id blog id
  * @returns 
  */
-async function findWholeInfo({ blog_id, author_id }) {
-    if(!blog_id && !author_id){
+async function findWholeInfo(blog_id) {
+    if (!blog_id) {
         return new ErrModel(ErrRes.BLOG.READ.NO_DATA)
     }
-    let data = await Blog.read(Opts.BLOG.findWholeInfo({ id: blog_id, author_id }))
+    let data = await Blog.read(Opts.BLOG.findWholeInfo(blog_id))
     if (!data) {
-        return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST)    
+        return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST)
     }
     return new SuccModel({ data })
 }
 //  0404
 async function find(blog_id) {
-    if(!blog_id){
+    if (!blog_id) {
         return new ErrModel(ErrRes.BLOG.READ.NO_DATA)
     }
-    let data = await Blog.read(Opts.BLOG.findInfoForNews(blog_id))
+    let data = await Blog.read(Opts.BLOG.find(blog_id))
     if (!data) {
-        return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST)    
+        return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST)
     }
     return new SuccModel({ data })
 }
@@ -65,22 +81,22 @@ module.exports = {
     modifyBlog,             //  0326
     findSquareBlogList,      //  0303
     removeBlogs,            //  0303
-    
+
     addBlog
 }
 
 
 const User = require('../server/user')
 const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR }, PUB_SUB } = require('../model/errRes')
-const Controller_FollowBlog = require('./followBlog')   //  0326
+const Controller_FollowBlog = require('./articleReader')   //  0326
 const Controller_BlogImgAlt = require('./blogImgAlt')
 
 
 // const { organizedList, sortAndInitTimeFormat } = require('../utils/init/blog')   //  0326
-const FollowBlog = require('../server/followBlog')  //  0326
+const FollowBlog = require('../server/articleReader')  //  0326
 
-const my_xxs = require('../utils/xss')          //  0303
-const { CACHE } = require('../conf/constant')
+
+
 //  0326
 async function findSquareBlogList(exclude_id) {
     let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
@@ -213,21 +229,7 @@ async function modifyBlog(author_id, blog_id, blog_data) {
     return new SuccModel({ data, cache })
 }
 
-/** 建立 blog   0303
- * @param { string } title 標題
- * @param { number } userId 使用者ID  
- * @returns SuccModel for { data: { id, title, html, show, showAt, createdAt, updatedAt }} || ErrModel
- */
-async function addBlog(title, authorId) {
-    try {
-        title = my_xxs(title)
-        const blog = await Blog.createBlog({ title, authorId })
-        const cache = { [CACHE.TYPE.PAGE.USER]: [authorId] }
-        return new SuccModel({ data: blog, cache })
-    } catch (e) {
-        return new ErrModel({ ...BLOG.CREATE_ERR, msg: e })
-    }
-}
+
 
 async function findBlogsHasPhoto(userId, options) {
     let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsHasPhoto(userId))

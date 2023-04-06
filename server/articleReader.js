@@ -1,7 +1,33 @@
+const { ArticleReader } = require('../db/mysql/model')  //  0406
+//  0406
+async function deleteList(opts){
+    let res = await ArticleReader.destroy(opts)
+    //  需確認 res 是甚麼
+    console.log('@ S ArticleReader deleteList => ', res)
+    return res
+}
+//  0406
+async function restore(opts) {
+    let res = await ArticleReader.restore(opts)
+    return res
+}
+
+module.exports = {
+    //  0406
+    deleteList,
+    //  0406
+    restore,
+
+    count,
+    deleteFollows,     //  0228
+    createFollows,
+    hiddenBlog,
+    readFollowers,
+}
 /**
  * @description ServeArticleReader*/
 const { PUB_SUB } = require('../model/errRes')
-const { ArticleReader } = require('../db/mysql/model')
+
 const { MyErr } = require('../model')
 
 async function count(opts) {
@@ -66,25 +92,9 @@ async function hiddenBlog({ where }) {
     return true
 }
 
-async function restoreBlog(opt_where) {
-    let where = { ...opt_where }
-
-    await ArticleReader.restore(where)
-}
 
 
 
 
 
-module.exports = {
-    count,
-    deleteFollows,     //  0228
 
-    createFollows,
-    restoreBlog,
-
-    hiddenBlog,
-    readFollowers,
-
-
-}

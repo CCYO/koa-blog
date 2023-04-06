@@ -1,4 +1,9 @@
-
+const Init = require('../utils/init')               //  0404
+const { COMMENT: {
+    //  0404
+    NOT_EXIST,
+    REMOVE_ERR
+} } = require('../model/errRes')
 const { SuccModel, ErrModel } = require('../model') //  0404
 const Opts = require('../utils/seq_findOpts')       //  0404
 const Comment = require('../server/comment')        //  0404
@@ -33,14 +38,13 @@ module.exports = {
     _findCommentsRelatedToPid
 }
 
-const { COMMENT: { NOT_EXIST, REMOVE_ERR } } = require('../model/errRes')
+
 const Controller_FollowComment = require('./followComment')
 const { CACHE: { TYPE: { NEWS, API } } } = require('../conf/constant')
 
 
 
-const Init = require('../utils/init')
-const { Comment } = require('../db/mysql/model')
+
 
 
 //  0303

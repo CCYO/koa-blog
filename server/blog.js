@@ -1,6 +1,31 @@
+const {
+    //  0406 
+    ErrRes,
+    //  0406
+    MyErr
+} = require('../model')           //  0406
 const Init = require('../utils/init')           //  0404
 const { Blog } = require('../db/mysql/model')   //  0404
 
+//  0406
+async function read(opts) {
+    let blog = await Blog.findOne(opts)
+    return Init.blog(blog)
+}
+//  0406
+/** 創建Blog
+ * @param {string} title 文章表提
+ * @param {number} user_id 作者id
+ * @returns {object} blog 資訊 { id, title, html, show, showAt, createdAt, updatedAt }
+ */
+async function create(data) {
+    try {
+        let blog = await Blog.create(data)
+        return Init.blog(blog)
+    }catch(err){
+        throw new MyErr({ ...ErrRes.BLOG.CREATE, err})
+    }
+}
 //  0404
 /** 查詢 blogs
  * @param {object} param0 查詢 blogs 紀錄所需的參數
@@ -19,14 +44,15 @@ async function readList(opts) {
 }
 
 module.exports = {
-    //  0440
+    //  0406
+    read,
+    //  0406
+    create,
+    //  0404
     readList,
 
     deleteBlogs,        //  0327
     updateBlog,         //  0326
-    createBlog,         //  0303
-    readBlog,           //  0228
-
 }
 
 /**批量刪除 0327
@@ -66,20 +92,8 @@ async function updateBlog({ blog_id, newData }) {
 }
 
 
-//  0228
-async function readBlog(opts) {
-    let blog = await Blog.findOne(opts)
-    return Init.blog(blog)
-}
 
-/** 創建Blog    0303
- * @param {string} title 文章表提
- * @param {number} user_id 作者id
- * @returns {object} blog 資訊 { id, title, html, show, showAt, createdAt, updatedAt }
- */
-async function createBlog({ title, authorId }) {
-    let blog = await Blog.create({ title, user_id: authorId })
-    return Init.blog(blog)
-}
+
+
 
 

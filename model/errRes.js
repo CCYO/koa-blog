@@ -3,9 +3,10 @@
  */
 
 module.exports = {
-    
     //  0404
     BLOG: {
+        //  0406
+        CREATE: { errno: 30003, msg: 'BLOG 創建失敗' },
         //  0404
         READ: {
             //  0404
@@ -13,12 +14,42 @@ module.exports = {
             //  0404
             NO_DATA: { errno: 30001, msg: '查詢 BLOG 卻沒提供查詢參數'}
         },
-        CREATE_ERR: { errno: 701, msg: 'Blog創建失敗' },                //  0326
+        
         UPLOAD_IMG_ERR: { errno: 704, msg: 'Blog內文圖片上傳失敗' },    //  0326
         
         UPDATE_ERR: { errno: 703, msg: 'BLOG資料更新失敗' },                //  0326
         IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上' },
         REMOVE_ERR: { errno: 706, msg: '刪除Blog失敗' }
+    },
+    //  0406
+    ARTICLE_READER: {
+        //  0406
+        RESTORE: {
+            ROW_ERR: {errno: 40004, msg: '恢復軟刪除 ArticleReader 的數量不完全' },
+        },
+        //  0406
+        DELETE: {
+            //  0406
+            ROW_ERR: {errno: 40003, msg: '刪除 ArticleReader 的數量不完全' },
+        }
+    },
+    //  0406
+    IDOL_FANS: {
+        //  0406
+        RESTORE: {
+            ROW_ERR: {errno: 40004, msg: '恢復軟刪除 IdolFans 的數量不完全' },
+        },
+        //  0406
+        DELETE: {
+            //  0406
+            ROW_ERR: {errno: 40003, msg: '刪除 IdolFans 的數量不完全' },
+            //  0406
+            NO_IDOL: { errno: 40002, msg: '要刪除的 Idol 不存在'}
+        },
+        //  0406
+        CREATE_ERR: { errno: 40001, msg: 'IdolFans 創建失敗' },
+                //  0228
+        CONFIRM_ERR: { errno: 1003, msg: '確認追蹤消息失敗' }
     },
     //  0404
     PERMISSION: {
@@ -31,6 +62,8 @@ module.exports = {
     USER: {
         //  0404
         READ: {
+            //  0406
+            NO_USER: { errno: 12002, msg: '找不到 USER'},
             //  0404
             NO_DATA: { errno: 12001, msg: 'USER 無相關數據'}
         },
@@ -97,11 +130,7 @@ module.exports = {
         NOT_EXIST: { errno: 1102, msg: '評論不存在' },
         REMOVE_ERR: { errno: 1101, msg: '文章刪除失敗' }
     },
-    FOLLOW: {
-        FOLLOW_ERR: { errno: 1001, msg: '追蹤失敗' },            //  0228
-        CANCEL_ERR: { errno: 1002, msg: '取消追蹤失敗' },        //  0228
-        CONFIRM_ERR: { errno: 1003, msg: '確認追蹤消息失敗' }
-    },
+    
     PUB_SUB: {
         REMOVE_ERR: { errno: 1101, msg: 'PUB_SUB 刪除失敗' }
     },

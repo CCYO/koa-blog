@@ -1,56 +1,79 @@
-const IdolFans = require('../server/idolFans')  //  0228
-
-const { CACHE: { TYPE: { PAGE, NEWS } }} = require('../conf/constant')
-const FollowBlogController = require('./followBlog')  //  0309
-const FollowBlog = require('../server/followBlog')
-const { FOLLOW } = require('../model/errRes')
-const { SuccModel, ErrModel } = require('../model')
-/** 取消追蹤    0322
+const { SuccModel, ErrRes, MyErr } = require('../model')                    //  0406
+const { CACHE: { TYPE: { PAGE, NEWS } } } = require('../conf/constant')     //  0406
+const C_ArticleReader = require('../controller/articleReader')              //  0406
+const IdolFans = require('../server/idolFans')                              //  0406
+const C_User = require('../controller/user')                                //  0406
+const Opts = require('../utils/seq_findOpts')                               //  0406
+//  0406
+/** 取消追蹤
  * @param {number} fans_id 
  * @param {number} idol_id 
  * @returns {object} SuccessModel | ErrorModel
  */
- async function cancelFollow({ fansId, idolId}) {
-    let { data: follows } = await FollowBlogController.findFollowsByIdolFans({idolId, fansId})
-    let deletedAt = new Date()
-    if (follows.length) {
-        //  刪除關聯
-        let datas = follows.map( id => ({id, deletedAt}))
-        let ok = await FollowBlog.deleteFollows(datas)
-        if (!ok) {
-            return new ErrModel(FOLLOWBLOG.DEL_ERR)
+async function cancelFollow({ fans_id, idol_id }) {
+    //  尋找 IdolFans + ArticleReader 關係
+    let { data: { idolFans_id_list, articleReader_id_list } } = await C_User.findInfoForFollowIdol({ fans_id, idol_id })
+    //  若無值，報錯
+    if (!idolFans_id_list.length) {
+        throw new MyErr(ErrRes.IDOL_FANS.DELETE.NO_IDOL)
+        //  軟刪除
+    } else {
+        await _removeList(idolFans_id_list)
+        if (articleReader_id_list.length) {
+            await C_ArticleReader.removeList(articleReader_id_list)
         }
     }
-    let ok = await IdolFans.deleteFollows({ target: idolId, follow: fansId, deletedAt })
-    if (!ok) {
-        return new ErrModel(FOLLOW.CANCEL_ERR)
-    }
-    let cache = { [PAGE.USER]: [fansId, idolId], [NEWS]: [fansId, idolId] }
+    let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [idol_id] }
     return new SuccModel({ cache })
 }
-/** 追蹤    0322
+//  0406
+async function _removeList(id_list) {
+    let row = await IdolFans.deleteList(Opts.FOLLOW.removeList(id_list))
+    if(id_list.length !== row){
+        throw new MyErr(ErrRes.IDOL_FANS.DELETE.ROW_ERR)
+    }
+    return new SuccModel()
+}
+//  0406
+/** 追蹤
  * @param {number} fans_id 
  * @param {number} idol_id 
  * @returns {object} SuccessModel { Follow_People Ins { id, idol_id, fans_id }} | ErrorModel
  */
-async function addFollow({ fansId, idolId }) {
-    let { data: follows } = await FollowBlogController.findFollowsByIdolFans({idolId, fansId})
-    if (follows.length) {
-        //  創建關聯
-        let datas = follows.map( id => ({id, deletedAt: null}))
-        let ok = await FollowBlog.createFollows(datas)
-        if (!ok) {
-            return new ErrModel(FOLLOWBLOG.DEL_ERR)
+async function follow({ fans_id, idol_id }) {
+    //  若此次 add 不是第一次，代表可能會有軟刪除的 ArticleReader 關係
+    //  尋找軟刪除的 IdolFans + ArticleReader 關係
+    let { data: { idolFans_id_list, articleReader_id_list } } = await C_User.findInfoForFollowIdol({ fans_id, idol_id })
+    //  恢復軟刪除
+    if (idolFans_id_list.length) {
+        //  需確認
+        await _restoreList(idolFans_id_list)
+        if (articleReader_id_list.length) {
+            //  需確認
+            await C_ArticleReader.restoreList(articleReader_id_list)
         }
+        //  代表這次是初次追蹤
+    } else {
+        await IdolFans.createList([{ idol_id, fans_id }])
     }
-    const ok = await IdolFans.createFollow({ target: idolId, follow: fansId })
-    if (!ok) return new ErrModel(FOLLOW.FOLLOW_ERR)
-    //  處理緩存
-    let cache = { [PAGE.USER]: [fansId, idolId], [NEWS]: [idolId] }
+    let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [idol_id] }
     return new SuccModel({ cache })
+}
+//  0406
+async function _restoreList(id_list) {
+    let row = await IdolFans.restore(Opts.FOLLOW.restoreList(id_list))
+    if(row !== id_list.length){
+        throw new MyErr(ErrRes.IDOL_FANS.RESTORE.ROW_ERR)
+    }
+    return new SuccModel({ data })
 }
 
 module.exports = {
-    cancelFollow,           //  0303
-    addFollow,                 //  0303
+    //  0406
+    cancelFollow,
+    //  0406
+    follow
 }
+
+
+

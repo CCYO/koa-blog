@@ -6,10 +6,17 @@ const { ErrRes, ErrModel, SuccModel, MyErr } = require('../model')  //  0404
 const Opts = require('../utils/seq_findOpts')                       //  0404
 const User = require('../server/user')                              //  0404
 
-async function findOthersInSomeBlogAndPid({ commenter_id, p_id, blog_id, createdAt }) {
-    //  [ { id, nickname, email, comments: [id, ...] }, ... ]
-    let commenters = await User.readUsers(Opts.USER.findOthersInSomeBlogAndPid({ commenter_id, p_id, blog_id, createdAt }))
-    return new SuccModel({ data: commenters })
+//  0406
+async function findInfoForFollowIdol({ fans_id, idol_id }) {
+    let user = await User.read(Opts.USER.findInfoForFollowIdol({ fans_id, idol_id }))
+    if (!user) {
+        throw new MyErr(ErrRes.USER.READ.NO_USER)
+    }
+    let { idols, articles } = user
+    let data = {}
+    data.idolFans_id_list = idols.map( ({ IdolFans }) => IdolFans.id ) 
+    data.articleReader_id_list = articles.map( ({ articleReaders }) => articleReaders.id )
+    return new SuccModel({data})
 }
 //  0404
 async function findInfoForUserPage(userId) {
@@ -100,6 +107,8 @@ async function isEmailExist(email) {
 }
 
 module.exports = {
+    //  0406
+    findInfoForFollowIdol,
     //  0404
     findOthersInSomeBlogAndPid,
     //  0404
@@ -116,11 +125,19 @@ module.exports = {
     register,
     //  0404
     isEmailExist,
-    
 
-    
+
+
     modifyUserInfo,             //  0309
 }
+
+async function findOthersInSomeBlogAndPid({ commenter_id, p_id, blog_id, createdAt }) {
+    //  [ { id, nickname, email, comments: [id, ...] }, ... ]
+    let commenters = await User.readUsers(Opts.USER.findOthersInSomeBlogAndPid({ commenter_id, p_id, blog_id, createdAt }))
+    return new SuccModel({ data: commenters })
+}
+
+
 
 
 

@@ -308,15 +308,15 @@ async function initNavbar() {
                                 count === 1 ?
                                 others[0] : ''
                             
-                            let who =
+                            let author =
                                 comment.article.author.id === pageData.me.id ? '你' :
-                                comment.blog.author.id === comment.commenter.id ? '自己' : comment.blog.author.nickname
+                                comment.article.author.id === comment.commenter.id ? '自己' : comment.blog.author.nickname
                             let query = confirm ? '' : `?anchorType=3&anchorId=${id}`
                             return `
             <li class="dropdown-item  position-relative news-item">
-                <a href="/blog/${comment.blog.id}${query}#comment_${comment.id}" class="stretched-link text-wrap">
+                <a href="/blog/${comment.article.id}${query}#comment_${comment.id}" class="stretched-link text-wrap">
                     <div>
-                        <span>${nicknames}在${who}的文章「${comment.blog.title}」留言囉！</span><br>
+                        <span>${nicknames}在${author}的文章「${comment.blog.title}」留言囉！</span><br>
                         <p class='text-end mb-0'>${timestamp}</span>
                     </div>
                 </a>
