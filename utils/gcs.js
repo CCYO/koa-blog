@@ -106,15 +106,15 @@ async function parse(ctx) {
     //  處理圖檔
     if (ext) {
         if (!hash) {
-            return new ErrModel(NO_HASH)
+            throw new MyErr(NO_HASH)
         }
         if (ext !== 'JPG' && ext !== 'PNG') {
-            return new ErrModel(AVATAR_FORMAT_ERR)
+            throw new MyErr(AVATAR_FORMAT_ERR)
         }
         //  建立GCS ref
         gceFile = { ref: storage.bucket().file(`${prefix}/${hash}.${ext}`) }
         //  確認GCS是否有該圖檔
-        let [exist] = await gceFile.ref.exists()
+        // let [exist] = await gceFile.ref.exists()
     }
     //  建立 promise，用來捕捉 formidable 傳送檔案給 gce 時的狀態
     // if (!exist) {

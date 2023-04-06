@@ -3,6 +3,44 @@
  */
 
 module.exports = {
+    //  0406
+    BLOG_IMG_ALT: {
+        //  0406
+        CREATE: { 
+            //  0406
+            NO_DATA: { errno: 50002, msg: '創建 BLOG_IMG_ALT 卻沒提供參數'},
+            //  0406
+            ERR: {errno: 50001, msg: 'BlogImgAlt創建失敗' },
+        },
+        REMOVE_ERR: { errno: 903, msg: 'BlogImgAlt刪除失敗' },    //  0326
+        
+        NOT_EXIST: { errno: 902, msg: '不存在任何相符的 BlogImgAlt' },    //  0326
+        UPDATE_ERR: { errno: 902, msg: '更新失敗' },
+    },
+    //  0406
+    IMG: {
+        //  0406
+        CREATE: { 
+            //  0406
+            NO_DATA: { errno: 50002, msg: '創建 IMG 卻沒提供參數'},
+            //  0406
+            ERR: {errno: 50001, msg: 'IMG 創建失敗' },
+        },
+        NO_DATA: { errno: 40001, msg: '沒有相符的 IMG'}
+    },
+    //  0406
+    BLOG_IMG: {
+        //  0406
+        CREATE: { 
+            //  0406
+            NO_DATA: { errno: 50002, msg: '創建 BLOG_IMG 卻沒提供參數'},
+            //  0406
+            ERR: {errno: 50001, msg: 'BlogImg創建失敗' },
+        },
+        REMOVE_ERR: { errno: 801, msg: '刪除 BlogImg 失敗' },
+        UPDATE_ERR: { errno: 802, msg: '更新失敗' },
+        CREATE_ERR: { errno: 803, msg: '創建失敗' }
+    },
     //  0404
     BLOG: {
         //  0406
@@ -97,12 +135,7 @@ module.exports = {
         CREATE_ERROR: { errno: 1301, msg: 'FollowBlog 創建失敗' },
         DEL_ERR: { errno: 1302, msg: '刪除關聯失敗' },        //  0228
     },
-    BLOGIMGALT: {
-        REMOVE_ERR: { errno: 903, msg: 'BlogImgAlt刪除失敗' },    //  0326
-        CREATE_ERR: { errno: 901, msg: 'BlogImgAlt創建失敗' },           //  0326
-        NOT_EXIST: { errno: 902, msg: '不存在任何相符的 BlogImgAlt' },    //  0326
-        UPDATE_ERR: { errno: 902, msg: '更新失敗' },
-    },
+    
     
 
     READ: {
@@ -120,11 +153,7 @@ module.exports = {
     },
     FORMAT_ERR: { errno: 601 },
 
-    BLOGIMG: {
-        REMOVE_ERR: { errno: 801, msg: '刪除 BlogImg 失敗' },
-        UPDATE_ERR: { errno: 802, msg: '更新失敗' },
-        CREATE_ERR: { errno: 803, msg: '創建失敗' }
-    },
+    
     COMMENT: {
         CREATE_ERR: { errno: 1103, msg: 'COMMENT 創建失敗' },
         NOT_EXIST: { errno: 1102, msg: '評論不存在' },

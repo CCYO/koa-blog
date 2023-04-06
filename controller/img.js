@@ -1,21 +1,51 @@
+//  0406
+const { SuccModel, ErrModel, ErrRes, MyErr } = require('../model')
+//  0406
+const Opts = require('../utils/seq_findOpts')
+//  0406
+const Img = require('../server/img')
+//  0406
+async function add(data) {
+    if(Object.entries(data).length){
+        throw new MyErr(ErrRes.IMG.CREATE.NO_DATA)
+    }
+    let img = await Img.create(data)
+    return new SuccModel({ data: img })
+}
+//  0406
+async function find(hash) {
+    //  找img
+    let data = await Img.read(Opts.IMG.find(hash))
+    if(!data){
+        return new ErrModel(ErrRes.IMG.NO_DATA)
+    }
+    return new SuccModel({ data })
+}
+
+module.exports = {
+    //  0406
+    add,
+    //  0406
+    find,
+    associateWithBlog,
+    
+    uploadImgToBlog,
+    uploadImg
+}
+
 const { CACHE: { TYPE: { PAGE } } } = require('../conf/constant')
 const Controller_BlogImgAlt = require('./blogImgAlt')
 const { BLOG: { UPLOAD_IMG_ERR } } = require('../model/errRes')
 const Controller_BlogImg = require('../controller/blogImg')
-const Opts = require('../utils/seq_findOpts')
-const Img = require('../server/img')
-const {
-    readImg,
-    createImg
-} = require('../server/img')
+
 
 const { parse } = require('../utils/gcs')
 
-const { SuccModel, ErrModel } = require('../model')
+
 
 async function uploadImgToBlog({ url, hash, name, blog_id }) {
     //  尋找img
-    let { data: img } = await findImgThenEditBlog(hash)
+    let { data: img } = await find(hash)
     //  img不存在，新建img
     if (!img) {
         //  創建img
@@ -57,19 +87,9 @@ async function associateWithBlog({ img_id, blog_id, name }) {
     return new SuccModel({data})
 }
 
-async function addImg({ hash, url }) {
-    let img = await Img.createImg({ hash, url })
-    if (!img) {
-        return new ErrModel(UPLOAD_IMG_ERR)
-    }
-    return new SuccModel({ data: img })
-}
 
-async function findImgThenEditBlog(hash) {
-    //  找img
-    let img = await Img.readImg(Opts.IMG.findImgThenEditBlog(hash))
-    return new SuccModel({ data: img })
-}
+
+
 
 /**
  * 上傳圖檔至GCS
@@ -83,17 +103,10 @@ async function uploadImg(ctx, next) {
     img && console.log('@GCS有圖檔，僅作BlogImg關聯')
     if (!img) {   //  若GCS沒有該圖檔，則 upload GCS
         let { blogImg: url } = await parse(ctx)
-        img = await createImg({ hash, url }, blog_id)
+        img = await Img.createImg({ hash, url }, blog_id)
         console.log('@GCS無圖檔，直接創建img且作BlogImg關聯')
     }
 
     ctx.body = new SuccModel(img)
 }
 
-module.exports = {
-    associateWithBlog,
-    addImg,
-    findImgThenEditBlog,
-    uploadImgToBlog,
-    uploadImg
-}

@@ -1,53 +1,60 @@
-const { Op } = require('sequelize')
-const Init = require('../utils/init')
-const { BlogImgAlt } = require('../db/mysql/model')
+const { ErrRes, MyErr } = require('../model')           //  0406
+const Init = require('../utils/init')                   //  0406
+const { BlogImgAlt } = require('../db/mysql/model')     //  0406
+//  0406
+async function create(data) {
+    try {
+        let blogImgAlt = await BlogImgAlt.create(data)
+        return Init.blogImgAlt(blogImgAlt)
+    }catch(err){
+        throw MyErr({ ...ErrRes.BLOG_IMG_ALT.CREATE.ERR, err})
+    }
+    
+}
+module.exports = {
+    //  0406
+    create,
+    updateBlogImgAlts,  //  0328
+    deleteBlogImgAlts,  //  0326
+    count,              //  0326
+    
+}
 
-async function updateBlogImgAlts(data, opts){
+const { Op } = require('sequelize')
+
+
+
+
+async function updateBlogImgAlts(data, opts) {
     console.log(data, opts)
     let [row] = await BlogImgAlt.update(data, opts)
-    if(!row){
+    if (!row) {
         return false
     }
     return true
 }
 //  0326
-async function deleteBlogImgAlts(ids){
+async function deleteBlogImgAlts(ids) {
     let row = await BlogImgAlt.destroy({
-        where: { id: { [Op.in]: ids }}
+        where: { id: { [Op.in]: ids } }
     })
-    if(ids.length !== row){
+    if (ids.length !== row) {
         return false
     }
     return true
 }
 //  0326
-async function count(opt){
+async function count(opt) {
     let { count } = await BlogImgAlt.findAndCountAll(opt)
     return count
 }
-//  0326
-async function createBlogImgAlt({ blogImg_id, alt }){
-    let data = { blogImg_id }
-    if(alt){
-        data.alt = alt
-    }
-    let blogImgAlt = await BlogImgAlt.create(data)
-    if(!blogImgAlt){
-        return false
-    }
-    return Init.blogImgAlt(blogImgAlt)
-}
 
 
-async function courtOfSomeImgInBlog({blog_id, blogImg_id}){
-    let {} = await BlogImgAlt.findAndCountAll({
+
+async function courtOfSomeImgInBlog({ blog_id, blogImg_id }) {
+    let { } = await BlogImgAlt.findAndCountAll({
         where: { blogImg_id }
     })
 }
 
-module.exports = {
-    updateBlogImgAlts,  //  0328
-    deleteBlogImgAlts,  //  0326
-    count,              //  0326
-    createBlogImgAlt,   //  0326
-}
+

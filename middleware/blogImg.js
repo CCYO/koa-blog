@@ -1,9 +1,18 @@
-const { GCS_ref: { BLOG} } = require('../conf/constant')
-const { CACHE: { TYPE: { PAGE } } } = require('../conf/constant')
+//  0406
 const { SuccModel } = require('../model')
-const Controller_img = require('../controller/img')
+//  0406
+const { CACHE: { TYPE: { PAGE } } } = require('../conf/constant')
+//  0406
+const C_BlogImgAlt = require('../controller/blogImgAlt')
+//  0406
+const { GCS_ref } = require('../conf/constant')
+//  0406
 const { parse } = require('../utils/gcs')
-
+//  0406
+const C_BlogImg = require('../controller/blogImg')
+//  0406
+const C_Img = require('../controller/img')
+//  0406
 /**
  * 上傳圖檔至GCS
  * @param { object } ctx
@@ -11,33 +20,33 @@ const { parse } = require('../utils/gcs')
  */
  async function uploadImg(ctx, next) {
     let { blog_id, hash, name } = ctx.query
-    //  查找img紀錄，若有則代表GCS內已有圖檔，直接將該img紀錄與blog作連結
-    let { data: img } = await Controller_img.findImgThenEditBlog(hash)
-    let img_id = img ? img.id : undefined
-    let url = img ? img.url : undefined
-    //  找不到，創建img
-    if(!img){
+    //  查找img紀錄
+    let imgModel = await C_Img.find(hash)
+    let url
+    //  無 img 紀錄
+    if(imgModel.errno){
         console.log('@GCS無圖檔，直接創建img且作BlogImg關聯')
-        let updateRes = await parse(ctx)
-        if(updateRes.errno){
-            return updateRes
-        }
-        url = updateRes[BLOG]
-        let imgRes = await Controller_img.addImg({hash, url})
-        if(imgRes.errno){
-            return imgRes
-        }
-        img_id = imgRes.data.id
+        //  上傳 GCS
+        let res = await parse(ctx)
+        //  取得 url
+        url = res[GCS_ref.BLOG]
+        //  創建 img
+        imgModel = await C_Img.add({hash, url})
     }
-    let resModel = await Controller_img.associateWithBlog({ img_id, blog_id, hash, name })
-    if(resModel.errno){
-        return resModel
+    //  建立 blogImg
+    let img_id = imgModel.data.id
+    let { data: { id: blogImg_id } } = await C_BlogImg.add({ blog_id, img_id, name })
+    //  建立 blogImgAlt
+    let { data: { id: alt_id, alt }} = await C_BlogImgAlt.add({ blogImg_id })
+    let data = {
+        alt_id, alt, 
+        blogImg_id, blog_id, name,
+        img_id, url, hash 
     }
-    // let { blog_id, blogImg_id, name, alt_id, alt } = resModel.data
-    let data = { ...resModel.data, img_id, hash, url }
-    ctx.body = new SuccModel({ data, cache: { [PAGE.BLOG]: blog_id } })
+    let cache = { [PAGE.BLOG]: blog_id }
+    ctx.body = new SuccModel({ data, cache })
 }
 
 module.exports = {
-    uploadImg
+    uploadImg   //  0406
 }

@@ -1,6 +1,28 @@
 const { BlogImg, BlogImgAlt } = require('../db/mysql/model')
+const { ErrRes, MyErr } = require('../model')
 
 const Init = require('../utils/init')
+
+//  0406
+async function create(data) {
+    try{
+        let blogImg = await BlogImg.create(data)
+        return Init.blogImg(blogImg)
+    }catch(err){
+        throw new MyErr({...ErrRes.BLOG_IMG.CREATE.ERR, err })
+    }
+    
+}
+module.exports = {
+    //  0406
+    create,
+    deleteBlogImg,
+    updateBlogImg,
+    updateBulkBlogImg,
+    readBlogImg
+}
+
+
 
 //  0326
 async function deleteBlogImg(id) {
@@ -12,11 +34,7 @@ async function deleteBlogImg(id) {
     }
     return true
 }
-//  0326
-async function createBlogImg({ blog_id, img_id, name }) {
-    let blogImg = await BlogImg.create({ blog_id, img_id, name })
-    return Init.blogImg(blogImg)
-}
+
 
 async function updateBlogImg(data) {
     let ins = await BlogImg.bulkCreate(data, {
@@ -64,11 +82,3 @@ async function readBlogImg(whereOps, needBlogImgAlt = false) {
     return res
 }
 
-module.exports = {
-    deleteBlogImg,      //  0326
-    createBlogImg,      //  0326
-
-    updateBlogImg,
-    updateBulkBlogImg,
-    readBlogImg
-}

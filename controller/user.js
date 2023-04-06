@@ -93,7 +93,7 @@ async function register(email, password) {
     const data = await User.create(Opts.USER.create({ email, password }))
     return new SuccModel({ data })
 }
-//0404
+//  0404
 /** 確認信箱是否已被註冊
  * @param {string} email 信箱 
  * @returns {object} resModel

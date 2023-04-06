@@ -1,15 +1,5 @@
 const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
-    FOLLOW: {
-        //  0406
-        removeList: (id_list) => ({
-            where: { id: { [Op.in]: id_list } }
-        }),
-        //  0406
-        restoreList: (id_list) => ({
-            where: { id: { [Op.in]: id_list } }
-        }),
-    },
     //  0404
     USER: {
         //  0406
@@ -130,6 +120,24 @@ module.exports = {
             }
         })
     },
+    //  0406
+    IMG: {
+        find: (hash) => ({
+            attributes: ['id', 'url', 'hash'],
+            where: { hash }
+        })
+    },
+    //  0406
+    FOLLOW: {
+        //  0406
+        removeList: (id_list) => ({
+            where: { id: { [Op.in]: id_list } }
+        }),
+        //  0406
+        restoreList: (id_list) => ({
+            where: { id: { [Op.in]: id_list } }
+        }),
+    },
     //  0404
     COMMENT: {
         //  0404
@@ -216,6 +224,35 @@ module.exports = {
     },
     //  0404
     BLOG: {
+        //  0406
+        findReadersAndFansList: ({ author_id, blog_id }) => ({
+            attribute: ['id'],
+            where: { id: blog_id },
+            include: [
+                {
+                    association: 'readers',
+                    attributes: ['id'],
+                    through: {
+                        //  ArticleReaders
+                        attributes: ['id'],
+                        paranoid: false
+                    }
+                },
+                {
+                    association: 'author',
+                    attribute: ['id'],
+                    include: {
+                        association: 'fansList',
+                        attributes: ['id'],
+                        required: true,
+                        through: {
+                            //  IdolFans
+                            attributes: ['']
+                        }
+                    }
+                },
+            ]
+        }),
         //  0404
         findWholeInfo: (id) => ({
             attributes: ['id', 'title', 'html', 'show', 'showAt', 'updatedAt'],
@@ -278,12 +315,7 @@ module.exports = {
             where: { blogImg_id }
         })
     },
-    IMG: {
-        findImgThenEditBlog: (hash) => ({
-            attributes: ['id', 'url', 'hash'],
-            where: { hash }
-        })
-    },
+   
     FOLLOWCOMMENT: {
         findItems: ({ comment_ids }, { exclude }) => {
             let where = {
@@ -337,3 +369,4 @@ const {
     BlogImgAlt,
 } = require('../db/mysql/model')
 const { Op } = require('sequelize')
+const { fastFormats } = require('ajv-formats/dist/formats')
