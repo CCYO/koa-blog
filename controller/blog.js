@@ -1,3 +1,4 @@
+const C_ArticleReader = require('./articleReader')   //  0326
 const { CACHE } = require('../conf/constant')                       //  0406
 const my_xxs = require('../utils/xss')                              //  0406
 const { MyErr, ErrRes, ErrModel, SuccModel } = require('../model')             //  0404
@@ -19,14 +20,14 @@ async function modify(author_id, blog_id, blog_data) {
     if (map.has('title') || map.has('show')) {
         //  取得作者的粉絲群
         //  取得 作者的 fansList + readers
-        
-        let res = await Blog.find(Opts.BLOG.findReadersAndFansList({author_id, blog_id}))
+
+        let res = await Blog.find(Opts.BLOG.findReadersAndFansList({ author_id, blog_id }))
         let resModel = await _findList_FansId(author_id)
         console.log('@resModel.data => ', resModel.data)
         fans = resModel.data
         //  提供緩存處理
-        cache[CACHE.TYPE.NEWS] = fans
-        cache[CACHE.TYPE.PAGE.USER] = [author_id]
+        // cache[CACHE.TYPE.NEWS] = fans
+        // cache[CACHE.TYPE.PAGE.USER] = [author_id]
     }
     //  存放 blog 要更新的數據
     let newData = {}
@@ -46,13 +47,8 @@ async function modify(author_id, blog_id, blog_data) {
         // 公開blog
         if (show) {
             newData.showAt = new Date()
-            //  
-            if (fans.length) {
-                let resModel = await Controller_FollowBlog.addSubscribers({ blog_id, fans })
-                if (resModel.errno) {
-                    return resModel
-                }
-            }
+            let { data: fansList } = await subscribe(blog_id)
+            cache[CACHE.TYPE.NEWS] = fansList
             // 隱藏blog
         } else if (!show) {
             newData.showAt = null
@@ -63,6 +59,7 @@ async function modify(author_id, blog_id, blog_data) {
                 return new ErrModel(PUB_SUB.REMOVE_ERR)
             }
         }
+        cache[CACHE.TYPE.PAGE.USER] = [author_id]
     }
     if (Object.getOwnPropertyNames(newData).length) {
         //  更新文章
@@ -88,28 +85,42 @@ async function modify(author_id, blog_id, blog_data) {
     return new SuccModel({ data, cache })
 }
 //  0406
-async function findReadersAndFansListAndFans({author_id, blog_id}){
-    let res = await Blog.read(Opts.BLOG.findReadersAndFansList({author_id, blog_id}))
-    if(!res){
+async function subscribe(article_id) {
+    let { data } = await findReadersAndFansList(article_id)
+    let { unsubscribes, listWithNotReader, fansList } = data
+    //  復原軟刪除
+    if(unsubscribes.length){
+        await C_ArticleReader.restoreList(unsubscribes)
+    }
+    //  創建 articleReader
+    if (listWithNotReader.length) {
+        let datas = listWithNotReader.map(reader_id => ({ reader_id, article_id }))
+        await C_ArticleReader.addList(datas)
+    }
+    return new SuccModel({ data: fansList })
+}
+//  0406
+async function findReadersAndFansList(blog_id) {
+    let blog = await Blog.read(Opts.BLOG.findReadersAndFansList(blog_id))
+    if (!blog) {
         throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST)
     }
-    console.log('@res => ', res)
-    let { readers, author: { fansList } } = res
-    let articleReaders = readers.map( ({ ArticleReaders }) => ArticleReaders.id ) 
-    fansList = fansList.map( ({ id }) => id )
-
-    //                      SHOW                            HIDDEN
-    //  fans === reader -> restore(ArticleReaders)          destoryReader(ArticleReaders)
-    //  fans !== reader -> addReader(article, reader)       N/A
-    
-    //  
-    let data = {
-        readers,    //  SHOW
-        fansList,   //  SHOW
-        articleReaders    //  用在 hidden
-    }
-    return new SuccModel({data})
+    let readers = blog.readers.map(({ id }) => id)
+    let fansList = blog.author.fansList.map(({ id }) => id)
+    //  軟刪除狀態的 articleReader_id
+    let unsubscribes = blog.readers.map(({ ArticleReaders }) => ArticleReaders.id)
+    //  是作者的粉絲，但尚未成為 reader
+    let listWithNotReader = fansList.map(fans => {
+        let isReader = blog.readers.includes(reader => { fans === reader.id })
+        if (!isReader) {
+            return fans
+        }
+        return undefined
+    }).filter(id => id)
+    let data = { unsubscribes, readers, fansList, listWithNotReader }
+    return new SuccModel({ data })
 }
+
 //  0406
 /** 建立 blog
  * @param { string } title 標題
@@ -193,17 +204,12 @@ module.exports = {
 }
 
 
-const User = require('../server/user')
-const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR }, PUB_SUB } = require('../model/errRes')
-const Controller_FollowBlog = require('./articleReader')   //  0326
+// const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR }, PUB_SUB } = require('../model/errRes')
+
 const Controller_BlogImgAlt = require('./blogImgAlt')
 
 
 // const { organizedList, sortAndInitTimeFormat } = require('../utils/init/blog')   //  0326
-const FollowBlog = require('../server/articleReader')  //  0326
-const { IdolFans } = require('../db/mysql/model')
-
-
 
 //  0326
 async function findSquareBlogList(exclude_id) {

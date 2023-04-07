@@ -1,6 +1,80 @@
 const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
     //  0404
+    BLOG: {
+        //  0406
+        findReadersAndFansList: (article_id) => ({
+            attribute: ['id'],
+            where: { id: article_id },
+            include: [
+                {
+                    association: 'readers',
+                    attributes: ['id'],
+                    through: {
+                        attributes: ['id'],
+                        paranoid: false
+                    }
+                },
+                {
+                    association: 'author',
+                    attribute: ['id'],
+                    include: {
+                        association: 'fansList',
+                        attributes: ['id']
+                    }
+                },
+            ]
+        }),
+        //  0404
+        findWholeInfo: (id) => ({
+            attributes: ['id', 'title', 'html', 'show', 'showAt', 'updatedAt'],
+            where: { id },
+            include: [
+                {
+                    association: 'author',
+                    attributes: ['id', 'email', 'nickname']
+                },
+                {
+                    model: BlogImg,
+                    attributes: [['id', 'blogImg_id'], 'name'],
+                    include: [
+                        {
+                            model: Img,
+                            attributes: [['id', 'img_id'], 'url', 'hash']
+                        },
+                        {
+                            model: BlogImgAlt,
+                            attributes: ['id', 'alt']
+                        }
+                    ]
+                }
+            ]
+        }),
+        //  0404
+        find: (id) => ({
+            attributes: ['id', 'title', 'html', 'show', 'showAt', 'updatedAt'],
+            where: { id },
+            include: {
+                association: 'author',
+                attributes: ['id', 'email', 'nickname']
+            },
+        }),
+        //  0404
+        findListForUserPage: (author_id) => ({
+            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
+            where: { author_id }
+        }),
+        findBlogsHasPhoto: (user_id) => ({
+            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
+            where: { user_id },
+            include: {
+                model: BlogImg,
+                attributes: [],
+                required: true
+            }
+        })
+    },
+    //  0404
     USER: {
         //  0406
         findInfoForFollowIdol: ({ idol_id, fans_id }) => ({
@@ -222,87 +296,6 @@ module.exports = {
             }
         }
     },
-    //  0404
-    BLOG: {
-        //  0406
-        findReadersAndFansList: ({ author_id, blog_id }) => ({
-            attribute: ['id'],
-            where: { id: blog_id },
-            include: [
-                {
-                    association: 'readers',
-                    attributes: ['id'],
-                    through: {
-                        //  ArticleReaders
-                        attributes: ['id'],
-                        paranoid: false
-                    }
-                },
-                {
-                    association: 'author',
-                    attribute: ['id'],
-                    include: {
-                        association: 'fansList',
-                        attributes: ['id'],
-                        required: true,
-                        through: {
-                            //  IdolFans
-                            attributes: ['']
-                        }
-                    }
-                },
-            ]
-        }),
-        //  0404
-        findWholeInfo: (id) => ({
-            attributes: ['id', 'title', 'html', 'show', 'showAt', 'updatedAt'],
-            where: { id },
-            include: [
-                {
-                    association: 'author',
-                    attributes: ['id', 'email', 'nickname']
-                },
-                {
-                    model: BlogImg,
-                    attributes: [['id', 'blogImg_id'], 'name'],
-                    include: [
-                        {
-                            model: Img,
-                            attributes: [['id', 'img_id'], 'url', 'hash']
-                        },
-                        {
-                            model: BlogImgAlt,
-                            attributes: ['id', 'alt']
-                        }
-                    ]
-                }
-            ]
-        }),
-        //  0404
-        find: (id) => ({
-            attributes: ['id', 'title', 'html', 'show', 'showAt', 'updatedAt'],
-            where: { id },
-            include: {
-                association: 'author',
-                attributes: ['id', 'email', 'nickname']
-            },
-        }),
-        //  0404
-        findListForUserPage: (author_id) => ({
-            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
-            where: { author_id }
-        }),
-        findBlogsHasPhoto: (user_id) => ({
-            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
-            where: { user_id },
-            include: {
-                model: BlogImg,
-                attributes: [],
-                required: true
-            }
-        })
-    },
-
     BLOGIMGALT: {
         modify: ({ id, alt }) => ({
             data: { alt },
