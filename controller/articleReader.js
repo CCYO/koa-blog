@@ -8,6 +8,7 @@ const {
 } = require('../model')
 const Opts = require('../utils/seq_findOpts')               //  0406
 const ArticleReader = require('../server/articleReader')    //  0406
+
 //  0406
 async function addList(datas) {
     let list = await ArticleReader.createList(datas)

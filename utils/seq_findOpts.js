@@ -3,7 +3,7 @@ module.exports = {
     //  0404
     BLOG: {
         //  0406
-        findReadersAndFansList: (article_id) => ({
+        findInfoForSubscribe: (article_id) => ({
             attribute: ['id'],
             where: { id: article_id },
             include: [

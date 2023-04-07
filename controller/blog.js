@@ -21,10 +21,10 @@ async function modify(author_id, blog_id, blog_data) {
         //  取得作者的粉絲群
         //  取得 作者的 fansList + readers
 
-        let res = await Blog.find(Opts.BLOG.findReadersAndFansList({ author_id, blog_id }))
-        let resModel = await _findList_FansId(author_id)
-        console.log('@resModel.data => ', resModel.data)
-        fans = resModel.data
+        // let res = await Blog.find(Opts.BLOG.findReadersAndFansList({ author_id, blog_id }))
+        // let resModel = await _findList_FansId(author_id)
+        // console.log('@resModel.data => ', resModel.data)
+        // fans = resModel.data
         //  提供緩存處理
         // cache[CACHE.TYPE.NEWS] = fans
         // cache[CACHE.TYPE.PAGE.USER] = [author_id]
@@ -46,18 +46,11 @@ async function modify(author_id, blog_id, blog_data) {
         newData.show = show
         // 公開blog
         if (show) {
-            newData.showAt = new Date()
-            let { data: fansList } = await subscribe(blog_id)
+            let { data: fansList } = await public(blog_id)
             cache[CACHE.TYPE.NEWS] = fansList
             // 隱藏blog
         } else if (!show) {
-            newData.showAt = null
-            await Controller_FollowBlog.removeSubscribers(blog_id)
-            let { data: stillHaveFans } = Controller_FollowBlog.count(blog_id)
-            //  軟刪除既有的條目
-            if (stillHaveFans) {
-                return new ErrModel(PUB_SUB.REMOVE_ERR)
-            }
+            await private(blog_id)
         }
         cache[CACHE.TYPE.PAGE.USER] = [author_id]
     }
@@ -85,22 +78,32 @@ async function modify(author_id, blog_id, blog_data) {
     return new SuccModel({ data, cache })
 }
 //  0406
-async function subscribe(article_id) {
-    let { data } = await findReadersAndFansList(article_id)
-    let { unsubscribes, listWithNotReader, fansList } = data
-    //  復原軟刪除
-    if(unsubscribes.length){
-        await C_ArticleReader.restoreList(unsubscribes)
-    }
-    //  創建 articleReader
-    if (listWithNotReader.length) {
-        let datas = listWithNotReader.map(reader_id => ({ reader_id, article_id }))
-        await C_ArticleReader.addList(datas)
+async function private(blog_id) {
+    let { data } = await findInfoForSubscribe(blog_id)
+    let { articleReaders, fansList } = data
+    //  軟刪除
+    if(articleReaders.length){
+        await C_ArticleReader.removeList(articleReaders)
     }
     return new SuccModel({ data: fansList })
 }
 //  0406
-async function findReadersAndFansList(blog_id) {
+async function public(blog_id) {
+    let { data } = await findInfoForSubscribe(blog_id)
+    let { articleReaders, listWithNotReader, fansList } = data
+    //  復原軟刪除
+    if(articleReaders.length){
+        await C_ArticleReader.restoreList(articleReaders)
+    }
+    //  創建 articleReader
+    if (listWithNotReader.length) {
+        let datas = listWithNotReader.map(reader_id => ({ reader_id, article_id: blog_id }))
+        await addList(datas)
+    }
+    return new SuccModel({ data: fansList })
+}
+//  0406
+async function findInfoForSubscribe(blog_id) {
     let blog = await Blog.read(Opts.BLOG.findReadersAndFansList(blog_id))
     if (!blog) {
         throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST)
@@ -108,7 +111,7 @@ async function findReadersAndFansList(blog_id) {
     let readers = blog.readers.map(({ id }) => id)
     let fansList = blog.author.fansList.map(({ id }) => id)
     //  軟刪除狀態的 articleReader_id
-    let unsubscribes = blog.readers.map(({ ArticleReaders }) => ArticleReaders.id)
+    let articleReaders = blog.readers.map(({ ArticleReaders }) => ArticleReaders.id)
     //  是作者的粉絲，但尚未成為 reader
     let listWithNotReader = fansList.map(fans => {
         let isReader = blog.readers.includes(reader => { fans === reader.id })
@@ -117,10 +120,9 @@ async function findReadersAndFansList(blog_id) {
         }
         return undefined
     }).filter(id => id)
-    let data = { unsubscribes, readers, fansList, listWithNotReader }
+    let data = { articleReaders, readers, fansList, listWithNotReader }
     return new SuccModel({ data })
 }
-
 //  0406
 /** 建立 blog
  * @param { string } title 標題
@@ -189,7 +191,7 @@ module.exports = {
     //  0406
     modify,
     //  0406
-    findReadersAndFansListAndFans,
+    findInfoForSubscribe,
     //  0406
     add,
     //  0404
