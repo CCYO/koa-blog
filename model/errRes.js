@@ -4,6 +4,47 @@
 
 module.exports = {
     //  0406
+    BLOG_IMG_ALT: {
+        //  0408
+        DELETE: {
+            ERR: { errno: 801, msg: '刪除 BlogImgAlt 失敗' },
+            //  0406
+            ROW: { errno: 40003, msg: '刪除 BlogImgAlt 的數量不完全' },
+        },
+        //  0408
+        READ: {
+            //  0408
+            NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 BlogImgAlt' },
+        },
+        //  0406
+        CREATE: {
+            //  0406
+            NO_DATA: { errno: 50002, msg: '創建 BLOG_IMG_ALT 卻沒提供參數' },
+            //  0406
+            ERR: { errno: 50001, msg: 'BlogImgAlt創建失敗' },
+        },
+        REMOVE_ERR: { errno: 903, msg: 'BlogImgAlt刪除失敗' },    //  0326
+        UPDATE_ERR: { errno: 902, msg: '更新失敗' },
+    },
+    //  0406
+    BLOG_IMG: {
+        //  0406
+        CREATE: {
+            //  0406
+            NO_DATA: { errno: 50002, msg: '創建 BLOG_IMG 卻沒提供參數' },
+            //  0406
+            ERR: { errno: 50001, msg: 'BlogImg創建失敗' },
+        },
+        DELETE: {
+            ERR: { errno: 801, msg: '刪除 BlogImg 失敗' },
+            //  0406
+            ROW: { errno: 40003, msg: '刪除 BlogImg 的數量不完全' },
+        },
+        
+        UPDATE_ERR: { errno: 802, msg: '更新失敗' },
+        CREATE_ERR: { errno: 803, msg: '創建失敗' }
+    },
+    //  0406
     ARTICLE_READER: {
         //  0406
         CREATE: {
@@ -21,20 +62,6 @@ module.exports = {
         }
     },
     //  0406
-    BLOG_IMG_ALT: {
-        //  0406
-        CREATE: {
-            //  0406
-            NO_DATA: { errno: 50002, msg: '創建 BLOG_IMG_ALT 卻沒提供參數' },
-            //  0406
-            ERR: { errno: 50001, msg: 'BlogImgAlt創建失敗' },
-        },
-        REMOVE_ERR: { errno: 903, msg: 'BlogImgAlt刪除失敗' },    //  0326
-
-        NOT_EXIST: { errno: 902, msg: '不存在任何相符的 BlogImgAlt' },    //  0326
-        UPDATE_ERR: { errno: 902, msg: '更新失敗' },
-    },
-    //  0406
     IMG: {
         //  0406
         CREATE: {
@@ -44,19 +71,6 @@ module.exports = {
             ERR: { errno: 50001, msg: 'IMG 創建失敗' },
         },
         NO_DATA: { errno: 40001, msg: '沒有相符的 IMG' }
-    },
-    //  0406
-    BLOG_IMG: {
-        //  0406
-        CREATE: {
-            //  0406
-            NO_DATA: { errno: 50002, msg: '創建 BLOG_IMG 卻沒提供參數' },
-            //  0406
-            ERR: { errno: 50001, msg: 'BlogImg創建失敗' },
-        },
-        REMOVE_ERR: { errno: 801, msg: '刪除 BlogImg 失敗' },
-        UPDATE_ERR: { errno: 802, msg: '更新失敗' },
-        CREATE_ERR: { errno: 803, msg: '創建失敗' }
     },
     //  0404
     BLOG: {

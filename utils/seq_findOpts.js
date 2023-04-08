@@ -1,5 +1,18 @@
 const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
+    //  0408
+    BLOG_IMG_ALT: {
+        //  0408
+        count: (blogImg_id) => ({
+            where: { blogImg_id }
+        }),
+        modify: ({ id, alt }) => ({
+            data: { alt },
+            opts: {
+                where: { id }
+            }
+        }),
+    },
     //  0404
     BLOG: {
         //  0406
@@ -296,19 +309,6 @@ module.exports = {
             }
         }
     },
-    BLOGIMGALT: {
-        modify: ({ id, alt }) => ({
-            data: { alt },
-            opts: {
-                where: { id }
-            }
-        }),
-        count: (blogImg_id) => ({
-            attributes: ['id'],
-            where: { blogImg_id }
-        })
-    },
-   
     FOLLOWCOMMENT: {
         findItems: ({ comment_ids }, { exclude }) => {
             let where = {

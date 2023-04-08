@@ -1,22 +1,30 @@
-const { BlogImg, BlogImgAlt } = require('../db/mysql/model')
-const { ErrRes, MyErr } = require('../model')
+const { BlogImg, BlogImgAlt } = require('../db/mysql/model')    //  0406
+const { ErrRes, MyErr } = require('../model')                   //  0406
 
-const Init = require('../utils/init')
-
+const Init = require('../utils/init')                           //  0406
+//  0408
+async function deleteList(opts) {
+    try {
+        let row = await BlogImg.destroy(opts)
+        return row
+    }catch(err){
+        throw new MyErr({ ...ErrRes.BLOG_IMG.DELETE.ERR, err })
+    }
+}
 //  0406
 async function create(data) {
-    try{
+    try {
         let blogImg = await BlogImg.create(data)
         return Init.blogImg(blogImg)
-    }catch(err){
-        throw new MyErr({...ErrRes.BLOG_IMG.CREATE.ERR, err })
+    } catch (err) {
+        throw new MyErr({ ...ErrRes.BLOG_IMG.CREATE.ERR, err })
     }
-    
 }
 module.exports = {
+    //  0408
+    deleteList,
     //  0406
     create,
-    deleteBlogImg,
     updateBlogImg,
     updateBulkBlogImg,
     readBlogImg
@@ -24,23 +32,14 @@ module.exports = {
 
 
 
-//  0326
-async function deleteBlogImg(id) {
-    let row = await BlogImg.destroy({
-        where: { id }
-    })
-    if (!row) {
-        return false
-    }
-    return true
-}
+
 
 
 async function updateBlogImg(data) {
     let ins = await BlogImg.bulkCreate(data, {
         updateOnDuplicate: ['id', 'name', 'updatedAt']
     })
-    if(ins.length !== data.length){
+    if (ins.length !== data.length) {
         return []
     }
     Init.blogImgins

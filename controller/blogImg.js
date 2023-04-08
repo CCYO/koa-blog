@@ -1,10 +1,17 @@
-const Init = require('../utils/init')
+const Opts = require('../utils/seq_findOpts')
 const {
     //  0406
     MyErr, ErrRes, SuccModel
     , ErrModel } = require('../model')
 const BlogImg = require('../server/blogImg')    //  0406
-
+//  0408
+async function removeList(id_list) {
+    let raw = await BlogImg.deleteList(Opts.FOLLOW.removeList(id_list))
+    if(id_list.length !== raw){
+        throw new MyErr(ErrRes.BLOG_IMG.DELETE.ROW)
+    }
+    return new SuccModel({ data: raw })
+}
 //  0406
 async function add(data) {
     if(!Object.entries(data).length){
@@ -15,10 +22,10 @@ async function add(data) {
 }
 
 module.exports = {
+    //  0408
+    removeList,
     //  0406
     add, 
-    removeBlogImg,  //  0326
-    
     modifyBlogImg
 }
 
@@ -34,13 +41,6 @@ async function modifyBlogImg({ id, blog_id, alt }) {
     console.log('成功')
     return new SuccModel(null, { blog: [blog_id] })
 }
-//  0326
-async function removeBlogImg(blogImg_id) {
-    let ok = await BlogImg.deleteBlogImg(blogImg_id)
-    if (!ok) {
-        return new ErrModel(REMOVE_ERR)
-    }
-    return new SuccModel()
-}
+
 
 

@@ -1,6 +1,19 @@
 const { ErrRes, MyErr } = require('../model')           //  0406
 const Init = require('../utils/init')                   //  0406
 const { BlogImgAlt } = require('../db/mysql/model')     //  0406
+//  0408
+async function deleteList(opts) {
+    try {
+        let row = await BlogImgAlt.destroy(opts)
+        return row
+    }catch(err){
+        throw new MyErr({ ...ErrRes.BLOG_IMG_ALT.DELETE.ERR, err })
+    }
+}
+//  0408
+async function count(opt) {
+    return await BlogImgAlt.count(opt)
+}
 //  0406
 async function create(data) {
     try {
@@ -12,12 +25,13 @@ async function create(data) {
     
 }
 module.exports = {
+    //  0408
+    deleteList,
+    //  0408
+    count, 
     //  0406
     create,
     updateBlogImgAlts,  //  0328
-    deleteBlogImgAlts,  //  0326
-    count,              //  0326
-    
 }
 
 const { Op } = require('sequelize')
@@ -33,23 +47,6 @@ async function updateBlogImgAlts(data, opts) {
     }
     return true
 }
-//  0326
-async function deleteBlogImgAlts(ids) {
-    let row = await BlogImgAlt.destroy({
-        where: { id: { [Op.in]: ids } }
-    })
-    if (ids.length !== row) {
-        return false
-    }
-    return true
-}
-//  0326
-async function count(opt) {
-    let { count } = await BlogImgAlt.findAndCountAll(opt)
-    return count
-}
-
-
 
 async function courtOfSomeImgInBlog({ blog_id, blogImg_id }) {
     let { } = await BlogImgAlt.findAndCountAll({

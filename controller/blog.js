@@ -1,4 +1,6 @@
-const C_ArticleReader = require('./articleReader')   //  0326
+const C_BlogImg = require('./blogImg')                        //  0408
+const C_BlogImgAlt = require('./blogImgAlt')                        //  0408
+const C_ArticleReader = require('./articleReader')                  //  0406
 const { CACHE } = require('../conf/constant')                       //  0406
 const my_xxs = require('../utils/xss')                              //  0406
 const { MyErr, ErrRes, ErrModel, SuccModel } = require('../model')             //  0404
@@ -16,7 +18,6 @@ async function modify(author_id, blog_id, blog_data) {
     // let { title, cancelImgs = [], html, show } = blog_data
     let map = new Map(Object.entries(blog_data))
     let cache = { [CACHE.TYPE.PAGE.BLOG]: blog_id }
-    let fans = []
     if (map.has('title') || map.has('show')) {
         //  取得作者的粉絲群
         //  取得 作者的 fansList + readers
@@ -44,14 +45,15 @@ async function modify(author_id, blog_id, blog_data) {
         let show = blog_data.show
         //  存放 blog 要更新的數據
         newData.show = show
+        let resModel
         // 公開blog
         if (show) {
-            let { data: fansList } = await public(blog_id)
-            cache[CACHE.TYPE.NEWS] = fansList
+            resModel = await public(blog_id)
             // 隱藏blog
         } else if (!show) {
-            await private(blog_id)
+            resModel = await private(blog_id)
         }
+        cache[CACHE.TYPE.NEWS] = resModel.data
         cache[CACHE.TYPE.PAGE.USER] = [author_id]
     }
     if (Object.getOwnPropertyNames(newData).length) {
@@ -65,11 +67,14 @@ async function modify(author_id, blog_id, blog_data) {
     if (map.has('cancelImgs')) {
         let cancelImgs = map.get('cancelImgs')
         //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
-        let resModel = await removeImgs(cancelImgs)
-        if (resModel.errno) {
-            return resModel
-        }
+        await removeImgs(cancelImgs)
+
     }
+
+
+
+
+
     let resModel = await findBlog({ blog_id, author_id })
     if (resModel.errno) {
         return resModel
@@ -77,22 +82,41 @@ async function modify(author_id, blog_id, blog_data) {
     let data = resModel.data
     return new SuccModel({ data, cache })
 }
+//  0408
+async function removeImgs(imgs) {
+    for (let { blogImg_id, blogImgAlt_list } of imgs) {
+        //  確認 blog 內同樣 blogImg 的 blogImgAlt 有幾張
+        let countModel = await C_BlogImgAlt.count(blogImg_id)
+        let { errno, data: count } = countModel
+        if (errno) {
+            throw new MyErr({ ...countModel })
+        }
+        //  若查詢結果 === blogImgAlt_list.length，直接刪掉 blogImg
+        if (count === blogImgAlt_list.length) {
+            await C_BlogImg.removeList([blogImg_id])
+            //  僅刪除 blogImgAlt.list 內的資料
+        }else{
+            await C_BlogImgAlt.removeList(blogImgAlt_list)
+        }   
+    }
+    return new SuccModel()
+}
 //  0406
 async function private(blog_id) {
     let { data } = await findInfoForSubscribe(blog_id)
-    let { articleReaders, fansList } = data
+    let { articleReaders, readers } = data
     //  軟刪除
-    if(articleReaders.length){
+    if (articleReaders.length) {
         await C_ArticleReader.removeList(articleReaders)
     }
-    return new SuccModel({ data: fansList })
+    return new SuccModel({ data: readers })
 }
 //  0406
 async function public(blog_id) {
     let { data } = await findInfoForSubscribe(blog_id)
     let { articleReaders, listWithNotReader, fansList } = data
     //  復原軟刪除
-    if(articleReaders.length){
+    if (articleReaders.length) {
         await C_ArticleReader.restoreList(articleReaders)
     }
     //  創建 articleReader
@@ -206,10 +230,6 @@ module.exports = {
 }
 
 
-// const { BLOG: { REMOVE_ERR, NOT_EXIST, UPDATE_ERR }, PUB_SUB } = require('../model/errRes')
-
-const Controller_BlogImgAlt = require('./blogImgAlt')
-
 
 // const { organizedList, sortAndInitTimeFormat } = require('../utils/init/blog')   //  0326
 
@@ -255,17 +275,7 @@ async function removeBlogs(blogIdList, authorId) {
     }
     return new SuccModel({ cache })
 }
-//  移除blog內的圖片
-async function removeImgs(cancelImgs) {
-    let resModel
-    for (let { blogImg_id, blogImgAlt_list } of cancelImgs) {
-        resModel = await Controller_BlogImgAlt.cancelWithBlog(blogImg_id, blogImgAlt_list)
-        if (resModel.errno) {
-            break
-        }
-    }
-    return resModel
-}
+
 
 
 
