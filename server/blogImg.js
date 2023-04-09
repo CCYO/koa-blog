@@ -1,6 +1,5 @@
 const { BlogImg, BlogImgAlt } = require('../db/mysql/model')    //  0406
 const { ErrRes, MyErr } = require('../model')                   //  0406
-
 const Init = require('../utils/init')                           //  0406
 //  0408
 async function deleteList(opts) {
@@ -26,8 +25,7 @@ module.exports = {
     //  0406
     create,
     updateBlogImg,
-    updateBulkBlogImg,
-    readBlogImg
+    updateBulkBlogImg
 }
 
 
@@ -67,17 +65,3 @@ async function updateBulkBlogImg(dataList) {
 
     return true
 }
-
-async function readBlogImg(whereOps, needBlogImgAlt = false) {
-    let opts = { where: whereOps }
-    if (needBlogImgAlt) {
-        opts.include = {
-            model: BlogImgAlt
-        }
-    }
-    let blogImg = await BlogImg.findOne(opts)
-    let { id, img_id, BlogImgAlts } = blogImg.toJSON()
-    let res = BlogImgAlts.map(imgAlt => ({ blogImgAlt_id: imgAlt.id, img_id, blogImg_id: id, alt: imgAlt.alt }))
-    return res
-}
-

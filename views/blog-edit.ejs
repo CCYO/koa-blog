@@ -79,6 +79,7 @@
     async function renderPage(data) {
         //  公用變量
         let pageData = data
+        window.pageData = pageData
         //  API
         let api_blog = '/api/blog'
         let api_initImg = api_blog + '/initImgs'
@@ -145,11 +146,12 @@
 
                 //  整理要與該blog切斷關聯的圖片，格式為[{blogImg_id, blogImgAlt_list}, ...]
                 let cancelImgs = getBlogImgIdList_needToRemoveAssociate()
-                console.log(cancelImgs)
+
                 if (!cancelImgs.length) {    //  若cancel無值
+                    console.log('@initPage階段，沒有需要移除的 img')
                     return
                 }
-
+                console.log('@initPage階段，需要移除的 img 為 => alt_id:', cancelImgs)
                 const {
                     data: {
                         errno, data, msg
@@ -165,11 +167,8 @@
                 }
                 //  整理img數據
                 cancelImgs.forEach(({ blogImgAlt_list }) => {
-                    blogImgAlt_list.forEach(altId => {
-                        let { index } = pageData.blog.map_imgs.get(altId)
-                        //  從pageData刪除剛剛切斷關聯的圖片
-                        pageData.blog.imgs.splice(index, 1, null)
-                        pageData.blog.map_imgs.delete(altId)
+                    blogImgAlt_list.forEach(alt_id => {
+                        pageData.blog.map_imgs.delete(alt_id)
                     })
                 })
             }
@@ -266,13 +265,13 @@
 
                 //  將<img>替換為自定義<x-img>
                 function parseImgToXImg(html) {
-                    let reg = /<img.+?src=".+?blogImgAlt=(?<id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g
+                    let reg = /<img.+?src=".+?alt_id=(?<alt_id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g
                     let res
                     let _html = html
                     while (res = reg.exec(html)) {
                         if (res) {
-                            let { id, style } = res.groups
-                            _html = _html.replace(res[0], `<x-img data-id='${id}' data-style='${style}'/>`)
+                            let { alt_id, style } = res.groups
+                            _html = _html.replace(res[0], `<x-img data-alt-id='${alt_id}' data-style='${style}'/>`)
                         }
                     }
                     return _html
@@ -490,22 +489,18 @@
                 //  editor 的 修改圖片資訊前的檢查函數
                 async function checkImage(src, alt, url) {
                     //  修改
-                    let reg = /blogImgAlt=(\w+)/
-                    let res_reg = reg.exec(src)
-                    let blogImgAlt_id = res_reg[1] * 1
+                    let reg = /alt_id=(?<alt_id>\w+)/
+                    let res = reg.exec(src)
+                    let alt_id = res.groups.alt_id * 1
                     let blog_id = pageData.blog.id
                     alt = my_xss(alt)
-                    let { data: { errno, msg } } = await axios.patch('/api/album', { blog_id, blogImgAlt_id, alt })
+                    let { data: { errno, msg } } = await axios.patch('/api/album', { blog_id, alt_id, alt })
                     if (errno) {
                         return msg
                     }
-                    pageData.blog.imgs.some((img, index, imgs) => {
-                        if (img.id !== blogImgAlt_id) {
-                            return false
-                        }
-                        imgs[index].alt = alt
-                        pageData.blog.map_imgs.set(blogImgAlt_id, { ...imgs[index], index })
-                    })
+                    //  尋找相同 alt_id
+                    let imgData = pageData.blog.map_imgs.get(alt_id)
+                    imgData.alt = alt
                     return true
                 }
                 //  editor的 自定義上傳圖片方法
@@ -519,14 +514,13 @@
                         return
                     }
                     //  生成 img 的 hash(hex格式)
-                    let { hash, ...other } = await _getHash(img)
+                    let { exist, blogImg_id, hash } = await _getHash(img)
                     let res
-                    let blog_id = pageData.blog.id
                     loading([editor])
-                    if (!other.blogImg_id) { // img為新圖，傳給後端建檔
+                    if (!exist) { // img為新圖，傳給後端建檔
                         //  imgName要作為query參數傳送，必須先作百分比編碼
                         name = encodeURIComponent(name)
-                        let api = `${api_img}?hash=${hash}&name=${name}&ext=${ext}&blog_id=${blog_id}`
+                        let api = `${api_img}?hash=${hash}&name=${name}&ext=${ext}&blog_id=${pageData.blog.id}`
                         //  創建 formData，作為酬載數據的容器
                         let formdata = new FormData()
                         //  放入圖片數據
@@ -534,7 +528,7 @@
                         //  upload
                         res = await axios.post(api, formdata)
                     } else {    // img為重覆的舊圖，傳給後端新建一個blogImgAlt
-                        res = await axios.post(api_createBlogImgAlt, { blog_id, blogImg_id: other.blogImg_id })
+                        res = await axios.post(api_createBlogImgAlt, { blogImg_id })
                     }
                     loadEnd([editor])
                     let {
@@ -547,38 +541,37 @@
                         my_alert('上傳圖片失敗', msg)
                         return
                     }
+                    console.log('完成 => ', data)
                     //  上傳成功
-                    if (other.blogImg_id) { //  img為舊圖
-                        data = { ...other, ...data }
-                    } else {    //  img為新圖
-                        data.name = decodeURIComponent(data.name)
-                    }
-                    //  data格式: blogImgAlt { id, alt, img_id, url, hash, blogImg_id, blog_id, name }
+                    //  data格式: blogImgAlt { alt_id, alt, img_id, url, hash, blogImg_id, name }
+                    data.name = decodeURIComponent(data.name)
                     //  同步數據
-                    let index = pageData.blog.imgs.push(data)
-                    pageData.blog.map_imgs.set(data.id, { ...data, index })
+                    pageData.blog.map_imgs.set(data.alt_id, data)
                     //  將圖片插入 editor
-                    insertFn(`${data.url}?blogImgAlt=${data.id}`, data.name)
+                    insertFn(`${data.url}?alt_id=${data.alt_id}`, data.name)
                     //  取得圖片的 hash
                     async function _getHash(img) {
                         //  取得 img 的 MD5 Hash(hex格式)
                         let hash = await _getMD5Hash(img)
-                        let res = { hash }
-                        let { imgs } = pageData.blog
-                        if (!imgs.length) {
-                            return res
+                        let res = {
+                            exist: false,
+                            blogImg_id: undefined,
+                            hash
                         }
-                        //  利用hash，確認img是否為舊圖
-                        let exist = imgs.find(img => {
-                            if (img) {
-                                return img.hash === hash
+                        let { map_imgs } = pageData.blog
+                        if (map_imgs.size) {
+                            //  利用hash，確認此時要上傳的img是否為舊圖
+                            let imgs = [ ...map_imgs.values() ]
+                            //  img { alt_id, alt, blogImg_id, name, img_id, hash, url }
+                            for(let img of imgs){
+                                if(img.hash === hash){
+                                    res.blogImg_id = img.blogImg_id
+                                    res.exist = true
+                                    break
+                                }
                             }
-                            return false
-                        })
-                        if (!exist) {
-                            return res
                         }
-                        return exist
+                        return res
                         //  計算 file 的 MD5 Hash
                         function _getMD5Hash(file) {
                             return new Promise((resolve, reject) => {
@@ -672,35 +665,36 @@
             }
             /*  取出要移除的 blogImgAlt_id  */
             function getBlogImgIdList_needToRemoveAssociate() {
-                let reg = /blogImgAlt=(?<blogImgAlt_id>\w+)/
+                let reg = /alt_id=(?<alt_id>\w+)/
                 //  複製一份 blogImgAlt
-                let copy_map_imgs = new Map([...pageData.blog.map_imgs])
+                let map_imgs_needRemove = new Map([...pageData.blog.map_imgs])
                 //  找出[{src, alt, href}, ...]
                 editor.getElemsByType('image').forEach(({ src }) => {
-                    let res_reg = reg.exec(src)
-                    if (!res_reg && !res_reg.groups.blogImgAlt_id) {
+                    let res = reg.exec(src)
+                    if (!res && !res.groups.alt_id) {
                         return
                     }
-                    let blogImgAlt_id = res_reg.groups.blogImgAlt_id * 1
-                    copy_map_imgs.delete(blogImgAlt_id)
+                    let alt_id = res.groups.alt_id * 1
+                    //  map_imgs_needRemove 刪去 從 editor 找到的 img 資料，剩下的便是要請求後端刪除的 img 數據
+                    map_imgs_needRemove.delete(alt_id)
                     return
                 })
                 let cancelImgs = []
-                if (copy_map_imgs.size) {
-                    copy_map_imgs.forEach(({ blogImg_id }, altId) => {
+
+                if (map_imgs_needRemove.size) {
+                    map_imgs_needRemove.forEach(({ blogImg_id }, alt_id) => {
                         let ok = cancelImgs.some((img, index) => {
-                            if (img.blogImg_id === blogImg_id) {  //  若存在，則將當前片altId直接收入blogImgAlt_list
-                                cancelImgs[index]['blogImgAlt_list'].push(altId)
+                            if (img.blogImg_id === blogImg_id) {  //  若存在，則將當前片alt_id直接收入blogImgAlt_list
+                                cancelImgs[index]['blogImgAlt_list'].push(alt_id)
                                 return true
                             }
-                            //  若不存在，則先跳出
-                            return false
                         })
                         if (!ok) {    //  不存在，將當前整理的圖片整筆記錄下來
-                            cancelImgs.push({ blogImg_id, blogImgAlt_list: [altId] })
+                            cancelImgs.push({ blogImg_id, blogImgAlt_list: [alt_id] })
                         }
                     })
                 }
+                console.log('@要刪除的img,整理結果 => ', cancelImgs)
                 return cancelImgs
             }
         }

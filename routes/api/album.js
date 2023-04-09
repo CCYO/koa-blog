@@ -7,7 +7,7 @@ const BlogImgAlt = require('../../controller/blogImgAlt')
 router.prefix('/api/album')
 
 router.patch('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
-    const { blog_id, alt, blogImgAlt_id: id } = ctx.request.body
+    const { blog_id, alt, alt_id: id } = ctx.request.body
     ctx.body = await BlogImgAlt.modifyBlogImgAlt({id, blog_id, alt})
 })
 

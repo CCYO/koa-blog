@@ -6,7 +6,19 @@ const {
 } = require('../model')           //  0406
 const Init = require('../utils/init')           //  0404
 const { Blog } = require('../db/mysql/model')   //  0404
-
+//  0409
+/** 更新blog
+ * @param {number} blog_id blog id
+ * @param {object} blog_data 要更新的資料
+ * @returns {number} 1代表更新成功，0代表失敗
+ */
+ async function update(id, data) {
+    let [row] = await Blog.update(data, { where: { id } })
+    if (!row) {
+        throw new MyErr(ErrRes.BLOG.UPDATE)
+    }
+    return row
+}
 //  0406
 async function read(opts) {
     let blog = await Blog.findOne(opts)
@@ -44,6 +56,8 @@ async function readList(opts) {
 }
 
 module.exports = {
+    //  0409
+    update,
     //  0406
     read,
     //  0406
@@ -52,7 +66,6 @@ module.exports = {
     readList,
 
     deleteBlogs,        //  0327
-    updateBlog,         //  0326
 }
 
 /**批量刪除 0327
@@ -76,20 +89,7 @@ async function deleteBlogs(datas) {
     }
     return true
 }
-/** 更新blog    //  0326
- * @param {number} blog_id blog id
- * @param {object} blog_data 要更新的資料
- * @returns {number} 1代表更新成功，0代表失敗
- */
-async function updateBlog({ blog_id, newData }) {
-    let [row] = await Blog.update(newData, {
-        where: { id: blog_id }
-    })
-    if (row) {
-        return true
-    }
-    return false
-}
+
 
 
 

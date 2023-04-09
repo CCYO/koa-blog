@@ -18,21 +18,17 @@ async function modify(author_id, blog_id, blog_data) {
     // let { title, cancelImgs = [], html, show } = blog_data
     let map = new Map(Object.entries(blog_data))
     let cache = { [CACHE.TYPE.PAGE.BLOG]: blog_id }
-    if (map.has('title') || map.has('show')) {
-        //  取得作者的粉絲群
-        //  取得 作者的 fansList + readers
-
-        // let res = await Blog.find(Opts.BLOG.findReadersAndFansList({ author_id, blog_id }))
-        // let resModel = await _findList_FansId(author_id)
-        // console.log('@resModel.data => ', resModel.data)
-        // fans = resModel.data
-        //  提供緩存處理
-        // cache[CACHE.TYPE.NEWS] = fans
-        // cache[CACHE.TYPE.PAGE.USER] = [author_id]
-    }
     //  存放 blog 要更新的數據
     let newData = {}
     if (map.has('title')) {
+        let { data } = await findInfoForSubscribe(blog_id)
+        let { show, fansList } = data
+        //  若 當前是公開狀態，必須告知 fansList
+        if (show) {
+            cache[CACHE.TYPE.NEWS] = fansList
+        }
+        //  無論 show 是公開/隱藏，都會影響到作者資訊頁
+        cache[CACHE.TYPE.PAGE.USER] = [author_id]
         //  存放 blog 要更新的數據
         newData.title = my_xxs(blog_data.title)
     }
@@ -48,36 +44,29 @@ async function modify(author_id, blog_id, blog_data) {
         let resModel
         // 公開blog
         if (show) {
+            //  存放 blog 要更新的數據
+            newData.showAt = new Date()
             resModel = await public(blog_id)
             // 隱藏blog
         } else if (!show) {
             resModel = await private(blog_id)
         }
-        cache[CACHE.TYPE.NEWS] = resModel.data
+        cache[CACHE.TYPE.NEWS] = cache[CACHE.TYPE.NEWS] ? cache[CACHE.TYPE.NEWS].concat(resModel.data) : resModel.data
         cache[CACHE.TYPE.PAGE.USER] = [author_id]
     }
     if (Object.getOwnPropertyNames(newData).length) {
         //  更新文章
-        let ok = await Blog.updateBlog({ blog_id, newData })
-        if (!ok) {
-            return new ErrModel(UPDATE_ERR)
-        }
+        await Blog.update(blog_id, newData)
     }
     //  刪除圖片
     if (map.has('cancelImgs')) {
         let cancelImgs = map.get('cancelImgs')
         //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
         await removeImgs(cancelImgs)
-
     }
-
-
-
-
-
-    let resModel = await findBlog({ blog_id, author_id })
+    let resModel = await findWholeInfo(blog_id)
     if (resModel.errno) {
-        return resModel
+        throw new MyErr(resModel)
     }
     let data = resModel.data
     return new SuccModel({ data, cache })
@@ -95,9 +84,9 @@ async function removeImgs(imgs) {
         if (count === blogImgAlt_list.length) {
             await C_BlogImg.removeList([blogImg_id])
             //  僅刪除 blogImgAlt.list 內的資料
-        }else{
+        } else {
             await C_BlogImgAlt.removeList(blogImgAlt_list)
-        }   
+        }
     }
     return new SuccModel()
 }
@@ -122,20 +111,20 @@ async function public(blog_id) {
     //  創建 articleReader
     if (listWithNotReader.length) {
         let datas = listWithNotReader.map(reader_id => ({ reader_id, article_id: blog_id }))
-        await addList(datas)
+        await C_ArticleReader.addList(datas)
     }
     return new SuccModel({ data: fansList })
 }
 //  0406
-async function findInfoForSubscribe(blog_id) {
-    let blog = await Blog.read(Opts.BLOG.findReadersAndFansList(blog_id))
+async function findInfoForSubscribe(blog_id, map) {
+    let blog = await Blog.read(Opts.BLOG.findInfoForSubscribe(blog_id))
     if (!blog) {
         throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST)
     }
     let readers = blog.readers.map(({ id }) => id)
     let fansList = blog.author.fansList.map(({ id }) => id)
     //  軟刪除狀態的 articleReader_id
-    let articleReaders = blog.readers.map(({ ArticleReaders }) => ArticleReaders.id)
+    let articleReaders = blog.readers.map(({ ArticleReader }) => ArticleReader.id)
     //  是作者的粉絲，但尚未成為 reader
     let listWithNotReader = fansList.map(fans => {
         let isReader = blog.readers.includes(reader => { fans === reader.id })
@@ -144,7 +133,7 @@ async function findInfoForSubscribe(blog_id) {
         }
         return undefined
     }).filter(id => id)
-    let data = { articleReaders, readers, fansList, listWithNotReader }
+    let data = { articleReaders, readers, fansList, listWithNotReader, show: blog.show }
     return new SuccModel({ data })
 }
 //  0406
@@ -169,7 +158,7 @@ async function add(title, author_id) {
  */
 async function findWholeInfo(blog_id) {
     if (!blog_id) {
-        return new ErrModel(ErrRes.BLOG.READ.NO_DATA)
+        throw new MyErr(ErrRes.BLOG.READ.NO_DATA)
     }
     let data = await Blog.read(Opts.BLOG.findWholeInfo(blog_id))
     if (!data) {

@@ -1,6 +1,11 @@
 const { ErrRes, MyErr } = require('../model')           //  0406
 const Init = require('../utils/init')                   //  0406
 const { BlogImgAlt } = require('../db/mysql/model')     //  0406
+//  0409
+async function find(opts){
+    let alt = await BlogImgAlt.findOne(opts)
+    return Init.alt(alt)
+}
 //  0408
 async function deleteList(opts) {
     try {
@@ -25,6 +30,8 @@ async function create(data) {
     
 }
 module.exports = {
+    //  0409
+    find,
     //  0408
     deleteList,
     //  0408

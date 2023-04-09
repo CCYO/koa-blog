@@ -73,6 +73,8 @@ async function initEJSData() {
         // JSON String → JSON Obj
         let blog = JSON.parse(data)
         //  處理blog內的img數據
+        //  blog.imgs: [ img { alt_id, alt, blogImg_id, name, img_id, hash, url }]
+        //  blog.map_imgs: alt_id → img
         blog.map_imgs = init_map_imgs(blog.imgs)
         //  處理blog內的comment數據
         //  將 blog.html(百分比編碼格式) → htmlStr
@@ -82,8 +84,9 @@ async function initEJSData() {
         let isBlogEditPage = reg_blogEdit.test(location.pathname)
         let reg_blogPreview = /\?preview=true/
         let isBlogPreview = reg_blogPreview.test(location.search)
-        console.log('@isBlogEditPage', isBlogEditPage)
-        console.log('@isBlogPreview', isBlogPreview)
+        console.log('@isBlogEditPage 判斷是否為 編輯頁 => ', isBlogEditPage)
+        console.log('@isBlogPreview 判對是否為 預覽頁 => ', isBlogPreview)
+        console.log('@若是編輯頁或預覽頁 => 不需請求 comment')
         if (!isBlogEditPage && !isBlogPreview) {
             let res = await axios.get(`/api/comment/${blog.id}`)
             let { data: { errno, data: responseData } } = res
@@ -105,24 +108,21 @@ async function initEJSData() {
                 return ''
             }
             let htmlStr = decodeURI(URI_String)
-            let reg = /<x-img.+?data-id='(?<id>\w+?)'.+?(data-style='(?<style>.?)')?.*?\/>/g
+            let reg = /<x-img.+?data-alt-id='(?<alt_id>\w+?)'.+?(data-style='(?<style>.?)')?.*?\/>/g
             //  複製一份
             let _html = htmlStr
-            //  存放結果
+            //  存放 reg.exec 的結果
             let res
             //  while 將 <x-img> 數據轉回 <img>
             while (res = reg.exec(htmlStr)) {
+                let { alt_id, style } = res.groups
                 //  找出對應的img數據
-                blog.imgs.some((img) => {
-                    let { id, style } = res.groups
-                    if (img.id !== id * 1) {
-                        return
-                    }
-                    //  { id, alt, img_id, hash, url, blogImg_id, name}
-                    let { url, alt } = img
-                    let replaceStr = style ? `<img src='${url}?blogImgAlt=${id}' alt='${alt}' style='${style}' />` : `<img src='${url}?blogImgAlt=${id}' alt='${alt}' />`
-                    _html = _html.replace(res[0], replaceStr)
-                })
+                let img = blog.map_imgs.get(alt_id * 1)
+                //  { alt_id, alt, blogImg_id, name, img_id, hash, url}
+                let { url, alt } = img
+                let replaceStr = style ? `<img src='${url}?alt_id=${alt_id}' alt='${alt}' style='${style}' />` : `<img src='${url}?alt_id=${alt_id}' alt='${alt}' />`
+                //  修改 _html 內對應的 img相關字符
+                _html = _html.replace(res[0], replaceStr)
             }
             return _html
         }
@@ -154,7 +154,7 @@ async function initEJSData() {
     function init_map_imgs(imgs) {
         let map_imgs = new Map()
         imgs.forEach((img, index) => {
-            map_imgs.set(img.id, { ...img, index })
+            map_imgs.set(img.alt_id, { ...img, index })
         })
         return map_imgs
     }

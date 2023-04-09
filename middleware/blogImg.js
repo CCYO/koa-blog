@@ -40,7 +40,7 @@ const C_Img = require('../controller/img')
     let { data: { id: alt_id, alt }} = await C_BlogImgAlt.add({ blogImg_id })
     let data = {
         alt_id, alt, 
-        blogImg_id, blog_id, name,
+        blogImg_id, name, // blog_id 不需要
         img_id, url, hash 
     }
     let cache = { [PAGE.BLOG]: blog_id }

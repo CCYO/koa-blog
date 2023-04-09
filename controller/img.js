@@ -6,7 +6,8 @@ const Opts = require('../utils/seq_findOpts')
 const Img = require('../server/img')
 //  0406
 async function add(data) {
-    if(Object.entries(data).length){
+
+    if(!Object.entries(data).length){
         throw new MyErr(ErrRes.IMG.CREATE.NO_DATA)
     }
     let img = await Img.create(data)

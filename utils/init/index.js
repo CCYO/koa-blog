@@ -6,7 +6,24 @@ const {
 } = require('./blog')
 const { filterEmptyAndFranferFns, filterEmptyAndFranferFnsForArray } = require('../filterEmpty')  //  0404
 const { USER: { AVATAR } } = require('../../conf/constant')     //  0404
-
+//  0409
+function initAlt(data){
+    return init(data, go)
+    function go(item){
+        let data = { ...item }
+        let map = new Map(Object.entries(item))
+        //  { alt_id, alt, BlogImg: { blogImg_id, blog_id, img_id, name } }
+        if(map.has('BlogImg')){
+            data = { ...data, ...item.BlogImg }
+        }
+        console.log('@ === > ', map.has('alt'))
+        if(map.has('alt') && !data.alt){
+            data.alt = item.BlogImg.name
+        }
+        delete data.BlogImg
+        return data
+    }
+}
 //  0404
 function initComment(data) {
     return init(data, go)
@@ -37,8 +54,8 @@ function initBlog(data) {
             blog.author = initUser(blog.author)
         }
         if (map.has('BlogImgs')) {
-            delete blog.BlogImgs
             blog.imgs = _initBlogImg(data.BlogImgs)
+            delete blog.BlogImgs
         }
         return blog
     }
@@ -72,8 +89,17 @@ function _initBlogImg(blogImgs) {
                 }
                 continue
             }
+            /*
+            ** res: { 
+            **     // alt.id → alt_id 是在 Opts.findWholeInfo 轉換的
+            **     alt_id, alt,
+            **     // blogImg.id → blogImg_id 是在 Opts.findWholeInfo 轉換的
+            **     blogImg_id, name,
+            **     // img.id → img_id 是在 Opts.findWholeInfo 轉換的
+            **     img_id, url, hash
+            ** }
+            */
             container.push(res)
-            //  { id, alt, blogImg_id, name, img_id, url, hash}
         }
         return container
     }
@@ -119,6 +145,8 @@ function init(data, ...fns) {
 const { init_newsOfFollowId, init_excepts } = require('./news')
 const { initCommentsForBrowser } = require('./comment')
 module.exports = {
+    //  0409
+    alt: initAlt,
     //  0404
     comment: initComment,
     browser: {

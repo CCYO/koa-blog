@@ -1,6 +1,13 @@
 const Opts = require('../utils/seq_findOpts')                       //  0408
 const { ErrModel, SuccModel, ErrRes, MyErr } = require('../model')  //  0408
 const BlogImgAlt = require('../server/blogImgAlt')                  //  0406
+async function find(alt_id){
+    let alt = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.find(alt_id))
+    if(!alt){
+        return new ErrModel(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST)
+    }
+    return new SuccModel({ data: alt })
+}
 //  0408
 async function removeList(id_list) {
     let raw = await BlogImgAlt.deleteList(Opts.FOLLOW.removeList(id_list))
@@ -20,12 +27,18 @@ async function count(blogImg_id){
 //  0406
 async function add(data) {
     if(!Object.entries(data).length){
-        throw MyErr(ErrRes.BLOG_IMG_ALT.CREATE.NO_DATA)
+        throw new MyErr(ErrRes.BLOG_IMG_ALT.CREATE.NO_DATA)
     }
     let blogImgAlt = await BlogImgAlt.create(data)
-    return new SuccModel({ data: blogImgAlt})
+    let resModel = await find(blogImgAlt.id)
+    if(resModel.errno){
+        throw new MyErr({ ...resModel })
+    }
+    return resModel
 }
 module.exports = {
+    //  0409
+    find,
     //  0408
     removeList,
     //  0408
@@ -56,7 +69,8 @@ async function cancelWithBlog(blogImg_id, blogImgAlt_list){
 }
 
 const { CACHE: { TYPE: { PAGE } }} = require('../conf/constant')
-const Controller_BlogImg = require('./blogImg')
+const { BLOG_IMG_ALT } = require('../utils/seq_findOpts')
+
 
 
 

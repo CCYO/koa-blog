@@ -1,7 +1,26 @@
+const {
+    //  0409
+    Img,
+    //  0409
+    BlogImg,
+    //  0409
+    BlogImgAlt,
+    Comment,
+    User,
+} = require('../db/mysql/model')
 const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
     //  0408
     BLOG_IMG_ALT: {
+        //  0409
+        find: (alt_id) => ({
+            where: { id: alt_id },
+            attributes: [['id', 'alt_id'], 'alt'],
+            include: {
+                model: BlogImg,
+                attributes: [['id', 'blogImg_id'], 'name', 'blog_id', 'img_id'],
+            }
+        }),
         //  0408
         count: (blogImg_id) => ({
             where: { blogImg_id }
@@ -17,7 +36,7 @@ module.exports = {
     BLOG: {
         //  0406
         findInfoForSubscribe: (article_id) => ({
-            attribute: ['id'],
+            attribute: ['id', 'show'],
             where: { id: article_id },
             include: [
                 {
@@ -57,7 +76,7 @@ module.exports = {
                         },
                         {
                             model: BlogImgAlt,
-                            attributes: ['id', 'alt']
+                            attributes: [['id', 'alt_id'], 'alt']
                         }
                     ]
                 }
@@ -353,13 +372,5 @@ module.exports = {
     }
 }
 
-const {
-    Comment,
-    User,
-    Img,
-    Blog,
-    BlogImg,
-    BlogImgAlt,
-} = require('../db/mysql/model')
 const { Op } = require('sequelize')
 const { fastFormats } = require('ajv-formats/dist/formats')
