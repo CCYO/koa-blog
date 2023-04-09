@@ -1,10 +1,24 @@
+const C_BlogImg = require('./blogImg')
 const Opts = require('../utils/seq_findOpts')                       //  0408
 const { ErrModel, SuccModel, ErrRes, MyErr } = require('../model')  //  0408
 const BlogImgAlt = require('../server/blogImgAlt')                  //  0406
-async function find(alt_id){
+//  0406
+async function add(data) {
+    if(!Object.entries(data).length){
+        throw new MyErr(ErrRes.BLOG_IMG_ALT.CREATE.NO_DATA)
+    }
+    let blogImgAlt = await BlogImgAlt.create(data)
+    return await findWholeInfo(blogImgAlt.id)
+    
+}
+//  0410
+async function findWholeInfo(alt_id){
+    if(!alt_id){
+        throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NO_DATA)
+    }
     let alt = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.find(alt_id))
     if(!alt){
-        return new ErrModel(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST)
+        throw new ErrModel(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST)
     }
     return new SuccModel({ data: alt })
 }
@@ -24,21 +38,9 @@ async function count(blogImg_id){
     }
     return new SuccModel({ data })
 }
-//  0406
-async function add(data) {
-    if(!Object.entries(data).length){
-        throw new MyErr(ErrRes.BLOG_IMG_ALT.CREATE.NO_DATA)
-    }
-    let blogImgAlt = await BlogImgAlt.create(data)
-    let resModel = await find(blogImgAlt.id)
-    if(resModel.errno){
-        throw new MyErr({ ...resModel })
-    }
-    return resModel
-}
 module.exports = {
     //  0409
-    find,
+    findWholeInfo,
     //  0408
     removeList,
     //  0408

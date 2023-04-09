@@ -6,15 +6,17 @@ module.exports = {
     //  0406
     BLOG_IMG_ALT: {
         //  0408
+        READ: {
+            //  0410
+            NO_DATA: { errno: 50002, msg: '查詢 BLOG_IMG_ALT 卻沒提供參數' },
+            //  0408
+            NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 BlogImgAlt' },
+        },
+        //  0408
         DELETE: {
             ERR: { errno: 801, msg: '刪除 BlogImgAlt 失敗' },
             //  0406
             ROW: { errno: 40003, msg: '刪除 BlogImgAlt 的數量不完全' },
-        },
-        //  0408
-        READ: {
-            //  0408
-            NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 BlogImgAlt' },
         },
         //  0406
         CREATE: {

@@ -12,9 +12,10 @@ function initAlt(data){
     function go(item){
         let data = { ...item }
         let map = new Map(Object.entries(item))
-        //  { alt_id, alt, BlogImg: { blogImg_id, blog_id, img_id, name } }
+        //  { alt_id, alt, BlogImg: { blogImg_id, blog_id, img_id, name , Img: { img_id, url, hash }} }
         if(map.has('BlogImg')){
-            data = { ...data, ...item.BlogImg }
+            let { Img, ...blogImg } = item.BlogImg
+            data = { ...data, ...blogImg, ...Img }
         }
         console.log('@ === > ', map.has('alt'))
         if(map.has('alt') && !data.alt){

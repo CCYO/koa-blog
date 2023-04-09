@@ -19,6 +19,12 @@ module.exports = {
             include: {
                 model: BlogImg,
                 attributes: [['id', 'blogImg_id'], 'name', 'blog_id', 'img_id'],
+                required: true,
+                include: {
+                    model: Img,
+                    attribute: [['id', 'img_id'], 'url', 'hash'],
+                    required: true
+                }
             }
         }),
         //  0408
