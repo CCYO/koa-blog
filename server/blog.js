@@ -6,6 +6,21 @@ const {
 } = require('../model')           //  0406
 const Init = require('../utils/init')           //  0404
 const { Blog } = require('../db/mysql/model')   //  0404
+//  0411
+/**批量刪除
+ * 
+ * @param {*} blog_id 
+ * @param {*} needComment 
+ * @returns 
+ */
+async function deleteList(opts) {
+    try {
+        //  RV row
+        return await Blog.destroy(opts)
+    } catch (err) {
+        throw new MyErr({ ...ErrRes.BLOG.DELETE.ERR, err })
+    }
+}
 //  0409
 /** 更新blog
  * @param {number} blog_id blog id
@@ -56,6 +71,8 @@ async function readList(opts) {
 }
 
 module.exports = {
+    //  0411
+    deleteList,
     //  0409
     update,
     //  0406
@@ -63,31 +80,7 @@ module.exports = {
     //  0406
     create,
     //  0404
-    readList,
-
-    deleteBlogs,        //  0327
-}
-
-/**批量刪除 0327
- * 
- * @param {*} blog_id 
- * @param {*} needComment 
- * @returns 
- */
-async function deleteBlogs(datas) {
-    try {
-        for (data of datas) {
-            let row = await Blog.destroy({
-                where: { ...data }
-            })
-            if (!row) {
-                throw new Error()
-            }
-        }
-    } catch (e) {
-        return false
-    }
-    return true
+    readList
 }
 
 

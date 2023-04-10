@@ -30,7 +30,7 @@ async function cancelFollow({ fans_id, idol_id }) {
 async function _removeList(id_list) {
     let row = await IdolFans.deleteList(Opts.FOLLOW.removeList(id_list))
     if(id_list.length !== row){
-        throw new MyErr(ErrRes.IDOL_FANS.DELETE.ROW_ERR)
+        throw new MyErr(ErrRes.IDOL_FANS.DELETE.ROW)
     }
     return new SuccModel()
 }

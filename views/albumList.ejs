@@ -10,11 +10,11 @@
     }
 </style>
 <div class='container-md main'>
-    <h1><a href="/other/<%=user.id%>"><%=user.nickname%></a>的相簿列表</h1>
+    <h1><a href="/other/<%=author.id%>"><%=author.nickname%></a>的相簿列表</h1>
     <div class="box-albumList">
         <h3>公開的文章相簿</h3>
-        <% if(albumList.show.length){ %>
-        <% albumList.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
+        <% if(albums.show.length){ %>
+        <% albums.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
         <ul class="list-group">
             <li class="list-group-item">
                 <a href="/album/<%= id %>"><%= title %></a>
@@ -29,8 +29,8 @@
     <div class="box-albumList">
         <% if(isAuthor){ %>
         <h3>未公開的文章相簿</h3>
-        <% if(albumList.hidden && albumList.hidden.length){ %>
-        <% albumList.hidden.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
+        <% if(albums.hidden && albums.hidden.length){ %>
+        <% albums.hidden.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
         <ul class="list-group">
             <li class="list-group-item">
                 <a href="/album/<%= id %>"><%= title %></a>

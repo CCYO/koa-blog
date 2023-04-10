@@ -108,7 +108,7 @@ async function initEJSData() {
                 return ''
             }
             let htmlStr = decodeURI(URI_String)
-            let reg = /<x-img.+?data-alt-id='(?<alt_id>\w+?)'.+?(data-style='(?<style>.?)')?.*?\/>/g
+            let reg = /<x-img.+?data-alt-id='(?<alt_id>\w+?)'.+?(data-style='(?<style>.+?)')?.*?\/>/g
             //  複製一份
             let _html = htmlStr
             //  存放 reg.exec 的結果
@@ -120,6 +120,8 @@ async function initEJSData() {
                 let img = blog.map_imgs.get(alt_id * 1)
                 //  { alt_id, alt, blogImg_id, name, img_id, hash, url}
                 let { url, alt } = img
+                console.log('@res => ', res)
+                console.log('@style => ', style)
                 let replaceStr = style ? `<img src='${url}?alt_id=${alt_id}' alt='${alt}' style='${style}' />` : `<img src='${url}?alt_id=${alt_id}' alt='${alt}' />`
                 //  修改 _html 內對應的 img相關字符
                 _html = _html.replace(res[0], replaceStr)
@@ -153,8 +155,8 @@ async function initEJSData() {
 
     function init_map_imgs(imgs) {
         let map_imgs = new Map()
-        imgs.forEach((img, index) => {
-            map_imgs.set(img.alt_id, { ...img, index })
+        imgs.forEach((img) => {
+            map_imgs.set(img.alt_id, { ...img })
         })
         return map_imgs
     }

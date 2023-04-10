@@ -1,19 +1,36 @@
-let router = require('koa-router')()
-
-const { BLOG } = require('../../conf/constant')
-const Album = require('../../controller/album')
-const Blog = require('../../controller/blog')
-
-router.prefix('/album')
-//  0318
+const { BLOG } = require('../../conf/constant')     //  0411
+const Blog = require('../../controller/blog')       //  0411
+let router = require('koa-router')()                //  0411
+router.prefix('/album')                             //  0411
+//  0411
+router.get('/list/:author_id', async (ctx, next) => {
+    let author_id = ctx.params.author_id * 1
+    let pagination = ctx.query.pagination
+    let isAuthor = false
+    if (ctx.session.user && ctx.session.user.id === author_id) {
+        isAuthor = true
+    }
+    let { data: { author, albums } } = await Blog.findInfoForPageOfAlbumList(author_id, { pagination })
+    if (!isAuthor) {
+        delete albums[BLOG.ORGANIZED.TYPE.NEGATIVE]
+    }
+    await ctx.render('albumList', {
+        isAuthor,
+        title: '文章照片列表',
+        author,
+        albums
+    })
+})
+//  0411
 router.get('/:blog_id', async (ctx, next) => {
     let blog_id = ctx.params.blog_id * 1
-    let res = await Blog.findBlog({blog_id})
+    let res = await Blog.findWholeInfo(blog_id)
     let { errno, data } = res
     if (errno) {
         await ctx.render('page404', res)
     }
     let { id, title, imgs } = data
+    console.log('data => ', data)
     await ctx.render('album', {
         title,
         album: {
@@ -22,27 +39,8 @@ router.get('/:blog_id', async (ctx, next) => {
         }
     })
 })
-//  0318
-router.get('/list/:user_id', async (ctx, next) => {
-    let user_id = ctx.params.user_id * 1
-    let isAuthor = false
-    if (ctx.session.user && ctx.session.user.id === user_id) {
-        isAuthor = true
-    }
-    let res = await Album.findAlbumList(user_id, isAuthor)
-    let { errno, data } = res
-    if (errno) {
-        return ctx.render('page404', res)
-    }
-    let { user, albumList } = data
-    if (!isAuthor) {
-        delete albumList[BLOG.ORGANIZED.TYPE.NEGATIVE]
-    }
-    await ctx.render('albumList', {
-        isAuthor,
-        title: '文章照片列表',
-        user,
-        albumList
-    })
-})
 module.exports = router
+
+
+
+const Album = require('../../controller/album')

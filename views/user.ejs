@@ -575,7 +575,7 @@
             //  要被刪除的文章id
             let id = $target.data('my-remove-blog')
             //  送出刪除命令
-            await removeBlog(id)
+            await removeBlog([id])
             return
         }
         //  渲染文章列表
@@ -814,10 +814,10 @@
 
         //  utils -----
         //  axios 刪除文章
-        async function removeBlog(blogList) {
+        async function  removeBlog(blogList) {
             //  送出刪除命令
             loading()
-            const res = await axios.delete('/api/blog', { data: { id: blogList } })
+            const res = await axios.delete('/api/blog', { data: { blogList } })
             loadEnd()
             let { errno, data, msg } = checkRes(res)
             if (!errno) {

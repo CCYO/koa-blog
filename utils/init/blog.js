@@ -131,6 +131,9 @@ function resetOptions(options) {
     let pairs = Object.entries(options)
     if (pairs.length) {
         for (let [prop, val] of pairs) {
+            if(!val){
+                continue
+            }
             opts[prop] = val
         }
     }

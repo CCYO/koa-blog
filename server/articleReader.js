@@ -1,5 +1,5 @@
 //  0406
-const { ErrRes ,MyErr } = require('../model')
+const { ErrRes, MyErr } = require('../model')
 //  0406
 const { ArticleReader } = require('../db/mysql/model')  //  0406
 //  0406
@@ -9,17 +9,19 @@ async function createList(datas) {
         if (datas.length !== list.length) {
             return new MyErr(ErrRes.ARTICLE_READER.CREATE.ROW)
         }
-        return list.map( item => item.toJSON() )
+        return list.map(item => item.toJSON())
     } catch (err) {
-        return new MyErr({ ...ErrRes.ARTICLE_READER.CREATE.ERR, err})
+        return new MyErr({ ...ErrRes.ARTICLE_READER.CREATE.ERR, err })
     }
 }
 //  0406
 async function deleteList(opts) {
-    let res = await ArticleReader.destroy(opts)
-    //  需確認 res 是甚麼
-    console.log('@ S ArticleReader deleteList => ', res)
-    return res
+    try {
+        //  RV row
+        return await ArticleReader.destroy(opts)
+    } catch (err) {
+        throw new MyErr({ ...ErrRes.ARTICLE_READER.DELETE.ERR, err })
+    }
 }
 //  0406
 async function restore(opts) {

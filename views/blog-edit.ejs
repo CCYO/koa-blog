@@ -79,7 +79,9 @@
                 async function renderPage(data) {
                     //  公用變量
                     let pageData = data
+                    // ----------------------------------------------------------------------------------------
                     window.pageData = pageData
+                    // ----------------------------------------------------------------------------------------
                     //  API
                     let api_blog = '/api/blog'
                     let api_initImg = api_blog + '/initImgs'
@@ -198,7 +200,7 @@
                                 data: {
                                     errno, data, msg
                                 }
-                            } = await axios.delete(api_blog, { data: { id: pageData.blog.id } })
+                            } = await axios.delete(api_blog, { data: { blogList: [pageData.blog.id] } })
                             loadEnd([editor])
                             if (!errno) {
                                 my_alert('已成功刪除此篇文章')
@@ -535,7 +537,7 @@
                                 loadEnd([editor])
                                 let {
                                     data: {
-                                        errno, data, msg
+                                        errno, data: newImg, msg
                                     }
                                 } = res
                                 //  上傳失敗
@@ -543,25 +545,23 @@
                                     my_alert('上傳圖片失敗', msg)
                                     return
                                 }
-                                console.log('完成 => ', data)
-                                //  舊圖完成或取道的檔案
+                                console.log('完成 => ', newImg)
+                                //  上傳成功
+                                //  newImg格式:
                                 /*{
                                     "alt_id": 16,
                                     "alt": "IMG_6362",
                                     "blogImg_id": 8,
                                     "name": "IMG_6362",
-                                    "blog_id": 1,
                                     "img_id": 7,
-                                    "url"
+                                    "url": xxxxx
                                 }
                                 */
-                                //  上傳成功
-                                //  data格式: blogImgAlt { alt_id, alt, img_id, url, hash, blogImg_id, name }
-                                data.name = decodeURIComponent(data.name)
+                                newImg.name = decodeURIComponent(newImg.name)
                                 //  同步數據
-                                pageData.blog.map_imgs.set(data.alt_id, data)
+                                pageData.blog.map_imgs.set(newImg.alt_id, newImg)
                                 //  將圖片插入 editor
-                                insertFn(`${data.url}?alt_id=${data.alt_id}`, data.name)
+                                insertFn(`${newImg.url}?alt_id=${newImg.alt_id}`, newImg.name)
                                 //  取得圖片的 hash
                                 async function _getHash(img) {
                                     //  取得 img 的 MD5 Hash(hex格式)

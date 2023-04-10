@@ -18,7 +18,7 @@ module.exports = {
             attributes: [['id', 'alt_id'], 'alt'],
             include: {
                 model: BlogImg,
-                attributes: [['id', 'blogImg_id'], 'name', 'blog_id', 'img_id'],
+                attributes: [['id', 'blogImg_id'], 'name'],
                 required: true,
                 include: {
                     model: Img,
@@ -40,6 +40,22 @@ module.exports = {
     },
     //  0404
     BLOG: {
+        //  0411
+        findInfoForPageOfAlbumList: (author_id) => ({
+            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt', 'createdAt'],
+            where: { author_id },
+            include: [
+                {
+                    association: 'author',
+                    attributes: ['id', 'nickname', 'email'],
+                    required: true
+                }, {
+                    model: BlogImg,
+                    attributes: [],
+                    required: true
+                }
+            ]
+        }),
         //  0406
         findInfoForSubscribe: (article_id) => ({
             attribute: ['id', 'show'],
@@ -101,15 +117,6 @@ module.exports = {
         findListForUserPage: (author_id) => ({
             attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
             where: { author_id }
-        }),
-        findBlogsHasPhoto: (user_id) => ({
-            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
-            where: { user_id },
-            include: {
-                model: BlogImg,
-                attributes: [],
-                required: true
-            }
         })
     },
     //  0404

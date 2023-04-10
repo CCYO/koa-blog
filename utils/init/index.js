@@ -12,16 +12,16 @@ function initAlt(data){
     function go(item){
         let data = { ...item }
         let map = new Map(Object.entries(item))
-        //  { alt_id, alt, BlogImg: { blogImg_id, blog_id, img_id, name , Img: { img_id, url, hash }} }
+        //  { alt_id, alt, BlogImg: { blogImg_id, name , Img: { img_id, url, hash }} }
         if(map.has('BlogImg')){
             let { Img, ...blogImg } = item.BlogImg
             data = { ...data, ...blogImg, ...Img }
+
+            if(map.has('alt') && !data.alt){
+                data.alt = item.BlogImg.name
+            }
+            delete data.BlogImg
         }
-        console.log('@ === > ', map.has('alt'))
-        if(map.has('alt') && !data.alt){
-            data.alt = item.BlogImg.name
-        }
-        delete data.BlogImg
         return data
     }
 }

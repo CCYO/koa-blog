@@ -1,4 +1,4 @@
-const C_BlogImg = require('./blogImg')                        //  0408
+const C_BlogImg = require('./blogImg')                              //  0408
 const C_BlogImgAlt = require('./blogImgAlt')                        //  0408
 const C_ArticleReader = require('./articleReader')                  //  0406
 const { CACHE } = require('../conf/constant')                       //  0406
@@ -7,6 +7,42 @@ const { MyErr, ErrRes, ErrModel, SuccModel } = require('../model')             /
 const Init = require('../utils/init')                               //  0404
 const Opts = require('../utils/seq_findOpts')                       //  0404
 const Blog = require('../server/blog')                              //  0404
+//  0411
+async function findInfoForPageOfAlbumList(userId, { pagination } ) {
+    let blogs = await Blog.readList(Opts.BLOG.findInfoForPageOfAlbumList(userId))
+    let author = blogs.length ? blogs[0].author : undefined
+    let albums = Init.browser.blog.pageTable(blogs, { pagination })
+    let data = { author, albums }
+    return new SuccModel({ data })
+}
+//  0411
+/** 刪除 blogs
+ * @param {number} blog_id 
+ * @returns {object} SuccModel || ErrModel
+ */
+async function removeList(blogList, author_id) {
+    if (!Array.isArray(blogList) || !blogList.length || !author_id) {
+        throw new MyErr(ErrRes.BLOG.REMOVE.NO_DATA)
+    }
+    //  處理cache -----
+    //  找出 readers
+    let readers = await blogList.reduce(async (readerList, blog_id) => {
+        let { data: { readers } } = await findInfoForSubscribe(blog_id)
+        let list = await readerList
+        list.concat(readers)
+        return list
+    }, [])
+    let cache = {
+        [CACHE.TYPE.NEWS]: readers,
+        [CACHE.TYPE.PAGE.USER]: [author_id]
+    }
+    //  刪除 blogList
+    let row = await Blog.deleteList(Opts.FOLLOW.removeList(blogList))
+    if (row !== blogList.length) {
+        throw new MyErr(ErrRes.BLOG.DELETE.ROW)
+    }
+    return new SuccModel({ cache })
+}
 //  0406
 /** 更新 blog
  * 
@@ -116,7 +152,7 @@ async function public(blog_id) {
     return new SuccModel({ data: fansList })
 }
 //  0406
-async function findInfoForSubscribe(blog_id, map) {
+async function findInfoForSubscribe(blog_id) {
     let blog = await Blog.read(Opts.BLOG.findInfoForSubscribe(blog_id))
     if (!blog) {
         throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST)
@@ -169,7 +205,7 @@ async function findWholeInfo(blog_id) {
 //  0404
 async function find(blog_id) {
     if (!blog_id) {
-        return new ErrModel(ErrRes.BLOG.READ.NO_DATA)
+        throw new MyErr(ErrRes.BLOG.READ.NO_DATA)
     }
     let data = await Blog.read(Opts.BLOG.find(blog_id))
     if (!data) {
@@ -201,6 +237,10 @@ async function findListForUserPage(userId, options) {
 }
 
 module.exports = {
+    //  0411
+    findInfoForPageOfAlbumList,
+    //  0411
+    removeList,
     //  0406
     modify,
     //  0406
@@ -213,9 +253,7 @@ module.exports = {
     find,
     //  0404
     findListForUserPage,
-    findBlogsHasPhoto,      //  0328
     findSquareBlogList,      //  0303
-    removeBlogs,            //  0303
 }
 
 
@@ -230,50 +268,5 @@ async function findSquareBlogList(exclude_id) {
 }
 
 
-/** 刪除 blogs  0326
- * @param {number} blog_id 
- * @returns {object} SuccModel || ErrModel
- */
-async function removeBlogs(blogIdList, authorId) {
-    if (!Array.isArray(blogIdList)) {
-        blogIdList = [blogIdList]
-    }
-
-    //  處理cache -----
-    //  找出 blog 的 follower
-    let subscripters = await blogIdList.reduce(async (acc, blog_id) => {
-        let followers = await FollowBlog.readFollowers(Opts.findBlogFollowersByBlogId(blog_id))
-        followers = followers.map(({ id }) => id)
-        let res = await acc
-        for (let id of followers) {
-            res.push(id)
-        }
-        return res
-    }, [])
-
-    let cache = {
-        [CACHE.TYPE.NEWS]: subscripters,
-        [CACHE.TYPE.PAGE.USER]: [authorId]
-    }
-
-    let datas = blogIdList.map(id => ({ id, user_id: authorId }))
-    let ok = await Blog.deleteBlogs(datas)
-
-    if (!ok) {
-        return new ErrModel(REMOVE_ERR)
-    }
-    return new SuccModel({ cache })
-}
-
-
-
-
-
-async function findBlogsHasPhoto(userId, options) {
-    let blogs = await Blog.readBlogs(Opts.BLOG.findBlogsHasPhoto(userId))
-    let data = Init.browser.blog.organizedList(blogs, options)
-
-    return new SuccModel({ data })
-}
 
 

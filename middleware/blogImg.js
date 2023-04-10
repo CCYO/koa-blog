@@ -36,13 +36,8 @@ const C_Img = require('../controller/img')
     //  建立 blogImg
     let img_id = imgModel.data.id
     let { data: { id: blogImg_id } } = await C_BlogImg.add({ blog_id, img_id, name })
-    //  建立 blogImgAlt
-    let { data: { id: alt_id, alt }} = await C_BlogImgAlt.add({ blogImg_id })
-    let data = {
-        alt_id, alt, 
-        blogImg_id, name, // blog_id 不需要
-        img_id, url, hash 
-    }
+    //  建立 blogImgAlt - data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
+    let { data } = await C_BlogImgAlt.add({ blogImg_id })
     let cache = { [PAGE.BLOG]: blog_id }
     ctx.body = new SuccModel({ data, cache })
 }

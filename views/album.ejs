@@ -4,11 +4,11 @@
 <div class="container main py-3">
     <h1 class="mb-3"><%= title %>的照片列表</h1>
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
-        <% album.imgs.forEach( ({id, img_id, blogImg_id, url, alt})=> { %>
+        <% album.imgs.forEach( ({alt_id, img_id, blogImg_id, url, alt})=> { %>
         <div>
-            <div class="card border-dark" data-my-photo="<%= id %>">
+            <div class="card border-dark" data-my-photo="<%= alt_id %>">
                 <div class="ratio ratio-1x1 border-bottom border-secondary">
-                    <img class="card-img-top" src="<%= url %>?blogImgAlt=<%= id %>" alt="<%= alt %>" />
+                    <img class="card-img-top" src="<%= url %>?blogImgAlt=<%= alt_id %>" alt="<%= alt %>" />
                 </div>
                 <div class="card-body">
                     <p class="card-text text-truncate mb-0" style="height: 2rem; line-height: 2rem;">
@@ -63,7 +63,12 @@
     }
 
     async function renderPage(data) {
+        //  初始化頁面功能
         //  公用變量
+        let pageData = data
+        // ----------------------------------------------------------------------------------------
+        window.pageData = pageData
+        // ----------------------------------------------------------------------------------------
         let { blog, imgs, map_imgs } = data.album
         //  handle ---
         //  照片名稱span，handle click => 顯示、聚焦改名表格

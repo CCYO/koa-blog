@@ -1,19 +1,16 @@
 const { ALBUM } = require('../conf/constant')
-const { SuccModel } = require('../model')
-const Blog = require('./blog')
-const User = require('./user')
-
-async function findAlbumList(userId) {
-    let userRes = await User.findUser(userId)
-    if (userRes.errno) {
-        return userRes
-    }
-    let user = userRes.data
-    let { data: albumList } = await Blog.findBlogsHasPhoto(userId, { pagination: ALBUM.PAGINATION })
-    let data = { user, albumList }
+//  0411
+async function findList(author_id, options) {
+    // data: { author, albums } 
+    let { data } = await Blog.findInfoForPageOfAlbumList(author_id, options)
     return new SuccModel({ data })
 }
 
 module.exports = {
-    findAlbumList
+    findList
 }
+
+const { SuccModel } = require('../model')
+const Blog = require('./blog')
+const User = require('./user')
+

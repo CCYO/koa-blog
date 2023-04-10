@@ -3,6 +3,74 @@
  */
 
 module.exports = {
+    //  0404
+    BLOG: {
+        //  0411
+        DELETE: {
+            //  0411
+            ROW: { errno: 40003, msg: '刪除 BLOG 的數量不完全' },
+            //  0411
+            ERR: { errno: 801, msg: '刪除 BLOG 失敗' },
+        },
+        //  0411
+        REMOVE: {
+            //  0411
+            NO_DATA: { errno: 30001, msg: '刪除 BLOG 卻沒提供查詢參數' },
+            ERR: { errno: 706, msg: '刪除Blog失敗' }
+        },
+        //  0409
+        UPDATE: { errno: 30004, msg: 'BLOG資料更新失敗' },
+        //  0406
+        CREATE: { errno: 30003, msg: 'BLOG 創建失敗' },
+        //  0404
+        READ: {
+            //  0404
+            NOT_EXIST: { errno: 30002, msg: 'BLOG不存在' },
+            //  0404
+            NO_DATA: { errno: 30001, msg: '查詢 BLOG 卻沒提供查詢參數' }
+        },
+        UPLOAD_IMG_ERR: { errno: 704, msg: 'Blog內文圖片上傳失敗' },    //  0326
+        IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上' },
+    },
+    //  0406
+    IDOL_FANS: {
+        //  0406
+        RESTORE: {
+            ROW_ERR: { errno: 40004, msg: '恢復軟刪除 IdolFans 的數量不完全' },
+        },
+        //  0406
+        DELETE: {
+            //  0411
+            ERR: { errno: 801, msg: '刪除 IdolFans 失敗' },
+            //  0406
+            ROW: { errno: 40003, msg: '刪除 IdolFans 的數量不完全' },
+            //  0406
+            NO_IDOL: { errno: 40002, msg: '要刪除的 Idol 不存在' }
+        },
+        //  0406
+        CREATE_ERR: { errno: 40001, msg: 'IdolFans 創建失敗' },
+        //  0228
+        CONFIRM_ERR: { errno: 1003, msg: '確認追蹤消息失敗' }
+    },
+    //  0406
+    ARTICLE_READER: {
+        //  0406
+        DELETE: {
+            //  0411
+            ERR: { errno: 801, msg: '刪除 ArticleReader 失敗' },
+            //  0406
+            ROW: { errno: 40003, msg: '刪除 ArticleReader 的數量不完全' },
+        },
+        //  0406
+        CREATE: {
+            ROW: { errno: 40005, msg: '創建 ArticleReader 的數量不完全' },
+            ERR: { errno: 40005, msg: 'ArticleReader 創建失敗' },
+        },
+        //  0406
+        RESTORE: {
+            ROW: { errno: 40004, msg: '恢復軟刪除 ArticleReader 的數量不完全' },
+        },
+    },
     //  0406
     BLOG_IMG_ALT: {
         //  0408
@@ -47,23 +115,6 @@ module.exports = {
         CREATE_ERR: { errno: 803, msg: '創建失敗' }
     },
     //  0406
-    ARTICLE_READER: {
-        //  0406
-        CREATE: {
-            ROW: { errno: 40005, msg: '創建 ArticleReader 的數量不完全' },
-            ERR: { errno: 40005, msg: 'ArticleReader 創建失敗' },
-        },
-        //  0406
-        RESTORE: {
-            ROW: { errno: 40004, msg: '恢復軟刪除 ArticleReader 的數量不完全' },
-        },
-        //  0406
-        DELETE: {
-            //  0406
-            ROW_ERR: { errno: 40003, msg: '刪除 ArticleReader 的數量不完全' },
-        }
-    },
-    //  0406
     IMG: {
         //  0406
         CREATE: {
@@ -73,41 +124,6 @@ module.exports = {
             ERR: { errno: 50001, msg: 'IMG 創建失敗' },
         },
         NO_DATA: { errno: 40001, msg: '沒有相符的 IMG' }
-    },
-    //  0404
-    BLOG: {
-        //  0409
-        UPDATE: { errno: 30004, msg: 'BLOG資料更新失敗' },
-        //  0406
-        CREATE: { errno: 30003, msg: 'BLOG 創建失敗' },
-        //  0404
-        READ: {
-            //  0404
-            NOT_EXIST: { errno: 30002, msg: 'BLOG不存在' },
-            //  0404
-            NO_DATA: { errno: 30001, msg: '查詢 BLOG 卻沒提供查詢參數' }
-        },
-        UPLOAD_IMG_ERR: { errno: 704, msg: 'Blog內文圖片上傳失敗' },    //  0326
-        IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上' },
-        REMOVE_ERR: { errno: 706, msg: '刪除Blog失敗' }
-    },
-    //  0406
-    IDOL_FANS: {
-        //  0406
-        RESTORE: {
-            ROW_ERR: { errno: 40004, msg: '恢復軟刪除 IdolFans 的數量不完全' },
-        },
-        //  0406
-        DELETE: {
-            //  0406
-            ROW_ERR: { errno: 40003, msg: '刪除 IdolFans 的數量不完全' },
-            //  0406
-            NO_IDOL: { errno: 40002, msg: '要刪除的 Idol 不存在' }
-        },
-        //  0406
-        CREATE_ERR: { errno: 40001, msg: 'IdolFans 創建失敗' },
-        //  0228
-        CONFIRM_ERR: { errno: 1003, msg: '確認追蹤消息失敗' }
     },
     //  0404
     PERMISSION: {

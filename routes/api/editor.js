@@ -8,6 +8,13 @@ const Cache = require('../../middleware/cache')                 //  未整理
 const Check = require('../../middleware/check_login')           //  0406
 const router = require('koa-router')()                          //  0406
 router.prefix('/api/blog')                                      //  0406
+//  0411
+//  刪除 blogs
+router.delete('/', Check.api_logining/*, Cache.modifiedtCache 未整理*/, async (ctx, next) => {
+    const author_id = ctx.session.user.id
+    const { blogList } = ctx.request.body
+    ctx.body = await Blog.removeList(blogList, author_id)
+})
 //  0409
 //  為Blog既存圖片建立alt數據
 router.post('/blogImgAlt', Check.api_logining/*, Cache.modifiedtCache 未整理*/, async (ctx, next) => {
@@ -31,13 +38,6 @@ router.post('/', Check.api_logining/*, Cache.modifiedtCache 未整理*/, async (
     return ctx.body = await Blog.add(title, ctx.session.user.id)
 })
 module.exports = router
-
-//  刪除 blogs  0326
-router.delete('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
-    const authorId = ctx.session.user.id
-    const { id } = ctx.request.body
-    ctx.body = await Blog.removeBlogs(id, authorId)
-})
 
 
 
