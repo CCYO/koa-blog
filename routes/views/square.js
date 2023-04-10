@@ -2,17 +2,20 @@
  * @description Router/Views Square
  */
 
-const router = require('koa-router')()          //  0228
-const Blog = require('../../controller/blog')   //  0228
-
-//  廣場頁  0303
+const router = require('koa-router')()          //  0411
+const Blog = require('../../controller/blog')   //  0411
+//  廣場頁  0411
 router.get('/square', async (ctx, next) => {
-    let exclude_id = ctx.session.user && ctx.session.user.id || null
-    let { data: blogList } = await Blog.findSquareBlogList(exclude_id)
+    let { data: blogs } = await Blog.findInfoForPageOfSquare()
+    let author_id = ctx.session.user && ctx.session.user.id || null
+    if(author_id){
+        blogs = blogs.filter( ({ blog: { author } }) => {
+            return author.id === author_id
+        })
+    }
     await ctx.render('square', {
         title: '廣場頁',
-        blogList
+        blogs
     })
 })
-
 module.exports = router

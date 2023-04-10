@@ -17,8 +17,9 @@
 
 <div class='container-md main'>
     <h1>文章列表</h1>
+    <% if(blogs.length){ %>
     <ul class="list-group">
-        <% blogList.forEach( ({ id, title, author, time }) => { %>
+        <% blogs.forEach( ({ id, title, author, time }) => { %>
         <li class="list-group-item">
             <a href="/blog/<%= id %>"><%= title %></a>
             <span>by<a href="/other/<%= author.id %>"><%= author.nickname %></a></span>
@@ -26,6 +27,9 @@
         </li>
         <% }) %>
     </ul>
+    <% } else { %>
+        <p>沒有任何文章</p>
+    <% } %>
 </div>
 <!-- JQ AXIOS BS5 -->
 <%- include('wedgets/cdn') %>

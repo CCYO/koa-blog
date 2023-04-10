@@ -38,9 +38,10 @@ function initComment(data) {
             data.commenter = initUser(data.commenter)
         }
         if (map.has('article')) {
-            if(data.article.author){
-                data.article.author = initUser(data.article.author) 
-            }
+            data.article = initBlog(data.article)
+            // if(data.article.author){
+            //     data.article.author = initUser(data.article.author) 
+            // }
         }
         return data
     }

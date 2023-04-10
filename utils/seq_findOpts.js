@@ -10,30 +10,105 @@ const {
 } = require('../db/mysql/model')
 const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
-    //  0408
-    BLOG_IMG_ALT: {
-        //  0409
-        find: (alt_id) => ({
-            where: { id: alt_id },
-            attributes: [['id', 'alt_id'], 'alt'],
-            include: {
-                model: BlogImg,
-                attributes: [['id', 'blogImg_id'], 'name'],
-                required: true,
+    //  0404
+    COMMENT: {
+        //  0411
+        findInfoForPageOfBlog: (article_id) => {
+            return {
+                attributes: ['id', 'html', 'pid', 'createdAt', 'deletedAt'],
+                where: { article_id },
+                paranoid: false,    //  包含已軟刪除的條目
                 include: {
-                    model: Img,
-                    attribute: [['id', 'img_id'], 'url', 'hash'],
-                    required: true
+                    association: 'commenter',
+                    attributes: ['id', 'email', 'nickname']
                 }
             }
+        },
+        //  0404
+        findRelativeUnconfirmList: ({ pid, article_id, createdAt }) => ({
+            attributes: ['id'],
+            where: {
+                article_id,
+                pid: pid === 0 ? null : pid,
+                createdAt: { [Op.gt]: createdAt }
+            },
+            include: {
+                association: 'commenter',
+                attributes: ['id', 'email', 'nickname'],
+            }
         }),
-        //  0408
-        count: (blogImg_id) => ({
-            where: { blogImg_id }
+        //  0404
+        findWholeInfo: (id) => ({
+            attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
+            where: { id },
+            include: [
+                {
+                    association: 'commenter',
+                    attributes: ['id', 'email', 'nickname'],
+                },
+                {
+                    association: 'article',
+                    attributes: ['id', 'title'],
+                    include: {
+                        association: 'author',
+                        attributes: ['id', 'email', 'nickname']
+                    }
+                }
+            ]
         }),
+        findBlogsOfCommented: (commenter_id) => ({
+            attributes: ['blog_id'],
+            where: {
+                user_id: commenter_id
+            },
+            paranoid: false
+        }),
+        findBlogCommentsRelatedPid: ({ blog_id, p_id }) => {
+            //  找尋指定 blogId
+            let where = { blog_id }
+            //  根評論，找同樣是 pid = null 的根評論即可
+            if (!p_id) {
+                where.p_id = null
+                //  子評論，找id=pid的父評論 and pid=pid 的兄弟評論
+            } else {
+                where[Op.or] = [{ id: p_id }, { p_id }]
+            }
+            return {
+                attributes: ['id'],
+                where,
+                include: {
+                    model: User,
+                    attributes: ['id']
+                }
+            }
+        },
+        //  0309
+        findCommentById: (comment_id) => {
+            return {
+                attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
+                where: { id: comment_id },
+                include: {
+                    model: User,
+                    attributes: ['id', 'email', 'nickname']
+                }
+            }
+        },
     },
     //  0404
     BLOG: {
+        //  0411
+        findInfoForPageOfSquare() {
+            return {
+                attributes: ['id', 'title', 'show', 'showAt', 'createdAt'],
+                where: {
+                    show: true
+                },
+                include: {
+                    association: 'author',
+                    attributes: ['id', 'email', 'nickname']
+                }
+            }
+        },
         //  0411
         findInfoForPageOfAlbumList: (author_id) => ({
             attributes: ['id', 'title', 'show', 'showAt', 'updatedAt', 'createdAt'],
@@ -112,6 +187,28 @@ module.exports = {
             attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
             where: { author_id }
         })
+    },
+    //  0408
+    BLOG_IMG_ALT: {
+        //  0409
+        find: (alt_id) => ({
+            where: { id: alt_id },
+            attributes: [['id', 'alt_id'], 'alt'],
+            include: {
+                model: BlogImg,
+                attributes: [['id', 'blogImg_id'], 'name'],
+                required: true,
+                include: {
+                    model: Img,
+                    attribute: [['id', 'img_id'], 'url', 'hash'],
+                    required: true
+                }
+            }
+        }),
+        //  0408
+        count: (blogImg_id) => ({
+            where: { blogImg_id }
+        }),
     },
     //  0404
     USER: {
@@ -251,90 +348,6 @@ module.exports = {
             where: { id: { [Op.in]: id_list } }
         }),
     },
-    //  0404
-    COMMENT: {
-        //  0404
-        findRelativeUnconfirmList: ({ pid, article_id, createdAt }) => ({
-            attributes: ['id'],
-            where: {
-                article_id,
-                pid: pid === 0 ? null : pid,
-                createdAt: { [Op.gt]: createdAt }
-            },
-            include: {
-                association: 'commenter',
-                attributes: ['id', 'email', 'nickname'],
-            }
-        }),
-        //  0404
-        findWholeInfo: (id) => ({
-            attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
-            where: { id },
-            include: [
-                {
-                    association: 'commenter',
-                    attributes: ['id', 'email', 'nickname'],
-                },
-                {
-                    association: 'article',
-                    attributes: ['id', 'title'],
-                    include: {
-                        association: 'author',
-                        attributes: ['id', 'email', 'nickname']
-                    }
-                }
-            ]
-        }),
-        findBlogsOfCommented: (commenter_id) => ({
-            attributes: ['blog_id'],
-            where: {
-                user_id: commenter_id
-            },
-            paranoid: false
-        }),
-        findBlogCommentsRelatedPid: ({ blog_id, p_id }) => {
-            //  找尋指定 blogId
-            let where = { blog_id }
-            //  根評論，找同樣是 pid = null 的根評論即可
-            if (!p_id) {
-                where.p_id = null
-                //  子評論，找id=pid的父評論 and pid=pid 的兄弟評論
-            } else {
-                where[Op.or] = [{ id: p_id }, { p_id }]
-            }
-            return {
-                attributes: ['id'],
-                where,
-                include: {
-                    model: User,
-                    attributes: ['id']
-                }
-            }
-        },
-        //  0309
-        findCommentById: (comment_id) => {
-            return {
-                attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
-                where: { id: comment_id },
-                include: {
-                    model: User,
-                    attributes: ['id', 'email', 'nickname']
-                }
-            }
-        },
-        //  0228
-        findCommentsByBlogId: (blog_id) => {
-            return {
-                attributes: ['id', 'html', 'p_id', 'createdAt', 'deletedAt'],
-                where: { blog_id },
-                paranoid: false,    //  包含已軟刪除的條目
-                include: {
-                    model: User,
-                    attributes: ['id', 'email', 'nickname']
-                }
-            }
-        }
-    },
     FOLLOWCOMMENT: {
         findItems: ({ comment_ids }, { exclude }) => {
             let where = {
@@ -356,19 +369,6 @@ module.exports = {
         count: (blog_id) => ({
             where: { blog_id }
         })
-    },
-    findPublicBlogListByExcludeId(exclude_id) {
-        return {
-            attributes: ['id', 'title', 'show', 'showAt', 'createdAt'],
-            where: {
-                show: true,
-                user_id: { [Op.not]: exclude_id }
-            },
-            include: {
-                association: 'author',
-                attributes: ['id', 'email', 'nickname']
-            }
-        }
     },
     //  0303
     findBlogFollowersByBlogId(blog_id) {

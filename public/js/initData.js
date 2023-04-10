@@ -120,8 +120,6 @@ async function initEJSData() {
                 let img = blog.map_imgs.get(alt_id * 1)
                 //  { alt_id, alt, blogImg_id, name, img_id, hash, url}
                 let { url, alt } = img
-                console.log('@res => ', res)
-                console.log('@style => ', style)
                 let replaceStr = style ? `<img src='${url}?alt_id=${alt_id}' alt='${alt}' style='${style}' />` : `<img src='${url}?alt_id=${alt_id}' alt='${alt}' />`
                 //  修改 _html 內對應的 img相關字符
                 _html = _html.replace(res[0], replaceStr)

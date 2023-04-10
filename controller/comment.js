@@ -7,7 +7,12 @@ const { COMMENT: {
 const { SuccModel, ErrModel } = require('../model') //  0404
 const Opts = require('../utils/seq_findOpts')       //  0404
 const Comment = require('../server/comment')        //  0404
-
+//  0411
+async function findInfoForPageOfBlog(article_id) {
+    let comments = await Comment.readList(Opts.COMMENT.findInfoForPageOfBlog(article_id))
+    let data = Init.browser.comment(comments)
+    return new SuccModel({ data })
+}
 //  0404
 async function findRelativeUnconfirmList({ pid, article_id, createdAt }){
     let comments = await Comment.readList(Opts.COMMENT.findRelativeUnconfirmList({ pid, article_id, createdAt }))
@@ -25,16 +30,15 @@ async function findInfoForNews(commentId){
 }
 
 module.exports = {
+    //  0411
+    findInfoForPageOfBlog,
     //  0404
     findRelativeUnconfirmList,
     //  0404
     findInfoForNews,
-    
     findBlogsOfCommented,  //  0303
     removeComment,
     addComment,             //  0316
-    findCommentsByBlogId,    //  0228
-
     _findCommentsRelatedToPid
 }
 
@@ -173,10 +177,3 @@ async function _findCommentsRelatedToPid({blog_id, p_id, commenter_id, author_id
     }
     return new SuccModel({ data })
 }
-//  0228
-async function findCommentsByBlogId(blog_id) {
-    let comments = await Comment.readComments(Opts.COMMENT.findCommentsByBlogId(blog_id))
-    let data = Init.browser.comment(comments)
-    return new SuccModel({ data })
-}
-

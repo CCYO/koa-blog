@@ -2,24 +2,27 @@ const Init = require('../utils/init')   //  0404
 const {
     //  0404
     Comment,
-
     FollowComment
 } = require('../db/mysql/model')
-
-
+//  0411
+async function readList(opts) {
+    let comments = await Comment.findAll(opts)
+    return Init.comment(comments)
+}
+//  0404
 async function read(opts) {
     let comment = await Comment.findOne(opts)
     return Init.comment(comment)
 }
-
 module.exports = {
+    //  0411
+    readList,
     //  0404
     read,
     
     setRelatedComment,
     deleteComment,
-    createComment,
-    readComments        //  0313 
+    createComment, 
 }
 
 const { COMMENT: { CREATE_ERR }} = require('../model/errRes')
@@ -33,11 +36,6 @@ async function deleteComment({ commentId, blog_id }) {
     })
     if (!num) return false
     return true
-}
-//  0313
-async function readComments(opts) {
-    let comments = await Comment.findAll(opts)
-    return Init.comment(comments)
 }
 
 async function createComment({

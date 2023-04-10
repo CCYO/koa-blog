@@ -3,10 +3,16 @@ const C_BlogImgAlt = require('./blogImgAlt')                        //  0408
 const C_ArticleReader = require('./articleReader')                  //  0406
 const { CACHE } = require('../conf/constant')                       //  0406
 const my_xxs = require('../utils/xss')                              //  0406
-const { MyErr, ErrRes, ErrModel, SuccModel } = require('../model')             //  0404
+const { MyErr, ErrRes, ErrModel, SuccModel } = require('../model')  //  0404
 const Init = require('../utils/init')                               //  0404
 const Opts = require('../utils/seq_findOpts')                       //  0404
 const Blog = require('../server/blog')                              //  0404
+//  0411
+async function findInfoForPageOfSquare() {
+    let blogs = await Blog.readList(Opts.BLOG.findInfoForPageOfSquare())
+    let data = Init.browser.blog.sortAndInitTimeFormat(blogs)
+    return new SuccModel({ data })
+}
 //  0411
 async function findInfoForPageOfAlbumList(userId, { pagination } ) {
     let blogs = await Blog.readList(Opts.BLOG.findInfoForPageOfAlbumList(userId))
@@ -253,19 +259,13 @@ module.exports = {
     find,
     //  0404
     findListForUserPage,
-    findSquareBlogList,      //  0303
+    //  0411
+    findInfoForPageOfSquare
 }
 
 
 
-// const { organizedList, sortAndInitTimeFormat } = require('../utils/init/blog')   //  0326
 
-//  0326
-async function findSquareBlogList(exclude_id) {
-    let blogs = await Blog.readBlogs(Opts.findPublicBlogListByExcludeId(exclude_id))
-    blogs = Init.browser.blog.sortAndInitTimeFormat(blogs)
-    return new SuccModel({ data: blogs })
-}
 
 
 

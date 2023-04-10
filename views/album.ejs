@@ -91,7 +91,7 @@
             let $btn = $(e.target)
             let $container = $btn.parents('[data-my-photo]')
             let alt = $btn.prev().val()
-            let blogImgAlt_id = $container.attr('data-my-photo') * 1
+            let alt_id = $container.attr('data-my-photo') * 1
             let payload = { alt_id, alt, blog_id: blog.id }
             // 發出請求
             let { data: { errno, data, msg } } = await axios.patch('/api/album', payload)
@@ -101,9 +101,8 @@
             }
             //  更新成功
             //  同步頁面數據
-            map_imgs.set(blogImgAlt_id, {
-                ...map_imgs.get(blogImgAlt_id), alt
-            })
+            let img = map_imgs.get(alt_id)
+            img.alt = alt
             //  同步畫面
             $container.children('img').attr('alt', alt)
             $container.find('.card-text').text(alt).toggle()
