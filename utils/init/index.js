@@ -1,3 +1,4 @@
+const { initListForBrowser } = require('./comment')                                             //  0411
 const { 
     //  0404
     pageTable,
@@ -145,28 +146,29 @@ function init(data, ...fns) {
 }
 
 const { init_newsOfFollowId, init_excepts } = require('./news')
-const { initCommentsForBrowser } = require('./comment')
+
 module.exports = {
     //  0409
     alt: initAlt,
     //  0404
     comment: initComment,
     browser: {
+        //  0411
+        comment: initListForBrowser,
         //  0404
         blog: {
             //  0404
             pageTable,
 
             sortAndInitTimeFormat
-        },
-        comment: initCommentsForBrowser,
+        }
     },
     //  0404
     user: initUser,
     //  0404
     blog: initBlog,
 
-    followComment: init,    //  0328
+    msgReceiver: init,    //  0328
     blogImgAlt: init,       //  0326
     blogImg: init,          //  0326
     img: init,              //  0326

@@ -13,6 +13,45 @@ module.exports = {
     //  0404
     COMMENT: {
         //  0411
+        find: (id) => ({
+            attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
+            where: { id },
+            include: {
+                association: 'commenter',
+                attributes: ['id', 'email', 'nickname']
+            }
+        }),
+        //  0411
+        findInfoForTheCommentParent: ({ article_id, pid }) => {
+            //  找尋指定 blogId
+            let where = { article_id }
+            //  根評論，找同樣是 pid = null 的根評論即可
+            if (!pid) {
+                where.pid = null
+                //  子評論，找id=pid的父評論 and pid=pid 的兄弟評論
+            } else {
+                where[Op.or] = [{ id: pid }, { pid }]
+            }
+            return {
+                attributes: ['id'],
+                where,
+                include: [
+                    {
+                        association: 'commenter',
+                        attributes: ['id']
+                    },
+                    {
+                        association: 'receivers',
+                        attribute: ['id'],
+                        through: {
+                            attributes: ['id', 'msg_id', 'receiver_id', 'confirm', 'deletedAt', 'createdAt'],
+                            //  連被刪除的都要找，此時 msgReceiver被刪除 僅有可能是因為 comment 被刪除
+                            paranoid: false
+                        }
+                    }]
+            }
+        },
+        //  0411
         findInfoForPageOfBlog: (article_id) => {
             return {
                 attributes: ['id', 'html', 'pid', 'createdAt', 'deletedAt'],
@@ -63,36 +102,25 @@ module.exports = {
             },
             paranoid: false
         }),
-        findBlogCommentsRelatedPid: ({ blog_id, p_id }) => {
-            //  找尋指定 blogId
-            let where = { blog_id }
-            //  根評論，找同樣是 pid = null 的根評論即可
-            if (!p_id) {
-                where.p_id = null
-                //  子評論，找id=pid的父評論 and pid=pid 的兄弟評論
-            } else {
-                where[Op.or] = [{ id: p_id }, { p_id }]
-            }
+    },
+    //  0411
+    MSG_RECEIVER: {
+        //  0411
+        bulkCreate: (datas) => {
+            let keys = [...Object.keys(datas)]
             return {
-                attributes: ['id'],
-                where,
-                include: {
-                    model: User,
-                    attributes: ['id']
-                }
+                updateOnDuplicate: [...keys]
             }
         },
-        //  0309
-        findCommentById: (comment_id) => {
-            return {
-                attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'p_id'],
-                where: { id: comment_id },
-                include: {
-                    model: User,
-                    attributes: ['id', 'email', 'nickname']
-                }
-            }
-        },
+        //  0411
+        find: (id) => ({
+            attributes: ['id', 'receiver_id', 'msg_id', 'confirm', 'deletedAt', 'createdAt'],
+            where: { id }
+        }),
+        findList: (list) => ({
+            attributes: ['id', 'follower_id', 'comment_id'],
+            where: { msg_id: { [Op.in]: list } }
+        }),
     },
     //  0404
     BLOG: {
@@ -347,23 +375,6 @@ module.exports = {
         restoreList: (id_list) => ({
             where: { id: { [Op.in]: id_list } }
         }),
-    },
-    FOLLOWCOMMENT: {
-        findItems: ({ comment_ids }, { exclude }) => {
-            let where = {
-                comment_id: { [Op.in]: comment_ids }
-            }
-            if (exclude) {
-                let kvPairs = Object.entries(exclude)
-                for (let [key, val] of kvPairs) {
-                    where[key] = { [Op.notIn]: val }
-                }
-            }
-            return {
-                attributes: ['id', 'follower_id', 'comment_id'],
-                where
-            }
-        }
     },
     ARTICLE_READER: {
         count: (blog_id) => ({

@@ -1,9 +1,26 @@
-const Init = require('../utils/init')   //  0404
+const { ErrRes, MyErr } = require('../model')   //  0411
+const xss = require('xss')                      //  0411
+const Init = require('../utils/init')           //  0404
 const {
     //  0404
     Comment,
     FollowComment
 } = require('../db/mysql/model')
+//  0411
+async function create({ commenter_id, article_id, html, pid }) {
+    try {
+        let data = {
+            html: xss(html),
+            article_id,
+            commenter_id,
+            pid: !pid ? null : pid 
+        }
+        let comment = await Comment.create(data)
+        return Init.comment(comment)
+    } catch (err) {
+        throw new MyErr({...ErrRes.MSG_RECEIVER.CREATE.ERR, err})
+    }
+}
 //  0411
 async function readList(opts) {
     let comments = await Comment.findAll(opts)
@@ -16,19 +33,19 @@ async function read(opts) {
 }
 module.exports = {
     //  0411
+    create,
+    //  0411
     readList,
     //  0404
-    read,
-    
+    read,    
     setRelatedComment,
     deleteComment,
-    createComment, 
 }
 
 const { COMMENT: { CREATE_ERR }} = require('../model/errRes')
 const { Op } = require('sequelize')
-const xss = require('xss')
-const { MyErr } = require('../model')
+
+
 
 async function deleteComment({ commentId, blog_id }) {
     let num = await Comment.destroy({
@@ -38,25 +55,7 @@ async function deleteComment({ commentId, blog_id }) {
     return true
 }
 
-async function createComment({
-    //  創建comment用
-    user_id, blog_id, html, p_id
-}) {
-    try {
-        let data = {
-            html: xss(html),
-            blog_id,
-            user_id,
-            p_id
-        }
 
-        //  建立 comment
-        let comment = await Comment.create(data)
-        return Init.comment(comment)
-    } catch (err) {
-        throw new MyErr({...CREATE_ERR, err})
-    }
-}
 
 async function setRelatedComment(comment, { author }) {
     let whereOps_comment = { blog_id: comment.blog_id, p_id: comment.p_id }

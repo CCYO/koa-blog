@@ -3,6 +3,23 @@
  */
 
 module.exports = {
+    //  0411
+    MSG_RECEIVER: {
+        //  0411
+        CREATE: {
+            //  0411
+            ROW: { errno: 40005, msg: '創建 MsgReceiver 的數量不完全' },
+            //  0411
+            NO_DATA: { errno: 50002, msg: '創建 MsgReceiver 卻沒提供參數' },
+            //  0411
+            ERR: { errno: 50001, msg: 'MsgReceiver 創建失敗' },
+        },
+        READ: {
+            //  0411
+            NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 MsgReceiver' },
+        },
+        UPDATE_ERR: { errno: 1401, msg: 'FollowComment更新失敗' }
+    },
     //  0406
     BLOG_IMG_ALT: {
         UPDATE: { errno: 902, msg: 'BLOG_IMG_ALT 更新失敗' },
@@ -197,9 +214,5 @@ module.exports = {
     PUB_SUB: {
         REMOVE_ERR: { errno: 1101, msg: 'PUB_SUB 刪除失敗' }
     },
-    FOLLOWCOMMENT: {
-        UPDATE_ERR: { errno: 1401, msg: 'FollowComment更新失敗' }
-    },
-
     SERVER_ERR: { errno: 9999, msg: '伺服器錯誤' }
 }

@@ -1,6 +1,8 @@
 /**
  * @description API commond相關
  */
+
+const Check = require('../../middleware/check_login')                       //  0411
 const {
     //  0411
     CACHE: {
@@ -12,12 +14,19 @@ const {
     }
 } = require('../../conf/constant')
 //  0411    ----------------------------------------------------------------未整理
-const Cache = require('../../middleware/cache') //  0228
+const Cache = require('../../middleware/cache')
 const router = require('koa-router')()                                      //  0411
 router.prefix('/api/comment')                                               //  0411
 //  0411
+//  創建comment
+router.post('/', Check.api_logining,
+    Cache.getCommentCache, //  ----------------------------------------------未整理 
+    async (ctx, next) => {
+        ctx.body = await Comment.add(ctx.request.body)
+    })
+//  0411???
 router.get('/:blog_id',
-    Cache.getCommentCache, //  未整理 
+    Cache.getCommentCache, //  ----------------------------------------------未整理 
     async (ctx, next) => {
         const blog_id = ctx.params.blog_id * 1
         let cacheStatus = ctx.cache[API.COMMENT]
@@ -48,19 +57,9 @@ router.get('/:blog_id',
     })
 module.exports = router
 
-
-
-const Check = require('../../middleware/check_login')         //  0228
-
 const Comment = require('../../controller/comment')                         //  0228
 const { htmlStr_comments } = require('../../utils/ejs-render')              //  0228
 const removeDeletedComment = require('../../utils/hiddenRemovedComments')   //  0228
-
-
-//  創建comment
-router.post('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
-    ctx.body = await Comment.addComment(ctx.request.body)
-})
 
 //  0318
 router.delete('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
