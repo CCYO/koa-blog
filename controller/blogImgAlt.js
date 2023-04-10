@@ -1,7 +1,13 @@
-const C_BlogImg = require('./blogImg')
 const Opts = require('../utils/seq_findOpts')                       //  0408
 const { ErrModel, SuccModel, ErrRes, MyErr } = require('../model')  //  0408
 const BlogImgAlt = require('../server/blogImgAlt')                  //  0406
+//  0411
+async function modify({alt_id, blog_id, alt}) {
+    await BlogImgAlt.update(alt_id, { alt })
+    let cache = { [PAGE.BLOG]: [ blog_id ] }
+    return new SuccModel({cache})
+}
+
 //  0406
 async function add(data) {
     if(!Object.entries(data).length){
@@ -39,6 +45,8 @@ async function count(blogImg_id){
     return new SuccModel({ data })
 }
 module.exports = {
+    //  0411
+    modify,
     //  0409
     findWholeInfo,
     //  0408
@@ -47,7 +55,6 @@ module.exports = {
     count,
     //  0406
     add,
-    modifyBlogImgAlt,   //  0328
     cancelWithBlog,     //  0326
     
 }
@@ -77,16 +84,6 @@ const { BLOG_IMG_ALT } = require('../utils/seq_findOpts')
 
 
 
-//  0328
-async function modifyBlogImgAlt({id, blog_id, alt}) {
-    let { opts , data } = Opts.BLOGIMGALT.modify({id, alt})
-    let ok = await BlogImgAlt.updateBlogImgAlts(data, opts)
-    if (!ok) {
-        return new ErrModel(BLOG_IMG_ALT.UPDATE_ERR)
-    }
-    let cache = { [PAGE.BLOG]: [ blog_id ] }
-    return new SuccModel({cache})
-}
 
 //  0326
 async function _removeBlogImgAlts(blogImgAlt_list){

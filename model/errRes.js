@@ -3,6 +3,31 @@
  */
 
 module.exports = {
+    //  0406
+    BLOG_IMG_ALT: {
+        UPDATE: { errno: 902, msg: 'BLOG_IMG_ALT 更新失敗' },
+        //  0408
+        READ: {
+            //  0410
+            NO_DATA: { errno: 50002, msg: '查詢 BLOG_IMG_ALT 卻沒提供參數' },
+            //  0408
+            NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 BlogImgAlt' },
+        },
+        //  0408
+        DELETE: {
+            ERR: { errno: 801, msg: '刪除 BlogImgAlt 失敗' },
+            //  0406
+            ROW: { errno: 40003, msg: '刪除 BlogImgAlt 的數量不完全' },
+        },
+        //  0406
+        CREATE: {
+            //  0406
+            NO_DATA: { errno: 50002, msg: '創建 BLOG_IMG_ALT 卻沒提供參數' },
+            //  0406
+            ERR: { errno: 50001, msg: 'BlogImgAlt創建失敗' },
+        },
+        REMOVE_ERR: { errno: 903, msg: 'BlogImgAlt刪除失敗' },    //  0326
+    },
     //  0404
     BLOG: {
         //  0411
@@ -71,31 +96,7 @@ module.exports = {
             ROW: { errno: 40004, msg: '恢復軟刪除 ArticleReader 的數量不完全' },
         },
     },
-    //  0406
-    BLOG_IMG_ALT: {
-        //  0408
-        READ: {
-            //  0410
-            NO_DATA: { errno: 50002, msg: '查詢 BLOG_IMG_ALT 卻沒提供參數' },
-            //  0408
-            NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 BlogImgAlt' },
-        },
-        //  0408
-        DELETE: {
-            ERR: { errno: 801, msg: '刪除 BlogImgAlt 失敗' },
-            //  0406
-            ROW: { errno: 40003, msg: '刪除 BlogImgAlt 的數量不完全' },
-        },
-        //  0406
-        CREATE: {
-            //  0406
-            NO_DATA: { errno: 50002, msg: '創建 BLOG_IMG_ALT 卻沒提供參數' },
-            //  0406
-            ERR: { errno: 50001, msg: 'BlogImgAlt創建失敗' },
-        },
-        REMOVE_ERR: { errno: 903, msg: 'BlogImgAlt刪除失敗' },    //  0326
-        UPDATE_ERR: { errno: 902, msg: '更新失敗' },
-    },
+    
     //  0406
     BLOG_IMG: {
         //  0406

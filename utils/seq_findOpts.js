@@ -31,12 +31,6 @@ module.exports = {
         count: (blogImg_id) => ({
             where: { blogImg_id }
         }),
-        modify: ({ id, alt }) => ({
-            data: { alt },
-            opts: {
-                where: { id }
-            }
-        }),
     },
     //  0404
     BLOG: {

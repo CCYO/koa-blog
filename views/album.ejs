@@ -92,7 +92,7 @@
             let $container = $btn.parents('[data-my-photo]')
             let alt = $btn.prev().val()
             let blogImgAlt_id = $container.attr('data-my-photo') * 1
-            let payload = { blogImgAlt_id, alt, blog_id: blog.id }
+            let payload = { alt_id, alt, blog_id: blog.id }
             // 發出請求
             let { data: { errno, data, msg } } = await axios.patch('/api/album', payload)
             if (errno) {    //  更新失敗

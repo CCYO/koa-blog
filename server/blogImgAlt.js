@@ -1,6 +1,14 @@
 const { ErrRes, MyErr } = require('../model')           //  0406
 const Init = require('../utils/init')                   //  0406
 const { BlogImgAlt } = require('../db/mysql/model')     //  0406
+//  0411
+async function update(id, data) {
+    let [row] = await BlogImgAlt.update(data, { where: { id } })
+    if (!row) {
+        throw new MyErr(ErrRes.BLOG_IMG_ALT.UPDATE)
+    }
+    return row
+}
 //  0409
 async function find(opts){
     let alt = await BlogImgAlt.findOne(opts)
@@ -30,6 +38,8 @@ async function create(data) {
     
 }
 module.exports = {
+    //  0411
+    update,
     //  0409
     find,
     //  0408
@@ -37,8 +47,7 @@ module.exports = {
     //  0408
     count, 
     //  0406
-    create,
-    updateBlogImgAlts,  //  0328
+    create
 }
 
 const { Op } = require('sequelize')
@@ -46,14 +55,7 @@ const { Op } = require('sequelize')
 
 
 
-async function updateBlogImgAlts(data, opts) {
-    console.log(data, opts)
-    let [row] = await BlogImgAlt.update(data, opts)
-    if (!row) {
-        return false
-    }
-    return true
-}
+
 
 async function courtOfSomeImgInBlog({ blog_id, blogImg_id }) {
     let { } = await BlogImgAlt.findAndCountAll({
