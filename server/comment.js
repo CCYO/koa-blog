@@ -6,6 +6,13 @@ const {
     Comment,
     FollowComment
 } = require('../db/mysql/model')
+async function remove({ comment_id, blog_id }) {
+    let num = await Comment.destroy({
+        where: { id: commentId, blog_id }
+    })
+    if (!num) return false
+    return true
+}
 //  0411
 async function create({ commenter_id, article_id, html, pid }) {
     try {
@@ -44,16 +51,6 @@ module.exports = {
 
 const { COMMENT: { CREATE_ERR }} = require('../model/errRes')
 const { Op } = require('sequelize')
-
-
-
-async function deleteComment({ commentId, blog_id }) {
-    let num = await Comment.destroy({
-        where: { id: commentId, blog_id }
-    })
-    if (!num) return false
-    return true
-}
 
 
 

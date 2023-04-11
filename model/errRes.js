@@ -4,6 +4,16 @@
 
 module.exports = {
     //  0411
+    COMMENT: {
+        READ: {
+            //  0411
+            NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 Comment' },
+        },
+        CREATE_ERR: { errno: 1103, msg: 'COMMENT 創建失敗' },
+        NOT_EXIST: { errno: 1102, msg: '評論不存在' },
+        REMOVE_ERR: { errno: 1101, msg: '文章刪除失敗' }
+    },
+    //  0411
     MSG_RECEIVER: {
         //  0411
         CREATE: {
@@ -205,11 +215,7 @@ module.exports = {
     FORMAT_ERR: { errno: 601 },
 
 
-    COMMENT: {
-        CREATE_ERR: { errno: 1103, msg: 'COMMENT 創建失敗' },
-        NOT_EXIST: { errno: 1102, msg: '評論不存在' },
-        REMOVE_ERR: { errno: 1101, msg: '文章刪除失敗' }
-    },
+    
 
     PUB_SUB: {
         REMOVE_ERR: { errno: 1101, msg: 'PUB_SUB 刪除失敗' }

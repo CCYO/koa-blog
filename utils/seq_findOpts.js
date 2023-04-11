@@ -1,3 +1,5 @@
+//  0411
+const { Op } = require('sequelize')
 const {
     //  0409
     Img,
@@ -12,6 +14,15 @@ const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
     //  0404
     COMMENT: {
+        //  0411
+        findLastItemOfNotSelf: (article_id, commenter_id) => ({
+            attributes: ['id', 'html', 'article_id', 'commenter_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
+            where: { 
+                article_id,
+                commenter_id: { [Op.not]: commenter_id }
+            },
+            order: [ ['createdAt', 'DESC']]
+        }),
         //  0411
         find: (id) => ({
             attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
@@ -44,9 +55,7 @@ module.exports = {
                         association: 'receivers',
                         attribute: ['id'],
                         through: {
-                            attributes: ['id', 'msg_id', 'receiver_id', 'confirm', 'deletedAt', 'createdAt'],
-                            //  連被刪除的都要找，此時 msgReceiver被刪除 僅有可能是因為 comment 被刪除
-                            paranoid: false
+                            attributes: ['id', 'msg_id', 'receiver_id', 'confirm', 'deletedAt', 'createdAt']
                         }
                     }]
             }
@@ -113,9 +122,9 @@ module.exports = {
             }
         },
         //  0411
-        find: (id) => ({
+        find: (whereOps) => ({
             attributes: ['id', 'receiver_id', 'msg_id', 'confirm', 'deletedAt', 'createdAt'],
-            where: { id }
+            where: { ...whereOps }
         }),
         findList: (list) => ({
             attributes: ['id', 'follower_id', 'comment_id'],
@@ -390,5 +399,4 @@ module.exports = {
     }
 }
 
-const { Op } = require('sequelize')
-const { fastFormats } = require('ajv-formats/dist/formats')
+

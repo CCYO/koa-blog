@@ -13,8 +13,8 @@ async function addList(datas) {
     return new SuccModel({ data: list })
 }
 //  0411
-async function find(id) {    
-    let data = await MsgReceiver.read(Opts.MSG_RECEIVER.find(id))
+async function find(whereOps) {
+    let data = await MsgReceiver.read(Opts.MSG_RECEIVER.find(whereOps))
     if(!data){
         return new ErrModel(ErrRes.MSG_RECEIVER.READ.NOT_EXIST)
     }

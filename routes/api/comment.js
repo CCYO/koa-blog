@@ -1,7 +1,11 @@
 /**
  * @description API commond相關
  */
-
+//  0411    ----------------------------------------------------------------未整理
+const { htmlStr_comments } = require('../../utils/ejs-render')
+//  0411    ----------------------------------------------------------------未整理
+const removeDeletedComment = require('../../utils/hiddenRemovedComments')
+const Comment = require('../../controller/comment')                         //  0411
 const Check = require('../../middleware/check_login')                       //  0411
 const {
     //  0411
@@ -17,6 +21,12 @@ const {
 const Cache = require('../../middleware/cache')
 const router = require('koa-router')()                                      //  0411
 router.prefix('/api/comment')                                               //  0411
+//  0411
+router.delete('/', Check.api_logining,
+    Cache.modifiedtCache,   //  ----------------------------------------------未整理 
+    async (ctx, next) => {
+        ctx.body = await Comment.remove(ctx.request.body)
+    })
 //  0411
 //  創建comment
 router.post('/', Check.api_logining,
@@ -38,6 +48,7 @@ router.get('/:blog_id',
             //  向 DB 提取數據
             const commentsResModel = await Comment.findInfoForPageOfBlog(blog_id)
             //  刪除已軟刪除的comments，且將數據轉換為pid->id的嵌套格式
+            //  0411    ----------------------------------------------------------------未整理
             commentsResModel.data = removeDeletedComment(commentsResModel.data)
             //  將 數據賦予給 ctx.cache
             resModel = cacheStatus.data = commentsResModel
@@ -49,6 +60,7 @@ router.get('/:blog_id',
         //  複製 resModel
         let { errno, data: comments } = resModel
         //  生成 htmlString 的 comments 數據
+        //  0411    ----------------------------------------------------------------未整理
         let commentsHtmlStr = await htmlStr_comments(comments)
         ctx.body = {
             errno,
@@ -56,13 +68,3 @@ router.get('/:blog_id',
         }
     })
 module.exports = router
-
-const Comment = require('../../controller/comment')                         //  0228
-const { htmlStr_comments } = require('../../utils/ejs-render')              //  0228
-const removeDeletedComment = require('../../utils/hiddenRemovedComments')   //  0228
-
-//  0318
-router.delete('/', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
-    let { author_id, commenter_id, commentId, blog_id, p_id } = ctx.request.body
-    ctx.body = await Comment.removeComment({ author_id, commenter_id, commentId, blog_id, p_id })
-})
