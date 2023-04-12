@@ -187,7 +187,7 @@ async function _findItemForPageOfBlog(comment_id) {
     return new SuccModel({ data })
 }
 //  0411
-async function _findInfoForTheCommentParent({ article_id, pid, commenter_id, author_id }) {
+async function _findInfoAboutItem({ id, article_id, commenter_id, pid }, author_id) {
     //  [ comment { id,
     //      receivers: [ { id, 
     //        MsgReceiver: { id, msg_id, receiver_id, confirm, deletedAt, createdAt }
@@ -203,19 +203,28 @@ async function _findInfoForTheCommentParent({ article_id, pid, commenter_id, aut
         return null
     }).filter(id => id)
     commenters = [...new Set(commenters)]
+    let msgReceiverOfAuthor = null
     //  從 comments 取得用來修改/創建的 MsgReceivers(不須包含commenter與author，因為留言者不需要接收自己留言的通知，而author後面統一處理)
     let msgReceivers = comments.map(({ receivers }) => receivers) //  取出每一份comment的msgReceivers
         .flat() //  扁平化
         //  過濾掉 author 與 commenter
-        .filter(({ receiver_id }) => receiver_id !== commenter_id && receiver_id !== author_id)
-    let receivers = comments.map(({ receivers }) => receivers.map(({ id }) => id)).flat()
+        .filter((msgReceiver) => {
+            let { receiver_id } = msgReceiver
+            if(receiver_id !== author_id){
+                msgReceiverOfAuthor = msgReceiver
+                return false
+            }
+            return receiver_id !== commenter_id
+        })
+    let receivers = msgReceivers.map(({ receiver_id }) => receiver_id)
     receivers = [...new Set(receivers)]
-    let newReceivers = commenters.filter(commenter => !receivers.include(commenter.id))
+    let listOfNotReceiver = commenters.filter(commenter => !receivers.include(commenter.id))
     let data = {
         comments,
         commenters,
         msgReceivers,
-        newReceivers
+        receivers,
+        listOfNotReceiver
     }
     return new SuccModel({ data })
 }

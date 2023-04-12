@@ -33,7 +33,7 @@ module.exports = {
             }
         }),
         //  0411
-        findInfoForTheCommentParent: ({ article_id, pid }) => {
+        _findInfoAboutItem: ({ article_id, pid }) => {
             //  找尋指定 blogId
             let where = { article_id }
             //  根評論，找同樣是 pid = null 的根評論即可

@@ -1,4 +1,5 @@
-const { ALBUM } = require('../conf/constant')
+const { SuccModel } = require('../model')
+const Blog = require('./blog')
 //  0411
 async function findList(author_id, options) {
     // data: { author, albums } 
@@ -9,8 +10,3 @@ async function findList(author_id, options) {
 module.exports = {
     findList
 }
-
-const { SuccModel } = require('../model')
-const Blog = require('./blog')
-const User = require('./user')
-
