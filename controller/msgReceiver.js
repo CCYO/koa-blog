@@ -4,6 +4,14 @@ const { MyErr, SuccModel, ErrRes, ErrModel } = require('../model')
 const Opts = require('../utils/seq_findOpts')
 //  0411
 const MsgReceiver = require('../server/msgReceiver');
+//  0414
+async function findList(msg_id){
+    let list = await MsgReceiver.readList(Opts.MSG_RECEIVER.findList(msg_id))
+    if(!list){
+        return new ErrModel(ErrRes.MSG_RECEIVER.READ.NOT_EXIST)
+    }
+    return SuccModel({ data: list })
+}
 //  0411
 async function addList(datas) {
     if(datas.length){
@@ -21,6 +29,8 @@ async function find(whereOps) {
     return new SuccModel(data)
 }
 module.exports = {
+    //  0414
+    findList,
     //  0411
     addList,
     //  0411

@@ -5,6 +5,7 @@ const {
     User,
     Blog,
     Comment,
+    MsgReceiver,
     News
 } = require('./db/mysql/model')
 const C_U = require('./controller/user')
@@ -15,7 +16,17 @@ go()
 
 async function go() {
     try {
-        let resModel = await C_B.findReadersAndFansListAndFans({author_id: 1, blog_id: 1})
+        let resModel = await MsgReceiver.findAll({
+            include: {
+                model: Comment,
+                required: true,
+                include: {
+                    association: 'article',
+                    where: { id: 1}
+                }
+            }
+            
+        })
         console.log('@resModel => ', resModel)
     } catch (e) {
         console.log(e)

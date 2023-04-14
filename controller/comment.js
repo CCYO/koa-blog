@@ -13,9 +13,20 @@ const Comment = require('../server/comment')        //  0404
 //  0411
 async function remove({ author_id, commenter_id, comment_id, article_id, pid }) {
     //  刪除comment
-    let removedComment
+    let removedComment = await Comment.deleteList(Opts.FOLLOW.removeList([comment_id]))
+    //  找出符合 msg_id = comment_id 的 msgReceiver
+    let resModel = await C_MsgReceiver.findList(comment_id)
+
+
+
     //  整理出要通知的 commenters
-    let { data: { comments, commenters, msgReceivers } } = await _findInfoForTheCommentParent({ article_id, pid, commenter_id, author_id })
+    let { data: { comments, commenters, msgReceivers } } = await _findInfoAboutItem({ article_id, pid, commenter_id, author_id })
+    let isAuthor = commenter_id === author_id
+    if (isAuthor) {
+        //  肯定不會有
+    }
+
+
     msgReceivers
     //  尋找 article 最新的 comment（commenter !== author）
     let resModel = await _findLastItemOfNotSelf(article_id, author_id)
@@ -57,10 +68,10 @@ async function remove({ author_id, commenter_id, comment_id, article_id, pid }) 
             }
         }
     }
-    let cache = {
-        [CACHE.TYPE.API.COMMENT]: [article_id],
-        [CACHE.TYPE.NEWS]: commenters
-    }
+    // let cache = {
+    //     [CACHE.TYPE.API.COMMENT]: [article_id],
+    //     [CACHE.TYPE.NEWS]: commenters
+    // }
 
     //  若相同，不須多做動作
     //  若不相同，找出author在此article的 MsgReceiver_id
@@ -209,7 +220,25 @@ async function _findInfoAboutItem({ article_id, commenter_id, pid, author_id }) 
     //      }, ...],
     //      commenter: { id }
     //    }, ... ]
-    let comments = await Comment.readList(Opts.COMMENT._findInfoAboutItem({ article_id, pid }))
+    
+    async function findInfoForRemovedComment(comment_id) {
+        let comments = await Comment.readList({
+            attributes: [''],
+            where: {
+                id: comment_id
+            },
+            include: {
+                attributes: ['id'],
+                association: 'receivers',
+                through: {
+                    attributes: ['id']
+                }
+            }
+        })
+        /**
+         * com{ }
+         */
+    }
     //  從 comments 取得用來處理CACHE[NEWS]的commenters(不須包含commenter與author，因為留言者不需要接收自己留言的通知，而author後面統一處理)
     let commenters = comments.map(({ commenter: { id } }) => {
         if (id !== commenter_id && id !== author_id) {
@@ -275,7 +304,7 @@ async function findInfoForNews(commentId) {
 
 module.exports = {
     //  0411
-    remove,
+    // remove,
     //  0411
     add,
     //  0411

@@ -114,6 +114,10 @@ module.exports = {
     },
     //  0411
     MSG_RECEIVER: {
+        //  0414
+        findList: (msg_id) => ({
+            where: { msg_id }
+        }),
         //  0411
         bulkCreate: (datas) => {
             let keys = [...Object.keys(datas)]
@@ -125,11 +129,7 @@ module.exports = {
         find: (whereOps) => ({
             attributes: ['id', 'receiver_id', 'msg_id', 'confirm', 'deletedAt', 'createdAt'],
             where: { ...whereOps }
-        }),
-        findList: (list) => ({
-            attributes: ['id', 'follower_id', 'comment_id'],
-            where: { msg_id: { [Op.in]: list } }
-        }),
+        })
     },
     //  0404
     BLOG: {

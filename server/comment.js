@@ -6,12 +6,14 @@ const {
     Comment,
     FollowComment
 } = require('../db/mysql/model')
-async function remove({ comment_id, blog_id }) {
-    let num = await Comment.destroy({
-        where: { id: commentId, blog_id }
-    })
-    if (!num) return false
-    return true
+//  0414
+async function deleteList(opts) {
+    try {
+        //  RV row
+        return await Comment.destroy(opts)
+    } catch (err) {
+        throw new MyErr({ ...ErrRes.COMMENT.DELETE.ERR, err })
+    }
 }
 //  0411
 async function create({ commenter_id, article_id, html, pid }) {
@@ -39,6 +41,8 @@ async function read(opts) {
     return Init.comment(comment)
 }
 module.exports = {
+    //  0414
+    deleteList,
     //  0411
     create,
     //  0411
@@ -46,7 +50,6 @@ module.exports = {
     //  0404
     read,    
     setRelatedComment,
-    deleteComment,
 }
 
 const { COMMENT: { CREATE_ERR }} = require('../model/errRes')

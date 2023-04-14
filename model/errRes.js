@@ -5,6 +5,12 @@
 module.exports = {
     //  0411
     COMMENT: {
+        //  0414
+        DELETE: {
+            //  0414
+            ERR: { errno: 801, msg: '刪除 COMMENT 失敗' },
+            ROW: { errno: 40003, msg: '刪除 BLOG 的數量不完全' },
+        },
         READ: {
             //  0411
             NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 Comment' },

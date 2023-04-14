@@ -1,7 +1,13 @@
+const Init = require('../utils/init')
 //  0411
 const { ErrRes, MyErr } = require('../model')
 //  0411
 const { MsgReceiver } = require('../db/mysql/model')
+//  0414
+async function readList(opts){
+    let list = MsgReceiver.findAll(opts)
+    return Init.msgReceiver(list)
+}
 //  0411
 async function bulkCreate(datas, opts) {
     try {
@@ -20,6 +26,8 @@ async function read(opts) {
     return list.map(item => item.toJSON() )
 }
 module.exports = {
+    //  0414
+    readList,
     //  0411
     bulkCreate,
     //  0411
