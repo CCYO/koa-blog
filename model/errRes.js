@@ -4,6 +4,38 @@
 
 module.exports = {
     //  0411
+    MSG_RECEIVER: {
+        //  0414
+        UPDATE: {
+            //  0414
+            ERR: { errno: 801, msg: '更新 MsgReceiver 失敗' },
+            //  0414
+            ROW: { errno: 1401, msg: 'bulkCreate MsgReceiver 的數量不完全' }
+        },
+        //  0414
+        DELETE: {
+            //  0414
+            ROW: { errno: 40003, msg: '刪除 MsgReceiver 的數量不完全' },
+            //  0414
+            ERR: { errno: 801, msg: '刪除 MsgReceiver 失敗' },
+        },
+        //  0411
+        CREATE: {
+            //  0411
+            ROW: { errno: 40005, msg: '創建 MsgReceiver 的數量不完全' },
+            //  0411
+            NO_DATA: { errno: 50002, msg: '創建 MsgReceiver 卻沒提供參數' },
+            //  0411
+            ERR: { errno: 50001, msg: 'MsgReceiver 創建失敗' },
+        },
+        READ: {
+            //  0414
+            SHOULD_NOT_EXIST: {errno: 50003, msg: '出現不該存在的 MsgReceiver'},
+            //  0411
+            NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 MsgReceiver' },
+        }
+    },
+    //  0411
     COMMENT: {
         //  0414
         DELETE: {
@@ -18,23 +50,6 @@ module.exports = {
         CREATE_ERR: { errno: 1103, msg: 'COMMENT 創建失敗' },
         NOT_EXIST: { errno: 1102, msg: '評論不存在' },
         REMOVE_ERR: { errno: 1101, msg: '文章刪除失敗' }
-    },
-    //  0411
-    MSG_RECEIVER: {
-        //  0411
-        CREATE: {
-            //  0411
-            ROW: { errno: 40005, msg: '創建 MsgReceiver 的數量不完全' },
-            //  0411
-            NO_DATA: { errno: 50002, msg: '創建 MsgReceiver 卻沒提供參數' },
-            //  0411
-            ERR: { errno: 50001, msg: 'MsgReceiver 創建失敗' },
-        },
-        READ: {
-            //  0411
-            NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 MsgReceiver' },
-        },
-        UPDATE_ERR: { errno: 1401, msg: 'FollowComment更新失敗' }
     },
     //  0406
     BLOG_IMG_ALT: {

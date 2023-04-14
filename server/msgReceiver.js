@@ -4,7 +4,29 @@ const { ErrRes, MyErr } = require('../model')
 //  0411
 const { MsgReceiver } = require('../db/mysql/model')
 //  0414
-async function readList(opts){
+async function updateList(datas) {
+    try {
+        let updateOnDuplicate = Object.keys(datas[0])
+        let list = await MsgReceiver.bulkCreate(datas, { updateOnDuplicate })
+        return Init.msgReceiver(list)
+    }catch(err){
+        throw new MyErr({ ...ErrRes.MSG_RECEIVER.UPDATE.ERR})
+    }
+}
+//  0414
+async function deleteList(opts) {
+    try {
+        let row = await MsgReceiver.destroy(opts)
+        if (!row) {
+            throw new MyErr(ErrRes.MSG_RECEIVER.DELETE.ROW)
+        }
+        return row
+    } catch (err) {
+        throw new MyErr({ ...ErrRes.MSG_RECEIVER.DELETE.ERR, err })
+    }
+}
+//  0414
+async function readList(opts) {
     let list = MsgReceiver.findAll(opts)
     return Init.msgReceiver(list)
 }
@@ -12,44 +34,28 @@ async function readList(opts){
 async function bulkCreate(datas, opts) {
     try {
         let list = await MsgReceiver.bulkCreate(datas, opts)
-        if(list.length !== datas.length){
+        if (list.length !== datas.length) {
             throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.ROW)
         }
         return Init.msgReceiver(list)
-    }catch(err){
-        throw new MyErr({...ErrRes.MSG_RECEIVER.CREATE.ERR, err})
+    } catch (err) {
+        throw new MyErr({ ...ErrRes.MSG_RECEIVER.CREATE.ERR, err })
     }
 }
 //  0411
 async function read(opts) {
     let list = await MsgReceiver.findOne(opts)
-    return list.map(item => item.toJSON() )
+    return list.map(item => item.toJSON())
 }
 module.exports = {
+    //  0414
+    updateList,
+    //  0414
+    deleteList,
     //  0414
     readList,
     //  0411
     bulkCreate,
     //  0411
     read,
-    updateFollowComments,
 }
-
-
-const Init = require('../utils/init')
-
-
-async function updateFollowComments(datas) {
-    let keys = Object.keys(datas)
-    let followComments = await MsgReceiver.bulkCreate(datas, { updateOnDuplicate: [...keys, 'updatedAt'] })
-    let json = followComments.map(item => item.toJSON())
-    if(json.length !== datas.length){
-        return false
-    }else{
-        return json
-    }
-
-}
-
-
-

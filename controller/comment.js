@@ -1,131 +1,141 @@
 const { CACHE } = require('../conf/constant')       //  0411
 const C_MsgReceiver = require('./msgReceiver')      //  0411
 const Init = require('../utils/init')               //  0404
-const { COMMENT: {
-    //  0404
-    NOT_EXIST,
-    REMOVE_ERR
-} } = require('../model/errRes')
 const { SuccModel, ErrModel, MyErr, ErrRes } = require('../model') //  0404
 const Opts = require('../utils/seq_findOpts')       //  0404
 const Comment = require('../server/comment')        //  0404
 
+const { Op } = require('sequelize')
+
 //  0411
 async function remove({ author_id, commenter_id, comment_id, article_id, pid }) {
+    let removedComment = await Comment.read(Opts.COMMENT.find(comment_id))
     //  刪除comment
-    let removedComment = await Comment.deleteList(Opts.FOLLOW.removeList([comment_id]))
+    await Comment.deleteList(Opts.FOLLOW.removeList([comment_id]))
+    let updatedAt = new Date()
     //  找出符合 msg_id = comment_id 的 msgReceiver
-    let resModel = await C_MsgReceiver.findList(comment_id)
-
-
-
-    //  整理出要通知的 commenters
-    let { data: { comments, commenters, msgReceivers } } = await _findInfoAboutItem({ article_id, pid, commenter_id, author_id })
-    let isAuthor = commenter_id === author_id
-    if (isAuthor) {
-        //  肯定不會有
-    }
-
-
-    msgReceivers
-    //  尋找 article 最新的 comment（commenter !== author）
-    let resModel = await _findLastItemOfNotSelf(article_id, author_id)
-    if (!resModel.errno) {
-        let lastComment = resModel.data
-        //  處理 author
-        let isAuthor = commenter_id === author_id
-        if (!isAuthor) {
-            //  commenters 加入 author
-            commenters.push(author_id)
-            //  此篇文章作為 author 的 msgReceiver
-            let { errno, data: msgReceiverOfAuthor } = await C_MsgReceiver.find({ receiver_id: author_id })
-            //  若存在
-            if (errno) {
-                //  判斷 removedComment 是否同 msgReceiverOfAuthor.msg_id
-                let some = msgReceiverOfAuthor.msg_id === comment_id
-                //  若相等，則 msgReceiverOfAuthor 的 msg_id 必須改為 lastComment
-                if (some) {
-                    let { msg_id, createdAt, updatedAt } = lastComment
-                    if (msgReceiverOfAuthor.confirm) {
-                        //  msgReceiverOfAuthor { id, msg_id, receiver_id, confirm, createdAt, updatedAt, deletedAt}
-                        //  msgReceiverOfAuthor 已 confirm，故僅需改 msg_id + createdAt
-                        msgReceivers.push({ ...msgReceiverOfAuthor, msg_id, createdAt })
-                    } else {
-                        //  確認 msgReceiverOfAuthor 是否僅 removedComment 未確認
-                        let isOnlyRemovedCommentUnConfirm = !(msgReceiverOfAuthor.createdAt - msgReceiverOfAuthor.updatedAt)
-                        if (isOnlyRemovedCommentUnConfirm) {
-                            //  僅 removedComment 未確認，故需改 msg_id + createdAt + updatedAt
-                            msgReceivers.push({ ...msgReceiverOfAuthor, msg_id, createdAt, updatedAt })
-                        } else {
-                            //  不只 removedComment 未確認，故需改 msg_id
-                            msgReceivers.push({ ...msgReceiverOfAuthor, msg_id })
-                        }
-                    }
-                }
-            } else {
-                //  不可能不存在，因為 removedComment.commenter_id不是 author，故當時 removeComment 創建時，也會給 author 建立一份 msgReceiver
-                throw new MyErr(ErrRes.MSG_RECEIVER.READ.NOT_EXIST)
-            }
-        }
-    }
-    // let cache = {
-    //     [CACHE.TYPE.API.COMMENT]: [article_id],
-    //     [CACHE.TYPE.NEWS]: commenters
-    // }
-
-    //  若相同，不須多做動作
-    //  若不相同，找出author在此article的 MsgReceiver_id
-    if (!isAuthor) {
-
-        //  此篇文章內屬於 author 的 msgReceiver
-
-        if (!errno) {
-            let { msg_id, createdAt, updatedAt, confirm } = msgReceiver
-
-            if (!resModel.errno) {
-                let lastComment = resModel.data
-                //  確認 removedComment.id === msgReceocer.msg_id
-                if (removedComment.id === msg_id) {
-                    //   removedComment 之前的 msgReceiver 都已確認
-                    let onlyRemovedCommentUnconfirm = createdAt === updatedAt
-                    if (onlyRemovedCommentUnconfirm) {
-                        msgReceivers.push({})
-                    }
-                }
-
-            }
-        }
-        //  查詢 最新一次的 commit（lastCommit）
-
-        //  確認 msgReceiver.confirm
-        //  confirm，代表最近一次的確認過
-        //  unconfirm，代表最近一次的未確認
-        //  確認 msgReceiver.createdAt >= lastCommit.createdAt
-        //  true，表示 author 上一次更新
-        if (!errno) {
-            data = { receiver_id: author_id, msg_id: comment.id, confirm: false, createdAt: comment.created }
-        }
-        msgReceivers.push(data)
-    }
-
+    let { errno, data: msgReceivers } = await C_MsgReceiver.findList(comment_id)
+    let updateList = []
+    let deleteList = []
+    //  存在 removedComment 的 msgReceiver
+    //  先做過濾
+    //  updateList 、 deleteList 存放過濾後的數據
+    //  存放符合這筆被刪除評論，且 receiver 為作者的通知數據
+    let msgReceiverOfAuthor
+    //  存放符合這筆被刪除評論，且 receiver 不是除作者的其他使用者的通知
+    let msgReceiverOfOthers
+    //  存放緩存更新數據
     let cache = {
-        [API.COMMENT]: [blog_id],
-        [NEWS]: commenterIds
+        [CACHE.TYPE.API.COMMENT]: [article_id],
+        [CACHE.TYPE.NEWS]: []
     }
-    let ok = await Comment.deleteComment({ commentId, blog_id })
-    if (!ok) {
-        return new ErrModel(REMOVE_ERR)
+    //  有符合這筆被刪除評論的通知數據，依據 receiver_id 分類，同時撈取更新緩存所需的數據
+    if (!errno) {
+        //  除了作者以外，其他使用者的通知
+        msgReceiverOfOthers = msgReceivers.filter((msgReceiver) => {
+            //  處理緩存
+            cache[CACHE.TYPE.NEWS].push(msgReceiver.receiver_id)
+            let { receiver_id } = msgReceiver
+            if (receiver_id === author_id) {
+                msgReceiverOfAuthor = msgReceiver
+                return false
+            } else {
+                return true
+            }
+        })
+    }
+    let isAuthor = commenter_id === author_id
+    //  從作者的通知開始分析
+    //  依據作者的通知是否存在 + 此次刪除的是否為作者自己留下的評論，分析如何更新 MsgReceiver數據
+    //  若作者的通知存在，且被刪除的評論屬於作者留下的
+    if(msgReceiverOfAuthor && isAuthor){
+        //  報錯，因為作者不可能收到自己評論的通知
+        throw new MyErr(ErrRes.MSG_RECEIVER.READ.SHOULD_NOT_EXIST)
+    }else if(msgReceiverOfAuthor && !isAuthor){
+        //  找出除了被刪除的評論外，文章中最近一次應該給作者提出通知的評論
+        let {errno, data: comment } = await _findLastItemOfNotSelf(article_id, author_id, removedComment.createdAt)
+        //  假使不存在這樣的評論，代表目前整篇文章都沒有評論 || 評論都屬於作者自己的
+        if(errno){
+            //  將目前這篇文章中屬於作者的通知，硬刪除
+            deleteList.push(msgReceiverOfAuthor.id)
+        }else{
+            //  假使存在，依屬於作者通知的comfirm值來判斷要如何更新數據
+            if(msgReceiverOfAuthor.confirm){
+                //  若 confirm，需要修改 msg_id + createdAt
+                updateList.push({...msgReceiverOfAuthor, msg_id: comment.id, createdAt: comment.createdAt })
+            }else{
+                //  若 unconfirm，依據屬於作者通知的 createdAt - updatedAt 來判斷如何更新數據
+                if( (msgReceiverOfAuthor.created - msgReceiverOfAuthor.updatedAt) === 0){
+                    //  代表僅這筆被刪除的評論通知未確認
+                    //  更新 msg_id + createdAt + confirm
+                    updateList.push({...msgReceiverOfAuthor, msg_id: comment.id, createdAt: comment.createdAt, confirm: true })
+                }else{
+                    //  代表除了這筆被刪除的評論通知未確認，至少連最新的這筆回應也未確認
+                    //  更新 msg_id + updatedAt
+                    updateList.push({...msgReceiverOfAuthor, msg_id: comment.id, updatedAt: comment.updatedAt})
+                }
+            }
+        }
+    }   //  其他狀況則是作者的通知不存在，那更本沒東西可更新，則作者的部分不再處理
+
+    //  作者通知的數據更新已完成，接下來處理，其他使用者的通知數據
+    //  若存在 除了作者以外，其他使用者的通知
+    if(msgReceiverOfOthers.length){
+        let _removedComment = removedComment
+        //  尋找屬於個別使用者，在此文章中，同一pid + 不屬於自己留言 的最新留言
+        for(let msgReceiver of msgReceiverOfOthers){
+            let { errno, data: comment } = await _findItemOfSomePidAndNotSelf(article_id, author_id, _removedComment.createdAt, pid)
+            if(!errno){
+                //  不存在上一個要通知使用者的回覆，那就無法更改，則將 msgReceiver 硬刪除
+                deleteList.push(msgReceiver.id)
+            }else{
+                //  假使存在，依屬於通知的comfirm值來判斷要如何更新數據
+                if(msgReceiver.confirm){
+                    //  若 confirm，需要修改 msg_id + createdAt
+                    updateList.push({...msgReceiver, msg_id: comment.id, createdAt: comment.createdAt })
+                }else{
+                    //  若 unconfirm，依據通知的 createdAt - updatedAt 來判斷如何更新數據
+                    if( (msgReceiver.created - msgReceiver.updatedAt) === 0){
+                        //  代表僅這筆被刪除的評論通知未確認
+                        //  更新 msg_id + createdAt + confirm
+                        updateList.push({...msgReceiver, msg_id: comment.id, createdAt: comment.createdAt, confirm: true })
+                    }else{
+                        //  代表除了這筆被刪除的評論通知未確認，至少連最新的這筆回應也未確認
+                        //  更新 msg_id + updatedAt
+                        updateList.push({...msgReceiver, msg_id: comment.id, updatedAt: comment.updatedAt})
+                    }
+                }
+            }
+        }
+    }//  其他狀況則是其他使用者的通知不存在，那更本沒東西可更新，則其他使用者的部分不再處理
+        
+    //  更新數據
+    if(updateList.length){
+        await C_MsgReceiver.modifyList(updateList)
+    }
+    //  硬刪除
+    if(deleteList.length){
+        await C_MsgReceiver.forceRemoveList(deleteList)
     }
     return new SuccModel({ cache })
 }
-async function _findLastItemOfNotSelf(article_id, commenter_id) {
-    let comment = await Comment.read(Opts.COMMENT.findLastItemOfNotSelf(article_id, commenter_id))
+//  0414
+async function _findItemOfSomePidAndNotSelf(article_id, commenter_id, time, pid){
+    let comment = await Comment.read(Opts.COMMENT.findItemOfSomePidAndNotSelf(article_id, commenter_id, time, pid))
     if (!comment) {
         return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST)
     }
     return new SuccModel({ data: comment })
-
 }
+//  0414
+async function _findLastItemOfNotSelf(article_id, commenter_id, time) {
+    let comment = await Comment.read(Opts.COMMENT.findLastItemOfNotSelf(article_id, commenter_id, time))
+    if (!comment) {
+        return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST)
+    }
+    return new SuccModel({ data: comment })
+}
+
 //  0411
 async function add({ commenter_id, article_id, html, pid, author_id }) {
     //  創建 comment
@@ -207,7 +217,7 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
 async function _findItemForPageOfBlog(comment_id) {
     let comment = await Comment.read(Opts.COMMENT.find(comment_id))
     if (!comment) {
-        return ErrModel(NOT_EXIST)
+        return ErrModel(ErrRes.COMMENT.READ.NOT_EXIST)
     }
     let data = Init.browser.comment(comment)
     return new SuccModel({ data })
@@ -220,25 +230,6 @@ async function _findInfoAboutItem({ article_id, commenter_id, pid, author_id }) 
     //      }, ...],
     //      commenter: { id }
     //    }, ... ]
-    
-    async function findInfoForRemovedComment(comment_id) {
-        let comments = await Comment.readList({
-            attributes: [''],
-            where: {
-                id: comment_id
-            },
-            include: {
-                attributes: ['id'],
-                association: 'receivers',
-                through: {
-                    attributes: ['id']
-                }
-            }
-        })
-        /**
-         * com{ }
-         */
-    }
     //  從 comments 取得用來處理CACHE[NEWS]的commenters(不須包含commenter與author，因為留言者不需要接收自己留言的通知，而author後面統一處理)
     let commenters = comments.map(({ commenter: { id } }) => {
         if (id !== commenter_id && id !== author_id) {
@@ -286,25 +277,10 @@ async function findInfoForPageOfBlog(article_id) {
     let data = Init.browser.comment(comments)
     return new SuccModel({ data })
 }
-//  0404
-async function findRelativeUnconfirmList({ pid, article_id, createdAt }) {
-    let comments = await Comment.readList(Opts.COMMENT.findRelativeUnconfirmList({ pid, article_id, createdAt }))
-    let data = Init.comment(comments)
-    return new SuccModel({ data })
-}
-//  0404
-async function findInfoForNews(commentId) {
-    let comment = await Comment.read(Opts.COMMENT.find(commentId))
-    if (!comment) {
-        return new ErrModel(NOT_EXIST)
-    }
-    let data = Init.browser.comment(comment)
-    return new SuccModel({ data })
-}
 
 module.exports = {
     //  0411
-    // remove,
+    remove,
     //  0411
     add,
     //  0411
@@ -316,7 +292,21 @@ module.exports = {
     findBlogsOfCommented,  //  0303
 }
 
-
+//  0404    --------
+async function findRelativeUnconfirmList({ pid, article_id, createdAt }) {
+    let comments = await Comment.readList(Opts.COMMENT.findRelativeUnconfirmList({ pid, article_id, createdAt }))
+    let data = Init.comment(comments)
+    return new SuccModel({ data })
+}
+//  0404    ----------
+async function findInfoForNews(commentId) {
+    let comment = await Comment.read(Opts.COMMENT.find(commentId))
+    if (!comment) {
+        return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST)
+    }
+    let data = Init.browser.comment(comment)
+    return new SuccModel({ data })
+}
 
 
 

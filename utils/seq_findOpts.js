@@ -14,12 +14,24 @@ const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
     //  0404
     COMMENT: {
-        //  0411
-        findLastItemOfNotSelf: (article_id, commenter_id) => ({
+        //  0414
+        findItemOfSomePidAndNotSelf: (article_id, commenter_id, pid) => ({
             attributes: ['id', 'html', 'article_id', 'commenter_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
             where: { 
                 article_id,
-                commenter_id: { [Op.not]: commenter_id }
+                commenter_id: { [Op.not]: commenter_id },
+                pid: pid ? pid : null,
+                createdAt: { [Op.lte]: time}
+            },
+            order: [ ['createdAt', 'DESC']]
+        }),
+        //  0411
+        findLastItemOfNotSelf: (article_id, commenter_id, time) => ({
+            attributes: ['id', 'html', 'article_id', 'commenter_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
+            where: { 
+                article_id,
+                commenter_id: { [Op.not]: commenter_id },
+                createdAt: { [Op.lte]: time}
             },
             order: [ ['createdAt', 'DESC']]
         }),
@@ -376,6 +388,11 @@ module.exports = {
     },
     //  0406
     FOLLOW: {
+        //  0414
+        forceRemove: (id_list) => ({
+            where: {id: { [Op.in]: id_list } },
+            force: true
+        }),
         //  0406
         removeList: (id_list) => ({
             where: { id: { [Op.in]: id_list } }
