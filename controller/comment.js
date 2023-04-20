@@ -144,13 +144,15 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
     let newComment = await Comment.create({ commenter_id, article_id, html, pid })
 
     //  找出相關的 comments
-    let { data } = await _findInfoAboutItem({ ...newComment, author_id })
-    let { msgReceiver: { author, commenter, other }, isFansButNotReceiver, commenters } = data
+    let { data } = await _findInfoForAdd({ ...newComment, author_id })
+    let { msgReceiver: { author, curCommenter, others }, commenters:{ notReceiver, other } } = data
 
     //  存放要更新的數據
     let newDatas = []
     //  存放待整理為 newDatas Item
     let container = []
+    //  必定會更新到的數據屬性
+    let defProp = { msg_id: newComment.id, updatedAt: newComment.createdAt }
     //  確認 commenter === author
     let isAuthor = commenter_id === author_id
     //  若是留言者是文章作者
@@ -158,7 +160,7 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
         //  若不存在符合pid的作者通知
         if (!author) {
             //  找出文章中對作者的通知
-            let { errno, data } = await C_MsgReceiver.find(Opts.MSG_RECEIVER.find({ receiver_id: author_id, article_id }))
+            let { errno, data } = await _findMsgReceiverOfAuthor({author_id, article_id})
             //  若存在，賦值給 author
             if (!errno) {
                 author = data
@@ -167,36 +169,34 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
         //  若author存在，且未確認，則改為「已確認狀態」，存入 newDatas
         author && !author.confirm && newDatas.push({ ...author, confirm: true })
     } else {
-        //  留言者不是文章作者，將作者添入 commenter，待處理 cache 時使用
-        commenters.add(author_id)
+        //  留言者不是文章作者，將作者添入 other，待處理 cache 時使用
+        other.add(author_id)
         //  若符合 pid 的作者通知存在
         if (author) {
             //  放入待處理的數據列表 container 中
             container.push(author)
-        }else{
+        } else {
             //  如果符合 pid 的作者通知不存在
             //  找出文章中對作者的通知
-            let { errno, data } = await C_MsgReceiver.find(Opts.MSG_RECEIVER.find({ receiver_id: author_id, article_id }))
+            let { errno, data } = await _findMsgReceiverOfAuthor({author_id, article_id})
             //  若存在，則放入 待處理的數據列表 container 中
             if (!errno) {
                 container.push(data)
-            }else{
+            } else {
                 //  若不存在，創建全新通知
                 newDatas.push({ ...defProp, receiver_id: author_id, createdAt: newComment.createdAt, confirm: false })
             }
         }
         //  若符合 pid 的 留言者自身通知 存在，且處於「未確認」狀態
-        if (commenter && !commenter.confirm) {
+        if (curCommenter && !curCommenter.confirm) {
             //  改為「已確認狀態」，存入 newDatas
-            newDatas.push({ ...commenter, confirm: true })
+            newDatas.push({ ...curCommenter, confirm: true })
         }
     }
     //  若留言者本人或是作者本人以外的 使用者通知 存在，則一併放入 待處理的數據列表 container 中 
-    if (other.length) {
-        container.concat(other)
+    if (others.length) {
+        container.concat(others)
     }
-    //  必定會更新到的數據屬性
-    let defProp = { msg_id: newComment.id, updatedAt: newComment.createdAt }
     //  遞歸整理待更新數據
     for (let msgReceiver of container) {
         //  若數據為「已確認」狀態
@@ -207,63 +207,38 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
             newDatas.push({ ...msgReceiver, defProp })
         }
     }
-    //  若 fans 尚未
-    for (let fans of isFansButNotReceiver) {
-        newDatas.push({ ...defProp, id: fans, createdAt: newComment.createdAt, confirm: false})
+    //  為尚未成為 receiver 的 commenter 建立 msgReceiver
+    for (let receiver_id of [...notReceiver]) {
+        newDatas.push({ ...defProp, receiver_id, createdAt: newComment.createdAt, confirm: false })
     }
-
-    // //  找出符合 { receiver_id: author_id, article_id } 的 msgReceiver
-    // let { errno, data } = await C_MsgReceiver.find(Opts.MSG_RECEIVER.find({ receiver_id: author_id, article_id }))
-    // if (errno) {
-    //     //  找不到結果，代表整篇文章目前完全無回覆，或是回覆都是autho自己留的，所以需要新創建
-    //     list.push({ receiver_id: author_id, msg_id: newComment.id, createdAt: newComment.createdAt, updatedAt: newComment.createdAt })
-    // } else {
-    //     //  更新
-    //     if (data.confirm) {
-    //         //  更新 msg_id: newComment.id, createdAt: newComment.createdAt, updatedAt: newComment.createdAt, confirm: false
-    //         list.push({ ...data, msg_id: newComment.id, createdAt: newComment.createdAt, updatedAt: newComment.createdAt, confirm: false })
-    //     } else {
-    //         list.push({ ...data, msg_id: newComment.id, updatedAt: newComment.createdAt })
-    //     }
-    // }
-
-    // if (commenter) {
-    //     list.push({ ...commenter, updatedAt: newComment.createdAt, confirm: false })
-    // }
-    //  如果沒有，代表commenter是前沒追蹤過這串留言||這串pid尚未有留言，故不需再處理
-
-
-    // let defProp = { msg_id: newComment.id, updatedAt: newComment.createdAt }
-    // list.map(item => {
-    //     if (item.confirm) {
-    //         item = { ...item, ...defProp, createdAt: newComment.createdAt, confirm: false }
-    //     } else {
-    //         item = { ...item, defProp }
-    //     }
-    // })
-    // //  針對 fans 而非 receiver 的使用者，創建一個 msgReceiver
-    // for (let receiver_id of listOfNotReceiver) {
-    //     list.push({ ...defProp, receiver_id, createdAt: newComment.createdAt })
-    // }
-
-    if(newDatas.length){
+    //  更新
+    if (newDatas.length) {
         await C_MsgReceiver.modifyList(newDatas)
     }
     let cache = {
         [CACHE.TYPE.API.COMMENT]: [article_id],
-        [CACHE.TYPE.NEWS]: commenters
+        [CACHE.TYPE.NEWS]: [...other]
     }
-    
+
     //  讀取符合Blog格式數據格式的新Comment
     let resModel = await _findItemForPageOfBlog(newComment.id)
     if (resModel.errno) {
         throw new MyErr(resModel)
     }
-    
+
     return new SuccModel({
         data: resModel.data,
         cache
     })
+}
+//  0420
+async function _findMsgReceiverOfAuthor({ article_id, author_id}){
+    let comment = await Comment.read(Opts.COMMENT._findMsgReceiverOfAuthor({ article_id, author_id}))
+    if(!comment){
+        return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST)
+    }
+    let data = comment.receivers[0].MsgReceiver
+    return new SuccModel({ data })
 }
 //  0411
 async function _findItemForPageOfBlog(comment_id) {
@@ -274,8 +249,8 @@ async function _findItemForPageOfBlog(comment_id) {
     let data = Init.browser.comment(comment)
     return new SuccModel({ data })
 }
-//  0411
-async function _findInfoAboutItem({ article_id, commenter_id, pid, author_id }) {
+//  0420
+async function _findInfoForAdd({ article_id, commenter_id, pid, author_id }) {
     //  [ comment { id,
     //      receivers: [ { id, 
     //        MsgReceiver: { id, msg_id, receiver_id, confirm, deletedAt, createdAt }
@@ -284,47 +259,39 @@ async function _findInfoAboutItem({ article_id, commenter_id, pid, author_id }) 
     //    }, ... ]
 
     //  尋找 pid、author 相符的 msgReciever
-    let list = await C_MsgReceiver.findList({
-        attributes: ['id'],
-        where: {
-            pid: pid ? pid : null,
-        },
-        include: {
-            //	receiver
-            association: 'receivers',
-            attributes: ['id'],
-            // required: true
-        }
-    })
+    let list = await Comment.readList(Opts.COMMENT._findInfoAboutItem({article_id, pid }))
 
     let res = {
         msgReceiver: {
-            other: [],
+            others: [],
             author: undefined,
-            commenter: undefined,
+            curCommenter: undefined,
         },
-        commenters: new Set(),
-        isFansButNotReceiver: new Set()
+        commenters: {
+            other: new Set(),
+            notReceiver: new Set()
+        }
     }
 
-    let comments = list.reduce((acc, { receivers, ...comment }) => {
-        acc.isFansButNotReceiver.add(comment.id)
-        if( comment.id !== author_id && commenter.id !== commenter_id){
-            acc.commenters.add(comment.id)
+    let data = list.reduce((acc, { receivers, ...comment }) => {
+        let { msgReceiver, commenters } = acc
+        commenters.notReceiver.add(comment.id)
+        if (comment.commenter_id !== author_id && comment.commenter_id !== commenter_id) {
+            commenters.other.add(comment.id)
         }
         for (let { id, MsgReceiver } of receivers) {
             if (id === author_id) {
-                acc.author = MsgReceiver
+                msgReceiver.author = MsgReceiver
             } else if (id === commenter_id) {
-                acc.commenter = MsgReceiver
+                msgReceiver.curCommenter = MsgReceiver
             } else {
-                acc.list.push(MsgReceiver)
+                msgReceiver.others.push(MsgReceiver)
             }
-            acc.isFansButNotReceiver.delete(id)
+            commenters.notReceiver.delete(id)
         }
         return acc
     }, res)
-    return new SuccModel({ data: res })
+    return new SuccModel({ data })
 
 
 

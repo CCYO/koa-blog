@@ -14,34 +14,14 @@ const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
     //  0404
     COMMENT: {
-        //  0414
-        findItemOfSomePidAndNotSelf: (article_id, commenter_id, pid) => ({
-            attributes: ['id', 'html', 'article_id', 'commenter_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
-            where: { 
-                article_id,
-                commenter_id: { [Op.not]: commenter_id },
-                pid: pid ? pid : null,
-                createdAt: { [Op.lte]: time}
-            },
-            order: [ ['createdAt', 'DESC']]
-        }),
-        //  0411
-        findLastItemOfNotSelf: (article_id, commenter_id, time) => ({
-            attributes: ['id', 'html', 'article_id', 'commenter_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
-            where: { 
-                article_id,
-                commenter_id: { [Op.not]: commenter_id },
-                createdAt: { [Op.lte]: time}
-            },
-            order: [ ['createdAt', 'DESC']]
-        }),
-        //  0411
-        find: (id) => ({
-            attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
-            where: { id },
+        //  0420
+        _findMsgReceiverOfAuthor: ({ article_id, author_id }) => ({
+            attributes: ['id'],
+            where: { article_id },
             include: {
-                association: 'commenter',
-                attributes: ['id', 'email', 'nickname']
+                association: 'receivers',
+                attributes: ['id'],
+                where: { id: author_id }
             }
         }),
         //  0411
@@ -56,22 +36,44 @@ module.exports = {
                 where[Op.or] = [{ id: pid }, { pid }]
             }
             return {
-                attributes: ['id'],
+                attributes: ['id', 'commenter_id'],
                 where,
-                include: [
-                    {
-                        association: 'commenter',
-                        attributes: ['id']
-                    },
-                    {
-                        association: 'receivers',
-                        attribute: ['id'],
-                        through: {
-                            attributes: ['id', 'msg_id', 'receiver_id', 'confirm', 'deletedAt', 'createdAt']
-                        }
-                    }]
+                include: {
+                    association: 'receivers',
+                    attribute: ['id'],
+                }
             }
         },
+        //  0414
+        findItemOfSomePidAndNotSelf: (article_id, commenter_id, pid) => ({
+            attributes: ['id', 'html', 'article_id', 'commenter_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
+            where: {
+                article_id,
+                commenter_id: { [Op.not]: commenter_id },
+                pid: pid ? pid : null,
+                createdAt: { [Op.lte]: time }
+            },
+            order: [['createdAt', 'DESC']]
+        }),
+        //  0411
+        findLastItemOfNotSelf: (article_id, commenter_id, time) => ({
+            attributes: ['id', 'html', 'article_id', 'commenter_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
+            where: {
+                article_id,
+                commenter_id: { [Op.not]: commenter_id },
+                createdAt: { [Op.lte]: time }
+            },
+            order: [['createdAt', 'DESC']]
+        }),
+        //  0411
+        find: (id) => ({
+            attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
+            where: { id },
+            include: {
+                association: 'commenter',
+                attributes: ['id', 'email', 'nickname']
+            }
+        }),
         //  0411
         findInfoForPageOfBlog: (article_id) => {
             return {
@@ -390,7 +392,7 @@ module.exports = {
     FOLLOW: {
         //  0414
         forceRemove: (id_list) => ({
-            where: {id: { [Op.in]: id_list } },
+            where: { id: { [Op.in]: id_list } },
             force: true
         }),
         //  0406
