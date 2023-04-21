@@ -22,7 +22,7 @@ async function create(data) {
         const user = await User.create(data)
         return Init.user(user)
     } catch (err) {
-        throw MyErr({ ...errRes.USER.CREATE, err})
+        throw MyErr({ ...errRes.USER.CREATE, err })
     }
 }
 //  0404
@@ -37,13 +37,21 @@ async function read(opts) {
     let user = await User.findOne(opts)
     return Init.user(user)
 }
+module.exports = {
+    //  0404
+    readList,
+    //  0404
+    create,
+    //  0404
+    read,
 
+    updateUser,     //  controller user
 
-
+}
 
 
 //  更新user數據
-const updateUser = async ({ newData, id }) => {
+async function updateUser({ newData, id }) {
     let data = { ...newData }
     if (data.hasOwnProperty('age')) {
         newData.age *= 1
@@ -57,16 +65,4 @@ const updateUser = async ({ newData, id }) => {
     user = await user.update(data)
 
     return Init.user(user)
-}
-
-module.exports = {
-    //  0404
-    readList,
-    //  0404
-    create,
-    //  0404
-    read,
-
-    updateUser,     //  controller user
- 
 }

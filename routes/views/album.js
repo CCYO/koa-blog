@@ -1,3 +1,4 @@
+const User = require('../../controller/user')
 const { BLOG } = require('../../conf/constant')     //  0411
 const Blog = require('../../controller/blog')       //  0411
 let router = require('koa-router')()                //  0411
@@ -5,12 +6,17 @@ router.prefix('/album')                             //  0411
 //  0411
 router.get('/list/:author_id', async (ctx, next) => {
     let author_id = ctx.params.author_id * 1
-    let pagination = ctx.query.pagination
+    let pagination = ctx.query
     let isAuthor = false
     if (ctx.session.user && ctx.session.user.id === author_id) {
         isAuthor = true
     }
-    let { data: { author, albums } } = await Blog.findInfoForPageOfAlbumList(author_id, { pagination })
+    let resModel = await User.findAlbumListOfUser(author_id, pagination)
+    if(resModel.errno){
+        await ctx.render('page404', resModel)
+        return
+    }
+    let { data: { author, albums } } = resModel
     if (!isAuthor) {
         delete albums[BLOG.ORGANIZED.TYPE.NEGATIVE]
     }
@@ -40,7 +46,3 @@ router.get('/:blog_id', async (ctx, next) => {
     })
 })
 module.exports = router
-
-
-
-const Album = require('../../controller/album')

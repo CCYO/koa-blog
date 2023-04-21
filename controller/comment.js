@@ -1,13 +1,9 @@
-const C_User = require('./user')
 const { CACHE } = require('../conf/constant')       //  0411
 const C_MsgReceiver = require('./msgReceiver')      //  0411
 const Init = require('../utils/init')               //  0404
 const { SuccModel, ErrModel, MyErr, ErrRes } = require('../model') //  0404
 const Opts = require('../utils/seq_findOpts')       //  0404
 const Comment = require('../server/comment')        //  0404
-
-const { Op } = require('sequelize')
-
 
 //  0411
 async function remove({ author_id, commenter_id, comment_id, article_id, pid }) {
@@ -137,7 +133,6 @@ async function _findLastItemOfNotSelf(article_id, commenter_id, time) {
     }
     return new SuccModel({ data: comment })
 }
-
 //  0411
 async function add({ commenter_id, article_id, html, pid, author_id }) {
     //  創建 comment
@@ -204,7 +199,7 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
             newDatas.push({ ...msgReceiver, ...defProp, createdAt: newComment.createdAt, confirm: false })
         } else {
             //  若數據為「未確認」狀態
-            newDatas.push({ ...msgReceiver, defProp })
+            newDatas.push({ ...msgReceiver, ...defProp })
         }
     }
     //  為尚未成為 receiver 的 commenter 建立 msgReceiver
@@ -275,7 +270,9 @@ async function _findInfoForAdd({ article_id, commenter_id, pid, author_id }) {
 
     let data = list.reduce((acc, { receivers, ...comment }) => {
         let { msgReceiver, commenters } = acc
-        commenters.notReceiver.add(comment.id)
+        if(comment.commenter_id !== commenter_id){
+            commenters.notReceiver.add(comment.commenter_id)
+        }
         if (comment.commenter_id !== author_id && comment.commenter_id !== commenter_id) {
             commenters.other.add(comment.id)
         }
@@ -291,51 +288,6 @@ async function _findInfoForAdd({ article_id, commenter_id, pid, author_id }) {
         }
         return acc
     }, res)
-    return new SuccModel({ data })
-
-
-
-    if (errno) {
-        //  從 comments 取得用來處理CACHE[NEWS]的commenters(不須包含commenter與author，因為留言者不需要接收自己留言的通知，而author後面統一處理)
-        let commenters = data.map(({ commenter: { id } }) => {
-            if (id !== commenter_id && id !== author_id) {
-                return id
-            }
-            return null
-        }).filter(id => id)
-        commenters = [...new Set(commenters)]
-
-        //  從 comments 取得用來修改/創建的 MsgReceivers(不須包含commenter與author，因為留言者不需要接收自己留言的通知，而author後面統一處理)
-        msgReceiver.list = comments.map(({ receivers }) => receivers) //  取出每一份comment的msgReceivers
-            .flat() //  扁平化
-            //  過濾掉 author 與 commenter
-            .filter((item) => {
-                let { receiver_id } = item
-                if (receiver_id === author_id) {
-                    msgReceiver.author = item
-                    return false
-                }
-                if (receiver_id === commenter_id) {
-                    msgReceiver.commenter = item
-                    return false
-                }
-                return receiver_id !== commenter_id
-            })
-        let receivers = msgReceiver.list.map(({ receiver_id }) => receiver_id)
-        receivers = [...new Set(receivers)]
-        let listOfNotReceiver = commenters.filter(commenter => !receivers.include(commenter.id))
-        let data = {
-            comments,
-            commenters,
-            msgReceiver,
-            receivers,
-            listOfNotReceiver
-        }
-    }
-
-
-
-
     return new SuccModel({ data })
 }
 //  0411

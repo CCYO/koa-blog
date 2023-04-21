@@ -1,10 +1,22 @@
 /**
  * @description Controller user相關
  */
-const C_Blog = require('./blog')    //  0309
+const Init = require('../utils/init')                               //  0421
+const C_Blog = require('./blog')                                    //  0309
 const { ErrRes, ErrModel, SuccModel, MyErr } = require('../model')  //  0404
 const Opts = require('../utils/seq_findOpts')                       //  0404
 const User = require('../server/user')                              //  0404
+
+//  0421 因為使用 C_BLOG 會造成迴圈，故直接以USER做查詢
+async function findAlbumListOfUser(user_id, pagination){
+    let res = await User.read(Opts.USER.findAlbumListOfUser(user_id))
+    if(!res){
+        return ErrModel(ErrRes.USER.READ.NO_USER)
+    }
+    let { blogs, ...author } = res
+    let albums = Init.browser.blog.pageTable(blogs, pagination)
+    return new SuccModel({ data: { albums, author}})
+}
 
 //  0406
 async function findInfoForFollowIdol({ fans_id, idol_id }) {
@@ -107,6 +119,8 @@ async function isEmailExist(email) {
 }
 
 module.exports = {
+    //  0421
+    findAlbumListOfUser,
     //  0406
     findInfoForFollowIdol,
     //  0404

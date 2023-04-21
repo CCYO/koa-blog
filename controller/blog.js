@@ -8,19 +8,20 @@ const Init = require('../utils/init')                               //  0404
 const Opts = require('../utils/seq_findOpts')                       //  0404
 const Blog = require('../server/blog')                              //  0404
 //  0411
-async function findInfoForPageOfSquare() {
-    let blogs = await Blog.readList(Opts.BLOG.findInfoForPageOfSquare())
+async function findInfoForPageOfSquare(author_id) {
+    let list = await Blog.readList(Opts.BLOG.findInfoForPageOfSquare())
+    let blogs = list.filter(({ author }) => author.id !== author_id )
     let data = Init.browser.blog.sortAndInitTimeFormat(blogs)
     return new SuccModel({ data })
 }
-//  0411
-async function findInfoForPageOfAlbumList(userId, { pagination } ) {
-    let blogs = await Blog.readList(Opts.BLOG.findInfoForPageOfAlbumList(userId))
-    let author = blogs.length ? blogs[0].author : undefined
-    let albums = Init.browser.blog.pageTable(blogs, { pagination })
-    let data = { author, albums }
-    return new SuccModel({ data })
-}
+// //  0411
+// async function findInfoForPageOfAlbumList(userId, { pagination } ) {
+//     let blogs = await Blog.readList(Opts.BLOG.findInfoForPageOfAlbumList(userId))
+//     let author = blogs.length ? blogs[0].author : undefined
+//     let albums = Init.browser.blog.pageTable(blogs, { pagination })
+//     let data = { author, albums }
+//     return new SuccModel({ data })
+// }
 //  0411
 /** 刪除 blogs
  * @param {number} blog_id 
@@ -244,7 +245,7 @@ async function findListForUserPage(userId, options) {
 
 module.exports = {
     //  0411
-    findInfoForPageOfAlbumList,
+    // findInfoForPageOfAlbumList,
     //  0411
     removeList,
     //  0406

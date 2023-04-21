@@ -9,6 +9,7 @@ const {
     BlogImgAlt,
     Comment,
     User,
+    Blog,
 } = require('../db/mysql/model')
 const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
@@ -263,6 +264,21 @@ module.exports = {
     },
     //  0404
     USER: {
+        //  0421
+        findAlbumListOfUser: (user_id) => ({
+            where: { id: user_id },
+            include: {
+                // model: Blog,
+                // as: 'blogs',
+                association: 'blogs',
+                attributes: ['id', 'title', 'show', 'showAt', 'updatedAt', 'createdAt'],
+                include: {
+                    model: BlogImg,
+                    attributes: [],
+                    required: true
+                }
+            }
+        }),
         //  0406
         findInfoForFollowIdol: ({ idol_id, fans_id }) => ({
             attributes: ['id'],
