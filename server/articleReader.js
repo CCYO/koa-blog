@@ -1,7 +1,18 @@
+const Init = require('../utils/init')
 //  0406
 const { ErrRes, MyErr } = require('../model')
 //  0406
 const { ArticleReader } = require('../db/mysql/model')  //  0406
+//  0423
+async function updateList(datas){
+    try {
+        let updateOnDuplicate = Object.keys(datas[0])
+        let list = await ArticleReader.bulkCreate(datas, { updateOnDuplicate })
+        return Init.articleReader(list)
+    }catch(err){
+        throw new MyErr({ ...ErrRes.ARTICLE_READER.UPDATE.ERR, err})
+    }
+}
 //  0406
 async function createList(datas) {
     try {
@@ -30,6 +41,8 @@ async function restore(opts) {
 }
 
 module.exports = {
+    //  0423
+    updateList,
     //  0406
     createList,
     //  0406
@@ -41,9 +54,6 @@ module.exports = {
     hiddenBlog,
     readFollowers,
 }
-/**
- * @description ServeArticleReader*/
-const { PUB_SUB } = require('../model/errRes')
 
 
 

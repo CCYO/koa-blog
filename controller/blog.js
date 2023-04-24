@@ -7,6 +7,7 @@ const { MyErr, ErrRes, ErrModel, SuccModel } = require('../model')  //  0404
 const Init = require('../utils/init')                               //  0404
 const Opts = require('../utils/seq_findOpts')                       //  0404
 const Blog = require('../server/blog')                              //  0404
+
 //  0411
 async function findInfoForPageOfSquare(author_id) {
     let list = await Blog.readList(Opts.BLOG.findInfoForPageOfSquare())

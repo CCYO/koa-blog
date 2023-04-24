@@ -1,7 +1,7 @@
 /**
  * @description API user相關
  */
-const IdolFans = require('../../controller/IdolFans')               //  0406
+const IdolFans = require('../../controller/idolFans')               //  0406
 const Cache = require('../../middleware/cache')                     //  未處理
 const Check = require('../../middleware/check_login') //  0228
 const Session = require('../../middleware/session')                 //  0228

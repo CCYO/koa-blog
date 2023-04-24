@@ -15,6 +15,20 @@ const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
     //  0404
     COMMENT: {
+        //  0423
+        _findUnconfirmListBeforeNews: ({ comment_id, pid, article_id, createdAt }) => ({
+            attributes: ['id'],
+            where: {
+                id: { [Op.not]: comment_id },
+                article_id,
+                pid: pid === 0 ? null : pid,
+                createdAt: { [Op.gte]: createdAt }
+            },
+            include: {
+                association: 'commenter',
+                attributes: ['id', 'email', 'nickname'],
+            }
+        }),
         //  0420
         _findMsgReceiverOfAuthor: ({ article_id, author_id }) => ({
             attributes: ['id'],
@@ -46,7 +60,7 @@ module.exports = {
             }
         },
         //  0414
-        findItemOfSomePidAndNotSelf: (article_id, commenter_id, pid) => ({
+        _findLastItemOfPidAndNotSelf: (article_id, commenter_id, pid) => ({
             attributes: ['id', 'html', 'article_id', 'commenter_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
             where: {
                 article_id,
@@ -68,12 +82,18 @@ module.exports = {
         }),
         //  0411
         find: (id) => ({
-            attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
+            attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid', 'article_id', 'commenter_id'],
             where: { id },
-            include: {
-                association: 'commenter',
-                attributes: ['id', 'email', 'nickname']
-            }
+            include: [
+                {
+                    association: 'commenter',
+                    attributes: ['id', 'email', 'nickname']
+                },
+                {
+                    association: 'article',
+                    attribute: ['id', 'author_id']
+                }
+            ]
         }),
         //  0411
         findInfoForPageOfBlog: (article_id) => {
@@ -87,19 +107,6 @@ module.exports = {
                 }
             }
         },
-        //  0404
-        findRelativeUnconfirmList: ({ pid, article_id, createdAt }) => ({
-            attributes: ['id'],
-            where: {
-                article_id,
-                pid: pid === 0 ? null : pid,
-                createdAt: { [Op.gt]: createdAt }
-            },
-            include: {
-                association: 'commenter',
-                attributes: ['id', 'email', 'nickname'],
-            }
-        }),
         //  0404
         findWholeInfo: (id) => ({
             attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],

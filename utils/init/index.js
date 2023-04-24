@@ -148,6 +148,10 @@ function init(data, ...fns) {
 const { init_newsOfFollowId, init_excepts } = require('./news')
 
 module.exports = {
+    //  0423
+    articleReader: init,
+    //  0423
+    idolFans: init,
     //  0409
     alt: initAlt,
     //  0404

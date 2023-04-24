@@ -25,6 +25,9 @@ router.prefix('/api/comment')                                               //  
 router.delete('/', Check.api_logining,
     Cache.modifiedtCache,   //  ----------------------------------------------未整理 
     async (ctx, next) => {
+        //  要多一個判斷，這請求有沒有刪除的資格 
+        //  1. 作者 > 誰都可以山
+        //  2. 留言者 > 山自己的
         ctx.body = await Comment.remove(ctx.request.body)
     })
 //  0411

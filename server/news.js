@@ -1,15 +1,7 @@
-
-const { NEWS: { LIMIT } } = require('../conf/constant')
-
-const {
-    FollowBlog,
-    FollowComment,
-    IdolFans
-} = require('../db/mysql/model')
-
+//  0423
 const rawQuery = require('../db/mysql/query')
-
-async function readNews({ userId, excepts = { people: [], blogs: [], comments: [] }}) {
+//  0423
+async function readList({ user_id, excepts = { people: [], blogs: [], comments: [] }}) {
     /*
     {
         unconfirm: [
@@ -19,55 +11,14 @@ async function readNews({ userId, excepts = { people: [], blogs: [], comments: [
         ... ],
         confirm: [...] 
     }*/
-    let newsList = await rawQuery.readNews({ userId, excepts })
+    //  尋找 news（撇除 excepts）
+    let newsList = await rawQuery.readNews({ user_id, excepts })
     //   { num: { unconfirm, confirm, total } }
-    let { num } = await rawQuery.count({ userId, excepts })
-    return { newsList, num, limit: LIMIT }
+    //  目前news總數，其中有無確認過的又各有多少
+    let { num } = await rawQuery.count({ user_id, excepts })
+    return { newsList, num }
 }
-
-async function updateFollowComfirm(list, data = { confirm: true }) {
-    let [row] = await Follow.update(data, {
-        where: { id: list }
-    })
-    return row
-}
-
-async function updateBlogFansComfirm(list, data = { confirm: true }) {
-    let [row] = await Blog_Fans.update(data, {
-        where: { id: list }
-    })
-    return row
-}
-
-async function updateNews({ people, blogs, comments }) {
-    let data = {}
-    if (people.length) {
-        let [rowOfPeople] = await IdolFans.update({ confirm: true }, { where: { id: people } })
-        data.rowOfPeople = rowOfPeople
-    } else {
-        data.rowOfPeople = 0
-    }
-
-    if (blogs.length) {
-        let [rowOfBlogs] = await FollowBlog.update({ confirm: true }, { where: { id: blogs } })
-        data.rowOfBlogs = rowOfBlogs
-    } else {
-        data.rowOfBlogs = 0
-    }
-
-    if (comments.length) {
-        let [rowOfComments] = await FollowComment.update({ confirm: true }, { where: { id: comments } })
-        data.rowOfComments = rowOfComments
-    } else {
-        data.rowOfComments = 0
-    }
-
-    return data
-}
-
 module.exports = {
-    readNews,
-    updateFollowComfirm,
-    updateBlogFansComfirm,
-    updateNews
+    //  0423
+    readList
 }

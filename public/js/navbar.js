@@ -15,10 +15,10 @@ async function initNavbar() {
         //  初始化渲染  ------
         //  渲染基本navBar
         template_nav(data.me)
-        
+
         //  若未登入，則不需要初始化功能
         if (!data.me.id) {
-            return 
+            return
         }
 
         //  公用變量 ------
@@ -57,15 +57,20 @@ async function initNavbar() {
             limit
         }
         */
+       let { list } = data.news.newsList
         let pageData = data
         //  賦予 pageData.news.excepts 預設值
         pageData.news.excepts = { people: [], blogs: [], comments: [], num: 0 }
         //  賦予 pageData.news.page 預設值
         pageData.news.page = 0
-
+        console.log('@=> ', pageData.news.page)
         //  渲染並序列化news數據(初次渲染)
         pageData.news = renderAndSerializeNewsData(pageData.news, true)
-
+        console.log('@=> ', pageData.news.page)
+        pageData.news.newsList.list = list
+        //  ---------------------------------------------------------------------------
+        window._news = pageData.news
+        //  ---------------------------------------------------------------------------
         //  讀取更多
         $readMore.on('click', moreNews)
         //  登出功能
@@ -77,6 +82,8 @@ async function initNavbar() {
             //  取news
             let { news } = await getNews(pageData.news)
             pageData.news = renderAndSerializeNewsData(news)
+            console.log('ee=> ', news)
+            pageData.news.newsList.list = news.newsList.list
             return
         }
 
@@ -100,11 +107,15 @@ async function initNavbar() {
         function renderAndSerializeNewsData(news, firstRender = false) {
             //  初次渲染news
             //  使用未序列化的newsData進行渲染
-            renderByDeserializeNewsData(news, firstRender)
+            let { newsList, num, page } = news
+            let { list, unconfirm, confirm } = newsList
+            let x = { num, newsList: { unconfirm, confirm }, page }
+            renderByDeserializeNewsData(x, firstRender)
             //  渲染readMore
-            render_readMore(news)
+            render_readMore(x)
+
             //  序列化 news 數據
-            return serialization_news(news)
+            return serialization_news(x)
 
             //  序列化 news 數據
             function serialization_news(newsData) {
@@ -132,7 +143,8 @@ async function initNavbar() {
                     let initNews = { confirm: {}, unconfirm: {} }
                     for (let isConfirm in newsList) {
                         initNews[isConfirm] = { people: [], blogs: [], comments: [], num: 0 }
-                        newsList[isConfirm].reduce((init, { type, id }) => {
+                        newsList[isConfirm].reduce((init, news) => {
+                            let { type, id } = news
                             switch (type) {
                                 case 1:
                                     init['people'].push(id)
@@ -214,9 +226,12 @@ async function initNavbar() {
                             'confirm' => [...]
                         }
                     */
-                    let map = new Map(Object.entries(newsList))
+                    let { confirm, unconfirm } = newsList
+                    let map = new Map(Object.entries({ confirm, unconfirm }))
+
                     //  針對通知列表進行渲染
                     //  list 代表 newsItemList，isConfirm 代表 'unconfirm' | 'confirm'
+
                     map.forEach((list, isConfirm) => {
                         //  通知列表內的相應title
                         let $title = $(`#${isConfirm}-news-title`)
@@ -240,8 +255,10 @@ async function initNavbar() {
                             hr.last().after(htmlStr)
                         }
                     })
+
                     //  生成通知列表內的相應html
                     function template_list(newsItemList) {
+                        console.log('@newsItemList => ', newsItemList)
                         return newsItemList.reduce((init, newsItem) => {
                             let type = newsItem.type
                             if (type === 1) {
@@ -287,36 +304,23 @@ async function initNavbar() {
 
                         function template_comment({ confirm, id, comment, timestamp }) {
                             let { otherComments } = comment
-                            // let otherNotIncludeMe = []
-                            // if (others.length) {
-                            //     otherNotIncludeMe = new Set()
-                            //     others.reduce((initVal, other) => {
-                            //         if (other.id !== pageData.me.id) {
-                            //             otherNotIncludeMe.add(other.nickname)
-                            //         }
-                            //         return initVal
-                            //     }, otherNotIncludeMe)
-                            //     otherNotIncludeMe = [...otherNotIncludeMe]
-                            // }
-                            
-                            // let count = otherNotIncludeMe.length
                             let count = otherComments.commenters.length
-                            let others = otherComments.map(({nickname}) => nickname)
-                            let nicknames = comment.commenter.nickname + 
-                                count > 1 ? 
-                                others.slice(0, 2).join(',') + ( count > 2 ? `與其他${count - 2}人`  : '' + `，都` ) :
+                            let others = otherComments.commenters.map(({ nickname }) => nickname)
+                            let nicknames = comment.commenter.nickname +
+                                count > 1 ?
+                                others.slice(0, 2).join(',') + (count > 2 ? `與其他${count - 2}人` : '' + `，都`) :
                                 count === 1 ?
-                                others[0] : ''
-                            
+                                    others[0] : comment.commenter.nickname
+                            console.log('@comment => ', comment)
                             let author =
                                 comment.article.author.id === pageData.me.id ? '你' :
-                                comment.article.author.id === comment.commenter.id ? '自己' : comment.blog.author.nickname
+                                    comment.article.author.id === comment.commenter.id ? '自己' : comment.blog.author.nickname
                             let query = confirm ? '' : `?anchorType=3&anchorId=${id}`
                             return `
             <li class="dropdown-item  position-relative news-item">
                 <a href="/blog/${comment.article.id}${query}#comment_${comment.id}" class="stretched-link text-wrap">
                     <div>
-                        <span>${nicknames}在${author}的文章「${comment.blog.title}」留言囉！</span><br>
+                        <span>${nicknames}在${author}的文章「${comment.article.title}」留言囉！</span><br>
                         <p class='text-end mb-0'>${timestamp}</span>
                     </div>
                 </a>
@@ -442,10 +446,14 @@ async function initNavbar() {
             page: 0,
         }
         if (news) {   //  非初次渲染
-            let { newsList: { unconfirm: newsListNeedToConfirm }, page, excepts } = news
+            // let { newsList: { unconfirm: newsListNeedToConfirm }, page, excepts } = news
+            let { newsList: { list: newsListNeedToConfirm }, page, excepts } = news
             opts = {
+                //  後端需要 confirm 的 news
                 newsListNeedToConfirm,
+                //  告知後端我們需要的 news 分頁
                 page: ++page,
+                //  提供後端尋找news時，需要撇除的 news
                 excepts
             }
         }

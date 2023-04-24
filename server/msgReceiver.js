@@ -5,7 +5,6 @@ const { ErrRes, MyErr } = require('../model')
 const { MsgReceiver } = require('../db/mysql/model')
 //  0414
 async function updateList(datas) {
-    console.log('@datas => ', datas)
     try {
         let updateOnDuplicate = Object.keys(datas[0])
         let list = await MsgReceiver.bulkCreate(datas, { updateOnDuplicate })

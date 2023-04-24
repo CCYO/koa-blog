@@ -7,6 +7,8 @@ module.exports = {
     MSG_RECEIVER: {
         //  0414
         UPDATE: {
+            //  0423
+            CONFIRM: { errno: 1003, msg: 'confirm msgReceiver 失敗' },
             //  0414
             ERR: { errno: 801, msg: '更新 MsgReceiver 失敗' },
             //  0414
@@ -34,6 +36,53 @@ module.exports = {
             //  0411
             NOT_EXIST: { errno: 50003, msg: '不存在任何相符的 MsgReceiver' },
         }
+    },
+    //  0406
+    ARTICLE_READER: {
+        //  0423
+        UPDATE: {
+            CONFIRM: { errno: 1003, msg: 'confirm articleReader 失敗' },
+            ERR: { errno: 801, msg: '更新 ArticleReader 失敗' }
+        },
+        //  0406
+        DELETE: {
+            //  0411
+            ERR: { errno: 801, msg: '刪除 ArticleReader 失敗' },
+            //  0406
+            ROW: { errno: 40003, msg: '刪除 ArticleReader 的數量不完全' },
+        },
+        //  0406
+        CREATE: {
+            ROW: { errno: 40005, msg: '創建 ArticleReader 的數量不完全' },
+            ERR: { errno: 40005, msg: 'ArticleReader 創建失敗' },
+        },
+        //  0406
+        RESTORE: {
+            ROW: { errno: 40004, msg: '恢復軟刪除 ArticleReader 的數量不完全' },
+        },
+    },
+    //  0406
+    IDOL_FANS: {
+        //  0423
+        UPDATE: {
+            CONFIRM: { errno: 1003, msg: 'confirm IdolFans 失敗' },
+            ERR: { errno: 801, msg: '更新 IdolFans 失敗' }
+        },
+        //  0406
+        RESTORE: {
+            ROW_ERR: { errno: 40004, msg: '恢復軟刪除 IdolFans 的數量不完全' },
+        },
+        //  0406
+        DELETE: {
+            //  0411
+            ERR: { errno: 801, msg: '刪除 IdolFans 失敗' },
+            //  0406
+            ROW: { errno: 40003, msg: '刪除 IdolFans 的數量不完全' },
+            //  0406
+            NO_IDOL: { errno: 40002, msg: '要刪除的 Idol 不存在' }
+        },
+        //  0406
+        CREATE_ERR: { errno: 40001, msg: 'IdolFans 創建失敗' },
     },
     //  0411
     COMMENT: {
@@ -105,46 +154,6 @@ module.exports = {
         UPLOAD_IMG_ERR: { errno: 704, msg: 'Blog內文圖片上傳失敗' },    //  0326
         IMAGE_REMOVE_ERR: { errno: 705, msg: '刪除BlogImg時，數量對不上' },
     },
-    //  0406
-    IDOL_FANS: {
-        //  0406
-        RESTORE: {
-            ROW_ERR: { errno: 40004, msg: '恢復軟刪除 IdolFans 的數量不完全' },
-        },
-        //  0406
-        DELETE: {
-            //  0411
-            ERR: { errno: 801, msg: '刪除 IdolFans 失敗' },
-            //  0406
-            ROW: { errno: 40003, msg: '刪除 IdolFans 的數量不完全' },
-            //  0406
-            NO_IDOL: { errno: 40002, msg: '要刪除的 Idol 不存在' }
-        },
-        //  0406
-        CREATE_ERR: { errno: 40001, msg: 'IdolFans 創建失敗' },
-        //  0228
-        CONFIRM_ERR: { errno: 1003, msg: '確認追蹤消息失敗' }
-    },
-    //  0406
-    ARTICLE_READER: {
-        //  0406
-        DELETE: {
-            //  0411
-            ERR: { errno: 801, msg: '刪除 ArticleReader 失敗' },
-            //  0406
-            ROW: { errno: 40003, msg: '刪除 ArticleReader 的數量不完全' },
-        },
-        //  0406
-        CREATE: {
-            ROW: { errno: 40005, msg: '創建 ArticleReader 的數量不完全' },
-            ERR: { errno: 40005, msg: 'ArticleReader 創建失敗' },
-        },
-        //  0406
-        RESTORE: {
-            ROW: { errno: 40004, msg: '恢復軟刪除 ArticleReader 的數量不完全' },
-        },
-    },
-    
     //  0406
     BLOG_IMG: {
         //  0406

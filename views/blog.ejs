@@ -196,7 +196,7 @@
                     })
 
                     async function removeComment(replyBox) {
-                        let { commentId: comment_id } = replyBox.dataset
+                        let comment_id = replyBox.dataset.commentId * 1
                         let payload = {
                             author_id: pageData.blog.author.id,
                             commenter_id: pageData.me.id,

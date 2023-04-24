@@ -18,7 +18,7 @@ router.post('/', Check.api_logining, Cache.modifiedtCache,
         //  該頁面初次請求
         if (page === 0) { 
             //  res {errno, data: { me: 登入者資料, news: 通知數據 } } 
-            res = await News.getMeAndTheFirstNews(me)
+            res = await News.getFirstNews(me)
         } else {
             //  let { page, newsList, excepts } = ctx.request.body
             res = await News.readMore({ me, ...ctx.request.body })
