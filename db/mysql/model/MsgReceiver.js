@@ -2,7 +2,7 @@
  * @description Sequelize Model
  */
 const seq = require('../seq')
-const { INTEGER, BOO } = require('../types')
+const { INTEGER, BOO, DATE, NOW } = require('../types')
 
 const MsgReceiver = seq.define(
     'MsgReceiver',
@@ -24,10 +24,16 @@ const MsgReceiver = seq.define(
         confirm: {
             type: BOO,
             defaultValue: false
+        },
+        createdAt: {
+            type: DATE,
+            allowNull: false,
+            defaultValue: NOW
         }
     },
     {
-        paranoid: true
+        paranoid: true,
+        createdAt: false
     }
 )
 
