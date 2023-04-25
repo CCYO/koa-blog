@@ -305,14 +305,17 @@ module.exports = {
                     where: { id: idol_id },
                     required: false,
                     through: {
-                        attributes: ['id'],
+                        // attributes: ['id'],
                         paranoid: false
                     }
                 },
                 {
                     association: 'articles',
                     attributes: ['id'],
-                    where: { author_id: idol_id },
+                    where: {
+                        author_id: idol_id,
+                        show: true 
+                    },
                     required: false,
                     through: {
                         attributes: ['id'],

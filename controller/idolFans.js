@@ -5,11 +5,11 @@ const IdolFans = require('../server/idolFans')                              //  
 const C_User = require('./user')                                //  0406
 const Opts = require('../utils/seq_findOpts')                               //  0406
 //  0423
-async function confirmList(datas){
+async function confirmList(datas) {
     let updatedAt = new Date()
-    let newDatas = datas.map( data => ({ ...data, updatedAt, confirm: true}))
+    let newDatas = datas.map(data => ({ ...data, updatedAt, confirm: true }))
     let list = await IdolFans.updateList(newDatas)
-    if(list.length !== newDatas.length){
+    if (list.length !== newDatas.length) {
         throw new MyErr(ErrRes.IDOL_FANS.UPDATE.CONFIRM)
     }
     return new SuccModel({ data: list })
@@ -22,24 +22,24 @@ async function confirmList(datas){
  */
 async function cancelFollow({ fans_id, idol_id }) {
     //  尋找 IdolFans + ArticleReader 關係
-    let { data: { idolFans_id_list, articleReader_id_list } } = await C_User.findInfoForFollowIdol({ fans_id, idol_id })
+    let { errno, data } = await C_User.findInfoForFollowIdol({ fans_id, idol_id })
     //  若無值，報錯
-    if (!idolFans_id_list.length) {
+    if (errno) {
         throw new MyErr(ErrRes.IDOL_FANS.DELETE.NO_IDOL)
-        //  軟刪除
-    } else {
-        await _removeList(idolFans_id_list)
-        if (articleReader_id_list.length) {
-            await C_ArticleReader.removeList(articleReader_id_list)
-        }
+    }
+    let { idolFans, articleReaders } = data
+    await removeList([idolFans])
+    if (articleReaders.length) {
+        await C_ArticleReader.removeList(articleReaders)
     }
     let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [idol_id] }
     return new SuccModel({ cache })
 }
 //  0406
-async function _removeList(id_list) {
-    let row = await IdolFans.deleteList(Opts.FOLLOW.removeList(id_list))
-    if(id_list.length !== row){
+async function removeList(datas) {
+    let list = datas.map(({ id }) => id)
+    let row = await IdolFans.deleteList(Opts.FOLLOW.removeList(list))
+    if (datas.length !== row) {
         throw new MyErr(ErrRes.IDOL_FANS.DELETE.ROW)
     }
     return new SuccModel()
@@ -53,29 +53,29 @@ async function _removeList(id_list) {
 async function follow({ fans_id, idol_id }) {
     //  若此次 add 不是第一次，代表可能會有軟刪除的 ArticleReader 關係
     //  尋找軟刪除的 IdolFans + ArticleReader 關係
-    let { data: { idolFans_id_list, articleReader_id_list } } = await C_User.findInfoForFollowIdol({ fans_id, idol_id })
+    let { errno, data } = await C_User.findInfoForFollowIdol({ fans_id, idol_id })
     //  恢復軟刪除
-    if (idolFans_id_list.length) {
-        //  需確認
-        await _restoreList(idolFans_id_list)
-        if (articleReader_id_list.length) {
-            //  需確認
-            await C_ArticleReader.restoreList(articleReader_id_list)
+    if (!errno) {
+        let { idolFans, articleReaders } = data
+        await addList([{ ...idolFans, deletedAt: null }])
+        if (articleReaders.length) {
+            let datas = articleReaders.map(articleReader => ({ ...articleReader, deletedAt: null }))
+            await C_ArticleReader.addList(datas)
         }
-        //  代表這次是初次追蹤
     } else {
-        await IdolFans.createList([{ idol_id, fans_id }])
+        //  代表這次是初次追蹤
+        await addList([{ idol_id, fans_id }])
     }
     let cache = { [PAGE.USER]: [fans_id, idol_id], [NEWS]: [idol_id] }
     return new SuccModel({ cache })
 }
-//  0406
-async function _restoreList(id_list) {
-    let row = await IdolFans.restore(Opts.FOLLOW.restoreList(id_list))
-    if(row !== id_list.length){
-        throw new MyErr(ErrRes.IDOL_FANS.RESTORE.ROW_ERR)
+//  0426
+async function addList(datas) {
+    let list = await IdolFans.updateList(datas)
+    if (list.length !== datas.length) {
+        throw new MyErr(ErrRes.IDOL_FANS.CREATE.ROW)
     }
-    return new SuccModel({ data })
+    return new SuccModel({ data: list })
 }
 
 module.exports = {

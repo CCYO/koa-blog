@@ -8,14 +8,14 @@ const Opts = require('../utils/seq_findOpts')                       //  0404
 const User = require('../server/user')                              //  0404
 
 //  0421 因為使用 C_BLOG 會造成迴圈，故直接以USER做查詢
-async function findAlbumListOfUser(user_id, pagination){
+async function findAlbumListOfUser(user_id, pagination) {
     let res = await User.read(Opts.USER.findAlbumListOfUser(user_id))
-    if(!res){
+    if (!res) {
         return ErrModel(ErrRes.USER.READ.NO_USER)
     }
     let { blogs, ...author } = res
     let albums = Init.browser.blog.pageTable(blogs, pagination)
-    return new SuccModel({ data: { albums, author}})
+    return new SuccModel({ data: { albums, author } })
 }
 
 //  0406
@@ -25,10 +25,13 @@ async function findInfoForFollowIdol({ fans_id, idol_id }) {
         throw new MyErr(ErrRes.USER.READ.NO_USER)
     }
     let { idols, articles } = user
-    let data = {}
-    data.idolFans_id_list = idols.map( ({ IdolFans }) => IdolFans.id ) 
-    data.articleReader_id_list = articles.map( ({ articleReaders }) => articleReaders.id )
-    return new SuccModel({data})
+    if (!idols.length) {
+        return new ErrModel(ErrRes.USER.READ.FIRST_FOLLOW)
+    }
+    let idolFans = idols[0].IdolFans
+    let articleReaders = articles.map(({ ArticleReader }) => ArticleReader)
+    let data = { idolFans, articleReaders }
+    return new SuccModel({ data })
 }
 //  0404
 async function findInfoForUserPage(userId) {

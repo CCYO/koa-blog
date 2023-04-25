@@ -8,6 +8,7 @@ const {
     MyErr,
     ErrRes
 } = require('../model')
+
 //  0423
 async function updateList(datas){
     try {

@@ -8,6 +8,7 @@ const {
 } = require('../model')
 const Opts = require('../utils/seq_findOpts')               //  0406
 const ArticleReader = require('../server/articleReader')    //  0406
+
 //  0423
 async function confirmList(datas){
     let updatedAt = new Date()
@@ -20,17 +21,22 @@ async function confirmList(datas){
 }
 //  0406
 async function addList(datas) {
-    let list = await ArticleReader.createList(datas)
+    let list = await ArticleReader.updateList(datas)
+    if(list.length !== datas.length){
+        throw new MyErr(ErrRes.ARTICLE_READER.CREATE.ROW)
+    }
     return new SuccModel({ data: list })
 }
 //  0406
-async function removeList(id_list) {
-    let raw = await ArticleReader.deleteList(Opts.FOLLOW.removeList(id_list))
+async function removeList(datas) {
+    let list = data.map(( {id} ) => id)
+    let raw = await ArticleReader.deleteList(Opts.FOLLOW.removeList(list))
     if(id_list.length !== raw){
-        throw new MyErr(ErrRes.ARTICLE_READER.DELETE.ROW_ERR)
+        throw new MyErr(ErrRes.ARTICLE_READER.DELETE.ROW)
     }
     return new SuccModel()
 }
+
 //  0406
 // async function restoreList(id_list){
 //     let row = await ArticleReader.restore(Opts.FOLLOW.restoreList(id_list))

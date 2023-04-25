@@ -41,6 +41,8 @@ module.exports = {
     ARTICLE_READER: {
         //  0423
         UPDATE: {
+            //  0426
+            ROW: { errno: 10004, msg: ' ArticleReader 更新結果的數量不完全'},
             CONFIRM: { errno: 1003, msg: 'confirm articleReader 失敗' },
             ERR: { errno: 801, msg: '更新 ArticleReader 失敗' }
         },
@@ -63,6 +65,10 @@ module.exports = {
     },
     //  0406
     IDOL_FANS: {
+        //  0406
+        CREATE: {
+            ROW: { errno: 40001, msg: 'IdolFans 創建數量不完全' }
+        },
         //  0423
         UPDATE: {
             CONFIRM: { errno: 1003, msg: 'confirm IdolFans 失敗' },
@@ -70,7 +76,7 @@ module.exports = {
         },
         //  0406
         RESTORE: {
-            ROW_ERR: { errno: 40004, msg: '恢復軟刪除 IdolFans 的數量不完全' },
+            ROW: { errno: 40004, msg: '恢復軟刪除 IdolFans 的數量不完全' },
         },
         //  0406
         DELETE: {
@@ -80,9 +86,7 @@ module.exports = {
             ROW: { errno: 40003, msg: '刪除 IdolFans 的數量不完全' },
             //  0406
             NO_IDOL: { errno: 40002, msg: '要刪除的 Idol 不存在' }
-        },
-        //  0406
-        CREATE_ERR: { errno: 40001, msg: 'IdolFans 創建失敗' },
+        }
     },
     //  0411
     COMMENT: {
@@ -194,6 +198,8 @@ module.exports = {
     USER: {
         //  0404
         READ: {
+            //  0425
+            FIRST_FOLLOW: { errno: 12003, msg: '第一次跟隨此 idol，沒有軟刪除 idolFans 紀錄'},
             //  0406
             NO_USER: { errno: 12002, msg: '找不到 USER' },
             //  0404
