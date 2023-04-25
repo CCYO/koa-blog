@@ -14,6 +14,144 @@ const {
 const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
     //  0404
+    BLOG: {
+        //  0406
+        findInfoForHidden: (article_id) => ({
+            attribute: ['id'],
+            where: { id: article_id },
+            include: [
+                {
+                    association: 'author',
+                    attributes: ['id'],
+                    include: {
+                        association: 'fansList',
+                        attributes: ['id']
+                    }
+                },
+                {
+                    association: 'readers',
+                    attributes: ['id'],
+                    through: {
+                        attributes: ['id']
+                    }
+                },
+                {
+                    association: 'replys',
+                    attributes: ['id'],
+                    include: {
+                        association: 'receivers',
+                        attributes: ['id'],
+                        through: {
+                            attributes: ['id']
+                        }
+                    }
+                }
+            ]
+        }),
+        //  0406
+        findInfoForShow: (article_id) => ({
+            attribute: ['id'],
+            where: { id: article_id },
+            include: [
+                {
+                    association: 'readers',
+                    attributes: ['id'],
+                    through: {
+                        // attributes: ['id'],
+                        paranoid: false
+                    }
+                },
+                {
+                    association: 'author',
+                    attributes: ['id'],
+                    include: {
+                        association: 'fansList',
+                        attributes: ['id']
+                    }
+                },
+                {
+                    association: 'replys',
+                    attributes: ['id'],
+                    include: {
+                        association: 'receivers',
+                        // attributes: ['id'],
+                        through: {
+                            attributes: ['id']
+                        }
+                    }
+                }
+            ]
+        }),
+        //  0411
+        findInfoForPageOfSquare() {
+            return {
+                attributes: ['id', 'title', 'show', 'showAt', 'createdAt'],
+                where: {
+                    show: true
+                },
+                include: {
+                    association: 'author',
+                    attributes: ['id', 'email', 'nickname']
+                }
+            }
+        },
+        //  0411
+        findInfoForPageOfAlbumList: (author_id) => ({
+            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt', 'createdAt'],
+            where: { author_id },
+            include: [
+                {
+                    association: 'author',
+                    attributes: ['id', 'nickname', 'email'],
+                    required: true
+                }, {
+                    model: BlogImg,
+                    attributes: [],
+                    required: true
+                }
+            ]
+        }),
+        //  0404
+        findWholeInfo: (id) => ({
+            attributes: ['id', 'title', 'html', 'show', 'showAt', 'updatedAt'],
+            where: { id },
+            include: [
+                {
+                    association: 'author',
+                    attributes: ['id', 'email', 'nickname']
+                },
+                {
+                    model: BlogImg,
+                    attributes: [['id', 'blogImg_id'], 'name'],
+                    include: [
+                        {
+                            model: Img,
+                            attributes: [['id', 'img_id'], 'url', 'hash']
+                        },
+                        {
+                            model: BlogImgAlt,
+                            attributes: [['id', 'alt_id'], 'alt']
+                        }
+                    ]
+                }
+            ]
+        }),
+        //  0404
+        find: (id) => ({
+            attributes: ['id', 'title', 'html', 'show', 'showAt', 'updatedAt'],
+            where: { id },
+            include: {
+                association: 'author',
+                attributes: ['id', 'email', 'nickname']
+            },
+        }),
+        //  0404
+        findListForUserPage: (author_id) => ({
+            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
+            where: { author_id }
+        })
+    },
+    //  0404
     COMMENT: {
         //  0423
         _findUnconfirmListBeforeNews: ({ comment_id, pid, article_id, createdAt }) => ({
@@ -151,108 +289,6 @@ module.exports = {
         find: (whereOps) => ({
             attributes: ['id', 'receiver_id', 'msg_id', 'confirm', 'deletedAt', 'createdAt'],
             where: { ...whereOps }
-        })
-    },
-    //  0404
-    BLOG: {
-        //  0411
-        findInfoForPageOfSquare() {
-            return {
-                attributes: ['id', 'title', 'show', 'showAt', 'createdAt'],
-                where: {
-                    show: true
-                },
-                include: {
-                    association: 'author',
-                    attributes: ['id', 'email', 'nickname']
-                }
-            }
-        },
-        //  0411
-        findInfoForPageOfAlbumList: (author_id) => ({
-            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt', 'createdAt'],
-            where: { author_id },
-            include: [
-                {
-                    association: 'author',
-                    attributes: ['id', 'nickname', 'email'],
-                    required: true
-                }, {
-                    model: BlogImg,
-                    attributes: [],
-                    required: true
-                }
-            ]
-        }),
-        //  0406
-        findInfoForSubscribe: (article_id) => ({
-            attribute: ['id', 'show', 'author_id'],
-            where: { id: article_id },
-            include: [
-                {
-                    association: 'readers',
-                    attributes: ['id'],
-                    through: {
-                        attributes: ['id'],
-                        paranoid: false
-                    }
-                },
-                {
-                    association: 'author',
-                    attributes: ['id'],
-                    include: {
-                        association: 'fansList',
-                        attributes: ['id']
-                    }
-                },
-                {
-                    association: 'replys',
-                    attributes: ['id'],
-                    through: {
-                        attributes: ['id'],
-                        paranoid: false
-                    }
-                }
-            ]
-        }),
-        //  0404
-        findWholeInfo: (id) => ({
-            attributes: ['id', 'title', 'html', 'show', 'showAt', 'updatedAt'],
-            where: { id },
-            include: [
-                {
-                    association: 'author',
-                    attributes: ['id', 'email', 'nickname']
-                },
-                {
-                    model: BlogImg,
-                    attributes: [['id', 'blogImg_id'], 'name'],
-                    include: [
-                        {
-                            model: Img,
-                            attributes: [['id', 'img_id'], 'url', 'hash']
-                        },
-                        {
-                            model: BlogImgAlt,
-                            attributes: [['id', 'alt_id'], 'alt']
-                        }
-                    ]
-                }
-            ]
-        }),
-        //  0404
-        find: (id) => ({
-            attributes: ['id', 'title', 'html', 'show', 'showAt', 'updatedAt'],
-            where: { id },
-            include: {
-                association: 'author',
-                attributes: ['id', 'email', 'nickname']
-            },
-        }),
-        //  0404
-        findListForUserPage: (author_id) => ({
-            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
-            where: { author_id }
         })
     },
     //  0408

@@ -1,3 +1,4 @@
+const C_MsgReceiver = require('./msgReceiver')                      //  0426
 const C_Comment = require('./comment')                             //  0425
 const C_BlogImg = require('./blogImg')                              //  0408
 const C_BlogImgAlt = require('./blogImgAlt')                        //  0408
@@ -86,7 +87,7 @@ async function modify(author_id, blog_id, blog_data) {
         [NEWS]: [],
         [USER]: [],
         [BLOG]: [],
-        [COMMENT]: []
+        // [COMMENT]: []
     }
     // let { title, cancelImgs = [], html, show } = blog_data
     let map = new Map(Object.entries(blog_data))
@@ -126,11 +127,10 @@ async function modify(author_id, blog_id, blog_data) {
         } else if (!show) {
             resModel = await private(blog_id)
         }
-        for(let [key, list] of Object.entries(resModel.cache)){
-            if(list.length){
-                cache[key] = cache[key].concat( list )
-            }
-        }
+        let { author_id, readers, receivers } = resModel.data
+        cache[NEWS] = cache[NEWS].cancat( [...readers, ...receivers ])
+        cache[USER].push(author_id)
+        cache[BLOG].push(blog_id)
         // cache[CACHE.TYPE.NEWS] = cache[CACHE.TYPE.NEWS] ? cache[CACHE.TYPE.NEWS].concat(resModel.data) : resModel.data
         // cache[CACHE.TYPE.PAGE.USER] = [author_id]
     }
@@ -171,48 +171,17 @@ async function removeImgs(imgs) {
     return new SuccModel()
 }
 //  0406
-async function private(blog_id) {
-    let { data } = await findInfoForSubscribe(blog_id)
-    let { author_id, readers, articleReaders, replys } = data
-    let { NEWS, PAGE: { USER, BLOG }, API: { COMMENT } } = CACHE.TYPE
-    let cache = {
-        [NEWS]: [],
-        [USER]: [author_id],
-        [BLOG]: [blog_id],
-        [COMMENT]: []
-    }
-    // cache[USER].push(author_id)
-    if (readers.length) {
-        cache[NEWS] = cache[NEWS].concat(readers)
-    }
-    //  軟刪除
-    if (articleReaders.length) {
-        await C_ArticleReader.removeList(articleReaders)
-    }
-    //  軟刪除 comments
-    if (replys.length) {
-        let resModel = await C_Comment.removeList(replys)
-        cache[COMMENT] = cache[COMMENT].concat(resModel.cache[COMMENT])
-        cache[NEWS] = cache[NEWS].concat(resModel.cache[NEWS])
-    }
-    // return new SuccModel({ data: readers })
-    return new SuccModel({ cache })
-}
-//  0406
 async function public(blog_id) {
-    let { data } = await findInfoForSubscribe(blog_id)
-    let { author_id, articleReaders, listWithNotReader, fansList } = data
-    //  復原軟刪除
-    // if (articleReaders.length) {
-    //     await C_ArticleReader.restoreList(articleReaders)
-    // }
-    let { NEWS, PAGE: { USER, BLOG }, API: { COMMENT } } = CACHE.TYPE
-    let cache = {
-        [NEWS]: [],
-        [USER]: [author_id],
-        [BLOG]: [blog_id],
-        [COMMENT]: []
-    }
+    let blog = await Blog.read(Opts.BLOG.findInfoForShow(blog_id))
+    let { author, readers, replys } = blog
+    let data = { fansList: [], readers: [], receivers: [] }
+    data.fansList = author.fansList.map( ({id}) => id)
+    let articleReaders = readers.map( ({ id, ArticleReader }) => {
+        data.readers.push(id)
+        return ArticleReader
+    } )
+
+
     //  創建 articleReader
     if (listWithNotReader.length) {
         let datas = listWithNotReader.map(reader_id => ({ reader_id, article_id: blog_id }))
@@ -222,8 +191,83 @@ async function public(blog_id) {
     return new SuccModel({ data: fansList })
 }
 //  0406
-async function findInfoForSubscribe(blog_id) {
-    let blog = await Blog.read(Opts.BLOG.findInfoForSubscribe(blog_id))
+async function private(blog_id) {
+    let blog = await Blog.read(Opts.BLOG.findInfoForHidden(blog_id))
+    let { author: { id: author_id }, readers, replys } = blog
+    let data = { readers: [], receivers: [], author_id }
+    //  軟刪除 articleReaders
+    let articleReaders = readers.map( ({ id, ArticleReader }) => {
+        data.readers.push(id)
+        return ArticleReader
+    } )
+    await C_ArticleReader.removeList( articleReaders )
+    //  軟刪除 msgReceivers
+    let msgReceivers = replys.map( ({ receivers }) => {
+        let list = receivers.map( ( { id, MsgReceiver } ) => {
+            data.receivers.push(id)
+            return MsgReceiver
+        })
+        return list
+    }).flat()
+    await C_MsgReceiver.removeList(msgReceivers)
+    
+    return new SuccModel({ data })
+
+
+
+    // let { data } = await findInfoForHidden(blog_id)
+    // let { author_id, readers, receivers } = data
+    // let { NEWS, PAGE: { USER, BLOG }, API: { COMMENT } } = CACHE.TYPE
+    // let cache = {
+    //     [NEWS]: [ ...readers, ...receivers ],
+    //     [USER]: [author_id],
+    //     [BLOG]: [blog_id],
+    //     [COMMENT]: [blog_id]
+    // }
+    // // cache[USER].push(author_id)
+    // if (readers.length) {
+    //     cache[NEWS] = cache[NEWS].concat(readers)
+    // }
+    // //  軟刪除
+    // if (articleReaders.length) {
+    //     await C_ArticleReader.removeList(articleReaders)
+    // }
+    // //  軟刪除 comments
+    // if (replys.length) {
+    //     let resModel = await C_Comment.removeList(replys)
+    //     cache[COMMENT] = cache[COMMENT].concat(resModel.cache[COMMENT])
+    //     cache[NEWS] = cache[NEWS].concat(resModel.cache[NEWS])
+    // }
+    // // return new SuccModel({ data: readers })
+    // return new SuccModel({ cache })
+}
+
+//  0426
+async function findInfoForHidden(blog_id){
+    let blog = await Blog.read(Opts.BLOG.findInfoForHidden(blog_id))
+    let { author: { id: author_id }, readers, replys } = blog
+    let data = { readers: [], receivers: [] }
+    //  軟刪除 articleReaders
+    let articleReaders = readers.map( ({ id, ArticleReader }) => {
+        data.readers.push(id)
+        return ArticleReader
+    } )
+    await C_ArticleReader.removeList( articleReaders )
+    //  軟刪除 msgReceivers
+    let msgReceivers = replys.map( ({ receivers }) => {
+        let list = receivers.map( ( { id, MsgReceiver } ) => {
+            data.receivers.push(id)
+            return MsgReceiver
+        })
+        return list
+    }).flat()
+    await C_MsgReceiver.removeList(msgReceivers)
+    
+    return new SuccModel({ data })
+}
+//  0406
+async function findInfoForShow(blog_id) {
+    let blog = await Blog.read(Opts.BLOG.findInfoForHidden(blog_id))
     if (!blog) {
         throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST)
     }

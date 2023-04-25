@@ -4,6 +4,15 @@ const { MyErr, SuccModel, ErrRes, ErrModel } = require('../model')
 const Opts = require('../utils/seq_findOpts')
 //  0411
 const MsgReceiver = require('../server/msgReceiver');
+//  0426
+async function removeList(datas) {
+    let list = datas.map(( {id} ) => id)
+    let raw = await MsgReceiver.deleteList(Opts.FOLLOW.removeList(list))
+    if(list.length !== raw){
+        throw new MyErr(ErrRes.MSG_RECEIVER.DELETE.ROW)
+    }
+    return new SuccModel()
+}
 //  0423
 async function confirmList(datas){
     let updatedAt = new Date()
@@ -52,6 +61,8 @@ async function find(whereOps) {
     return new SuccModel(data)
 }
 module.exports = {
+    //  0426
+    removeList,
     //  0423
     confirmList,
     //  0414

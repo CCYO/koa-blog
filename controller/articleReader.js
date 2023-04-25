@@ -29,9 +29,9 @@ async function addList(datas) {
 }
 //  0406
 async function removeList(datas) {
-    let list = data.map(( {id} ) => id)
+    let list = datas.map(( {id} ) => id)
     let raw = await ArticleReader.deleteList(Opts.FOLLOW.removeList(list))
-    if(id_list.length !== raw){
+    if(list.length !== raw){
         throw new MyErr(ErrRes.ARTICLE_READER.DELETE.ROW)
     }
     return new SuccModel()

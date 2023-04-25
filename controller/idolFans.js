@@ -57,7 +57,7 @@ async function follow({ fans_id, idol_id }) {
     //  恢復軟刪除
     if (!errno) {
         let { idolFans, articleReaders } = data
-        await addList([{ ...idolFans, deletedAt: null }])
+        await modifyList([{ ...idolFans, deletedAt: null }])
         if (articleReaders.length) {
             let datas = articleReaders.map(articleReader => ({ ...articleReader, deletedAt: null }))
             await C_ArticleReader.addList(datas)
@@ -74,6 +74,14 @@ async function addList(datas) {
     let list = await IdolFans.updateList(datas)
     if (list.length !== datas.length) {
         throw new MyErr(ErrRes.IDOL_FANS.CREATE.ROW)
+    }
+    return new SuccModel({ data: list })
+}
+//  0426
+async function modifyList(datas) {
+    let list = await IdolFans.updateList(datas)
+    if (list.length !== datas.length) {
+        throw new MyErr(ErrRes.IDOL_FANS.UPDATE.ROW)
     }
     return new SuccModel({ data: list })
 }
