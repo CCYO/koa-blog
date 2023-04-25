@@ -4,7 +4,20 @@ const Init = require('../utils/init')               //  0404
 const { SuccModel, ErrModel, MyErr, ErrRes } = require('../model') //  0404
 const Opts = require('../utils/seq_findOpts')       //  0404
 const Comment = require('../server/comment')        //  0404
+//  0425
+async function removeList(list) {
+    let cache = await list.reduce(async (acc, comment_id) => {
+        let model = await remove({ comment_id })
+        let res = await acc
+        res[CACHE.TYPE.API.COMMENT] = res[CACHE.TYPE.API.COMMENT].concat( model.cache[CACHE.TYPE.API.COMMENT] )
+        res[CACHE.TYPE.NEWS] = res[CACHE.TYPE.NEWS].concat( model.cache[CACHE.TYPE.NEWS] )
+    }, {
+        [CACHE.TYPE.API.COMMENT]: [],
+        [CACHE.TYPE.NEWS]: []
+    })
+    return new SuccModel({ cache })
 
+}
 //  0423
 async function findInfoForNews(comment_id) {
     // let comment = await Comment.read(Opts.COMMENT.find(comment_id))
@@ -337,6 +350,8 @@ async function findInfoForPageOfBlog(article_id) {
 }
 
 module.exports = {
+    //  0425
+    removeList,
     //  0411
     remove,
     //  0411

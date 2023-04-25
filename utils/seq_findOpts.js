@@ -109,13 +109,13 @@ module.exports = {
         },
         //  0404
         findWholeInfo: (id) => ({
-            attributes: ['id', 'html', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
+            attributes: ['id', 'html', 'article_id','updatedAt', 'createdAt', 'deletedAt', 'pid'],
             where: { id },
             include: [
-                {
-                    association: 'commenter',
-                    attributes: ['id', 'email', 'nickname'],
-                },
+                // {
+                //     association: 'commenter',
+                //     attributes: ['id', 'email', 'nickname'],
+                // },
                 {
                     association: 'article',
                     attributes: ['id', 'title'],
@@ -186,7 +186,7 @@ module.exports = {
         }),
         //  0406
         findInfoForSubscribe: (article_id) => ({
-            attribute: ['id', 'show'],
+            attribute: ['id', 'show', 'author_id'],
             where: { id: article_id },
             include: [
                 {
@@ -199,12 +199,20 @@ module.exports = {
                 },
                 {
                     association: 'author',
-                    attribute: ['id'],
+                    attributes: ['id'],
                     include: {
                         association: 'fansList',
                         attributes: ['id']
                     }
                 },
+                {
+                    association: 'replys',
+                    attributes: ['id'],
+                    through: {
+                        attributes: ['id'],
+                        paranoid: false
+                    }
+                }
             ]
         }),
         //  0404

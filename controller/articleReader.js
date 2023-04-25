@@ -32,13 +32,13 @@ async function removeList(id_list) {
     return new SuccModel()
 }
 //  0406
-async function restoreList(id_list){
-    let row = await ArticleReader.restore(Opts.FOLLOW.restoreList(id_list))
-    if(row !== id_list.length){
-        throw new MyErr(ErrRes.ARTICLE_READER.RESTORE.ROW)
-    }
-    return new SuccModel()
-}
+// async function restoreList(id_list){
+//     let row = await ArticleReader.restore(Opts.FOLLOW.restoreList(id_list))
+//     if(row !== id_list.length){
+//         throw new MyErr(ErrRes.ARTICLE_READER.RESTORE.ROW)
+//     }
+//     return new SuccModel()
+// }
 module.exports = {
     //  0423
     confirmList,
@@ -47,7 +47,7 @@ module.exports = {
     //  0406
     removeList,
     //  0406
-    restoreList,
+    // restoreList,
     count, 
 }
 

@@ -1,3 +1,4 @@
+const C_Comment = require('./comment')                             //  0425
 const C_BlogImg = require('./blogImg')                              //  0408
 const C_BlogImgAlt = require('./blogImgAlt')                        //  0408
 const C_ArticleReader = require('./articleReader')                  //  0406
@@ -11,7 +12,7 @@ const Blog = require('../server/blog')                              //  0404
 //  0411
 async function findInfoForPageOfSquare(author_id) {
     let list = await Blog.readList(Opts.BLOG.findInfoForPageOfSquare())
-    let blogs = list.filter(({ author }) => author.id !== author_id )
+    let blogs = list.filter(({ author }) => author.id !== author_id)
     let data = Init.browser.blog.sortAndInitTimeFormat(blogs)
     return new SuccModel({ data })
 }
@@ -33,17 +34,38 @@ async function removeList(blogList, author_id) {
         throw new MyErr(ErrRes.BLOG.REMOVE.NO_DATA)
     }
     //  處理cache -----
-    //  找出 readers
-    let readers = await blogList.reduce(async (readerList, blog_id) => {
-        let { data: { readers } } = await findInfoForSubscribe(blog_id)
-        let list = await readerList
-        list.concat(readers)
-        return list
-    }, [])
     let cache = {
-        [CACHE.TYPE.NEWS]: readers,
-        [CACHE.TYPE.PAGE.USER]: [author_id]
+        [CACHE.TYPE.NEWS]: [],
+        [CACHE.TYPE.PAGE.USER]: [author_id],
+        [CACHE.TYPE.PAGE.BLOG]: blogList,
+        [CACHE.TYPE.API.COMMENT]: []
     }
+    //  找出 readers 與 articleReaders
+    let info = await blogList.reduce(async (acc, blog_id) => {
+        let { data: { readers, articleReaders, replys } } = await findInfoForSubscribe(blog_id)
+        let res = await acc
+        res.readers = res.readers.concat(readers)
+        res.articleReaders = res.articleReaders.concat(articleReaders)
+        res.replys = res.replys.concat(replys)
+        return res
+    }, { readers: [], articleReaders: [], replys: [] })
+    //  緩存: 告知使用者，重新爬 news
+    if (info.readers) {
+        cache[CACHE.TYPE.NEWS] = cache[CACHE.TYPE.NEWS].concat(info.readers)
+    }
+    //  軟刪除 articleReaders
+    if (info.articleReaders.length) {
+        await C_ArticleReader.removeList(info.articleReaders)
+    }
+    //  軟刪除 comments(內部也會軟刪除msgReceiver)
+    if (info.replys.length) {
+        info.replys
+        let resModel = await C_Comment.removeList(info.replys)
+        //  
+        cache[CACHE.TYPE.API.COMMENT] = cache[CACHE.TYPE.API.COMMENT].concat(resModel.cache[CACHE.TYPE.API.COMMENT])
+        cache[CACHE.TYPE.NEWS] = cache[CACHE.TYPE.NEWS].concat(resModel.cache[CACHE.TYPE.NEWS])
+    }
+    
     //  刪除 blogList
     let row = await Blog.deleteList(Opts.FOLLOW.removeList(blogList))
     if (row !== blogList.length) {
@@ -59,9 +81,17 @@ async function removeList(blogList, author_id) {
  * @returns {object} SuccModel || ErrModel
  */
 async function modify(author_id, blog_id, blog_data) {
+    let { NEWS, PAGE: { USER, BLOG }, API: { COMMENT } } = CACHE.TYPE
+    let cache = {
+        [NEWS]: [],
+        [USER]: [],
+        [BLOG]: [],
+        [COMMENT]: []
+    }
     // let { title, cancelImgs = [], html, show } = blog_data
     let map = new Map(Object.entries(blog_data))
-    let cache = { [CACHE.TYPE.PAGE.BLOG]: blog_id }
+    // let cache = { [CACHE.TYPE.PAGE.BLOG]: blog_id }
+    cache[BLOG].push(blog_id)
     //  存放 blog 要更新的數據
     let newData = {}
     if (map.has('title')) {
@@ -69,10 +99,11 @@ async function modify(author_id, blog_id, blog_data) {
         let { show, fansList } = data
         //  若 當前是公開狀態，必須告知 fansList
         if (show) {
-            cache[CACHE.TYPE.NEWS] = fansList
+            // cache[CACHE.TYPE.NEWS] = fansList
+            cache[NEWS] = cache[NEWS].concat(fansList)
         }
         //  無論 show 是公開/隱藏，都會影響到作者資訊頁
-        cache[CACHE.TYPE.PAGE.USER] = [author_id]
+        // cache[CACHE.TYPE.PAGE.USER] = [author_id]
         //  存放 blog 要更新的數據
         newData.title = my_xxs(blog_data.title)
     }
@@ -95,8 +126,13 @@ async function modify(author_id, blog_id, blog_data) {
         } else if (!show) {
             resModel = await private(blog_id)
         }
-        cache[CACHE.TYPE.NEWS] = cache[CACHE.TYPE.NEWS] ? cache[CACHE.TYPE.NEWS].concat(resModel.data) : resModel.data
-        cache[CACHE.TYPE.PAGE.USER] = [author_id]
+        for(let [key, list] of Object.entries(resModel.cache)){
+            if(list.length){
+                cache[key] = cache[key].concat( list )
+            }
+        }
+        // cache[CACHE.TYPE.NEWS] = cache[CACHE.TYPE.NEWS] ? cache[CACHE.TYPE.NEWS].concat(resModel.data) : resModel.data
+        // cache[CACHE.TYPE.PAGE.USER] = [author_id]
     }
     if (Object.getOwnPropertyNames(newData).length) {
         //  更新文章
@@ -137,26 +173,52 @@ async function removeImgs(imgs) {
 //  0406
 async function private(blog_id) {
     let { data } = await findInfoForSubscribe(blog_id)
-    let { articleReaders, readers } = data
+    let { author_id, readers, articleReaders, replys } = data
+    let { NEWS, PAGE: { USER, BLOG }, API: { COMMENT } } = CACHE.TYPE
+    let cache = {
+        [NEWS]: [],
+        [USER]: [author_id],
+        [BLOG]: [blog_id],
+        [COMMENT]: []
+    }
+    // cache[USER].push(author_id)
+    if (readers.length) {
+        cache[NEWS] = cache[NEWS].concat(readers)
+    }
     //  軟刪除
     if (articleReaders.length) {
         await C_ArticleReader.removeList(articleReaders)
     }
-    return new SuccModel({ data: readers })
+    //  軟刪除 comments
+    if (replys.length) {
+        let resModel = await C_Comment.removeList(replys)
+        cache[COMMENT] = cache[COMMENT].concat(resModel.cache[COMMENT])
+        cache[NEWS] = cache[NEWS].concat(resModel.cache[NEWS])
+    }
+    // return new SuccModel({ data: readers })
+    return new SuccModel({ cache })
 }
 //  0406
 async function public(blog_id) {
     let { data } = await findInfoForSubscribe(blog_id)
-    let { articleReaders, listWithNotReader, fansList } = data
+    let { author_id, articleReaders, listWithNotReader, fansList } = data
     //  復原軟刪除
-    if (articleReaders.length) {
-        await C_ArticleReader.restoreList(articleReaders)
+    // if (articleReaders.length) {
+    //     await C_ArticleReader.restoreList(articleReaders)
+    // }
+    let { NEWS, PAGE: { USER, BLOG }, API: { COMMENT } } = CACHE.TYPE
+    let cache = {
+        [NEWS]: [],
+        [USER]: [author_id],
+        [BLOG]: [blog_id],
+        [COMMENT]: []
     }
     //  創建 articleReader
     if (listWithNotReader.length) {
         let datas = listWithNotReader.map(reader_id => ({ reader_id, article_id: blog_id }))
         await C_ArticleReader.addList(datas)
     }
+    
     return new SuccModel({ data: fansList })
 }
 //  0406
@@ -167,17 +229,20 @@ async function findInfoForSubscribe(blog_id) {
     }
     let readers = blog.readers.map(({ id }) => id)
     let fansList = blog.author.fansList.map(({ id }) => id)
-    //  軟刪除狀態的 articleReader_id
+    //  包含軟刪除狀態的 articleReader_id
     let articleReaders = blog.readers.map(({ ArticleReader }) => ArticleReader.id)
     //  是作者的粉絲，但尚未成為 reader
     let listWithNotReader = fansList.map(fans => {
-        let isReader = blog.readers.includes(reader => { fans === reader.id })
+        let isReader = readers.includes(fans)
         if (!isReader) {
             return fans
         }
         return undefined
     }).filter(id => id)
-    let data = { articleReaders, readers, fansList, listWithNotReader, show: blog.show }
+    //  文章評論
+    let replys = blog.reqlys.map(({ id }) => id)
+    let author_id = blog.author_id
+    let data = { author_id, articleReaders, replys, readers, fansList, listWithNotReader, show: blog.show }
     return new SuccModel({ data })
 }
 //  0406

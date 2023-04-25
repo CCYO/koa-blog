@@ -16,7 +16,8 @@ async function updateList(datas){
 //  0406
 async function createList(datas) {
     try {
-        let list = await ArticleReader.bulkCreate(datas)
+        let updateOnDuplicate = ['id', 'article_id', 'reader_id', 'createdAt', 'updatedAt', 'confirm']
+        let list = await ArticleReader.bulkCreate(datas, { updateOnDuplicate })
         if (datas.length !== list.length) {
             return new MyErr(ErrRes.ARTICLE_READER.CREATE.ROW)
         }
@@ -35,10 +36,10 @@ async function deleteList(opts) {
     }
 }
 //  0406
-async function restore(opts) {
-    let res = await ArticleReader.restore(opts)
-    return res
-}
+// async function restore(opts) {
+//     let res = await ArticleReader.restore(opts)
+//     return res
+// }
 
 module.exports = {
     //  0423
@@ -48,7 +49,7 @@ module.exports = {
     //  0406
     deleteList,
     //  0406
-    restore,
+    // restore,
 
     count,
     hiddenBlog,

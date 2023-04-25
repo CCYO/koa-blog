@@ -60,6 +60,9 @@ function initBlog(data) {
             blog.imgs = _initBlogImg(data.BlogImgs)
             delete blog.BlogImgs
         }
+        if(map.has('replys')){
+            blog.replys = initComment(data.replys)
+        }
         return blog
     }
 }
