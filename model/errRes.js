@@ -55,6 +55,7 @@ module.exports = {
         },
         //  0406
         CREATE: {
+            NO_DATA: { errno: 50002, msg: '創建 ArticleReader 卻沒提供參數' },
             ROW: { errno: 40005, msg: '創建 ArticleReader 的數量不完全' },
             ERR: { errno: 40005, msg: 'ArticleReader 創建失敗' },
         },

@@ -4,9 +4,8 @@ const { ErrRes, MyErr } = require('../model')
 //  0406
 const { ArticleReader } = require('../db/mysql/model')  //  0406
 //  0423
-async function updateList(datas){
+async function updateList(datas, updateOnDuplicate){
     try {
-        let updateOnDuplicate = Object.keys(datas[0])
         let list = await ArticleReader.bulkCreate(datas, { updateOnDuplicate })
         return Init.articleReader(list)
     }catch(err){
@@ -14,18 +13,18 @@ async function updateList(datas){
     }
 }
 //  0406
-async function createList(datas) {
-    try {
-        let updateOnDuplicate = ['id', 'article_id', 'reader_id', 'createdAt', 'updatedAt', 'confirm']
-        let list = await ArticleReader.bulkCreate(datas, { updateOnDuplicate })
-        if (datas.length !== list.length) {
-            return new MyErr(ErrRes.ARTICLE_READER.CREATE.ROW)
-        }
-        return list.map(item => item.toJSON())
-    } catch (err) {
-        return new MyErr({ ...ErrRes.ARTICLE_READER.CREATE.ERR, err })
-    }
-}
+// async function createList(datas) {
+//     try {
+//         let updateOnDuplicate = ['id', 'article_id', 'reader_id', 'createdAt', 'updatedAt', 'confirm']
+//         let list = await ArticleReader.bulkCreate(datas, { updateOnDuplicate })
+//         if (datas.length !== list.length) {
+//             return new MyErr(ErrRes.ARTICLE_READER.CREATE.ROW)
+//         }
+//         return list.map(item => item.toJSON())
+//     } catch (err) {
+//         return new MyErr({ ...ErrRes.ARTICLE_READER.CREATE.ERR, err })
+//     }
+// }
 //  0406
 async function deleteList(opts) {
     try {
@@ -45,7 +44,7 @@ module.exports = {
     //  0423
     updateList,
     //  0406
-    createList,
+    // createList,
     //  0406
     deleteList,
     //  0406

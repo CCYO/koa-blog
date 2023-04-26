@@ -44,12 +44,16 @@ async function findList(msg_id){
     }
     return new SuccModel({ data: list })
 }
-//  0411
+//  0406
 async function addList(datas) {
     if(datas.length){
         throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.NO_DATA)
     }
-    let list = await MsgReceiver.bulkCreate(datas, Opts.MSG_RECEIVER.bulkCreate(datas))
+    let updateOnDuplicate = ['msg_id', 'receiver_id', 'confirm', 'createdAt', 'updatedAt', 'deletedAt']
+    let list = await MsgReceiver.updateList(datas, updateOnDuplicate)
+    if(list.length !== datas.length){
+        throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.ROW)
+    }
     return new SuccModel({ data: list })
 }
 //  0411
