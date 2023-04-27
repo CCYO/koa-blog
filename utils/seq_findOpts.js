@@ -15,10 +15,10 @@ const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
     //  0404
     BLOG: {
-        //  0406
-        findInfoForHidden: (article_id) => ({
-            attribute: ['id'],
-            where: { id: article_id },
+        //  0427
+        findInfoForModifyTitle: (blog_id) => ({
+            where: { id: blog_id, show: true },
+            attributes: ['id'],
             include: [
                 {
                     association: 'author',
@@ -27,6 +27,32 @@ module.exports = {
                         association: 'fansList',
                         attributes: ['id']
                     }
+                },
+                {
+                    association: 'readers',
+                    attributes: ['id'],
+                },
+                {
+                    association: 'replys',
+                    attributes: ['id'],
+                    include: {
+                        association: 'receivers',
+                        attributes: ['id'],
+                        through: {
+                            attributes: []
+                        }
+                    }
+                }
+            ]
+        }),
+        //  0406
+        findInfoForHidden: (article_id) => ({
+            attribute: ['id'],
+            where: { id: article_id, show: true },
+            include: [
+                {
+                    association: 'author',
+                    attributes: ['id']
                 },
                 {
                     association: 'readers',
@@ -51,13 +77,14 @@ module.exports = {
         //  0406
         findInfoForShow: (article_id) => ({
             attribute: ['id'],
-            where: { id: article_id },
+            where: { id: article_id, show: false },
             include: [
                 {
                     association: 'readers',
                     attributes: ['id'],
+                    //  ArticleReader
                     through: {
-                        // attributes: ['id'],
+                        attributes: ['id', 'article_id', 'reader_id', 'confirm', 'createdAt', 'deletedAt'],
                         paranoid: false
                     }
                 },
@@ -71,12 +98,16 @@ module.exports = {
                 },
                 {
                     association: 'replys',
+                    where: { 
+                        deletedAt: { [Op.not]: null }
+                    },
                     attributes: ['id'],
                     include: {
                         association: 'receivers',
-                        // attributes: ['id'],
+                        attributes: ['id'],
+                        //  MsgReceiver
                         through: {
-                            attributes: ['id']
+                            attributes: ['id', 'msg_id', 'reciever_id', 'confirm', 'createdAt', 'deletedAt'],
                         }
                     }
                 }
@@ -247,7 +278,7 @@ module.exports = {
         },
         //  0404
         findWholeInfo: (id) => ({
-            attributes: ['id', 'html', 'article_id','updatedAt', 'createdAt', 'deletedAt', 'pid'],
+            attributes: ['id', 'html', 'article_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
             where: { id },
             include: [
                 // {
@@ -350,7 +381,7 @@ module.exports = {
                     attributes: ['id'],
                     where: {
                         author_id: idol_id,
-                        show: true 
+                        show: true
                     },
                     required: false,
                     through: {

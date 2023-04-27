@@ -49,7 +49,7 @@ async function addList(datas) {
     if(datas.length){
         throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.NO_DATA)
     }
-    let updateOnDuplicate = ['msg_id', 'receiver_id', 'confirm', 'createdAt', 'updatedAt', 'deletedAt']
+    let updateOnDuplicate = ['id', 'msg_id', 'receiver_id', 'confirm', 'createdAt', 'updatedAt', 'deletedAt']
     let list = await MsgReceiver.updateList(datas, updateOnDuplicate)
     if(list.length !== datas.length){
         throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.ROW)

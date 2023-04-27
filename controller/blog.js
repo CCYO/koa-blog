@@ -1,5 +1,5 @@
 const C_MsgReceiver = require('./msgReceiver')                      //  0426
-const C_Comment = require('./comment')                             //  0425
+const C_Comment = require('./comment')                              //  0425
 const C_BlogImg = require('./blogImg')                              //  0408
 const C_BlogImgAlt = require('./blogImgAlt')                        //  0408
 const C_ArticleReader = require('./articleReader')                  //  0406
@@ -80,57 +80,53 @@ async function removeList(blogList, author_id) {
  * @param {object} blog_data 要更新的資料
  * @returns {object} SuccModel || ErrModel
  */
-async function modify(author_id, blog_id, blog_data) {
-    let { NEWS, PAGE: { USER, BLOG }, API: { COMMENT } } = CACHE.TYPE
+async function modify(blog_id, blog_data) {
+    // let { title, cancelImgs = [], html, show } = blog_data
+    let map = new Map(Object.entries(blog_data))
+    let { NEWS, PAGE: { USER, BLOG } } = CACHE.TYPE
     let cache = {
         [NEWS]: [],
         [USER]: [],
-        [BLOG]: [],
-        // [COMMENT]: []
+        [BLOG]: [blog_id]
     }
-    // let { title, cancelImgs = [], html, show } = blog_data
-    let map = new Map(Object.entries(blog_data))
-    // let cache = { [CACHE.TYPE.PAGE.BLOG]: blog_id }
-    cache[BLOG].push(blog_id)
     //  存放 blog 要更新的數據
     let newData = {}
+    if (map.has('html')) {
+        //  存放此次 blog 要更新的數據
+        newData.html = my_xxs(blog_data.html)
+    }
+    //  更新 文章標題
     if (map.has('title')) {
         //  存放 blog 要更新的數據
         newData.title = my_xxs(blog_data.title)
         //  處理緩存
+        //  若此次更新包含更改文章的公開狀態，可略過，因為下面處理show時會有同樣的操作
         if (!map.has('show')) {
-            let { data: { author_id, readers, receivers } } = await findInfoForModifyTitle(blog_id)
-            //  無論 show 是公開/隱藏，都會影響到作者資訊頁
-            cache[USER] = [author_id]
-            //  若文章是公開狀態，才處理 cache[NEWS]
-            if (show) {
-                cache[NEWS] = cache[NEWS].concat([...readers, ...receivers])
+            let { errno, data } = await findInfoForModifyTitle(blog_id)
+            if (!errno) {
+                let { author_id, followers } = data
+                cache[USER] = [author_id]
+                cache[NEWS] = cache[NEWS].concat(followers)
             }
         }
     }
-    if (map.has('html')) {
-        //  存放 blog 要更新的數據
-        newData.html = my_xxs(blog_data.html)
-    }
-    //  依show處理更新 BlogFollow
+    //  更新 文章公開狀態
     if (map.has('show')) {
-        let show = blog_data.show
-        //  存放 blog 要更新的數據
-        newData.show = show
+        //  存放此次 blog 要更新的數據
+        newData.show = blog_data.show
         let resModel
-        // 公開blog
-        if (show) {
-            //  存放 blog 要更新的數據
+        // 處理緩存
+        if (newData.show) {
+            //  存放此次 blog 要更新的數據
             newData.showAt = new Date()
             resModel = await public(blog_id)
             // 隱藏blog
         } else if (!show) {
             resModel = await private(blog_id)
         }
-        let { author_id, readers, receivers } = resModel.data
-        cache[NEWS] = cache[NEWS].cancat([...readers, ...receivers])
+        let { author_id, followers } = resModel.data
+        cache[NEWS] = cache[NEWS].cancat(followers)
         cache[USER].push(author_id)
-        cache[BLOG].push(blog_id)
     }
     if (Object.getOwnPropertyNames(newData).length) {
         //  更新文章
@@ -170,109 +166,103 @@ async function removeImgs(imgs) {
 }
 //  0406
 async function public(blog_id) {
-    let blog = await Blog.read(Opts.BLOG.findInfoForShow(blog_id))
-    let { author, readers, replys } = blog
-    let author_id = author.id
-    let fansList = new Set(author.fansList.map(({ id }) => id))
+    let resModel = await find(Opts.BLOG.findInfoForShow(blog_id))
+    if (resModel.errno) {
+        throw new MyErr(resModel)
+    }
+    let { author: { id: author_id, fansList }, readers, replys } = resModel.data
+    let fansList = new Set(fansList.map(({ id }) => id))
     let readers = [...fansList]
     let articleReaders = []
     for (let { id: reader_id, ArticleReader } of readers) {
         if (fansList.has(reader_id)) {
             fansList.delete(reader_id)
-            delete ArticleReader.updatedAt
             articleReaders.push({ ...ArticleReader, deletedAt: null })
         }
     }
     for (let reader_id of [...fansList]) {
         articleReaders.push({ reader_id, article_id: blog_id })
     }
-    await C_ArticleReader.addList(articleReaders)
-    let { receivers, msgReceivers } = replys.reduce(acc, ({ receivers }) => {
-        for (let { receiver_id, MsgReceiver } of receivers) {
-            acc.receivers.push(receiver_id)
-            delete MsgReceiver.updatedAt
-            acc.msgReceivers.push({ ...MsgReceiver, deletedAt: null })
+    //  恢復軟刪除 + 新增
+    if (articleReaders.length) {
+        await C_ArticleReader.addList(articleReaders)
+    }
+    let receivers = []
+    let msgReceivers = []
+    for (let reply of replys) {
+        for (let { receiver_id, MsgReceiver } of reply.receivers) {
+            receivers.push(receiver_id)
+            msgReceivers.push({ ...MsgReceiver, deletedAt: null })
         }
-        return acc
-    }, { receivers: [], msgReceivers: [] })
-    await C_MsgReceiver.addList(msgReceivers)
-    let data = { author_id, readers, receivers }
+    }
+    //  恢復軟刪除
+    if (msgReceivers.length) {
+        await C_MsgReceiver.addList(msgReceivers)
+    }
+    let data = { author_id, followers: [...readers, ...receivers] }
     return new SuccModel({ data })
 }
 //  0406
 async function private(blog_id) {
-    let blog = await Blog.read(Opts.BLOG.findInfoForHidden(blog_id))
-    let { author: { id: author_id }, readers, replys } = blog
-    let data = { readers: [], receivers: [], author_id }
+    let resModel = await find(Opts.BLOG.findInfoForHidden(blog_id))
+    if (resModel.errno) {
+        throw new MyErr(resModel)
+    }
+    let { author: { id: author_id }, readers, replys } = resModel.data
+    let readers = []
     let articleReaders = []
-    //  軟刪除 articleReaders
     for (let { id: reader_id, ArticleReader } of readers) {
-        data.readers.push(reader_id)
+        readers.push(reader_id)
         articleReaders.push(ArticleReader)
     }
+    //  軟刪除 articleReaders
     if (articleReaders.length) {
         await C_ArticleReader.removeList(articleReaders)
     }
-    //  軟刪除 msgReceivers
+    let receivers = []
     let msgReceivers = []
-    for (let { receivers } of replys) {
-        for (let { id: receiver_id, MsgReceiver } of receivers) {
-            data.receivers.push(receiver_id)
+    for (let reply of replys) {
+        for (let { id: receiver_id, MsgReceiver } of reply.receivers) {
+            receivers.push(receiver_id)
             msgReceivers.push(MsgReceiver)
         }
     }
+    //  軟刪除 msgReceivers
     if (msgReceivers.length) {
         await C_MsgReceiver.removeList(msgReceivers)
     }
+    let data = { author_id＿, followers: [...readers, ...receivers] }
     return new SuccModel({ data })
 }
 //  0426
 async function findInfoForModifyTitle(blog_id) {
-    let resModel = await find({
-        where: { id: blog_id },
-        attributes: ['id', 'show'],
-        include: [
-            {
-                association: 'readers',
-                attributes: ['id'],
-                through: {
-                    attributes: []
-                }
-            },
-            {
-                association: 'replys',
-                attributes: ['id'],
-                through: {
-                    attributes: ['id']
-                },
-                include: {
-                    association: 'receivers',
-                    attributes: ['id'],
-                    through: {
-                        attributes: []
-                    }
-                }
-            }
-        ]
-    })
+    let resModel = await find(Opts.BLOG.findInfoForModifyTitle(blog_id))
     if (resModel.errno) {
-        throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST)
+        return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST)
     }
-    let { show, author_id, readers, replys } = resModel.data
-    let data = {
-        author_id,
-        show,
-        readers: [],
-        receivers: [],
-    }
+    let { author, readers, replys } = resModel.data
+    let author_id = author.id
+    let fansList = new Set(author.fansList.map(({ id }) => id))
+    let readers = [...fansList]
+    let articleReaders = []
+    //  過濾出新粉絲
     for (let { id: reader_id } of readers) {
-        data.readers.push(reader_id)
+        fansList.has(reader_id) && fansList.delete(reader_id)
     }
-    for (let { receivers } of replys) {
-        for (let { id: receiver_id } of receivers) {
-            data.receivers.push(receiver_id)
+    //  整理新粉絲要建立的 articleReaders 的數據
+    for (let reader_id of [...fansList]) {
+        articleReaders.push({ reader_id, article_id: blog_id })
+    }
+    //  建立新粉絲的 articleReaders 的數據
+    await C_ArticleReader.addList(articleReaders)
+    let receivers = []
+    //  整理出 receivers
+    for (let reply of replys) {
+        for (let { id: receiver_id } of reply.receivers) {
+            receivers.push(receiver_id)
         }
     }
+    let data = { author_id, followers: [...readers, ...receivers] }
     return new SuccModel({ data })
 }
 //  0406
@@ -346,8 +336,6 @@ module.exports = {
     removeList,
     //  0406
     modify,
-    //  0406
-    findInfoForSubscribe,
     //  0406
     add,
     //  0404
