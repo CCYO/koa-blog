@@ -46,7 +46,7 @@ async function findList(msg_id){
 }
 //  0406
 async function addList(datas) {
-    if(datas.length){
+    if(!datas.length){
         throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.NO_DATA)
     }
     let updateOnDuplicate = ['id', 'msg_id', 'receiver_id', 'confirm', 'createdAt', 'updatedAt', 'deletedAt']

@@ -11,9 +11,9 @@ router.prefix('/api/blog')                                      //  0406
 //  0411
 //  刪除 blogs
 router.delete('/', Check.api_logining/*, Cache.modifiedtCache 未整理*/, async (ctx, next) => {
-    const author_id = ctx.session.user.id
+    // const author_id = ctx.session.user.id
     const { blogList } = ctx.request.body
-    ctx.body = await Blog.removeList(blogList, author_id)
+    ctx.body = await Blog.removeList(blogList)
 })
 //  0409
 //  為Blog既存圖片建立alt數據
@@ -23,9 +23,8 @@ router.post('/blogImgAlt', Check.api_logining/*, Cache.modifiedtCache 未整理*
 })
 //  更新 blog 資料  0326
 router.patch('/', Check.api_logining/*, Cache.modifiedtCache 未整理*/, async (ctx, next) => {
-    const author_id = ctx.session.user.id
     const { id: blog_id, ...blog_data } = ctx.request.body
-    res = await Blog.modify(author_id, blog_id, blog_data)
+    res = await Blog.modify(blog_id, blog_data)
     ctx.body = res
 })
 //  0406

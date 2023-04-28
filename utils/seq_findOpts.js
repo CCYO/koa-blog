@@ -35,6 +35,10 @@ module.exports = {
                 {
                     association: 'replys',
                     attributes: ['id'],
+                    required: false,
+                    // where: {
+                    //     deletedAt: { [Op.not]: null }
+                    // },
                     include: {
                         association: 'receivers',
                         attributes: ['id'],
@@ -47,7 +51,7 @@ module.exports = {
         }),
         //  0406
         findInfoForHidden: (article_id) => ({
-            attribute: ['id'],
+            attributes: ['id'],
             where: { id: article_id, show: true },
             include: [
                 {
@@ -64,6 +68,10 @@ module.exports = {
                 {
                     association: 'replys',
                     attributes: ['id'],
+                    required: false,
+                    // where: {
+                    //     deletedAt: { [Op.not]: null }
+                    // },
                     include: {
                         association: 'receivers',
                         attributes: ['id'],
@@ -76,8 +84,8 @@ module.exports = {
         }),
         //  0406
         findInfoForShow: (article_id) => ({
-            attribute: ['id'],
-            where: { id: article_id, show: false },
+            attributes: ['id'],
+            where: { id: article_id },
             include: [
                 {
                     association: 'readers',
@@ -98,16 +106,17 @@ module.exports = {
                 },
                 {
                     association: 'replys',
-                    where: { 
-                        deletedAt: { [Op.not]: null }
-                    },
+                    required: false,
+                    // where: { 
+                    //     deletedAt: { [Op.not]: null }
+                    // },
                     attributes: ['id'],
                     include: {
                         association: 'receivers',
                         attributes: ['id'],
                         //  MsgReceiver
                         through: {
-                            attributes: ['id', 'msg_id', 'reciever_id', 'confirm', 'createdAt', 'deletedAt'],
+                            attributes: ['id', 'msg_id', 'receiver_id', 'confirm', 'createdAt', 'deletedAt'],
                         }
                     }
                 }
@@ -229,7 +238,7 @@ module.exports = {
             }
         },
         //  0414
-        _findLastItemOfPidAndNotSelf: (article_id, commenter_id, pid) => ({
+        _findLastItemOfPidAndNotSelf: (article_id, commenter_id, time, pid) => ({
             attributes: ['id', 'html', 'article_id', 'commenter_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
             where: {
                 article_id,
@@ -281,10 +290,10 @@ module.exports = {
             attributes: ['id', 'html', 'article_id', 'updatedAt', 'createdAt', 'deletedAt', 'pid'],
             where: { id },
             include: [
-                // {
-                //     association: 'commenter',
-                //     attributes: ['id', 'email', 'nickname'],
-                // },
+                {
+                    association: 'commenter',
+                    attributes: ['id', 'email', 'nickname'],
+                },
                 {
                     association: 'article',
                     attributes: ['id', 'title'],

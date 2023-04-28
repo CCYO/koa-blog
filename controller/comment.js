@@ -5,17 +5,15 @@ const { SuccModel, ErrModel, MyErr, ErrRes } = require('../model') //  0404
 const Opts = require('../utils/seq_findOpts')       //  0404
 const Comment = require('../server/comment')        //  0404
 //  0425
-async function removeList(list) {
-    let cache = await list.reduce(async (acc, comment_id) => {
-        let model = await remove({ comment_id })
-        let res = await acc
-        res[CACHE.TYPE.API.COMMENT] = res[CACHE.TYPE.API.COMMENT].concat( model.cache[CACHE.TYPE.API.COMMENT] )
-        res[CACHE.TYPE.NEWS] = res[CACHE.TYPE.NEWS].concat( model.cache[CACHE.TYPE.NEWS] )
-    }, {
-        [CACHE.TYPE.API.COMMENT]: [],
-        [CACHE.TYPE.NEWS]: []
-    })
-    return new SuccModel({ cache })
+async function removeListForRemoveBlog(list) {
+    if(!list.length){
+        throw new MyErr(ErrRes.COMMENT.DELETE.NOT_DATA)
+    }
+    let row = await Comment.deleteList(Opts.FOLLOW.removeList(list))
+    if(row !== list.legnth){
+        return new MyErr(ErrRes.COMMENT.DELETE.ROW)
+    }
+    return new SuccModel()
 
 }
 //  0423
@@ -157,7 +155,7 @@ async function remove({ comment_id }) {
 
     //  更新數據
     if (updateList.length) {
-        await C_MsgReceiver.modifyList(updateList)
+        await C_MsgReceiver.addList(updateList)
     }
     //  硬刪除
     if (deleteList.length) {
@@ -254,10 +252,8 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
         newDatas.push({ ...defProp, receiver_id, createdAt: newComment.createdAt, confirm: false })
     }
     //  更新
-
     if (newDatas.length) {
-        let res = await C_MsgReceiver.modifyList(newDatas)
-        console.log('res')
+        await C_MsgReceiver.addList(newDatas)
     }
 
     let cache = {
@@ -351,7 +347,7 @@ async function findInfoForPageOfBlog(article_id) {
 
 module.exports = {
     //  0425
-    removeList,
+    removeListForRemoveBlog,
     //  0411
     remove,
     //  0411

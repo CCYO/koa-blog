@@ -21,7 +21,7 @@ async function confirmList(datas){
 }
 //  0406
 async function addList(datas) {
-    if(datas.length){
+    if(!datas.length){
         throw new MyErr(ErrRes.ARTICLE_READER.CREATE.NO_DATA)
     }
     let updateOnDuplicate = ['id', 'article_id', 'reader_id', 'confirm', 'updatedAt', 'createdAt', 'deletedAt']

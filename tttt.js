@@ -1,17 +1,11 @@
 const Opts = require('./utils/seq_findOpts')
 const S_Comment = require('./server/comment')
-const { Comment } = require('./db/mysql/model')
+const S_Blog = require('./server/blog')
+const { Comment, seq, Blog } = require('./db/mysql/model')
 go()
 async function go() {
-    let res = await Comment.findOne({
-        where: {
-            id: 38,
-        },
-        include: {
-            required: true,
-            association: 'article'
-        }
-    })
+    let res = await S_Blog.read(Opts.BLOG.findInfoForHidden(2))
+    console.log('@res => ', res)
     console.log('@res => ', res.toJSON())
 }
 

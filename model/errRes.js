@@ -93,6 +93,8 @@ module.exports = {
     COMMENT: {
         //  0414
         DELETE: {
+            //  0429
+            NOT_DATA: {errno: 50002, msg: '刪除 COMMENT 卻沒提供參數'},
             //  0414
             ERR: { errno: 801, msg: '刪除 COMMENT 失敗' },
             ROW: { errno: 40003, msg: '刪除 BLOG 的數量不完全' },
