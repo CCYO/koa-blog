@@ -13,6 +13,15 @@ const {
 } = require('../db/mysql/model')
 const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
+    //  0429
+    BLOG_IMG: {
+        findInfoForRemoveBlog: (blog_id) => ({
+            where: {
+                blog_id
+            },
+            attributes: ['id']
+        })
+    },
     //  0404
     BLOG: {
         //  0427
@@ -381,7 +390,6 @@ module.exports = {
                     where: { id: idol_id },
                     required: false,
                     through: {
-                        // attributes: ['id'],
                         paranoid: false
                     }
                 },

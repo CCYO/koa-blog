@@ -163,6 +163,10 @@ module.exports = {
     },
     //  0406
     BLOG_IMG: {
+        //  0429
+        READ: {
+            NOT_EXIST: { errno: 1111, msg: '沒有相符的 BlogImg'}
+        },
         //  0406
         CREATE: {
             //  0406

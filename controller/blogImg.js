@@ -4,6 +4,14 @@ const {
     MyErr, ErrRes, SuccModel
     , ErrModel } = require('../model')
 const BlogImg = require('../server/blogImg')    //  0406
+//  0429
+async function findInfoForRemoveBlog(blog_id){
+    let list = await BlogImg.readList(Opts.BLOG_IMG.findInfoForRemoveBlog(blog_id))
+    if(list.length){
+        return new ErrModel(ErrRes.BLOG_IMG.READ.NOT_EXIST)
+    }
+    return new SuccModel({ data: list })
+}
 //  0408
 async function removeList(id_list) {
     let raw = await BlogImg.deleteList(Opts.FOLLOW.removeList(id_list))
@@ -22,6 +30,8 @@ async function add(data) {
 }
 
 module.exports = {
+    //  0429
+    findInfoForRemoveBlog,
     //  0408
     removeList,
     //  0406

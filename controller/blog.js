@@ -9,6 +9,7 @@ const { MyErr, ErrRes, ErrModel, SuccModel } = require('../model')  //  0404
 const Init = require('../utils/init')                               //  0404
 const Opts = require('../utils/seq_findOpts')                       //  0404
 const Blog = require('../server/blog')                              //  0404
+const { BlogImg } = require('../db/mysql/model')
 
 //  0411
 async function findInfoForPageOfSquare(author_id) {
@@ -34,25 +35,16 @@ async function removeList(blogList) {
     if (!Array.isArray(blogList) || !blogList.length) {
         throw new MyErr(ErrRes.BLOG.REMOVE.NO_DATA)
     }
-    let { TYPE: {NEWS, PAGE: { USER, BLOG }}} = CACHE
+    let { TYPE: { NEWS, PAGE: { USER, BLOG } } } = CACHE
     //  處理cache -----
     let cache = {
         [NEWS]: [],
         [USER]: [],
         [BLOG]: blogList
     }
-    //  找出 readers 與 articleReaders
-    // let info = await blogList.reduce(async (acc, blog_id) => {
-    //     let { data: { readers, articleReaders, replys } } = await findInfoForSubscribe(blog_id)
-    //     let res = await acc
-    //     res.readers = res.readers.concat(readers)
-    //     res.articleReaders = res.articleReaders.concat(articleReaders)
-    //     res.replys = res.replys.concat(replys)
-    //     return res
-    // }, { readers: [], articleReaders: [], replys: [] })
-
     let { followers, replys, author_id } = await blogList.reduce(async (acc, blog_id) => {
         let { data: { author_id, followers, replys } } = await private(blog_id)
+        
         let res = await acc
         if (!res.author_id) {
             res.author_id = author_id
@@ -65,17 +57,23 @@ async function removeList(blogList) {
     }, { followers: new Set(), replys: [], author_id: undefined })
     cache[USER].push(author_id)
     //  緩存: 告知使用者，重新爬 news
-    if (followers.size) {
-        cache[NEWS] = [...followers]
-    }
-    //  軟刪除 articleReaders
-    // if (info.articleReaders.length) {
-    //     await C_ArticleReader.removeList(info.articleReaders)
-    // }
+
+    cache[NEWS] = [...followers]
     //  軟刪除 comments(內部也會軟刪除msgReceiver)
     if (replys.length) {
         await C_Comment.removeListForRemoveBlog(replys)
     }
+    //  找出 所有 blog 內的 blogImg
+    let blogImgs = await blogList.reduce( async (acc, blog_id) => {
+        let { errno , data } = await C_BlogImg.findInfoForRemoveBlog(blog_id)
+        let blogImgs = await acc
+        if(!errno){
+            blogImgs = blogImgs.concat( data.map( ({ id: blogImg_id }) => blogImg_id ))
+        }
+        return blogImgs 
+    }, [])
+    //  刪除 所有 blog 內的 blogImg
+    await C_BlogImg.removeList(blogImgs)
     //  刪除 blogList
     let row = await Blog.deleteList(Opts.FOLLOW.removeList(blogList))
     if (row !== blogList.length) {

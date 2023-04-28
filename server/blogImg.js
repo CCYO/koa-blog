@@ -1,6 +1,10 @@
 const { BlogImg, BlogImgAlt } = require('../db/mysql/model')    //  0406
 const { ErrRes, MyErr } = require('../model')                   //  0406
 const Init = require('../utils/init')                           //  0406
+async function readList(opts){
+    let list = await BlogImg.findAll(opts)
+    return Init.blogImg(list)
+}
 //  0408
 async function deleteList(opts) {
     try {
