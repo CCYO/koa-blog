@@ -1,16 +1,32 @@
+//  0430
+const { SuccModel, ErrRes, MyErr } = require('../model')
+//  0430
+const { NEWS: { TYPE: { IDOL_FANS, ARTICLE_READER, MSG_RECEIVER }} } = require('../conf/constant')
 /**
  * @description Controller news相關
  */
 //  0426
-const C_MsgReceiver = require('./msgReceiver')
-//  0426
-const C_ArticleReader = require('./articleReader')
-//  0426
-const C_IdolFans = require('./idolFans')
-//  0426
 const News = require('../server/news')
-//  0404
-const { SuccModel } = require('../model')
+
+//  0430
+async function confirm({ type, id }) {
+    let row = await News.update(type, id, { confirm: true })
+    if(row !== 1){
+        let TABLE = getTableName(type)
+        throw new MyErr(ErrRes[TABLE].UPDATE.CONFIRM)
+    }
+    return new SuccModel()
+    function getTableName(type) {
+        switch (type) {
+            case IDOL_FANS:
+                return 'IDOL_FANS'
+            case ARTICLE_READER:
+                return 'ARTICLE_READER'
+            case MSG_RECEIVER:
+                return 'MSG_RECEIVER'
+        }
+    }
+}
 //  0423
 async function readMore({ me, excepts, newsListNeedToConfirm }) {
     /*
@@ -49,34 +65,6 @@ async function readMore({ me, excepts, newsListNeedToConfirm }) {
     }
     return new SuccModel({ data: { news, me }, cache })
 }
-//  0423
-async function confirmList(datas) {
-    // let { blogs, people, comments } = list
-    function getUpdateFn(type) {
-        let table
-        switch (type) {
-            case 'people':
-                table = C_IdolFans
-                break
-            case 'blogs':
-                table = C_ArticleReader
-                break
-            case 'comments':
-                table = C_MsgReceiver
-                break
-        }
-        return table.confirmList
-    }
-    let promises = []
-    for (let [type, list] of Object.entries(datas)) {
-        if (list.length) {
-            let fn = getUpdateFn(type)
-            promises.push(fn(list))
-        }
-    }
-    await Promise.all(promises)
-    return new SuccModel()
-}
 //  0404
 /** 藉由 userID 取得 news
  * @param {number} userId 
@@ -98,7 +86,7 @@ async function getFirstNews(me) {
 }
 module.exports = {
     //  0423
-    confirmList,
+    confirm,
     //  0423
     readMore,
     //  0404

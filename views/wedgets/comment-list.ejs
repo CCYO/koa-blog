@@ -1,7 +1,7 @@
 <% comments.forEach(({ id, html, commenter, reply, isDeleted, time}) => { %>
 <% if (html || reply.length) { %>
 
-<div class="comment-box">
+<div class="comment-box" id="comment_<%= id %>">
     
         <% if (isDeleted || !html) { %>
         <div>

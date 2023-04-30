@@ -160,7 +160,10 @@
                             }
                         })
                     }
-
+                    //  處理 因為comment通知前來此頁面，可以直接滑動至錨點
+                    if(location.hash){
+                        location.href = location.hash
+                    }
 
                     //  初始化根評論editor
                     let editor = init_editor(document.querySelector(commentEditor_root))
@@ -231,7 +234,8 @@
                         }
                         let editorConfig = {
                             MENU_CONF: {},
-                            customPaste
+                            customPaste,
+                            autoFocus: false
                         }
                         //  若container的父元素.replyBox的commentId不為0，則替editor添加onBlur handle
                         if (container.parentElement.dataset.commentId * 1) {
@@ -239,6 +243,7 @@
                             editorConfig.onBlur = function () {
                                 $(container).hide()
                             }
+                            editorConfig.autoFocus = true
                         }
                         //  editor config : placeholder
                         editorConfig.placeholder = '我有話要說'
@@ -351,7 +356,7 @@
                                     //  創建評論
                                     function templateComment({ id, html, time, commenter }) {
                                         return `
-                                <div class="comment-box">
+                                <div class="comment-box" id="comment_${id}">
                                     <div>${html}</div>
                                     <div>
                                         By<a href="/other/${commenter.id}">${commenter.nickname}</a> 於 ${time} 發佈
@@ -406,7 +411,6 @@
                         }
                         return false
                     }
-
                 }
 
             </script>

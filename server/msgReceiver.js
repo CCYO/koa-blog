@@ -3,9 +3,12 @@ const Init = require('../utils/init')
 const { ErrRes, MyErr } = require('../model')
 //  0411
 const { MsgReceiver } = require('../db/mysql/model')
+async function update(id, newData){
+    let [ row ] = await MsgReceiver.update(newData, { where: id })
+    return row
+}
 //  0414
 async function updateList(datas, updateOnDuplicate) {
-    
     try {
         let list = await MsgReceiver.bulkCreate(datas, { updateOnDuplicate })
         return Init.msgReceiver(list)
@@ -48,6 +51,8 @@ async function read(opts) {
     return list.map(item => item.toJSON())
 }
 module.exports = {
+    //  0430
+    update,
     //  0414
     updateList,
     //  0414

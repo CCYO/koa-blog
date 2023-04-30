@@ -1,13 +1,13 @@
-
-const ENV = require('../utils/env')
 //  0430
-const S_CACHE = require('../server/cache')
+const ENV = require('../../utils/env')
 //  0430
-const C_News = require('../controller/news')
+const S_CACHE = require('../../server/cache')
 //  0430
-const { ErrRes, ErrModel } = require('../model')
+const C_News = require('../../controller/news')
 //  0430
-async function confirmFollow(ctx, next) {
+const { ErrRes, ErrModel } = require('../../model')
+//  0430
+async function confirm(ctx, next) {
     let type = ctx.query.type && ctx.query.type * 1
     let id = ctx.query.id && ctx.query.id * 1
     if (type && id) {
@@ -25,5 +25,5 @@ async function confirmFollow(ctx, next) {
 }
 
 module.exports = {
-    confirmFollow
+    confirm
 }

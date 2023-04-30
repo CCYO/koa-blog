@@ -59,38 +59,45 @@ module.exports = {
             ]
         }),
         //  0406
-        findInfoForHidden: (article_id) => ({
-            attributes: ['id'],
-            where: { id: article_id, show: true },
-            include: [
-                {
-                    association: 'author',
-                    attributes: ['id']
-                },
-                {
-                    association: 'readers',
-                    attributes: ['id'],
-                    through: {
+        findInfoForHidden: (article_id, forDelete) => {
+            let where = { id: article_id }
+            //  不作為刪除 blog 使用時，判斷條件需加入 show: true
+            if (!forDelete) {
+                where.show = true
+            }
+            return {
+                attributes: ['id'],
+                where,
+                include: [
+                    {
+                        association: 'author',
                         attributes: ['id']
-                    }
-                },
-                {
-                    association: 'replys',
-                    attributes: ['id'],
-                    required: false,
-                    // where: {
-                    //     deletedAt: { [Op.not]: null }
-                    // },
-                    include: {
-                        association: 'receivers',
+                    },
+                    {
+                        association: 'readers',
                         attributes: ['id'],
                         through: {
                             attributes: ['id']
                         }
+                    },
+                    {
+                        association: 'replys',
+                        attributes: ['id'],
+                        required: false,
+                        // where: {
+                        //     deletedAt: { [Op.not]: null }
+                        // },
+                        include: {
+                            association: 'receivers',
+                            attributes: ['id'],
+                            through: {
+                                attributes: ['id']
+                            }
+                        }
                     }
-                }
-            ]
-        }),
+                ]
+            }
+        },
         //  0406
         findInfoForShow: (article_id) => ({
             attributes: ['id'],
@@ -196,7 +203,7 @@ module.exports = {
         }),
         //  0404
         findListForUserPage: (author_id) => ({
-            attributes: ['id', 'title', 'show', 'showAt', 'updatedAt'],
+            attributes: ['id', 'title', 'author_id', 'show', 'showAt', 'updatedAt'],
             where: { author_id }
         })
     },

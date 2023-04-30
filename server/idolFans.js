@@ -10,9 +10,8 @@ const {
 } = require('../model')
 
 //  0423
-async function updateList(datas){
+async function updateList(datas, updateOnDuplicate){
     try {
-        let updateOnDuplicate = Object.keys(datas[0])
         let list = await IdolFans.bulkCreate(datas, { updateOnDuplicate })
         return Init.idolFans(list)
     }catch(err){

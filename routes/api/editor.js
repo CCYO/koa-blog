@@ -10,7 +10,7 @@ const router = require('koa-router')()                          //  0406
 router.prefix('/api/blog')                                      //  0406
 //  0411
 //  刪除 blogs
-router.delete('/', Check.api_logining/*, Cache.modifiedtCache 未整理*/, async (ctx, next) => {
+router.delete('/', Check.api_logining, Check.api_isAuthor /*, Cache.modifiedtCache 未整理*/, async (ctx, next) => {
     // const author_id = ctx.session.user.id
     const { blogList } = ctx.request.body
     ctx.body = await Blog.removeList(blogList)

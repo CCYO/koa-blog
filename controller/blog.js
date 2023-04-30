@@ -43,7 +43,7 @@ async function removeList(blogList) {
         [BLOG]: blogList
     }
     let { followers, replys, author_id } = await blogList.reduce(async (acc, blog_id) => {
-        let { data: { author_id, followers, replys } } = await private(blog_id)
+        let { data: { author_id, followers, replys } } = await private(blog_id, true)
         
         let res = await acc
         if (!res.author_id) {
@@ -121,10 +121,10 @@ async function modify(blog_id, blog_data) {
     //  更新 文章公開狀態
     if (map.has('show')) {
         //  存放此次 blog 要更新的數據
-        newData.show = blog_data.show
+        let show = newData.show = blog_data.show
         let resModel
         // 處理緩存
-        if (newData.show) {
+        if (show) {
             //  存放此次 blog 要更新的數據
             newData.showAt = new Date()
             resModel = await public(blog_id)
@@ -211,8 +211,8 @@ async function public(blog_id) {
     return new SuccModel({ data })
 }
 //  0406
-async function private(blog_id) {
-    let blog = await Blog.read(Opts.BLOG.findInfoForHidden(blog_id))
+async function private(blog_id, forDelete = false) {
+    let blog = await Blog.read(Opts.BLOG.findInfoForHidden(blog_id, forDelete))
     if (!blog) {
         throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST)
     }

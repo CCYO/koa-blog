@@ -52,7 +52,7 @@ router.get('/blog/:blog_id',
     })
 //  0406
 //  編輯文章
-router.get('/blog/edit/:blog_id', Check.view_logining,
+router.get('/blog/edit/:blog_id', Check.view_logining, Check.view_isAuthor,
     //  未整理
     Cache.blogEditPageCache,
     async (ctx, next) => {

@@ -7,7 +7,7 @@ const BlogImg = require('../server/blogImg')    //  0406
 //  0429
 async function findInfoForRemoveBlog(blog_id){
     let list = await BlogImg.readList(Opts.BLOG_IMG.findInfoForRemoveBlog(blog_id))
-    if(list.length){
+    if(!list.length){
         return new ErrModel(ErrRes.BLOG_IMG.READ.NOT_EXIST)
     }
     return new SuccModel({ data: list })

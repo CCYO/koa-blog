@@ -24,6 +24,8 @@ async function create(data) {
     }
 }
 module.exports = {
+    //  0430
+    readList,
     //  0408
     deleteList,
     //  0406

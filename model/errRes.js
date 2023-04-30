@@ -7,10 +7,10 @@ module.exports = {
     MSG_RECEIVER: {
         //  0414
         UPDATE: {
-            //  0423
-            CONFIRM: { errno: 1003, msg: 'confirm msgReceiver 失敗' },
-            //  0414
+            //  0430
             ERR: { errno: 801, msg: '更新 MsgReceiver 失敗' },
+            //  0430
+            CONFIRM: { errno: 1003, msg: 'confirm msgReceiver 失敗' },
             //  0414
             ROW: { errno: 1401, msg: 'bulkCreate MsgReceiver 的數量不完全' }
         },
@@ -41,10 +41,12 @@ module.exports = {
     ARTICLE_READER: {
         //  0423
         UPDATE: {
+            //  0430
+            ERR: { errno: 801, msg: '更新 ArticleReader 失敗' },
+            //  0430
+            CONFIRM: { errno: 1003, msg: 'confirm articleReader 失敗' },
             //  0426
             ROW: { errno: 10004, msg: ' ArticleReader 更新結果的數量不完全'},
-            CONFIRM: { errno: 1003, msg: 'confirm articleReader 失敗' },
-            ERR: { errno: 801, msg: '更新 ArticleReader 失敗' }
         },
         //  0406
         DELETE: {
@@ -72,6 +74,7 @@ module.exports = {
         },
         //  0423
         UPDATE: {
+            //  0430
             CONFIRM: { errno: 1003, msg: 'confirm IdolFans 失敗' },
             ERR: { errno: 801, msg: '更新 IdolFans 失敗' }
         },
@@ -196,6 +199,8 @@ module.exports = {
     },
     //  0404
     PERMISSION: {
+        //  0430
+        NOT_AUTHOR: { errno: 200002, msg: '非作者'},
         //  0404
         NO_LOGIN: { errno: 20001, msg: '尚未登入' },
 

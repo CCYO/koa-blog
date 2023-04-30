@@ -4,6 +4,14 @@ const { MyErr, SuccModel, ErrRes, ErrModel } = require('../model')
 const Opts = require('../utils/seq_findOpts')
 //  0411
 const MsgReceiver = require('../server/msgReceiver');
+//  0423
+async function confirm(id){
+    let row = await MsgReceiver.update(id, { confirm: true })
+    if(row !== 1){
+        throw new MyErr(ErrRes.MSG_RECEIVER.UPDATE.CONFIRM)
+    }
+    return new SuccModel()
+}
 //  0426
 async function removeList(datas) {
     let list = datas.map(( {id} ) => id)
@@ -12,16 +20,6 @@ async function removeList(datas) {
         throw new MyErr(ErrRes.MSG_RECEIVER.DELETE.ROW)
     }
     return new SuccModel()
-}
-//  0423
-async function confirmList(datas){
-    let updatedAt = new Date()
-    let newDatas = datas.map( data => ({ ...data, updatedAt, confirm: true}))
-    let list = await MsgReceiver.updateList(newDatas)
-    if(list.length !== newDatas.length){
-        throw new MyErr(ErrRes.MSG_RECEIVER.UPDATE.CONFIRM)
-    }
-    return new SuccModel({ data: list })
 }
 //  0414
 async function modifyList(datas){
@@ -67,8 +65,6 @@ async function find(whereOps) {
 module.exports = {
     //  0426
     removeList,
-    //  0423
-    confirmList,
     //  0414
     modifyList,
     //  0414

@@ -1,15 +1,16 @@
 /**
  * @description Router/Views user
  */
+//  0430
+const { confirm } = require('../../middleware/views/news')
+//  0430
+const Cache = require('../../middleware/views/cache')
 //  未處理
-const { confirmFollow } = require('../../middleware/confirmFollow')
-//  未處理
-const Cache = require('../../middleware/cache')                         
 const Check = require('../../middleware/check_login')                   //  0406
 const router = require('koa-router')()                                  //  0406
 
 //  他人頁  0324
-router.get('/other/:id', Check.view_isSelf, confirmFollow, Cache.getOtherCache, async (ctx, next) => {
+router.get('/other/:id', Check.view_isSelf, confirm, Cache.other, async (ctx, next) => {
     let userId = ctx.params.id * 1
     //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined }
     let cacheStatus = ctx.cache[PAGE.USER]

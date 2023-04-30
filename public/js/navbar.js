@@ -258,7 +258,6 @@ async function initNavbar() {
 
                     //  生成通知列表內的相應html
                     function template_list(newsItemList) {
-                        console.log('@newsItemList => ', newsItemList)
                         return newsItemList.reduce((init, newsItem) => {
                             let type = newsItem.type
                             if (type === 1) {
@@ -266,6 +265,7 @@ async function initNavbar() {
                             } else if (type === 2) {
                                 init += template_blog(newsItem)
                             } else {
+                                
                                 init += template_comment(newsItem)
                             }
                             let hr = newsItem.confirm ? `<li data-my-hr="confirm-news-hr">` : `<li data-my-hr="unconfirm-news-hr">`
@@ -274,7 +274,7 @@ async function initNavbar() {
                         }, '')
 
                         function template_fans({ confirm, id, fans, timestamp }) {
-                            let query = confirm ? '' : `?anchorType=1&anchorId=${id}`
+                            let query = confirm ? '' : `?type=1&id=${id}`
                             return `
                 <!-- 新通知 of fans -->
                 <li class="dropdown-item position-relative news-item">
@@ -288,7 +288,7 @@ async function initNavbar() {
                         }
 
                         function template_blog({ confirm, id, blog, timestamp }) {
-                            let query = confirm ? '' : `?anchorType=2&anchorId=${id}`
+                            let query = confirm ? '' : `?type=2&id=${id}`
                             return `
             <li class="dropdown-item  position-relative news-item">
                 <a href="/blog/${blog.id}${query}" class="stretched-link text-wrap">
@@ -315,7 +315,7 @@ async function initNavbar() {
                             let author =
                                 comment.article.author.id === pageData.me.id ? '你' :
                                     comment.article.author.id === comment.commenter.id ? '自己' : comment.blog.author.nickname
-                            let query = confirm ? '' : `?anchorType=3&anchorId=${id}`
+                            let query = confirm ? '' : `?type=3&id=${id}`
                             return `
             <li class="dropdown-item  position-relative news-item">
                 <a href="/blog/${comment.article.id}${query}#comment_${comment.id}" class="stretched-link text-wrap">

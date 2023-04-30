@@ -1,59 +1,94 @@
-const { hash_obj } = require('../utils/crypto')     //  0228
-
-const Redis = require('../db/cache/redis/_redis')   //  0228
-
 const {
-    isNoCache   //  0228
-} = require('../utils/env')
+    //  0430
+    CACHE: {
+        //  0430
+        TYPE: {
+            //  0430
+            PAGE,
+            API,    //  0228
 
-const { CACHE: {
-    TYPE: {
-        API,    //  0228
-        PAGE,   //  0228
-        NEWS,
-    },
-    HAS_FRESH_CACHE, NO_IF_NONE_MATCH, IF_NONE_MATCH_IS_NO_FRESH,
-    NO_CACHE    //  0228
+            NEWS,
+        },
+        HAS_FRESH_CACHE, NO_IF_NONE_MATCH, IF_NONE_MATCH_IS_NO_FRESH,
+        NO_CACHE    //  0228
 
 
-} } = require('../conf/constant')
+    } } = require('../conf/constant')
+//  0430
+const Redis = require('../db/cache/redis/_redis')
+//  0430
+const ENV = require('../utils/env')
 
-//  0228    取得 user 緩存
-async function getUser(userId, ifNoneMatch) {
-    let cacheStatus = { exist: NO_CACHE, data: undefined }
-    if (isNoCache) {
+
+const USER = {
+    //  0430
+    //  取得 user 緩存
+    async get(userId, ifNoneMatch) {
+        let cacheStatus = { exist: NO_CACHE, data: undefined }
+        //  若是 nocache 模式，直接返回
+        if (ENV.isNoCache) {
+            return cacheStatus
+        }
+        //  使用者緩存的 key
+        let cacheKey = `${PAGE.USER}/${userId}`
+        //  取緩存KV [[hash, userData]]
+        let cachePair = await Redis.get(cacheKey)
+        if (!cachePair) {  //    若系統cache沒有資料
+            console.log(`@系統緩存 ${cacheKey} 沒有資料`)
+            return cacheStatus  //  exist: 1 代表無緩存
+        }
+
+        //  若系統cache有資料
+        let [etag, data] = Object.entries(cachePair)[0]    //  [K, V]
+        cacheStatus.data = data
+        console.log(`@系統緩存 ${cacheKey} 有資料`)
+        if (!ifNoneMatch) {
+            console.log(`@此次 ${cacheKey} 緩存請求未攜帶 if-none-match`)
+            cacheStatus.exist = NO_IF_NONE_MATCH   //  未攜帶 if-none-match
+        } else if (ifNoneMatch !== etag) {
+            console.log('@if-none-match => ', ifNoneMatch)
+            console.log('@etag => ', etag)
+            console.log(`@此次 ${cacheKey} if-none-match !== etag`)
+            cacheStatus.exist = IF_NONE_MATCH_IS_NO_FRESH   //  if-none-match 已過期
+        } else {
+            console.log(`@此次 ${cacheKey} if-none-match 是最新的`)
+            cacheStatus.exist = HAS_FRESH_CACHE  //  if-none-match 仍是最新的
+        }
         return cacheStatus
     }
-
-    let cacheKey = `${PAGE.USER}/${userId}`
-    //  取緩存KV [[hash, userData]]
-    let cachePair = await Redis.get(cacheKey)
-    if (!cachePair) {  //    若系統cache沒有資料
-        console.log(`@系統緩存 ${cacheKey} 沒有資料`)
-        return cacheStatus  //  exist: 1 代表無緩存
-    }
-
-    //  若系統cache有資料
-    let [etag, data] = Object.entries(cachePair)[0]    //  [K, V]
-    cacheStatus.data = data
-    console.log(`@系統緩存 ${cacheKey} 有資料`)
-    if (!ifNoneMatch) {
-        console.log(`@此次 ${cacheKey} 緩存請求未攜帶 if-none-match`)
-        cacheStatus.exist = NO_IF_NONE_MATCH   //  未攜帶 if-none-match
-    } else if (ifNoneMatch !== etag) {
-        console.log('@if-none-match => ', ifNoneMatch)
-        console.log('@etag => ', etag)
-        console.log(`@此次 ${cacheKey} if-none-match !== etag`)
-        cacheStatus.exist = IF_NONE_MATCH_IS_NO_FRESH   //  if-none-match 已過期
-    } else {
-        console.log(`@此次 ${cacheKey} if-none-match 是最新的`)
-        cacheStatus.exist = HAS_FRESH_CACHE  //  if-none-match 仍是最新的
-    }
-    return cacheStatus
+}
+//  0430
+async function remindNews(user) {
+    let list = await Redis.get('cacheNews')
+    let set = new Set(list)
+    set.add(user)
+    await Redis.set('cacheNews', [...set])
+    return true
 }
 
+module.exports = {
+    getUser,    //  0430
+    remindNews, //  0430
+
+    getEtag,    //  0228
+    setComment, //  0228
+    getComment, //  0228
+    setBlog,    //  0228
+    getBlog,    //  0228
+    modifyCache,//  0228
+    setUser,    //  0228
+
+    removeRemindNews,
+    checkNews,
+}
+
+const { hash_obj } = require('../utils/crypto')     //  0228
+
+
+
+
 //  0303
-async function getEtag(cacheKey){
+async function getEtag(cacheKey) {
     //  取緩存數據 { etag: resModel }
     let cachePair = await Redis.get(cacheKey)
     let [etag] = Object.entries(cachePair)[0]
@@ -78,7 +113,7 @@ async function setComment(blog_id, val = undefined) {
 }
 
 //  0228
-async function getComment(blog_id, ifNoneMatch){
+async function getComment(blog_id, ifNoneMatch) {
     let cacheStatus = { exist: NO_CACHE, data: undefined }
     if (isNoCache) {
         return cacheStatus
@@ -87,16 +122,16 @@ async function getComment(blog_id, ifNoneMatch){
     //  取緩存數據 { etag: resModel }
     let cachePair = await Redis.get(cacheKey)
     //  系統cache沒有資料 
-    if (!cachePair) {  
+    if (!cachePair) {
         console.log(`@ 系統緩存 ${cacheKey} 沒有資料`)
         return cacheStatus
     }
     //  系統cache有資料
-    let [etag, resModel ] = Object.entries(cachePair)[0]
+    let [etag, resModel] = Object.entries(cachePair)[0]
     cacheStatus.data = resModel
     console.log(`@ 系統緩存 ${cacheKey} 有資料`)
 
-    if(etag === ifNoneMatch){
+    if (etag === ifNoneMatch) {
         console.log(`@ 此次 ${cacheKey} 請求攜帶的 if-none-match 匹配 etag`)
         cacheStatus.exist = HAS_FRESH_CACHE  //  if-none-match 仍是最新的
     } else if (!ifNoneMatch) {
@@ -136,16 +171,16 @@ async function getBlog(blog_id, ifNoneMatch) {
     //  取緩存數據 { etag: resModel }
     let cachePair = await Redis.get(cacheKey)
     //  系統cache沒有資料 
-    if (!cachePair) {  
+    if (!cachePair) {
         console.log(`@ 系統緩存 ${cacheKey} 沒有資料`)
         return cacheStatus
     }
-    
+
     let [etag, resModel] = Object.entries(cachePair)[0]    //  [K, V]
     cacheStatus.data = resModel
     console.log(`@ 系統緩存 ${cacheKey} 有資料`)
 
-    if(etag === ifNoneMatch){
+    if (etag === ifNoneMatch) {
         console.log(`@ 此次 ${cacheKey} 請求攜帶的 if-none-match 匹配 etag`)
         cacheStatus.exist = HAS_FRESH_CACHE  //  if-none-match 仍是最新的
     } else if (!ifNoneMatch) {
@@ -260,16 +295,3 @@ async function removeRemindNews(id) {
     return news
 }
 
-module.exports = {
-    removeRemindNews,
-    checkNews,
-
-    getEtag,    //  0228
-    setComment, //  0228
-    getComment, //  0228
-    setBlog,    //  0228
-    getBlog,    //  0228
-    modifyCache,//  0228
-    setUser,    //  0228
-    getUser,    //  0228
-}
