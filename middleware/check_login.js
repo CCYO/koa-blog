@@ -22,20 +22,7 @@ async function view_isAuthor(ctx, next){
     }
     await next()
 }
-//  0404
-/** Middleware 針對 VIEW 請求，驗證是否登入
- * @param {*} ctx 
- * @param {function} next 
- * @returns {promise<null>}
- */
-async function view_logining(ctx, next) {
-    if (ctx.session.user) {
-        await next()
-    } else {
-        ctx.redirect(`/login?from=${encodeURIComponent(ctx.href)}`)
-    }
-    return
-}
+
 //  0404
 /** Middleware 針對 API 請求，驗證是否登入
  * @param {*} ctx 
@@ -50,16 +37,7 @@ async function api_logining(ctx, next) {
     }
     return
 }
-//  0228
-async function view_isSelf(ctx, next) {
-    let me = ctx.session.user ? ctx.session.user.id : undefined
-    let currentUser = ctx.params.id * 1
-    //  若是自己的ID，跳轉到個人頁面
-    if (me === currentUser) {
-        return ctx.redirect('/self')
-    }
-    await next()
-}
+
 
 module.exports = {
     //  0430
@@ -67,11 +45,7 @@ module.exports = {
     //  0430
     view_isAuthor,
     //  0404
-    view_logining,
-    //  0404
     api_logining,
-    //  0228
-    view_isSelf,
     view_mustBeSelf,
 }
 //  0308

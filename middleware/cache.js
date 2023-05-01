@@ -12,97 +12,8 @@ const {
 } = require('../conf/constant')
 
 const S_Cache = require('../server/cache')
-//  取得/設置other頁的緩存  0322
-async function other(ctx, next) {
-    let userId = ctx.params.id * 1
-    let ifNoneMatch = ctx.headers['if-none-match']
-    //  向系統cache撈資料 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined } }
-    let cacheStatus = await S_Cache.getUser(userId, ifNoneMatch)
-    ctx.cache = {
-        [PAGE.USER]: cacheStatus
-    }
-    await next()
 
-    //  判斷是否將數據存入系統緩存
-    let { exist, data } = ctx.cache[PAGE.USER]
-    let etag
-    //  系統無有效的緩存數據
-    if (exist === NO_CACHE || exist === IF_NONE_MATCH_IS_NO_FRESH) {
-        //  將blog存入系統緩存
-        etag = await S_Cache.setUser(userId, data)
-        //  系統緩存有資料，但請求未攜帶if-None-Match  
-    } else if (exist === NO_IF_NONE_MATCH) {
-        //  直接拿系統緩存的 etag
-        etag = await S_Cache.getEtag(`${PAGE.USER}/${userId}`)
-    }
-    //  將etag傳給前端做緩存
-    if (etag) {
-        ctx.set({
-            etag,
-            ['Cache-Control']: 'no-cache'
-        })
-        console.log(`${PAGE.USER}/${userId} 提供前端 etag 做緩存`)
-    }
-    delete ctx.cache
-    return
-}
-//  取得/設置self頁的緩存  0322
-async function getSelfCache(ctx, next) {
-    let userId = ctx.session.user.id * 1
-    //  向系統cache撈資料 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined } }
-    let cacheStatus = await S_Cache.getUser(userId)
-    ctx.cache = {
-        [PAGE.USER]: cacheStatus
-    }
-    await next()
-    //  系統沒有應對的緩存資料
-    let { exist, data } = ctx.cache[PAGE.USER]
-    if (exist === NO_CACHE) {
-        //  將user存入系統緩存
-        await S_Cache.setUser(userId, data)
-    }
-    //  不允許前端緩存
-    ctx.set({
-        ['Cache-Control']: 'no-store'
-    })
-    console.log(`不允許前端緩存 ${ctx.request.path} 響應的數據`)
-    delete ctx.cache
-    return
-}
 
-//  0228
-async function getCommentCache(ctx, next) {
-    let blog_id = ctx.params.blog_id * 1
-    let ifNoneMatch = ctx.headers['if-none-match']
-    //  向系統緩存撈資料 { exist: 緩存提取結果, data: resModel{ errno, data: 對應blogPage格式化的comments數據 } || undefined }
-    let cacheStatus = await S_Cache.getComment(blog_id, ifNoneMatch)
-    ctx.cache = {
-        [API.COMMENT]: cacheStatus
-    }
-    await next()
-
-    let { exist, data } = ctx.cache[API.COMMENT]
-    //  存放要給前端的etag
-    let etag
-    //  系統沒有緩存數據 || 請求攜帶的 if-None-Match 過期
-    if (exist === NO_CACHE || exist === IF_NONE_MATCH_IS_NO_FRESH) {
-        //  將comments存入系統緩存
-        etag = await S_Cache.setComment(blog_id, data)
-        //  系統緩存有資料，但請求未攜帶if-None-Match
-    } else if (exist === NO_IF_NONE_MATCH) {
-        etag = await S_Cache.getEtag(`${API.COMMENT}/${blog_id}`)
-    }
-    //  將etag傳給前端做緩存
-    if (etag) {
-        ctx.set({
-            etag,
-            ['Cache-Control']: 'no-cache'
-        })
-        console.log(`${API.COMMENT}/${blog_id} 提供前端 etag 做緩存`)
-    }
-    delete ctx.cache
-    return
-}
 //  0303
 async function blogEditPageCache(ctx, next) {
     let blog_id = ctx.params.blog_id * 1
@@ -127,42 +38,7 @@ async function blogEditPageCache(ctx, next) {
     delete ctx.cache
     return
 }
-//  0303
-async function blogPageCache(ctx, next) {
-    let blog_id = ctx.params.blog_id * 1
-    let ifNoneMatch = ctx.headers['if-none-match']
-    //  向系統cache撈資料 { exist: 提取緩存數據的結果 , data: initBlog || undefined }
-    let cacheStatus = await S_Cache.getBlog(blog_id, ifNoneMatch)
-    //  將數據綁在 ctx.cache
-    ctx.cache = {
-        [PAGE.BLOG]: cacheStatus
-    }
-    await next()
 
-    //  判斷是否將數據存入系統緩存
-    let { exist, data } = ctx.cache[PAGE.BLOG]
-    //  存放要給前端的etag
-    let etag
-    //  系統無有效的緩存數據
-    if (exist === NO_CACHE || exist === IF_NONE_MATCH_IS_NO_FRESH) {
-        //  將blog存入系統緩存
-        etag = await S_Cache.setBlog(blog_id, data)
-        //  系統緩存有資料，但請求未攜帶if-None-Match  
-    } else if (exist === NO_IF_NONE_MATCH) {
-        //  直接拿系統緩存的 etag
-        etag = await S_Cache.getEtag(`${PAGE.BLOG}/${blog_id}`)
-    }
-    //  將etag傳給前端做緩存
-    if (etag) {
-        ctx.set({
-            etag,
-            ['Cache-Control']: 'no-cache'
-        })
-        console.log(`${PAGE.BLOG}/${blog_id} 提供前端 etag 做緩存`)
-    }
-    delete ctx.cache
-    return
-}
 //  更新的cache數據 0228
 async function modifiedtCache(ctx, next) {
     await next()
@@ -263,12 +139,7 @@ async function notifiedNews(ctx, next) {
 
 
 module.exports = {
-    //  0430
-    other,
-    getSelfCache,       //  0323
     blogEditPageCache,  //  0303
-    blogPageCache,      //  0228
-    getCommentCache,    //  0228
     modifiedtCache,     //  0228
     resetBlog,
     cacheNews,

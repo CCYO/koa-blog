@@ -1,39 +1,42 @@
 /**
  * @description Router/Views user
  */
+//  0501
+const { CACHE: { TYPE, STATUS } } = require('../../conf/constant')
 //  0430
-const { confirm } = require('../../middleware/views/news')
-//  0430
-const Cache = require('../../middleware/views/cache')
+const { CACHE, CHECK, NEWS } = require('../../middleware/views')
 //  未處理
 const Check = require('../../middleware/check_login')                   //  0406
 const router = require('koa-router')()                                  //  0406
 
 //  他人頁  0324
-router.get('/other/:id', Check.view_isSelf, confirm, Cache.other, async (ctx, next) => {
-    let userId = ctx.params.id * 1
-    //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined }
-    let cacheStatus = ctx.cache[PAGE.USER]
-    let { exist, data: relationShip } = cacheStatus
-    let cacheKey = `${PAGE.USER}/${userId}`
-    //  提取到有效的緩存數據
-    if (exist === HAS_FRESH_CACHE) {
+router.get('/other/:id', CHECK.isSelf, NEWS.confirm, CACHE.USER.other, async (ctx, next) => {
+    let user_id = ctx.params.id * 1
+    //  從 middleware 取得的緩存數據 ctx.cache[PAGE.USER]
+    /**
+     * { 
+     ** exist: 提取緩存數據的結果 ,
+     ** data: { currentUser, fansList, idolList, blogList } || undefined
+     * }
+     */
+    let cache = ctx.cache[TYPE.PAGE.USER]
+    let { exist } = cache
+    let cacheKey = `${TYPE.PAGE.USER}/${user_id}`
+    if (exist === STATUS.HAS_FRESH_CACHE) {
         console.log(`@ ${cacheKey} 響應 304`)
         ctx.status = 304
-        //  在沒 if-None-Match 的情況下，取得到系統緩存數據
-    } else if (exist === NO_IF_NONE_MATCH) {
+    } else if (exist === STATUS.NO_IF_NONE_MATCH || exist == STATUS.IF_NONE_MATCH_IS_NO_FRESH) {
         console.log(`@ ${cacheKey} 響應 系統緩存數據`)
-        //  適用 NO_CACHE, IF_NO_MATCH_IS_NO_FRESH
     } else {
         //  向 DB 撈取數據
-        let resModel = await User.findInfoForUserPage(userId)
+        let resModel = await User.findInfoForUserPage(user_id)
         if (resModel.errno) {
             return await ctx.render('page404', { ...resModel })
         }
         //  將 DB 數據賦予給 ctx.cache
-        relationShip = cacheStatus.data = resModel.data
+        cache.data = resModel.data
     }
-    let { currentUser, fansList, idols, blogs } = relationShip
+    let { currentUser, fansList, idols, blogs } = cache.data
     //  非文章作者，所以不傳入未公開的文章
     delete blogs.hidden
     await ctx.render('user', {
@@ -45,21 +48,27 @@ router.get('/other/:id', Check.view_isSelf, confirm, Cache.other, async (ctx, ne
         idols,       //  window.data 數據
     })
 })
-
 //  個人頁  0324
-router.get('/self', Check.view_logining, Cache.getSelfCache, async (ctx, next) => {
-    let { id: userId } = ctx.session.user
-    //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: { currentUser, fansList, idolList, blogList } || undefined }
-    let cacheStatus = ctx.cache[PAGE.USER]
-    let { exist, data: relationShip } = cacheStatus
-    if (exist === NO_CACHE) {
+router.get('/self', CHECK.login, CACHE.USER.self, async (ctx, next) => {
+    let { id: user_id } = ctx.session.user
+    //  從 middleware 取得的緩存數據 ctx.cache[TYPE.PAGE.USER]
+    /**
+     * { 
+     ** exist: 提取緩存數據的結果 ,
+     ** data: { currentUser, fansList, idolList, blogList } || undefined
+     * }
+     */
+    ctx.cache
+    let cache = ctx.cache[TYPE.PAGE.USER]
+    let { exist, data: relationShip } = cache
+    if (exist === STATUS.NO_CACHE) {
         //  向 DB 撈取數據
-        let resModel = await User.findInfoForUserPage(userId)
+        let resModel = await User.findInfoForUserPage(user_id)
         if (resModel.errno) {
             return await ctx.render('page404', { ...resModel })
         }
         //  將 DB 數據賦予給 ctx.cache
-        relationShip = cacheStatus.data = resModel.data
+        relationShip = cache.data = resModel.data
     }
     let { currentUser, fansList, idols, blogs } = relationShip
     await ctx.render('user', {
@@ -105,15 +114,7 @@ router.get('/register', async (ctx, next) => {
 
 
 const User = require('../../controller/user')   //  0228
-const {
-    CACHE: {
-        TYPE: {
-            PAGE                                //  0228
-        },
-        HAS_FRESH_CACHE,                    //  0228
-        NO_CACHE,                           //  0228
-        NO_IF_NONE_MATCH                    //  0228
-    } } = require('../../conf/constant')
+
 
 
 

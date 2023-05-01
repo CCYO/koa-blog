@@ -53,12 +53,12 @@ module.exports = {
                 COMMENT: 'blogPageComment'
             }
         },
-        HAS_FRESH_CACHE: 0,
-        NO_CACHE: 1,
-        NO_IF_NONE_MATCH: 2, // 請求未攜帶 if-none-match
-        IF_NONE_MATCH_IS_NO_FRESH: 3,   //  請求 if-none-match 已過期
-
-
+        STATUS: {
+            HAS_FRESH_CACHE: 0,
+            NO_CACHE: 1,
+            NO_IF_NONE_MATCH: 2, // 請求未攜帶 if-none-match
+            IF_NONE_MATCH_IS_NO_FRESH: 3,   //  請求 if-none-match 已過期
+        }
     },
     REDIS_CONF: {
         SESSION_KEY: 'session_key'

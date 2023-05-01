@@ -1,6 +1,7 @@
 /**
  * @description API commond相關
  */
+const { CACHE } = require('../../middleware/api')
 //  0411    ----------------------------------------------------------------未整理
 const { htmlStr_comments } = require('../../utils/ejs-render')
 //  0411    ----------------------------------------------------------------未整理
@@ -33,13 +34,13 @@ router.delete('/', Check.api_logining,
 //  0411
 //  創建comment
 router.post('/', Check.api_logining,
-    Cache.getCommentCache, //  ----------------------------------------------未整理 
+    // CACHE.getCommentCache, //  ----------------------------------------------未整理 
     async (ctx, next) => {
         ctx.body = await Comment.add(ctx.request.body)
     })
 //  0411???
 router.get('/:blog_id',
-    Cache.getCommentCache, //  ----------------------------------------------未整理 
+    CACHE.COMMENT.cache, //  ----------------------------------------------未整理 
     async (ctx, next) => {
         const blog_id = ctx.params.blog_id * 1
         let cacheStatus = ctx.cache[API.COMMENT]
