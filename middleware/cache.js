@@ -1,3 +1,19 @@
+//  0503
+//  更新的cache數據
+async function modify(ctx, next) {
+    await next()
+
+    //  SuccessModel.cache 無定義
+    if (!ctx.body.cache) {
+        return
+    }
+
+    await S_Cache.modifyCache(ctx.body.cache)
+    //  移除 SuccessModel.cache
+    delete ctx.body.cache
+    return
+}
+
 const {
     CACHE: {
         TYPE: {
@@ -12,6 +28,8 @@ const {
 } = require('../conf/constant')
 
 const S_Cache = require('../server/cache')
+
+
 
 
 //  0303
@@ -39,20 +57,6 @@ async function blogEditPageCache(ctx, next) {
     return
 }
 
-//  更新的cache數據 0228
-async function modifiedtCache(ctx, next) {
-    await next()
-
-    //  SuccessModel.cache 無定義
-    if (!ctx.body.cache) {
-        return
-    }
-
-    await S_Cache.modifyCache(ctx.body.cache)
-    //  移除 SuccessModel.cache
-    delete ctx.body.cache
-    return
-}
 async function resetBlog(ctx, next) {
     await next()
     let { cache } = ctx.body

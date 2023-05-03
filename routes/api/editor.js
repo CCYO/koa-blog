@@ -22,7 +22,7 @@ router.post('/blogImgAlt', Check.api_logining/*, Cache.modifiedtCache 未整理*
     ctx.body = await BlogImgAlt.add({blogImg_id})
 })
 //  更新 blog 資料  0326
-router.patch('/', Check.api_logining/*, Cache.modifiedtCache 未整理*/, async (ctx, next) => {
+router.patch('/', Check.api_logining, Cache.modifiedtCache , async (ctx, next) => {
     const { id: blog_id, ...blog_data } = ctx.request.body
     res = await Blog.modify(blog_id, blog_data)
     ctx.body = res

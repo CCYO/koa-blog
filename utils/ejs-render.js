@@ -3,7 +3,13 @@ const { resolve } = require('path') //0228
 const { renderFile } = require('ejs')   //  0228
 
 let ejs_comments = resolve(__dirname, '../views/wedgets/comment-list.ejs')  //  0228
-
+//  0503
+async function commentsToHtml(comments){
+    if(!comments.length){
+        return ''
+    }
+    return await _renderFile(ejs_comments, { comments })
+}
 
 //  0228
 function _renderFile(fileName, data) {
@@ -17,18 +23,7 @@ function _renderFile(fileName, data) {
         })
     })
 }
-
-//  0228
-async function htmlStr_comments(comments){
-    if(!comments.length){
-        return ''
-    }
-    return await _renderFile(ejs_comments, { comments })
-}
-
-
-
 module.exports = {
-
-    htmlStr_comments    //  0228
+    // 0503
+    commentsToHtml
 }

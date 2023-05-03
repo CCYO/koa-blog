@@ -50,27 +50,34 @@ const Redis = {
 //  0501
 const COMMENT = {
     KEY: TYPE.API.COMMENT,
-    async get() {
+    async getComments() {
         //  [ [blog_id, { etag: SuccModel }], ... ]
         let arr = await Redis.get(COMMENT.KEY)
-        //  { etag: data }
         return new Map(arr)
     },
+    async get(id) {
+        //  Map: { blog_id => { etag: SuccModel }, ... }
+        let map = await COMMENT.getComments()
+        //  { etag: data }
+        return map.get(id)
+    },
     async set(id, data) {
-        //  [ [blog_id, { etag: SuccModel }], ... ]
-        let comments = await COMMENT.get()
         let KEY = COMMENT.KEY
+        //  [ [blog_id, { etag: SuccModel }], ... ]
+        let map = await COMMENT.getComments()
+        let etag
         if (!data) {
-            await Redis.set(KEY, undefined)
-            return true
+            await map.del(id)
+            console.log(`@ 系統緩存 ${KEY}/${id} 已清除`)
+        } else {
+            etag = crypto.hash_obj(data)
+            console.log(`@ 系統緩存 ${KEY}/${id} 生成 etag => `, etag)
+            let cache = { [etag]: data }
+            map.set(id, cache)
+            console.log(`@ 系統緩存 ${KEY}/${id} 完成緩存`)
         }
-        let etag = crypto.hash_obj(data)
-        console.log(`@ 系統緩存 ${KEY}/${id} 生成 etag => `, etag)
-        let cache = { [etag]: data }
-        let map = comments.set(id, cache)
-        newCache = [...map.entries()]
+        let newCache = [...map.entries()]
         await Redis.set(KEY, newCache)
-        console.log(`@ 系統緩存 ${KEY}/${id} 完成緩存`)
         return etag
     },
     async clear(id) {

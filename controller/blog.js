@@ -35,12 +35,13 @@ async function removeList(blogList) {
     if (!Array.isArray(blogList) || !blogList.length) {
         throw new MyErr(ErrRes.BLOG.REMOVE.NO_DATA)
     }
-    let { TYPE: { NEWS, PAGE: { USER, BLOG } } } = CACHE
+    let { TYPE: { NEWS, PAGE: { USER, BLOG }, API: { COMMENT } } } = CACHE
     //  處理cache -----
     let cache = {
         [NEWS]: [],
         [USER]: [],
-        [BLOG]: blogList
+        [BLOG]: blogList,
+        [COMMENT]: blogList
     }
     let { followers, replys, author_id } = await blogList.reduce(async (acc, blog_id) => {
         let { data: { author_id, followers, replys } } = await private(blog_id, true)
@@ -91,11 +92,12 @@ async function removeList(blogList) {
 async function modify(blog_id, blog_data) {
     // let { title, cancelImgs = [], html, show } = blog_data
     let map = new Map(Object.entries(blog_data))
-    let { NEWS, PAGE: { USER, BLOG } } = CACHE.TYPE
+    let { NEWS, PAGE: { USER, BLOG }, API: { COMMENT } } = CACHE.TYPE
     let cache = {
         [NEWS]: [],
         [USER]: [],
-        [BLOG]: [blog_id]
+        [BLOG]: [blog_id],
+        [COMMENT]: map.has('show') && [blog_id] || []
     }
     //  存放 blog 要更新的數據
     let newData = {}
