@@ -13,15 +13,6 @@ async function api_isAuthor(ctx, next){
     }
     await next()
 }
-//  0430
-async function view_isAuthor(ctx, next){
-    let author_id = ctx.request.query && ctx.request.query.author_id && ctx.request.query.author_id * 1
-    let user_id = ctx.session.user.id
-    if(author_id !== user_id){
-        return await ctx.render('page404', new ErrModel(PERMISSION.NOT_AUTHOR))
-    }
-    await next()
-}
 
 //  0404
 /** Middleware 針對 API 請求，驗證是否登入
@@ -37,13 +28,9 @@ async function api_logining(ctx, next) {
     }
     return
 }
-
-
 module.exports = {
     //  0430
     api_isAuthor,
-    //  0430
-    view_isAuthor,
     //  0404
     api_logining,
     view_mustBeSelf,
@@ -61,7 +48,3 @@ async function view_mustBeSelf(ctx, next) {
     }
     return
 }
-
-
-
-

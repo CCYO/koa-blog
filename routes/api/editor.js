@@ -22,7 +22,7 @@ router.post('/blogImgAlt', Check.api_logining/*, Cache.modifiedtCache 未整理*
     ctx.body = await BlogImgAlt.add({blogImg_id})
 })
 //  更新 blog 資料  0326
-router.patch('/', Check.api_logining, Cache.modifiedtCache , async (ctx, next) => {
+router.patch('/', Check.api_logining, /*Cache.modifiedtCache ,*/ async (ctx, next) => {
     const { id: blog_id, ...blog_data } = ctx.request.body
     res = await Blog.modify(blog_id, blog_data)
     ctx.body = res
@@ -43,7 +43,7 @@ module.exports = router
 //  與圖片有關 -------
 
 //  初始化blog的圖片列表數據（通常用在上一次Blog有上傳圖片，但未儲存文章時，會導致沒有建立edito需要的<x-img>，因此需要初始化將其刪除）
-router.patch('/initImgs', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
+router.patch('/initImgs', Check.api_logining, /*Cache.modifiedtCache,*/ async (ctx, next) => {
     const { id: user_id } = ctx.session.user
     const { id: blog_id, cancelImgs } = ctx.request.body
     //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]

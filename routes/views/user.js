@@ -1,16 +1,22 @@
 /**
  * @description Router/Views user
  */
+//  0504
+const User = require('../../controller/user')
 //  0501
 const { CACHE: { TYPE, STATUS } } = require('../../conf/constant')
+//  0504
+const CACHE = require('../../middleware/cache')
 //  0430
-const { CACHE, CHECK, NEWS } = require('../../middleware/views')
-//  未處理
-const Check = require('../../middleware/check_login')                   //  0406
+const { CHECK, NEWS } = require('../../middleware/views')
 const router = require('koa-router')()                                  //  0406
-
-//  他人頁  0324
-router.get('/other/:id', CHECK.isSelf, NEWS.confirm, CACHE.USER.other, async (ctx, next) => {
+//  0504
+const privateCache = CACHE.private(TYPE.PAGE.USER)
+//  0504
+const commonCache = CACHE.common(TYPE.PAGE.USER)
+//  0504
+//  他人頁
+router.get('/other/:id', CHECK.isSelf, NEWS.confirm, commonCache, async (ctx, next) => {
     let user_id = ctx.params.id * 1
     //  從 middleware 取得的緩存數據 ctx.cache[PAGE.USER]
     /**
@@ -48,8 +54,9 @@ router.get('/other/:id', CHECK.isSelf, NEWS.confirm, CACHE.USER.other, async (ct
         idols,       //  window.data 數據
     })
 })
-//  個人頁  0324
-router.get('/self', CHECK.login, CACHE.USER.self, async (ctx, next) => {
+//  0504
+//  個人頁
+router.get('/self', CHECK.login, privateCache, async (ctx, next) => {
     let { id: user_id } = ctx.session.user
     //  從 middleware 取得的緩存數據 ctx.cache[TYPE.PAGE.USER]
     /**
@@ -58,7 +65,6 @@ router.get('/self', CHECK.login, CACHE.USER.self, async (ctx, next) => {
      ** data: { currentUser, fansList, idolList, blogList } || undefined
      * }
      */
-    ctx.cache
     let cache = ctx.cache[TYPE.PAGE.USER]
     let { exist, data: relationShip } = cache
     if (exist === STATUS.NO_CACHE) {
@@ -110,23 +116,11 @@ router.get('/register', async (ctx, next) => {
         active: 'register'
     })
 })
-
-
-
-const User = require('../../controller/user')   //  0228
-
-
-
-
-
-
-
-
-
-
+//  0504
+module.exports = router
 
 //  個資更新頁  //  0228
-router.get('/setting/:userId', Check.view_mustBeSelf, async (ctx, next) => {
+router.get('/setting/:userId', /*Check.view_mustBeSelf,*/ async (ctx, next) => {
     let currentUser = ctx.session.user
     //  不允許前端緩存
     ctx.set({
@@ -138,4 +132,3 @@ router.get('/setting/:userId', Check.view_mustBeSelf, async (ctx, next) => {
         currentUser
     })
 })
-module.exports = router

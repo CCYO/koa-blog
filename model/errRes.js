@@ -5,30 +5,35 @@
 module.exports = {
     //  0501
     CACHE: {
-        //  0501
-        COMMENT: {
-            //  0501
-            SET: {
-                //  0501
-                NOT_DATA: { errno: 50002, msg: '更新 cache/comment 卻沒提供參數' }
-            }
-        },
-        //  0501
-        BLOG: {
-            //  0501
-            SET: {
-                //  0501
-                NOT_DATA: { errno: 50002, msg: '更新 cache/blog 卻沒提供參數' }
-            }
-        },
-        //  0501
-        USER: {
-            //  0501
-            SET: {
-                //  0501
-                NOT_DATA: { errno: 50002, msg: '更新 cache/user 卻沒提供參數' }
+        SET: {
+            NO_DATA(type){
+                return { errno: 50002, msg: `更新 cache/${type} 卻沒提供參數` }
             }
         }
+        // //  0501
+        // COMMENT: {
+        //     //  0501
+        //     SET: {
+        //         //  0501
+        //         NOT_DATA: { errno: 50002, msg: '更新 cache/comment 卻沒提供參數' }
+        //     }
+        // },
+        // //  0501
+        // BLOG: {
+        //     //  0501
+        //     SET: {
+        //         //  0501
+        //         NOT_DATA: { errno: 50002, msg: '更新 cache/blog 卻沒提供參數' }
+        //     }
+        // },
+        // //  0501
+        // USER: {
+        //     //  0501
+        //     SET: {
+        //         //  0501
+        //         NOT_DATA: { errno: 50002, msg: '更新 cache/user 卻沒提供參數' }
+        //     }
+        // }
     },
     //  0411
     MSG_RECEIVER: {

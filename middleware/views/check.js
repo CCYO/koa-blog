@@ -1,3 +1,14 @@
+//  0504
+const { ErrRes, ErrModel } = require('../../model')
+//  0504
+async function mustBeAuthor(ctx, next){
+    let author_id = ctx.request.query && ctx.request.query.author_id && ctx.request.query.author_id * 1
+    let user_id = ctx.session.user.id
+    if(author_id !== user_id){
+        return await ctx.render('page404', new ErrModel(ErrRes.PERMISSION.NOT_AUTHOR))
+    }
+    await next()
+}
 //  0501
 async function isSelf(ctx, next) {
     let me = ctx.session.user ? ctx.session.user.id : undefined
@@ -24,6 +35,8 @@ async function isSelf(ctx, next) {
 }
 
 module.exports = {
+    //  0504
+    mustBeAuthor,
     //  0501
     isSelf,
     //  0501

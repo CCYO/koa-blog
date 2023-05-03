@@ -9,7 +9,7 @@ const Cache = require('../../middleware/cache')
 
 router.prefix('/api/news')
 
-router.post('/', Check.api_logining, Cache.modifiedtCache,
+router.post('/', Check.api_logining, /*Cache.modifiedtCache,*/
     // Cache.cacheNews,
     async (ctx, next) => {
         let { page } = ctx.request.body

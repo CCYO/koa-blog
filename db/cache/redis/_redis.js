@@ -48,42 +48,45 @@ const Redis = {
 
 }
 //  0501
-const COMMENT = {
-    KEY: TYPE.API.COMMENT,
-    async getComments() {
+const getTYPE = (type) => ({
+    async getMap() {
         //  [ [blog_id, { etag: SuccModel }], ... ]
-        let arr = await Redis.get(COMMENT.KEY)
+        let arr = await Redis.get(type)
         return new Map(arr)
     },
     async get(id) {
         //  Map: { blog_id => { etag: SuccModel }, ... }
-        let map = await COMMENT.getComments()
+        let map = await this.getMap()
         //  { etag: data }
         return map.get(id)
     },
     async set(id, data) {
-        let KEY = COMMENT.KEY
         //  [ [blog_id, { etag: SuccModel }], ... ]
-        let map = await COMMENT.getComments()
+        let map = await await this.getMap()
         let etag
         if (!data) {
             await map.del(id)
-            console.log(`@ 系統緩存 ${KEY}/${id} 已清除`)
+            console.log(`@ 系統緩存 ${type}/${id} 已清除`)
         } else {
             etag = crypto.hash_obj(data)
-            console.log(`@ 系統緩存 ${KEY}/${id} 生成 etag => `, etag)
+            console.log(`@ 系統緩存 ${type}/${id} 生成 etag => `, etag)
             let cache = { [etag]: data }
             map.set(id, cache)
-            console.log(`@ 系統緩存 ${KEY}/${id} 完成緩存`)
+            console.log(`@ 系統緩存 ${type}/${id} 完成緩存`)
         }
         let newCache = [...map.entries()]
-        await Redis.set(KEY, newCache)
+        await Redis.set(type, newCache)
         return etag
     },
-    async clear(id) {
-        return await COMMENT.set(id)
+    async clear(list) {
+        let map = this.getMap()
+        for(let id of list){
+            map.del(id)
+        }
+        await Redis.set(type, [...map.entries()])
+        return true
     }
-}
+})
 //  0501
 const BLOG = {
     KEY: TYPE.PAGE.BLOG,
@@ -140,7 +143,8 @@ const USER = {
         console.log(`@ 系統緩存 ${KEY}/${id} 完成緩存`)
         return etag
     },
-    async clear(id) {
+    async clear(list) {
+        
         return await USER.set(id)
     }
 }
@@ -169,8 +173,10 @@ async function init() {
 }
 
 module.exports = {
+    //  0504
+    getTYPE,
     //  0501
-    COMMENT,
+    // COMMENT,
     //  0501
     BLOG,
     //  0430

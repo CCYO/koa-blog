@@ -10,14 +10,67 @@ const { CACHE: {
 } } = require('../conf/constant')
 //  0501
 const ENV = require('../utils/env')
+//  0504
+const TYPE = async (type) => ({
+    //  0501
+    //  取得 blog 緩存
+    async get(id, ifNoneMatch) {
+        let res = { exist: STATUS.NO_CACHE, data: undefined, etag: undefined }
+        if (ENV.isNoCache) {
+            return res
+        }
+        //  Map { blog_id => { etag: SuccModel }, ... }
+        let cacheType = Redis.getTYPE(type)
+        //  { etag: data }
+        let cache = await cacheType.get(id)
+        if (!cache) {
+            //  沒有緩存
+            return res
+        }
+        //  使用 if-none-match 取出緩存數據
+        let data = cache[ifNoneMatch]
+        if (!ifNoneMatch) {
+            //  沒有 if-none-match
+            res.exist = STATUS.NO_IF_NONE_MATCH
+        } else if (!data) {
+            //  if-none-match 不匹配
+            res.exist = STATUS.IF_NONE_MATCH_IS_NO_FRESH
+        } else {
+            //  if-none-match 有效
+            return { exist: STATUS.HAS_FRESH_CACHE, data, etag: ifNoneMatch }
+        }
+        //  分解緩存，取出 etag 與 緩存數據
+        res.etag = Object.keys(cache)[0]
+        res.data = Object.values(cache)[0]
+        return res
+    },
+    //  0501
+    //  設置 user 緩存
+    async set(id, data) {
+        if (ENV.isNoCache) {
+            return false
+        }
+        if (!data) {
+            throw new MyErr(ErrRes.CACHE.SET.NO_DATA(KEY))
+        }
+        let cacheType = Redis.getTYPE(type)
+        let etag = await cacheType.set(id, data)
+        return etag
+    },
+    //  0501
+    //  清除緩存
+    async clear(list) {
+        let cacheType = Redis.getTYPE(type)
+        return await cacheType.clear(list)
+    }
+})
 //  0228
 async function modify(cache) {
-    //  當前若是 noCache 模式 || SuccessModel.cache 無定義
-    if (isNoCache || !cache) {
+    //  當前若是 noCache 模式
+    if (isNoCache) {
         return
     }
-
-    await _removeCache({
+    await reset({
         [PAGE.USER]: cache[PAGE.USER],
         [PAGE.BLOG]: cache[PAGE.BLOG],
         [API.COMMENT]: cache[API.COMMENT]
@@ -28,12 +81,22 @@ async function modify(cache) {
 }
 //  0228
 //  移除既存的緩存數據
-async function reset(obj) {
-    //  當前若是 noCache 模式
-    if (isNoCache || !obj) {
-        return
-    }
-    let kvPairs = Object.entries(obj)
+async function reset(kvPairs) {
+    await Object.entries(kvPairs).reduce(acc, async (type, list) => {
+        let clearFn = getClearFn(type)
+        
+        await clearFn()
+        function getClearFn(type) {
+            switch (type) {
+                case [PAGE.USER]:
+                    return Redis.USER.clear
+                case [PAGE.BLOG]:
+                    return Redis.BLOG.clear
+                case [API.COMMENT]:
+                    return Redis.COMMENT.clear
+            }
+        }
+    }, [])
     let promises = await kvPairs.map(async ([key, list]) => {
         let arr = []
         if (list) {
@@ -47,172 +110,13 @@ async function reset(obj) {
     await Promise.all(promises)
     return true
 }
-//  0501
-const COMMENT = {
-    //  0501
-    //  取得 commnet 緩存
-    async get(id, ifNoneMatch) {
-        let res = { exist: STATUS.NO_CACHE, data: undefined, etag: undefined }
-        if (ENV.isNoCache) {
-            return res
-        }
-        //  Map { blog_id => { etag: SuccModel }, ... }
-        //  { etag: data }
-        let cache = await Redis.COMMENT.get(id)
-        if (!cache) {
-            //  沒有緩存
-            return res
-        }
-        //  使用 if-none-match 取出緩存數據
-        let data = cache[ifNoneMatch]
-        if (!ifNoneMatch) {
-            //  沒有 if-none-match
-            res.exist = STATUS.NO_IF_NONE_MATCH
-        } else if (!data) {
-            //  if-none-match 不匹配
-            res.exist = STATUS.IF_NONE_MATCH_IS_NO_FRESH
-        } else {
-            //  if-none-match 有效
-            return { exist: STATUS.HAS_FRESH_CACHE, data, etag: ifNoneMatch }
-        }
-        //  分解緩存，取出 etag 與 緩存數據
-        res.etag = Object.keys(cache)[0]
-        res.data = Object.values(cache)[0]
-        return res
-    },
-    //  0501
-    //  設置 comment 緩存
-    async set(id, data) {
-        if (ENV.isNoCache) {
-            return false
-        }
-        if (!data) {
-            throw new MyErr(ErrRes.CACHE.COMMENT.SET.NOT_DATA)
-        }
-        let etag = await Redis.COMMENT.set(id, data)
-        return etag
-    },
-    //  0501
-    //  清除緩存
-    async clear(id) {
-        return await Redis.COMMENT.clear(id)
-    }
-}
-//  0501
-const BLOG = {
-    //  0501
-    //  取得 blog 緩存
-    async get(id, ifNoneMatch) {
-        let res = { exist: STATUS.NO_CACHE, data: undefined, etag: undefined }
-        if (ENV.isNoCache) {
-            return res
-        }
-        //  Map { blog_id => { etag: SuccModel }, ... }
-        let blogs = await Redis.BLOG.get()
-        //  { etag: data }
-        let cache = blogs.get(id)
-        if (!cache) {
-            //  沒有緩存
-            return res
-        }
-        //  使用 if-none-match 取出緩存數據
-        let data = cache[ifNoneMatch]
-        if (!ifNoneMatch) {
-            //  沒有 if-none-match
-            res.exist = STATUS.NO_IF_NONE_MATCH
-        } else if (!data) {
-            //  if-none-match 不匹配
-            res.exist = STATUS.IF_NONE_MATCH_IS_NO_FRESH
-        } else {
-            //  if-none-match 有效
-            return { exist: STATUS.HAS_FRESH_CACHE, data, etag: ifNoneMatch }
-        }
-        //  分解緩存，取出 etag 與 緩存數據
-        res.etag = Object.keys(cache)[0]
-        res.data = Object.values(cache)[0]
-        return res
-    },
-    //  0501
-    //  設置 user 緩存
-    async set(id, data) {
-        if (ENV.isNoCache) {
-            return false
-        }
-        if (!data) {
-            throw new MyErr(ErrRes.CACHE.BLOG.SET.NOT_DATA)
-        }
-        let etag = await Redis.BLOG.set(id, data)
-        return etag
-    },
-    //  0501
-    //  清除緩存
-    async clear(id) {
-        return await Redis.BLOG.clear(id)
-    }
-}
-//  0501
-const USER = {
-    //  0430
-    //  取得 user 緩存
-    async get(id, ifNoneMatch) {
-        let res = { exist: STATUS.NO_CACHE, data: undefined, etag: undefined }
-        if (ENV.isNoCache) {
-            return res
-        }
-        //  Map { user_id => { etag: SuccModel }, ... }
-        let users = await Redis.USER.get()
-        //  { etag: data }
-        let cache = users.get(id)
-        if (!cache) {
-            //  沒有緩存
-            return res
-        }
-        //  使用 if-none-match 取出緩存數據
-        let data = cache[ifNoneMatch]
-        if (!ifNoneMatch) {
-            //  沒有 if-none-match
-            res.exist = STATUS.NO_IF_NONE_MATCH
-        } else if (!data) {
-            //  if-none-match 不匹配
-            res.exist = STATUS.IF_NONE_MATCH_IS_NO_FRESH
-        } else {
-            //  if-none-match 有效
-            return { exist: STATUS.HAS_FRESH_CACHE, data, etag: ifNoneMatch }
-        }
-        //  分解緩存，取出 etag 與 緩存數據
-        res.etag = Object.keys(cache)[0]
-        res.data = Object.values(cache)[0]
-        return res
-    },
-    //  0501
-    //  設置 user 緩存
-    async set(id, data) {
-        if (ENV.isNoCache) {
-            return false
-        }
-        if (!data) {
-            throw new MyErr(ErrRes.CACHE.USER.SET.NOT_DATA)
-        }
-        let etag = await Redis.USER.set(id, data)
-        return etag
-    },
-    //  0501
-    //  清除緩存
-    async clear(id) {
-        return await Redis.USER.clear(id)
-    }
-}
 
 module.exports = {
-    //  0501
-    COMMENT,
-    //  0501
-    BLOG,
-    //  0501
-    USER,
-
+    //  0504
+    TYPE,
+    //  0503
+    modify,
     remindNews, //  0430
-    modifyCache,//  0228
     removeRemindNews,
     checkNews,
 }

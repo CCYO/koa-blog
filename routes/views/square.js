@@ -1,7 +1,6 @@
 /**
  * @description Router/Views Square
  */
-const { BLOG } = require('../../conf/constant')
 const router = require('koa-router')()          //  0411
 const Blog = require('../../controller/blog')   //  0411
 //  廣場頁  0411

@@ -11,14 +11,14 @@ const router = require('koa-router')()                              //  0404
 router.prefix('/api/user')       
 //  0406
 //  取消追蹤
-router.post('/cancelFollow', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
+router.post('/cancelFollow', Check.api_logining, /*Cache.modifiedtCache,*/ async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await IdolFans.cancelFollow({ fans_id, idol_id })
 })
 //  0406
 //  追蹤
-router.post('/follow', Check.api_logining, Cache.modifiedtCache, async (ctx, next) => {
+router.post('/follow', Check.api_logining, /*Cache.modifiedtCache,*/ async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await IdolFans.follow({ fans_id, idol_id })
@@ -56,7 +56,7 @@ const { parse_user_data } = require('../../middleware/gcs')
 
 
 //  setting 0309
-router.patch('/', Check.api_logining, Session.set, Cache.modifiedtCache, parse_user_data, validate_user, async (ctx, next) => {
+router.patch('/', Check.api_logining, Session.set, /*Cache.modifiedtCache,*/ parse_user_data, validate_user, async (ctx, next) => {
     let { id } = ctx.session.user
     let { body: newData } = ctx.request
     ctx.body = await User.modifyUserInfo(newData, id)

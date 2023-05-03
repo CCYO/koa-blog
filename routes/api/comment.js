@@ -1,7 +1,8 @@
 /**
  * @description API commond相關
  */
-const { CACHE } = require('../../middleware/api')
+//  0504
+const CACHE = require('../../middleware/cache')
 //  0411    ----------------------------------------------------------------未整理
 const { commentsToHtml } = require('../../utils/ejs-render')
 //  0411    ----------------------------------------------------------------未整理
@@ -17,13 +18,13 @@ const {
         TYPE
     }
 } = require('../../conf/constant')
-//  0411    ----------------------------------------------------------------未整理
-const Cache = require('../../middleware/cache')
 const router = require('koa-router')()                                      //  0411
 router.prefix('/api/comment')                                               //  0411
+//  0504
+const commonCaChe = CACHE.common(TYPE.API.COMMENT)
 //  0503
-router.get('/:blog_id', CACHE.COMMENT.cache, async (ctx, next) => {
-    const blog_id = ctx.params.blog_id * 1
+router.get('/:id', commonCaChe, async (ctx, next) => {
+    const blog_id = ctx.params.id * 1
     let cache = ctx.cache[TYPE.API.COMMENT]
     //  向系統緩存撈資料 { exist: 緩存提取結果, data: resModel{ errno, data: 對應blogPage格式化的comments數據 } || undefined }
     let { exist, data: resModel } = cache
@@ -52,7 +53,7 @@ router.get('/:blog_id', CACHE.COMMENT.cache, async (ctx, next) => {
 })
 //  0411
 router.delete('/', Check.api_logining,
-    Cache.modifiedtCache,   //  ----------------------------------------------未整理 
+    /*Cache.modifiedtCache,*/   //  ----------------------------------------------未整理 
     async (ctx, next) => {
         //  要多一個判斷，這請求有沒有刪除的資格 
         //  1. 作者 > 誰都可以山
