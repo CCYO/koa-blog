@@ -2,7 +2,7 @@
  * @description API user相關
  */
 const IdolFans = require('../../controller/idolFans')               //  0406
-const Cache = require('../../middleware/cache')                     //  未處理
+const { CACHE } = require('../../middleware/api')                     //  未處理
 const Check = require('../../middleware/check_login') //  0228
 const Session = require('../../middleware/session')                 //  0228
 const User = require('../../controller/user')                       //  0404
@@ -11,7 +11,7 @@ const router = require('koa-router')()                              //  0404
 router.prefix('/api/user')       
 //  0406
 //  取消追蹤
-router.post('/cancelFollow', Check.api_logining, /*Cache.modifiedtCache,*/ async (ctx, next) => {
+router.post('/cancelFollow', Check.api_logining, CACHE.modify, async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await IdolFans.cancelFollow({ fans_id, idol_id })

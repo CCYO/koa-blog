@@ -5,12 +5,11 @@
 const router = require('koa-router')()
 const News = require('../../controller/news')
 const Check = require('../../middleware/check_login')
-const Cache = require('../../middleware/cache')
+const { CACHE } = require('../../middleware/api')
 
 router.prefix('/api/news')
-
-router.post('/', Check.api_logining, /*Cache.modifiedtCache,*/
-    // Cache.cacheNews,
+//  鑒察
+router.post('/', Check.api_logining, CACHE.modify, CACHE.news,
     async (ctx, next) => {
         let { page } = ctx.request.body
         let me = ctx.session.user

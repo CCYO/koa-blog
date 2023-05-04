@@ -11,11 +11,70 @@ const { CACHE: { TYPE } } = require('../../../conf/constant')
 const { REDIS_CONF } = require('../../../conf/key/db')
 //  0501
 const redis = require('redis')
-
-
 const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)
 cli.on('error', (e) => console.log('@Redis Error --> ', e))
 cli.on('connect', () => console.log('@ => Redis cache init -- ok'))
+async function getSet(type) {
+    let arr = await Redis.get(type)
+    let set = new Set(arr)
+    return {
+        get() {
+            return [...cache]
+        },
+        has(id){
+            return set.has(id)
+        },
+        async add(list) {
+            for (let id of list) {
+                set.add(id)
+            }
+            await Redis.set(type, [...set])
+            return [...set]
+        },
+        async del(list) {
+            for (let id of list) {
+                set.delete(id)
+            }
+            await Redis.set(type, [...set])
+            return [...set]
+        }
+    }
+}
+//  0501
+async function getMap(type) {
+    let arr = await Redis.get(type)
+    let map = new Map(arr)
+    return {
+        async get(id) {
+            if (!id) {
+                throw new MyErr(ErrRes.CACHE.READ.NO_DATA(type))
+            }
+            //  { etag: data }
+            return map.get(id)
+        },
+        async set(id, data) {
+            //  [ [blog_id, { etag: SuccModel }], ... ]
+            if (!id || !data) {
+                throw new MyErr(ErrRes.CACHE.UPDATE.NO_DATA(type))
+            }
+            let etag = crypto.hash_obj(data)
+            console.log(`@ 系統緩存 ${type}/${id} 生成 etag => `, etag)
+            let cache = { [etag]: data }
+            map.set(id, cache)
+            let newCache = [...map.entries()]
+            await Redis.set(type, newCache)
+            console.log(`@ 系統緩存 ${type}/${id} 完成緩存`)
+            return etag
+        },
+        async clear(list) {
+            for (let id of list) {
+                map.del(id)
+            }
+            await Redis.set(type, [...map.entries()])
+            return true
+        }
+    }
+}
 //  0501
 const Redis = {
     //  0501
@@ -51,43 +110,6 @@ const Redis = {
 
 }
 //  0501
-const getTYPE = (type) => ({
-    async getMap() {
-        //  [ [blog_id, { etag: SuccModel }], ... ]
-        let arr = await Redis.get(type)
-        return new Map(arr)
-    },
-    async get(id) {
-        //  Map: { blog_id => { etag: SuccModel }, ... }
-        let map = await this.getMap()
-        //  { etag: data }
-        return map.get(id)
-    },
-    async set(id, data) {
-        //  [ [blog_id, { etag: SuccModel }], ... ]
-        let map = await this.getMap()
-        if (!id || !data) {
-            throw new MyErr(ErrRes.CACHE.SET.NO_DATA(type))
-        }
-        let etag = crypto.hash_obj(data)
-        console.log(`@ 系統緩存 ${type}/${id} 生成 etag => `, etag)
-        let cache = { [etag]: data }
-        map.set(id, cache)
-        let newCache = [...map.entries()]
-        await Redis.set(type, newCache)
-        console.log(`@ 系統緩存 ${type}/${id} 完成緩存`)
-        return etag
-    },
-    async clear(list) {
-        let map = this.getMap()
-        for (let id of list) {
-            map.del(id)
-        }
-        await Redis.set(type, [...map.entries()])
-        return true
-    }
-})
-//  0501
 const NEWS = {
     //  0501
     async init() {
@@ -113,7 +135,9 @@ async function init() {
 
 module.exports = {
     //  0504
-    getTYPE,
+    getSet,
+    //  0504
+    getMap,
     Redis,
     init
 }
