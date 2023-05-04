@@ -1,6 +1,4 @@
 //  0430
-const ENV = require('../../utils/env')
-//  0430
 const S_CACHE = require('../../server/cache')
 //  0430
 const C_News = require('../../controller/news')
@@ -17,9 +15,9 @@ async function confirm(ctx, next) {
             return
         }
         await C_News.confirm({ type, id })
-        if(!ENV.isNoCache){
-            await S_CACHE.remindNews(user_id)
-        }
+        let cache = await S_CACHE.getNews()
+        //  「通知」數據有變動
+        await cache.addList([user_id])
     }
     await next()
 }

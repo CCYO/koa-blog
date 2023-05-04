@@ -22,10 +22,10 @@ async function news(ctx, next) {
     let clearNews = false
     //  若有新通知
     if (hasNews) {
-        console.log(`@ 因為 user/${id} 有新通知`)
+        console.log(`@ 因為 user/${id} 的通知數據有變動`)
         clearNews = true
         //  從系統緩存cacheNews中移除當前userId
-        await S_Cache.removeRemindNews(id)
+        await cache.delList([id])
     }
     //  請求若有攜帶需確認的通知
     if (num) {
@@ -49,18 +49,14 @@ async function news(ctx, next) {
     console.log(`@ user/${id} 向DB查詢 news數據`)
     await next()
 
-    //  next 接回來，繼續處理緩存
-    if (ctx.body.errno) {   //  若發生錯誤
-        return
-    }
     //  ctx.body = { errno, data, cache }
     let { errno, data } = ctx.body
     ctx.session.news[page] = { errno, data }
     console.log(`@ user/${id} 的 session.news[${page}] 完成緩存`)
     // console.log(`@session.news[${page}] => `, ctx.session.news[page])
 }
-
 //  0503
+//  當 cache 有變動時
 async function modify(ctx, next){
     await next()
     let cache = ctx.body.cache
@@ -68,13 +64,11 @@ async function modify(ctx, next){
     if (!cache) {
         return
     }
-
     await S_Cache.modify(cache)
     //  移除 SuccessModel.cache
     delete ctx.body.cache
     return
 }
-
 module.exports = {
     //  0504
     news,

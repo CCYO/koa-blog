@@ -74,18 +74,3 @@ module.exports = {
     //  0504
     private
 }
-
-
-async function notifiedNews(ctx, next) {
-    await next()
-    if (ctx.body.errno) {
-        return
-    }
-    let { cache } = ctx.body
-    if (cache && cache.news.length) {
-        console.trace('@要被通知的人 => ', cache.news)
-        await remindNews(cache.news)
-        delete ctx.body.cache.news
-    }
-    return
-}

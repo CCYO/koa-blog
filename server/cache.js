@@ -10,27 +10,17 @@ const { CACHE: {
 } } = require('../conf/constant')
 //  0501
 const ENV = require('../utils/env')
-async function checkNews(id) {
-    let cache = await getNews()
-    return cache.has(id)
-}
-
-
 //  0228
 async function modify(cache) {
-    //  當前若是 noCache 模式
-    if (isNoCache) {
-        return false
-    }
     for (let [type, list] of Object.entries(cache)) {
         if (type === [NEWS]) {
             //  提醒使用者的通知數據有變動，要重新從DB讀取
             let cache = await getNews()
-            await cache.add(list)
+            await cache.addList(list)
         } else {
             //  移除既存的頁面緩存數據，要重新從DB讀取
             let cache = await getTYPE(type)
-            await cache.del(list)
+            await cache.delList(list)
         }
     }
     return true
@@ -46,13 +36,13 @@ async function getNews() {
         has(id){
             return set.has(id)
         },
-        async add(list) {
+        async addList(list) {
             if (list.length) {
                 return await set.add(list)
             }
             return false
         },
-        async del(list) {
+        async delList(list) {
             if (list.length) {
                 return await set.del(list)
             }
@@ -107,7 +97,7 @@ async function getTYPE(type) {
         },
         //  0501
         //  清除緩存
-        async del(list) {
+        async delList(list) {
             if (list.length) {
                 return await cacheType.del(list)
             }
@@ -123,7 +113,6 @@ module.exports = {
     //  0503
     modify,
     removeRemindNews,
-    checkNews,
 }
 
 async function removeRemindNews(id) {

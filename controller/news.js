@@ -38,9 +38,9 @@ async function readMore({ me, excepts, newsListNeedToConfirm }) {
     },
     newsListNeedToConfirm: { peopel, blogs, comments, num }
     */
-    if (newsListNeedToConfirm.num) {
-        await confirmList(newsListNeedToConfirm)
-    }
+    // if (newsListNeedToConfirm.num) {
+    //     await confirmList(newsListNeedToConfirm)
+    // }
     /*
     res: {
         newsList: {

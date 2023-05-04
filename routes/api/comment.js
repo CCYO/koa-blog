@@ -2,7 +2,7 @@
  * @description API commond相關
  */
 //  0504
-const CACHE = require('../../middleware/cache')
+const { CACHE_TYPE, API } = require('../../middleware')
 //  0411    ----------------------------------------------------------------未整理
 const { commentsToHtml } = require('../../utils/ejs-render')
 //  0411    ----------------------------------------------------------------未整理
@@ -21,7 +21,7 @@ const {
 const router = require('koa-router')()                                      //  0411
 router.prefix('/api/comment')                                               //  0411
 //  0504
-const commonCaChe = CACHE.common(TYPE.API.COMMENT)
+const commonCaChe = CACHE_TYPE.common(TYPE.API.COMMENT)
 //  0503
 router.get('/:id', commonCaChe, async (ctx, next) => {
     const blog_id = ctx.params.id * 1
@@ -52,20 +52,16 @@ router.get('/:id', commonCaChe, async (ctx, next) => {
     }
 })
 //  0411
-router.delete('/', Check.api_logining,
-    /*Cache.modifiedtCache,*/   //  ----------------------------------------------未整理 
-    async (ctx, next) => {
-        //  要多一個判斷，這請求有沒有刪除的資格 
-        //  1. 作者 > 誰都可以山
-        //  2. 留言者 > 山自己的
-        ctx.body = await Comment.remove(ctx.request.body)
-    })
+router.delete('/', API.CHECK.login, API.CACHE.modify, async (ctx, next) => {
+    //  要多一個判斷，這請求有沒有刪除的資格 
+    //  1. 作者 > 誰都可以山
+    //  2. 留言者 > 山自己的
+    ctx.body = await Comment.remove(ctx.request.body)
+})
 //  0411
 //  創建comment
-router.post('/', Check.api_logining,
-    // CACHE.getCommentCache, //  ----------------------------------------------未整理 
-    async (ctx, next) => {
-        ctx.body = await Comment.add(ctx.request.body)
-    })
+router.post('/', API.CHECK.login, API.CACHE.modify, async (ctx, next) => {
+    ctx.body = await Comment.add(ctx.request.body)
+})
 
 module.exports = router

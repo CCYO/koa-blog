@@ -2,7 +2,7 @@
  * @description API user相關
  */
 const IdolFans = require('../../controller/idolFans')               //  0406
-const { CACHE } = require('../../middleware/api')                     //  未處理
+const { SESSION, CHECK, CACHE } = require('../../middleware/api')                     //  未處理
 const Check = require('../../middleware/check_login') //  0228
 const Session = require('../../middleware/session')                 //  0228
 const User = require('../../controller/user')                       //  0404
@@ -11,24 +11,24 @@ const router = require('koa-router')()                              //  0404
 router.prefix('/api/user')       
 //  0406
 //  取消追蹤
-router.post('/cancelFollow', Check.api_logining, CACHE.modify, async (ctx, next) => {
+router.post('/cancelFollow', CHECK.login, CACHE.modify, async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await IdolFans.cancelFollow({ fans_id, idol_id })
 })
 //  0406
 //  追蹤
-router.post('/follow', Check.api_logining, /*Cache.modifiedtCache,*/ async (ctx, next) => {
+router.post('/follow', CHECK.login, CACHE.modify, async (ctx, next) => {
     const { id: idol_id } = ctx.request.body
     const { id: fans_id } = ctx.session.user
     ctx.body = await IdolFans.follow({ fans_id, idol_id })
 })
 //  0404
 //  登出
-router.get('/logout', Check.api_logining, Session.remove)
+router.get('/logout', CHECK.login, SESSION.remove)
 //  0404
 //  登入
-router.post('/', Session.set, validate_user, async (ctx, next) => {
+router.post('/', SESSION.set, validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
     ctx.body = await User.login(email, password)
 })
@@ -56,7 +56,7 @@ const { parse_user_data } = require('../../middleware/gcs')
 
 
 //  setting 0309
-router.patch('/', Check.api_logining, Session.set, /*Cache.modifiedtCache,*/ parse_user_data, validate_user, async (ctx, next) => {
+router.patch('/', CHECK.login, SESSION.set, CACHE.modify, parse_user_data, validate_user, async (ctx, next) => {
     let { id } = ctx.session.user
     let { body: newData } = ctx.request
     ctx.body = await User.modifyUserInfo(newData, id)
