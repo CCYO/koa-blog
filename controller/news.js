@@ -56,14 +56,14 @@ async function readMore({ me, excepts, newsListNeedToConfirm }) {
     }*/
     let news = await News.readList({ user_id: me.id, excepts })
 
-    let cache = { news: [] }
+    // let cache = { news: [] }
     let { newsList: { unconfirm, confirm } } = news
     //  沒有更多news
     if (unconfirm.length + confirm.length === 0) {
         console.log('@ 純粹作為最後一次readMore確認')
         // cache.news.push(id)
     }
-    return new SuccModel({ data: { news, me }, cache })
+    return new SuccModel({ data: { news, me }})
 }
 //  0404
 /** 藉由 userID 取得 news

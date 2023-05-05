@@ -22,8 +22,6 @@ async function initNavbar() {
         }
 
         //  公用變量 ------
-        //  下拉選單鈕、通知鈕
-        // let $newsDropdown = $('#newsDropdown')
         //  新通知筆數的提醒
         let $newsCount = $('.news-count')
         //  下拉選單內 的 readMore鈕                                                                                                                                                                                                
@@ -82,7 +80,6 @@ async function initNavbar() {
             //  取news
             let { news } = await getNews(pageData.news)
             pageData.news = renderAndSerializeNewsData(news)
-            console.log('ee=> ', news)
             pageData.news.newsList.list = news.newsList.list
             return
         }
@@ -105,11 +102,10 @@ async function initNavbar() {
         }
         //  渲染 + 序列化 news
         function renderAndSerializeNewsData(news, firstRender = false) {
-            //  初次渲染news
-            //  使用未序列化的newsData進行渲染
             let { newsList, num, page } = news
             let { list, unconfirm, confirm } = newsList
             let x = { num, newsList: { unconfirm, confirm }, page }
+            //  使用未序列化的newsData進行渲染
             renderByDeserializeNewsData(x, firstRender)
             //  渲染readMore
             render_readMore(x)
@@ -120,7 +116,9 @@ async function initNavbar() {
             //  序列化 news 數據
             function serialization_news(newsData) {
                 let newsList = serialization_newsList(newsData.newsList)
+                //  複製newData，且覆蓋 newData.newsList
                 let res = { ...newsData, newsList }
+                //  整理 excepts 數據（readMore 時，提供給後端過濾已撈取的「通知」數據）
                 let excepts = init_excepts(newsList)
                 if (firstRender) {   //  初次渲染
                     res.excepts = excepts
