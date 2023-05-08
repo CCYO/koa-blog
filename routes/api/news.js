@@ -20,5 +20,4 @@ router.post('/', CHECK.login, CACHE.modify, CACHE.news, async (ctx, next) => {
     }
     ctx.body = res
 })
-
 module.exports = router

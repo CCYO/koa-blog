@@ -1,3 +1,5 @@
+//  0508
+const { SESSION } = require('../../conf/constant')
 //  0404
 const { SuccModel } = require('../../model')
 //  0404
@@ -16,25 +18,11 @@ async function set(ctx, next) {
     }
     ctx.session.user = data
     console.log(`@ 設置 user/${data.id} 的 session.user`)
-
     if (!ctx.session.news) {
         console.log(`@ 初始化 user/${data.id} 的 session.news`)
-        ctx.session.news = {
-            errno: undefined,
-            data: {
-                news: {
-                    newsList: {
-                        confirm: [],
-                        unconfirm: []
-                    },
-                    num: undefined
-                },
-                me: ctx.session.user
-            },
-        }
+        ctx.session.news = SESSION.NEWS(ctx)
     }
 }
-
 module.exports = {
     remove,
     set

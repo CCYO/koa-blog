@@ -10,7 +10,7 @@ const Blog = require('../../controller/blog')
 //  0504
 const CACHE = require('../../middleware/cache')
 //  0406
-const router = require('koa-router')()                                  //  0406
+const router = require('koa-router')()
 //  0504
 const privateCache = CACHE.private(TYPE.PAGE.BLOG)
 //  0504

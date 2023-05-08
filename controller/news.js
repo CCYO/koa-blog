@@ -28,20 +28,15 @@ async function confirm({ type, id }) {
     }
 }
 //  0423
-async function readMore({ me, excepts, newsListNeedToConfirm }) {
+async function readMore({ me, excepts }) {
     /*
     excepts: {
         people: [ id, ... ],
         blogs: [ id, ... ],
         comments: [ id, ...],
         num: NUMBER
-    },
-    newsListNeedToConfirm: { peopel, blogs, comments, num }
-    */
-    // if (newsListNeedToConfirm.num) {
-    //     await confirmList(newsListNeedToConfirm)
-    // }
-    /*
+    }
+    
     res: {
         newsList: {
             unconfirm: [
@@ -51,18 +46,9 @@ async function readMore({ me, excepts, newsListNeedToConfirm }) {
             ... ],
             confirm: [...]
         },
-        num: { unconfirm, confirm, total },
-        limit
+        num: { unconfirm, confirm, total }
     }*/
     let news = await News.readList({ user_id: me.id, excepts })
-
-    // let cache = { news: [] }
-    let { newsList: { unconfirm, confirm } } = news
-    //  沒有更多news
-    if (unconfirm.length + confirm.length === 0) {
-        console.log('@ 純粹作為最後一次readMore確認')
-        // cache.news.push(id)
-    }
     return new SuccModel({ data: { news, me }})
 }
 //  0404

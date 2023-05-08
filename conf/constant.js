@@ -60,6 +60,25 @@ module.exports = {
             IF_NONE_MATCH_IS_NO_FRESH: 3,   //  請求 if-none-match 已過期
         }
     },
+    SESSION: {
+        NEWS: (ctx) => ({
+            errno: undefined,
+            data: {
+                news: {
+                    newsList: {
+                        confirm: [],
+                        unconfirm: []
+                    },
+                    num: {
+                        unconfirm: 0,
+                        confirm: 0,
+                        total: 0
+                    }
+                },
+                me: ctx.session.user
+            },
+        })
+    },
     REDIS_CONF: {
         SESSION_KEY: 'session_key'
     }

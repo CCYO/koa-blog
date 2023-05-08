@@ -99,8 +99,8 @@ async function initNavbar() {
         }
         //  渲染 + 序列化 news
         function renderAndSerializeNewsData(news, firstRender = false) {
-            let { newsList, page } = news
-            let { num, unconfirm, confirm } = newsList
+            let { newsList, page, num } = news
+            let { unconfirm, confirm } = newsList
             let x = { num, newsList: { unconfirm, confirm }, page }
             //  使用未序列化的newsData進行渲染
             renderByDeserializeNewsData(x, firstRender)

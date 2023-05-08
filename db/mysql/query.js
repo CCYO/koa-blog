@@ -36,7 +36,6 @@ async function count({ user_id }) {
     ) AS X
     `
     let [{ unconfirm, confirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })
-
     return { num: { unconfirm, confirm, total } }
 }
 //  0404
@@ -80,6 +79,15 @@ async function readNews({ user_id, excepts }) {
     ORDER BY confirm=1, createdAt DESC
     LIMIT ${NEWS.LIMIT}
     `
+    /*
+    {
+        unconfirm: [
+        { type, id, timestamp, confirm, fans: ... },
+        { type, id, timestamp, confirm, blog: ... },
+        { type, id, timestamp, confirm, comment: ... },
+        ... ],
+        confirm: [...] 
+    }*/
     let newsList = await seq.query(query, { type: QueryTypes.SELECT })
     return await initNews(newsList)
 }

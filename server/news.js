@@ -28,15 +28,6 @@ async function update(type, id, newData) {
 }
 //  0423
 async function readList({ user_id, excepts = { people: [], blogs: [], comments: [] } }) {
-    /*
-    {
-        unconfirm: [
-        { type, id, timestamp, confirm, fans: ... },
-        { type, id, timestamp, confirm, blog: ... },
-        { type, id, timestamp, confirm, comment: ... },
-        ... ],
-        confirm: [...] 
-    }*/
     //  尋找 news（撇除 excepts）
     let newsList = await rawQuery.readNews({ user_id, excepts })
     //   { num: { unconfirm, confirm, total } }

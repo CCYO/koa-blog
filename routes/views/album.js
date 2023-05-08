@@ -36,7 +36,6 @@ router.get('/:blog_id', async (ctx, next) => {
         await ctx.render('page404', res)
     }
     let { id, title, imgs } = data
-    console.log('data => ', data)
     await ctx.render('album', {
         title,
         album: {
