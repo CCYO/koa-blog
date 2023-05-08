@@ -19,7 +19,19 @@ async function set(ctx, next) {
 
     if (!ctx.session.news) {
         console.log(`@ 初始化 user/${data.id} 的 session.news`)
-        ctx.session.news = []
+        ctx.session.news = {
+            errno: undefined,
+            data: {
+                news: {
+                    newsList: {
+                        confirm: [],
+                        unconfirm: []
+                    },
+                    num: undefined
+                },
+                me: ctx.session.user
+            },
+        }
     }
 }
 

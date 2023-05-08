@@ -68,7 +68,7 @@ async function getMap(type) {
         },
         async clear(list) {
             for (let id of list) {
-                map.del(id)
+                map.delete(id)
             }
             await Redis.set(type, [...map.entries()])
             return true

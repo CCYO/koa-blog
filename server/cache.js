@@ -13,7 +13,7 @@ const ENV = require('../utils/env')
 //  0228
 async function modify(cache) {
     for (let [type, list] of Object.entries(cache)) {
-        if (type === [NEWS]) {
+        if (type === NEWS) {
             //  提醒使用者的通知數據有變動，要重新從DB讀取
             let cache = await getNews()
             await cache.addList(list)
@@ -99,7 +99,7 @@ async function getTYPE(type) {
         //  清除緩存
         async delList(list) {
             if (list.length) {
-                return await cacheType.del(list)
+                return await cacheType.clear(list)
             }
             return false
         }

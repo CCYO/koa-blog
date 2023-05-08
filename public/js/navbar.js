@@ -15,7 +15,6 @@ async function initNavbar() {
         //  初始化渲染  ------
         //  渲染基本navBar
         template_nav(data.me)
-
         //  若未登入，則不需要初始化功能
         if (!data.me.id) {
             return
@@ -61,10 +60,8 @@ async function initNavbar() {
         pageData.news.excepts = { people: [], blogs: [], comments: [], num: 0 }
         //  賦予 pageData.news.page 預設值
         pageData.news.page = 0
-        console.log('@=> ', pageData.news.page)
         //  渲染並序列化news數據(初次渲染)
         pageData.news = renderAndSerializeNewsData(pageData.news, true)
-        console.log('@=> ', pageData.news.page)
         pageData.news.newsList.list = list
         //  ---------------------------------------------------------------------------
         window._news = pageData.news
@@ -102,8 +99,8 @@ async function initNavbar() {
         }
         //  渲染 + 序列化 news
         function renderAndSerializeNewsData(news, firstRender = false) {
-            let { newsList, num, page } = news
-            let { list, unconfirm, confirm } = newsList
+            let { newsList, page } = news
+            let { num, unconfirm, confirm } = newsList
             let x = { num, newsList: { unconfirm, confirm }, page }
             //  使用未序列化的newsData進行渲染
             renderByDeserializeNewsData(x, firstRender)
@@ -207,6 +204,7 @@ async function initNavbar() {
             //  使用未序列化的newsData進行渲染
             function renderByDeserializeNewsData(news, firstRender) {
                 //  num通知總數統計，newsList前端目前撈取到的通知統計
+                console.log('@news => ', news)
                 let { newsList, num } = news
                 //  渲染新通知筆數的提醒
                 renderUnconfirmNewsCount(newsList, num, firstRender)
@@ -442,6 +440,7 @@ async function initNavbar() {
         let opts = {
             newsListNeedToConfirm: { num: 0 },
             page: 0,
+            excepts: { people: [], blogs: [], comments: [], num: 0 }
         }
         if (news) {   //  非初次渲染
             // let { newsList: { unconfirm: newsListNeedToConfirm }, page, excepts } = news
