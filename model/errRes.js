@@ -237,7 +237,7 @@ module.exports = {
     //  0404
     PERMISSION: {
         //  0430
-        NOT_AUTHOR: { errno: 200002, msg: '非作者'},
+        NOT_OWNER: { errno: 200002, msg: '非擁有者'},
         //  0404
         NO_LOGIN: { errno: 20001, msg: '尚未登入' },
 

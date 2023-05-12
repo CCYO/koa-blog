@@ -9,7 +9,7 @@ const router = require('koa-router')()                          //  0406
 router.prefix('/api/blog')                                      //  0406
 //  0411
 //  刪除 blogs
-router.delete('/', CHECK.login, CHECK.mustBeAuthor, CACHE.modify, async (ctx, next) => {
+router.delete('/', CHECK.login, CHECK.mustBeOwner, CACHE.modify, async (ctx, next) => {
     // const author_id = ctx.session.user.id
     const { blogList } = ctx.request.body
     ctx.body = await Blog.removeList(blogList)
@@ -21,8 +21,8 @@ router.post('/blogImgAlt', CHECK.login, CACHE.modify, async (ctx, next) => {
     ctx.body = await BlogImgAlt.add({blogImg_id})
 })
 //  更新 blog 資料  0326
-router.patch('/', CHECK.login, CACHE.modify, async (ctx, next) => {
-    const { id: blog_id, ...blog_data } = ctx.request.body
+router.patch('/', CHECK.login, CHECK.mustBeOwner, CACHE.modify, async (ctx, next) => {
+    const { owner_id, blog_id, ...blog_data } = ctx.request.body
     res = await Blog.modify(blog_id, blog_data)
     ctx.body = res
 })

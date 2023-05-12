@@ -1,11 +1,11 @@
 //  0505
 const { ErrRes, ErrModel } = require('../../model')
 //  0505
-async function mustBeAuthor(ctx, next){
-    let { author_id } = ctx.request.body
+async function mustBeOwner(ctx, next){
+    let { owner_id } = ctx.request.body
     let user_id = ctx.session.user.id
-    if( author_id !== user_id ){
-        ctx.body = new ErrModel(ErrRes.PERMISSION.NOT_AUTHOR)
+    if( owner_id !== user_id ){
+        ctx.body = new ErrModel(ErrRes.PERMISSION.NOT_OWNER)
         return
     }
     await next()
@@ -27,7 +27,7 @@ async function login(ctx, next) {
 
 module.exports = {
     //  0505
-    mustBeAuthor,
+    mustBeOwner,
     //  0505
     login
 }

@@ -160,7 +160,8 @@
                                 }
                             } = await axios.patch(api_blog, {
                                 cancelImgs,
-                                id: pageData.blog.id
+                                blog_id: pageData.blog.id,
+                                owner_id: pageData.blog.author.id
                             })
                             loadEnd()
                             if (errno) {
@@ -200,7 +201,10 @@
                                 data: {
                                     errno, data, msg
                                 }
-                            } = await axios.delete(api_blog, { data: { blogList: [pageData.blog.id] } })
+                            } = await axios.delete(api_blog, { data: {
+                                blogList: [pageData.blog.id],
+                                owner_id: pageData.blog.author.id
+                            } })
                             loadEnd([editor])
                             if (!errno) {
                                 my_alert('已成功刪除此篇文章')

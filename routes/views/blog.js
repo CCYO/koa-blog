@@ -17,7 +17,7 @@ const privateCache = CACHE.private(TYPE.PAGE.BLOG)
 const commonCache = CACHE.common(TYPE.PAGE.BLOG)
 //  0406
 //  編輯文章
-router.get('/blog/edit/:id', CHECK.login, CHECK.mustBeAuthor, privateCache, async (ctx, next) => {
+router.get('/blog/edit/:id', CHECK.login, CHECK.mustBeOwner, privateCache, async (ctx, next) => {
     const blog_id = ctx.params.id * 1
     //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: initBlog || undefined }
     let cacheStatus = ctx.cache[TYPE.PAGE.BLOG]

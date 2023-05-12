@@ -818,10 +818,10 @@
         //  utils -----
         //  axios 刪除文章
         async function  removeBlog(blogList) {
-            let author_id = pageData.me.id
+            let owner_id = pageData.me.id
             //  送出刪除命令
             loading()
-            const res = await axios.delete('/api/blog', { data: { blogList, author_id } })
+            const res = await axios.delete('/api/blog', { data: { blogList, owner_id } })
             loadEnd()
             let { errno, data, msg } = checkRes(res)
             if (!errno) {
