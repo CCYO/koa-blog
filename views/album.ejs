@@ -70,6 +70,7 @@
         window.pageData = pageData
         // ----------------------------------------------------------------------------------------
         let { blog, imgs, map_imgs } = data.album
+        let { id: owner_id } = pageData.me
         //  handle ---
         //  照片名稱span，handle click => 顯示、聚焦改名表格
         $('p.card-text').click(showAndFocusChangeImgAlt)
@@ -92,7 +93,7 @@
             let $container = $btn.parents('[data-my-photo]')
             let alt = $btn.prev().val()
             let alt_id = $container.attr('data-my-photo') * 1
-            let payload = { alt_id, alt, blog_id: blog.id }
+            let payload = { alt_id, alt, blog_id: blog.id, owner_id }
             // 發出請求
             let { data: { errno, data, msg } } = await axios.patch('/api/album', payload)
             if (errno) {    //  更新失敗

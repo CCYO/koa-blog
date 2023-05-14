@@ -237,7 +237,8 @@
                                 payloadObj.html = parseImgToXImg(payload.get('html'))
                             }
                             //  payloadObj 放入 blog_id
-                            payloadObj.id = pageData.blog.id
+                            payloadObj.blog_id = pageData.blog.id
+                            payloadObj.owner_id = pageData.blog.author.id
                             loading([editor])
                             const {
                                 data: {

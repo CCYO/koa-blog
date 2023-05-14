@@ -8,7 +8,12 @@ const {
 } = require('../model')
 const Opts = require('../utils/seq_findOpts')               //  0406
 const ArticleReader = require('../server/articleReader')    //  0406
-
+//  0514
+async function findReadersForModifiedUserData(articles){
+    let datas = await ArticleReader.readList(Opts.ARTICLE_READER.findReadersForModifiedUserData(articles))
+    let data = datas.map( ({ reader_id }) => reader_id)
+    return new SuccModel({data})
+}
 //  0423
 async function confirmList(datas){
     let updatedAt = new Date()
@@ -50,6 +55,8 @@ async function removeList(datas) {
 //     return new SuccModel()
 // }
 module.exports = {
+    //  0514
+    findReadersForModifiedUserData,
     //  0423
     confirmList,
     //  0406

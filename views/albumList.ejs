@@ -17,7 +17,7 @@
         <% albums.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
         <ul class="list-group">
             <li class="list-group-item">
-                <a href="/album/<%= id %>"><%= title %></a>
+                <a href="/album/<%= id %>?owner_id=<%= author.id %>"><%= title %></a>
                 <span>文章公開於 <%= time %></span>
             </li>
         </ul>
@@ -27,20 +27,18 @@
         <% } %>
     </div>
     <div class="box-albumList">
-        <% if(isAuthor){ %>
         <h3>未公開的文章相簿</h3>
         <% if(albums.hidden && albums.hidden.length){ %>
         <% albums.hidden.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
         <ul class="list-group">
             <li class="list-group-item">
-                <a href="/album/<%= id %>"><%= title %></a>
+                <a href="/album/<%= id %>?owner_id=<%= author.id %>"><%= title %></a>
                 <span>文章最近一次更新於 <%= time %></span>
             </li>
         </ul>
         <% }) }) %>
         <% } else { %>
         <p>沒有相簿</p>
-        <% } %>
         <% } %>
     </div>
 </div>

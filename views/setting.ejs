@@ -220,7 +220,7 @@ import initPageFn from '/js/initData.js'
             let file = $avatar.prop('files')[0]
             //  取得副檔名
             let ext = _getExt(file)
-            if (ext !== 'jpg' && ext !== 'png') {
+            if (ext !== 'JPG' && ext !== 'PNG') {
                 resetAvatar('只能傳jpg跟png啦!')
                 return
             }
@@ -286,7 +286,7 @@ import initPageFn from '/js/initData.js'
                 //  副檔名regux
                 let reg_ext = /.+\.(.*)$/
                 //  校驗檔案格式(jpg png)
-                return reg_ext.exec(file.name)[1].toLowerCase()
+                return reg_ext.exec(file.name)[1].toUpperCase()
             }
         }
         //  UI input值同步 pageData.currentUser

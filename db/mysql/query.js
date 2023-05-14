@@ -41,13 +41,12 @@ async function count({ user_id }) {
 //  0404
 async function readNews({ user_id, excepts }) {
     // let { people, blogs, comments } = excepts
-    let list = { people: '', blogs: '', comments: '' }
+    let list = { idolFans: '', articleReader: '', msgReceiver: '' }
     if (excepts) {
         for (key in list) {
             list[key] = excepts[key].length && ` AND id NOT IN (${excepts[key].join(',')})` || ''
         }
     }
-
     let query = `
     SELECT type, id, target_id, follow_id, confirm, createdAt
     FROM (
@@ -55,7 +54,7 @@ async function readNews({ user_id, excepts }) {
         FROM IdolFans
         WHERE 
             idol_id=${user_id}
-            ${list.people}
+            ${list.idolFans}
 
         UNION
 
@@ -64,7 +63,7 @@ async function readNews({ user_id, excepts }) {
         WHERE 
             reader_id=${user_id}
             AND deletedAt IS NULL
-            ${list.blogs}
+            ${list.articleReader}
 
         UNION
 
@@ -73,7 +72,7 @@ async function readNews({ user_id, excepts }) {
         WHERE 
             receiver_id=${user_id}
             AND deletedAt IS NULL
-            ${list.comments}
+            ${list.msgReceiver}
 
     ) AS X
     ORDER BY confirm=1, createdAt DESC
@@ -103,20 +102,6 @@ async function initNews(newsList) {
         }
         return acc
     }, { unconfirm: [], confirm: [] })
-    res.list = newsList.reduce((acc, item) => {
-        let { type, id, target_id, follow_id, confirm, createdAt } = item
-        if(!confirm){
-            if(type === 1){
-                acc.people.push( { id, idol_id: target_id, fans_id: follow_id })
-            }else if(type === 2){
-                acc.blogs.push( { type, id, article_id: target_id, reader_id: follow_id })
-            }else{
-                acc.comments.push( { type, id, msg_id: target_id, receiver_id: follow_id })
-            }
-            acc.num += 1
-        }
-        return acc
-    }, { people: [], blogs: [], comments: [], num: 0})
     return res
     //  0404
     async function findNews(news) {

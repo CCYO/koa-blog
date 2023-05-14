@@ -2,7 +2,6 @@ const { initListForBrowser } = require('./comment')                             
 const { 
     //  0404
     pageTable,
-
     sortAndInitTimeFormat
 } = require('./blog')
 const { filterEmptyAndFranferFns, filterEmptyAndFranferFnsForArray } = require('../filterEmpty')  //  0404
@@ -166,7 +165,6 @@ module.exports = {
         blog: {
             //  0404
             pageTable,
-
             sortAndInitTimeFormat
         }
     },

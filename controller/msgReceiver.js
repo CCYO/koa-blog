@@ -4,6 +4,12 @@ const { MyErr, SuccModel, ErrRes, ErrModel } = require('../model')
 const Opts = require('../utils/seq_findOpts')
 //  0411
 const MsgReceiver = require('../server/msgReceiver');
+//  0514
+async function findListForModifiedUserData(msgs){
+    let list = await MsgReceiver.readList(Opts.MSG_RECEIVER.findListForModifiedUserData(msgs))
+    let data = list.map( ({ receiver_id }) => receiver_id)
+    return new SuccModel({ data })
+}
 //  0423
 async function confirm(id){
     let row = await MsgReceiver.update(id, { confirm: true })
@@ -63,6 +69,8 @@ async function find(whereOps) {
     return new SuccModel(data)
 }
 module.exports = {
+    //  0514
+    findListForModifiedUserData,
     //  0426
     removeList,
     //  0414

@@ -2,13 +2,18 @@
  * @description API user相關
  */
 const IdolFans = require('../../controller/idolFans')               //  0406
-const { SESSION, CHECK, CACHE } = require('../../middleware/api')                     //  未處理
-const Check = require('../../middleware/check_login') //  0228
-const Session = require('../../middleware/session')                 //  0228
+const { SESSION, CHECK, CACHE, FIREBASE } = require('../../middleware/api')                     //  未處理
 const User = require('../../controller/user')                       //  0404
 const { validate_user } = require('../../middleware/validate')      //  0404
 const router = require('koa-router')()                              //  0404
-router.prefix('/api/user')       
+router.prefix('/api/user')
+//  0514
+//  setting
+router.patch('/', CHECK.login, SESSION.set, CACHE.modify, FIREBASE.user, validate_user, async (ctx, next) => {
+    let { id } = ctx.session.user
+    let { body: newData } = ctx.request
+    ctx.body = await User.modify(newData, id)
+})
 //  0406
 //  取消追蹤
 router.post('/cancelFollow', CHECK.login, CACHE.modify, async (ctx, next) => {
@@ -44,25 +49,4 @@ router.post('/register', validate_user, async (ctx, next) => {
     const { email, password } = ctx.request.body
     ctx.body = await User.register(email, password)
 })
-
-
-
-
-const { parse_user_data } = require('../../middleware/gcs')
-
-
-
-
-
-
-//  setting 0309
-router.patch('/', CHECK.login, SESSION.set, CACHE.modify, parse_user_data, validate_user, async (ctx, next) => {
-    let { id } = ctx.session.user
-    let { body: newData } = ctx.request
-    ctx.body = await User.modifyUserInfo(newData, id)
-})
-
-
-
-
 module.exports = router

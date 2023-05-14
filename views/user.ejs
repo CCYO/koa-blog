@@ -254,7 +254,7 @@
                                 <span class="timestamp">發佈於<%= time %></span>
                             </div>
                             <div class="btn-blog-edit my-noshow flex-shrink-0">
-                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?author_id=<%= author_id %>">編輯</a>
+                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?owner_id=<%= author_id %>">編輯</a>
                                 <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%= id %>">刪除</a>
                             </div>
                         </li>
@@ -322,7 +322,7 @@
                                 <span class="timestamp">上一次編輯<%= time %></span>
                             </div>
                             <div class="btn-blog-edit flex-shrink-0">
-                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?author_id=<%= author_id %>">編輯</a>
+                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?owner_id=<%= author_id %>">編輯</a>
                                 <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%= id %>">刪除</a>
                             </div>
                         </li>
@@ -542,7 +542,7 @@
 
             let { errno, data } = checkRes(res)
             if (!errno) {
-                location.href = `/blog/edit/${data.id}?author_id=${pageData.me.id}`
+                location.href = `/blog/edit/${data.id}?owner_id=${pageData.me.id}`
             }
 
             //  取title值
@@ -675,7 +675,7 @@
                 //  依頁面是否為使用者自己的資料，來判斷是否提供文章的編輯/刪除紐
                 let blogEdit = isSelf ? `
                             <div class="btn-blog-edit">
-                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/${id}?author_id=${author_id}">編輯</a>
+                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/${id}?owner_id=${author_id}">編輯</a>
                                 <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="${id}">刪除</a>
                             </div>` : ''
 

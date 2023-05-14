@@ -13,6 +13,19 @@ const {
 } = require('../db/mysql/model')
 const { hash } = require('../utils/crypto')   //  0228
 module.exports = {
+    //  0514
+    ARTICLE_READER: {
+        //  0514
+        findReadersForModifiedUserData: (articles) => ({
+            where: {
+                attributes: ['reader_id'],
+                article_id: { [Op.in]: articles}
+            }
+        }),
+        count: (blog_id) => ({
+            where: { blog_id }
+        })
+    },
     //  0429
     BLOG_IMG: {
         findInfoForRemoveBlog: (blog_id) => ({
@@ -209,6 +222,13 @@ module.exports = {
     },
     //  0404
     COMMENT: {
+        //  0514
+        findArticlesOfCommented: (commenter_id) => ({
+            attributes: ['id', 'article_id'],
+            where: {
+                commenter_id
+            }
+        }),
         //  0423
         _findUnconfirmListBeforeNews: ({ comment_id, pid, article_id, createdAt }) => ({
             attributes: ['id'],
@@ -319,17 +339,15 @@ module.exports = {
                     }
                 }
             ]
-        }),
-        findBlogsOfCommented: (commenter_id) => ({
-            attributes: ['blog_id'],
-            where: {
-                user_id: commenter_id
-            },
-            paranoid: false
-        }),
+        })
     },
     //  0411
     MSG_RECEIVER: {
+        //  0514
+        findListForModifiedUserData: (msgs) => ({
+            attributes: ['receiver_id'],
+            where: { msg_id: { [Op.in]: msgs } }
+        }),
         //  0414
         findList: (msg_id) => ({
             where: { msg_id }
@@ -528,11 +546,6 @@ module.exports = {
         restoreList: (id_list) => ({
             where: { id: { [Op.in]: id_list } }
         }),
-    },
-    ARTICLE_READER: {
-        count: (blog_id) => ({
-            where: { blog_id }
-        })
     },
     //  0303
     findBlogFollowersByBlogId(blog_id) {

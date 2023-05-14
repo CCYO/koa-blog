@@ -239,7 +239,7 @@ module.exports = {
         //  0430
         NOT_OWNER: { errno: 200002, msg: '非擁有者'},
         //  0404
-        NO_LOGIN: { errno: 20001, msg: '尚未登入' },
+        NO_LOGIN: { errno: 99999, msg: '尚未登入' },
 
         NOT_SELF: { errno: 502, msg: '非本人' },
     },

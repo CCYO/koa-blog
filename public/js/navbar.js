@@ -1,32 +1,45 @@
+const CONF = {
+    TIME: {
+        AUTO_READMORE: 2
+    }
+}
+
+const ERR_MSG = {
+    PERMISSION: {
+        NO_LOGIN: { errno: 99999, msg: '尚未登入' }
+    },
+    REQUEST: {
+        NEWS: { errno: 99998, msg: '請求NEWS數據時發生錯誤' }
+    }
+}
+
 async function initNavbar() {
     try {
         // 取得「新聞」數據（含登入者資訊）
-        let data = await getNews()
+        let res = await getNews()
         //  初始化通知列表相關功能
-        await initNews(data)
-        let { news, me } = data
+        await initNews(res)
+        let { data: { me } } = res
         return { me }
     } catch (e) {
         throw e
     }
 
     //  初始化 通知列表 功能
-    async function initNews(data) {
-        //  初始化渲染  ------
-        let user_id = me.id
-        let isLogin = !!user_id
-        //  渲染 NavBar
-        if (isLogin) {
-            templateForLogin()
-        } else {
-            templateForNoLogin()
-        }
+    async function initNews(res) {
         //  渲染 NavItem Active
         activeNavItem()
-        //  若未登入，則不需要初始化功能
-        if (!data.me.id) {
+        let { errno, data } = res
+
+        //  初始化渲染  ------
+        let isLogin = !errno
+        //  渲染 NavBar
+        if (!isLogin) {
+            templateForNoLogin()
             return
         }
+        templateForLogin(data.me.id)
+        initFn(data)
         //  登出功能
         $('#logout').click(logout)
         //  功能 -----
@@ -46,7 +59,7 @@ async function initNavbar() {
             }
         }
         //  生成 navbar template
-        function templateForLogin() {
+        function templateForLogin(user_id) {
             //  登入狀態
             //  摺疊選單外的部份
             let template_outOfOffcanvas = `
@@ -84,10 +97,10 @@ async function initNavbar() {
                                 <a class="nav-link" href="/self">個人頁面</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="/album/list/${user_id}">文章相簿</a>
+                                <a class="nav-link" href="/album/list?owner_id=${user_id}">文章相簿</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="/setting/${user_id}">個人設置</a>
+                                <a class="nav-link" href="/setting?owner_id=${user_id}">個人設置</a>
                             </li>
                             <li class="nav-item">
                                 <a id="logout" class="btn btn-outline-success text-nowrap">登出</a>
@@ -124,16 +137,12 @@ async function initNavbar() {
                 $(`.nav-link[href^="/album"]`).addClass('active')
             }
         }
-
-        initFn(data)
         function initFn(data) {
-            //  公用變量
-            let $$news = pageData.news
-            let $$htmlStr = $$news.htmlStr
-            let $$newsList = $$news.newsList
-            let $$excepts = $$news.excepts
-            let $$num = $$news.num
-            let $$fn = $$news.fn
+            let $readMore = $('#readMore')
+            let $noNews = $('#noNews')
+            let $newsCount = $('.news-count')
+            //  下拉選單按鈕
+            let $newsDropdown = $('#newsDropdown')
             //  頁面數據
             let pageData = {
                 me: data.me,
@@ -150,18 +159,12 @@ async function initNavbar() {
                         idolFans: [],
                         articleReader: [],
                         msgReceiver: [],
-                        num: 0
+                        get num() {
+                            return this.idolFans.length + this.articleReader.length + this.msgReceiver.length
+                        }
                     },
                     templateNeedToReset: false,
                     num: {
-                        excepts: {
-                            get count() {
-                                let total = 0
-                                for (let type in $$excepts) {
-                                    total += $$excepts[type].length
-                                }
-                            }
-                        },
                         newsList: {
                             get unconfirm() {
                                 return $$newsList.unconfirm.length
@@ -211,7 +214,9 @@ async function initNavbar() {
                         excepts: {
                             clear() {
                                 for (let type in $$excepts) {
-                                    $$excepts[type] = []
+                                    if (type !== 'num') {
+                                        $$excepts[type] = []
+                                    }
                                 }
                             },
                             update(list) {
@@ -254,13 +259,12 @@ async function initNavbar() {
                                 let { idolFans, articleReader, msgReceiver } = this._gen
                                 return list.reduce((htmlStr, item) => {
                                     let { type, confirm } = item
-                                    let type = item.type
                                     if (type === 1) {
-                                        init += idolFans(item)
+                                        htmlStr += idolFans(item)
                                     } else if (type === 2) {
-                                        init += articleReader(item)
+                                        htmlStr += articleReader(item)
                                     } else {
-                                        init += msgReceiver(item)
+                                        htmlStr += msgReceiver(item)
                                     }
                                     let hr = confirm ? `<li data-my-hr="confirm-news-hr">` : `<li data-my-hr="unconfirm-news-hr">`
                                     hr += `<hr class="dropdown-divider"></li>`
@@ -304,7 +308,7 @@ async function initNavbar() {
                                         count === 1 ? others[0] : comment.commenter.nickname
                                     let author =
                                         comment.article.author.id === pageData.me.id ? '你' :
-                                        comment.article.author.id === comment.commenter.id ? '自己' : comment.blog.author.nickname
+                                            comment.article.author.id === comment.commenter.id ? '自己' : comment.blog.author.nickname
                                     return `
                                     <li class="dropdown-item  position-relative news-item">
                                         <a href="/blog/${comment.article.id}${query}#comment_${comment.id}" class="stretched-link text-wrap">
@@ -319,7 +323,7 @@ async function initNavbar() {
                             clear() {
                                 $$num.unRender.clear()
                                 for (let isConfirm in $$htmlStr) {
-                                    curData[isConfirm] = ''
+                                    $$htmlStr[isConfirm] = ''
                                 }
                             },
                             update(newsList) {
@@ -343,11 +347,13 @@ async function initNavbar() {
                                 //  清空新聞列表
                                 $('.news-item').remove()
                                 $('[data-my-hr]').remove()
+                                $$num.rendered.clear()
                             },
-                            insert(firstRender = false) {
+                            insert() {
                                 if (!$$num.unRender.total) {
                                     return
                                 }
+                                let firstRender = $$num.unRender.total && !$$num.rendered.total
                                 //  針對通知列表進行渲染
                                 for (let isConfirm in $$htmlStr) {
                                     let htmlStr = $$htmlStr[isConfirm]
@@ -357,7 +363,7 @@ async function initNavbar() {
                                     if (!!!htmlStr) {
                                         //  htmlStr 沒有內容的狀況
                                         //  若初渲染，則隱藏title
-                                        firstRender && show($title, false) 
+                                        firstRender && show($title, false)
                                         continue
                                     }
                                     //  htmlStr 有內容的狀況
@@ -373,181 +379,142 @@ async function initNavbar() {
                                         //  渲染在相應通知列的後方
                                         hr.last().after(htmlStr)
                                     }
-                                    $$num.rendered[isConfirm] += num.unRender[isConfirm]
+                                    $$num.rendered[isConfirm] += $$num.unRender[isConfirm]
                                 }
+                                let count = $$num.db.total - $$num.rendered.total
+                                show($readMore, count)
+                                show($noNews, !count)
                                 $$fn.htmlStr.clear()
                             }
                         }
                     }
                 }
             }
-            let $newsCount = $('.news-count')
+            //  ---------------------------------------------------------------------------
+            window._news = pageData.news
+            //  ---------------------------------------------------------------------------
+            //  公用變量
+            let reading = true
+            let timeSet
+            let $$news = pageData.news
+            let $$htmlStr = $$news.htmlStr
+            let $$newsList = $$news.newsList
+            let $$excepts = $$news.excepts
+            let $$num = $$news.num
+            let $$fn = $$news.fn
             //  整理頁面初次渲染取得的newsData
             $$fn.newsList.reset(data.news)
             $$fn.htmlStr.update()
-            $$fn.newsDropdown.insert(true)
-            let count = curNum.db.unconfirm
-            show($newsCount, count).text(count || '')
-
+            show($newsCount, $$num.db.unconfirm).text($$num.db.unconfirm || '')
+            $newsDropdown.click(renderUnconfirmNewsCountByClick)
+            $readMore.on('click', readMore)
+            // debounce(autoReadMore, CONF.TIME.AUTO_READMORE)
+            reading = false
+            //  渲染新通知筆數的提醒
+            function renderUnconfirmNewsCountByClick() {
+                if ($$num.unRender.total) {
+                    $$fn.newsDropdown.insert()
+                }
+                let count = $$num.db.unconfirm - $$num.rendered.unconfirm
+                //  渲染新通知筆數的提醒
+                show($newsCount, count).text(count || '')
+            }
             async function autoReadMore() {
-                let { data: { errno, data } } = await getNews(curNews.excepts)
-                if (errno) {
-                    //  處理例外狀況
+                if (reading) {
                     return
                 }
-                let { news } = data
-                let { hasNews, num, newsList } = news
+                reading = true
+                let excepts = { ...$$excepts }
+                let checkHasNews = !($$num.db.total - $$num.newsList.total)
+                let { data: { news } } = await getNews({ excepts, checkHasNews })
+                let { hasNews, newsList } = news
                 if (hasNews) {
                     $$fn.newsList.clear()
                     $$fn.htmlStr.clear()
                     $$fn.newsDropdown.clear()
+                    console.log('有新資料,頁面目前的被渲染/未渲染的數值都要歸0')
+                    console.log('unReader => ', $$num.unRender.unconfirm)
+                    console.log('readered => ', $$num.rendered.unconfirm)
                 }
-                $$fn.newsList.update(newsList)
-                $$fn.htmlStr.update(newsList)
-                
-                let count = $$num.db.unconfirm
-                    //  若hasNews:true -> 顯示DB數量
-                    // hasNews ? curNum.db.unconfirm :
-                    //  若hasNews:false -> 顯示DB數量-已渲染數量
-                    // curNum.db.unconfirm - curNum.rendered.unconfirm
-                show($newsCount, count).text(count || '')
+                if (!checkHasNews) {
+                    $$fn.newsList.update(news)
+                    $$fn.htmlStr.update(newsList)
+                    console.log('頁面目前的被渲染/未渲染的數值都更新')
+                    console.log('unReader => ', $$num.unRender.unconfirm)
+                    console.log('readered => ', $$num.rendered.unconfirm)
+                    let count = $$num.db.unconfirm - $$num.rendered.unconfirm
+                    console.log('count', count)
+                    show($newsCount, count).text(count || '')
+                }else{
+                    console.log('這次回來的是session')
+                }
+                reading = false
             }
-
-            async function readMore(){
-                let { data: { errno, data } } = await getNews(curNews.excepts)
+            async function readMore() {
+                if (reading) {
+                    return
+                }
+                reading = true
+                if (timeSet) {
+                    clearTimeout(timeSet)
+                }
+                let excepts = { ...$$excepts }
+                let checkHasNews = !($$num.db.total - $$num.newsList.total)
+                let { data: { news } } = await getNews({ excepts, checkHasNews })
                 if (errno) {
                     //  處理例外狀況
                     return
                 }
+                let { newsList, hasNews } = news
+                if (hasNews) {
+                    $$fn.newsDropdown.clear()
+                    $$fn.newsList.clear()
+                    $$fn.htmlStr.clear()
+                    $$fn.newsDropdown.clear()
+                }
+                $$fn.newsList.update(news)
+                $$fn.htmlStr.update(newsList)
+                $$fn.newsDropdown.insert()
+                let count = $$num.db.unconfirm - $$num.newsList.unconfirm
+                show($newsCount, count).text(count || '')
+                // debounce(autoReadMore, CONF.TIME.AUTO_READMORE)
+                reading = false
             }
-
-
-
-
-        }
-
-        updateNewsList(true)
-        //  渲染新通知筆數的提醒
-        renderUnconfirmNewsCount()
-        //  渲染新通知筆數的提醒
-        function renderUnconfirmNewsCount() {
-            let { unconfirm } = pageData.news.num
-            let count = unconfirm.length
-            //  新通知筆數的提醒
-            let $newsCount = $('.news-count')
-            //  渲染新通知筆數的提醒
-            show($newsCount, count).text(count || '')
-        }
-        //  渲染readMore
-        render_readMore()
-        //  渲染 readMore鈕
-        function render_readMore() {
-            let total = pageData.news.num.total
-            let { unconfirm, confirm } = pageData.news.newsList
-            let hasMore = total - unconfirm.length - confirm.length > 0
-            //  下拉選單內 的 readMore鈕                                                                                                                                                                                                
-            let $readMore = $('#readMore')
-            //  下拉選單內 的 沒有更多提醒
-            let $noNews = $('#noNews')
-            show($readMore, hasMore)
-            show($noNews, !hasMore)
-        }
-
-        //  渲染新通知筆數的提醒
-        function renderUnconfirmNewsCountByClick() {
-            let { num, newsList: { unconfirm } } = pageData.news
-            let count = num.unconfirm - unconfirm.length
-            //  新通知筆數的提醒
-            let $newsCount = $('.news-count')
-            //  渲染新通知筆數的提醒
-            show($newsCount, count).text(count || '')
-        }
-        //  下拉選單按鈕
-        let $newsDropdown = $('#newsDropdown')
-        $newsDropdown.click(renderUnconfirmNewsCountByClick)
-        let timeSet
-        async function debounce(fn, sec) {
-            if (timeSet) {
-                clearTimeout(timeSet)
+            async function debounce(fn, sec) {
+                if (timeSet) {
+                    clearTimeout(timeSet)
+                }
+                timeSet = setTimeout(async function () {
+                    await fn()
+                    debounce(fn, sec)
+                }, sec * 1000)
             }
-            timeSet = setTimeout(function () {
-                new Promise((resolve, reject) => {
-                    fn()
-                    resolve()
-                })
-                    .then(_ => debounce(fn, sec))
-                    .catch(err => { throw err })
-            }, sec * 1000)
-        }
-        async function autoReadMore() {
-            let { } = await
+            //  utils ------
+            //  顯示el與否
+            function show(q, boo = true) {
+                return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
             }
-        //  公用變量 ------
-
-
-
-
-        //  ---------------------------------------------------------------------------
-        window._news = pageData.news
-        //  ---------------------------------------------------------------------------
-        //  讀取更多
-        $readMore.on('click', moreNews)
-
-
-        //  handle -----
-        //  請求更多通知
-        async function moreNews() {
-            let { news: { excepts } } = pageData.news
-            //  取news
-            let { data: { errno, data } } = await getNews(excepts)
-            if (!errno) {
-                //  處理錯誤
-                return
-            }
-            let { news: { newsList, num, hasNews } } = data
-            if (hasNews) {
-                //  代表當前 pageData 都已過時
-                //  pageData 重整
-                pageData.reset({ newsList, num })
-                //  新聞列表 重整
-                resetNewsList()
-            } else {
-                //  pageData 更新
-                pageData.update({ newsList, hasNews })
-                //  新聞列表 更新
-                updateNewsList()
-            }
-            //  未讀新聞數量的提醒
-            renderUnconfirmNewsCountByClick()
-            //  渲染 readMore
-            render_readMore()
-            return
-        }
-
-        //  utils ------
-        //  顯示el與否
-        function show(q, boo = true) {
-            return $(q).toggleClass('my-show', boo).toggleClass('my-noshow', !boo)
         }
     }
 }
 
 //  請求 news
-async function getNews(excepts) {
-    let opts = {
-        first: true
-    }
-    if (excepts) {   //  非初次渲染
-        opts = {
-            excepts,
-            first: false
+async function getNews(payload) {
+    let res = await axios.post(`/api/news`, payload)
+    let { errno, data, msg } = res.data
+    if (errno && errno !== ERR_MSG.PERMISSION.NO_LOGIN.errno) {
+        //  若非預期結果，且是未登入以外的狀況
+        throw new Error(ERR_MSG.REQUEST.NEWS)
+    } else if (errno === ERR_MSG.PERMISSION.NO_LOGIN.errno) {
+        if (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/square') {
+            //  不需要登入即可使用的頁面
+            return { errno, data: { me: {} } }
+        } else {
+            //  未登入
+            location.href = '/login'
         }
-    }
-    let { data: { errno, data } } = await axios.post(`/api/news`, opts)
-    if (errno) {
-        //  處理未登入
-        return { me: {} }
-        //  處理報錯
+    } else {
+        return { errno, data }
     }
     /*  取得 news
        data: {
@@ -565,8 +532,7 @@ async function getNews(excepts) {
            me: ...
        }
        */
-    return data
-}
+    // return data
 }
 
 export default initNavbar 

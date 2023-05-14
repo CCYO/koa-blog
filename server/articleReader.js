@@ -3,6 +3,11 @@ const Init = require('../utils/init')
 const { ErrRes, MyErr } = require('../model')
 //  0406
 const { ArticleReader } = require('../db/mysql/model')  //  0406
+//  0514
+async function readList(opts){
+    let datas = await ArticleReader.findAll(opts)
+    return Init.articleReader(datas)
+}
 //  0423
 async function updateList(datas, updateOnDuplicate){
     try {
@@ -41,6 +46,8 @@ async function deleteList(opts) {
 // }
 
 module.exports = {
+    //  0514
+    readList,
     //  0423
     updateList,
     //  0406

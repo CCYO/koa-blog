@@ -1,12 +1,54 @@
 /**
  * @description Controller user相關
  */
+const {
+    BLOG: { ORGANIZED: { TYPE: { POSITIVE, NEGATIVE }}},
+    CACHE: {
+        TYPE: {
+            API,
+            PAGE,   //  0228
+            NEWS    //  0228
+        }
+    }
+} = require('../conf/constant')
+const C_MsgReceiver = require('./msgReceiver')
+const C_Comment = require('./comment')
+const C_ArticlReader = require('./articleReader')
 const Init = require('../utils/init')                               //  0421
 const C_Blog = require('./blog')                                    //  0309
 const { ErrRes, ErrModel, SuccModel, MyErr } = require('../model')  //  0404
 const Opts = require('../utils/seq_findOpts')                       //  0404
 const User = require('../server/user')                              //  0404
 
+//  0514
+//  更新user
+async function modify(newData, user_id) {
+    let cache = { [PAGE.USER]: [user_id], [PAGE.BLOG]: [], [API.COMMENT]: [], [NEWS]: [] }
+    if (newData.nickname || newData.email || newData.avatar) {
+        let { data: { fansList, idols, blogs } } = await findInfoForUserPage(user_id)
+        //  找出 idolFans
+        let people = [...fansList, ...idols].map(({ id }) => id)
+        cache[PAGE.USER] = cache[PAGE.USER].concat(people)
+        //  找出 自己的 blog
+        for(let isShow in blogs){
+            let list = blogs[isShow].map( ({ id }) => id )
+            cache[PAGE.BLOG] = cache[PAGE.BLOG].concat(list)
+        }
+        //  找出 reader
+        let { data: readers } = await C_ArticlReader.findReadersForModifiedUserData(blogs)
+        cache[NEWS] = cache[NEWS].concat(readers)
+        //  找出 評論 與 被評論的文章
+        let { data: { articles, comments } } = await C_Comment.findBlogsOfCommented(user_id)
+        cache[API.COMMENT] = cache[API.COMMENT].concat(articles)
+        if (comments.length) {
+            //  找出 receiver
+            let { data: receivers } = await C_MsgReceiver.findListForModifiedUserData(comments)
+            cache[NEWS] = cache[NEWS].concat(receivers)
+        }
+    }
+    let user = await User.update({ newData, id: user_id })
+    return new SuccModel({ data: user, cache })
+}
 //  0421 因為使用 C_BLOG 會造成迴圈，故直接以USER做查詢
 async function findAlbumListOfUser(user_id, pagination) {
     let res = await User.read(Opts.USER.findAlbumListOfUser(user_id))
@@ -122,6 +164,8 @@ async function isEmailExist(email) {
 }
 
 module.exports = {
+    //  0514
+    modify,
     //  0421
     findAlbumListOfUser,
     //  0406
@@ -141,11 +185,7 @@ module.exports = {
     //  0404
     register,
     //  0404
-    isEmailExist,
-
-
-
-    modifyUserInfo,             //  0309
+    isEmailExist
 }
 
 async function findOthersInSomeBlogAndPid({ commenter_id, p_id, blog_id, createdAt }) {
@@ -160,50 +200,3 @@ async function findOthersInSomeBlogAndPid({ commenter_id, p_id, blog_id, created
 
 
 const CommentController = require('./comment')
-
-
-const {
-    CACHE: {
-        TYPE: {
-            API,
-            PAGE,   //  0228
-            NEWS    //  0228
-        }
-    }
-} = require('../conf/constant')
-
-
-
-
-
-
-
-
-
-
-//  更新user    0309
-async function modifyUserInfo(newData, userId) {
-    let cache = { [PAGE.USER]: [userId] }
-    if (newData.nickname || newData.email || newData.avatar) {
-        let resModel = await findRelationShip(userId)
-        if (resModel.errno) {
-            return resModel
-        }
-        let { fansList, idolList } = resModel.data
-        let people = [...fansList, ...idolList].map(({ id }) => id)
-
-        let { data: blogs } = await BlogController.findBlogListByUserId(userId, { beOrganized: false })
-        let blogList = blogs.map(({ id }) => id)
-        //  找出曾留過言的Blog
-        let { data: blogsIncludeUsersComments } = await CommentController.findBlogsOfCommented(userId)
-
-        cache[NEWS] = people
-        cache[PAGE.USER] = [...cache[PAGE.USER], ...people]
-        cache[PAGE.BLOG] = blogList
-        cache[API.COMMENT] = blogsIncludeUsersComments
-    }
-    let user = await User.updateUser({ newData, id: userId })
-    return new SuccModel({ data: user, cache })
-}
-
-

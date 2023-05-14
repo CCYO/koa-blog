@@ -14,6 +14,20 @@ const router = require('koa-router')()                                  //  0406
 const privateCache = CACHE.private(TYPE.PAGE.USER)
 //  0504
 const commonCache = CACHE.common(TYPE.PAGE.USER)
+
+//  個資更新頁  //  0228
+router.get('/setting', CHECK.login, CHECK.mustBeOwner, async (ctx, next) => {
+    let currentUser = ctx.session.user
+    //  不允許前端緩存
+    ctx.set({
+        ['Cache-Control']: 'no-store'
+    })
+    await ctx.render('setting', {
+        title: `${currentUser.nickname}的個資`,
+        //  window.data 數據
+        currentUser
+    })
+})
 //  0504
 //  他人頁
 router.get('/other/:user_id', CHECK.isSelf, NEWS.confirm, commonCache, async (ctx, next) => {
@@ -118,17 +132,3 @@ router.get('/register', async (ctx, next) => {
 })
 //  0504
 module.exports = router
-
-//  個資更新頁  //  0228
-router.get('/setting/:owner_id', CHECK.login, CHECK.mustBeOwner, /*Check.view_mustBeSelf,*/ async (ctx, next) => {
-    let currentUser = ctx.session.user
-    //  不允許前端緩存
-    ctx.set({
-        ['Cache-Control']: 'no-store'
-    })
-    await ctx.render('setting', {
-        title: `${currentUser.nickname}的個資`,
-        //  window.data 數據
-        currentUser
-    })
-})

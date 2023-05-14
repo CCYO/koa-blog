@@ -4,6 +4,16 @@ const Init = require('../utils/init')               //  0404
 const { SuccModel, ErrModel, MyErr, ErrRes } = require('../model') //  0404
 const Opts = require('../utils/seq_findOpts')       //  0404
 const Comment = require('../server/comment')        //  0404
+//  0303
+async function findArticlesOfCommented(commenter_id) {
+    let comments = await Comment.readList(Opts.COMMENT.findArticlesOfCommented(commenter_id))
+    let data = comments.reduce(( init, { id: comment_id, article_id }) => {
+        init.comments.push(comment_id)
+        init.articles.push(article_id)
+        return init
+    }, { comments, articles })
+    return new SuccModel({ data })
+}
 //  0425
 async function removeListForRemoveBlog(list) {
     if(!list.length){
@@ -346,6 +356,8 @@ async function findInfoForPageOfBlog(article_id) {
 }
 
 module.exports = {
+    //  0514
+    findArticlesOfCommented,
     //  0425
     removeListForRemoveBlog,
     //  0411
@@ -355,14 +367,5 @@ module.exports = {
     //  0411
     findInfoForPageOfBlog,
     //  0404
-    findInfoForNews,
-    findBlogsOfCommented,  //  0303
-}
-
-//  0303
-async function findBlogsOfCommented(commenterId) {
-    let comments = await Comment.readComments(Opts.COMMENT.findBlogsOfCommented(commenterId))
-    let data = comments.map(({ blog_id }) => blog_id)
-    data = [...new Set(data)]
-    return new SuccModel({ data })
+    findInfoForNews
 }

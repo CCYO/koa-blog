@@ -5,6 +5,20 @@ const { errRes, MyErr } = require('../model')
 const { hash } = require('../utils/crypto')
 const { User } = require('../db/mysql/model')  //  0404
 const Init = require('../utils/init')           //  0404
+//  0514
+//  更新user數據
+async function update({ newData, id }) {
+    let data = { ...newData }
+    if (data.hasOwnProperty('age')) {
+        newData.age *= 1
+    }
+    if (data.hasOwnProperty('password')) {
+        data.password = hash(data.password)
+    }
+    let user = await User.findByPk(id)
+    user = await user.update(data)
+    return Init.user(user)
+}
 //  0404
 async function readList(opts) {
     let users = await User.findAll(opts)
@@ -38,31 +52,12 @@ async function read(opts) {
     return Init.user(user)
 }
 module.exports = {
+    //  0514
+    update,
     //  0404
     readList,
     //  0404
     create,
     //  0404
-    read,
-
-    updateUser,     //  controller user
-
-}
-
-
-//  更新user數據
-async function updateUser({ newData, id }) {
-    let data = { ...newData }
-    if (data.hasOwnProperty('age')) {
-        newData.age *= 1
-    }
-    if (data.hasOwnProperty('password')) {
-        data.password = hash(data.password)
-    }
-
-    let user = await User.findByPk(id)
-    console.log()
-    user = await user.update(data)
-
-    return Init.user(user)
+    read
 }

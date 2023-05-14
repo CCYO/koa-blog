@@ -1,22 +1,22 @@
 /**
  * @description middleware of upload to GCS by Formidable
  */
-const { parse } = require('../utils/gcs')
+const { parse } = require('../../utils/gcs')
 
-async function parse_user_data(ctx, next) {    
+async function user(ctx, next) {
     let resModel = await parse(ctx)
-    if(resModel.errno){
+    if (resModel.errno) {
         return resModel
     }
-    if(resModel.age){
+    if (resModel.age) {
         resModel.age = Number.parseInt(res.age)
     }
-    let res = {...resModel, avatar_hash: ctx.query.hash}
+    let res = { ...resModel, avatar_hash: ctx.query.hash }
     ctx.request.body = res
     await next()
     return
 }
 
 module.exports = {
-    parse_user_data
+    user
 }
