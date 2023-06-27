@@ -1,445 +1,263 @@
-<!-- 主導覽： NAV_CSS + NAV第一層template -->
+<!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
 <%- include('wedgets/header') %>
+  <style>
+    .loading {
+      color: blue
+    }
+  </style>
 
-<style>
-  .loading {
-    color: blue
-  }
-</style>
 
-
-<!-- 註冊/登入 互動卡片-->
-<div class="card w-50 mx-auto" style='margin-top: 4rem;'>
-  <!-- 卡片頭部 -->
-  <div class="card-header">
-    <!-- 頭部導行列-->
-    <ul class="card-header-tabs nav nav-tabs">
-      <!-- 頭部導行項-->
-      <li class="nav-item">
-        <a class="nav-link <%= active === 'register' ? `active` : `` %>" href="#" data-bs-toggle='tab'
-          data-bs-target='#register-box' role="tab" aria-controls="register" aria-selected="true">註冊</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link <%= active === 'login'  ? `active` : `` %>" href="#" data-bs-toggle='tab'
-          data-bs-target='#login-box' role="tab" aria-controls="login" aria-selected="false">登入</a>
-      </li>
-    </ul>
-  </div>
-  <!-- 卡片主體 -->
-  <div class="card-body tab-content">
-    <div class="tab-pane fade <%= active === 'register' ? `show active` : ``%>" role="tabpanel"
-      aria-labelledby="register-tab" id="register-box">
-      <form id='form-register' class="row" autocomplete="do-not-autofill">
-        <div class="col-8 mx-auto">
-          <div class="mb-3">
-            <label for="email" class="form-label">信箱</label>
-            <input type="email" class="form-control" name="email" aria-describedby="email_help" autocomplete="off"
-              required>
-            <div class="d-block">&nbsp;</div>
-          </div>
-          <div class="mb-3">
-            <label for="input_password" class="form-label">密碼</label>
-            <input type="password" class="form-control" name="password" data-retry='yes' autocomplete="new-password"
-              required>
-            <div class="d-block">&nbsp;</div>
-          </div>
-          <div class="mb-3">
-            <label for="input_check_password" class="form-label">密碼確認</label>
-            <input type="password" class="form-control" name='password_again' autocomplete="off" disabled>
-            <div class="d-block">&nbsp;</div>
-          </div>
-          <button type="submit" class="btn btn-primary" disabled>送出</button>
-        </div>
-      </form>
+  <!-- 註冊/登入 互動卡片-->
+  <div class="card w-50 mx-auto" style='margin-top: 4rem;'>
+    <!-- 卡片頭部 -->
+    <div class="card-header">
+      <!-- 頭部導行列-->
+      <ul class="card-header-tabs nav nav-tabs">
+        <!-- 頭部導行項-->
+        <li class="nav-item">
+          <a class="nav-link <%= active === 'register' ? `active` : `` %>" href="#" data-my-tab="#register"
+            data-bs-toggle='tab' data-bs-target='#register-box' role="tab" aria-controls="register"
+            aria-selected="true">註冊</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= active === 'login'  ? `active` : `` %>" href="#" data-my-tab="#login"
+            data-bs-toggle='tab' data-bs-target='#login-box' role="tab" aria-controls="login"
+            aria-selected="false">登入</a>
+        </li>
+      </ul>
     </div>
-    <div class="tab-pane fade <%= active === 'login'  ? `show active` : ``%>" id="login-box" role="tabpanel"
-      aria-labelledby="login-tab">
-      <form id='form_login' class="row" autocomplete="do-not-autofill">
-        <div class="col-8 mx-auto">
-          <div class="mb-3">
-            <label for="email" class="form-label">信箱</label>
-            <input type="email" class="form-control" name="email" data-form-id='#form_login' autocomplete="off" required
-              aria-describedby="email_help">
-            <div class="d-block">&nbsp;</div>
+    <!-- 卡片主體 -->
+    <div class="card-body tab-content">
+      <div class="tab-pane fade <%= active === 'register' ? `show active` : ``%>" role="tabpanel"
+        aria-labelledby="register-tab" id="register-box">
+        <form id='form-register' data-my-type="register" class="row" autocomplete="do-not-autofill">
+          <div class="col-8 mx-auto">
+            <div class="mb-3">
+              <label for="email" class="form-label">信箱</label>
+              <input type="email" class="form-control" name="email" aria-describedby="email_help" autocomplete="off"
+                required>
+              <div class="d-block">&nbsp;</div>
+            </div>
+            <div class="mb-3">
+              <label for="input_password" class="form-label">密碼</label>
+              <input type="password" class="form-control" name="password" data-retry='yes' autocomplete="new-password"
+                required>
+              <div class="d-block">&nbsp;</div>
+            </div>
+            <div class="mb-3">
+              <label for="input_check_password" class="form-label">密碼確認</label>
+              <input type="password" class="form-control" name='password_again' autocomplete="off">
+              <div class="d-block">&nbsp;</div>
+            </div>
+            <button type="submit" class="btn btn-primary">送出</button>
           </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">密碼</label>
-            <input type="password" class="form-control" name="password" data-form-id='#form_login'
-              autocomplete="do-not-autofill">
-            <div class="d-block">&nbsp;</div>
+        </form>
+      </div>
+      <div class="tab-pane fade <%= active === 'login'  ? `show active` : ``%>" id="login-box" role="tabpanel"
+        aria-labelledby="login-tab">
+        <form id='form_login' data-my-type="login" class="row" autocomplete="do-not-autofill">
+          <div class="col-8 mx-auto">
+            <div class="mb-3">
+              <label for="email" class="form-label">信箱</label>
+              <input type="email" class="form-control" name="email" data-form-id='#form_login' autocomplete="off"
+                aria-describedby="email_help">
+              <div class="d-block">&nbsp;</div>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">密碼</label>
+              <input type="password" class="form-control" name="password" data-form-id='#form_login'
+                autocomplete="do-not-autofill">
+              <div class="d-block">&nbsp;</div>
+            </div>
+            <button type="submit" class="btn btn-primary">送出</button>
           </div>
-          <button type="submit" class="btn btn-primary" disabled>送出</button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
-</div>
-<%- include('wedgets/cdn') %>
-<!-- 讀取的遮蔽 -->
-<%- include('wedgets/backdrop') %>
-<script type="module" defer>
-  //  初始化來自ejs傳入當前頁面所需的數據
-  import initPageFn from '/js/initData.js'
-  //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
-  import initNavbar from '/js/navbar.js'
-  try {
-    //  讀取中，遮蔽畫面
-    loading()
-    //  初始化ejs附帶的數據
-    let initPage = new initPageFn()
-    //  初始化navbar數據
-    await initPage.addOtherInitFn(initNavbar)
-    await initPage.render()
-    //  讀取完成，解除遮蔽
-    loadEnd()
-  } catch (e) {
-    console.log('@page error => ', e)
-  }
-
-  let reg_pathname = /^\/(?<pathname>.+)\W?/
-  let { pathname } = reg_pathname.exec(location.pathname).groups
-  $(`.nav-item > a[data-my-tab='#${pathname}']`).addClass('active')
-
-  let password_length = 6
-  let regex_password = /^[0-9a-zA-Z_]{6,}$/
-  let patten_email = /^[^\s@]+@[^\s@]+\.[^\s@]+[^\\.]$/
-  let api_isEmailExist = '/api/user/isEmailExist'
-  let api_register = '/api/user/register'
-  let api_login = '/api/user/'
-
-  /*  BS5 Tab : Register & Login */
-  //  手動註冊的 BS5 Tab 列表
-  let BS5_tabs = []
-
-  //  手動註冊 BS5 Tab
-  $(`.card .nav-link`).each((ind, tab) => {
-    //  手動註冊 tab
-    const tabTrigger = new bootstrap.Tab(tab)
-
-    //  show.bs.tab 當 tab 內容顯示時
-    tab.addEventListener('show.bs.tab', (e) => {
-      //  .card .nav-link - 選擇卡的選項群組
-      //  #my-navbar-header-register .nav-link - navbar 的 login/register 選項群組
-      $(`.card .nav-link, #my-navbar-header-register .nav-link`).each((ind, nav) => {
-        $(nav).toggleClass('active')
-      })
-    })
-    BS5_tabs.push(tabTrigger)
-  })
-
-  valicate_login('#form_login')
-  valicate_register('#form-register')
-
-  //  針對 登入表單 定義需要用到的 valicate
-  function valicate_login(selector_form) {
-    /*  生成 login from 內會用到的各種 valicate */
-    let valicate_email_front = valicator_email_front(selector_form)
-    let valicate_password = valicator_password(selector_form)
-    let valicate_submit = valicator_submit(selector_form)
-
-    //  防抖動的 valicate for email
-    let Debouncing_email = Debouncing(valicate_email)
-
-    //  綁定 form 的 submit
-    $(`${selector_form}`).submit(handle_submit)
-
-    //  綁定 email 的 handle
-    $(`${selector_form} input[type='email']`).on('input', Debouncing_email)
-
-    //  綁定 password 的 handle
-    $(`${selector_form} input[type='password']`).on('input', handle_password)
-
-    //  handle for input of password
-    function handle_password(e) {
-      valicate_password()
-      valicate_submit()
-    }
-
-    //  valicate for email
-    async function valicate_email() {
-      valicate_email_front()
-      valicate_submit()
-    }
-
-    //  handle for submit of submit
-    async function handle_submit(e) {
-      e.preventDefault()
-
-      let email = $(`${selector_form} input[name='email']`).val()
-      let password = $(`${selector_form} input[name='password']`).val()
-
-      let {
-        data: { errno, data, msg }
-      } = await axios.post(api_login, { email, password })
-
-      if (!errno) {
-        alert('登入成功')
-        let from = location.search ? new URLSearchParams(location.search).get('from') : false
-        location.href = from ? from : '/self'
-      } else {
-        alert(msg)
-        $(selector_form)[0].reset()
-        location.reload()
-      }
-    }
-  }
-
-  //  針對 註冊表單 定義需要用到的 valicate
-  function valicate_register(selector_form) {
-    /*  生成 register from 內會用到的各種 valicate */
-    let valicate_email_front = valicator_email_front(selector_form, true)
-    let valicate_email_server = valicator_email_server(selector_form)
-    let valicate_password = valicator_password(selector_form)
-    let valicate_password_again = valicator_password_again(selector_form)
-    let valicate_submit = valicator_submit(selector_form)
-
-    //  防抖動的 valicate for email
-    let Debouncing_email = Debouncing(valicate_email)
-
-    //  綁定 form 的 submit
-    $(`${selector_form}`).submit(handle_submit)
-
-    //  綁定 email 的 handle
-    $(`${selector_form} input[type='email']`).one('change', (e) => {
-      Debouncing_email()
-      $(e.target).on('input', Debouncing_email)
-    })
-
-    $(`${selector_form} input[type='password']`).on('change', (e) => {
-      if ($(e.target).val().length < password_length) {
-        feedback_UI(e.target, false, '密碼必須至少6個字符')
-      }
-    })
-
-    //  綁定 password 的 handle
-    $(`${selector_form} input[type='password']`).first().on('input', handle_password)
-
-    //  綁定 password_again 的 handle
-    $(`${selector_form} input[type='password']`).last().on('input', handle_password_again)
-
-    //  handle for input of password_again
-    function handle_password_again(e) {
-      valicate_password_again()
-      valicate_submit()
-    }
-
-    //  handle for input of password
-    function handle_password(e) {
-      let is_valid = valicate_password()
-
-      valicate_submit()
-
-      setDisabled(
-        $(`${selector_form} input[type='password']`).last(),
-        is_valid
-      )
-
-      //  若 password_again 有值，則對 password_again 進行驗證
-      $(`${selector_form} input[type='password']`).last().val() && handle_password_again()
-    }
-
-    //  handle for submit of submit
-    async function handle_submit(e) {
-      e.preventDefault()
-
-      let email = $(`${selector_form} input[name='email']`).val()
-      let password = $(`${selector_form} input[name='password']`).val()
-
-      let {
-        data: { errno, data, msg }
-      } = await axios.post(api_register, { email, password })
-
-      if (!errno) {
-        alert('註冊成功，請嘗試登入')
-        location.pathname = '/login'
-      } else {
-        alert(msg)
-      }
-    }
-
-    //  valicate for email
-    async function valicate_email() {
-      valicate_email_front() && await valicate_email_server()
-      valicate_submit()
-    }
-  }
-
-  //  valicator for password_again 前端驗證
-  function valicator_password_again(form_selector) {
-    let inp_pwd1 = $(`${form_selector} input[type='password']`).first()
-    let inp_pwd2 = $(`${form_selector} input[type='password']`).last()
-
-    return () => {
-      if (inp_pwd2.val().length < password_length) {
-        return false
+  <%- include('wedgets/cdn') %>
+    <script type="module" defer>
+      import validate from '/js/_validate.js'
+      import initPageFn from '/js/initData.js'
+      //  統整頁面數據、渲染頁面的函數
+      import initNavbar from '/js/navbar.js'
+      //  初始化 Navbar
+      import initEJSData from '/js/initEJSData.js'
+      //  初始化來自ejs在頁面上的字符數據
+      try {
+        loading()
+        //  讀取中，遮蔽畫面
+        let initPage = new initPageFn()
+        await initPage.addOtherInitFn(initEJSData)
+        //  初始化ejs
+        await initPage.addOtherInitFn(initNavbar)
+        //  初始化navbar
+        await initPage.render(renderPage)
+        //  統整頁面數據，並渲染需要用到統整數據的頁面內容
+        loadEnd()
+        //  讀取完成，解除遮蔽
+      } catch (error) {
+        throw error
+        // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
       }
 
-      let pwd2 = inp_pwd2.val()
-
-      if (!!!pwd2) {
-        feedback_UI(inp_pwd2, false, '請再填一次密碼')
-        return false
+      function renderPage() {
+        const CONST = {
+          REGISTER: {
+            FORM: 'register',
+            API: '/api/user/register',
+          },
+          LOGIN: {
+            FORM: 'login',
+            API: '/api/user',
+          }
+        }
+        let $$validate = validate
+        let $$payload = {
+          login: {},
+          register: {}
+        }
+        $('form[data-my-type=register] input[name=email]').on('input', handle_isEmailExist)
+        $('form[data-my-type=register]').on('submit', handle_form(CONST.REGISTER))
+        $('form[data-my-type=login]').on('submit', handle_form(CONST.LOGIN))
+        async function handle_isEmailExist(e) {
+          let el = e.target
+          let form = $(el).parents('form')[0]
+          let formType = form.dataset['myType']
+          let datas = $$payload[formType]
+          let inpVal = el.value
+          datas.email = inpVal
+          let validateRes = await $$validate.email(datas)
+          if (validateRes) {
+            let msg = validateRes['email']
+            feedback_UI(el, false, msg)
+            return
+          }
+          feedback_UI(el, true, '')
+          el.focus()
+        }
+        function handle_form(ACTION) {
+          return async function _(e){
+            e.preventDefault()
+            let ele = e.target
+            let formType = ACTION.FORM
+            let api = ACTION.API
+            let form = document.querySelector(`form[data-my-type=${formType}]`)
+            //  取得 formType
+            let datas = $$payload[formType]
+            let invalidInps = []
+            //  存放無效值的inp
+            let validInps = []
+            //  存放有效值的inp
+            let validate = $$validate[formType]
+            if (e.type === 'input') {
+              /* input 代表是由 input 觸發*/
+              datas[ele.name] = ele.value
+              //  更新$$datas內的表格數據
+            } else {
+              /* submit 代表是由 form 觸發，蒐集表單數據*/
+              for (let inp of form) {
+                console.log('@inp => ', inp)
+                if (inp.type === 'submit' || (formType === 'register' && inp.name === 'email')) {
+                  /* submit沒資料，email則有獨立handle*/
+                  continue
+                }
+                datas[inp.name] = inp.value
+                //  將表格數據存入$$datas
+              }
+            }
+            let validateErrs = await validate(datas)
+            //  驗證
+            if (e.type === 'input') {
+              /* 整理此次 input 影響的錯誤提醒，以及表格的綁定事件 */
+              for (let inp of form) {
+                let inputName = inp.name
+                if (inp.type === 'submit' || (formType === 'register' && inputName === 'email')) {
+                  /* 除了email，其有獨立的 handle*/
+                  continue
+                }
+                if (!validateErrs || !validateErrs[inputName]) {
+                  /* datas 整體有效 || datas[inpName] 當前屬性數據有效 */
+                  validInps.push(inp)
+                } else if (validateErrs[inputName]) {
+                  invalidInps.push({ inp, msg: validateErrs[inputName] })
+                }
+              }
+            } else if (validateErrs) {
+              /* 若EventType不是input，且驗證結果有錯誤 */
+              let inputNames = [...form].filter(inp => {
+                return inp.type !== 'submit' && !(formType === 'register' && inp.name === 'email')
+                //  撇除 email 與 submit
+              }).map(inp => inp.name)
+              //  僅取出 inputName
+              let set_validInpName = new Set(inputNames)
+              //  用來過濾出含有效值的inpName
+              for (let inputName in validateErrs) {
+                set_validInpName.delete(inputName)
+                //  刪去無效值的inpName
+                let inp = $(form).find(`input[name=${inputName}]`)[0]
+                invalidInps.push({ inp, msg: validateErrs[inputName] })
+              }
+              for (let inpName of set_validInpName) {
+                /* 針對通過驗證的 inpName 進行處理*/
+                let inp = $(form).find(`input[name=${inpName}]`)[0]
+                validInps.push(inp)
+              }
+            } else {
+              /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
+              let { errno, msg } = await axios.post(api, datas)
+              if (!errno) {
+                if (formType === 'login') {
+                  alert('登入成功')
+                  let from = location.search ? new URLSearchParams(location.search).get('from') : false
+                  location.href = from ? from : '/self'
+                } else {
+                  alert('註冊成功，請嘗試登入')
+                  location.pathname = '/login'
+                }
+              } else {
+                alert(msg)
+                $(form)[0].reset()
+                datas = {}
+                feedback_UI(false)
+              }
+              return
+            }
+            for (let inp of validInps) {
+              feedback_UI(inp, true, '')
+            }
+            for (let { inp, msg } of invalidInps) {
+              feedback_UI(inp, false, msg)
+              inp.removeEventListener('input', _)
+              inp.addEventListener('input', _)
+            }
+            return
+          }
+        }
+        //  input 的 valicate UI
+        function feedback_UI(inp, valid, msg) {
+          if (inp === false) {
+            for (let form of $('form')) {
+              for (let inp of form) {
+                $(inp).removeClass('is-invalid is-valid')
+                $(inp).next().removeClass('invalid-feedback valid-feedback myshow').text('')
+              }
+            }
+          } else if (valid === 'load') {
+            //  驗證中
+            $(inp).next().toggleClass('my-show', true).text('loading...')
+          } else if (valid) {
+            //  驗證成功
+            $(inp).removeClass('is-invalid').addClass('is-valid')
+            $(inp).next().removeClass('invalid-feedback myshow').addClass('valid-feedback').text(msg)
+          } else {
+            //  驗證失敗
+            $(inp).removeClass('is-valid').addClass('is-invalid')
+            $(inp).next().removeClass('valid-feedback myshow').addClass('invalid-feedback').text(msg)
+          }
+        }
       }
+    </script>
+    </body>
 
-      let pwd1 = inp_pwd1.val()
-
-      let is_valid = pwd1 === pwd2
-
-      if (!is_valid) {
-        feedback_UI(inp_pwd2, false, '必須與密碼相同')
-        return false
-      } else {
-        feedback_UI(inp_pwd2, true, 'ok')
-        return true
-      }
-    }
-  }
-
-  //  valicator for password 前端驗證
-  function valicator_password(selector) {
-    let form = $(selector)
-    let inp = $(`${selector} input[type='password']`).first()
-
-    return () => {
-      if (inp.val().length < password_length) {
-        return false
-      }
-
-      feedback_UI(inp, 'load')
-      let password = inp.val().trim()
-
-      if (!!!password) {
-        feedback_UI(inp, false, '密碼必填，不能為空')
-        return false
-      } else if (!regex_password.test(password)) {
-        feedback_UI(inp, false, '密碼僅能由數字、大小寫英文、底線組成')
-        return false
-      } else {
-        feedback_UI(inp, true, 'ok')
-        return true
-      }
-    }
-  }
-
-  //  valicator for email 前端驗證
-  function valicator_email_front(selector_form, checkBack = false) {
-    let inp = $(`${selector_form} input[type='email']`)
-
-    return () => {
-      feedback_UI(inp, 'load')
-
-      let email = inp.val()
-
-      if (!!!email) {
-        feedback_UI(inp, false, '請填入信箱資訊')
-        return false
-      } else if (!regex_test(email, patten_email, true)) {
-        feedback_UI(inp, false, '不符合email格式')
-        return false
-      }
-
-      if (!checkBack) {
-        feedback_UI(inp, true, 'ok')
-      }
-      return true
-    }
-  }
-
-  //  valicator for email 後端驗證
-  function valicator_email_server(selector_form) {
-    let inp = $(`${selector_form} input[type='email']`)
-
-    return async () => {
-      feedback_UI(inp, 'load')
-
-      let email = inp.val()
-
-      let { data: { errno, msg } } = await axios.post(api_isEmailExist, { email })
-
-      //  後端驗證
-      if (!errno) {
-        feedback_UI(inp, true, "此帳號仍未被使用，歡迎註冊")
-        return true
-      } else {
-        msg = Array.isArray(msg) ? msg[0].message : msg
-
-        feedback_UI(inp, false, msg)
-        return false
-      }
-    }
-  }
-
-  //  valicator for submit button 的 disabled
-  function valicator_submit(selector_form) {
-    let form = $(selector_form)
-    let submit = $(`${selector_form} button[type='submit']`)
-    let inps = $(`${selector_form} input`)
-    let length = inps.length
-
-    return () => {
-      let num = 0
-
-      inps.each((index, item) => {
-        $(item).hasClass('is-valid') && num++
-      })
-
-      let canSubmit = num === length
-
-      setDisabled(submit, canSubmit)
-    }
-  }
-
-  //  input 的 valicate UI
-  function feedback_UI(inp, valid, msg) {
-    if (valid === 'load') {
-      //  驗證中
-      $(inp).next().toggleClass('my-show', true).text('loading...')
-    } else if (valid) {
-      //  驗證成功
-      $(inp).removeClass('is-invalid').addClass('is-valid')
-      $(inp).next().removeClass('invalid-feedback myshow').addClass('valid-feedback').text(msg)
-    } else {
-      //  驗證失敗
-      $(inp).removeClass('is-valid').addClass('is-invalid')
-      $(inp).next().removeClass('valid-feedback myshow').addClass('invalid-feedback').text(msg)
-    }
-  }
-
-  //  針對 jqObj 的 input 設置 attr: disabled
-  function setDisabled(jqObj, boo) {
-    jqObj.attr('disabled', (index, val) => {
-      if (boo) {
-        return false
-      } else {
-        return 'disabled'
-      }
-    })
-  }
-
-  //  驗證字符資料
-  function regex_test(str, pattern, toLowercase = true) {
-    if (toLowercase) {
-      str = _lowercaseAndTrim(str)
-    }
-
-    return pattern.test(str)
-  }
-
-  //  格式化字符串資料
-  function _lowercaseAndTrim(str) {
-    return str.trim().toLocaleLowerCase()
-  }
-
-  //  防抖動
-  function Debouncing(func, ms = 250) {
-    let n
-    return () => {
-      n && clearTimeout(n)
-      n = setTimeout(func, ms)
-    }
-  }
-
-</script>
-</body>
-
-</html>
+    </html>

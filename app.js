@@ -1,3 +1,5 @@
+const { ErrRes } = require('./model')
+
 const { resolve } = require('path')
 
 const Koa = require('koa')
@@ -24,8 +26,9 @@ const viewUser = require('./routes/views/user')
 const viewBlog = require('./routes/views/blog')
 const viewAlbum = require('./routes/views/album')
 const viewSquare = require('./routes/views/square')
+const viewErrPage = require('./routes/views/errPage')
 
-const { isDev } = require('./utils/env')
+const { isProd } = require('./utils/env')
 const { REDIS_CONF } = require('./conf/constant')
 
 const app = new Koa()
@@ -34,22 +37,29 @@ const app = new Koa()
 //  負責捕捉意外的錯誤（預期可能發生的邏輯問題，已預先以ErrModel處理）
 app.use(async (ctx, next) => {
     try {
-        await seq.transaction( async (t) => {
+        await seq.transaction(async (t) => {
             await next()
         })
     } catch (error) {
-        if (isDev && error.hasOwnProperty('errno')) {	//  不希望發生的錯誤
-            if (!/^\/api\//.test(ctx.path)) {   //  針對 VIEW 的錯誤
-                ctx.body = error.msg
-            } else {                              //  針對 API 的錯誤
-                ctx.status = 500
-                ctx.body = { errno: error.errno, msg: error.msg }
-            }
-        } else {    //  完全無預期的錯誤
-            ctx.status = 500
-            ctx.body = { errno: 9999, msg: '伺服器錯誤' }
+        ctx.status = 500
+        let isAPI = /^\/api\//.test(ctx.path)
+        let isMyErr = error.isMyErr
+        let responseErr = error
+        if (!isMyErr) {
+            /* 完全無預期的錯誤 */
+            ctx.error = error
+            //  若 error 直接作為 emit 的 2st參數，部份prop會被移除，所以將 error 附加在 ctx，後續 emit 調用時則可以取得完整 error
+            ctx.app.emit('error', error, ctx)
+            responseErr = ErrRes.SERVER_ERR
         }
-        ctx.app.emit('error', error, ctx)
+        if (isProd) {
+            //  let responseErr = { errno: '44444', msg: '伺服器未預期的錯誤' }
+        }
+        if (isAPI) {
+            ctx.body = responseErr
+        } else {
+            await ctx.render('page404', responseErr)
+        }
         return
     }
 })
@@ -90,19 +100,10 @@ app.use(viewUser.routes(), viewUser.allowedMethods())
 app.use(viewBlog.routes(), viewBlog.allowedMethods())
 app.use(viewAlbum.routes(), viewAlbum.allowedMethods())
 app.use(viewSquare.routes(), viewSquare.allowedMethods())
+app.use(viewErrPage.routes(), viewErrPage.allowedMethods())
 
-
-app.on('error', (err, ctx) => {
-    if (!err.hasOwnProperty('errno')) {   //  完全無預期的錯誤
-        err.errno = 9999
-        err.msg = '完全預期外的錯誤'
-    }
-    console.log(`
-    @ custom ErrHandle Fire!!!! => \n
-    err.errno => ${err.errno}\n
-    err.msg => ${err.msg} \n
-    err => \n `, err
-    )
+app.on('error', (error, ctx) => {
+    console.log(`@ 發生未預期的錯誤!!!! =>`, error)
 });
 
 module.exports = app

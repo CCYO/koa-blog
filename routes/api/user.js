@@ -1,15 +1,20 @@
 /**
  * @description API user相關
  */
+//  0516
+const { API: { VALIDATE, SESSION, CHECK, CACHE, FIREBASE } } = require('../../middleware')
 const IdolFans = require('../../controller/idolFans')               //  0406
-const { SESSION, CHECK, CACHE, FIREBASE } = require('../../middleware/api')                     //  未處理
 const User = require('../../controller/user')                       //  0404
-const { validate_user } = require('../../middleware/validate')      //  0404
 const router = require('koa-router')()                              //  0404
 router.prefix('/api/user')
+router.post('/confirmPassword', CHECK.login, async (ctx, next) => {
+    let { email } = ctx.session.user
+    let { origin_password: password } = ctx.request.body
+    ctx.body = await User.login(email, password)
+})
 //  0514
 //  setting
-router.patch('/', CHECK.login, SESSION.set, CACHE.modify, FIREBASE.user, validate_user, async (ctx, next) => {
+router.patch('/', CHECK.login , SESSION.reset, CACHE.modify, FIREBASE.user, VALIDATE.user, async (ctx, next) => {
     let { id } = ctx.session.user
     let { body: newData } = ctx.request
     ctx.body = await User.modify(newData, id)
@@ -33,19 +38,19 @@ router.post('/follow', CHECK.login, CACHE.modify, async (ctx, next) => {
 router.get('/logout', CHECK.login, SESSION.remove)
 //  0404
 //  登入
-router.post('/', SESSION.set, validate_user, async (ctx, next) => {
+router.post('/', SESSION.set, VALIDATE.user, async (ctx, next) => {
     const { email, password } = ctx.request.body
     ctx.body = await User.login(email, password)
 })
 //  0404
 //  驗證信箱是否已被註冊
-router.post('/isEmailExist', validate_user, async (ctx, next) => {
+router.post('/isEmailExist', VALIDATE.user, async (ctx, next) => {
     const { email } = ctx.request.body
     ctx.body = await User.isEmailExist(email)
 })
 //  0404
 //  註冊
-router.post('/register', validate_user, async (ctx, next) => {
+router.post('/register', VALIDATE.user, async (ctx, next) => {
     const { email, password } = ctx.request.body
     ctx.body = await User.register(email, password)
 })

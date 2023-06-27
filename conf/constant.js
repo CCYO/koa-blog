@@ -3,6 +3,14 @@
  */
 
 module.exports = {
+    VALIDATE: {
+        USER: {
+            IS_EMAIL_EXIST: 'isEmailExist',
+            REGISTER: 'register',
+            LOGIN: 'login',
+            SETTING: 'setting'
+        }
+    },
     USER: {
         //  0404
         AVATAR: 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
@@ -34,7 +42,7 @@ module.exports = {
         PAGINATION: 10
     },
     COMMENT: {
-        TIME_FORMAT: 'YYYY/MM/DD HH:mm:ss', //  0303
+        TIME_FORMAT: 'YYYY/MM/DD HH:mm:ss',
         SORT_BY: 'createdAt',
         CHECK_IS_DELETED: 'isDeleted'
     },

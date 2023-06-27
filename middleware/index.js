@@ -1,7 +1,8 @@
 const API = require('./api')
 const VIEWS = require('./views')
-const CACHE_TYPE = require('./cache')
+const GEN_CACHE_FN = require('./genCacheFn')
 
 module.exports = {
-    API, VIEWS, CACHE_TYPE
+    API, VIEWS,
+    GEN_CACHE_FN
 }

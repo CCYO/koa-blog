@@ -14,7 +14,11 @@ const common = (type) => async function (ctx, next) {
     ctx.cache = {
         [KEY]: cache
     }
+    try{
     await next()
+}catch(e){
+    throw e
+}
     //  判斷是否將數據存入系統緩存
     let { exist, data, etag } = ctx.cache[KEY]
     //  當前系統緩存，無資料 || eTag已過期
@@ -53,6 +57,7 @@ const private = (type) => async function (ctx, next) {
         [KEY]: cache
     }
     await next()
+    console.log(123)
     let { exist, data } = ctx.cache[KEY]
     //  系統沒有應對的緩存資料
     if (exist === STATUS.NO_CACHE) {

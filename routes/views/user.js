@@ -1,21 +1,24 @@
 /**
  * @description Router/Views user
  */
+//  0516
+const {
+    VIEWS: { CHECK, NEWS },
+    GEN_CACHE_FN
+} = require('../../middleware')
 //  0504
 const User = require('../../controller/user')
 //  0501
 const { CACHE: { TYPE, STATUS } } = require('../../conf/constant')
 //  0504
-const CACHE = require('../../middleware/cache')
-//  0430
-const { CHECK, NEWS } = require('../../middleware/views')
-const router = require('koa-router')()                                  //  0406
+const privateCache = GEN_CACHE_FN.private(TYPE.PAGE.USER)
 //  0504
-const privateCache = CACHE.private(TYPE.PAGE.USER)
-//  0504
-const commonCache = CACHE.common(TYPE.PAGE.USER)
+const commonCache = GEN_CACHE_FN.common(TYPE.PAGE.USER)
+//  0516
+const router = require('koa-router')()
 
-//  個資更新頁  //  0228
+//  0516
+//  個資更新頁
 router.get('/setting', CHECK.login, CHECK.mustBeOwner, async (ctx, next) => {
     let currentUser = ctx.session.user
     //  不允許前端緩存
@@ -30,8 +33,8 @@ router.get('/setting', CHECK.login, CHECK.mustBeOwner, async (ctx, next) => {
 })
 //  0504
 //  他人頁
-router.get('/other/:user_id', CHECK.isSelf, NEWS.confirm, commonCache, async (ctx, next) => {
-    let user_id = ctx.params.user_id * 1
+router.get('/other/:id', CHECK.isSelf, NEWS.confirm, commonCache, async (ctx, next) => {
+    let user_id = ctx.params.id * 1
     //  從 middleware 取得的緩存數據 ctx.cache[PAGE.USER]
     /**
      * { 

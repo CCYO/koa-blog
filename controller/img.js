@@ -36,7 +36,6 @@ module.exports = {
 
 const { CACHE: { TYPE: { PAGE } } } = require('../conf/constant')
 const Controller_BlogImgAlt = require('./blogImgAlt')
-const { BLOG: { UPLOAD_IMG_ERR } } = require('../model/errRes')
 const Controller_BlogImg = require('../controller/blogImg')
 
 

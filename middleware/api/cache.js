@@ -8,9 +8,9 @@ async function news(ctx, next) {
     //  關於「通知」的數據，是否有變動
     let cache = await S_Cache.getNews()
     let hasNews = cache.has(id)
-    let { checkHasNews, excepts } = ctx.request.body
-    //  若為頁面初次請求，且「通知」數據沒有變動，並有緩存數據
-    if ( (!excepts || checkHasNews) && !hasNews && ctx.session.news.errno === 0) {
+    let { excepts } = ctx.request.body
+    //  若為頁面初次請求||已確認前端仍有未取得的通知數據，且「通知」數據沒有變動，並有緩存數據
+    if ( !excepts && !hasNews && ctx.session.news.errno === 0) {
         console.log(`@ user/${id} 直接使用緩存 session.news`)
         ctx.body = ctx.session.news
         return

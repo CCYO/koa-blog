@@ -2,13 +2,12 @@
  * @description API commond相關
  */
 //  0504
-const { CACHE_TYPE, API } = require('../../middleware')
+const { GEN_CACHE_FN, API: { CACHE, CHECK } } = require('../../middleware')
 //  0411    ----------------------------------------------------------------未整理
 const { commentsToHtml } = require('../../utils/ejs-render')
 //  0411    ----------------------------------------------------------------未整理
 const removeDeletedComment = require('../../utils/hiddenRemovedComments')
 const Comment = require('../../controller/comment')                         //  0411
-const Check = require('../../middleware/check_login')                       //  0411
 const {
     //  0411
     CACHE: {
@@ -21,7 +20,7 @@ const {
 const router = require('koa-router')()                                      //  0411
 router.prefix('/api/comment')                                               //  0411
 //  0504
-const commonCaChe = CACHE_TYPE.common(TYPE.API.COMMENT)
+const commonCaChe = GEN_CACHE_FN.common(TYPE.API.COMMENT)
 //  0503
 router.get('/:id', commonCaChe, async (ctx, next) => {
     const blog_id = ctx.params.id * 1
@@ -52,7 +51,7 @@ router.get('/:id', commonCaChe, async (ctx, next) => {
     }
 })
 //  0411
-router.delete('/', API.CHECK.login, API.CACHE.modify, async (ctx, next) => {
+router.delete('/', CHECK.login, CACHE.modify, async (ctx, next) => {
     //  要多一個判斷，這請求有沒有刪除的資格 
     //  1. 作者 > 誰都可以山
     //  2. 留言者 > 山自己的
@@ -60,7 +59,7 @@ router.delete('/', API.CHECK.login, API.CACHE.modify, async (ctx, next) => {
 })
 //  0411
 //  創建comment
-router.post('/', API.CHECK.login, API.CACHE.modify, async (ctx, next) => {
+router.post('/', CHECK.login, CACHE.modify, async (ctx, next) => {
     ctx.body = await Comment.add(ctx.request.body)
 })
 

@@ -30,11 +30,11 @@ class MyErr extends Error {
         this.errno = errno
         this.msg = msg
     }
+    isMyErr = true
 }
 module.exports = {
     ErrRes,
     SuccModel,
     ErrModel,
     MyErr
-    
 }

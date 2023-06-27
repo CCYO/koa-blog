@@ -9,7 +9,7 @@
 
     .input-box {
         margin-top: .25rem;
-        background: rgba(255, 255, 255, .5);
+        /* background: rgba(255, 255, 255, .5); */
         border-radius: .25rem;
     }
 
@@ -29,6 +29,30 @@
     }
 </style>
 
+<div class="modal fade" id="origin_password_modal" tabindex="-1" aria-labelledby="origin_password_modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">請先驗證原密碼</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-box">
+                    <label class="form-label">原密碼
+                        <input type="password" class="form-control" name="origin_password" data-retry='yes'
+                            autocomplete="off">
+                        <div class="d-none">&nbsp;</div>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" id="checkOrginPassword" class="btn btn-primary">確定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container-md main">
     <h3>修改個人資訊</h3>
     <form class="row" id="setting">
@@ -37,22 +61,33 @@
                 <label class="form-label">信箱
                     <input type="text" class="form-control" name="email" aria-describedby="email_help"
                         autocomplete="off">
+                    <div class="d-none">&nbsp;</div>
+                </label>
+            </div>
+
+            <div class="input-box">
+                <label class="form-label">新密碼
+                    <input type="password" class="form-control" name="password" data-retry='yes' autocomplete="off">
+                    <div class="d-none">&nbsp;</div>
                 </label>
             </div>
             <div class="input-box">
-                <label class="form-label">密碼
-                    <input type="password" class="form-control" name="password" data-retry='yes'
-                        autocomplete="new-password">
+                <label class="form-label">密碼確認
+                    <input type="password" class="form-control" name="password_again" data-retry='yes'
+                        autocomplete="off">
+                    <div class="d-none">&nbsp;</div>
                 </label>
             </div>
             <div class="input-box">
                 <label for="nickname" class="form-label">暱稱
                     <input type="text" class="form-control" name="nickname" autocomplete="off">
+                    <div class="d-none">&nbsp;</div>
                 </label>
             </div>
             <div class="input-box">
                 <label class="form-label">年齡
-                    <input type="number" class="form-control" name="age" autocomplete="off">
+                    <input type="number" class="form-control" name="age" min="0" max="120">
+                    <div class="d-none">&nbsp;</div>
                 </label>
             </div>
             <div class="input-box">
@@ -64,6 +99,7 @@
                 </div>
                 <label class="form-label mt-1">
                     <input type="file" id="avatar" class="form-control" name="avatar" autocomplete="off">
+                    <div class="d-none">&nbsp;</div>
                 </label>
 
             </div>
@@ -80,8 +116,6 @@
 </div>
 <!-- JQ AXIOS BS5 -->
 <%- include('wedgets/cdn') %>
-<!-- 讀取的遮蔽 -->
-<%- include('wedgets/backdrop') %>
 <!-- 引入 Spark-MD5 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
 <!-- 引入 Ajv -->
@@ -89,414 +123,381 @@
     integrity="sha512-NGcX0dMSiOACZ7t7BKTSSoL2vnVKAp5mG+M8gK1vZQGwJtzbLQba1eniSXdez+WfDtcrxBUEo143DV297oAnbw=="
     crossorigin="anonymous" referrerpolicy="no-referrer">
     </script>
-
 <script type="module" defer>
-//  初始化來自ejs傳入當前頁面所需的數據
-import initPageFn from '/js/initData.js'
-    //  logout功能 + 完整渲染 NAV + 取得news + 完整渲染 通知下拉選單
+    import validate from '/js/_validate.js'
+    import initPageFn from '/js/initData.js'
+    //  統整頁面數據、渲染頁面的函數
     import initNavbar from '/js/navbar.js'
+    //  初始化 Navbar
+    import initEJSData from '/js/initEJSData.js'
+    //  初始化來自ejs在頁面上的字符數據
     try {
-        //  讀取中，遮蔽畫面
         loading()
-        //  初始化ejs附帶的數據
+        //  讀取中，遮蔽畫面
         let initPage = new initPageFn()
-        //  初始化navbar數據
+        await initPage.addOtherInitFn(initEJSData)
+        //  初始化ejs
         await initPage.addOtherInitFn(initNavbar)
+        //  初始化navbar
         await initPage.render(renderPage)
-        //  讀取完成，解除遮蔽
+        //  統整頁面數據，並渲染需要用到統整數據的頁面內容
         loadEnd()
-    } catch (e) {
-        console.log('@page error => ', e)
+        //  讀取完成，解除遮蔽
+    } catch (error) {
+        throw error
+        // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
     }
 
-    async function renderPage(data) {
-        //  公用變量
-        let pageData = data
-        let api_user = '/api/user'
-        //  用來存放 upload 時的 avatar 數據
-        let payload_avatar = {
-            hash: undefined,
-            ext: undefined,
-            api: api_user
+    function renderPage(data) {
+        /* ------------------------- 公用常數 ------------------------- */
+        const CONST = {
+            AVATAR_EXT: ['JPG', 'PNG'],
+            AVATAR_SIZE: 1024 * 1024 * 1,
+            // 1MB = 1024 KB = 1024 * 1024 Byte
+            REG: {
+                EXT: /\b.+\.(?<ext>\w+)\b/,
+                BASE64URL: /\bdata:.*;base64,(?<avatar_base64>.*)/
+            },
+            API: {
+                SETTING: '/api/user'
+            }
         }
+        /* ------------------------- 公用變量 ------------------------- */
+        let $$pageData = data
+        let $$me = $$pageData.me
+        let $$payload = {}
+        let $$api_avatar = CONST.API.SETTING
+        /* ------------------------- 公用函數 ------------------------- */
+        let $$fn_validateSetting = validate.setting
+        let $$fn_validateAvatar = validate.avatar
+        let $$fn_validateConfirmPassword = validate.password
+        /* ------------------------- 公用 JQ Ele ------------------------- */
         let $avatar = $('#avatar')
         let $avatarImg = $('#avatar-img')
         let $submit = $('[type=submit]')
         let $settingForm = $('#setting')
-
-        //  初始化 input placeholder
-        reset_placeholder()
-        //  初始化 input 資料校驗器
-        let valicate = init_valicatorForInput()
-
-        //  除了 avatar 以外的input，綁定 handle: 驗證資料是否有效
-        $('input:not([type=file])').on('input', (e) => valicateInputValue(e.target, e))
-        //  change handle => 更新 payload_avatar
-        $avatar.on('change', handle_valicator_avatar)
-        //  click handle => 若 #avatar 已配置過頭像，則重新選擇
+        let $origin_password = $('[name=origin_password]')
+        let $checkOrginPassword = $('#checkOrginPassword')
+        let $newPasswordList = $('[name=password], [name=password_again]')
+        let $model = $('#origin_password_modal')
+        /* ------------------------- 公用 BS 原件 ------------------------- */
+        let $bs_modal = new bootstrap.Modal($model)
+        /* ------------------------- handle ------------------------- */
+        $checkOrginPassword.on('click', handle_originPassword)
+        $settingForm.on('submit', handle_Form)
+        $avatar.on('change', handle_Avatar)
         $avatar.on('click', handle_resetAvatar)
-        //  submit handle => 送出setting更新請求
-        $settingForm.on('submit', handle_update)
-
-        //  handle -----
-        //  送出要更新的數據
-        async function handle_update(e) {
+        $newPasswordList.on('focus', handle_showModel)
+        $model.on('shown.bs.modal', () => $origin_password.focus() )
+        reset_placeholder()
+        //  初始化 input placeholder
+        /* ------------------------- handle Fn ------------------------- */
+        //  顯示 origin_password 的 model
+        function handle_showModel(e){
             e.preventDefault()
-            //  統計不符規範的數量
-            let invalid_num = 0
-            //  存放表單數據
-            let formData = new FormData()
-            for (let inputEle of e.target) {  //  el表示form內各表格
-                //  驗證
-                let data = await valicateInputValue(inputEle, e)
-                if (data) { //  代表驗證通過
-                    formData.append(data.name, data.data)
-                } else if (data === false) {    //  代表驗證失敗
-                    invalid_num++
-                    continue
-                }
-            }
-            //  若存在任一個無效值，則停止更新動作，並顯示錯誤提醒
-            if (invalid_num) {
-                alert('請重新確認表格內容是否正確')
+            if($$payload.origin_password){
                 return
             }
-            //  取得有效值的name
-            let inputNameList = [...formData.keys()]
-            //  若沒有要更新的資料，則停止更新動作，並顯示錯誤提醒
-            if (!inputNameList.length) {
-                alert('沒有要更新的就別亂')
-                return
-            }
-            loading()
-            let {
-                data: {
-                    errno,
-                    data,
-                    msg
-                }
-            } = await axios.patch(payload_avatar.api, formData)
-            loadEnd()
-            if (errno) {
-                console.log('GET ERROR')
-                alert(msg)
-                return
-            }
-            //  清空avatar數據
-            resetAvatar()
-            //  input顯示更新完成
-            for (let key of inputNameList) {
-                UI_input($(`input[name=${key}]`), true, '更新完成')
-            }
-            //  同步數據
-            pageData.currentUser = data
-            reset_placeholder()
-            alert('資料更新完成!')
+            $bs_modal.show()
         }
         //  重新選擇要上傳的頭像
         function handle_resetAvatar(e) {
+            e.preventDefault()
             if (!$avatar.prop('files')[0]) {
                 return
             }
             if (confirm('要重新傳一顆頭嗎?')) {
-                $avatarImg.attr('src', pageData.currentUser.avartar)
                 //  重設頭像表格
-                resetAvatar()
+                previewAvatar()
             } else {
                 e.preventDefault()
             }
         }
         //  設置 avatar 相關資訊
-        async function handle_valicator_avatar() {
-            let { avatar_hash } = pageData.currentUser
-
-            //  限制上傳一張圖
+        async function handle_Avatar() {
             let files = $avatar.prop('files')
+            let file = files[0]
             if (files.length > 1) {
-                resetAvatar('你只有一顆頭，不要太貪心好嗎')
+                /*  限制上傳一張圖 */
+                previewAvatar('你只有一顆頭，不要太貪心好嗎')
+                return
+            } else if (file.size > CONST.AVATAR_SIZE) {
+                // File.size的單位是 Byte
+                previewAvatar('你的頭太大了，只能1MB以下!')
                 return
             }
-
-            let file = $avatar.prop('files')[0]
-            //  取得副檔名
-            let ext = _getExt(file)
-            if (ext !== 'JPG' && ext !== 'PNG') {
-                resetAvatar('只能傳jpg跟png啦!')
+            /* 取得副檔名 */
+            let { ext, msg } = _getExt(file.name)
+            if (msg) {
+                previewAvatar(msg)
                 return
             }
-
-            //  確認avatar 是否同既有 avatar 
-            let hash = await _getMD5Hash(file)
-            if (hash === avatar_hash) {
-                resetAvatar('你的頭現在就是這樣啦! ok?')
+            //  確認avatar 是否同既有 avatar
+            let arrayBuffer = await _getArrayBuffer(file)
+            let avatar_hash = SparkMD5.ArrayBuffer.hash(arrayBuffer)
+            if (avatar_hash === $$me.avatar_hash) {
+                previewAvatar('你的頭現在就是這樣啦! ok?')
                 return
             }
-
-            let maxSize = 1024 * 1024 * 1 // 1MB = 1024 KB = 1024 * 1024 Byte
-            if (file.size > maxSize) {   // File.size的單位是 Byte
-                resetAvatar('你的頭太大了，只能1MB以下!')
+            let base64Url = await _getDataURL(file)
+            let reg_res = CONST.REG.BASE64URL.exec(base64Url)
+            if (!reg_res) {
+                previewAvatar('解析base64Url失敗')
                 return
             }
-
-            let src = await _getDataURL(file)
-            $avatarImg.attr('src', src)
-            //  通過校驗
-            UI_input($avatar, true)
-            //  同步 payload_avatar
-            payload_avatar = { hash, ext, api: `${payload_avatar.api}?hash=${hash}&ext=${ext}` }
-
-            //  計算預覽圖
-            function _getDataURL(file) {
-                return new Promise((resolve, reject) => {
-                    let fr = new FileReader()
-                    fr.addEventListener('load', (evt) => {
-                        if (fr.readyState === FileReader.DONE) {
-                            let src = fr.result
-                            console.log('計算出的src => ', src)
-                            resolve(src)
-                        }
-                    })
-                    fr.addEventListener('error', (error) => {
-                        console.log('fr load 發生錯誤 => ', error)
-                        reject(error)
-                    })
-                    fr.readAsDataURL(file)
-                })
+            let { avatar_base64 } = reg_res.groups
+            let validateErrs = await $$fn_validateAvatar({ avatar_hash, avatar_base64, $$me })
+            if (validateErrs) {
+                let msg = ''
+                for (let inputName in validateErrs) {
+                    msg += validateErrs[inputName]
+                }
+                previewAvatar(msg)
+                return
             }
-            //  計算 avatar hash
-            function _getMD5Hash(file) {
-                return new Promise((resolve, reject) => {
-                    let fr = new FileReader()
-                    fr.addEventListener('load', (evt) => {
-                        if (fr.readyState === FileReader.DONE) {
-                            let hash = SparkMD5.ArrayBuffer.hash(fr.result)
-                            console.log('計算出的hash => ', hash)
-                            resolve(hash)
-                        }
-                    })
-                    fr.addEventListener('error', (error) => {
-                        console.log('fr load 發生錯誤 => ', error)
-                        reject(error)
-                    })
-                    fr.readAsArrayBuffer(file)
-                })
-            }
-            //  取得附檔名
-            function _getExt(file) {
-                //  副檔名regux
-                let reg_ext = /.+\.(.*)$/
-                //  校驗檔案格式(jpg png)
-                return reg_ext.exec(file.name)[1].toUpperCase()
-            }
+            let avatar = { file, ext, hash: avatar_hash, base64Url }
+            previewAvatar(avatar)
         }
-        //  UI input值同步 pageData.currentUser
+        //  設置原密碼
+        async function handle_originPassword(e) {
+            e.preventDefault()
+            let inp = $origin_password[0]
+            let origin_password = inp.value
+            let validateErrs = await $$fn_validateConfirmPassword({ origin_password })
+            if (validateErrs) {
+                feedback_UI(inp, false, validateErrs.origin_password)
+                return
+            }
+            feedback_UI(inp, true, '')
+            $$payload.origin_password = origin_password
+            //  取消 handle
+            $bs_modal.hide()
+            //  隱藏 model
+        }
+        //  設置表單數據
+        async function validateForm(e) {
+            e.preventDefault()
+            let form = $settingForm[0]
+            let invalidInps = []
+            // 「無效數據」表格列表
+            let validInps = new Set()
+            // 「有效數據」表格列表
+            for (let input of form) {
+                /* 蒐集表單內數據(除了 avatar, orgin_password，他們有各別的 handle)*/
+                let { name, value } = input
+                if (input.type === 'submit' || input.type === 'file') {
+                    /* 忽略 submit 與 file */
+                    continue
+                }
+                if (!value) {
+                    /* 無值則刪除現有數據 */
+                    delete $$payload[name]
+                    feedback_UI(input, 'empty')
+                    continue
+                }
+                if (name === 'age') {
+                    /* 轉換成數字 */
+                    value *= 1
+                }
+                validInps.add(input)
+                //  將 input 先都加入「有效數據」表格
+                $$payload[name] = value
+                //  將所有數據納入 $$payload
+            }
+            let _payload = { ...$$payload }
+            let validateErrs = await $$fn_validateSetting({ ..._payload, $$me })
+            //  驗證（$me作為不能重覆現有數據的比對值）
+            if (validateErrs) {
+                /* 處理發生的錯誤 validateErrs { inputName: 錯誤訊息 }*/
+                if (validateErrs.all) {
+                    /* 若 inputName 含有 all，代表 $$payload 根本沒有數據 */
+                    e.type === 'submit' && alert(validateErrs.all)
+                    //  若是 submit 事件，才顯示提醒
+                    return
+                }
+                for (let inputName in validateErrs) {
+                    let input = $settingForm.find(`input[name=${inputName}]`)[0]
+                    //  根據 validateErr Item 的 inputName 取得 input
+                    let msg = validateErrs[inputName]
+                    //  錯誤訊息
+                    if (inputName !== 'origin_password') {
+                        //  若不是 原密碼 input 則刪除、添加 驗證表單的 handle
+                        input.removeEventListener('input', validateForm)
+                        input.addEventListener('input', validateForm)
+                    }
+                    invalidInps.push({ input, msg })
+                    // 「無效數據」表格列表存入 input 與 錯誤訊息 數據
+                    validInps.delete($(`input[name=${inputName}]`)[0])
+                    //  將 input 從「有效數據」表格列表內刪除 
+                }
+            }
+            for (let { input, msg } of invalidInps) {
+                /* 處理 「無效數據」表格列表 的 input 相關事項*/
+                let inputName = input.name
+                delete $$payload[inputName]
+                //  刪除 $$payload 內相關數據
+                feedback_UI(input, false, msg)
+                //  渲染 input 數據無效的提醒
+            }
+            if (e.type !== 'submit' || invalidInps.length) {
+                /* 如果不是 submit 事件，或是 存在「無效數據」表格，要處理相關事項 */
+                for (let input of validInps) {
+                    feedback_UI(input, true, '')
+                    //  渲染 input 數據有效的提醒
+                }
+            }
+            /* 根據是否 存在「無效數據」表格，反映這次驗證是否通過 */
+            return !invalidInps.length
+        }
+        //  送出請求
+        async function handle_Form(e) {
+            e.preventDefault()
+            if (!await validateForm(e)) {
+                /* 若表單數據沒通過驗證，則停止 */
+                return
+            }
+            if($$payload.origin_password && (!$$payload.password && !$$payload.again_password) ){
+                delete $$payload.origin_password
+            }
+            console.log('axxios --- $$payload => ', $$payload)
+            
+            let formData = new FormData()
+            for (let prop in $$payload) {
+                /* 整理要更新的請求數據 */
+                let data = $$payload[prop]
+                formData.append(prop, data)
+            }
+            let { data } = await axios.patch($$api_avatar, formData)
+            //  清空avatar數據
+            previewAvatar()
+            for (let prop in $$payload) {
+                /* 針對完成更新的數據表格 渲染提醒 */
+                let input = $(`[name=${prop}]`)[0]
+                if (!input) {
+                    continue
+                }
+                feedback_UI(input, true, '')
+            }
+            $$payload = {}
+            //  清空 payload
+            for (let prop in data) {
+                /* 同步 $$me 數據 */
+                $$me[prop] = data[prop]
+            }
+            document.addEventListener('click', () => {
+                /* 當頁面被點擊，隨即取消所有表單提醒，並重整 placeholder */
+                feedback_UI(false)
+                reset_placeholder()
+            }, { once: true })
+            alert('資料更新完成!')
+        }
+        /* ------------------------- Utils ------------------------- */
+        //  顯示 placeholder
         function reset_placeholder() {
-            $('form')[0].reset()
-            let currentUser = pageData.currentUser
-            for (let prop in currentUser) {
+            $settingForm[0].reset()
+            for (let prop in $$me) {
                 if (prop === 'avatar') {
                     //  顯示頭像預覽
-                    $avatarImg.attr('src', currentUser.avatar)
+                    $avatarImg.attr('src', $$me[prop])
+                    continue
                 }
                 //  將現有數據放入頁面
-                $(`input[name=${prop}]`).attr('placeholder', currentUser[prop])
+                $settingForm.find(`input[name=${prop}]`).attr('placeholder', $$me[prop])
             }
         }
-
-        //  init ----
-        //  input有效值驗證器(除了avatar以外的資料)
-        function init_valicatorForInput() {
-            $submit.prop('disabled', true)
-
-            let Ajv = window.ajv7
-            let ajv = new Ajv()
-
-            //  驗證用schema
-            const schema_common = {
-                type: 'object',
-                properties: {
-                    email: {
-                        type: 'string',
-                        pattern: '^[a-z0-9][a-z0-9-_\\.]+@([a-z]|[a-z0-9]?[a-z0-9-]+[a-z0-9])\\.[a-z0-9]{2,10}(?:\\.[a-z]{2,10})?$'
-                    },
-                    nickname: {
-                        type: 'string',
-                        pattern: '^[\\u4e00-\\u9fa5a-zA-Z\\d]+$',
-                        minLength: 2,
-                        maxLength: 20,
-                    },
-                    password: {
-                        type: 'string',
-                        pattern: '^[\\w]+$',
-                        minLength: 6,
-                        maxLength: 32,
-                    },
-                    age: {
-                        type: 'number',
-                        minimum: 1,
-                        maximum: 120,
+        //  表格數據有/無效提醒
+        function feedback_UI(inp, valid, msg) {
+            if (inp === false) {
+                for (let form of $('form')) {
+                    for (let inp of form) {
+                        $(inp).removeClass('is-invalid is-valid')
+                        $(inp).next().removeClass('invalid-feedback valid-feedback myshow').text('')
                     }
                 }
-            }
-
-            //  無效值的錯誤提醒
-            let errorMsg = {
-                email: {
-                    pattern: '必須符合email格式'
-                },
-                nickname: {
-                    pattern: '必須由是中文或英文或數字組成',
-                    minLength: '必須2個字以上',
-                    maxLength: '必須20個字以下',
-                },
-                password: {
-                    pattern: '只能由數字、英文、底線_組成',
-                    minLength: '必須6個字以上',
-                    maxLength: '必須32個字以下',
-                },
-                age: {
-                    minimum: '年齡必須大於0，且只能是整數',
-                    maximum: '年齡必須小於120，且只能是整數'
-                }
-            }
-
-            //  客製化的驗證器
-            let valicator = ajv.compile(schema_common)
-
-            //  若傳入驗證器的Kv-obj為無效值，則會返回錯誤提醒
-            return (data) => {
-                let key = Object.keys(data)[0]
-                let val = data[key]
-                if (key === 'age') {
-                    val *= 1
-                }
-                let ok = valicator({ [key]: val })
-                let $el = $(`[name=${key}]`)
-                if (ok) {
-                    UI_input($el, true)
-                    return true
-                }
-                let [{ keyword }] = valicator.errors
-                let msg = errorMsg[key][keyword]
-                UI_input($el, false, msg)
-                return false
+            } else if (valid === 'load') {
+                //  驗證中
+                $(inp).next().toggleClass('my-show', true).text('loading...')
+            } else if (valid === 'empty') {
+                $(inp).removeClass('is-invalid is-valid')
+                $(inp).next().removeClass('invalid-feedback valid-feedback myshow').text('')
+            } else if (valid) {
+                //  驗證成功
+                $(inp).removeClass('is-invalid').addClass('is-valid')
+                $(inp).next().removeClass('invalid-feedback').addClass('valid-feedback d-none').text(msg)
+            } else {
+                //  驗證失敗
+                $(inp).removeClass('is-valid').addClass('is-invalid')
+                $(inp).next().removeClass('valid-feedback d-none').addClass('invalid-feedback').text(msg)
             }
         }
-
-        //  utils -----
-        //  重製 payload_avatar 與 input[type=file]
-        function resetAvatar(msg) {
+        //  預覽 avatar
+        function previewAvatar(data) {
+            if (typeof data === 'object') {
+                let { file, ext, hash, base64Url } = data
+                $$api_avatar += `?hash=${hash}&ext=${ext}`
+                $$payload.avatar_hash = hash
+                $$payload.avatar = file
+                $avatarImg.attr('src', base64Url)
+                feedback_UI($avatar, true, '')
+            } else {
+                $avatarImg.attr('src', $$me.avartar)
+                delete $$payload.avartar
+                delete $$payload.hash
+                $$api_avatar = CONST.API.SETTING
+                feedback_UI($avatar, 'empty')
+                typeof data === 'string' && alert(data)
+            }
             $avatar.val('')
-            payload_avatar = {
-                hash: undefined,
-                ext: undefined,
-                api: api_user
-            }
-            if (msg) {
-                alert(msg)
-            }
-            UI_input($avatar)
         }
-        //  校驗input當前值
-        async function valicateInputValue(inputEle, event) {
-            let el = inputEle
-            let $el = $(el)
-            let name = $el.attr('name')
-
-            //  submit Inp 不須校驗
-            if (name === 'submit') {
-                return null
-            }
-
-            let value = $el.val()
-            let trim = value.trim()
-            let submiting = event.type === 'submit'
-            let inputing = event.type === 'input'
-            let valueIsSpace = value.length && !trim.length //  若值為空格
-            let valueIsEmpty = !value.length // 若沒有值
-            //  若無值，則略過
-            if (valueIsSpace) { //  若值為空格
-                return valicate({ [name]: value })   //  直接校驗
-            } else if (valueIsEmpty) { //  若無值
-                UI_input($el)   //  UI重置
-                return null
-            }
-
-            //  將age轉為有效的整數
-            if (name === 'age') {
-                let num
-                try {
-                    num = Number.parseInt(value)
-                } catch (err) {
-                    return valicate({ [name]: value })
-                }
-                $el.val(num)
-                value = num
-            }
-
-            //  除avatar以外的input，若校驗失敗，回傳false
-            if (name !== 'avatar' && !valicate({ [name]: value })) {
-                return false
-            }
-            //  若是既存值，回傳false
-            let sameOther = value === pageData.currentUser[name]
-            if (sameOther) {
-                UI_input($el, false, '現在就是了，賣鬧')
-                return false
-            }
-            //  若email已註冊，回傳false
-            let EmailIsRegistered = name === 'email' && !(await isEmailExist(value))
-            if (EmailIsRegistered) {
-                UI_input($el, false, '此信箱已被註冊')
-                return false
-            }
-            //  完成以上驗證，代表為有效值，回傳 kv
-            let data = name === 'avatar' ? el.files[0] : value
-            return { name, data }
-
-            //  驗證email是否已被註冊
-            async function isEmailExist(email) {
-                loading()
-                let api = '/api/user/isEmailExist'
-                let { data: { errno, msg } } = await axios.post(api, { email })
-                loadEnd()
-                return !errno   // true，代表未註冊，反之
-            }
-        }
-        //  UI input有效值提醒 
-        function UI_input($inp, status, msg) {
-            switch (status) {
-                case true:  //  valid
-                    $inp.removeClass('is-invalid').addClass('is-valid')
-                    $inp.next().removeClass('invalid-feedback myshow').addClass('valid-feedback').text(msg ? msg : 'ok')
-                    break
-                case false: //  invalid
-                    $inp.removeClass('is-valid').addClass('is-invalid')
-                    $inp.next().removeClass('valid-feedback myshow').addClass('invalid-feedback').text(msg)
-                    break
-                default:    //  empty
-                    $inp.removeClass('is-valid is-invalid')
-                    $inp.next().removeClass('invalid-feedback valid-feedback myshow').text('')
-            }
-            //  UI submit權限
-            valicate_submit()
-
-            //  UI submit權限
-            function valicate_submit() {
-                let num_valid = 0
-                let num_invalid = 0
-                $('input').each((index, item) => {
-                    $(item).hasClass('is-valid') && num_valid++
-                    $(item).hasClass('is-invalid') && num_invalid++
+        /* ------------------------- _Fn ------------------------- */
+        //  計算預覽圖
+        function _getDataURL(file) {
+            return new Promise((resolve, reject) => {
+                let fr = new FileReader()
+                fr.addEventListener('load', (evt) => {
+                    if (fr.readyState === FileReader.DONE) {
+                        let base64Url = fr.result
+                        resolve(base64Url)
+                    }
                 })
-                let ok = num_valid > 0 && num_invalid < 1
-
-                $submit.prop('disabled', !ok)
+                fr.addEventListener('error', (error) => {
+                    reject(error)
+                })
+                fr.readAsDataURL(file)
+            })
+        }
+        //  計算 arrayBuffer
+        function _getArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                let fr = new FileReader()
+                fr.addEventListener('load', (evt) => {
+                    if (fr.readyState === FileReader.DONE) {
+                        resolve(fr.result)
+                    }
+                })
+                fr.addEventListener('error', (error) => {
+                    reject(error)
+                })
+                fr.readAsArrayBuffer(file)
+            })
+        }
+        //  取得附檔名
+        function _getExt(file) {
+            //  校驗檔案格式(jpg png)
+            let regRes = CONST.REG.EXT.exec(file.name)
+            let ext = undefined
+            let msg = undefined
+            if (regRes) {
+                ext = res.groups.ext.toUpperCase()
             }
+            if (!CONST.AVATAR_EXT.some(avatarExt => avatarExt === ext)) {
+                msg = `僅接受 ${CONST.AVATAR_EXT.join()} 格式`
+            }
+            return { ext, msg }
         }
     }
 
-    
+
 </script>
 </body>
 

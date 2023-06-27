@@ -2,9 +2,8 @@
  * @description API editor 相關
  */
 const BlogImgAlt = require('../../controller/blogImgAlt')    //  0409
-const { uploadImg } = require('../../middleware/blogImg')       //  0406
 const Blog = require('../../controller/blog')                   //  0406
-const { CACHE, CHECK } = require('../../middleware/api')           //  0406
+const { CACHE, CHECK, FIREBASE } = require('../../middleware/api')           //  0406
 const router = require('koa-router')()                          //  0406
 router.prefix('/api/blog')                                      //  0406
 //  0411
@@ -28,7 +27,7 @@ router.patch('/', CHECK.login, CHECK.mustBeOwner, CACHE.modify, async (ctx, next
 })
 //  0406
 //  上傳圖片
-router.post('/img', CHECK.login, CACHE.modify, uploadImg)
+router.post('/img', CHECK.login, CACHE.modify, FIREBASE.blogImg)
 //  0406
 //  建立blog
 router.post('/', CHECK.login, CACHE.modify, async (ctx, next) => {

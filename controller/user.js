@@ -29,22 +29,32 @@ async function modify(newData, user_id) {
         //  找出 idolFans
         let people = [...fansList, ...idols].map(({ id }) => id)
         cache[PAGE.USER] = cache[PAGE.USER].concat(people)
+        let blogList = []
         //  找出 自己的 blog
         for(let isShow in blogs){
-            let list = blogs[isShow].map( ({ id }) => id )
-            cache[PAGE.BLOG] = cache[PAGE.BLOG].concat(list)
+            //  公開/隱藏的blog
+            for(let pagination of blogs[isShow]){
+                //  分頁
+                let blog_id_list = pagination.map( ({id}) => id)
+                blogList = blogList.concat(blog_id_list)
+            }
         }
+        cache[PAGE.BLOG] = cache[PAGE.BLOG].concat(blogList)
         //  找出 reader
-        let { data: readers } = await C_ArticlReader.findReadersForModifiedUserData(blogs)
+        let { data: readers } = await C_ArticlReader.findReadersForModifiedUserData(blogList)
         cache[NEWS] = cache[NEWS].concat(readers)
         //  找出 評論 與 被評論的文章
-        let { data: { articles, comments } } = await C_Comment.findBlogsOfCommented(user_id)
+        let { data: { articles, comments } } = await C_Comment.findArticlesOfCommented(user_id)
         cache[API.COMMENT] = cache[API.COMMENT].concat(articles)
         if (comments.length) {
             //  找出 receiver
             let { data: receivers } = await C_MsgReceiver.findListForModifiedUserData(comments)
             cache[NEWS] = cache[NEWS].concat(receivers)
         }
+    }
+    if(newData.hasOwnProperty('origin_password')){
+        delete newData.origin_password
+        delete newData.password_again
     }
     let user = await User.update({ newData, id: user_id })
     return new SuccModel({ data: user, cache })

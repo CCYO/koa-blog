@@ -116,6 +116,10 @@ function initUser(data) {
     function go(json) {
         let data = { ...json }
         let map = new Map(Object.entries(data))
+        //  刪除 password
+        if(map.has('password')){
+            delete data.password
+        }
         //  設置默認的nickname
         if (map.has('nickname') && !map.get('nickname')) {
             let regex = /^([\w]+)@/

@@ -6,7 +6,7 @@ const { SuccModel } = require('../../model')
 //  移除登入者session
 async function remove(ctx) {
     ctx.session = null
-    ctx.body = new SuccModel('成功登出')
+    ctx.body = new SuccModel({ data: '成功登出'})
 }
 //  0404
 //  設置登入者session
@@ -16,14 +16,20 @@ async function set(ctx, next) {
     if (errno) {
         return
     }
-    ctx.session.user = data
-    console.log(`@ 設置 user/${data.id} 的 session.user`)
-    if (!ctx.session.news) {
-        console.log(`@ 初始化 user/${data.id} 的 session.news`)
+    if (!ctx.session.user) {
+        console.log(`@ 設置 user/${data.id} 的 session`)
+        ctx.session.user = data
         ctx.session.news = SESSION.NEWS(ctx)
     }
 }
+async function reset(ctx, next) {
+    await next()
+    let { data } = ctx.body
+    console.log(`@ 重設 user/${data.id} 的 session`)
+    ctx.session.user = ctx.session.news.data.me = data
+}
 module.exports = {
+    reset,
     remove,
     set
 }

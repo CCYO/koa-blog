@@ -17,8 +17,8 @@ module.exports = {
     ARTICLE_READER: {
         //  0514
         findReadersForModifiedUserData: (articles) => ({
+            attributes: ['reader_id'],
             where: {
-                attributes: ['reader_id'],
                 article_id: { [Op.in]: articles}
             }
         }),

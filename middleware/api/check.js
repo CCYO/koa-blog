@@ -1,5 +1,5 @@
 //  0505
-const { ErrRes, ErrModel } = require('../../model')
+const { ErrRes, ErrModel, MyErr } = require('../../model')
 //  0505
 async function mustBeOwner(ctx, next){
     let { owner_id } = ctx.request.body
@@ -18,9 +18,12 @@ async function mustBeOwner(ctx, next){
  */
 async function login(ctx, next) {
     if (ctx.session.user) {
-        await next()
-    } else {
+        return await next()
+    } 
+    if(ctx.request.path === '/api/news'){
         ctx.body = new ErrModel(ErrRes.PERMISSION.NO_LOGIN)
+    }else{
+        throw new MyErr(ErrRes.PERMISSION.NO_LOGIN)
     }
     return
 }

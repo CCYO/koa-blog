@@ -11,7 +11,7 @@ async function findArticlesOfCommented(commenter_id) {
         init.comments.push(comment_id)
         init.articles.push(article_id)
         return init
-    }, { comments, articles })
+    }, { comments: [], articles: [] })
     return new SuccModel({ data })
 }
 //  0425

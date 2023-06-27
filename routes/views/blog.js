@@ -4,17 +4,18 @@
 //  0501
 const { CACHE: { TYPE, STATUS } } = require('../../conf/constant')
 //  0501
-const { CHECK, NEWS } = require('../../middleware/views')
+const {
+    VIEWS: { CHECK, NEWS } ,
+    GEN_CACHE_FN
+} = require('../../middleware')
 //  0406
 const Blog = require('../../controller/blog')
-//  0504
-const CACHE = require('../../middleware/cache')
 //  0406
 const router = require('koa-router')()
 //  0504
-const privateCache = CACHE.private(TYPE.PAGE.BLOG)
+const privateCache = GEN_CACHE_FN.private(TYPE.PAGE.BLOG)
 //  0504
-const commonCache = CACHE.common(TYPE.PAGE.BLOG)
+const commonCache = GEN_CACHE_FN.common(TYPE.PAGE.BLOG)
 //  0406
 //  編輯文章
 router.get('/blog/edit/:id', CHECK.login, CHECK.mustBeOwner, privateCache, async (ctx, next) => {
