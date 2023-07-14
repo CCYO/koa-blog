@@ -5,13 +5,14 @@
   "scripts": {
     "start": "node bin/www",
     "nocache": "export GOOGLE_APPLICATION_CREDENTIALS=/home/ccy/koa-blog/conf/key/GFB_admin_key.json && cross-env NODE_ENV=nocache ./node_modules/.bin/nodemon bin/www",
-    "dev": "export GOOGLE_APPLICATION_CREDENTIALS=/home/ccy/koa-blog/conf/key/GFB_admin_key.json && cross-env NODE_ENV=dev ./node_modules/.bin/nodemon bin/www",
+    "dev": "export GOOGLE_APPLICATION_CREDENTIALS=/home/twccy007/koa-blog/server/conf/key/GFB_admin_key.json && cross-env NODE_ENV=dev ./node_modules/.bin/nodemon server/bin/www",
     "prd": "cross-env NODE_ENV=production pm2 start bin/www",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@google-cloud/storage": "^5.18.2",
     "@koa/multer": "^3.0.0",
+    "@ladjs/koa-views": "^9.0.0",
     "@wangeditor/editor": "^5.1.18",
     "ajv": "^8.10.0",
     "ajv-errors": "^3.0.0",
@@ -34,6 +35,7 @@
     "koa-generic-session": "^2.3.0",
     "koa-json": "^2.0.2",
     "koa-logger": "^3.2.0",
+    "koa-mount": "^4.0.0",
     "koa-onerror": "^4.1.0",
     "koa-redis": "^4.0.1",
     "koa-router": "^7.4.0",
@@ -52,7 +54,10 @@
   "devDependencies": {
     "clean-webpack-plugin": "^4.0.0",
     "html-webpack-plugin": "^5.5.0",
+    "koa-webpack-hot-middleware": "^1.0.3",
     "nodemon": "^1.19.1",
-    "webpack-cli": "^4.9.2"
+    "webpack": "^5.88.1",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-middleware": "^6.1.1"
   }
 }

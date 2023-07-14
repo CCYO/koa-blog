@@ -1,11 +1,25 @@
+const webpack = require('webpack')
+const koaMount = require('koa-mount')
+const koaConvert = require('koa-convert')
+const koaViews = require('@ladjs/koa-views');
+const webpackDevMiddleware = require('./middleware/_webpackDev')
+const webpackHotMiddleware = require('koa-webpack-hot-middleware')  //  警告：沒有TS檔
+
+const CONFIG = require('../build/config')
+const isDev = process.env.NODE_ENV === 'development'
+let webpackConfig = require('../build/webpack.dev.config')
+let compiler = webpack(webpackConfig)
+let viewRoot
+
+
 const { ErrRes } = require('./model')
 
 const { resolve } = require('path')
 
 const Koa = require('koa')
 const session = require('koa-generic-session')
-const views = require('koa-views')
-const static = require('koa-static')
+// const views = require('koa-views')
+// const static = require('koa-static')
 //  解析前端傳來的POST數據（存入ctx.request.body）
 const bodyparser = require('koa-bodyparser')
 //  打印請求跟響應的url
@@ -67,6 +81,42 @@ app.use(async (ctx, next) => {
 app.use(json())
 app.use(logger())
 
+if (isDev) {
+	// 用 webpack-dev-middleware 启动 webpack 编译
+	app.use(
+		webpackDevMiddleware(compiler, {
+			publicPath: webpackConfig.output.publicPath,
+			stats: {
+				colors: true
+			}
+		})
+	)
+	// 使用 webpack-hot-middleware 支持热更新
+	app.use(
+		koaConvert(
+			webpackHotMiddleware(compiler, {
+				publicPath: webpackConfig.output.publicPath,
+				noInfo: true,
+				reload: true
+			})
+		)
+	)
+	// 指定开发环境下的静态资源目录
+	app.use(koaMount(
+		CONFIG.PUBLIC_PATH,
+		koaStatic(path.join(__dirname, '../src'))
+	))
+	viewRoot = path.resolve(__dirname, '../dist/views')
+} else {
+	app.use(koaMount(
+		CONFIG.PUBLIC_PATH,
+		// koaStatic(path.join(__dirname, `./server/${CONFIG.SERVER.ASSET}`))
+		koaStatic(path.resolve(__dirname, `./assets`))
+	))
+	viewRoot = path.resolve(__dirname, `./${CONFIG.BUILD.VIEW}`)
+}
+app.use(koaViews(viewRoot, { extension: 'ejs', map: { ejs: 'ejs' }, viewExt: 'ejs' }))
+
 //  靜態檔案
 app.use(static(resolve(__dirname, 'public'), { maxage: 60 * 60 * 1000 }))
 
@@ -84,9 +134,9 @@ app.use(bodyparser({
     enableTypes: ['json', 'form', 'text']
 }))
 
-app.use(views(__dirname + '/views', {
-    extension: 'ejs'
-}))
+// app.use(views(__dirname + '/views', {
+//     extension: 'ejs'
+// }))
 
 // Router - API
 app.use(apiUser.routes(), apiUser.allowedMethods())

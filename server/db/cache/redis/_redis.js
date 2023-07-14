@@ -8,7 +8,7 @@ const crypto = require('../../../utils/crypto')
 //  0501
 const { CACHE: { TYPE } } = require('../../../conf/constant')
 //  0501
-const { REDIS_CONF } = require('../../../conf/key/db')
+const { REDIS_CONF } = require('../../../conf/db')
 //  0501
 const redis = require('redis')
 const cli = redis.createClient(REDIS_CONF.port, REDIS_CONF.host)

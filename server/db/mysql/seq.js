@@ -3,7 +3,7 @@
  */
 const { Sequelize, DataTypes } = require('sequelize')
 const cls = require('cls-hooked')
-const { MYSQL_CONF } = require('../../conf/key/db')
+const { MYSQL_CONF } = require('../../conf/db')
 let seqOps = { ...MYSQL_CONF, logging: false}
 
 const namespace = cls.createNamespace('seq-namespace')

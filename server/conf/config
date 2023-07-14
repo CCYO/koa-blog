@@ -1,0 +1,4 @@
+Host GCE_ins_0412
+    HostName 34.81.0.246
+    User ccy
+    IdentityFile C:\Users\User\Desktop\code\a006ccy\.ssh\GCE_key
