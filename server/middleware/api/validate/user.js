@@ -2,7 +2,7 @@
  * @description middleware validate
  */
 const { VALIDATE } = require('../../../conf/constant')
-const { ErrRes, MyErr } = require('../../../model')
+const { ErrRes, MyErr, ErrModel } = require('../../../model')
 const validator = require('../../../utils/validator')
 
 /** Middleware - 校驗 USER 資料
@@ -37,12 +37,8 @@ const validator = require('../../../utils/validator')
             break;
     }
     if (errorMessages) {
-        let msg = ''
-        let index = 1
-        for( let key in errorMessages ){
-            msg += `(${index++})${key} ${errorMessages[key]} `
-        }
-        throw new MyErr(ErrRes.VALIDATE.USER(action, msg))
+        ctx.body = new ErrModel(ErrRes.VALIDATE.USER(errorMessages))
+        return
     }
     return await next()
 }

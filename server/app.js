@@ -19,7 +19,7 @@ const { resolve } = require('path')
 const Koa = require('koa')
 const session = require('koa-generic-session')
 // const views = require('koa-views')
-// const static = require('koa-static')
+const koaStatic = require('koa-static')
 //  解析前端傳來的POST數據（存入ctx.request.body）
 const bodyparser = require('koa-bodyparser')
 //  打印請求跟響應的url
@@ -102,23 +102,23 @@ if (isDev) {
 		)
 	)
 	// 指定开发环境下的静态资源目录
-	app.use(koaMount(
-		CONFIG.PUBLIC_PATH,
-		koaStatic(path.join(__dirname, '../src'))
-	))
-	viewRoot = path.resolve(__dirname, '../dist/views')
+	// app.use(koaMount(
+	// 	CONFIG.PUBLIC_PATH,
+	// 	koaStatic(resolve(__dirname, '../src'), { maxage: 60 * 60 * 1000 })
+	// ))
+	viewRoot = resolve(__dirname, '../dist/views')
 } else {
-	app.use(koaMount(
-		CONFIG.PUBLIC_PATH,
-		// koaStatic(path.join(__dirname, `./server/${CONFIG.SERVER.ASSET}`))
-		koaStatic(path.resolve(__dirname, `./assets`))
-	))
-	viewRoot = path.resolve(__dirname, `./${CONFIG.BUILD.VIEW}`)
+	viewRoot = resolve(__dirname, `./${CONFIG.BUILD.VIEW}`)
 }
+//  view
 app.use(koaViews(viewRoot, { extension: 'ejs', map: { ejs: 'ejs' }, viewExt: 'ejs' }))
-
 //  靜態檔案
-app.use(static(resolve(__dirname, 'public'), { maxage: 60 * 60 * 1000 }))
+app.use(koaMount(
+    CONFIG.PUBLIC_PATH,
+    koaStatic(resolve(__dirname, `./assets`), { maxage: 60 * 60 * 1000 })
+))
+
+
 
 //  加密 session
 app.keys = [REDIS_CONF.SESSION_KEY]

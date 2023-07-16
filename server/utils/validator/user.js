@@ -7,7 +7,12 @@ const { isEmailExist } = require('../../controller/user')
 const Ajv2019 = require("ajv/dist/2019")
 const addFormats = require('ajv-formats')
 const AjvErrors = require("ajv-errors")
-const ajv = new Ajv2019({ allErrors: true, $data: true })
+const { MyErr } = require('../../model')
+const ajv = new Ajv2019({
+    strict: false,
+    allErrors: true,
+    $data: true
+})
 addFormats(ajv)
 //  為 ajv 添加 format 關鍵字，僅適用 string 與 number
 AjvErrors(ajv)
@@ -330,7 +335,12 @@ module.exports = async function (type, data) {
             throw err
         }
         return null
-    } catch ({ errors }) {
-        return _handleErr(errors)
+    } catch (err) {
+        let { errors } = err
+        if(errors){
+            return _handleErr(errors)
+        }else{
+            throw new MyErr(err)
+        }
     }
 }

@@ -1,0 +1,14 @@
+//	參考https://awdr74100.github.io/2020-03-16-webpack-babelloader/
+{
+	"presets": ["@babel/preset-env"],
+	"plugins": [
+		[
+			"@babel/plugin-transform-runtime",
+			{
+				"corejs": 3
+			}
+		]
+	],
+	"sourceType": "unambiguous"
+}
+

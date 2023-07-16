@@ -6,22 +6,37 @@ const { resolve } = require('path')
 const CONFIG = require('./config.js')
 const isDev = process.env.NODE_ENV === 'development'
 
+const entry = ((filepathList) => {
+	let res = {}
+	filepathList.forEach(filepath => {
+		const list = filepath.split(/[\/|\/\/|\\|\\\\]/g) // eslint-disable-line
+		const key = list[list.length - 1].replace(/\.js/g, '')
+		// 如果是开发环境，才需要引入 hot module
+		// res[key] = filepath
+		res[key] = isDev ?
+			// filepath
+			[filepath, 'webpack-hot-middleware/client?reload=true']
+			: filepath
+	})
+	return res
+})(glob.sync(resolve(__dirname, '../src/js/*.js')))
+
+const HtmlWebpackPlugins = glob.sync(resolve(__dirname, '../src/views/*.ejs')).map((filepath, i) => {
+	const tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g) // eslint-disable-line
+	// 读取 CONFIG.EXT 文件自定义的文件后缀名，默认生成 ejs 文件，可以定义生成 html 文件
+	const filename = (name => `${name.split('.')[0]}.${CONFIG.EXT}`)(`${CONFIG.BUILD.VIEW}/${tempList[tempList.length - 1]}`)
+	const template = filepath
+	const fileChunk = filename.split('.')[0].split(/[\/|\/\/|\\|\\\\]/g).pop() // eslint-disable-line
+	const chunks = isDev ? [fileChunk] : ['manifest', 'vendors', fileChunk]
+	return new HtmlWebpackPlugin({
+		filename, template, chunks,
+		alwaysWriteToDisk: true,
+	})
+})
+
 module.exports = {
 	context: resolve(__dirname),
-	entry: ((filepathList) => {
-		let entry = {}
-		filepathList.forEach(filepath => {
-			const list = filepath.split(/[\/|\/\/|\\|\\\\]/g) // eslint-disable-line
-			const key = list[list.length - 1].replace(/\.js/g, '')
-			// 如果是开发环境，才需要引入 hot module
-			entry[key] = isDev ?
-				// filepath
-				[filepath, 'webpack-hot-middleware/client?reload=true']
-				: filepath
-		})
-		return entry
-	})(glob.sync(resolve(__dirname, '../src/js/*.js'))),
-
+	entry,
 	output: {
 		path: resolve(__dirname, `../${CONFIG.BUILD.DIST}`),
 		publicPath: `${CONFIG.PUBLIC_PATH}/`,
@@ -93,6 +108,8 @@ module.exports = {
 					},
 					{
 						loader: 'template-ejs-loader',
+						//	認得<%- 
+						//	<%= 必須寫成 <%%=
 						options: {
 							production: process.env.ENV === 'production'
 						}
@@ -104,18 +121,12 @@ module.exports = {
 
 	plugins: [
 		// 打包文件
-		...glob.sync(resolve(__dirname, '../src/views/*.ejs')).map((filepath, i) => {
-			const tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g) // eslint-disable-line
-			// 读取 CONFIG.EXT 文件自定义的文件后缀名，默认生成 ejs 文件，可以定义生成 html 文件
-			const filename = (name => `${name.split('.')[0]}.${CONFIG.EXT}`)(`${CONFIG.BUILD.VIEW}/${tempList[tempList.length - 1]}`)
-			const template = filepath
-			const fileChunk = filename.split('.')[0].split(/[\/|\/\/|\\|\\\\]/g).pop() // eslint-disable-line
-			const chunks = isDev ? [fileChunk] : ['manifest', 'vendors', fileChunk]
-			return new HtmlWebpackPlugin({
-				filename, template, chunks,
-				alwaysWriteToDisk: true,
-			})
-		}),
+		...HtmlWebpackPlugins,
+		// new HtmlWebpackPlugin({
+		// 	template: '/home/twccy007/koa-blog/src/views/register&login.ejs',
+		// 	filename: 'views/register&login.ejs',
+		// 	alwaysWriteToDisk: true
+		// }),
 		new webpack.ProvidePlugin({
 			$: 'jquery'
 		}),
