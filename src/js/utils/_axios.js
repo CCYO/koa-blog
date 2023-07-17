@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { genBackdrop } from './commonUI'
-// import * as ErrRes from '../../../server/model/errRes'
+import * as ErrRes from '../../../server/model/errRes'
 
 let { loading, loadEnd } = genBackdrop()
 /* 配置 axios 的 請求攔截器，統一處理報錯 */

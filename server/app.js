@@ -11,7 +11,6 @@ let webpackConfig = require('../build/webpack.dev.config')
 let compiler = webpack(webpackConfig)
 let viewRoot
 
-
 const { ErrRes } = require('./model')
 
 const { resolve } = require('path')

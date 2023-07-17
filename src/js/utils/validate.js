@@ -2,7 +2,6 @@ import Ajv2019 from "ajv/dist/2019"
 import addFormats from 'ajv-formats'
 import errors from 'ajv-errors'
 import _axios from './_axios'
-
 const ajv = new Ajv2019({
     strict: false,
     allErrors: true,

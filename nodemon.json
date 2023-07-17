@@ -1,0 +1,11 @@
+{
+    "ignore": [
+        "node_modules/**",
+        "src/"
+    ],
+    "env": {
+        "NODE_ENV": "development",
+        "PORT": 8080
+    },
+    "exec": "node server/bin/www"
+}

@@ -29,6 +29,19 @@ try {
     throw error
     // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
 }
+console.log('@ module.hot ==============> ', module.hot)
+if (module.hot) {
+    module.hot.accept('./utils/genDebounce', function () {
+        console.log('genDebounce OK!');
+    })
+    module.hot.accept('./utils/_axios', function () {
+        console.log('_axios OK!');
+    })
+    module.hot.accept('../views/register&login.ejs', function () {
+        console.log('ejs OK!----------------------------------------------------------');
+        location.reload()
+    })
+}
 
 function renderPage() {
     const CONST = {
@@ -52,7 +65,7 @@ function renderPage() {
     $('form[data-my-type=register] input[name=email]').on('input', deb_handle_isEmailExist)
     $('form[data-my-type=register]').on('submit', deb_handle_register)
     $('form[data-my-type=login]').on('submit', deb_handel_login)
-    
+
     async function handle_isEmailExist(e) {
         let el = e.target
         let form = $(el).parents('form')[0]

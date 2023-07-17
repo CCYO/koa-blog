@@ -122,11 +122,6 @@ module.exports = {
 	plugins: [
 		// 打包文件
 		...HtmlWebpackPlugins,
-		// new HtmlWebpackPlugin({
-		// 	template: '/home/twccy007/koa-blog/src/views/register&login.ejs',
-		// 	filename: 'views/register&login.ejs',
-		// 	alwaysWriteToDisk: true
-		// }),
 		new webpack.ProvidePlugin({
 			$: 'jquery'
 		}),
