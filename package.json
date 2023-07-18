@@ -6,9 +6,12 @@
     "storage:gce": "export GOOGLE_APPLICATION_CREDENTIALS=/home/twccy007/koa-blog/server/conf/key/GFB_admin_key.json",
     "syncDB": "node ./server/db/mysql/sync",
     "start": "node bin/www",
-    "nocache": "storage:gce && cross-env NODE_ENV=nocache ./node_modules/.bin/nodemon bin/www",
-    "dev": "npm run storage:gce && ./node_modules/.bin/nodemon ",
-    "prd": "cross-env NODE_ENV=production pm2 start bin/www",
+    "nocache": "npm run storage:gce && cross-env NODE_ENV=nocache ./node_modules/.bin/nodemon",
+    "dev": "npm run storage:gce && cross-env NODE_ENV=development ./node_modules/.bin/nodemon",
+    "build": "webpack --config ./build/webpack.prod.config.js",
+    "server": "cross-env NODE_ENV=production node server/bin/www",
+    "deploy": "npm run build && npm run server",
+    "prod": "npm run storage:gce && npm run build && webpack --config cross-env NODE_ENV=production node server/bin/www",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

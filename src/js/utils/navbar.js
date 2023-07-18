@@ -1,9 +1,10 @@
+console.log('@navbar loading...')
+import '../../css/navbar.css'
 import _axios from './_axios'
 import genDebounce from './genDebounce'
 
 /* 初始化 通知列表 功能 */
 export default async function () {
-
     let resModel = await getNews()
     // 取得「新聞」數據（含登入者資訊）
     let { errno, data } = resModel

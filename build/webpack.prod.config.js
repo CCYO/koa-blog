@@ -60,12 +60,12 @@ module.exports = merge(webpackBaseConfig, {
 							destination: `../server/${CONFIG.SERVER.ASSET}`
 						}]
 					},
-					{
-						copy: [{
-							source: '../src/css/lib',
-							destination: '../server/assets/css/lib'
-						}]
-					},
+					// {
+					// 	copy: [{
+					// 		source: '../src/css/lib',
+					// 		destination: '../server/assets/css/lib'
+					// 	}]
+					// },
 				]
 			}
 		}),

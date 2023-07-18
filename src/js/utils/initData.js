@@ -1,3 +1,4 @@
+console.log('@initData loading....')
 export default class {
     data = {}
     promises = []

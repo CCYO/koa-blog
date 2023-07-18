@@ -1,3 +1,4 @@
+console.log('@commonUI loading...')
 /* 顯示/隱藏 讀取遮罩 的 工廠函數 */
 export function genBackdrop() {
     let originalEnableInps = []

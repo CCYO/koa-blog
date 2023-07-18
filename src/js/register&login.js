@@ -1,4 +1,9 @@
-require('../views/register&login.ejs')
+if(process.env.NODE_ENV === 'development'){
+    console.log(123)
+    require('../views/register&login.ejs')
+}
+
+import '../css/basic.css'
 
 import { genBackdrop } from './utils/commonUI'
 import genDebounce from './utils/genDebounce'
@@ -11,10 +16,11 @@ import initNavbar from './utils/navbar.js'
 //  初始化 Navbar
 import initEJSData from './utils/initEJSData.js'
 
-const { loadEnd, loading } = genBackdrop()
+let { loadEnd, loading } = genBackdrop()
 //  初始化來自ejs在頁面上的字符數據
 try {
     loading()
+    console.log('loading start -----')
     //  讀取中，遮蔽畫面
     let initPage = new initPageFn()
     await initPage.addOtherInitFn(initEJSData)
@@ -29,17 +35,10 @@ try {
     throw error
     // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
 }
-console.log('@ module.hot ==============> ', module.hot)
+
 if (module.hot) {
     module.hot.accept('./utils/genDebounce', function () {
         console.log('genDebounce OK!');
-    })
-    module.hot.accept('./utils/_axios', function () {
-        console.log('_axios OK!');
-    })
-    module.hot.accept('../views/register&login.ejs', function () {
-        console.log('ejs OK!----------------------------------------------------------');
-        location.reload()
     })
 }
 

@@ -1,3 +1,4 @@
+console.log('@initEJSData loading....')
 import _axios from './_axios'
 //  初始化數據
 //  取得由 JSON.stringify(data) 轉譯過的純跳脫字符，

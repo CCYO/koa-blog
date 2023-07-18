@@ -1,3 +1,4 @@
+console.log('@validate loading...')
 import Ajv2019 from "ajv/dist/2019"
 import addFormats from 'ajv-formats'
 import errors from 'ajv-errors'
