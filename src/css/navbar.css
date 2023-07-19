@@ -1,3 +1,5 @@
+@import url('./common/basic.css');
+
 .dropdown-menu {
     min-width: 40vw;
 }

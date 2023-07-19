@@ -1,7 +1,8 @@
 console.log('@genDebounce loading...')
 const CONF = {
     ms: 250,
-    auto: false
+    auto: false,
+    loading: undefined
 }
 
 /* 防抖動 的 工廠函數  */
@@ -9,11 +10,15 @@ export default function(fn, config = CONF) {
     /* 防抖動的函數工廠 */
     let {
         ms = CONF.ms,
-        auto = CONF.auto
+        auto = CONF.auto,
+        loading = CONF.loading
     } = config
     let timeSet
     //  setTimeout 標記
     let debounce = (...args) => {
+        if(loading){
+            loading.call(this, ...args)
+        }
         if (timeSet) {
             /* 取消上一次的 setTimeout */
             clearTimeout(timeSet)

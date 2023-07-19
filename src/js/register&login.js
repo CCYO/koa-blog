@@ -1,9 +1,9 @@
-if(process.env.NODE_ENV === 'development'){
+if (process.env.NODE_ENV === 'development') {
     console.log(123)
     require('../views/register&login.ejs')
 }
 
-import '../css/basic.css'
+import '../css/navbar.css'
 
 import { genBackdrop } from './utils/commonUI'
 import genDebounce from './utils/genDebounce'
@@ -58,13 +58,30 @@ function renderPage() {
         login: {},
         register: {}
     }
-    const deb_handle_isEmailExist = genDebounce(handle_isEmailExist)
-    const deb_handle_register = genDebounce(handle_form(CONST.REGISTER))
-    const deb_handel_login = genDebounce(handle_form(CONST.LOGIN))
-    $('form[data-my-type=register] input[name=email]').on('input', deb_handle_isEmailExist)
-    $('form[data-my-type=register]').on('submit', deb_handle_register)
-    $('form[data-my-type=login]').on('submit', deb_handel_login)
+    const deb_eventHandle = ($ele, eventType, handle) => {
+        const deb_handle = genDebounce(handle, {
+            loading: (e) => {
+                let ele = e.target
+                feedback_UI(ele, 'load')
+            }
+        })
+        $ele.on(eventType, deb_handle)
+    }
+    deb_eventHandle($('form[data-my-type=register] input[name=email]'), 'input', handle_isEmailExist)
+    // deb_eventHandle($('form[data-my-type=register]'), 'submit', handle_form(CONST.REGISTER))
+    // deb_eventHandle($('form[data-my-type=login]'), 'submit', handle_form(CONST.LOGIN))
+    // const deb_handle_isEmailExist = genDebounce(handle_isEmailExist, {
+    //     loading: () => {
 
+    //     }
+    // })
+    // const deb_handle_register = genDebounce(handle_form(CONST.REGISTER))
+    // const deb_handel_login = genDebounce(handle_form(CONST.LOGIN))
+    // $('form[data-my-type=register] input[name=email]').on('input', deb_handle_isEmailExist)
+    // $('form[data-my-type=register]').on('submit', deb_handle_register)
+    // $('form[data-my-type=login]').on('submit', deb_handel_login)
+    document.querySelector('form[data-my-type=register]').addEventListener('submit', handle_form(CONST.REGISTER))
+    $('form[data-my-type=login]').on('submit', handle_form(CONST.LOGIN))
     async function handle_isEmailExist(e) {
         let el = e.target
         let form = $(el).parents('form')[0]
@@ -149,6 +166,8 @@ function renderPage() {
                     validInps.push(inp)
                 }
             } else {
+                alert('submit axios go-----')
+                return
                 /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
                 let { errno, msg } = await _axios.post(api, datas)
                 if (!errno) {
@@ -173,8 +192,16 @@ function renderPage() {
             }
             for (let { inp, msg } of invalidInps) {
                 feedback_UI(inp, false, msg)
-                inp.removeEventListener('input', _)
+                const deb_handle = genDebounce(_, {
+                    loading: (e) => {
+                        let ele = e.target
+                        feedback_UI(ele, 'load')
+                    }
+                })
+                inp.removeEventListener('input', deb_handle)
                 inp.addEventListener('input', _)
+                // inp.removeEventListener('input', _)
+                // inp.addEventListener('input', _)
             }
             return
         }
