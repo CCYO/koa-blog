@@ -3,7 +3,7 @@ if (process.env.NODE_ENV === 'development') {
     require('../views/register&login.ejs')
 }
 
-import '../css/navbar.css'
+import '../css/register&login.css'
 
 import { genBackdrop } from './utils/commonUI'
 import genDebounce from './utils/genDebounce'
@@ -70,6 +70,8 @@ function renderPage() {
     deb_eventHandle($('form[data-my-type=register] input[name=email]'), 'input', handle_isEmailExist)
     // deb_eventHandle($('form[data-my-type=register]'), 'submit', handle_form(CONST.REGISTER))
     // deb_eventHandle($('form[data-my-type=login]'), 'submit', handle_form(CONST.LOGIN))
+    console.log('@ => ', $('form[data-my-type=login]').find('button'))
+    
     // const deb_handle_isEmailExist = genDebounce(handle_isEmailExist, {
     //     loading: () => {
 
@@ -105,6 +107,7 @@ function renderPage() {
             let formType = ACTION.FORM
             let api = ACTION.API
             let form = document.querySelector(`form[data-my-type=${formType}]`)
+            let btn_submit
             //  取得 formType
             let datas = $$payload[formType]
             let invalidInps = []
@@ -118,8 +121,10 @@ function renderPage() {
                 //  更新$$datas內的表格數據
             } else {
                 /* submit 代表是由 form 觸發，蒐集表單數據*/
+                btn_submit = $(form).find('button[type=submit]')[0]
+                console.log(123)
+                btn_submit.disabled = true
                 for (let inp of form) {
-                    console.log('@inp => ', inp)
                     if (inp.type === 'submit' || (formType === 'register' && inp.name === 'email')) {
                         /* submit沒資料，email則有獨立handle*/
                         continue
@@ -166,8 +171,6 @@ function renderPage() {
                     validInps.push(inp)
                 }
             } else {
-                alert('submit axios go-----')
-                return
                 /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
                 let { errno, msg } = await _axios.post(api, datas)
                 if (!errno) {
@@ -184,6 +187,7 @@ function renderPage() {
                     $(form)[0].reset()
                     datas = {}
                     feedback_UI(false)
+                    btn_submit.disabled = false
                 }
                 return
             }
@@ -202,6 +206,9 @@ function renderPage() {
                 inp.addEventListener('input', _)
                 // inp.removeEventListener('input', _)
                 // inp.addEventListener('input', _)
+            }
+            if(btn_submit){
+                btn_submit.disabled = false
             }
             return
         }

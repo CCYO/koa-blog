@@ -1,0 +1,17 @@
+@import 'navbar.css';
+@import './common/basic.css';
+@import './utils/throttle.css';
+
+button.throttle {
+    animation: throttle 1s step-end forwards;
+}
+button.throttle:active {
+    animation: none;
+}
+
+button:disabled {
+    color: red;
+    background: red;
+    width: 200px;
+    height: 400px;
+}
