@@ -15,30 +15,8 @@ if (process.env.NODE_ENV === 'development') {
     require('../views/register&login.ejs')
 }
 
-
-function Backdrop(){
-    
-    let autoTabIndex = $('<input>').addClass('autoTabIndex').on('focus', (e) => {
-        // e.target.blur()
-        // console.log(e.target)
-    })
-    $('body').append(autoTabIndex)
-    $('input, a, button, *[tabindex]').addClass('noClick')
-    $('input:not(.autoTabIndex), a, button, *[tabindex]').on('focus', (e) => {
-        e.preventDefault()
-        console.log('1 ------------>', e.target)
-        autoTabIndex[0].focus()
-    })
-    $('input:not(.autoTabIndex), a, *[tabindex]').on('click', (e) => {
-        e.preventDefault()
-        console.log('2 ------------>', e.target)
-        autoTabIndex[0].focus()
-    })
-    console.log($('input:not(.autoTabIndex), a, *[tabindex]'))
-}
-
-function clearBackdrop(){
-    $('#pageLoading, navbar, main, footer').removeAttr('style')
+function afterInitPage(){
+    $('#pageLoading, nav, main, footer').removeAttr('style')
     $('#pageLoading').hide()
 }
 
@@ -58,7 +36,7 @@ window.addEventListener('load', async () => {
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
         
-        clearBackdrop()
+        afterInitPage()
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error

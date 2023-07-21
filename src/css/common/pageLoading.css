@@ -1,4 +1,4 @@
-.pageLoading {
+#pageLoading {
     width: 100vw;
     height: 100vh;
     color: red;
@@ -7,4 +7,5 @@
     top: 0;
     left: 0;
     z-index: 99999;
+    pointer-events: none;
 }
