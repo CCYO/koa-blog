@@ -1,75 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
-<%- include('wedgets/header') %>
-<!-- 註冊/登入 互動卡片-->
-<div class="card w-50 mx-auto" style='margin-top: 4rem;'>
-  <!-- 卡片頭部 -->
-  <div class="card-header">
-    <!-- 頭部導行列-->
-    <ul class="card-header-tabs nav nav-tabs">
-      <!-- 頭部導行項-->
-      <li class="nav-item">
-        <a class="nav-link <%%= active === 'register' ? `active` : `` %>" href="#" data-my-tab="#register"
-          data-bs-toggle='tab' data-bs-target='#register-box' role="tab" aria-controls="register"
-          aria-selected="true">註冊</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link <%%= active === 'login'  ? `active` : `` %>" href="#" data-my-tab="#login"
-          data-bs-toggle='tab' data-bs-target='#login-box' role="tab" aria-controls="login" aria-selected="false">登入</a>
-      </li>
-    </ul>
-  </div>
-  <!-- 卡片主體 -->
-  <div class="card-body tab-content">
-    <div class="tab-pane fade <%%= active === 'register' ? `show active` : ``%>" role="tabpanel"
-      aria-labelledby="register-tab" id="register-box">
-      <form id='form-register' data-my-type="register" class="row" autocomplete="do-not-autofill">
-        <div class="col-8 mx-auto">
-          <div class="mb-3">
-            <label for="email" class="form-label">信箱</label>
-            <input type="email" class="form-control" name="email" aria-describedby="email_help" autocomplete="off"
-              required>
-            <div class="d-block">&nbsp;</div>
-          </div>
-          <div class="mb-3">
-            <label for="input_password" class="form-label">密碼</label>
-            <input type="password" class="form-control" name="password" data-retry='yes' autocomplete="new-password"
-              required>
-            <div class="d-block">&nbsp;</div>
-          </div>
-          <div class="mb-3">
-            <label for="input_check_password" class="form-label">密碼確認</label>
-            <input type="password" class="form-control" name='password_again' autocomplete="off">
-            <div class="d-block">&nbsp;</div>
-          </div>
-          <button type="submit" class="btn btn-primary">送出</button>
-        </div>
-      </form>
+<%- include('wedgets/header.ejs') %>
+
+<body>
+  <%- include('wedgets/pageLoading.ejs') %>
+  <%- include('wedgets/navbar.ejs') %>
+  <!-- 數據讀取提示 -->
+  <main style="display: none;">
+    <div class="backdrop my-noshow">
+      <div>讀取中...</div>
     </div>
-    <div class="tab-pane fade <%%= active === 'login'  ? `show active` : ``%>" id="login-box" role="tabpanel"
-      aria-labelledby="login-tab">
-      <form id='form_login' data-my-type="login" class="row" autocomplete="do-not-autofill">
-        <div class="col-8 mx-auto">
-          <div class="mb-3">
-            <label for="email" class="form-label">信箱</label>
-            <input type="email" class="form-control" name="email" data-form-id='#form_login' autocomplete="off"
-              aria-describedby="email_help">
-            <div class="d-block">&nbsp;</div>
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">密碼</label>
-            <input type="password" class="form-control" name="password" data-form-id='#form_login'
-              autocomplete="do-not-autofill">
-            <div class="d-block">&nbsp;</div>
-          </div>
-          <button type="submit" class="btn btn-primary">送出</button>
-          
+    <!-- 註冊/登入 互動卡片-->
+    <div class="card w-50 mx-auto" style='margin-top: 4rem;'>
+      <!-- 卡片頭部 -->
+      <div class="card-header">
+        <!-- 頭部導行列-->
+        <ul class="card-header-tabs nav nav-tabs">
+          <!-- 頭部導行項-->
+          <li class="nav-item">
+            <a class="nav-link <%%= active === 'register' ? `active` : `` %>" href="#" data-my-tab="#register" data-bs-toggle='tab' data-bs-target='#register-box' role="tab" aria-controls="register" aria-selected="true">註冊</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <%%= active === 'login'  ? `active` : `` %>" href="#" data-my-tab="#login" data-bs-toggle='tab' data-bs-target='#login-box' role="tab" aria-controls="login" aria-selected="false">登入</a>
+          </li>
+        </ul>
+      </div>
+      <!-- 卡片主體 -->
+      <div class="card-body tab-content">
+        <div class="tab-pane fade <%%= active === 'register' ? `show active` : ``%>" role="tabpanel" aria-labelledby="register-tab" id="register-box">
+          <form id='form-register' data-my-type="register" class="row" autocomplete="do-not-autofill">
+            <div class="col-8 mx-auto">
+              <div class="mb-3">
+                <label for="email" class="form-label">信箱</label>
+                <input type="email" class="form-control" name="email" aria-describedby="email_help" autocomplete="off" required>
+                <div class="d-block">&nbsp;</div>
+              </div>
+              <div class="mb-3">
+                <label for="input_password" class="form-label">密碼</label>
+                <input type="password" class="form-control" name="password" data-retry='yes' autocomplete="new-password" required>
+                <div class="d-block">&nbsp;</div>
+              </div>
+              <div class="mb-3">
+                <label for="input_check_password" class="form-label">密碼確認</label>
+                <input type="password" class="form-control" name='password_again' autocomplete="off">
+                <div class="d-block">&nbsp;</div>
+              </div>
+              <button type="submit" class="btn btn-primary">送出</button>
+            </div>
+          </form>
         </div>
-      </form>
+        <div class="tab-pane fade <%%= active === 'login'  ? `show active` : ``%>" id="login-box" role="tabpanel" aria-labelledby="login-tab">
+          <form id='form_login' data-my-type="login" class="row" autocomplete="do-not-autofill">
+            <div class="col-8 mx-auto">
+              <div class="mb-3">
+                <label for="email" class="form-label">信箱</label>
+                <input type="email" class="form-control" name="email" data-form-id='#form_login' autocomplete="off" aria-describedby="email_help">
+                <div class="d-block">&nbsp;</div>
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">密碼</label>
+                <input type="password" class="form-control" name="password" data-form-id='#form_login' autocomplete="do-not-autofill">
+                <div class="d-block">&nbsp;</div>
+              </div>
+              <button type="submit" class="btn btn-primary">送出</button>
+
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-<div></div>
-<%- include('wedgets/cdn') %>
+  </main>
+  <%- include('wedgets/cdn') %>
 </body>
 
 </html>

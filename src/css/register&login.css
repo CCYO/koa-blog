@@ -1,5 +1,7 @@
 @import 'navbar.css';
 @import './common/basic.css';
+@import './utils//pageLoading.css';
+@import './utils/autoTabIndex.css';
 @import './utils/throttle.css';
 
 button.throttle {
