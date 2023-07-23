@@ -1,31 +1,49 @@
 console.log('@commonUI loading...')
 /* 顯示/隱藏 讀取遮罩 的 工廠函數 */
+import '../../css/utils/noClick.css'
 
-let $pageLoading = $('#pageLoading')
-$pageLoading.on('focus', (e) => {
-    e.preventDefault()
-    console.log('@阻擋成功')
-    e.target.blur()
-})
-function focusBackdrop(e){
+const backdropClassName = 'loadingBackdrop'
+const targetSelector = `input, a, button, *[tabindex]:not(#${backdropClassName})`
+const blockClassName = 'noClick'
+
+export class genLoadingBackDrop {
+    constructor(id = `#${backdropClassName}`) {
+        this.$backdrop = $(id).first()
+        this.$blockList = $(targetSelector)
+        this.$backdrop.on('focus', (e) => {
+            e.preventDefault()
+            this.$backdrop.blur()
+        })
+    }
+    hidden() {
+        this.$blockList
+            .removeClass(blockClassName)
+            .off(`.${backdropClassName}`)
+        this.$backdrop.removeAttr('style').hide()
+    }
+    show(blockPage = false) {
+        if(!blockPage){
+            this.$backdrop.css('visibility', 'hidden')
+        }
+        this.$backdrop.show()
+        this.$blockList
+            .addClass(blockClassName)
+            .on(`focus.${backdropClassName}`, (e) => this.focusBackdrop(e))
+    }
+    focusBackdrop(e) {
         e.preventDefault()
-        console.log('@被擋 ---> ', e.target)
-        $pageLoading[0].focus()
+        this.$backdrop.focus()
+    }
 }
-function Backdrop(){
-    $pageLoading.addClass('pageLoading').show()
-    $('input, a, button, *[tabindex]:not(#pageLoading)').addClass('noClick').on('focus', focusBackdrop)
-}
-function clearBackdrop(){
-    $pageLoading.addClass('pageLoading').hide()
-    $('input, a, button, *[tabindex]:not(#pageLoading)').removeClass('noClick').off('focus', focusBackdrop)
-}
+
+
+
 export function genBackdrop() {
     let originalEnableInps = []
     return {
         loading(editorList = []) {
             Backdrop()
-            return 
+            return
             /*
             頁面讀取中，禁止任何點擊、tab獲取焦點
             */

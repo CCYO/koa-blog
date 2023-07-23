@@ -1,13 +1,17 @@
 console.log('@_axios loading.....')
 import axios from 'axios'
-import { genBackdrop } from './commonUI'
+import { genLoadingBackDrop } from './commonUI'
 import * as ErrRes from '../../../server/model/errRes'
 
-let { loading, loadEnd } = genBackdrop()
+// let { loading, loadEnd } = genBackdrop()
+const backdrop = new genLoadingBackDrop()
+// let loadEnd = pageLoading.hide
+// let loading = pageLoading.show
 /* 配置 axios 的 請求攔截器，統一處理報錯 */
 axios.interceptors.request.use(
     (config) => {
-        loading()
+        let { blockPage = false } = config
+        backdrop.show(blockPage)
         return config
     },
     error => { throw error }
@@ -20,7 +24,7 @@ axios.interceptors.response.use(
         if (errno === ErrRes.PERMISSION.NO_LOGIN.errno) {
             res = { errno, data: { me: {} } }
         }
-        loadEnd()
+        backdrop.hidden()
         return Promise.resolve(res)
     },
     error => {
@@ -29,6 +33,7 @@ axios.interceptors.response.use(
     }
 )
 function errHandle(error) {
+    console.log('@_axios error => ', error)
     let { data: { errno, msg } } = error.response
     let redir
     if (errno === ErrRes.PERMISSION.NO_LOGIN.errno) {

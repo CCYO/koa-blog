@@ -1,5 +1,13 @@
+@font-face {
+    font-family: 'JetBrainsMono';
+    src: url('../../font/JetBrainsMono-Regular.ttf');
+}
+@font-face {
+    font-family: 'NotoSerifTC';
+    src: url('../../font/NotoSerifTC-Regular.otf');
+}
 * {
-    font-family: 'Libre Baskerville', 'Martian Mono', monospace;
+    font-family: 'JetBrainsMono', 'NotoSerifTC', 'Courier New', Courier, monospace;
 }
 
 body {

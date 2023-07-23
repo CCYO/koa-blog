@@ -17,6 +17,7 @@ export default function(fn, config = CONF) {
     //  setTimeout 標記
     let debounce = (...args) => {
         if(loading){
+            console.log('@...args => ', args)
             loading.call(this, ...args)
         }
         if (timeSet) {

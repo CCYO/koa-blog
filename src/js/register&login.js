@@ -1,6 +1,6 @@
 import '../css/register&login.css'
 
-import { genBackdrop } from './utils/commonUI'
+import { genLoadingBackDrop, genBackdrop } from './utils/commonUI'
 import genDebounce from './utils/genDebounce'
 import validate from './utils/validate.js'
 import _axios from './utils/_axios'
@@ -15,18 +15,13 @@ if (process.env.NODE_ENV === 'development') {
     require('../views/register&login.ejs')
 }
 
-function afterInitPage(){
-    $('#pageLoading, nav, main, footer').removeAttr('style')
-    $('#pageLoading').hide()
-}
-
 window.addEventListener('load', async () => {
     console.log('-------------------------------------> onload ... start')
-    let { loadEnd, loading } = genBackdrop()
     //  初始化來自ejs在頁面上的字符數據
     try {
-        
         console.log('loading start -----')
+        const backdrop = new genLoadingBackDrop()
+        backdrop.show(true)
         //  讀取中，遮蔽畫面
         let initPage = new initPageFn()
         await initPage.addOtherInitFn(initEJSData)
@@ -35,8 +30,8 @@ window.addEventListener('load', async () => {
         //  初始化navbar
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-        
-        afterInitPage()
+        backdrop.hidden()
+        $('main, nav').removeAttr('style')
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error
@@ -65,19 +60,31 @@ window.addEventListener('load', async () => {
             login: {},
             register: {}
         }
-        const deb_eventHandle = ($ele, eventType, handle) => {
-            const deb_handle = genDebounce(handle, {
+        const deb_eventHandle = (selectorOrEl, eventType, handle) => {
+            let ele = typeof selectorOrEl === 'string' ? document.querySelector(selectorOrEl) : selectorOrEl
+            const deb_handleName = `deb_${eventType}Handle`
+            const deb_handle = ele[deb_handleName] = genDebounce(handle, {
                 loading: (e) => {
-                    let ele = e.target
-                    feedback_UI(ele, 'load')
+                    feedback_UI(e.target, 'load')
                 }
             })
-            $ele.on(eventType, deb_handle)
+            ele.addEventListener(eventType, deb_handle)
+
+            ele._resetHandle = (_handle) => {
+                const deb_handle = ele[deb_handleName]
+                if (ele.type !== 'email' && deb_handle) {
+                    console.log('@移除重設 => ', ele)
+                    ele.removeEventListener('input', deb_handle)
+                    delete ele[deb_handleName]
+                }
+                deb_eventHandle(ele, 'input', _handle)
+                return true
+            }
+            return true
         }
-        deb_eventHandle($('form[data-my-type=register] input[name=email]'), 'input', handle_isEmailExist)
+        deb_eventHandle('form[data-my-type=register] input[name=email]', 'input', handle_isEmailExist)
         // deb_eventHandle($('form[data-my-type=register]'), 'submit', handle_form(CONST.REGISTER))
         // deb_eventHandle($('form[data-my-type=login]'), 'submit', handle_form(CONST.LOGIN))
-        console.log('@ => ', $('form[data-my-type=login]').find('button'))
 
         // const deb_handle_isEmailExist = genDebounce(handle_isEmailExist, {
         //     loading: () => {
@@ -204,14 +211,27 @@ window.addEventListener('load', async () => {
                 }
                 for (let { inp, msg } of invalidInps) {
                     feedback_UI(inp, false, msg)
-                    const deb_handle = genDebounce(_, {
-                        loading: (e) => {
-                            let ele = e.target
-                            feedback_UI(ele, 'load')
-                        }
-                    })
-                    inp.removeEventListener('input', deb_handle)
-                    inp.addEventListener('input', _)
+                    inp._resetHandle && inp._resetHandle(_) || deb_eventHandle(inp, 'input', _, 666)
+                    // if(inp._resetHandle){
+                    //     inp._resetHandle(_)
+                    // }else{
+                    //     deb_eventHandle(inp, 'input', _)
+                    // }
+                    // if (inp.type !== 'email' && inp[_handleName]) {
+                    //     inp.removeEventListener('input', inp[_handleName])
+                    //     delete inp[_handleName]
+                    // }
+
+
+                    // const deb_handle = genDebounce(_, {
+                    //     loading: (e) => {
+                    //         let ele = e.target
+                    //         feedback_UI(ele, 'load')
+                    //     }
+                    // })
+                    // inp.removeEventListener('input', deb_handle)
+                    // inp.addEventListener('input', _)
+
                     // inp.removeEventListener('input', _)
                     // inp.addEventListener('input', _)
                 }
