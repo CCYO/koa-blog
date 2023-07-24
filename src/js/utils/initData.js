@@ -15,13 +15,16 @@ export default class {
         for (let res of allRes) {
             for (let prop in res) {
                 if (prop === 'news') {
+                    //  省略news數據
                     continue
                 }
                 this.data[prop] = res[prop]
+                //  將所有初始化頁面的函數結果，存放在瀏覽器
             }
         }
         if (renderPage) {
             await renderPage(this.data)
+            //  渲染頁面的函數
         }
     }
 }

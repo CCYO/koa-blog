@@ -1,6 +1,6 @@
 import '../css/register&login.css'
-
-import { genLoadingBackDrop, genBackdrop } from './utils/commonUI'
+console.log('?')
+import { genLoadingBackDrop } from './utils/commonUI'
 import genDebounce from './utils/genDebounce'
 import validate from './utils/validate.js'
 import _axios from './utils/_axios'
@@ -16,16 +16,15 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 window.addEventListener('load', async () => {
-    console.log('-------------------------------------> onload ... start')
     //  初始化來自ejs在頁面上的字符數據
     try {
-        console.log('loading start -----')
         const backdrop = new genLoadingBackDrop()
         backdrop.show(true)
         //  讀取中，遮蔽畫面
         let initPage = new initPageFn()
+        //  幫助頁面初始化的統整函數
         await initPage.addOtherInitFn(initEJSData)
-        //  初始化ejs
+        //  初始化ejs數據
         await initPage.addOtherInitFn(initNavbar)
         //  初始化navbar
         await initPage.render(renderPage)

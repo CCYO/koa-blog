@@ -1,8 +1,14 @@
 console.log('@navbar loading...')
-import '../../css/navbar.css'
+import '../../css/wedgets/navbar.css'
 import _axios from './_axios'
 import genDebounce from './genDebounce'
 
+const NEWS = {
+    DEBOUNCE_CONFIG: {
+        auto: true,
+        ms: 300 * 1000
+    }
+}
 /* 初始化 通知列表 功能 */
 export default async function () {
     let resModel = await getNews()
@@ -14,70 +20,15 @@ export default async function () {
         /* 登入狀態 */
         renderLoginNav(data.me.id)
         initNavFn(data)
+        //  初始化登入狀態的nav
     } else {
         /* 登出狀態 */
         renderNoLoginNav()
     }
     return data
-    //  初始化通知列表相關功能
+    //  返回 getNews的數據，提供統整初始化頁面的函數initPageFn使用
 
-
-    //  渲染 登入狀態的 navbar template
-    function renderLoginNav(user_id) {
-        //  登入狀態
-        //  摺疊選單外的部份
-        let template_outOfOffcanvas = `
-                        <li class="nav-item d-none d-sm-inline-block">
-                            <a class="nav-link" href="/square">廣場頁</a>
-                        </li>
-                        <!--純粹用作排版-->
-                        <li style="flex-grow: 1;">
-                        </li> 
-                        <!--下拉選單-->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="newsDropdown"
-                                role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">通知
-                                <span class="position-absolute translate-middle badge rounded-pill bg-danger news-count"></span>
-                            </a>
-                            <!-- 通知列表 -->
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" id="newList">
-                                <!-- 新通知標題 -->
-                                <li class="dropdown-item" id="unconfirm-news-title">新通知</li>
-                                <!-- 先前通知的標頭 -->
-                                <li class="dropdown-item" id="confirm-news-title">先前的通知</li>
-                                <li id="readMore">
-                                    <button class="dropdown-item link-primary" type="button">讀取更多</button>
-                                </li>
-                                <li class="dropdown-item" id="noNews">
-                                    <span>沒有更多了</span>
-                                </li>
-                            </ul>
-                        </li>
-                        `
-        //  摺疊選單內的部份
-        let template_inOfOffcanvas = `
-                        <ul class="navbar-nav justify-content-around">
-                            <li class="nav-item">
-                                <a class="nav-link" href="/self">個人頁面</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/album/list?owner_id=${user_id}">文章相簿</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/setting?owner_id=${user_id}">個人設置</a>
-                            </li>
-                            <li class="nav-item">
-                                <a id="logout" class="btn btn-outline-success text-nowrap">登出</a>
-                            </li>
-                        </ul>
-                        `
-        //  #needCollapse-list 之外放入 個人資訊/文章相簿/設置/LOGOUT
-        $('#needCollapse-list').html(template_inOfOffcanvas)
-        //  #noNeedCollapse-list 內放入 NEWS
-        $('#noNeedCollapse-list').html(template_outOfOffcanvas)
-        return true
-
-    }
+    
     /* 初始化Nav功能 */
     function initNavFn(data) {
         /* 公用ele */
@@ -367,7 +318,7 @@ export default async function () {
         let $$excepts = $$news.excepts
         let $$num = $$news.num
         let $$fn = $$news.fn
-        let debounce_autoReadMore = genDebounce(autoReadMore, { auto: true, ms: 300 * 1000 })
+        let debounce_autoReadMore = genDebounce(autoReadMore, NEWS.DEBOUNCE_CONFIG)
         /* 初始化 nav 各功能 */
         $$fn.newsList.reset(data.news)
         //  整理頁面初次渲染取得的 news(通知數據)
@@ -475,6 +426,62 @@ export default async function () {
         //  摺疊nav始終盤排前頭（未登入狀態僅會有Home）
         $('.offcanvas').removeClass('order-1 order-md-1').addClass('order-0')
         $('.navbar-toggler, .offcanvas').remove()
+    }
+    //  渲染 登入狀態的 navbar template
+    function renderLoginNav(user_id) {
+        //  登入狀態
+        //  摺疊選單外的部份
+        let template_outOfOffcanvas = `
+                        <li class="nav-item d-none d-sm-inline-block">
+                            <a class="nav-link" href="/square">廣場頁</a>
+                        </li>
+                        <!--純粹用作排版-->
+                        <li style="flex-grow: 1;">
+                        </li> 
+                        <!--下拉選單-->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="newsDropdown"
+                                role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">通知
+                                <span class="position-absolute translate-middle badge rounded-pill bg-danger news-count"></span>
+                            </a>
+                            <!-- 通知列表 -->
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" id="newList">
+                                <!-- 新通知標題 -->
+                                <li class="dropdown-item" id="unconfirm-news-title">新通知</li>
+                                <!-- 先前通知的標頭 -->
+                                <li class="dropdown-item" id="confirm-news-title">先前的通知</li>
+                                <li id="readMore">
+                                    <button class="dropdown-item link-primary" type="button">讀取更多</button>
+                                </li>
+                                <li class="dropdown-item" id="noNews">
+                                    <span>沒有更多了</span>
+                                </li>
+                            </ul>
+                        </li>
+                        `
+        //  摺疊選單內的部份
+        let template_inOfOffcanvas = `
+                        <ul class="navbar-nav justify-content-around">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/self">個人頁面</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/album/list?owner_id=${user_id}">文章相簿</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/setting?owner_id=${user_id}">個人設置</a>
+                            </li>
+                            <li class="nav-item">
+                                <a id="logout" class="btn btn-outline-success text-nowrap">登出</a>
+                            </li>
+                        </ul>
+                        `
+        //  #needCollapse-list 之外放入 個人資訊/文章相簿/設置/LOGOUT
+        $('#needCollapse-list').html(template_inOfOffcanvas)
+        //  #noNeedCollapse-list 內放入 NEWS
+        $('#noNeedCollapse-list').html(template_outOfOffcanvas)
+        return true
+
     }
     //  渲染 NavItem Active
     function activeNavItem() {

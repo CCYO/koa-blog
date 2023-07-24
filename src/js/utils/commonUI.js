@@ -20,6 +20,7 @@ export class genLoadingBackDrop {
             .removeClass(blockClassName)
             .off(`.${backdropClassName}`)
         this.$backdrop.removeAttr('style').hide()
+        console.log('backdrop hidden')
     }
     show(blockPage = false) {
         if(!blockPage){
