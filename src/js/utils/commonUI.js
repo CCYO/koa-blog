@@ -1,6 +1,9 @@
 console.log('@commonUI loading...')
 /* 顯示/隱藏 讀取遮罩 的 工廠函數 */
 import '../../css/utils/noClick.css'
+import '../../css/common/loadingBackdrop.css'
+
+import '../../css/common/feedback.css'
 
 const backdropClassName = 'loadingBackdrop'
 const targetSelector = `input, a, button, *[tabindex]:not(#${backdropClassName})`
@@ -36,6 +39,52 @@ export class genLoadingBackDrop {
         this.$backdrop.focus()
     }
 }
+
+export function feedback(targetEl, valid, msg) {
+    //  清空form
+    //  input 讀取中
+    //  input 有效
+    //  input 無效
+
+    if (targetEl.tagName === 'FORM') {
+        for (let inp of targetEl) {
+            $(inp)
+            .removeClass('is-invalid is-valid')
+            .next()
+                .removeClass('invalid-feedback valid-feedback loading')
+                .text('')
+        }
+    } else if (!valid && !msg) {
+        //  驗證中
+        $(targetEl)
+            .addClass('is-valid')
+            .next()
+                .addClass('valid-feedback loading')
+                .text('loading...')
+    } else {
+        //  驗證結束
+        $(targetEl)
+            .removeClass(valid ? 'is-invalid' : 'is-valid')
+            .addClass( valid ? 'is-valid' : 'is-invalid' )
+            .next()
+                .removeClass(( valid ? 'invalid-feedback' : 'valid-feedback') + ' loading')
+                .addClass(valid ? 'valid-feedback' : 'invalid-feedback').text(msg)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

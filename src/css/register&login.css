@@ -1,4 +1,2 @@
-@import './common/index.css';
-@import './wedgets/navbar.css';
-@import './utils/noClick.css';
-@import './utils/throttle.css';
+/* register&login.css */
+@import './common/basic.css';
