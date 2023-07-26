@@ -1,12 +1,11 @@
 console.log('@_axios loading.....')
 import axios from 'axios'
-import { genLoadingBackDrop } from './commonUI'
+import UI from './ui'
 import * as ErrRes from '../../../server/model/errRes'
 
-// let { loading, loadEnd } = genBackdrop()
-const backdrop = new genLoadingBackDrop()
-// let loadEnd = pageLoading.hide
-// let loading = pageLoading.show
+const { genLoadingBackdrop } = UI
+
+const backdrop = new genLoadingBackdrop()
 /* 配置 axios 的 請求攔截器，統一處理報錯 */
 axios.interceptors.request.use(
     (config) => {

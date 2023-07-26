@@ -1,15 +1,13 @@
 import '../css/register&login.css'
 
-import { genLoadingBackDrop, feedback } from './utils/commonUI'
+import UI from './utils/ui'
 import genDebounce from './utils/genDebounce'
 import validate from './utils/validate.js'
 import _axios from './utils/_axios'
 
 import initPageFn from './utils/initData.js'
 //  統整頁面數據、渲染頁面的函數
-import initNavbar from './utils/navbar.js'
-//  初始化 Navbar
-import initEJSData from './utils/initEJSData.js'
+import initNavbar from './wedgets/navbar.js'
 
 if (process.env.NODE_ENV === 'development') {
     require('../views/register&login.ejs')
@@ -22,15 +20,15 @@ window.addEventListener('load', async () => {
         },
         REGISTER: {
             ACTION: 'register',
-            get SELECTOR_FORM() { return `#${this.ACTION}-form` },
-            get SELECTOR_CARD() { return `#${this.ACTION}-card` },
             get API() { return `/api/user/${this.ACTION}` }
         },
         LOGIN: {
             ACTION: 'login',
-            get SELECTOR_FORM() { return `#${this.ACTION}-form` },
-            get SELECTOR_CARD() { return `#${this.ACTION}-card` },
             get API() { return `/api/user` }
+        },
+        SELECTOR: {
+            FORM: (action) => `#${action}-form`,
+            CARD: (action) => `#${action}-card`
         }
     }
     let $$validate = validate
@@ -38,22 +36,20 @@ window.addEventListener('load', async () => {
         login: {},
         register: {}
     }
-    const backdrop = new genLoadingBackDrop()
+    const { genLoadingBackdrop, feedback } = UI
+    const backdrop = new genLoadingBackdrop()
     //  初始化來自ejs在頁面上的字符數據
     try {
-
         backdrop.show(true)
         //  讀取中，遮蔽畫面
         let initPage = new initPageFn()
         //  幫助頁面初始化的統整函數
-        await initPage.addOtherInitFn(initEJSData)
-        //  初始化ejs數據
         await initPage.addOtherInitFn(initNavbar)
         //  初始化navbar
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
         backdrop.hidden()
-        $('main, nav').removeAttr('style')
+        
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error
@@ -61,11 +57,11 @@ window.addEventListener('load', async () => {
     }
 
     function renderPage() {
-
-        deb_eventHandle(`${CONST.REGISTER.SELECTOR_FORM} input[name=email] `, 'input', handle_isEmailExist)
-
-        document.querySelector(CONST.REGISTER.SELECTOR_FORM).addEventListener('submit', handle_form(CONST.REGISTER.ACTION))
-        document.querySelector(CONST.LOGIN.SELECTOR_FORM).addEventListener('submit', handle_form(CONST.LOGIN.ACTION))
+        deb_eventHandle(`${CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)} input[name=email] `, 'input', handle_isEmailExist)
+        document.querySelector(CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)).addEventListener('submit', handle_form(CONST.REGISTER.ACTION))
+        document.querySelector(CONST.SELECTOR.FORM(CONST.LOGIN.ACTION)).addEventListener('submit', handle_form(CONST.LOGIN.ACTION))
+        $('main, nav, main, footer').removeAttr('style')
+        
         async function handle_isEmailExist(e) {
             let formType = CONST.REGISTER.ACTION
             let action = CONST.IS_EMAIL_EXIST.ACTION
@@ -87,8 +83,7 @@ window.addEventListener('load', async () => {
                 e.preventDefault()
                 let ACTION = action.toLocaleUpperCase()
                 let ele = e.target
-                let api = CONST[ACTION].API
-                let form = document.querySelector(CONST[ACTION].SELECTOR_FORM)
+                let form = document.querySelector(CONST.SELECTOR.FORM(action))
                 let btn_submit
                 //  取得 formType
                 let datas = $$payload[action]
@@ -105,7 +100,7 @@ window.addEventListener('load', async () => {
                     /* submit 代表是由 form 觸發，蒐集表單數據*/
                     btn_submit = $(form).find('button[type=submit]')[0]
                     for (let inp of form) {
-                        if (inp.type === 'submit' || (action === 'register' && inp.name === 'email')) {
+                        if (inp.type === 'submit' || (action === CONST.REGISTER.ACTION && inp.name === 'email')) {
                             /* submit沒資料，email則有獨立handle*/
                             continue
                         }
@@ -119,7 +114,7 @@ window.addEventListener('load', async () => {
                     /* 整理此次 input 影響的錯誤提醒，以及表格的綁定事件 */
                     for (let inp of form) {
                         let inputName = inp.name
-                        if (inp.type === 'submit' || (action === 'register' && inputName === 'email')) {
+                        if (inp.type === 'submit' || (action === CONST.REGISTER.ACTION && inputName === 'email')) {
                             /* 除了email，其有獨立的 handle*/
                             continue
                         }
@@ -133,7 +128,7 @@ window.addEventListener('load', async () => {
                 } else if (validateErrs) {
                     /* 若EventType不是input，且驗證結果有錯誤 */
                     let inputNames = [...form].filter(inp => {
-                        return inp.type !== 'submit' && !(action === 'register' && inp.name === 'email')
+                        return inp.type !== 'submit' && !(action === CONST.REGISTER.ACTION && inp.name === 'email')
                         //  撇除 email 與 submit
                     }).map(inp => inp.name)
                     //  僅取出 inputName
@@ -155,7 +150,7 @@ window.addEventListener('load', async () => {
                     const api = CONST[ACTION].API
                     let { errno, msg } = await _axios.post(api, datas)
                     if (!errno) {
-                        if (action === 'login') {
+                        if (action === CONST.LOGIN.ACTION) {
                             alert('登入成功')
                             let from = location.search ? new URLSearchParams(location.search).get('from') : false
                             location.href = from ? from : '/self'

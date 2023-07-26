@@ -1,7 +1,9 @@
 console.log('@navbar loading...')
 import '../../css/wedgets/navbar.css'
-import _axios from './_axios'
-import genDebounce from './genDebounce'
+import _axios from '../utils/_axios'
+import genDebounce from '../utils/genDebounce'
+
+import UI from '../utils/ui'
 
 const NEWS = {
     DEBOUNCE_CONFIG: {
@@ -11,6 +13,7 @@ const NEWS = {
 }
 /* 初始化 通知列表 功能 */
 export default async function () {
+    const { show } = UI
     let resModel = await getNews()
     // 取得「新聞」數據（含登入者資訊）
     let { errno, data } = resModel

@@ -1,0 +1,277 @@
+ <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
+ <%- include('wedgets/header.ejs') %>
+ <%- include('wedgets/pageLoading.ejs') %>
+ <%- include('wedgets/navbar.ejs') %>
+ <!-- 斷點提示 -->
+ <!-- <div class="d-sm-none position-fixed top-0 start-0 bg-success text-white" style="z-index: 1080;">xs</div>
+ <div class="d-md-none position-fixed top-0 end-0 bg-success text-white" style="z-index: 1080;">sm</div>
+ <div class="d-lg-none position-fixed bottom-0 start-0 bg-success text-white" style="z-index: 1080;">md</div>
+ <div class="d-xl-none position-fixed bottom-0 end-0 bg-success text-white" style="z-index: 1080;">lg</div>
+ <div class="d-xxl-none position-fixed bottom-50 end-50 bg-success text-white" style="z-index: 1080;">xl</div> -->
+ <!-- MAIN -->
+ <main class="container-md main" style="display: none;">
+   <!-- 使用者資訊 + 文章列表 -->
+   <div class="row">
+     <div class="col-md-8">
+       <div class="userInfo">
+         <div class="card">
+           <div class="row align-items-center justify-content-center">
+             <div class="col-sm-4">
+               <div class="avatar-box">
+                 <div class="ratio ratio-1x1">
+                   <img src="<%%= currentUser.avatar %>" class="img-fluid" alt="...">
+                 </div>
+                 <button id="cancelFollow" type="button" class="btn btn-danger btn-sm follow my-noshow">取消追蹤</button>
+                 <button id="follow" type="button" class="btn btn-success btn-sm follow my-noshow">追蹤</button>
+               </div>
+
+             </div>
+             <div class="col-sm-8">
+               <div class="card-body">
+                 <h5 class="card-title">主要資料</h5>
+                 <hr>
+                 <p>信箱： <%%= currentUser.email %>
+                 </p>
+                 <p>暱稱： <%%= currentUser.nickname %>
+                 </p>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <div class="blogs-container">
+         <!-- Button trigger modal -->
+         <button id="newBlog" type="button" class="btn btn-primary mb-1 my-noshow" data-bs-toggle="modal" data-bs-target="#exampleModal">
+           撰寫新文章
+         </button>
+
+         <!-- Modal -->
+         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+           <div class="modal-dialog">
+             <div class="modal-content">
+
+               <div class="modal-body">
+                 <div class="mb-3">
+                   <label for="blogTitle" class="form-label">文章標題</label>
+                   <input type="text" class="form-control" id="blogTitle" placeholder="文章標題">
+                 </div>
+               </div>
+               <div class="modal-footer">
+                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消建立文章</button>
+                 <button id="sendBlogTitle" type="button" class="btn btn-primary">建立文章</button>
+               </div>
+             </div>
+           </div>
+         </div>
+
+         <div class="card blogList bg-light" data-my-blog-key="show">
+           <div class="card-header blogList-header align-items-center">
+             <h5>已發布的BLOG</h5>
+             <button type="button" class="btn btn-sm btn-outline-danger <%%= blogs.show.length? 'my-show' : 'my-noshow'%>" data-my-remove-blogs="show">全部刪除</button>
+           </div>
+           <%% if(blogs.show.length && blogs.show[0].length){ %>
+           <ul class="list-group list-group-flush">
+             <%% blogs.show[0].forEach(({id, author_id, title, time})=> { %>
+             <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+               <div class="text-truncate me-3">
+                 <a href="/blog/<%%= id %>" class="stretched-link">
+                   <%%= title %>
+                 </a>
+               </div>
+               <div class="d-none d-sm-block">
+                 <span class="timestamp">發佈於<%%= time %></span>
+               </div>
+               <div class="btn-blog-edit my-noshow flex-shrink-0">
+                 <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%%= id %>?owner_id=<%%= author_id %>">編輯</a>
+                 <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%%= id %>">刪除</a>
+               </div>
+             </li>
+             <%% }) %>
+             <%% if(blogs.show[0].length < 5) {%>
+             <%% for(let i=5 - blogs.show[0].length; i> 0; i-- ){ %>
+             <li class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
+               <div class="text-truncate me-3">
+                 <span class="invisible">x</span>
+               </div>
+               <div class="btn-blog-edit flex-shrink-0 invisible">
+                 <a class='btn btn-outline-primary btn-sm'>編輯</a>
+                 <a class='btn btn-outline-primary btn-sm'>刪除</a>
+               </div>
+             </li>
+             <%% } %>
+             <%% } %>
+           </ul>
+           <%% if (blogs.show.length> 1) { %>
+           <nav aria-label="...">
+             <ul class="pagination" id="show-list">
+               <li class="page-item my-disabled">
+                 <a class="page-link" href='#' data-my-way="back">Previous</a>
+               </li>
+               <%% blogs.show.forEach((item, ind, arr)=> { %>
+               <li class="page-item <%%= ind === 0 ? 'active my-disabled': ''%>">
+                 <a class="page-link" href="#" data-my-key="show" data-my-ind="<%%= ind %>">
+                   <%%= ind + 1 %>
+                 </a>
+               </li>
+               <%% }) %>
+
+               <li class="page-item">
+                 <a class="page-link" href="#" data-my-way="next">Next</a>
+               </li>
+             </ul>
+           </nav>
+           <%% } %>
+           <%% } else { %>
+
+           <p class="p-3">沒有發布的BLOG</p>
+
+           <%% } %>
+         </div>
+         <%% if(blogs.hidden){ %>
+         <div class="card blogList bg-light" data-my-blog-key="hidden">
+           <div class="card-header blogList-header align-items-center">
+             <h5>編輯中的BLOG</h5>
+             <button type="button" class="btn btn-sm btn-outline-danger <%%= blogs.hidden.length? 'my-show' : 'my-noshow'%>" data-my-remove-blogs="hidden">全部刪除</button>
+           </div>
+           <%% if(blogs.hidden.length && blogs.hidden[0].length){ %>
+           <ul class="list-group list-group-flush">
+             <%% blogs.hidden[0].forEach(({id, author_id, title, time})=> { %>
+             <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+               <div class="text-truncate me-3">
+                 <a class="stretched-link" href="/blog/<%%= id %>">
+                   <%%= title %>
+                 </a>
+               </div>
+               <div class="d-none d-sm-block">
+                 <span class="timestamp">上一次編輯<%%= time %></span>
+               </div>
+               <div class="btn-blog-edit flex-shrink-0">
+                 <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%%= id %>?owner_id=<%%= author_id %>">編輯</a>
+                 <a class='btn btn-outline-primary btn-sm' data-my-remove-blog="<%%= id %>">刪除</a>
+               </div>
+             </li>
+             <%% }) %>
+             <%% if(blogs.hidden[0].length < 5) {%>
+             <%% for(let i=5 - blogs.hidden[0].length; i> 0; i-- ){ %>
+             <li class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
+               <div class="text-truncate me-3">
+                 <span class="invisible">x</span>
+               </div>
+               <div class="btn-blog-edit flex-shrink-0 invisible">
+                 <a class='btn btn-outline-primary btn-sm'>編輯</a>
+                 <a class='btn btn-outline-primary btn-sm'>刪除</a>
+               </div>
+             </li>
+             <%% } %>
+             <%% } %>
+           </ul>
+           <%% if (blogs.hidden.length> 1) { %>
+           <nav aria-label="...">
+             <ul class="pagination" id="hidden-list">
+               <li class="page-item my-disabled">
+                 <a class="page-link" href="#" data-my-way="back">Previous</a>
+               </li>
+               <%% blogs.hidden.forEach((item, ind, arr)=> { %>
+               <li class="page-item <%%= ind === 0 ? 'active my-disabled': ''%>">
+                 <a class="page-link" href="#" data-my-key="hidden" data-my-ind="<%%= ind %>">
+                   <%%= ind + 1 %>
+                 </a>
+               </li>
+               <%% }) %>
+
+               <li class="page-item">
+                 <a class="page-link" href="#" data-my-way="next">Next</a>
+               </li>
+             </ul>
+           </nav>
+           <%% } %>
+
+           <%% } else { %>
+           <p class="p-3">沒有編輯中的BLOG</p>
+           <%% } %>
+         </div>
+         <%% } %>
+       </div>
+     </div>
+     <hr class="d-md-none">
+     <div class="col-md-4">
+       <div class="relationShip-container">
+         <div class="relationShip-box">
+           <h3>粉絲列表</h3>
+           <div id="fansList" class="relationShip-list-box">
+             <%% if(fansList.length) {%>
+             <ul>
+               <%% fansList.forEach(fans=> { %>
+               <li class="card" data-fans-id="<%%= fans.id %>">
+                 <div class="ratio ratio-1x1">
+                   <img src="<%%= fans.avatar %>" class="card-img-top" alt="">
+                 </div>
+                 <div class="text-truncate">
+                   <a href="/other/<%%= fans.id %>" class="stretched-link">
+                     <%%= fans.nickname %>
+                   </a>
+                 </div>
+               </li>
+
+               <%% }) %>
+             </ul>
+             <%% } else { %>
+             <p>可憐阿，沒有朋友</p>
+             <%% } %>
+           </div>
+         </div>
+         <div class="relationShip-box">
+           <h3>追蹤列表</h3>
+           <div id="idols" class="relationShip-list-box">
+             <%% if(idols.length) {%>
+             <ul>
+               <%% idols.forEach(idol=> { %>
+               <li class="card" data-idol-id="<%%= idol.id %>">
+                 <div class="ratio ratio-1x1">
+                   <img src="<%%= idol.avatar %>" class="card-img-top" alt="">
+                 </div>
+                 <div class="text-truncate">
+                   <a href="/other/<%%= idol.id %>" class="stretched-link">
+                     <%%= idol.nickname %>
+                   </a>
+                 </div>
+               </li>
+               <%% }) %>
+             </ul>
+             <%% } else { %>
+             <p>沒有偶像，你最屌</p>
+             <%% } %>
+           </div>
+
+         </div>
+       </div>
+     </div>
+   </div>
+   <!-- EJS -->
+ <div style="display: none;">
+  <!-- 當前使用者頁面的使用者資料 -->
+  <div data-my-data="currentUser">
+    <%%- JSON.stringify(currentUser) %>
+  </div>
+  <div data-my-data="fansList">
+    <%%- JSON.stringify(fansList) %>
+  </div>
+  <div data-my-data="idols">
+    <%%- JSON.stringify(idols) %>
+  </div>
+  <div data-my-data="blogs">
+    <%%- JSON.stringify(blogs) %>
+  </div>
+</div>
+</main>
+ <!-- FOOTER -->
+ <%- include('wedgets/footer.ejs') %>
+ <%- include('wedgets/cdn') %>
+ <!-- 引入 xss -->
+ <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
+ <!-- 滾輪 -->
+ <script src="https://unpkg.com/better-scroll@latest/dist/better-scroll.min.js"></script>
+ </body>
+
+ </html>

@@ -26,7 +26,7 @@ export default async function (selector = `[data-${EJS_DATA.DATA_SET}]`) {
     //  取得存放ejs數據的元素
     let res = await $ejs_eles.reduce(async (kvPairs, $ejs_ele) => {
         //  數據的用途
-        let key = $ejs_ele.data(ejs_dataSet)
+        let key = $ejs_ele.data(EJS_DATA.DATA_SET)
         //  該ejs數據元素內，所存放的數據種類名稱
         try {
             let kv
