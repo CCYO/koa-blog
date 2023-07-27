@@ -5,11 +5,13 @@
     font-size: 0.5rem
 }
 
-.btn-blog-edit {
+/* .btn-blog-edit, */
+[data-selector=blogBtnList] {
     z-index: 2;
 }
 
-.btn-blog-edit>a {
+/* .btn-blog-edit > a, */
+[data-selector=blogBtnList]> a {
     background: #fff;
 }
 

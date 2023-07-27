@@ -5,6 +5,11 @@ import genDebounce from '../utils/genDebounce'
 
 import UI from '../utils/ui'
 
+const CONST = {
+    REG: {
+        PAGE_REGISTER_OR_LOGIN: /^\/(login)|(register)/
+    }
+}
 const NEWS = {
     DEBOUNCE_CONFIG: {
         auto: true,
@@ -13,22 +18,28 @@ const NEWS = {
 }
 /* 初始化 通知列表 功能 */
 export default async function () {
-    const { show } = UI
-    let resModel = await getNews()
-    // 取得「新聞」數據（含登入者資訊）
-    let { errno, data } = resModel
+    let _data = { me: {} }
     activeNavItem()
     //  根據 path，顯示當前 active NavItem
+    if(CONST.REG.PAGE_REGISTER_OR_LOGIN.test(location.pathname)){
+
+        renderNoLoginNav()
+        return _data
+    }
+    const { show } = UI
+    let { errno, data }  = await getNews()
+    // 取得「新聞」數據（含登入者資訊）
     if (!errno) {
         /* 登入狀態 */
         renderLoginNav(data.me.id)
         initNavFn(data)
         //  初始化登入狀態的nav
+        _data = data
     } else {
         /* 登出狀態 */
         renderNoLoginNav()
     }
-    return data
+    return _data
     //  返回 getNews的數據，提供統整初始化頁面的函數initPageFn使用
 
     

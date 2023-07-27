@@ -25,6 +25,7 @@
     "ajv-errors": "^3.0.0",
     "ajv-formats": "^2.1.1",
     "axios": "^0.26.1",
+    "better-scroll": "^2.5.1",
     "cls-hooked": "^4.2.2",
     "cross-env": "^7.0.3",
     "date-and-time": "^2.4.2",

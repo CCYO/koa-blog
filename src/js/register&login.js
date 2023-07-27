@@ -28,7 +28,8 @@ window.addEventListener('load', async () => {
         },
         SELECTOR: {
             FORM: (action) => `#${action}-form`,
-            CARD: (action) => `#${action}-card`
+            CARD: (action) => `#${action}-card`,
+            EMAIL: '[name=email]'
         }
     }
     let $$validate = validate
@@ -57,7 +58,7 @@ window.addEventListener('load', async () => {
     }
 
     function renderPage() {
-        deb_eventHandle(`${CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)} input[name=email] `, 'input', handle_isEmailExist)
+        deb_eventHandle(`${CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)} ${CONST.SELECTOR.EMAIL}`, 'input', handle_isEmailExist)
         document.querySelector(CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)).addEventListener('submit', handle_form(CONST.REGISTER.ACTION))
         document.querySelector(CONST.SELECTOR.FORM(CONST.LOGIN.ACTION)).addEventListener('submit', handle_form(CONST.LOGIN.ACTION))
         $('main, nav, main, footer').removeAttr('style')
@@ -81,10 +82,10 @@ window.addEventListener('load', async () => {
         function handle_form(action) {
             return async function _(e) {
                 e.preventDefault()
+                const isInputEvent = e.type === 'input'
                 let ACTION = action.toLocaleUpperCase()
                 let ele = e.target
                 let form = document.querySelector(CONST.SELECTOR.FORM(action))
-                let btn_submit
                 //  取得 formType
                 let datas = $$payload[action]
                 let invalidInps = []
@@ -92,13 +93,12 @@ window.addEventListener('load', async () => {
                 let validInps = []
                 //  存放有效值的inp
                 let validate = $$validate[action]
-                if (e.type === 'input') {
+                if (isInputEvent) {
                     /* input 代表是由 input 觸發*/
                     datas[ele.name] = ele.value
                     //  更新$$datas內的表格數據
                 } else {
                     /* submit 代表是由 form 觸發，蒐集表單數據*/
-                    btn_submit = $(form).find('button[type=submit]')[0]
                     for (let inp of form) {
                         if (inp.type === 'submit' || (action === CONST.REGISTER.ACTION && inp.name === 'email')) {
                             /* submit沒資料，email則有獨立handle*/
@@ -110,11 +110,11 @@ window.addEventListener('load', async () => {
                 }
                 let validateErrs = await validate(datas)
                 //  驗證
-                if (e.type === 'input') {
+                if (isInputEvent) {
                     /* 整理此次 input 影響的錯誤提醒，以及表格的綁定事件 */
                     for (let inp of form) {
                         let inputName = inp.name
-                        if (inp.type === 'submit' || (action === CONST.REGISTER.ACTION && inputName === 'email')) {
+                        if (eventType === 'submit' || (action === CONST.REGISTER.ACTION && inputName === 'email')) {
                             /* 除了email，其有獨立的 handle*/
                             continue
                         }
