@@ -143,6 +143,7 @@ window.addEventListener('load', async () => {
             $(DATASET.SELECTOR(NAME.PRIVATE_BLOG_LIST)).removeClass('my-noshow')
             //  隱藏文章編輯/刪除功能
             $(DATASET.SELECTOR(NAME.BLOG_BTN_LIST)).removeClass('my-noshow')
+
             /* event handle */
             //  綁定創建文章功能
             $(DATASET.ACTION(CONST.CREATE_BLOG.ACTION)).click(handle_createBlog)
@@ -166,6 +167,7 @@ window.addEventListener('load', async () => {
         //  文章列表 的 上下頁，綁定翻頁功能
         $(DATASET.ACTION(CONST.TURN_PAGE.ACTION)).on('click', renderBlogList)
         $('main, nav, main, footer').removeAttr('style')
+
         //  handle -------
         //  handle => 創建 blog
         async function handle_createBlog(e) {
@@ -317,7 +319,7 @@ window.addEventListener('load', async () => {
                 //  目標頁碼紐的容器，顯示為當前頁，並禁止點擊
                 $container
                     .find(`[data-${DATASET.KEY.PAGE_IND}=${tarInd}]`).parent()
-                        .addClass('active my-disabled')
+                    .addClass('active my-disabled')
             }
             //  創建文章列表 htmlStr
             function templateCreator_BlogList({
@@ -369,7 +371,7 @@ window.addEventListener('load', async () => {
             if (!$$me.id) {
                 /* 若未登入，跳轉到登入頁 */
                 return () => {
-                    alert('請先登入')
+                    alert(`請先登入, ${CONST.URL.LOGIN}?from=${location.pathname}`)
                     location.href = `${CONST.URL.LOGIN}?from=${location.pathname}`
                 }
             }
