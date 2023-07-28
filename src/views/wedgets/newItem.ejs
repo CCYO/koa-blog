@@ -1,0 +1,49 @@
+_gen: {
+    idolFans({ confirm, id, fans, timestamp }) {
+        let query = confirm ? '' : `?type=1&id=${id}`
+        return `
+                <!-- 新通知 of fans -->
+                <li class="dropdown-item position-relative news-item">
+                    <a href="/other/${fans.id}${query}" class="stretched-link text-wrap ">
+                        <div>
+                            <span>${fans.nickname}追蹤你囉！</span><br>
+                            <span class='text-end mb-0'>${timestamp}</span>
+                        </div>
+                    </a>
+                </li>`
+    },
+    articleReader({ confirm, id, blog, timestamp }) {
+        let query = confirm ? '' : `?type=2&id=${id}`
+        return `
+                <li class="dropdown-item  position-relative news-item">
+                    <a href="/blog/${blog.id}${query}" class="stretched-link text-wrap">
+                        <div>
+                            <span>${blog.author.nickname} 有新文章唷！</span><br>
+                            <span>- ${blog.title}-</span><br>
+                            <span class='text-end mb-0'>${timestamp}</span>
+                        </div>
+                    </a>
+                </li>`
+    },
+    msgReceiver({ confirm, id, comment, timestamp }) {
+        let query = confirm ? '' : `?type=3&id=${id}`
+        let { otherComments } = comment
+        let count = otherComments.commenters.length
+        let others = otherComments.commenters.map(({ nickname }) => nickname)
+        let nicknames = comment.commenter.nickname +
+            count > 1 ? others.slice(0, 2).join(',') + (count > 2 ? `與其他${count - 2}人` : '' + `，都`) :
+            count === 1 ? others[0] : comment.commenter.nickname
+        let author =
+            comment.article.author.id === $$newsData.me.id ? '你' :
+                comment.article.author.id === comment.commenter.id ? '自己' : comment.blog.author.nickname
+        return `
+                <li class="dropdown-item  position-relative news-item">
+                    <a href="/blog/${comment.article.id}${query}#comment_${comment.id}" class="stretched-link text-wrap">
+                        <div>
+                            <span>${nicknames}在${author}的文章「${comment.article.title}」留言囉！</span><br>
+                            <span class='text-end mb-0'>${timestamp}</span>
+                        </div>
+                    </a>
+                </li>`
+    }
+},

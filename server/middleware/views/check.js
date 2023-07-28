@@ -12,7 +12,9 @@ async function mustBeOwner(ctx, next){
 //  0501
 async function isSelf(ctx, next) {
     let me = ctx.session.user ? ctx.session.user.id : undefined
-    let currentUser = ctx.params.user_id * 1
+    let currentUser = ctx.params.id * 1
+    console.log('@me => ', me)
+    console.log('@currentUser => ', currentUser)
     //  若是自己的ID，跳轉到個人頁面
     if (me === currentUser) {
         return ctx.redirect('/self')

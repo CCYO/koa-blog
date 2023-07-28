@@ -51,6 +51,10 @@ module.exports = {
 			js: resolve(__dirname, '../src/js'),
 			css: resolve(__dirname, '../src/css'),
 			less: resolve(__dirname, '../src/less')
+		},
+		fallback: {
+			"path": require.resolve("path-browserify"),
+			"fs": require.resolve("browserify-fs")
 		}
 	},
 

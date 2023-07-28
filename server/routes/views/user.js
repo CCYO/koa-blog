@@ -33,8 +33,8 @@ router.get('/setting', CHECK.login, CHECK.mustBeOwner, async (ctx, next) => {
 })
 //  0504
 //  他人頁
-router.get('/other/:user_id', CHECK.isSelf, NEWS.confirm, commonCache, async (ctx, next) => {
-    let user_id = ctx.params.user_id * 1
+router.get('/other/:id', CHECK.isSelf, NEWS.confirm, commonCache, async (ctx, next) => {
+    let user_id = ctx.params.id * 1
     //  從 middleware 取得的緩存數據 ctx.cache[PAGE.USER]
     /**
      * { 

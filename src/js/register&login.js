@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV === 'development') {
+    require('../views/register&login.ejs')
+}
+
 import '../css/register&login.css'
 
 import UI from './utils/ui'
@@ -8,10 +12,6 @@ import _axios from './utils/_axios'
 import initPageFn from './utils/initData.js'
 //  統整頁面數據、渲染頁面的函數
 import initNavbar from './wedgets/navbar.js'
-
-if (process.env.NODE_ENV === 'development') {
-    require('../views/register&login.ejs')
-}
 
 window.addEventListener('load', async () => {
     const CONST = {

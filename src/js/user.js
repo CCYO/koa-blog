@@ -1,10 +1,10 @@
 if (process.env.NODE_ENV === 'development') {
     require('../views/user.ejs')
 }
-
 import '../css/user.css'
 
 import BetterScroll from 'better-scroll'
+import _ from 'lodash'
 
 import UI from './utils/ui'
 import genDebounce from './utils/genDebounce'
@@ -16,6 +16,8 @@ import initNavbar from './wedgets/navbar.js'
 //  初始化 Navbar
 import initEJSData from './utils/initEJSData.js'
 
+import ejs_str_relationShipItem from 'template-ejs-loader!../views/wedgets/user/relationshipItem.ejs'
+import ejs_str_blogItem from 'template-ejs-loader!../views/wedgets/user/blogItem.ejs'
 
 window.addEventListener('load', async () => {
     const { genLoadingBackdrop } = UI
@@ -131,6 +133,33 @@ window.addEventListener('load', async () => {
         let $$html_blogList = $$pageData.html_blogList
         let $$blogs = $$pageData.blogs
         let $$betterScrollEles = $$pageData.betterScrollEles
+
+        let $$template = {
+            fn: {
+                relationshipItem: _.template(ejs_str_relationShipItem),
+                blogItem: (data) => {
+                    return _.template(ejs_str_blogItem)({
+                        ACTION: DATASET.ACTION(CONST.REMOVE_BLOG).slice(1,-1),
+                        KEY: DATASET.KEY.REMOVE_BLOG_ID,
+                        ...data
+                    })
+                }
+            },
+            str: {
+                blogItem: _.template(ejs_str_blogItem)({
+                    ACTION: DATASET.ACTION(CONST.REMOVE_BLOG.ACTION).slice(1,-1),
+                    KEY: DATASET.KEY.REMOVE_BLOG_ID,
+                    $$isSelf,
+                    $$me,
+                    id: 0,
+                    title: ' ',
+                    time: ' ',
+                    show: false
+                })
+            }
+
+        }
+        console.log('@@=>', $$template.str.blogItem)
         //  初始化BetterScroll
         //  public Var ----------------------------------------------------------------------
         let pageData = window.pageData = data
@@ -226,6 +255,7 @@ window.addEventListener('load', async () => {
             await removeBlogs([id])
             return
         }
+
         //  渲染文章列表
         function renderBlogList(e) {
             e.preventDefault()
@@ -253,19 +283,15 @@ window.addEventListener('load', async () => {
                 html_blogList.html[curInd] = $ul.html()
             }
             //  從 pageData 取得目標頁的htmlStr數據
-            let html_tarInd = html_blogList.html[tarInd]
-            if (!html_tarInd) { //   若無值
+            if (!html_blogList.html[tarInd]) { //   若無值
                 let i = 5
                 //  創建 目標頁 htmlStr
-                let htmlStr = data_blogList[tarInd].reduce((init, {
-                    id,
-                    title,
-                    time,
-                    show
-                }) => {
-                    init += templateCreator_BlogList({
+                let htmlStr = data_blogList[tarInd].reduce((init, { id, title, time, show }, ind) => {
+                    init += $$template.fn.blogItem({
+                        $$isSelf,
+                        $$me,
                         id,
-                        title,
+                        titie,
                         time,
                         show
                     })
@@ -275,16 +301,7 @@ window.addEventListener('load', async () => {
                 //  未滿 5 個，填入空白排版
                 if (i > 0) {
                     for (i; i > 0; i--) {
-                        htmlStr += `
-                        <li class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
-                            <div class="text-truncate me-3">
-                                <span class="invisible">x</span>
-                            </div>
-                            <div data-selector="blogBtnList" class="flex-shrink-0 invisible">
-                                <a class='btn btn-outline-primary btn-sm' href=''>編輯</a>
-                                <a class='btn btn-outline-primary btn-sm'>刪除</a>
-                            </div>
-                        </li>`
+                        htmlStr += $$template.str.blogItem
                     }
                 }
                 //  更新pageData
@@ -321,34 +338,6 @@ window.addEventListener('load', async () => {
                     .find(`[data-${DATASET.KEY.PAGE_IND}=${tarInd}]`).parent()
                     .addClass('active my-disabled')
             }
-            //  創建文章列表 htmlStr
-            function templateCreator_BlogList({
-                id,
-                title,
-                time,
-                show
-            }) {
-                let author_id = $$me.id
-                let editOrShow = show ? '發佈於' : '上一次編輯'
-                //  依頁面是否為使用者自己的資料，來判斷是否提供文章的編輯/刪除紐
-                let blogEdit = $$isSelf ? `
-                            <div data-selector="blogBtnList">
-                                <a class='btn btn-outline-primary btn-sm' href="/blog/edit/${id}?owner_id=${author_id}">編輯</a>
-                                <a class='btn btn-outline-primary btn-sm' data-${DATASET.PREFIX.ACTION}="${DATASET.ACTION(CONST.REMOVE_BLOG.ACTION)}" data-${DATASET.KEY.REMOVE_BLOG_ID}="${id}">刪除</a>
-                            </div>` : ''
-
-                return `                    
-                        <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
-                            <div>
-                                <a class="stretched-link" href="/blog/${id}">${title}</a>
-                            </div>
-                            <div class="d-none d-sm-block">
-                                <span class="timestamp">${editOrShow} ${time}</span>
-                            </div>
-                            ${blogEdit}
-                        </li>
-                    `
-            }
         }
 
         //  utils -----
@@ -371,7 +360,7 @@ window.addEventListener('load', async () => {
             if (!$$me.id) {
                 /* 若未登入，跳轉到登入頁 */
                 return () => {
-                    alert(`請先登入, ${CONST.URL.LOGIN}?from=${location.pathname}`)
+                    alert(`請先登入`)
                     location.href = `${CONST.URL.LOGIN}?from=${location.pathname}`
                 }
             }
@@ -456,15 +445,7 @@ window.addEventListener('load', async () => {
                 //  更新追蹤名單
                 $$fansList.unshift($$me)
                 //  生成 粉絲htmlStr
-                let li = `
-                    <li class="card" data-fans-id="${$$me.id}">
-                        <div class="ratio ratio-1x1">
-                            <img src="${$$me.avatar}" class="card-img-top" alt="">
-                        </div>
-                        <div class="text-truncate">
-                            <a href="/other/${$$me.id}" class="stretched-link">${$$me.nickname}</a>
-                        </div>
-                    </li>`
+                let li = $$template.fn.relationshipItem({ me: $$me })
                 //  在粉絲列表中插入 粉絲htmlStr
                 if ($$fansList.length === 1) { //  如果追蹤者只有當前的你
                     $fansList.html(`<ul>${li}</ul>`)
@@ -488,4 +469,5 @@ window.addEventListener('load', async () => {
             }
         }
     }
-})
+}
+)

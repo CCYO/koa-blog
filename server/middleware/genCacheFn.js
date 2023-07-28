@@ -14,11 +14,11 @@ const common = (type) => async function (ctx, next) {
     ctx.cache = {
         [KEY]: cache
     }
-    try{
-    await next()
-}catch(e){
-    throw e
-}
+    try {
+        await next()
+    } catch (e) {
+        throw e
+    }
     //  判斷是否將數據存入系統緩存
     let { exist, data, etag } = ctx.cache[KEY]
     //  當前系統緩存，無資料 || eTag已過期
@@ -40,7 +40,7 @@ const common = (type) => async function (ctx, next) {
 //  0504
 const private = (type) => async function (ctx, next) {
     let id = ctx.params.id * 1
-    if(ctx.request.path === '/self'){
+    if (ctx.request.path === '/self') {
         id = ctx.session.user.id
     }
     let KEY = type
