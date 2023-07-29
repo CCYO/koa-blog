@@ -50,24 +50,49 @@ window.addEventListener('load', async () => {
         // ----------------------------------------------------------------------------------------
         /* 常數 */
         const CONST = {
+            PUBLIC_OR_HIDDEN: {
+                ACTION: 'publicOrHidden'
+            },
+            CHANGE_TITLE: {
+                ACTION: 'changeTitle'
+            },
             UPDATE_TITLE: {
-                API: ''
+                ACTION: 'updateTitle',
+                API: '/api/blog'
             },
             REMOVE_BLOG: {
-                API: ''
+                ACTION: 'removeBlog',
+                API: '/api/blog/initImgs'
+            },
+            DATASET: {
+                PREFIX: {
+                    ACTION: 'action',
+                    SELECTOR: 'selector'
+                },
+                ACTION(action) { return `[data-${this.PREFIX.ACTION}=${action}]` },
+                SELECTOR(name) { return `[data-${this.PREFIX.SELECTOR}=${name}]` },
+                NAME: {
+                    
+                },
+                KEY: {
+                    REMOVE_BLOG_ID: 'blog_id',
+                    PAGE_IND: 'page_ind',
+                    TURN_DIR: 'turn_dir'
+                }
             }
         }
+        const { DATASET } = CONST
         /* 公用 JQ Ele */
         /* 公用 var */
         //  公用變量
         
         //  API
         let api_blog = '/api/blog'
-        let api_initImg = api_blog + '/initImgs'
+        let api_initImg = '/api/blog/initImgs'
         //  JQ Ele
-        let $title = $('#title')
-        let $btn_updateTitle = $('#updateTitle')
-        let $show = $('[name=show]')
+        let $inp_changeTitle = $(DATASET.ACTION(CONST.CHANGE_TITLE.ACTION))
+        let $btn_updateTitle = $(DATASET.ACTION(CONST.UPDATE_TITLE.ACTION))
+        let $publicOrHidden = $(DATASET.ACTION(CONST.PUBLIC_OR_HIDDEN.ACTION))
         let $wordCount = $('#wordCount')
 
         let $$editor
@@ -112,7 +137,7 @@ window.addEventListener('load', async () => {
             //  初始化 btn#updateTitle
             $btn_updateTitle.prop('disabled', true)
             //  初始化 input[name=show]
-            $show.prop('checked', pageData.blog.show)
+            publicOrHidden.prop('checked', pageData.blog.show)
         }
         //  初始化 頁面各功能
         function init_pageFuc() {
@@ -153,13 +178,13 @@ window.addEventListener('load', async () => {
             //  生成 valicator
             let valicator = init_valicator(schema)
             //  $title handleInput => 驗證標題合法性
-            $title.on('input', handle_input)
+            $inp_changeTitle.on('input', handle_input)
             //  $title handleBlur => 若標題非法，恢復原標題
-            $title.on('blur', handle_blur)
+            $inp_changeTitle.on('blur', handle_blur)
             //  $btn_updateTitlebtn handleClick => 送出新標題
             $btn_updateTitle.on('click', handle_updateTitle)
             //  $show handleChange => 改變文章的公開狀態
-            $show.on('change', handle_changeShow)
+            $publicOrHidden.on('change', handle_changeShow)
             //  $save handleClick => 更新文章
             $('#save').on('click', handle_saveBlog)
             //  btn#remove 綁定 click handle => 刪除 blog
@@ -219,7 +244,7 @@ window.addEventListener('load', async () => {
                 //  若此次有更新title
                 if (payloadObj.title) {
                     //  同步頁面數據
-                    $title.val(payloadObj.title)
+                    $inp_changeTitle.val(payloadObj.title)
                     //  關閉title更新鈕
                     $btn_updateTitle.prop('disabled', true)
                 }
