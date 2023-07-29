@@ -37,7 +37,7 @@ router.get('/blog/edit/:id', CHECK.login, CHECK.mustBeOwner, privateCache, async
             console.log(`@ 從 DB 取得 ${cacheKey}`)
             //  將 DB 數據賦予給 ctx.cache
             cacheStatus.data = resModel.data
-            cacheStatus.data.html = !cacheStatus.data.html && '' || encodeURI(cacheStatus.data.html)
+            cacheStatus.data.html = cacheStatus.data.html && encodeURI(cacheStatus.data.html)
         }
     } else {
         console.log(`@ ${cacheKey} -> 使用系統緩存`)

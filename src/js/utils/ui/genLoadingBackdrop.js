@@ -12,15 +12,16 @@ export default class {
             e.preventDefault()
             this.$backdrop.blur()
         })
-        editors = []
     }
+    editors = []
     hidden() {
         this.$blockList
             .removeClass(blockClassName)
             .off(`.${backdropClassName}`)
         this.$backdrop.removeAttr('style').hide()
+        console.log('@this.editors => ', this.editors)
         if (this.editors.length) {
-            for (editor of this.editor) {
+            for (editor of this.editors) {
                 editor.enable()
             }
         }
@@ -35,7 +36,7 @@ export default class {
             this.$backdrop.css('visibility', 'hidden')
         }
         if (editors.length) {
-            this.ediotrs = this.editors.concat(editors)
+            this.insertEditors(editors)
         }
         for (editor of this.editors) {
             ediotr.disable()
@@ -44,6 +45,9 @@ export default class {
         this.$blockList
             .addClass(blockClassName)
             .on(`focus.${backdropClassName}`, (e) => this.focusBackdrop(e))
+    }
+    insertEditors(editors){
+        this.editors = this.editors.concat(editors)
     }
     focusBackdrop(e) {
         e.preventDefault()

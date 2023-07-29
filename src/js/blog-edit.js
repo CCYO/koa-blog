@@ -106,6 +106,7 @@ window.addEventListener('load', async () => {
             pageData.payload = payload
             //  editor
             let editor = init_editor()
+            backDrop.insertEditors([editor])
             window.editor = editor
             initImgData()
             async function initImgData() {
@@ -155,14 +156,12 @@ window.addEventListener('load', async () => {
                 if (!confirm('真的要刪掉?')) {
                     return
                 }
-                loading([editor])
                 const { errno } = await _axios.delete(api_blog, {
                     data: {
                         blogList: [pageData.blog.id],
                         owner_id: pageData.blog.author.id
                     }
-                }, { editors: [editor]})
-                loadEnd([editor])
+                })
                 if (!errno) {
                     my_alert('已成功刪除此篇文章')
                     location.href = '/self'
@@ -196,9 +195,7 @@ window.addEventListener('load', async () => {
                 //  payloadObj 放入 blog_id
                 payloadObj.blog_id = pageData.blog.id
                 payloadObj.owner_id = pageData.blog.author.id
-                loading([editor])
                 const { errno } = await axios.patch(api_blog, payloadObj)
-                loadEnd([editor])
                 if (errno) {
                     my_alert('blog save error!')
                     return
@@ -282,14 +279,12 @@ window.addEventListener('load', async () => {
                     id: pageData.blog.id,
                     title: payload.get('title')
                 }
-                loading([editor])
                 let { data: blog } = await _axios.patch(api_blog, payloadData)
                 //  使 $btn_updateTitle 無法作用
                 e.target.disabled = true
                 //  同步數據
                 pageData.blog.title = blog.title
                 payload.delete('title')
-                loadEnd([editor])
                 my_alert('標題更新完成')
             }
             //  關於 title 輸入新值後，又沒立即更新的相關操作
@@ -449,6 +444,7 @@ window.addEventListener('load', async () => {
                 } = window.wangEditor
                 //  editor 相關配置
                 const editorConfig = {
+                    readOnly: true,
                     placeholder: '請開始撰寫文章內容...',
                     //  每次editor焦點/內容變動時調用
                     onChange: handle_change(),
@@ -514,7 +510,6 @@ window.addEventListener('load', async () => {
                         hash
                     } = await _getHash(img)
                     let res
-                    loading([editor])
                     if (!exist) { // img為新圖，傳給後端建檔
                         console.log('進行新圖處理')
                         //  imgName要作為query參數傳送，必須先作百分比編碼
@@ -532,7 +527,6 @@ window.addEventListener('load', async () => {
                             blogImg_id
                         })
                     }
-                    loadEnd([editor])
                     let { data: newImg } = res
                     console.log('完成 => ', newImg)
                     //  上傳成功
