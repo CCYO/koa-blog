@@ -1,0 +1,7 @@
+@import './common/basic.css';
+
+#editor-container {
+    border: 1px solid rgba(200, 200, 200, .8);
+    height: 400px;
+    min-height: 300px;
+}

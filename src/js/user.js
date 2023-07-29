@@ -5,6 +5,7 @@ import '../css/user.css'
 
 import BetterScroll from 'better-scroll'
 import _ from 'lodash'
+import xss from 'xss'
 
 import UI from './utils/ui'
 import genDebounce from './utils/genDebounce'
@@ -23,7 +24,7 @@ window.addEventListener('load', async () => {
     const { genLoadingBackdrop } = UI
     const backDrop = new genLoadingBackdrop()
     try {
-        backDrop.show(true)
+        backDrop.show({blockPage: true})
         //  讀取中，遮蔽畫面
         let initPage = new initPageFn()
         await initPage.addOtherInitFn(initEJSData)
@@ -33,6 +34,7 @@ window.addEventListener('load', async () => {
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
         backDrop.hidden()
+        $('main, nav, main, footer').removeAttr('style')
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error
@@ -40,6 +42,7 @@ window.addEventListener('load', async () => {
     }
 
     async function renderPage(data) {
+        /* 常數 */
         let CONST = {
             URL: {
                 LOGIN: '/login'
@@ -95,6 +98,7 @@ window.addEventListener('load', async () => {
         }
         const { DATASET } = CONST
         const { NAME } = DATASET
+
         /* 公用 JQ Ele */
         let $btn_follow = $(DATASET.ACTION(CONST.FOLLOW.ACTION))
         //  追蹤鈕
@@ -107,6 +111,7 @@ window.addEventListener('load', async () => {
         //  粉絲列表contaner
         let $idols = $(DATASET.SELECTOR(NAME.IDOLS))
         //  偶像列表contaner
+
         /* 公用 var */
         let $$pageData = {
             me: data.me,
@@ -157,9 +162,7 @@ window.addEventListener('load', async () => {
                     show: false
                 })
             }
-
         }
-        console.log('@@=>', $$template.str.blogItem)
         //  初始化BetterScroll
         //  public Var ----------------------------------------------------------------------
         let pageData = window.pageData = data
@@ -195,7 +198,6 @@ window.addEventListener('load', async () => {
         $(DATASET.ACTION(CONST.PAGE_NUM.ACTION)).on('click', renderBlogList)
         //  文章列表 的 上下頁，綁定翻頁功能
         $(DATASET.ACTION(CONST.TURN_PAGE.ACTION)).on('click', renderBlogList)
-        $('main, nav, main, footer').removeAttr('style')
 
         //  handle -------
         //  handle => 創建 blog
@@ -220,7 +222,7 @@ window.addEventListener('load', async () => {
                 if (!val.length) {
                     return false
                 }
-                return filterXSS(value)
+                return xss(value)
             }
         }
         //  刪除當前頁碼的所有文章

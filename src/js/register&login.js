@@ -41,7 +41,7 @@ window.addEventListener('load', async () => {
     const backdrop = new genLoadingBackdrop()
     //  初始化來自ejs在頁面上的字符數據
     try {
-        backdrop.show(true)
+        backDrop.show({blockPage: true})
         //  讀取中，遮蔽畫面
         let initPage = new initPageFn()
         //  幫助頁面初始化的統整函數
@@ -50,7 +50,7 @@ window.addEventListener('load', async () => {
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
         backdrop.hidden()
-        
+        $('main, nav, main, footer').removeAttr('style')
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error
@@ -61,7 +61,6 @@ window.addEventListener('load', async () => {
         deb_eventHandle(`${CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)} ${CONST.SELECTOR.EMAIL}`, 'input', handle_isEmailExist)
         document.querySelector(CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)).addEventListener('submit', handle_form(CONST.REGISTER.ACTION))
         document.querySelector(CONST.SELECTOR.FORM(CONST.LOGIN.ACTION)).addEventListener('submit', handle_form(CONST.LOGIN.ACTION))
-        $('main, nav, main, footer').removeAttr('style')
         
         async function handle_isEmailExist(e) {
             let formType = CONST.REGISTER.ACTION

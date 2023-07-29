@@ -9,8 +9,11 @@ const backdrop = new genLoadingBackdrop()
 /* 配置 axios 的 請求攔截器，統一處理報錯 */
 axios.interceptors.request.use(
     (config) => {
-        let { blockPage = false } = config
-        backdrop.show(blockPage)
+        const backdropConfig = {
+            blockPage: config.blockPage ? config.blockPage : false,
+            editors: config.editors ? config.editors : []
+        }
+        backdrop.show(backdropConfig)
         return config
     },
     error => { throw error }

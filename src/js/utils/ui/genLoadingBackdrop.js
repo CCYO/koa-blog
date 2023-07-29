@@ -12,17 +12,33 @@ export default class {
             e.preventDefault()
             this.$backdrop.blur()
         })
+        editors = []
     }
     hidden() {
         this.$blockList
             .removeClass(blockClassName)
             .off(`.${backdropClassName}`)
         this.$backdrop.removeAttr('style').hide()
+        if (this.editors.length) {
+            for (editor of this.editor) {
+                editor.enable()
+            }
+        }
         console.log('backdrop hidden')
     }
-    show(blockPage = false) {
-        if(!blockPage){
+    show(config = { blockPage: false, ediotrs: [] }) {
+        const {
+            blockPage = false,
+            editors = []
+        } = config
+        if (!blockPage) {
             this.$backdrop.css('visibility', 'hidden')
+        }
+        if (editors.length) {
+            this.ediotrs = this.editors.concat(editors)
+        }
+        for (editor of this.editors) {
+            ediotr.disable()
         }
         this.$backdrop.show()
         this.$blockList

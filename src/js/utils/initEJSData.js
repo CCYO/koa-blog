@@ -36,10 +36,10 @@ export default async function (selector = `[data-${EJS_DATA.DATA_SET}]`) {
             // JSON String → JSON Obj
             if (key === EJS_DATA.KEYS.BLOG) {
                 /* blog 相關數據 */
-                kv = { key: await initBlog(val) }
+                kv = { [key]: await initBlog(val) }
             } else if (key === EJS_DATA.KEYS.ALBUM) {
                 /* album 相關數據 */
-                kv = { key: await initAlbum(val) }
+                kv = { [key]: await initAlbum(val) }
             } else {
                 /* 其餘數據 */
                 kv = { [key]: val }

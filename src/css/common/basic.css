@@ -15,13 +15,13 @@ body {
     background: rgb(216, 62, 15);
 }
 
-.main, .footer {
+main, footer {
     background: rgb(219, 159, 159);
     padding: 1rem;
 }
-.main {
+main {
     margin-top: 4rem;
 }
-.footer {
+footer {
     margin-top: 1rem;
 }
