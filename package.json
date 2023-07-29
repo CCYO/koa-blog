@@ -20,7 +20,7 @@
     "@google-cloud/storage": "^5.18.2",
     "@koa/multer": "^3.0.0",
     "@ladjs/koa-views": "^9.0.0",
-    "@wangeditor/editor": "^5.1.18",
+    "@wangeditor/editor": "^5.1.23",
     "ajv": "^8.10.0",
     "ajv-errors": "^3.0.0",
     "ajv-formats": "^2.1.1",

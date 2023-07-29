@@ -38,6 +38,7 @@ router.get('/blog/edit/:id', CHECK.login, CHECK.mustBeOwner, privateCache, async
             //  將 DB 數據賦予給 ctx.cache
             cacheStatus.data = resModel.data
             cacheStatus.data.html = cacheStatus.data.html && encodeURI(cacheStatus.data.html)
+            //  若html有值，則進行解碼
         }
     } else {
         console.log(`@ ${cacheKey} -> 使用系統緩存`)

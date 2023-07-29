@@ -1,12 +1,13 @@
-//  <!-- 引入 Spark-MD5 -->
-//  <!-- 引入 Ajv -->
-//  <!-- 引入 editor css -->
-//  <!-- 引入 editor js -->
 if (process.env.NODE_ENV === 'development') {
     require('../views/blog-edit.ejs')
 }
 import '../css/blog-edit.css'
-
+//  <!-- 引入 editor css -->
+import '@wangeditor/editor/dist/css/style.css';
+//  <!-- 引入 Spark-MD5 -->
+//  <!-- 引入 Ajv -->
+//  <!-- 引入 editor js -->
+import { createToolbar, createEditor} from '@wangeditor/editor'
 import _ from 'lodash'
 import xss from 'xss'
 
@@ -43,11 +44,23 @@ window.addEventListener('load', async () => {
 
 
     async function renderPage(data) {
-        //  公用變量
         let pageData = data
         // ----------------------------------------------------------------------------------------
         window.pageData = pageData
         // ----------------------------------------------------------------------------------------
+        /* 常數 */
+        const CONST = {
+            UPDATE_TITLE: {
+                API: ''
+            },
+            REMOVE_BLOG: {
+                API: ''
+            }
+        }
+        /* 公用 JQ Ele */
+        /* 公用 var */
+        //  公用變量
+        
         //  API
         let api_blog = '/api/blog'
         let api_initImg = api_blog + '/initImgs'
@@ -55,8 +68,9 @@ window.addEventListener('load', async () => {
         let $title = $('#title')
         let $btn_updateTitle = $('#updateTitle')
         let $show = $('[name=show]')
-        // let $backdrop = $('#backdrop')
         let $wordCount = $('#wordCount')
+
+        let $$editor
         //  schema
         let htmlStr_minLength = 1
         let htmlStr_maxLength = 65536
@@ -88,6 +102,7 @@ window.addEventListener('load', async () => {
             init_pageUI()
             init_pageFuc()
             $('main, nav, main, footer').removeAttr('style')
+            $$editor.focus()
         } catch (e) {
             console.log(`init blog-editor.ejs Err =>`, e)
         }
@@ -105,9 +120,9 @@ window.addEventListener('load', async () => {
             let payload = init_payload()
             pageData.payload = payload
             //  editor
-            let editor = init_editor()
-            backDrop.insertEditors([editor])
-            window.editor = editor
+            $$editor = init_editor()
+            backDrop.insertEditors([$$editor])
+            window.editor = $$editor
             initImgData()
             async function initImgData() {
                 //  取出存在pageData.imgs的圖數據，但editor沒有的
@@ -438,11 +453,6 @@ window.addEventListener('load', async () => {
                 })
                 wangEditor.i18nChangeLanguage('tw')
                 //  editor config
-                const {
-                    createEditor,
-                    createToolbar
-                } = window.wangEditor
-                //  editor 相關配置
                 const editorConfig = {
                     readOnly: true,
                     placeholder: '請開始撰寫文章內容...',

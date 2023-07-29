@@ -43,7 +43,7 @@ window.addEventListener('load', async () => {
 
     async function renderPage(data) {
         /* 常數 */
-        let CONST = {
+        const CONST = {
             URL: {
                 LOGIN: '/login'
             },
@@ -106,7 +106,6 @@ window.addEventListener('load', async () => {
         //  取消追蹤鈕
         let $btn_removeBlogs = $(DATASET.ACTION(CONST.REMOVE_BLOGS.ACTION))
         let $btn_removeBlog = $(DATASET.ACTION(CONST.REMOVE_BLOG.ACTION))
-
         let $fansList = $(DATASET.SELECTOR(NAME.FANS_LIST))
         //  粉絲列表contaner
         let $idols = $(DATASET.SELECTOR(NAME.IDOLS))
