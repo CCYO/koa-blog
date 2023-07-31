@@ -5,11 +5,12 @@ import '../css/user.css'
 
 import BetterScroll from 'better-scroll'
 import _ from 'lodash'
-import xss from 'xss'
+
 
 import UI from './utils/ui'
 import genDebounce from './utils/genDebounce'
 import _axios from './utils/_axios'
+import _xss from './utils/_xss'
 
 import initPageFn from './utils/initData.js'
 //  統整頁面數據、渲染頁面的函數
@@ -221,7 +222,7 @@ window.addEventListener('load', async () => {
                 if (!val.length) {
                     return false
                 }
-                return xss(value)
+                return _xss(value)
             }
         }
         //  刪除當前頁碼的所有文章

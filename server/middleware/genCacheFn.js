@@ -57,7 +57,6 @@ const private = (type) => async function (ctx, next) {
         [KEY]: cache
     }
     await next()
-    console.log(123)
     let { exist, data } = ctx.cache[KEY]
     //  系統沒有應對的緩存資料
     if (exist === STATUS.NO_CACHE) {

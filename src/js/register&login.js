@@ -41,7 +41,7 @@ window.addEventListener('load', async () => {
     const backdrop = new genLoadingBackdrop()
     //  初始化來自ejs在頁面上的字符數據
     try {
-        backDrop.show({blockPage: true})
+        backdrop.show({blockPage: true})
         //  讀取中，遮蔽畫面
         let initPage = new initPageFn()
         //  幫助頁面初始化的統整函數
@@ -72,10 +72,10 @@ window.addEventListener('load', async () => {
             let validateRes = await validate(datas)
             if (validateRes) {
                 let msg = validateRes[action]
-                feedback(email_inp, false, msg)
+                feedback(2, email_inp, false, msg)
                 return
             }
-            feedback(email_inp, true, '')
+            feedback(2, email_inp, true, '')
             email_inp.focus()
         }
         function handle_form(action) {
@@ -161,15 +161,15 @@ window.addEventListener('load', async () => {
                         alert(msg)
                         $(form)[0].reset()
                         datas = {}
-                        feedback(false)
+                        feedback(4)
                     }
                     return
                 }
                 for (let inp of validInps) {
-                    feedback(inp, true, '')
+                    feedback(2, inp, true, '')
                 }
                 for (let { inp, msg } of invalidInps) {
-                    feedback(inp, false, msg)
+                    feedback(2, inp, false, msg)
                     inp._resetHandle && inp._resetHandle(_) || deb_eventHandle(inp, 'input', _)
                 }
                 return
@@ -181,7 +181,7 @@ window.addEventListener('load', async () => {
             const deb_handleName = `deb_${eventType}Handle`
             const deb_handle = ele[deb_handleName] = genDebounce(handle, {
                 loading: (e) => {
-                    feedback(e.target)
+                    feedback(1, e.target)
                 }
             })
             ele.addEventListener(eventType, deb_handle)

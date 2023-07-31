@@ -4,16 +4,19 @@ if (process.env.NODE_ENV === 'development') {
 import '../css/blog-edit.css'
 //  <!-- 引入 editor css -->
 import '@wangeditor/editor/dist/css/style.css';
+//  validate
+import validates from './utils/validate'
 //  <!-- 引入 Spark-MD5 -->
 //  <!-- 引入 Ajv -->
 //  <!-- 引入 editor js -->
-import { createToolbar, createEditor} from '@wangeditor/editor'
+import { i18nAddResources, i18nChangeLanguage, createToolbar, createEditor } from '@wangeditor/editor'
 import _ from 'lodash'
-import xss from 'xss'
+
 
 import UI from './utils/ui'
 import genDebounce from './utils/genDebounce'
 import _axios from './utils/_axios'
+import _xss from './utils/_xss'
 
 import initPageFn from './utils/initData.js'
 //  統整頁面數據、渲染頁面的函數
@@ -23,10 +26,10 @@ import initEJSData from './utils/initEJSData.js'
 //  初始化來自ejs在頁面上的字符數據
 
 window.addEventListener('load', async () => {
-    const { genLoadingBackdrop } = UI
+    const { genLoadingBackdrop, feedback } = UI
     const backDrop = new genLoadingBackdrop()
     try {
-        backDrop.show({blockPage: true})
+        backDrop.show({ blockPage: true })
         //  讀取中，遮蔽畫面
         let initPage = new initPageFn()
         await initPage.addOtherInitFn(initEJSData)
@@ -44,10 +47,28 @@ window.addEventListener('load', async () => {
 
 
     async function renderPage(data) {
-        let pageData = data
-        // ----------------------------------------------------------------------------------------
-        window.pageData = pageData
-        // ----------------------------------------------------------------------------------------
+        class genPayload {
+            constructor() {
+                this.payload.setKVpairs = this.setKVpairs
+                this.payload.reset = this.reset
+                return this.payload
+                //  實例即為 this.payload，同時也是一個 map，且在map身上掛上了setKVpairs與reset方法
+            }
+            payload = new Map()
+            setKVpairs(dataObj) {
+                //  將kv資料存入
+                if (dataObj) {
+                    for (let prop in dataObj) {
+                        this.set(prop, dataObj[prop])
+                    }
+                }
+            }
+            reset() {
+                let curHtml = this.get('curHtml')
+                this.clear()
+                this.set('curHtml', curHtml)
+            }
+        }
         /* 常數 */
         const CONST = {
             PUBLIC_OR_HIDDEN: {
@@ -60,9 +81,13 @@ window.addEventListener('load', async () => {
                 ACTION: 'updateTitle',
                 API: '/api/blog'
             },
+            UPDATE_BLOG: {
+                ACTION: 'updateBlog',
+                API: '/api/blog'
+            },
             REMOVE_BLOG: {
                 ACTION: 'removeBlog',
-                API: '/api/blog/initImgs'
+                API: '/api/blog' //'/api/blog/initImgs'
             },
             DATASET: {
                 PREFIX: {
@@ -72,7 +97,7 @@ window.addEventListener('load', async () => {
                 ACTION(action) { return `[data-${this.PREFIX.ACTION}=${action}]` },
                 SELECTOR(name) { return `[data-${this.PREFIX.SELECTOR}=${name}]` },
                 NAME: {
-                    
+                    WORD_COUNT: 'wordCount'
                 },
                 KEY: {
                     REMOVE_BLOG_ID: 'blog_id',
@@ -85,17 +110,24 @@ window.addEventListener('load', async () => {
         /* 公用 JQ Ele */
         /* 公用 var */
         //  公用變量
-        
+
         //  API
-        let api_blog = '/api/blog'
         let api_initImg = '/api/blog/initImgs'
         //  JQ Ele
         let $inp_changeTitle = $(DATASET.ACTION(CONST.CHANGE_TITLE.ACTION))
         let $btn_updateTitle = $(DATASET.ACTION(CONST.UPDATE_TITLE.ACTION))
         let $publicOrHidden = $(DATASET.ACTION(CONST.PUBLIC_OR_HIDDEN.ACTION))
-        let $wordCount = $('#wordCount')
+        let $btn_removeBlog = $(DATASET.ACTION(CONST.REMOVE_BLOG.ACTION))
+        let $wordCount = $(DATASET.SELECTOR(DATASET.NAME.WORD_COUNT))
+        let $btn_updateBlog = $(DATASET.ACTION(CONST.UPDATE_BLOG.ACTION))
 
         let $$editor
+        let $$pageData = data
+        // ----------------------------------------------------------------------------------------
+        window.pageData = $$pageData
+        // ----------------------------------------------------------------------------------------
+        let $$payload = new genPayload()
+        $$pageData.payload = $$payload
         //  schema
         let htmlStr_minLength = 1
         let htmlStr_maxLength = 65536
@@ -132,74 +164,68 @@ window.addEventListener('load', async () => {
             console.log(`init blog-editor.ejs Err =>`, e)
         }
 
-        //  初始化 頁面UI
-        function init_pageUI() {
-            //  初始化 btn#updateTitle
-            $btn_updateTitle.prop('disabled', true)
-            //  初始化 input[name=show]
-            publicOrHidden.prop('checked', pageData.blog.show)
-        }
+
         //  初始化 頁面各功能
         function init_pageFuc() {
-            //  updateBlog 酬載容器
-            let payload = init_payload()
-            pageData.payload = payload
             //  editor
             $$editor = init_editor()
             backDrop.insertEditors([$$editor])
             window.editor = $$editor
             initImgData()
-            async function initImgData() {
-                //  取出存在pageData.imgs的圖數據，但editor沒有的
-                //  通常是因為先前editor有做updateImg，但沒有存文章，導致後端有數據，但editor的html沒有
-
-                //  整理要與該blog切斷關聯的圖片，格式為[{blogImg_id, blogImgAlt_list}, ...]
-                let cancelImgs = getBlogImgIdList_needToRemoveAssociate()
-
-                if (!cancelImgs.length) { //  若cancel無值
-                    console.log('@initPage階段，沒有需要移除的 img')
-                    return
-                }
-                console.log('@initPage階段，需要移除的 img 為 => alt_id:', cancelImgs)
-                await _axios.patch(api_blog, {
-                    cancelImgs,
-                    blog_id: pageData.blog.id,
-                    owner_id: pageData.blog.author.id
-                })
-                //  整理img數據
-                cancelImgs.forEach(({
-                    blogImgAlt_list
-                }) => {
-                    blogImgAlt_list.forEach(alt_id => {
-                        pageData.blog.map_imgs.delete(alt_id)
-                    })
-                })
-            }
             //  生成 valicator
-            let valicator = init_valicator(schema)
+            // let valicator = init_valicator(schema)
+            const validate = (data) => validates.blog({ ...data, $$blog: $$pageData.blog })
             //  $title handleInput => 驗證標題合法性
             $inp_changeTitle.on('input', handle_input)
             //  $title handleBlur => 若標題非法，恢復原標題
             $inp_changeTitle.on('blur', handle_blur)
+
+            //  關於 title 輸入新值後，又沒立即更新的相關操作
+            async function handle_blur(e) {
+                let target = e.target
+                let title = _xss(target.value.trim())
+                //  如果標題不變，或是沒有值                
+                if(await validate({ title })){
+                    target.value = $$pageData.blog.title
+                //  恢復原標題
+                feedback(3, target)
+                //  移除非法提醒
+                return false
+                }
+                return true
+                if (!errors) { //  代表合法
+                    //  存入 payload
+                    $$payload.setKVpairs({
+                        title
+                    })
+                    //  移除非法提醒
+                    feedback(2, target, true, '')
+                    $btn_updateTitle.prop('disabled', false)
+                    //  $btn_updateTitle 可作用
+                    return true
+                }
+            }
+            /*
             //  $btn_updateTitlebtn handleClick => 送出新標題
             $btn_updateTitle.on('click', handle_updateTitle)
             //  $show handleChange => 改變文章的公開狀態
             $publicOrHidden.on('change', handle_changeShow)
             //  $save handleClick => 更新文章
-            $('#save').on('click', handle_saveBlog)
+            $btn_updateBlog.on('click', handle_updateBlog)
             //  btn#remove 綁定 click handle => 刪除 blog
-            $('#remove').on('click', handle_removeBlog)
-
+            $btn_removeBlog.on('click', handle_removeBlog)
+            */
             //  handle
+
             //  關於 刪除文章的相關操作
             async function handle_removeBlog(e) {
                 if (!confirm('真的要刪掉?')) {
                     return
                 }
-                const { errno } = await _axios.delete(api_blog, {
+                const { errno } = await _axios.delete(CONST.UPDATE_BLOG.API, {
                     data: {
-                        blogList: [pageData.blog.id],
-                        owner_id: pageData.blog.author.id
+                        blogList: [$$pageData.blog.id],
+                        owner_id: $$pageData.blog.author.id
                     }
                 })
                 if (!errno) {
@@ -207,10 +233,24 @@ window.addEventListener('load', async () => {
                     location.href = '/self'
                 }
             }
+            //  關於 更新title 的相關操作
+            async function handle_updateTitle(e) {
+                let payloadData = {
+                    id: $$pageData.blog.id,
+                    title: $$payload.get('title')
+                }
+                let { data: blog } = await _axios.patch(CONST.UPDATE_BLOG.API, payloadData)
+                //  使 $btn_updateTitle 無法作用
+                e.target.disabled = true
+                //  同步數據
+                $$pageData.blog.title = blog.title
+                $$payload.delete('title')
+                my_alert('標題更新完成')
+            }
             //  關於 更新文章的相關操作
-            async function handle_saveBlog(e) {
+            async function handle_updateBlog(e) {
                 //  若當前html沒有內容，則不合法
-                if (!payload.get('curHtml')) {
+                if (!$$payload.get('curHtml')) {
                     alert('沒有內容是要存什麼啦')
                     return
                 }
@@ -233,9 +273,9 @@ window.addEventListener('load', async () => {
                     payloadObj.html = parseImgToXImg(payload.get('html'))
                 }
                 //  payloadObj 放入 blog_id
-                payloadObj.blog_id = pageData.blog.id
-                payloadObj.owner_id = pageData.blog.author.id
-                const { errno } = await axios.patch(api_blog, payloadObj)
+                payloadObj.blog_id = $$pageData.blog.id
+                payloadObj.owner_id = $$pageData.blog.author.id
+                const { errno } = await axios.patch(CONST.UPDATE_BLOG.API, payloadObj)
                 if (errno) {
                     my_alert('blog save error!')
                     return
@@ -250,15 +290,15 @@ window.addEventListener('load', async () => {
                 }
 
                 //  重置 payload
-                payload.reset()
+                $$payload.reset()
                 //  同步 window.blog
-                pageData.blog = {
-                    ...pageData.blog,
+                $$pageData.blog = {
+                    ...$$pageData.blog,
                     ..._payloadObj
                 }
-                
+
                 if (confirm('儲存成功！是否預覽？（新開視窗）')) {
-                    window.open(`/blog/${pageData.blog.id}?preview=true`)
+                    window.open(`/blog/${$$pageData.blog.id}?preview=true`)
                 }
                 return
 
@@ -281,7 +321,7 @@ window.addEventListener('load', async () => {
                 //  檢查並返回當前所有表格數據
                 function checkAndGetPayload() {
                     //  複製 payload 內除了 curHtml 以外的所有數據
-                    let payloadObj = [...payload.entries()].reduce((initVal, [k, v]) => {
+                    let payloadObj = [...$$payload.entries()].reduce((initVal, [k, v]) => {
                         if (k !== 'curHtml') {
                             initVal[k] = v
                         }
@@ -307,61 +347,14 @@ window.addEventListener('load', async () => {
                 })
                 if (!errors.length) { //  代表合法
                     //  存入 payload
-                    payload.setKVpairs({
+                    $$payload.setKVpairs({
                         show
                     })
                 }
                 return
             }
-            //  關於 更新title 的相關操作
-            async function handle_updateTitle(e) {
-                let payloadData = {
-                    id: pageData.blog.id,
-                    title: payload.get('title')
-                }
-                let { data: blog } = await _axios.patch(api_blog, payloadData)
-                //  使 $btn_updateTitle 無法作用
-                e.target.disabled = true
-                //  同步數據
-                pageData.blog.title = blog.title
-                payload.delete('title')
-                my_alert('標題更新完成')
-            }
-            //  關於 title 輸入新值後，又沒立即更新的相關操作
-            function handle_blur(e) {
-                let $el = $(e.target)
-                let value = $el.val().trim()
-                //  如果標題不變，或是沒有值
-                if (value === pageData.blog.title || !value) {
-                    //  移除非法提醒
-                    $el.removeClass('is-invalid')
-                    //  恢復原標題
-                    $el.val(pageData.blog.title)
-                }
-                return
-            }
-            //  關於 title 輸入新值時的相關操作
-            function handle_input(e) {
-                let title = my_xss(e.target.value.trim())
-                let [error] = valicator({
-                    title
-                })
-                if (!error) { //  代表合法
-                    //  存入 payload
-                    payload.setKVpairs({
-                        title
-                    })
-                    //  移除非法提醒
-                    $(e.target).removeClass('is-invalid')
-                    //  $btn_updateTitle 可作用
-                    $btn_updateTitle.prop('disabled', false)
-                    return
-                }
-                //  $btn_updateTitle 不可作用
-                $btn_updateTitle.prop('disabled', true)
-                //  顯示非法提醒
-                $(e.target).addClass('is-invalid').next().addClass('invalid-feedback').text(error.message)
-            }
+
+
 
             //  init函數
             //  初始化 valicator
@@ -376,7 +369,7 @@ window.addEventListener('load', async () => {
                     type: ['string', 'number', 'boolean'],
                     schemaType: 'string',
                     validate: function _(inputName, newData) {
-                        let curData = pageData.blog[inputName]
+                        let curData = $$pageData.blog[inputName]
                         if (newData !== curData) {
                             return true
                         }
@@ -403,7 +396,7 @@ window.addEventListener('load', async () => {
                                 keyword
                             } = inputNameAndMessage(error)
                             //  移除payload非法的數據
-                            payload.delete(inputName)
+                            $$payload.delete(inputName)
                             return {
                                 inputName,
                                 message,
@@ -465,7 +458,7 @@ window.addEventListener('load', async () => {
                 let api_img = '/api/blog/img'
                 let api_createBlogImgAlt = '/api/blog/blogImgAlt'
                 //  editor 的 繁中設定
-                wangEditor.i18nAddResources('tw', {
+                i18nAddResources('tw', {
                     // 标题
                     header: {
                         title: '標題',
@@ -476,7 +469,7 @@ window.addEventListener('load', async () => {
                     },
                     // ... 其他语言词汇，下文说明 ...
                 })
-                wangEditor.i18nChangeLanguage('tw')
+                i18nChangeLanguage('tw')
                 //  editor config
                 const editorConfig = {
                     readOnly: true,
@@ -499,7 +492,7 @@ window.addEventListener('load', async () => {
                 //  editor 編輯欄 創建
                 const editor = createEditor({
                     //  插入後端取得的 html
-                    html: pageData.blog.html || '',
+                    html: $$pageData.blog.html || '',
                     selector: '#editor-container',
                     config: editorConfig,
                     mode: 'simple'
@@ -517,11 +510,11 @@ window.addEventListener('load', async () => {
                     let reg = /alt_id=(?<alt_id>\w+)/
                     let res = reg.exec(src)
                     let alt_id = res.groups.alt_id * 1
-                    let blog_id = pageData.blog.id
-                    alt = my_xss(alt)
+                    let blog_id = $$pageData.blog.id
+                    alt = _xss(alt)
                     await _axios.patch('/api/album', { blog_id, alt_id, alt })
                     //  尋找相同 alt_id
-                    let imgData = pageData.blog.map_imgs.get(alt_id)
+                    let imgData = $$pageData.blog.map_imgs.get(alt_id)
                     imgData.alt = alt
                     return true
                 }
@@ -549,7 +542,7 @@ window.addEventListener('load', async () => {
                         console.log('進行新圖處理')
                         //  imgName要作為query參數傳送，必須先作百分比編碼
                         name = encodeURIComponent(name)
-                        let api = `${api_img}?hash=${hash}&name=${name}&ext=${ext}&blog_id=${pageData.blog.id}`
+                        let api = `${api_img}?hash=${hash}&name=${name}&ext=${ext}&blog_id=${$$pageData.blog.id}`
                         //  創建 formData，作為酬載數據的容器
                         let formdata = new FormData()
                         //  放入圖片數據
@@ -577,7 +570,7 @@ window.addEventListener('load', async () => {
                     */
                     newImg.name = decodeURIComponent(newImg.name)
                     //  同步數據
-                    pageData.blog.map_imgs.set(newImg.alt_id, newImg)
+                    $$pageData.blog.map_imgs.set(newImg.alt_id, newImg)
                     //  將圖片插入 editor
                     insertFn(`${newImg.url}?alt_id=${newImg.alt_id}`, newImg.name)
                     //  取得圖片的 hash
@@ -591,7 +584,7 @@ window.addEventListener('load', async () => {
                         }
                         let {
                             map_imgs
-                        } = pageData.blog
+                        } = $$pageData.blog
                         if (map_imgs.size) {
                             //  利用hash，確認此時要上傳的img是否為舊圖
                             let imgs = [...map_imgs.values()]
@@ -641,20 +634,20 @@ window.addEventListener('load', async () => {
                         let html = xssAndRemoveEmpty(editor.getHtml())
                         //  初始化 payload.curHtml
                         if (init) {
-                            payload.set('curHtml', html)
-                            $wordCount.text(`還能輸入${htmlStr_maxLength - payload.get('curHtml').length}個字`)
+                            $$payload.set('curHtml', html)
+                            $wordCount.text(`還能輸入${htmlStr_maxLength - $$payload.get('curHtml').length}個字`)
                             init = false
                             return
                         }
                         //  僅是 editor 獲得/失去焦點
-                        if (html === payload.get('curHtml')) {
+                        if (html === $$payload.get('curHtml')) {
                             return
                         }
                         //  驗證htmlStr
                         let errors = valicator({
                             html
                         })
-                        payload.setKVpairs({
+                        $$payload.setKVpairs({
                             curHtml: html
                         })
                         if (errors.length) { //  非法
@@ -673,14 +666,14 @@ window.addEventListener('load', async () => {
                         }
                         console.log('OK', htmlStr_maxLength, html.length)
                         $wordCount.text(`還能輸入${htmlStr_maxLength - html.length}個字`)
-                        payload.setKVpairs({
+                        $$payload.setKVpairs({
                             html
                         })
                     }
                     //  去除空格與進行xss
                     function xssAndRemoveEmpty(data) {
                         //  xss
-                        let curHtml = my_xss(data.trim())
+                        let curHtml = _xss(data.trim())
                         //  移除開頭、結尾的空格與空行
                         let reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g
                         let reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g
@@ -690,31 +683,12 @@ window.addEventListener('load', async () => {
                     }
                 }
             }
-            //  初始化 payload
-            function init_payload() {
-                let payload = new Map()
-                payload.setKVpairs = setKVpairs
-                payload.reset = reset
-                return payload
 
-                function setKVpairs(dataObj) {
-                    //  將kv資料存入
-                    if (dataObj) {
-                        let kv = [...Object.entries(dataObj)].forEach(([key, val]) => payload.set(key, val))
-                    }
-                }
-
-                function reset() {
-                    let curHtml = payload.get('curHtml')
-                    payload.clear()
-                    payload.set('curHtml', curHtml)
-                }
-            }
             /*  取出要移除的 blogImgAlt_id  */
             function getBlogImgIdList_needToRemoveAssociate() {
                 let reg = /alt_id=(?<alt_id>\w+)/
                 //  複製一份 blogImgAlt
-                let map_imgs_needRemove = new Map([...pageData.blog.map_imgs])
+                let map_imgs_needRemove = new Map([...$$pageData.blog.map_imgs])
                 //  找出[{src, alt, href}, ...]
                 editor.getElemsByType('image').forEach(({
                     src
@@ -751,36 +725,100 @@ window.addEventListener('load', async () => {
                 console.log('@要刪除的img,整理結果 => ', cancelImgs)
                 return cancelImgs
             }
+
+            async function initImgData() {
+                //  取出存在pageData.imgs的圖數據，但editor沒有的
+                //  通常是因為先前editor有做updateImg，但沒有存文章，導致後端有數據，但editor的html沒有
+
+                //  整理要與該blog切斷關聯的圖片，格式為[{blogImg_id, blogImgAlt_list}, ...]
+                let cancelImgs = getBlogImgIdList_needToRemoveAssociate()
+
+                if (!cancelImgs.length) { //  若cancel無值
+                    console.log('@initPage階段，沒有需要移除的 img')
+                    return
+                }
+                console.log('@initPage階段，需要移除的 img 為 => alt_id:', cancelImgs)
+                await _axios.patch(CONST.UPDATE_BLOG.API, {
+                    cancelImgs,
+                    blog_id: $$pageData.blog.id,
+                    owner_id: $$pageData.blog.author.id
+                })
+                //  整理img數據
+                cancelImgs.forEach(({
+                    blogImgAlt_list
+                }) => {
+                    blogImgAlt_list.forEach(alt_id => {
+                        $$pageData.blog.map_imgs.delete(alt_id)
+                    })
+                })
+            }
+
+            //  關於 title 輸入新值時的相關操作
+            async function handle_input(e) {
+                const target = e.target
+                let title = _xss(target.value.trim())
+                let errors = await validate({
+                    title
+                })
+                if (!errors) { //  代表合法
+                    //  存入 payload
+                    $$payload.setKVpairs({
+                        title
+                    })
+                    console.log('@set => ', ...$$payload)
+                    //  移除非法提醒
+                    feedback(2, target, true, '')
+                    $btn_updateTitle.prop('disabled', false)
+                    //  $btn_updateTitle 可作用
+                    return
+                }
+                $btn_updateTitle.prop('disabled', true)
+                //  $btn_updateTitle 不可作用
+                feedback(2, target, false, errors.title)
+                //  顯示非法提醒
+            }
+        }
+
+        /* UTILS ------------------- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //  初始化 頁面UI
+        function init_pageUI() {
+            //  初始化 btn#updateTitle
+            $btn_updateTitle.prop('disabled', true)
+            //  初始化 input[name=show]
+            $publicOrHidden.prop('checked', $$pageData.blog.show)
         }
 
         //  utils ------
-        //  表格內容xss
-        function my_xss(html) {
-            return xss(html, {
-                whiteList: {
-                    ...xss.whiteList,
-                    div: ['data-w-e-type'],
-                    input: ['type'],
-                    img: ['src', 'alt', 'style', 'data-href']
-                },
-                //  若ele的tag與attr符合白名單，會進入此過濾函數
-                onTagAttr(tag, attr, attrVal, isW) {
-                    let checkbbox = tag === 'input' && attr === 'type' && attrVal === 'checkbox'
-                    let todoDiv = tag === 'div' && attr === 'data-w-e-type' && attrVal === 'todo'
-                    let img = tag === 'img' && attr === 'src' || attr === 'alt' || attr === 'style' || attr === 'data-href'
-                    if (checkbbox || todoDiv || img) {
-                        //  返回的字符串會成為ele的attr與attrVal
-                        return `${attr}="${attrVal}"`
-                    }
-                },
-                //  若ele的tag不符合白名單，會進入此過濾函數
-                onIgnoreTag(tag, htmlStr) {
-                    if (tag === 'x-img') {
-                        return htmlStr
-                    }
-                }
-            })
-        }
         //  配合loadEnd發生的alert，作異步處理
         function my_alert(msg) {
             setTimeout(() => {

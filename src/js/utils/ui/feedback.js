@@ -1,26 +1,16 @@
 import '../../../css/common/feedback.css'
 
-export default function (targetEl, valid, msg) {
-    //  清空form
-    //  input 讀取中
-    //  input 有效
-    //  input 無效
-
-    if (targetEl.tagName === 'FORM') {
-        for (let inp of targetEl) {
-            $(inp)
-            .removeClass('is-invalid is-valid')
-            .next()
-                .removeClass('invalid-feedback valid-feedback loading')
-                .text('')
-        }
-    } else if (!valid && !msg) {
-        //  驗證中
+export default function (status, targetEl, valid, msg) {
+    
+    
+    if(status === 1){
+        //  input 讀取中
         $(targetEl)
             .next()
                 .addClass('loading')
                 .text('loading...')
-    } else {
+    } else if (status === 2){
+        //  input 有效 || 無效
         //  驗證結束
         $(targetEl)
             .removeClass(valid ? 'is-invalid' : 'is-valid')
@@ -28,5 +18,34 @@ export default function (targetEl, valid, msg) {
             .next()
                 .removeClass(( valid ? 'invalid-feedback' : 'valid-feedback') + ' loading')
                 .addClass(valid ? 'valid-feedback' : 'invalid-feedback').text(msg)
+    }
+    //  清空inp
+    if(status === 3){
+        $(targetEl)
+            .removeClass('is-invalid is-valid')
+            .next()
+                .removeClass('invalid-feedback valid-feedback loading')
+                .text('')
+    }else if(status === 4){
+        //  清空form
+        for (let inp of targetEl) {
+            $(inp)
+            .removeClass('is-invalid is-valid')
+            .next()
+                .removeClass('invalid-feedback valid-feedback loading')
+                .text('')
+        }
+    }
+return
+    if (targetEl.tagName === 'FORM') {
+        
+    } else if (!valid && !msg) {
+        //  驗證中
+        $(targetEl)
+            .next()
+                .addClass('loading')
+                .text('loading...')
+    } else {
+        
     }
 }

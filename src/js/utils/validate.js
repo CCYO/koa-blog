@@ -53,7 +53,8 @@ const CONST = {
         LOGIN: 'login',
         PASSWORD: 'password',
         AVATAR: 'avatar',
-        SETTING: 'setting'
+        SETTING: 'setting',
+        BLOG: 'blog'
     },
     API: {
         EMAIL: '/api/user/isEmailExist',
@@ -144,6 +145,32 @@ const SCHEMA = {
             avatar_hash: {
                 type: 'string',
                 errorMessage: 'avatar_hash必須是字符串'
+            },
+            title: {
+                type: 'string',
+                maxLength: 20,
+                minLength: 1,
+                errorMessage: {
+                    type: '必須是字符串',
+                    maxLength: '長度需小於20個字',
+                    minLength: '長度需大於1個字',
+                }
+            },
+            html: {
+                type: 'string',
+                maxLength: 65536,
+                minLength: 1,
+                errorMessage: {
+                    type: '必須是字符串',
+                    maxLength: '長度需小於65536個字',
+                    minLength: '長度需大於1個字',
+                }
+            },
+            show: {
+                type: 'boolean',
+                errorMessage: {
+                    type: '必須是boolean'
+                }
             }
         }
     },
@@ -308,6 +335,36 @@ const SCHEMA = {
         errorMessage: {
             type: '驗證數據必須是 object 格式',
         }
+    },
+    [CONST.VALIDATE.BLOG]: {
+        $id: `${CONST.URL}/blog.json`,
+        type: 'object',
+        minProperties: 2,
+        properties: {
+            $$blog: {
+                type: 'object',
+                errorMessage: {
+                    type: '$$blog需是object'
+                }
+            },
+            title: {
+                $ref: 'defs.json#/definitions/title',
+                diff: { $data: '1/$$blog/title' }
+            },
+            html: {
+                $ref: 'defs.json#/definitions/html',
+                diff: { $data: '1/$$blog/title' }
+            },
+            show: {
+                $ref: 'defs.json#/definitions/show',
+                diff: { $data: '1/$$blog/show' }
+            }
+        },
+        required: ['$$blog'],
+        errorMessage: {
+            required: '必需有值',
+            minProperties: '至少需改一筆資料',
+        }
     }
 }
 ajv.addSchema(SCHEMA[CONST.VALIDATE.DEFS])
@@ -323,11 +380,33 @@ function validateUserData(schemaName) {
                 throw e
             }
             return null
-        } catch ( err ) {
+        } catch (err) {
             let { errors } = err
-            if(errors){
+            if (errors) {
                 return handleErr(errors)
-            }else{
+            } else {
+                throw err
+            }
+        }
+    }
+}
+
+function validateBlogData(schemaName) {
+    let validate = ajv.compile(SCHEMA[schemaName])
+    return async (data) => {
+        try {
+            await validate(data)
+            if (validate.errors) {
+                let e = new Error()
+                e.errors = validate.errors
+                throw e
+            }
+            return null
+        } catch (err) {
+            let { errors } = err
+            if (errors) {
+                return handleErr(errors)
+            } else {
                 throw err
             }
         }
@@ -366,14 +445,14 @@ function handleErr(validateErrors) {
         return init
     }, {})
 }
-function noSpace(schema, data, parentSchema, dataCtx){
-    if(!schema){
+function noSpace(schema, data, parentSchema, dataCtx) {
+    if (!schema) {
         return true
     }
     let regux = /\s/g
-    if(regux.test(data)){
+    if (regux.test(data)) {
         let { instancePath } = dataCtx
-        noSpace.errors = [{instancePath, message: '不可包含空格' }]
+        noSpace.errors = [{ instancePath, message: '不可包含空格' }]
         return false
     }
     return true
@@ -426,5 +505,6 @@ export default {
     [CONST.VALIDATE.LOGIN]: validateUserData(CONST.VALIDATE.LOGIN),
     [CONST.VALIDATE.PASSWORD]: validateUserData(CONST.VALIDATE.PASSWORD),
     [CONST.VALIDATE.AVATAR]: validateUserData(CONST.VALIDATE.AVATAR),
-    [CONST.VALIDATE.SETTING]: validateUserData(CONST.VALIDATE.SETTING)
+    [CONST.VALIDATE.SETTING]: validateUserData(CONST.VALIDATE.SETTING),
+    [CONST.VALIDATE.BLOG]: validateBlogData(CONST.VALIDATE.BLOG)
 }
