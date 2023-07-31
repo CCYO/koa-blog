@@ -179,32 +179,6 @@ window.addEventListener('load', async () => {
             $inp_changeTitle.on('input', handle_input)
             //  $title handleBlur => 若標題非法，恢復原標題
             $inp_changeTitle.on('blur', handle_blur)
-
-            //  關於 title 輸入新值後，又沒立即更新的相關操作
-            async function handle_blur(e) {
-                let target = e.target
-                let title = _xss(target.value.trim())
-                //  如果標題不變，或是沒有值                
-                if(await validate({ title })){
-                    target.value = $$pageData.blog.title
-                //  恢復原標題
-                feedback(3, target)
-                //  移除非法提醒
-                return false
-                }
-                return true
-                if (!errors) { //  代表合法
-                    //  存入 payload
-                    $$payload.setKVpairs({
-                        title
-                    })
-                    //  移除非法提醒
-                    feedback(2, target, true, '')
-                    $btn_updateTitle.prop('disabled', false)
-                    //  $btn_updateTitle 可作用
-                    return true
-                }
-            }
             /*
             //  $btn_updateTitlebtn handleClick => 送出新標題
             $btn_updateTitle.on('click', handle_updateTitle)
@@ -753,6 +727,22 @@ window.addEventListener('load', async () => {
                 })
             }
 
+
+
+            /* HANDLE --------------------------------------------------------------- */
+            //  關於 title 輸入新值後，又沒立即更新的相關操作
+            async function handle_blur(e) {
+                let target = e.target
+                let title = _xss(target.value.trim())
+                //  如果標題不變，或是沒有值                
+                if (await validate({ title })) {
+                    target.value = $$pageData.blog.title
+                    //  恢復原標題
+                    feedback(3, target)
+                    //  移除非法提醒
+                }
+                return
+            }
             //  關於 title 輸入新值時的相關操作
             async function handle_input(e) {
                 const target = e.target
@@ -765,17 +755,16 @@ window.addEventListener('load', async () => {
                     $$payload.setKVpairs({
                         title
                     })
-                    console.log('@set => ', ...$$payload)
-                    //  移除非法提醒
-                    feedback(2, target, true, '')
                     $btn_updateTitle.prop('disabled', false)
                     //  $btn_updateTitle 可作用
-                    return
+                    return feedback(2, target, true, '')
+                    //  合法提醒
                 }
                 $btn_updateTitle.prop('disabled', true)
                 //  $btn_updateTitle 不可作用
-                feedback(2, target, false, errors.title)
+                return feedback(2, target, false, errors.title)
                 //  顯示非法提醒
+
             }
         }
 

@@ -9,6 +9,7 @@ export default function (status, targetEl, valid, msg) {
             .next()
                 .addClass('loading')
                 .text('loading...')
+        return undefined
     } else if (status === 2){
         //  input 有效 || 無效
         //  驗證結束
@@ -18,6 +19,7 @@ export default function (status, targetEl, valid, msg) {
             .next()
                 .removeClass(( valid ? 'invalid-feedback' : 'valid-feedback') + ' loading')
                 .addClass(valid ? 'valid-feedback' : 'invalid-feedback').text(msg)
+        return valid
     }
     //  清空inp
     if(status === 3){
@@ -26,6 +28,7 @@ export default function (status, targetEl, valid, msg) {
             .next()
                 .removeClass('invalid-feedback valid-feedback loading')
                 .text('')
+        return undefined
     }else if(status === 4){
         //  清空form
         for (let inp of targetEl) {
@@ -35,17 +38,6 @@ export default function (status, targetEl, valid, msg) {
                 .removeClass('invalid-feedback valid-feedback loading')
                 .text('')
         }
-    }
-return
-    if (targetEl.tagName === 'FORM') {
-        
-    } else if (!valid && !msg) {
-        //  驗證中
-        $(targetEl)
-            .next()
-                .addClass('loading')
-                .text('loading...')
-    } else {
-        
+        return undefined
     }
 }
