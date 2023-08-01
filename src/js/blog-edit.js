@@ -179,9 +179,34 @@ window.addEventListener('load', async () => {
             $inp_changeTitle.on('input', handle_input)
             //  $title handleBlur => 若標題非法，恢復原標題
             $inp_changeTitle.on('blur', handle_blur)
-            /*
             //  $btn_updateTitlebtn handleClick => 送出新標題
             $btn_updateTitle.on('click', handle_updateTitle)
+            //  關於 更新title 的相關操作
+            async function handle_updateTitle(e) {
+                const target = e.target
+                const key = 'title'
+                const title = $$payload.get(key)
+                const blog_id = $$pageData.blog.id
+                const payload = { blog_id, title }
+                //  $btn_updateTitle 不可作用
+                let errors = await validate(payload)
+                //  驗證
+                if (errors) { //  代表非法
+                    //  清空 title
+                    alert(errors[key])
+                    //  顯示非法提醒
+                } else {
+                    let { data: blog } = await _axios.patch(CONST.UPDATE_BLOG.API, payload)
+                    $$pageData.blog[key] = blog[key]
+                    //  同步數據
+                    alert('標題更新完成')
+                }
+                target.disabled = true
+                //  使 $btn_updateTitle 無法作用
+                $$payload.delete(key)
+            }
+            /*
+            
             //  $show handleChange => 改變文章的公開狀態
             $publicOrHidden.on('change', handle_changeShow)
             //  $save handleClick => 更新文章
@@ -207,20 +232,7 @@ window.addEventListener('load', async () => {
                     location.href = '/self'
                 }
             }
-            //  關於 更新title 的相關操作
-            async function handle_updateTitle(e) {
-                let payloadData = {
-                    id: $$pageData.blog.id,
-                    title: $$payload.get('title')
-                }
-                let { data: blog } = await _axios.patch(CONST.UPDATE_BLOG.API, payloadData)
-                //  使 $btn_updateTitle 無法作用
-                e.target.disabled = true
-                //  同步數據
-                $$pageData.blog.title = blog.title
-                $$payload.delete('title')
-                my_alert('標題更新完成')
-            }
+
             //  關於 更新文章的相關操作
             async function handle_updateBlog(e) {
                 //  若當前html沒有內容，則不合法
@@ -750,21 +762,20 @@ window.addEventListener('load', async () => {
                 let errors = await validate({
                     title
                 })
-                if (!errors) { //  代表合法
-                    //  存入 payload
-                    $$payload.setKVpairs({
-                        title
-                    })
-                    $btn_updateTitle.prop('disabled', false)
-                    //  $btn_updateTitle 可作用
-                    return feedback(2, target, true, '')
-                    //  合法提醒
+                if (errors) { //  代表非法
+                    $btn_updateTitle.prop('disabled', true)
+                    //  $btn_updateTitle 不可作用
+                    return feedback(2, target, false, errors.title)
+                    //  顯示非法提醒
                 }
-                $btn_updateTitle.prop('disabled', true)
-                //  $btn_updateTitle 不可作用
-                return feedback(2, target, false, errors.title)
-                //  顯示非法提醒
-
+                //  存入 payload
+                $$payload.setKVpairs({
+                    title
+                })
+                $btn_updateTitle.prop('disabled', false)
+                //  $btn_updateTitle 可作用
+                return feedback(2, target, true, '')
+                //  合法提醒
             }
         }
 

@@ -45,7 +45,7 @@ async function removeList(blogList) {
     }
     let { followers, replys, author_id } = await blogList.reduce(async (acc, blog_id) => {
         let { data: { author_id, followers, replys } } = await private(blog_id, true)
-        
+
         let res = await acc
         if (!res.author_id) {
             res.author_id = author_id
@@ -65,13 +65,13 @@ async function removeList(blogList) {
         await C_Comment.removeListForRemoveBlog(replys)
     }
     //  找出 所有 blog 內的 blogImg
-    let blogImgs = await blogList.reduce( async (acc, blog_id) => {
-        let { errno , data } = await C_BlogImg.findInfoForRemoveBlog(blog_id)
+    let blogImgs = await blogList.reduce(async (acc, blog_id) => {
+        let { errno, data } = await C_BlogImg.findInfoForRemoveBlog(blog_id)
         let blogImgs = await acc
-        if(!errno){
-            blogImgs = blogImgs.concat( data.map( ({ id: blogImg_id }) => blogImg_id ))
+        if (!errno) {
+            blogImgs = blogImgs.concat(data.map(({ id: blogImg_id }) => blogImg_id))
         }
-        return blogImgs 
+        return blogImgs
     }, [])
     //  刪除 所有 blog 內的 blogImg
     await C_BlogImg.removeList(blogImgs)
@@ -262,8 +262,10 @@ async function findInfoForModifyTitle(blog_id) {
     for (let reader_id of [...fansList]) {
         articleReaders.push({ reader_id, article_id: blog_id })
     }
-    //  建立新粉絲的 articleReaders 的數據
-    await C_ArticleReader.addList(articleReaders)
+    if (articleReaders.length) {
+        //  建立新粉絲的 articleReaders 的數據
+        await C_ArticleReader.addList(articleReaders)
+    }
     //  整理出 receivers
     for (let reply of replys) {
         for (let { id: receiver_id } of reply.receivers) {

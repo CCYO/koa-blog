@@ -39,7 +39,7 @@ module.exports = {
     BLOG: {
         //  0427
         findInfoForModifyTitle: (blog_id) => ({
-            where: { id: blog_id, show: true },
+            where: { id: blog_id, /*show: true*/ },
             attributes: ['id'],
             include: [
                 {
