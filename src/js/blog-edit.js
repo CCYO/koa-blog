@@ -16,7 +16,7 @@ import _ from 'lodash'
 import UI from './utils/ui'
 import genDebounce from './utils/genDebounce'
 import _axios from './utils/_axios'
-import _xss from './utils/_xss'
+import _xss, { xssAndRemoveHTMLEmpty } from './utils/_xss'
 
 import initPageFn from './utils/initData.js'
 //  統整頁面數據、渲染頁面的函數
@@ -71,8 +71,8 @@ window.addEventListener('load', async () => {
         }
         /* 常數 */
         const CONST = {
-            PUBLIC_OR_HIDDEN: {
-                ACTION: 'publicOrHidden'
+            PUBLIC_OR_PRIVATE: {
+                ACTION: 'pubOrPri'
             },
             CHANGE_TITLE: {
                 ACTION: 'changeTitle'
@@ -116,7 +116,7 @@ window.addEventListener('load', async () => {
         //  JQ Ele
         let $inp_changeTitle = $(DATASET.ACTION(CONST.CHANGE_TITLE.ACTION))
         let $btn_updateTitle = $(DATASET.ACTION(CONST.UPDATE_TITLE.ACTION))
-        let $publicOrHidden = $(DATASET.ACTION(CONST.PUBLIC_OR_HIDDEN.ACTION))
+        let $publicOrHidden = $(DATASET.ACTION(CONST.PUBLIC_OR_PRIVATE.ACTION))
         let $btn_removeBlog = $(DATASET.ACTION(CONST.REMOVE_BLOG.ACTION))
         let $wordCount = $(DATASET.SELECTOR(DATASET.NAME.WORD_COUNT))
         let $btn_updateBlog = $(DATASET.ACTION(CONST.UPDATE_BLOG.ACTION))
@@ -169,6 +169,7 @@ window.addEventListener('load', async () => {
         function init_pageFuc() {
             //  editor
             $$editor = init_editor()
+            
             backDrop.insertEditors([$$editor])
             window.editor = $$editor
             initImgData()
@@ -181,58 +182,10 @@ window.addEventListener('load', async () => {
             $inp_changeTitle.on('blur', handle_blur)
             //  $btn_updateTitlebtn handleClick => 送出新標題
             $btn_updateTitle.on('click', handle_updateTitle)
-            //  關於 更新title 的相關操作
-            async function handle_updateTitle(e) {
-                const target = e.target
-                const key = 'title'
-                const title = $$payload.get(key)
-                const blog_id = $$pageData.blog.id
-                const payload = { blog_id, title }
-                //  $btn_updateTitle 不可作用
-                let errors = await validate(payload)
-                //  驗證
-                if (errors) { //  代表非法
-                    //  清空 title
-                    alert(errors[key])
-                    //  顯示非法提醒
-                } else {
-                    let { data: blog } = await _axios.patch(CONST.UPDATE_BLOG.API, payload)
-                    $$pageData.blog[key] = blog[key]
-                    //  同步數據
-                    alert('標題更新完成')
-                }
-                target.disabled = true
-                //  使 $btn_updateTitle 無法作用
-                $$payload.delete(key)
-            }
-            /*
-            
             //  $show handleChange => 改變文章的公開狀態
-            $publicOrHidden.on('change', handle_changeShow)
+            $publicOrHidden.on('change', handle_pubOrPri)
             //  $save handleClick => 更新文章
             $btn_updateBlog.on('click', handle_updateBlog)
-            //  btn#remove 綁定 click handle => 刪除 blog
-            $btn_removeBlog.on('click', handle_removeBlog)
-            */
-            //  handle
-
-            //  關於 刪除文章的相關操作
-            async function handle_removeBlog(e) {
-                if (!confirm('真的要刪掉?')) {
-                    return
-                }
-                const { errno } = await _axios.delete(CONST.UPDATE_BLOG.API, {
-                    data: {
-                        blogList: [$$pageData.blog.id],
-                        owner_id: $$pageData.blog.author.id
-                    }
-                })
-                if (!errno) {
-                    my_alert('已成功刪除此篇文章')
-                    location.href = '/self'
-                }
-            }
-
             //  關於 更新文章的相關操作
             async function handle_updateBlog(e) {
                 //  若當前html沒有內容，則不合法
@@ -325,20 +278,29 @@ window.addEventListener('load', async () => {
                     return payloadObj
                 }
             }
-            //  關於 設定文章公開/隱藏時的操作
-            function handle_changeShow(e) {
-                let show = e.target.checked
-                let errors = valicator({
-                    show
-                })
-                if (!errors.length) { //  代表合法
-                    //  存入 payload
-                    $$payload.setKVpairs({
-                        show
-                    })
+            /*
+            //  btn#remove 綁定 click handle => 刪除 blog
+            $btn_removeBlog.on('click', handle_removeBlog)
+            */
+            //  handle
+
+            //  關於 刪除文章的相關操作
+            async function handle_removeBlog(e) {
+                if (!confirm('真的要刪掉?')) {
+                    return
                 }
-                return
+                const { errno } = await _axios.delete(CONST.UPDATE_BLOG.API, {
+                    data: {
+                        blogList: [$$pageData.blog.id],
+                        owner_id: $$pageData.blog.author.id
+                    }
+                })
+                if (!errno) {
+                    my_alert('已成功刪除此篇文章')
+                    location.href = '/self'
+                }
             }
+
 
 
 
@@ -489,6 +451,11 @@ window.addEventListener('load', async () => {
                     selector: '#toolbar-container',
                     mode: 'simple'
                 })
+                //  初始化 payload.curHtml
+                let html = xssAndRemoveHTMLEmpty(editor.getHtml())
+                $$payload.set('curHtml', html)
+                $wordCount.text(`還能輸入${htmlStr_maxLength - $$payload.get('curHtml').length}個字`)                
+
                 return editor
                 //  editor 的 修改圖片資訊前的檢查函數
                 async function checkImage(src, alt, url) {
@@ -614,25 +581,36 @@ window.addEventListener('load', async () => {
                 //  handle：editor選區改變、內容改變時觸發
                 function handle_change() {
                     //  因為 editor 是 autoFocus，故handle_change 一開始便會被調用，也利用這點先為 payload 設置 html數據
-                    let init = true
-                    return (editor) => {
+                    // let init = true
+                    return async (editor) => {
+                        console.log('@editor handle_change')
                         //  xss & 移除頭尾空行
-                        let html = xssAndRemoveEmpty(editor.getHtml())
+                        let html = xssAndRemoveHTMLEmpty(editor.getHtml())
                         //  初始化 payload.curHtml
-                        if (init) {
+                        // if (init) {
+                        //     $$payload.set('curHtml', html)
+                        //     $wordCount.text(`還能輸入${htmlStr_maxLength - $$payload.get('curHtml').length}個字`)
+                        //     init = false
+                        //     return
+                        // }
+                        const errors = await validate({html})
+                        if(errors){
+                            //  非法
+                            errors.html && $$payload.delete('curHtml')
+                            console.log('@@errors => ', errors)
+                        }else{
                             $$payload.set('curHtml', html)
                             $wordCount.text(`還能輸入${htmlStr_maxLength - $$payload.get('curHtml').length}個字`)
-                            init = false
-                            return
                         }
+                        return
                         //  僅是 editor 獲得/失去焦點
-                        if (html === $$payload.get('curHtml')) {
-                            return
-                        }
+                        // if (html === $$payload.get('curHtml')) {
+                        //     return
+                        // }
                         //  驗證htmlStr
-                        let errors = valicator({
-                            html
-                        })
+                        // let errors = valicator({
+                        //     html
+                        // })
                         $$payload.setKVpairs({
                             curHtml: html
                         })
@@ -656,17 +634,7 @@ window.addEventListener('load', async () => {
                             html
                         })
                     }
-                    //  去除空格與進行xss
-                    function xssAndRemoveEmpty(data) {
-                        //  xss
-                        let curHtml = _xss(data.trim())
-                        //  移除開頭、結尾的空格與空行
-                        let reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g
-                        let reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g
-                        curHtml = curHtml.replace(reg_start, '')
-                        curHtml = curHtml.replace(reg_end, '')
-                        return curHtml
-                    }
+                    
                 }
             }
 
@@ -742,6 +710,44 @@ window.addEventListener('load', async () => {
 
 
             /* HANDLE --------------------------------------------------------------- */
+            //  關於 設定文章公開/隱藏時的操作
+            async function handle_pubOrPri(e) {
+                let show = e.target.checked
+                let key = 'show'
+                let errors = await validate({ [key]: show })
+                if(errors){
+                    //  代表非法
+                    $$payload.delete(key)
+                }else { 
+                    //  代表合法，存入 payload
+                    $$payload.setKVpairs({[key]: show})
+                }
+                return
+            }
+            //  關於 更新title 的相關操作
+            async function handle_updateTitle(e) {
+                const target = e.target
+                const key = 'title'
+                //  $btn_updateTitle 不可作用
+                let errors = await validate({
+                    blog_id: $$pageData.blog.id,
+                    title: $$payload.get(key)
+                })
+                //  驗證
+                if (errors) { //  代表非法
+                    //  清空 title
+                    alert(errors[key])
+                    //  顯示非法提醒
+                } else {
+                    let { data } = await _axios.patch(CONST.UPDATE_BLOG.API, payload)
+                    $$pageData.blog[key] = data[key]
+                    //  同步數據
+                    alert('標題更新完成')
+                }
+                target.disabled = true
+                //  使 $btn_updateTitle 無法作用
+                $$payload.delete(key)
+            }
             //  關於 title 輸入新值後，又沒立即更新的相關操作
             async function handle_blur(e) {
                 let target = e.target

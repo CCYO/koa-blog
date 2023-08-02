@@ -24,8 +24,8 @@ ajv.addKeyword({
 ajv.addKeyword({
     keyword: 'diff',
     $data: true,
-    type: ['string', 'number'],
-    schemaType: ['string', 'number', 'null'],
+    type: ['string', 'number', 'boolean'],
+    schemaType: ['string', 'number', 'boolean', 'null'],
     validate: diff,
     errors: true
 })
@@ -353,7 +353,7 @@ const SCHEMA = {
             },
             html: {
                 $ref: 'defs.json#/definitions/html',
-                diff: { $data: '1/$$blog/title' }
+                diff: { $data: '1/$$blog/html' }
             },
             show: {
                 $ref: 'defs.json#/definitions/show',
@@ -405,12 +405,63 @@ function validateBlogData(schemaName) {
         } catch (err) {
             let { errors } = err
             if (errors) {
-                return handleErr(errors)
+                return handleBlogErr(errors)
             } else {
                 throw err
             }
         }
     }
+}
+
+function handleBlogErr(validateErrors) {
+    /*{ 
+        errors: [ { ..., message: 自定義的錯誤說明, ... }, ...],
+      }*/
+    return validateErrors.reduce((init, __) => {
+        let { params, keyword, instancePath, message } = __
+        if (!instancePath) {
+            /* 通常是 schema 最高等級的錯誤，換句話說，通常不會是 data 上能查詢到的 keyword（如　required || if || then 等） */
+            if (keyword === 'errorMessage') {
+                /* 已被 ajv-errors 捕獲的錯誤 */
+                let { errors } = params
+                let _keyword = errors[0].keyword
+                if (_keyword === 'required' || _keyword === 'dependentRequired') {
+                    for (let { params: { missingProperty } } of errors) {
+                        if(!init.hasOwnProperty('required')){
+                            init['required'] = []
+                        }
+                        if(init['required'].some(prop => prop === missingProperty)){
+                            continue
+                        }
+                        init['required'].push(missingProperty)
+                    }
+                } else if (_keyword === 'minProperties') {
+                    init['all'] = message
+                }
+            }
+            /* 未被 ajv-errors 捕獲的錯誤，我不考慮（如 if、then、allOf 等）*/
+        } else {
+            /* 通常是 schema 非高等級的錯誤，這次的應用會是對應 properties 的內容 */
+            let name = instancePath.slice(1)
+            console.log('#error => ', name, keyword, message, __)
+            console.log('@init => ', init)
+            if(keyword === 'errorMessage'){
+                /* 已被 ajv-errors 捕獲的錯誤 */
+                const { errors: [ _error ] } = params
+                keyword = _error.keyword
+                console.log('@keyword =? ', keyword)
+            }
+            if (!init.hasOwnProperty(name)){
+                init[name] = {}
+            }
+            if(!init[name].hasOwnProperty(keyword)){
+                init[name][keyword] = message
+            }else{
+                init[name][keyword] += message
+            }
+        }
+        return init
+    }, {})
 }
 
 function handleErr(validateErrors) {
@@ -476,11 +527,11 @@ function diff(schema, data, parentSchema, dataCtx) {
     console.log('@data => ', data)
     console.log('@parentSchema => ', parentSchema)
     console.log('@dataCtx => ', dataCtx)
-    if (schema !== data || !schema) {
+    if (schema !== data) {
         return true
     }
     let { instancePath } = dataCtx
-    diff.errors = [{ instancePath, message: '與原資料相同' }]
+    diff.errors = [{ instancePath, message: '與原資料相同', keyword: 'diff' }]
     return false
 }
 async function isEmailExist(schema, data, parentSchema, dataCtx) {

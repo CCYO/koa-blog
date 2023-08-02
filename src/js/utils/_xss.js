@@ -1,6 +1,6 @@
 import xss from 'xss'
 //  表格內容xss
-export default function(html) {
+export default function _xss(html) {
     return xss(html, {
         whiteList: {
             ...xss.whiteList,
@@ -27,4 +27,16 @@ export default function(html) {
             }
         }
     })
+}
+
+//  去除空格與進行xss
+export function xssAndRemoveHTMLEmpty(data) {
+    //  xss
+    let curHtml = _xss(data.trim())
+    //  移除開頭、結尾的空格與空行
+    let reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g
+    let reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g
+    curHtml = curHtml.replace(reg_start, '')
+    curHtml = curHtml.replace(reg_end, '')
+    return curHtml
 }
