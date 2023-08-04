@@ -80,7 +80,7 @@ async function removeList(blogList) {
     if (row !== blogList.length) {
         throw new MyErr(ErrRes.BLOG.DELETE.ROW)
     }
-    return new SuccModel({ cache })
+    return new SuccModel({ cache, data: { author: {id: author_id} } })
 }
 //  0406
 /** 更新 blog

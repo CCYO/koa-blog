@@ -29,10 +29,14 @@ export default function _xss(html) {
     })
 }
 
+export function xssAndTrim(data){
+    return _xss(data.trim())
+}
+
 //  去除空格與進行xss
 export function xssAndRemoveHTMLEmpty(data) {
     //  xss
-    let curHtml = _xss(data.trim())
+    let curHtml = xssAndTrim(data.trim())
     //  移除開頭、結尾的空格與空行
     let reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g
     let reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g

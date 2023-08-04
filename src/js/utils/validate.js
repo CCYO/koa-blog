@@ -531,7 +531,7 @@ function diff(schema, data, parentSchema, dataCtx) {
         return true
     }
     let { instancePath } = dataCtx
-    diff.errors = [{ instancePath, message: '與原資料相同', keyword: 'diff' }]
+    diff.errors = [{ instancePath, message: '若沒有要異動就別鬧', keyword: 'diff' }]
     return false
 }
 async function isEmailExist(schema, data, parentSchema, dataCtx) {
