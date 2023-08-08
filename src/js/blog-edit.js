@@ -7,15 +7,17 @@ import '@wangeditor/editor/dist/css/style.css';
 //  validate
 import validates from './utils/validate'
 //  <!-- 引入 Spark-MD5 -->
+import SparkMD5 from 'spark-md5'
 //  <!-- 引入 editor js -->
 import { i18nAddResources, i18nChangeLanguage, createToolbar, createEditor } from '@wangeditor/editor'
 import _ from 'lodash'
-
 
 import UI from './utils/ui'
 import genDebounce from './utils/genDebounce'
 import _axios from './utils/_axios'
 import _xss, { xssAndRemoveHTMLEmpty, xssAndTrim } from './utils/_xss'
+
+import SERVER_CONST from '../../server/conf/constant'
 
 import initPageFn from './utils/initData.js'
 //  統整頁面數據、渲染頁面的函數
@@ -25,6 +27,7 @@ import initEJSData from './utils/initEJSData.js'
 //  初始化來自ejs在頁面上的字符數據
 
 window.addEventListener('load', async () => {
+    const { BLOG: { HTML_MAX_LENGTH } } = SERVER_CONST
     const { genLoadingBackdrop, feedback } = UI
     const backDrop = new genLoadingBackdrop()
     try {
@@ -56,10 +59,15 @@ window.addEventListener('load', async () => {
                     }
                 }
             }
-            getPayload() {
+            getPayload(kvPairs) {
                 let res = {}
                 for (let [key, value] of [...this]) {
                     res[key] = value
+                }
+                if (kvPairs) {
+                    for (let key in kvPairs) {
+                        res[key] = kvPairs[key]
+                    }
                 }
                 return res
             }
@@ -99,6 +107,14 @@ window.addEventListener('load', async () => {
                 ACTION: 'removeBlog',
                 API: '/api/blog' //'/api/blog/initImgs'
             },
+            CREATE_IMG: {
+                API: '/api/blog/img',
+                //  建立新圖API
+            },
+            CREATE_IMG_ALT: {
+                API: '/api/blog/blogImgAlt'
+                //  建立舊圖API
+            },
             DATASET: {
                 PREFIX: {
                     ACTION: 'action',
@@ -114,7 +130,13 @@ window.addEventListener('load', async () => {
                     PAGE_IND: 'page_ind',
                     TURN_DIR: 'turn_dir'
                 }
+            },
+            REG: {
+                IMG: {
+                    NAME_AND_EXT: /^(.+)\.(.+?)$/
+                }
             }
+
         }
         const { DATASET } = CONST
         /* 公用 JQ Ele */
@@ -138,7 +160,7 @@ window.addEventListener('load', async () => {
         let $$payload = new genPayload()
         $$pageData.payload = $$payload
         //  schema
-        let htmlStr_maxLength = 65536
+        let $$htmlStr_maxLength = HTML_MAX_LENGTH
 
         try {
             //  初始化 input[name=show]
@@ -157,13 +179,6 @@ window.addEventListener('load', async () => {
             backDrop.insertEditors([$$editor])
             window.editor = $$editor
             initImgData()
-            //  校驗blog數據，且決定submit可否點擊
-            async function validate(data) {
-                const _validate = validates.blog
-                const errors = await _validate({ ...data, $$blog: $$pageData.blog })
-                $btn_updateBlog.prop('disabled', !!errors)
-                return errors
-            }
             //  $title handleInput => 驗證標題合法性
             $inp_changeTitle.on('input', handle_input)
             //  $title handleBlur => 若標題非法，恢復原標題
@@ -193,8 +208,6 @@ window.addEventListener('load', async () => {
 
             // 初始化 編輯文章頁 的功能
             function init_editor() {
-                let api_img = '/api/blog/img'
-                let api_createBlogImgAlt = '/api/blog/blogImgAlt'
                 //  editor 的 繁中設定
                 i18nAddResources('tw', {
                     // 标题
@@ -242,7 +255,7 @@ window.addEventListener('load', async () => {
                     mode: 'simple'
                 })
                 //  初始化 payload.html
-                $wordCount.text(`還能輸入${htmlStr_maxLength - editor.getHtml().length}個字`)
+                $wordCount.text(`還能輸入${$$htmlStr_maxLength - editor.getHtml().length}個字`)
                 return editor
                 //  editor 的 修改圖片資訊前的檢查函數
                 async function checkImage(src, alt, url) {
@@ -260,40 +273,28 @@ window.addEventListener('load', async () => {
                 }
                 //  editor的 自定義上傳圖片方法
                 async function customUpload(img, insertFn) {
-                    let nameAndExt = getNameAndExt(img.name)
-                    let {
-                        name,
-                        ext
-                    } = nameAndExt
-                    name = name.trim().toUpperCase()
-                    ext = ext.trim().toUpperCase()
+                    let { name, ext } = _getNameAndExt(img.name)
                     if (ext !== 'PNG' && ext !== 'JPG') {
                         alert('只能提供png與jpg的圖檔類型')
                         return
                     }
                     //  生成 img 的 hash(hex格式)
-                    let {
-                        exist,
-                        blogImg_id,
-                        hash
-                    } = await _getHash(img)
+                    let { exist, blogImg_id, hash } = await _getHash(img)
                     let res
                     if (!exist) { // img為新圖，傳給後端建檔
                         console.log('進行新圖處理')
                         //  imgName要作為query參數傳送，必須先作百分比編碼
                         name = encodeURIComponent(name)
-                        let api = `${api_img}?hash=${hash}&name=${name}&ext=${ext}&blog_id=${$$pageData.blog.id}`
-                        //  創建 formData，作為酬載數據的容器
+                        let api = `${CONST.CREATE_IMG.API}?hash=${hash}&name=${name}&ext=${ext}&blog_id=${$$pageData.blog.id}`
                         let formdata = new FormData()
-                        //  放入圖片數據
+                        //  創建 formData，作為酬載數據的容器
                         formdata.append('blogImg', img)
-                        //  upload
+                        //  放入圖片數據
                         res = await _axios.post(api, formdata)
+                        //  upload
                     } else { // img為重覆的舊圖，傳給後端新建一個blogImgAlt
                         console.log('進行舊圖處理')
-                        res = await _axios.post(api_createBlogImgAlt, {
-                            blogImg_id
-                        })
+                        res = await _axios.post(CONST.CREATE_IMG_ALT.API, { blogImg_id })
                     }
                     let { data: newImg } = res
                     console.log('完成 => ', newImg)
@@ -309,10 +310,12 @@ window.addEventListener('load', async () => {
                     }
                     */
                     newImg.name = decodeURIComponent(newImg.name)
-                    //  同步數據
+                    //  回傳的圖片名要做百分比解碼
                     $$pageData.blog.map_imgs.set(newImg.alt_id, newImg)
-                    //  將圖片插入 editor
+                    //  同步數據
                     insertFn(`${newImg.url}?alt_id=${newImg.alt_id}`, newImg.name)
+                    //  將圖片插入 editor
+                    return 
                     //  取得圖片的 hash
                     async function _getHash(img) {
                         //  取得 img 的 MD5 Hash(hex格式)
@@ -322,19 +325,15 @@ window.addEventListener('load', async () => {
                             blogImg_id: undefined,
                             hash
                         }
-                        let {
-                            map_imgs
-                        } = $$pageData.blog
+                        let { map_imgs} = $$pageData.blog
                         if (map_imgs.size) {
                             //  利用hash，確認此時要上傳的img是否為舊圖
                             let imgs = [...map_imgs.values()]
                             //  img { alt_id, alt, blogImg_id, name, img_id, hash, url }
-                            for (let img of imgs) {
-                                if (img.hash === hash) {
-                                    res.blogImg_id = img.blogImg_id
-                                    res.exist = true
-                                    break
-                                }
+                            let target = imgs.find( img => img.hash === res.hash)
+                            if(target){
+                                res.blogImg_id = target.blogImg_id
+                                res.exist = true
                             }
                         }
                         return res
@@ -342,26 +341,29 @@ window.addEventListener('load', async () => {
                         function _getMD5Hash(file) {
                             return new Promise((resolve, reject) => {
                                 let fr = new FileReader()
+                                fr.readAsArrayBuffer(file)
+
                                 fr.addEventListener('load', (evt) => {
                                     if (fr.readyState === FileReader.DONE) {
                                         let hash = SparkMD5.ArrayBuffer.hash(fr.result)
                                         resolve(hash)
+                                        return
                                     }
                                 })
                                 fr.addEventListener('error', (error) => {
                                     reject(error)
+                                    return
                                 })
-                                fr.readAsArrayBuffer(file)
                             })
                         }
                     }
 
-                    function getNameAndExt(imgName) {
-                        let reg = /^(.+)\.(.+?)$/
+                    function _getNameAndExt(imgName) {
+                        const reg = CONST.REG.IMG.NAME_AND_EXT
                         let [_, name, ext] = reg.exec(imgName)
-                        return {
-                            name,
-                            ext
+                        return { 
+                            name: name.trim().toUpperCase(),
+                            ext: ext.trim().toUpperCase()
                         }
                     }
                 }
@@ -373,41 +375,48 @@ window.addEventListener('load', async () => {
                     }
                     const KEY = 'html'
                     let content = xssAndRemoveHTMLEmpty(editor.getHtml())
-                    $$payload._set('html', content)
-                    const errors = await validate({ [KEY]: content })
-                    if (errors) {
-                        $wordCount.text(`還能輸入${htmlStr_maxLength - content.length}個字`)
+                    let errors = await validate({ html: content })
+                    $$payload.setKVpairs({ [KEY]: content })
+                    if (!errors) {
+                        $wordCount.text(`還能輸入${$$htmlStr_maxLength - content.length}個字`).removeClass('text-danger')
                         return
                     }
                     const error = errors[KEY]
                     if (error['maxLength']) {
-                        $wordCount.text(`文章內容已超過${content.length - htmlStr_maxLength}個字`)
+                        $wordCount.text(`文章內容已超過${content.length - $$htmlStr_maxLength}個字`).addClass('text-danger')
                     } else if (error['minLength']) {
-                        $wordCount.text(`文章內容不能為空`)
+                        $wordCount.text(`文章內容不能為空`).addClass('text-danger')
+                    } else if (error['diff']) {
+                        $$payload._del(KEY)
                     }
+                    await validateAll()
                 }
             }
             /* HANDLE --------------------------------------------------------------- */
             //  關於 更新文章的相關操作
             async function handle_updateBlog(e) {
-                let payload = $$payload.getPayload()
-                const errors = await validate(payload)
+                const errors = await validateAll()
                 if (errors) {
                     let msg = ''
                     const invalidateMsg = Object.entries(errors)
                     for (let [key, obj] of invalidateMsg) {
                         if (key === 'all') {
-                            msg += obj
+                            msg += obj + '\n'
+                            continue
                         } else if (key === 'html') {
-                            msg = '文章內容' + Object.values(obj).join(',') + '\n'
-                        } else {
-                            msg = key + Object.values(obj).join(',') + '\n'
+                            key = '文章內容'
+                        } else if (key === 'title') {
+                            key = '文章標題'
+                        } else if (key === 'show') {
+                            key = '文章狀態'
                         }
+                        msg += key + Object.values(obj).join(',') + '\n'
                     }
                     alert(msg)
                     return
                 }
-                if (payload.html) {
+                let payload = $$payload.getPayload()
+                if ($$payload.has('html')) {
                     payload.html = parseImgToXImg(payload.html)
                     //  將<img>轉換為自定義<x-img>
                 }
@@ -418,16 +427,13 @@ window.addEventListener('load', async () => {
                 }
                 payload.blog_id = $$pageData.blog.id
                 payload.owner_id = $$pageData.blog.author.id
-                const { errno } = await _axios.patch(CONST.UPDATE_BLOG.API, payload)
-                if (errno) {
-                    my_alert('blog save error!')
-                    return
-                }
+                await _axios.patch(CONST.UPDATE_BLOG.API, payload)
                 for (let [key, value] of $$payload.entries()) {
                     $$pageData.blog[key] = value
                     //  同步數據
                 }
                 $$payload.clear()
+                //  清空$$payload
                 $btn_updateBlog.prop('disabled', true)
                 //  此時文章更新鈕無法點擊
                 if (confirm('儲存成功！是否預覽？（新開視窗）')) {
@@ -456,13 +462,15 @@ window.addEventListener('load', async () => {
             async function handle_pubOrPri(e) {
                 let show = e.target.checked
                 let KEY = 'show'
-                let errors = await validate({ [KEY]: show })
-                if (!errors) {
+                let errors = await validateAll({ show })
+                if (!errors || !errors[KEY]) {
                     //  代表合法，存入 payload
                     $$payload.setKVpairs({ [KEY]: show })
                 } else if (errors[KEY]) {
                     //  代表非法
                     $$payload._del(KEY)
+                    errors[KEY].hasOwnProperty('diff') && await validateAll()
+                    //  若驗證錯誤是與原值相同，則測試當前payload
                 }
                 return
             }
@@ -473,58 +481,82 @@ window.addEventListener('load', async () => {
                     blog_id: $$pageData.blog.id,
                     title: $$payload.get(KEY)
                 }
-                //  $btn_updateTitle 不可作用
+                let msg
                 let errors = await validate(payload)
                 //  驗證
-                if (!errors) {
+                feedback(3)
+                //  清空提醒
+                if (!errors || !errors[KEY]) {
                     //  代表合法
                     let { data } = await _axios.patch(CONST.UPDATE_BLOG.API, payload)
                     $$pageData.blog[KEY] = data[KEY]
                     //  同步數據
-                    alert('標題更新完成')
-                } else if (errors[KEY]) {
-                    //  代表非法
-                    alert(errors[KEY])
-                    //  顯示非法提醒
+                    msg = '標題更新完成'
+                } else {
+                    const error = errors[KEY]
+                    const values = Object.values(error)
+                    if (values.length === 1) {
+                        msg = '文章標題' + values[0]
+                    } else {
+                        msg = '文章標題' + values.join(',')
+                    }
                 }
                 $$payload._del(KEY)
-                //  清空 title
-                validate($$pageData.getPayload())
-                //  重新驗證
+                await validateAll()
+                alert(msg)
+                return
             }
             //  關於 title 輸入新值後，又沒立即更新的相關操作
             async function handle_blur(e) {
                 const KEY = 'title'
                 let target = e.target
                 let title = xssAndTrim(target.value)
-                let errors = await validate({ [KEY]: title })
-                //  如果標題不變，或是沒有值                
-                if (errors && errors[KEY]) {
+                let errors = await validateAll({ [KEY]: title })
+                if (!errors || !errors[KEY]) {
+                    return
+                }
+                if (errors[KEY]) {
                     target.value = $$pageData.blog[KEY]
                     //  恢復原標題
-                    feedback(3, target)
+                    errors[KEY].hasOwnProperty('diff') && await validateAll()
+                    //  若驗證錯誤是與原值相同，則測試當前payload
+                    return feedback(3, target)
                     //  移除非法提醒
                 }
-                return
+
             }
             //  關於 title 輸入新值時的相關操作
             async function handle_input(e) {
                 const KEY = 'title'
                 const target = e.target
                 let title = xssAndTrim(target.value)
-                let errors = await validate({ [KEY]: title })
-                if (errors && errors[KEY]) {
-                    $$payload._del(KEY)
-                    let values = Object.values(errors[KEY])
-                    let msg = values.length === 1 ? values[0] : values.join(',')
-                    msg = '文章標題' + msg
-                    return feedback(2, target, false, msg)
-                    //  顯示非法提醒
+                let errors = await validateAll({ [KEY]: title })
+                if (!errors || !errors[KEY]) {
+                    $$payload.setKVpairs({ [KEY]: title })
+                    //  存入 payload
+                    return feedback(2, target, true, '')
+                    //  合法提醒    
                 }
-                $$payload.setKVpairs({ [KEY]: title })
-                //  存入 payload
-                return feedback(2, target, true, '')
-                //  合法提醒    
+                const error = errors[KEY]
+                if (error) {
+                    $$payload._del(KEY)
+                }
+                if (error.hasOwnProperty('diff')) {
+                    delete error.diff
+                    await validateAll()
+                }
+                let msg
+                const values = Object.values(error)
+                if (!values.length) {
+                    return feedback(3, target)
+                } else if (values.length === 1) {
+                    msg = '文章標題' + values[0]
+                } else {
+                    msg = '文章標題' + values.join(',')
+                }
+                //  若驗證錯誤是與原值相同，則測試當前payload
+                return feedback(2, target, false, msg)
+                //  顯示非法提醒
             }
 
             /* UTILS ------------------- */
@@ -597,102 +629,115 @@ window.addEventListener('load', async () => {
                 console.log('@要刪除的img,整理結果 => ', cancelImgs)
                 return cancelImgs
             }
-            //  初始化 valicator
-            function init_valicator(schema) {
-                let Ajv = window.ajv7
-                let ajv = new Ajv({
-                    allErrors: true
-                })
-                //  定義 keyword: diff，定義不可與現存的表格值相同
-                ajv.addKeyword({
-                    keyword: 'diff',
-                    type: ['string', 'number', 'boolean'],
-                    schemaType: 'string',
-                    validate: function _(inputName, newData) {
-                        let curData = $$pageData.blog[inputName]
-                        if (newData !== curData) {
-                            return true
-                        }
-                        if (!_.errors) {
-                            _.errors = []
-                        }
-                        _.errors.push({
-                            keyword: 'diff'
-                        })
-                        return false
-                    },
-                    errors: true
-                })
-                //  生成驗證函數
-                let valicate = ajv.compile(schema)
-                //  返回驗證器
-                return (newData) => {
-                    if (!valicate(newData)) { //  代表非法
-                        let list_inputNameAndMessage = valicate.errors.map(error => {
-                            //  取得造成非法的相關資訊
-                            let {
-                                inputName,
-                                message,
-                                keyword
-                            } = inputNameAndMessage(error)
-                            //  移除payload非法的數據
-                            $$payload.delete(inputName)
-                            return {
-                                inputName,
-                                message,
-                                keyword
-                            }
-                        })
-                        return list_inputNameAndMessage
-                    } else { //  代表合法
-                        return []
-                    }
-                }
-                //  提取非法訊息的 { inputName, message } 
-                function inputNameAndMessage(error) {
-                    let {
-                        instancePath,
-                        keyword,
-                        params
-                    } = error
-                    //  instancePath 格式為 /xxx
-                    let inputName = instancePath.slice(1)
-                    let value = params ? [...Object.entries(params)][0][1] : undefined
-                    let message
-                    switch (keyword) {
-                        case 'type':
-                            message = `數據格式必須為${value}`
-                            break
-                        case 'minLength':
-                            message = `不能少於${value}個字元`
-                            break
-                        case 'maxLength':
-                            message = `不能多於${value}個字元`
-                            break
-                        case 'if':
-                            message = '請寫內文，不然幹嘛公開文章'
-                            break
-                        case 'diff':
-                            let name =
-                                inputName === 'title' ? '標題' :
-                                    inputName === 'html' ? '內文' :
-                                        '文章公開/隱藏設定'
-                            message = `與當前的${name}相同，若沒有要更新就別鬧了`
-                            break
-                        case 'minProperties':
-                            message = '沒有要變動就別亂'
-                            break
-                        default:
-                            message = `錯誤訊息的keyword為${keyword} -- 未知的狀況`
-                            break;
-                    }
-                    return {
-                        inputName,
-                        message,
-                        keyword
-                    }
-                }
+
+            //  校驗blog數據，且決定submit可否點擊
+            async function validate(data) {
+                const _validate = validates.blog
+                const errors = await _validate({ ...data, $$blog: $$pageData.blog })
+                $btn_updateBlog.prop('disabled', !!errors)
+                return errors
+            }
+            async function validateAll(kvPairs) {
+                const blogData = $$payload.getPayload(kvPairs)
+                return await validate(blogData)
             }
         }
     }
 })
+
+//  初始化 valicator
+function init_valicator(schema) {
+    let Ajv = window.ajv7
+    let ajv = new Ajv({
+        allErrors: true
+    })
+    //  定義 keyword: diff，定義不可與現存的表格值相同
+    ajv.addKeyword({
+        keyword: 'diff',
+        type: ['string', 'number', 'boolean'],
+        schemaType: 'string',
+        validate: function _(inputName, newData) {
+            let curData = $$pageData.blog[inputName]
+            if (newData !== curData) {
+                return true
+            }
+            if (!_.errors) {
+                _.errors = []
+            }
+            _.errors.push({
+                keyword: 'diff'
+            })
+            return false
+        },
+        errors: true
+    })
+    //  生成驗證函數
+    let valicate = ajv.compile(schema)
+    //  返回驗證器
+    return (newData) => {
+        if (!valicate(newData)) { //  代表非法
+            let list_inputNameAndMessage = valicate.errors.map(error => {
+                //  取得造成非法的相關資訊
+                let {
+                    inputName,
+                    message,
+                    keyword
+                } = inputNameAndMessage(error)
+                //  移除payload非法的數據
+                $$payload.delete(inputName)
+                return {
+                    inputName,
+                    message,
+                    keyword
+                }
+            })
+            return list_inputNameAndMessage
+        } else { //  代表合法
+            return []
+        }
+    }
+    //  提取非法訊息的 { inputName, message } 
+    function inputNameAndMessage(error) {
+        let {
+            instancePath,
+            keyword,
+            params
+        } = error
+        //  instancePath 格式為 /xxx
+        let inputName = instancePath.slice(1)
+        let value = params ? [...Object.entries(params)][0][1] : undefined
+        let message
+        switch (keyword) {
+            case 'type':
+                message = `數據格式必須為${value}`
+                break
+            case 'minLength':
+                message = `不能少於${value}個字元`
+                break
+            case 'maxLength':
+                message = `不能多於${value}個字元`
+                break
+            case 'if':
+                message = '請寫內文，不然幹嘛公開文章'
+                break
+            case 'diff':
+                let name =
+                    inputName === 'title' ? '標題' :
+                        inputName === 'html' ? '內文' :
+                            '文章公開/隱藏設定'
+                message = `與當前的${name}相同，若沒有要更新就別鬧了`
+                break
+            case 'minProperties':
+                message = '沒有要變動就別亂'
+                break
+            default:
+                message = `錯誤訊息的keyword為${keyword} -- 未知的狀況`
+                break;
+        }
+        return {
+            inputName,
+            message,
+            keyword
+        }
+    }
+}

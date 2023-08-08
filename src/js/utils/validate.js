@@ -3,6 +3,9 @@ import Ajv2019 from "ajv/dist/2019"
 import addFormats from 'ajv-formats'
 import errors from 'ajv-errors'
 import _axios from './_axios'
+
+import SERVER_CONST from '../../../server/conf/constant'
+
 const ajv = new Ajv2019({
     strict: false,
     allErrors: true,
@@ -44,7 +47,12 @@ ajv.addKeyword({
     validate: noSpace,
     errors: true
 })
+
 const CONST = {
+    BLOG: {
+        HTML_MAX_LENGTH: SERVER_CONST.BLOG.HTML_MAX_LENGTH,
+        HTML_MIN_LENGTH: SERVER_CONST.BLOG.HTML_MIN_LENGTH
+    },
     URL: 'http://my.ajv.schema',
     VALIDATE: {
         DEFS: 'defs',
@@ -158,8 +166,8 @@ const SCHEMA = {
             },
             html: {
                 type: 'string',
-                maxLength: 65536,
-                minLength: 1,
+                maxLength: CONST.BLOG.HTML_MAX_LENGTH,
+                minLength: CONST.BLOG.HTML_MIN_LENGTH,
                 errorMessage: {
                     type: '必須是字符串',
                     maxLength: '長度需小於65536個字',
@@ -427,10 +435,10 @@ function handleBlogErr(validateErrors) {
                 let _keyword = errors[0].keyword
                 if (_keyword === 'required' || _keyword === 'dependentRequired') {
                     for (let { params: { missingProperty } } of errors) {
-                        if(!init.hasOwnProperty('required')){
+                        if (!init.hasOwnProperty('required')) {
                             init['required'] = []
                         }
-                        if(init['required'].some(prop => prop === missingProperty)){
+                        if (init['required'].some(prop => prop === missingProperty)) {
                             continue
                         }
                         init['required'].push(missingProperty)
@@ -445,18 +453,18 @@ function handleBlogErr(validateErrors) {
             let name = instancePath.slice(1)
             console.log('#error => ', name, keyword, message, __)
             console.log('@init => ', init)
-            if(keyword === 'errorMessage'){
+            if (keyword === 'errorMessage') {
                 /* 已被 ajv-errors 捕獲的錯誤 */
-                const { errors: [ _error ] } = params
+                const { errors: [_error] } = params
                 keyword = _error.keyword
                 console.log('@keyword =? ', keyword)
             }
-            if (!init.hasOwnProperty(name)){
+            if (!init.hasOwnProperty(name)) {
                 init[name] = {}
             }
-            if(!init[name].hasOwnProperty(keyword)){
+            if (!init[name].hasOwnProperty(keyword)) {
                 init[name][keyword] = message
-            }else{
+            } else {
                 init[name][keyword] += message
             }
         }

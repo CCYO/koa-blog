@@ -24,6 +24,8 @@ module.exports = {
         }
     },
     BLOG: {
+        HTML_MAX_LENGTH: 65536,
+        HTML_MIN_LENGTH: 1,
         PAGINATION: 5,      //  0303
         TIME_FORMAT: 'YYYY/MM/DD HH:mm:ss', //  0303
         ORGANIZED: {

@@ -54,6 +54,7 @@ app.use(async (ctx, next) => {
             await next()
         })
     } catch (error) {
+        throw error
         ctx.status = 500
         let isAPI = /^\/api\//.test(ctx.path)
         let isMyErr = error.isMyErr

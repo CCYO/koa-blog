@@ -30,6 +30,7 @@ const C_Img = require('../../controller/img')
     if(imgModel.errno){
         console.log('@GCS無圖檔，直接創建img且作BlogImg關聯')
         //  上傳 GCS
+        console.log('@parse => ', parse)
         let res = await parse.blogImg(ctx)
         //  取得 url
         url = res[GCS_ref.BLOG]
