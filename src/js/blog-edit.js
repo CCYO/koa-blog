@@ -133,7 +133,9 @@ window.addEventListener('load', async () => {
             },
             REG: {
                 IMG: {
-                    NAME_AND_EXT: /^(.+)\.(.+?)$/
+                    NAME_AND_EXT: /^(.+)\.(.+?)$/,
+                    ALT_ID: /alt_id=(?<alt_id>\w+)/,
+                    PARSE_TO_X_IMG: /<img.+?src=".+?alt_id=(?<alt_id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g
                 }
             }
 
@@ -142,9 +144,6 @@ window.addEventListener('load', async () => {
         /* 公用 JQ Ele */
         /* 公用 var */
         //  公用變量
-
-        //  API
-        let api_initImg = '/api/blog/initImgs'
         //  JQ Ele
         let $inp_changeTitle = $(DATASET.ACTION(CONST.CHANGE_TITLE.ACTION))
         let $btn_updateTitle = $(DATASET.ACTION(CONST.UPDATE_TITLE.ACTION))
@@ -177,7 +176,6 @@ window.addEventListener('load', async () => {
             //  editor
             $$editor = init_editor()
             backDrop.insertEditors([$$editor])
-            window.editor = $$editor
             initImgData()
             //  $title handleInput => 驗證標題合法性
             $inp_changeTitle.on('input', handle_input)
@@ -249,7 +247,7 @@ window.addEventListener('load', async () => {
                     mode: 'simple'
                 })
                 //  editor 工具欄 創建
-                const toolbar = createToolbar({
+                createToolbar({
                     editor,
                     selector: '#toolbar-container',
                     mode: 'simple'
@@ -260,12 +258,14 @@ window.addEventListener('load', async () => {
                 //  editor 的 修改圖片資訊前的檢查函數
                 async function checkImage(src, alt, url) {
                     //  修改
-                    let reg = /alt_id=(?<alt_id>\w+)/
+                    let reg = CONST.REG.IMG.ALT_ID
                     let res = reg.exec(src)
-                    let alt_id = res.groups.alt_id * 1
-                    let blog_id = $$pageData.blog.id
-                    alt = _xss(alt)
-                    await _axios.patch('/api/album', { blog_id, alt_id, alt })
+                    let payload = {
+                        blog_id: $$pageData.blog.id,
+                        alt_id: res.groups.alt_id * 1,
+                        alt: xssAndTrim(alt)
+                    }
+                    await _axios.patch('/api/album', payload)
                     //  尋找相同 alt_id
                     let imgData = $$pageData.blog.map_imgs.get(alt_id)
                     imgData.alt = alt
@@ -315,7 +315,7 @@ window.addEventListener('load', async () => {
                     //  同步數據
                     insertFn(`${newImg.url}?alt_id=${newImg.alt_id}`, newImg.name)
                     //  將圖片插入 editor
-                    return 
+                    return
                     //  取得圖片的 hash
                     async function _getHash(img) {
                         //  取得 img 的 MD5 Hash(hex格式)
@@ -325,13 +325,13 @@ window.addEventListener('load', async () => {
                             blogImg_id: undefined,
                             hash
                         }
-                        let { map_imgs} = $$pageData.blog
+                        let { map_imgs } = $$pageData.blog
                         if (map_imgs.size) {
                             //  利用hash，確認此時要上傳的img是否為舊圖
                             let imgs = [...map_imgs.values()]
                             //  img { alt_id, alt, blogImg_id, name, img_id, hash, url }
-                            let target = imgs.find( img => img.hash === res.hash)
-                            if(target){
+                            let target = imgs.find(img => img.hash === res.hash)
+                            if (target) {
                                 res.blogImg_id = target.blogImg_id
                                 res.exist = true
                             }
@@ -361,7 +361,7 @@ window.addEventListener('load', async () => {
                     function _getNameAndExt(imgName) {
                         const reg = CONST.REG.IMG.NAME_AND_EXT
                         let [_, name, ext] = reg.exec(imgName)
-                        return { 
+                        return {
                             name: name.trim().toUpperCase(),
                             ext: ext.trim().toUpperCase()
                         }
@@ -443,17 +443,15 @@ window.addEventListener('load', async () => {
 
                 //  將<img>替換為自定義<x-img>
                 function parseImgToXImg(html) {
-                    let reg = /<img.+?src=".+?alt_id=(?<alt_id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g
+                    let reg = CONST.REG.IMG.PARSE_TO_X_IMG
                     let res
                     let _html = html
                     while (res = reg.exec(html)) {
-                        if (res) {
-                            let {
-                                alt_id,
-                                style
-                            } = res.groups
-                            _html = _html.replace(res[0], `<x-img data-alt-id='${alt_id}' data-style='${style}'/>`)
-                        }
+                        let {
+                            alt_id,
+                            style
+                        } = res.groups
+                        _html = _html.replace(res[0], `<x-img data-alt-id='${alt_id}' data-style='${style}'/>`)
                     }
                     return _html
                 }
@@ -572,11 +570,12 @@ window.addEventListener('load', async () => {
                     return
                 }
                 console.log('@initPage階段，需要移除的 img 為 => alt_id:', cancelImgs)
-                await _axios.patch(CONST.UPDATE_BLOG.API, {
+                const res = await _axios.patch(CONST.UPDATE_BLOG.API, {
                     cancelImgs,
                     blog_id: $$pageData.blog.id,
                     owner_id: $$pageData.blog.author.id
                 })
+                console.log('@@處理img res =>', res)
                 //  整理img數據
                 cancelImgs.forEach(({
                     blogImgAlt_list
@@ -588,23 +587,30 @@ window.addEventListener('load', async () => {
             }
             /*  取出要移除的 blogImgAlt_id  */
             function getBlogImgIdList_needToRemoveAssociate() {
-                let reg = /alt_id=(?<alt_id>\w+)/
+                let reg = CONST.REG.IMG.ALT_ID
                 //  複製一份 blogImgAlt(由initEJSData取得)
                 let map_imgs_needRemove = new Map([...$$pageData.blog.map_imgs])
                 //  找出[{src, alt, href}, ...]
-                editor.getElemsByType('image').forEach(({
-                    src
-                }) => {
+                for(let {src} of $$editor.getElemsByType('image')){
                     let res = reg.exec(src)
                     if (!res && !res.groups.alt_id) {
-                        return
+                        continue
                     }
                     let alt_id = res.groups.alt_id * 1
                     //  alt_id是資料庫內的既存圖片
                     map_imgs_needRemove.delete(alt_id)
-                    //  從 map_imgs_needRemove 過濾掉目前仍於 content 內的「既存圖片」
-                    return
-                })
+                }
+                // $$editor.getElemsByType('image').forEach(({ src }) => {
+                //     let res = reg.exec(src)
+                //     if (!res && !res.groups.alt_id) {
+                //         return
+                //     }
+                //     let alt_id = res.groups.alt_id * 1
+                //     //  alt_id是資料庫內的既存圖片
+                //     map_imgs_needRemove.delete(alt_id)
+                //     //  從 map_imgs_needRemove 過濾掉目前仍於 content 內的「既存圖片」
+                //     return
+                // })
                 let cancelImgs = []
 
                 map_imgs_needRemove.forEach(({ blogImg_id }, alt_id) => {
@@ -625,7 +631,6 @@ window.addEventListener('load', async () => {
                         })
                     }
                 })
-
                 console.log('@要刪除的img,整理結果 => ', cancelImgs)
                 return cancelImgs
             }

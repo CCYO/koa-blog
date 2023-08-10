@@ -22,9 +22,8 @@ const C_Img = require('../../controller/img')
  * @returns { object } SuccessModel { data: { blogImg_id, id, url, name, hash }}
  */
  async function blogImg(ctx) {
-    let { blog_id, hash, name } = ctx.query
     //  查找img紀錄
-    let imgModel = await C_Img.find(hash)
+    let imgModel = await C_Img.find(ctx.query.hash)
     let url
     //  無 img 紀錄
     if(imgModel.errno){
@@ -38,11 +37,15 @@ const C_Img = require('../../controller/img')
         imgModel = await C_Img.add({hash, url})
     }
     //  建立 blogImg
-    let img_id = imgModel.data.id
-    let { data: { id: blogImg_id } } = await C_BlogImg.add({ blog_id, img_id, name })
+    const BlogImgData = {
+        blog_id: ctx.query.blog_id * 1,
+        name: ctx.query.name,
+        img_id: imgModel.data.id
+    }
+    let { data: { id: blogImg_id } } = await C_BlogImg.add(BlogImgData)
     //  建立 blogImgAlt - data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
     let { data } = await C_BlogImgAlt.add({ blogImg_id })
-    let cache = { [PAGE.BLOG]: blog_id }
+    let cache = { [PAGE.BLOG]: ctx.query.blog_id * 1 }
     ctx.body = new SuccModel({ data, cache })
 }
 

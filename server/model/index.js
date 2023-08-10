@@ -29,6 +29,7 @@ class MyErr extends Error {
         super(err)
         this.errno = errno
         this.msg = msg
+        this.err = err
     }
     isMyErr = true
 }

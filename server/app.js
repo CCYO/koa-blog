@@ -5,6 +5,8 @@ const koaViews = require('@ladjs/koa-views');
 const webpackDevMiddleware = require('./middleware/_webpackDev')
 const webpackHotMiddleware = require('koa-webpack-hot-middleware')  //  警告：沒有TS檔
 
+require('dotenv').config()
+//  設定環境變量，以 ~/.env 作為設定檔
 const CONFIG = require('../build/config')
 const isDev = process.env.NODE_ENV === 'development'
 let webpackConfig = require('../build/webpack.dev.config')
@@ -54,17 +56,15 @@ app.use(async (ctx, next) => {
             await next()
         })
     } catch (error) {
-        throw error
         ctx.status = 500
         let isAPI = /^\/api\//.test(ctx.path)
         let isMyErr = error.isMyErr
         let responseErr = error
-        if (!isMyErr) {
-            /* 完全無預期的錯誤 */
-            ctx.error = error
-            //  若 error 直接作為 emit 的 2st參數，部份prop會被移除，所以將 error 附加在 ctx，後續 emit 調用時則可以取得完整 error
+        if (!isMyErr || error.err) {
+            /* 完全無預期的錯誤，或是捕捉到第三方模塊生成的錯誤 */
             ctx.app.emit('error', error, ctx)
             responseErr = ErrRes.SERVER_ERR
+            //  公版錯誤提醒
         }
         if (isProd) {
             //  let responseErr = { errno: '44444', msg: '伺服器未預期的錯誤' }
@@ -153,7 +153,10 @@ app.use(viewSquare.routes(), viewSquare.allowedMethods())
 app.use(viewErrPage.routes(), viewErrPage.allowedMethods())
 
 app.on('error', (error, ctx) => {
-    console.log(`@ 發生未預期的錯誤!!!! =>`, error)
+    console.log(`@ 發生未預期的錯誤!!!!`)
+    console.log(`@ MyErr : \n`, error)
+    console.log(`\n -------------------------------------------- \n`)
+    console.log(`@ 原生錯誤 error : \n`, error.err)
 });
 
 module.exports = app
