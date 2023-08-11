@@ -376,26 +376,43 @@ window.addEventListener('load', async () => {
                     const KEY = 'html'
                     let content = xssAndRemoveHTMLEmpty(editor.getHtml())
                     let errors = await validate({ html: content })
+                    //  僅做html驗證
                     $$payload.setKVpairs({ [KEY]: content })
-                    if (!errors) {
+                    //  先存入payload
+                    const error = !errors ? null : errors[KEY]
+                    if (!error) {
                         $wordCount.text(`還能輸入${$$htmlStr_maxLength - content.length}個字`).removeClass('text-danger')
-                        return
-                    }
-                    const error = errors[KEY]
-                    if (error['maxLength']) {
+                        //  若html通過驗證，提示可輸入字數
+                    } else if (error['maxLength']) {
                         $wordCount.text(`文章內容已超過${content.length - $$htmlStr_maxLength}個字`).addClass('text-danger')
+                        //  提示html超出字數
                     } else if (error['minLength']) {
                         $wordCount.text(`文章內容不能為空`).addClass('text-danger')
+                        //  提示html不可為空
                     } else if (error['diff']) {
                         $$payload._del(KEY)
+                        //  若html與原本相同，刪去payload的html數據
                     }
                     await validateAll()
+                    //  針對整體 payload 做驗證
                 }
             }
             /* HANDLE --------------------------------------------------------------- */
             //  關於 更新文章的相關操作
             async function handle_updateBlog(e) {
+                let payload = $$payload.getPayload()
+                if ($$payload.has('html')) {
+                    payload.html = parseImgToXImg(payload.html)
+                    //  將<img>轉換為自定義<x-img>
+                }
+                //  整理出「預計刪除BLOG→IMG關聯」的數據
+                let cancelImgs = getBlogImgIdList_needToRemoveAssociate()
+                if (cancelImgs.length) { //  若cancel有值
+                    payload.cancelImgs = cancelImgs //  放入payload
+                }
+                console.log('@更新前確認 -------------')
                 const errors = await validateAll()
+                console.log('@更新前確認 ------------- 確認完畢')
                 if (errors) {
                     let msg = ''
                     const invalidateMsg = Object.entries(errors)
@@ -414,16 +431,6 @@ window.addEventListener('load', async () => {
                     }
                     alert(msg)
                     return
-                }
-                let payload = $$payload.getPayload()
-                if ($$payload.has('html')) {
-                    payload.html = parseImgToXImg(payload.html)
-                    //  將<img>轉換為自定義<x-img>
-                }
-                //  整理出「預計刪除BLOG→IMG關聯」的數據
-                let cancelImgs = getBlogImgIdList_needToRemoveAssociate()
-                if (cancelImgs.length) { //  若cancel有值
-                    payload.cancelImgs = cancelImgs //  放入payload
                 }
                 payload.blog_id = $$pageData.blog.id
                 payload.owner_id = $$pageData.blog.author.id
@@ -561,15 +568,11 @@ window.addEventListener('load', async () => {
             async function initImgData() {
                 //  取出存在pageData.imgs的圖數據，但editor沒有的
                 //  通常是因為先前editor有做updateImg，但沒有存文章，導致後端有數據，但editor的html沒有
-
-                //  整理要與該blog切斷關聯的圖片，格式為[{blogImg_id, blogImgAlt_list}, ...]
                 let cancelImgs = getBlogImgIdList_needToRemoveAssociate()
-
+                //  整理要與該blog切斷關聯的圖片，格式為[{blogImg_id, blogImgAlt_list}, ...]
                 if (!cancelImgs.length) { //  若cancel無值
-                    console.log('@initPage階段，沒有需要移除的 img')
                     return
                 }
-                console.log('@initPage階段，需要移除的 img 為 => alt_id:', cancelImgs)
                 const res = await _axios.patch(CONST.UPDATE_BLOG.API, {
                     cancelImgs,
                     blog_id: $$pageData.blog.id,
@@ -589,52 +592,38 @@ window.addEventListener('load', async () => {
             function getBlogImgIdList_needToRemoveAssociate() {
                 let reg = CONST.REG.IMG.ALT_ID
                 //  複製一份 blogImgAlt(由initEJSData取得)
-                let map_imgs_needRemove = new Map([...$$pageData.blog.map_imgs])
-                //  找出[{src, alt, href}, ...]
-                for(let {src} of $$editor.getElemsByType('image')){
+                let map_imgs_needRemove = new Map($$pageData.blog.map_imgs)
+                //  找出editor內的<img>數據[{src, alt, href}, ...]
+                for (let { src } of $$editor.getElemsByType('image')) {
+                    /* 藉由<img>的alt_id，將仍存在editor內的圖片 從 map_imgs_needRemove 過濾掉 */
                     let res = reg.exec(src)
-                    if (!res && !res.groups.alt_id) {
+                    if (!res || !res.groups.alt_id) {
                         continue
                     }
                     let alt_id = res.groups.alt_id * 1
                     //  alt_id是資料庫內的既存圖片
                     map_imgs_needRemove.delete(alt_id)
                 }
-                // $$editor.getElemsByType('image').forEach(({ src }) => {
-                //     let res = reg.exec(src)
-                //     if (!res && !res.groups.alt_id) {
-                //         return
-                //     }
-                //     let alt_id = res.groups.alt_id * 1
-                //     //  alt_id是資料庫內的既存圖片
-                //     map_imgs_needRemove.delete(alt_id)
-                //     //  從 map_imgs_needRemove 過濾掉目前仍於 content 內的「既存圖片」
-                //     return
-                // })
-                let cancelImgs = []
-
-                map_imgs_needRemove.forEach(({ blogImg_id }, alt_id) => {
-                    let ok = cancelImgs.some((img, index) => {
-                        if (img.blogImg_id === blogImg_id) {
-                            //  若存在，代表這張準備被移除的圖片，有一張以上的同檔
-                            cancelImgs[index]['blogImgAlt_list'].push(alt_id)
-                            //  將這張重複圖檔的alt_id，收入blogImgAlt_list
-                            return true
-                        }
-                    })
-                    if (!ok) {
-                        //  代表還沒有與此圖檔相同的檔案
-                        //  將此圖檔整筆記錄下來
+                let cancelImgs = Array.from(map_imgs_needRemove).reduce((cancelImgs, [alt_id, { blogImg_id }]) => {
+                    const index = cancelImgs.findIndex(img => img.blogImg_id === blogImg_id)
+                    if (index < 0) {
+                        //  代表還沒有與此圖檔相同的檔案，將此圖檔整筆記錄下來
                         cancelImgs.push({
                             blogImg_id,
                             blogImgAlt_list: [alt_id]
                         })
+                    } else {
+                        //  代表這張準備被移除的圖片，有一張以上的同檔
+                        cancelImgs[index]['blogImgAlt_list'].push(alt_id)
+                        //  將這張重複圖檔的alt_id，收入blogImgAlt_list
                     }
-                })
-                console.log('@要刪除的img,整理結果 => ', cancelImgs)
+                    return cancelImgs
+                }, [])
+                if (cancelImgs.length) {
+                    console.log('@要刪除的img,整理結果 => ', cancelImgs)
+                }
                 return cancelImgs
             }
-
             //  校驗blog數據，且決定submit可否點擊
             async function validate(data) {
                 const _validate = validates.blog
@@ -649,100 +638,3 @@ window.addEventListener('load', async () => {
         }
     }
 })
-
-//  初始化 valicator
-function init_valicator(schema) {
-    let Ajv = window.ajv7
-    let ajv = new Ajv({
-        allErrors: true
-    })
-    //  定義 keyword: diff，定義不可與現存的表格值相同
-    ajv.addKeyword({
-        keyword: 'diff',
-        type: ['string', 'number', 'boolean'],
-        schemaType: 'string',
-        validate: function _(inputName, newData) {
-            let curData = $$pageData.blog[inputName]
-            if (newData !== curData) {
-                return true
-            }
-            if (!_.errors) {
-                _.errors = []
-            }
-            _.errors.push({
-                keyword: 'diff'
-            })
-            return false
-        },
-        errors: true
-    })
-    //  生成驗證函數
-    let valicate = ajv.compile(schema)
-    //  返回驗證器
-    return (newData) => {
-        if (!valicate(newData)) { //  代表非法
-            let list_inputNameAndMessage = valicate.errors.map(error => {
-                //  取得造成非法的相關資訊
-                let {
-                    inputName,
-                    message,
-                    keyword
-                } = inputNameAndMessage(error)
-                //  移除payload非法的數據
-                $$payload.delete(inputName)
-                return {
-                    inputName,
-                    message,
-                    keyword
-                }
-            })
-            return list_inputNameAndMessage
-        } else { //  代表合法
-            return []
-        }
-    }
-    //  提取非法訊息的 { inputName, message } 
-    function inputNameAndMessage(error) {
-        let {
-            instancePath,
-            keyword,
-            params
-        } = error
-        //  instancePath 格式為 /xxx
-        let inputName = instancePath.slice(1)
-        let value = params ? [...Object.entries(params)][0][1] : undefined
-        let message
-        switch (keyword) {
-            case 'type':
-                message = `數據格式必須為${value}`
-                break
-            case 'minLength':
-                message = `不能少於${value}個字元`
-                break
-            case 'maxLength':
-                message = `不能多於${value}個字元`
-                break
-            case 'if':
-                message = '請寫內文，不然幹嘛公開文章'
-                break
-            case 'diff':
-                let name =
-                    inputName === 'title' ? '標題' :
-                        inputName === 'html' ? '內文' :
-                            '文章公開/隱藏設定'
-                message = `與當前的${name}相同，若沒有要更新就別鬧了`
-                break
-            case 'minProperties':
-                message = '沒有要變動就別亂'
-                break
-            default:
-                message = `錯誤訊息的keyword為${keyword} -- 未知的狀況`
-                break;
-        }
-        return {
-            inputName,
-            message,
-            keyword
-        }
-    }
-}

@@ -501,7 +501,6 @@ export default async function () {
     function activeNavItem() {
         let reg_pathname = /^\/(?<pathname>\w+)\/?(?<albumList>list)?/
         let { pathname, albumList } = reg_pathname.exec(location.pathname).groups
-        console.log('@pathname => ', pathname)
         $(`.nav-link[href^="/${pathname}"]`).addClass('active')
     }
     //  請求 news

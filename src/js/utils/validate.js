@@ -179,7 +179,41 @@ const SCHEMA = {
                 errorMessage: {
                     type: '必須是boolean'
                 }
-            }
+            },
+            cancelImgs: {
+                type: 'object',
+                properties: {
+                    blogImg_id: {
+                        type: 'integer',
+                        errorMessage: {
+                            type: '只能是整數'
+                        }
+                    },
+                    blogImgAlt_list: {
+                        type: 'array',
+                        minItems: 1,
+                        uniqueItems: true,
+                        items: {
+                            type: 'integer',
+                            errorMessage: {
+                                type: '只能是整數'
+                            }
+                        },
+                        errorMessage: {
+                            type: '必須是array',
+                            minItems: '不能為空',
+                            uniqueItems: '不該有重複的值'
+                        }
+                    }
+                },
+                required: ['blogImg_id', 'blogImgAlt_list'],
+                additionalProperties: false,
+                errorMessage: {
+                    type: '必須是object',
+                    required: '必須包含blogImg_id與blogImgAlt_list數據',
+                    additionalProperties: '不允許除了blogImg_id與blogImgAlt_list以外的數據'
+                }
+            },
         }
     },
     [CONST.VALIDATE.EMAIL]: {
@@ -366,6 +400,9 @@ const SCHEMA = {
             show: {
                 $ref: 'defs.json#/definitions/show',
                 diff: { $data: '1/$$blog/show' }
+            },
+            cancelImgs: {
+                $ref: 'defs.json#/definitions/cancelImgs'
             }
         },
         required: ['$$blog'],
@@ -425,8 +462,9 @@ function handleBlogErr(validateErrors) {
     /*{ 
         errors: [ { ..., message: 自定義的錯誤說明, ... }, ...],
       }*/
-    return validateErrors.reduce((init, __) => {
-        let { params, keyword, instancePath, message } = __
+    console.log('@validate handle 要處理的 errors => ', validateErrors)
+    return validateErrors.reduce((init, validateError) => {
+        let { params, keyword, instancePath, message } = validateError
         if (!instancePath) {
             /* 通常是 schema 最高等級的錯誤，換句話說，通常不會是 data 上能查詢到的 keyword（如　required || if || then 等） */
             if (keyword === 'errorMessage') {
@@ -451,13 +489,11 @@ function handleBlogErr(validateErrors) {
         } else {
             /* 通常是 schema 非高等級的錯誤，這次的應用會是對應 properties 的內容 */
             let name = instancePath.slice(1)
-            console.log('#error => ', name, keyword, message, __)
-            console.log('@init => ', init)
+            //  去除'/'
             if (keyword === 'errorMessage') {
                 /* 已被 ajv-errors 捕獲的錯誤 */
                 const { errors: [_error] } = params
                 keyword = _error.keyword
-                console.log('@keyword =? ', keyword)
             }
             if (!init.hasOwnProperty(name)) {
                 init[name] = {}
@@ -531,10 +567,6 @@ async function confirmPassword(schema, origin_password, parentSchema, dataCtx) {
     return true
 }
 function diff(schema, data, parentSchema, dataCtx) {
-    console.log('@schema => ', schema)
-    console.log('@data => ', data)
-    console.log('@parentSchema => ', parentSchema)
-    console.log('@dataCtx => ', dataCtx)
     if (schema !== data) {
         return true
     }

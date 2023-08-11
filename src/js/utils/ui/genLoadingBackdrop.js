@@ -19,9 +19,8 @@ export default class {
             .removeClass(blockClassName)
             .off(`.${backdropClassName}`)
         this.$backdrop.removeAttr('style').hide()
-        console.log('@this.editors => ', this.editors)
         if (this.editors.length) {
-            for (editor of this.editors) {
+            for (let editor of this.editors) {
                 editor.enable()
             }
         }
@@ -38,15 +37,16 @@ export default class {
         if (editors.length) {
             this.insertEditors(editors)
         }
-        for (editor of this.editors) {
-            ediotr.disable()
+        for (let editor of this.editors) {
+            editor.disable()
         }
         this.$backdrop.show()
         this.$blockList
             .addClass(blockClassName)
             .on(`focus.${backdropClassName}`, (e) => this.focusBackdrop(e))
+        console.log('backdrop show')
     }
-    insertEditors(editors){
+    insertEditors(editors) {
         this.editors = this.editors.concat(editors)
     }
     focusBackdrop(e) {
