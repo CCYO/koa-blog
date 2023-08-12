@@ -22,7 +22,6 @@ export default async function () {
     activeNavItem()
     //  根據 path，顯示當前 active NavItem
     if(CONST.REG.PAGE_REGISTER_OR_LOGIN.test(location.pathname)){
-
         renderNoLoginNav()
         return _data
     }

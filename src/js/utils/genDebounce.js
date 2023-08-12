@@ -16,8 +16,9 @@ export default function(fn, config = CONF) {
     let timeSet
     //  setTimeout 標記
     let debounce = (...args) => {
+        //  args 是傳給 fn 的參數
+        //  例如fn若是EventHandle，則代表可藉由args[0]取得event
         if(loading){
-            console.log('@...args => ', args)
             loading.call(this, ...args)
         }
         if (timeSet) {

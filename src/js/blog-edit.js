@@ -177,8 +177,12 @@ window.addEventListener('load', async () => {
             $$editor = init_editor()
             backDrop.insertEditors([$$editor])
             initImgData()
+            const debounce_handle_input = genDebounce( handle_input, {
+                loading: () => $btn_updateTitle.prop('disabled', true)
+                //  debounce階段時，限制更新鈕
+            })
             //  $title handleInput => 驗證標題合法性
-            $inp_changeTitle.on('input', handle_input)
+            $inp_changeTitle.on('input', debounce_handle_input)
             //  $title handleBlur => 若標題非法，恢復原標題
             $inp_changeTitle.on('blur', handle_blur)
             //  $btn_updateTitlebtn handleClick => 送出新標題
@@ -199,7 +203,7 @@ window.addEventListener('load', async () => {
                     owner_id: $$pageData.blog.author.id
                 }
                 await _axios.delete(CONST.UPDATE_BLOG.API, { data })
-                my_alert('已成功刪除此篇文章')
+                alert('已成功刪除此篇文章')
                 location.href = '/self'
             }
             //  init函數
@@ -315,6 +319,7 @@ window.addEventListener('load', async () => {
                     //  同步數據
                     insertFn(`${newImg.url}?alt_id=${newImg.alt_id}`, newImg.name)
                     //  將圖片插入 editor
+                    console.log('完成圖片插入囉！-------------------------------------------------')
                     return
                     //  取得圖片的 hash
                     async function _getHash(img) {
@@ -368,7 +373,10 @@ window.addEventListener('load', async () => {
                     }
                 }
                 //  handle：editor選區改變、內容改變時觸發
-                async function handle_change() {
+                const handle_change = async function() {
+                    return genDebounce(_, { loading: () => console.log('loading....')})
+                    async function _(){
+                    console.log('handle_change 抓到囉！-------------------------------------------------')
                     if (!editor) {
                         //  editor尚未建構完成
                         return
@@ -397,6 +405,7 @@ window.addEventListener('load', async () => {
                     //  針對整體 payload 做驗證
                 }
             }
+            }
             /* HANDLE --------------------------------------------------------------- */
             //  關於 更新文章的相關操作
             async function handle_updateBlog(e) {
@@ -410,9 +419,7 @@ window.addEventListener('load', async () => {
                 if (cancelImgs.length) { //  若cancel有值
                     payload.cancelImgs = cancelImgs //  放入payload
                 }
-                console.log('@更新前確認 -------------')
                 const errors = await validateAll()
-                console.log('@更新前確認 ------------- 確認完畢')
                 if (errors) {
                     let msg = ''
                     const invalidateMsg = Object.entries(errors)
@@ -481,6 +488,7 @@ window.addEventListener('load', async () => {
             }
             //  關於 更新title 的相關操作
             async function handle_updateTitle(e) {
+                e.preventDefault()
                 const KEY = 'title'
                 const payload = {
                     blog_id: $$pageData.blog.id,

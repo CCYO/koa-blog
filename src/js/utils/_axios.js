@@ -21,10 +21,18 @@ axios.interceptors.request.use(
 /* 配置 axios 的 響應攔截器，統一處理報錯 */
 axios.interceptors.response.use(
     response => {
-        let { config: { url }, data: { errno, data, msg } } = response
+        let { config: { url }, data: { errno } } = response
         let res = response.data
         if (errno === ErrRes.PERMISSION.NO_LOGIN.errno) {
-            res = { errno, data: { me: {} } }
+            const reg = /^\/api\/news$/
+            let isNews = reg.test(window.location.pathname)
+            if(isNews){
+                console.log('取得news資訊時，發現未登入')
+                res = { errno, data: { me: {} } }
+            }else{
+                alert('尚未登入！請先登入帳號！')
+                location.href = `/login?from=${encodeURIComponent(location.href)}`
+            }
         }
         backdrop.hidden()
         return Promise.resolve(res)

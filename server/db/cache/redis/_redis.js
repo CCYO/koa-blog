@@ -68,9 +68,11 @@ async function getMap(type) {
         },
         async clear(list) {
             for (let id of list) {
+                console.log(`${type} --- #clear --- id:${id}`)
                 map.delete(id)
             }
             await Redis.set(type, [...map.entries()])
+            console.log('res => ', await Redis.get(type))
             return true
         }
     }

@@ -60,12 +60,12 @@ app.use(async (ctx, next) => {
         let isAPI = /^\/api\//.test(ctx.path)
         let isMyErr = error.isMyErr
         let responseErr = error
-        if (!isMyErr || error.err) {
+        // if (!isMyErr || error.err) {
             /* 完全無預期的錯誤，或是捕捉到第三方模塊生成的錯誤 */
             ctx.app.emit('error', error, ctx)
             responseErr = ErrRes.SERVER_ERR
             //  公版錯誤提醒
-        }
+        // }
         if (isProd) {
             //  let responseErr = { errno: '44444', msg: '伺服器未預期的錯誤' }
         }
@@ -153,10 +153,19 @@ app.use(viewSquare.routes(), viewSquare.allowedMethods())
 app.use(viewErrPage.routes(), viewErrPage.allowedMethods())
 
 app.on('error', (error, ctx) => {
-    console.log(`@ 發生未預期的錯誤!!!!`)
-    console.log(`@ MyErr : \n`, error)
-    console.log(`\n -------------------------------------------- \n`)
-    console.log(`@ 原生錯誤 error : \n`, error.err)
+    if(error.isMyErr){
+        console.log('@isMyErr => ', error.isMyErr)
+        console.log('@errno => ', error.errno)
+        console.log('@msg => ', error.msg)
+    }
+    if(error.err){
+        console.log('@第三方模塊包裝後的Error message: \n', error.message)
+        console.log('@entries => \n ', Object.entries(error.err))
+        console.log('@原生錯誤 ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓\n', error.err)
+    }
+    if(!error.isMyErr){
+        console.log('@ 未被預先機制捕捉的錯誤: \n', error)
+    }
 });
 
 module.exports = app

@@ -35,11 +35,10 @@ async function login(ctx, next) {
     if (ctx.session.user) {
         return await next()
     } 
-    if(ctx.request.path === '/api/news'){
-        ctx.body = new ErrModel(ErrRes.PERMISSION.NO_LOGIN)
-    }else{
-        throw new MyErr(ErrRes.PERMISSION.NO_LOGIN)
-    }
+    // if(ctx.request.path === '/api/news'){
+    //     ctx.body = new ErrModel(ErrRes.PERMISSION.NO_LOGIN)
+    // }
+    ctx.body = new ErrModel(ErrRes.PERMISSION.NO_LOGIN)
     return
 }
 

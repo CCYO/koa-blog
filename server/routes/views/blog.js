@@ -31,7 +31,7 @@ router.get('/blog/edit/:id', CHECK.login, CHECK.mustBeOwner, privateCache, async
         //  DB 沒有相符數據
         if (resModel.errno) {
             console.log(`@ DB 不存在 blog/${blog_id} 數據 `)
-            return await ctx.render('page404', { ...resModel })
+            return await ctx.render('page404', { ...resModel, title: '文章不存在' })
             //  將html數據做百分比編碼，交由前端解碼
         } else {
             console.log(`@ 從 DB 取得 ${cacheKey}`)

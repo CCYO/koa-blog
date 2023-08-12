@@ -250,11 +250,11 @@ window.addEventListener('load', async () => {
             if (!confirm('真的要刪掉?')) {
                 return
             }
-            let $target = $(e.target)
+            let id = e.target.dataset[DATASET.KEY.REMOVE_BLOG_ID]
             //  要被刪除的文章id
-            let id = $target.data('my-remove-blog')
-            //  送出刪除命令
             await removeBlogs([id])
+            //  送出刪除命令
+            alert('刪除成功')
             return
         }
 

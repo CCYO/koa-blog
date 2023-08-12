@@ -59,7 +59,7 @@ const private = (type) => async function (ctx, next) {
     await next()
     let { exist, data } = ctx.cache[KEY]
     //  系統沒有應對的緩存資料
-    if (exist === STATUS.NO_CACHE) {
+    if (exist === STATUS.NO_CACHE && data) {
         //  將blog存入系統緩存
         await cacheType.set(id, data)
     }

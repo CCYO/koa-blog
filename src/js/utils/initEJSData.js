@@ -70,8 +70,7 @@ async function initBlog(blog) {
     //  blog.imgs: [ img { alt_id, alt, blogImg_id, name, img_id, hash, url }]
     //  blog.map_imgs: alt_id → img
     blog.html = parseBlogContent(blog.html)
-    //  處理blog內的內文數據
-    //  將 blog.html(百分比編碼格式) → htmlStr
+    //  對 blog.html(百分比編碼格式) 進行解碼
 
     /* 處理blog內的comment數據 */
     //  當前是否為 編輯頁
@@ -105,12 +104,14 @@ async function initBlog(blog) {
         while (res = REG.BLOG.X_IMG.exec(copy)) {
             let { alt_id, style } = res.groups
             //  找出對應的img數據
-            let { url, alt } = blog.map_imgs.get(alt_id)
+            let tt = [...blog.map_imgs]
+            let ggg = blog.map_imgs.get(alt_id * 1)
+            let { url, alt } = ggg
             //  MAP: alt_id → img { alt_id, alt, blogImg_id, name, img_id, hash, url}
             let imgEle = `<img src='${url}?alt_id=${alt_id}' alt='${alt}' `
             let replaceStr = style ? `${imgEle} style='${style}'/>` : `${imgEle}/>`
             //  修改 _html 內對應的 img相關字符
-            copy = htmlStr.replace(res[0], replaceStr)
+            htmlStr = htmlStr.replace(res[0], replaceStr)
         }
         return htmlStr
     }

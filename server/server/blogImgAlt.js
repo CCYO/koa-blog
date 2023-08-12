@@ -33,7 +33,7 @@ async function create(data) {
         let blogImgAlt = await BlogImgAlt.create(data)
         return Init.blogImgAlt(blogImgAlt)
     }catch(err){
-        throw MyErr({ ...ErrRes.BLOG_IMG_ALT.CREATE.ERR, err})
+        throw new MyErr({ ...ErrRes.BLOG_IMG_ALT.CREATE.ERR, err})
     }
     
 }

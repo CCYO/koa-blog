@@ -98,6 +98,7 @@ async function getTYPE(type) {
         //  0501
         //  清除緩存
         async delList(list) {
+            console.log('@要刪除的 list => ', list)
             if (list.length) {
                 return await cacheType.clear(list)
             }
