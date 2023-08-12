@@ -177,7 +177,7 @@ window.addEventListener('load', async () => {
             $$editor = init_editor()
             backDrop.insertEditors([$$editor])
             initImgData()
-            const debounce_handle_input = genDebounce( handle_input, {
+            const debounce_handle_input = genDebounce(handle_input, {
                 loading: () => $btn_updateTitle.prop('disabled', true)
                 //  debounce階段時，限制更新鈕
             })
@@ -223,6 +223,9 @@ window.addEventListener('load', async () => {
                     // ... 其他语言词汇，下文说明 ...
                 })
                 i18nChangeLanguage('tw')
+                const handle_change = genDebounce(_, {
+                    loading: () => $btn_updateBlog.prop('disabled', true)
+                })
                 //  editor config
                 const editorConfig = {
                     readOnly: true,
@@ -373,9 +376,7 @@ window.addEventListener('load', async () => {
                     }
                 }
                 //  handle：editor選區改變、內容改變時觸發
-                const handle_change = async function() {
-                    return genDebounce(_, { loading: () => console.log('loading....')})
-                    async function _(){
+                async function _() {
                     console.log('handle_change 抓到囉！-------------------------------------------------')
                     if (!editor) {
                         //  editor尚未建構完成
@@ -403,8 +404,8 @@ window.addEventListener('load', async () => {
                     }
                     await validateAll()
                     //  針對整體 payload 做驗證
+
                 }
-            }
             }
             /* HANDLE --------------------------------------------------------------- */
             //  關於 更新文章的相關操作
