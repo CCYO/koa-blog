@@ -228,6 +228,11 @@ window.addEventListener('load', async () => {
                 })
                 //  editor config
                 const editorConfig = {
+                    hoverbarKeys: {
+                        image: {
+                            menuKeys: ["editImage", "imageWidth30", "imageWidth50", "imageWidth100", "deleteImage"],
+                        }
+                    },
                     readOnly: true,
                     placeholder: '請開始撰寫文章內容...',
                     //  每次editor焦點/內容變動時調用
@@ -243,10 +248,19 @@ window.addEventListener('load', async () => {
                             //  編輯前的檢查函數
                             checkImage
                         }
-                    }
+                    },
+                    // hoverbarKeys: {
+                    //     'image': {
+                    //         match: (editor, n) => {
+                    //             console.log('n => ', n)
+                    //         },
+                    //         // 清空 image 元素的 hoverbar
+                    //         menuKeys: [],
+                    //     }
+                    // }
                 }
                 //  editor 編輯欄 創建
-                const editor = createEditor({
+                const editor = window.editor = createEditor({
                     //  插入後端取得的 html
                     html: $$pageData.blog.html || '',
                     selector: '#editor-container',
@@ -264,15 +278,16 @@ window.addEventListener('load', async () => {
                 return editor
                 //  editor 的 修改圖片資訊前的檢查函數
                 async function checkImage(src, alt, url) {
+                    if(url || src){
+                        return '不能修改url'
+                    }
                     //  修改
                     let reg = CONST.REG.IMG.ALT_ID
                     let res = reg.exec(src)
-                    let payload = {
-                        blog_id: $$pageData.blog.id,
-                        alt_id: res.groups.alt_id * 1,
-                        alt: xssAndTrim(alt)
-                    }
-                    await _axios.patch('/api/album', payload)
+                    let blog_id = $$pageData.blog.id
+                    let alt_id = res.groups.alt_id *= 1
+                    alt = xssAndTrim(alt)
+                    await _axios.patch('/api/album', { alt_id, blog_id, alt })
                     //  尋找相同 alt_id
                     let imgData = $$pageData.blog.map_imgs.get(alt_id)
                     imgData.alt = alt

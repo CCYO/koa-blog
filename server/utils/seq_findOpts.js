@@ -373,7 +373,7 @@ module.exports = {
             attributes: [['id', 'alt_id'], 'alt'],
             include: {
                 model: BlogImg,
-                attributes: [['id', 'blogImg_id'], 'name'],
+                attributes: [['id', 'blogImg_id'], 'blog_id', 'name'],
                 required: true,
                 include: {
                     model: Img,

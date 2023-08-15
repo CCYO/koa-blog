@@ -14,19 +14,19 @@ async function add(data) {
         throw new MyErr(ErrRes.BLOG_IMG_ALT.CREATE.NO_DATA)
     }
     let blogImgAlt = await BlogImgAlt.create(data)
-    return await findWholeInfo(blogImgAlt.id)
-    
+    let res = await findWholeInfo(blogImgAlt.id)
+    return res
 }
 //  0410
 async function findWholeInfo(alt_id){
     if(!alt_id){
         throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NO_DATA)
     }
-    let alt = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.find(alt_id))
-    if(!alt){
+    let res = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.find(alt_id))
+    if(!res){
         throw new ErrModel(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST)
     }
-    return new SuccModel({ data: alt })
+    return new SuccModel({ data: res,  cache: { [PAGE.BLOG]: [ res.blog_id ] } })
 }
 //  0408
 async function removeList(id_list) {
