@@ -14,8 +14,8 @@ async function add(data) {
         throw new MyErr(ErrRes.BLOG_IMG_ALT.CREATE.NO_DATA)
     }
     let blogImgAlt = await BlogImgAlt.create(data)
-    let res = await findWholeInfo(blogImgAlt.id)
-    return res
+    return await findWholeInfo(blogImgAlt.id)
+    
 }
 //  0410
 async function findWholeInfo(alt_id){

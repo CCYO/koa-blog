@@ -10,6 +10,7 @@ import validates from './utils/validate'
 import SparkMD5 from 'spark-md5'
 //  <!-- 引入 editor js -->
 import { i18nAddResources, i18nChangeLanguage, createToolbar, createEditor } from '@wangeditor/editor'
+import twResources from '../locale/tw'
 import _ from 'lodash'
 
 import UI from './utils/ui'
@@ -174,7 +175,7 @@ window.addEventListener('load', async () => {
         //  初始化 頁面各功能
         function init_pageFuc() {
             //  editor
-            $$editor = init_editor()
+            $$editor = window.editor = init_editor()
             backDrop.insertEditors([$$editor])
             initImgData()
             const debounce_handle_input = genDebounce(handle_input, {
@@ -211,17 +212,7 @@ window.addEventListener('load', async () => {
             // 初始化 編輯文章頁 的功能
             function init_editor() {
                 //  editor 的 繁中設定
-                i18nAddResources('tw', {
-                    // 标题
-                    header: {
-                        title: '標題',
-                        text: '文字',
-                    },
-                    blockQuote: {
-                        title: '圖標'
-                    },
-                    // ... 其他语言词汇，下文说明 ...
-                })
+                i18nAddResources('tw', twResources)
                 i18nChangeLanguage('tw')
                 const handle_change = genDebounce(_, {
                     loading: () => $btn_updateBlog.prop('disabled', true)
@@ -248,38 +239,64 @@ window.addEventListener('load', async () => {
                             //  編輯前的檢查函數
                             checkImage
                         }
-                    },
-                    // hoverbarKeys: {
-                    //     'image': {
-                    //         match: (editor, n) => {
-                    //             console.log('n => ', n)
-                    //         },
-                    //         // 清空 image 元素的 hoverbar
-                    //         menuKeys: [],
-                    //     }
-                    // }
+                    }
                 }
+                // const toolbarConfig = {
+                //     insertKeys: {
+                //         index: 22,
+                //         key: 'group-video',
+                //         menuKeys: ['insertVideo', 'uploadVideo'],
+                //         title: '影片'
+                //     }
+                // }
                 //  editor 編輯欄 創建
                 const editor = window.editor = createEditor({
                     //  插入後端取得的 html
                     html: $$pageData.blog.html || '',
                     selector: '#editor-container',
                     config: editorConfig,
-                    mode: 'simple'
+                    // mode: 'simple'
                 })
                 //  editor 工具欄 創建
-                createToolbar({
+                const toolbar = window.toolbar = createToolbar({
                     editor,
                     selector: '#toolbar-container',
-                    mode: 'simple'
+                    // config: toolbarConfig,
+                    // mode: 'simple'
                 })
-                //  初始化 payload.html
+                const handle_modalShow = gen_handle_modalShow()
+                //  handle 用來隱藏 image modal 的 src & url 編輯功能
+                editor.on('modalOrPanelShow', handle_modalShow)
                 $wordCount.text(`還能輸入${$$htmlStr_maxLength - editor.getHtml().length}個字`)
+                //  初始化 payload.html
                 return editor
+                //  handle 用來隱藏 image modal 的 src & url 編輯功能
+                function gen_handle_modalShow() {
+                    let turnoff = true
+                    return function (modalOrPanel) {
+                        if (!turnoff) {
+                            return
+                        }
+                        turnoff = true
+                        //  關閉handle
+                        const $modal = $(modalOrPanel.$elem).first()
+                        const $containerList = $modal.find('div > label.babel-container')
+                        const isImgModel = $containerList.first().children('span').text() === twResources.image.src
+                        //  若匹配，代表是 Image modal
+                        if (!isImgModel) {
+                            return
+                        }
+                        $containerList.eq(0).hide()
+                        //  隱藏image modal修改src選項
+                        $containerList.eq(2).hide()
+                        //  隱藏image modal修改href選項
+                        return
+                    }
+                }
                 //  editor 的 修改圖片資訊前的檢查函數
                 async function checkImage(src, alt, url) {
-                    if(url || src){
-                        return '不能修改url'
+                    if (url || src) {
+                        return '不能修改src與url'
                     }
                     //  修改
                     let reg = CONST.REG.IMG.ALT_ID
