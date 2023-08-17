@@ -1,22 +1,27 @@
 import xss from 'xss'
 //  表格內容xss
 export default function _xss(html) {
+    let whiteList = {
+        ...xss.whiteList,
+        div: ['data-w-e-type', 'data-w-e-is-void'],
+        input: ['type'],
+        img: ['src', 'alt', 'style', 'data-href'],
+        iframe: ['src', 'title', 'width', 'height', 'title', 'frameborder', 'allow', 'allowfullscreen']
+    }
     return xss(html, {
-        whiteList: {
-            ...xss.whiteList,
-            div: ['data-w-e-type'],
-            input: ['type'],
-            img: ['src', 'alt', 'style', 'data-href']
-        },
-        //  若ele的tag與attr符合白名單，會進入此過濾函數
-        onTagAttr(tag, attr, attrVal, isW) {
-            let checkbbox = tag === 'input' && attr === 'type' && attrVal === 'checkbox'
-            let todoDiv = tag === 'div' && attr === 'data-w-e-type' && attrVal === 'todo'
-            //  針對editor的todoList
-            let img = tag === 'img' && attr === 'src' || attr === 'alt' || attr === 'style' || attr === 'data-href'
-            //  針對editor的img
-            if (checkbbox || todoDiv || img) {
-                //  返回的字符串會成為ele的attr與attrVal
+        whiteList,
+        //  若ele的tag符合白名單，會進入此過濾函數
+        onTagAttr(tag, attr, attrVal, isWhiteAtt) {
+            if (!isWhiteAtt) {
+                //  若attr不在白名單內
+                return
+                //  無返回值的狀況，會再進入onIgnoreTag處理
+            }
+            attr = attr.trim()
+            if (tag !== 'img' && typeof attrVal !== "boolean" && !attrVal.length) {
+                //  attrVal 無值
+                return attr
+            } else {
                 return `${attr}="${attrVal}"`
             }
         },
@@ -29,7 +34,7 @@ export default function _xss(html) {
     })
 }
 
-export function xssAndTrim(data){
+export function xssAndTrim(data) {
     return _xss(data.trim())
 }
 

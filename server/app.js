@@ -67,11 +67,14 @@ app.use(async (ctx, next) => {
             //  公版錯誤提醒
         // }
         if (isProd) {
-            //  let responseErr = { errno: '44444', msg: '伺服器未預期的錯誤' }
+         
         }
         if (isAPI) {
             ctx.body = responseErr
         } else {
+            if(!responseErr.title){
+                responseErr.title = '伺服器錯誤'
+            }
             await ctx.render('page404', responseErr)
         }
         return

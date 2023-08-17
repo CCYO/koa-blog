@@ -1,0 +1,10 @@
+/* blog CSS */
+@import './common/basic.css';
+
+.box-albumList {
+    padding: 1rem;
+}
+
+.list-group-item>span {
+    font-size: 0.5rem;
+}

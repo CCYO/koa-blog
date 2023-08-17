@@ -238,6 +238,15 @@ window.addEventListener('load', async () => {
                         editImage: {
                             //  編輯前的檢查函數
                             checkImage
+                        },
+                        insertVideo: {
+                            onInsertedVideo(videoNode) {
+                                if (videoNode == null) return
+
+                                const { src } = videoNode
+                                console.log('inserted video', src, videoNode)
+                            },
+                            parseVideoSrc: customParseVideoSrc
                         }
                     }
                 }
@@ -270,6 +279,34 @@ window.addEventListener('load', async () => {
                 $wordCount.text(`還能輸入${$$htmlStr_maxLength - editor.getHtml().length}個字`)
                 //  初始化 payload.html
                 return editor
+                // 自定义转换视频
+                function customParseVideoSrc(src) {
+                    const reg = /^https:\/\/youtu.be\/(?<hash>.{11})/
+                    const res = reg.exec(src)
+                    if (!res) {
+                        return
+                    }
+                    const template = `
+                    <iframe 
+                        src="https://www.youtube.com/embed/${res.groups.hash}"
+                        width="570" height="370"
+                        title="YouTube video player"
+                        frameborder="0"
+                        allow="
+                            accelerometer;
+                            autoplay;
+                            clipboard-write;
+                            encrypted-media;
+                            gyroscope;
+                            picture-in-picture;
+                            web-share"
+                        allowfullscreen
+                    ></iframe>
+                    `
+                    console.log('轉換')
+                    return template
+                }
+
                 //  handle 用來隱藏 image modal 的 src & url 編輯功能
                 function gen_handle_modalShow() {
                     let turnoff = true
@@ -474,6 +511,7 @@ window.addEventListener('load', async () => {
                 }
                 payload.blog_id = $$pageData.blog.id
                 payload.owner_id = $$pageData.blog.author.id
+                console.log('payload => ', payload)
                 await _axios.patch(CONST.UPDATE_BLOG.API, payload)
                 for (let [key, value] of $$payload.entries()) {
                     $$pageData.blog[key] = value
@@ -498,8 +536,13 @@ window.addEventListener('load', async () => {
                             alt_id,
                             style
                         } = res.groups
-                        _html = _html.replace(res[0], `<x-img data-alt-id='${alt_id}' data-style='${style}'/>`)
+                        _html = _html.replace(
+                            res[0],
+                            //  此次匹配到的整條字符串
+                            `<x-img data-alt-id='${alt_id}' data-style='${style}'/>`
+                        )
                     }
+                    console.log('@xxxx => ', _html)
                     return _html
                 }
             }

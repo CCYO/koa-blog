@@ -108,10 +108,11 @@ async function initBlog(blog) {
             let ggg = blog.map_imgs.get(alt_id * 1)
             let { url, alt } = ggg
             //  MAP: alt_id → img { alt_id, alt, blogImg_id, name, img_id, hash, url}
-            let imgEle = `<img src='${url}?alt_id=${alt_id}' alt='${alt}' `
-            let replaceStr = style ? `${imgEle} style='${style}'/>` : `${imgEle}/>`
+            let imgEle = `<img src="${url}?alt_id=${alt_id}" alt="${alt}"`
+            let replaceStr = style ? `${imgEle} style="${style}"/>` : `${imgEle}/>`
             //  修改 _html 內對應的 img相關字符
             htmlStr = htmlStr.replace(res[0], replaceStr)
+            console.log('@替換完一次img => ', replaceStr)
         }
         return htmlStr
     }

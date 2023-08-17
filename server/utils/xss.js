@@ -1,24 +1,28 @@
 const xss = require('xss')
-
+const whiteList = {
+  ...xss.whiteList,
+  div: ['data-w-e-type', 'data-w-e-is-void'],
+  input: ['type'],
+  img: ['src', 'alt', 'style', 'data-href'],
+  iframe: ['src', 'title', 'width', 'height', 'title', 'frameborder', 'allow', 'allowfullscreen']
+}
 function my_xxs(html) {
   return xss(html, {
     //  這定能放過的 attr
-    whiteList: {
-      ...xss.whiteList,
-      //  wangEditor 會自動附加的 attr
-      div: ['data-w-e-type'],
-      input: ['type'],
-      img: ['src', 'alt', 'style', 'data-href']
-    },
+    whiteList,
     //  通過在白名單上後的attr filter
-    onTagAttr(tag, attr, value, isW) {
-      let checkbbox = tag === 'input' && attr === 'type' && value === 'checkbox'
-      //  皆是 wangEditor 自動生成
-      let todoDiv = tag === 'div' && attr === 'data-w-e-type' && value === 'todo'
-      //  自定義的 img 相關 attr
-      let img = tag === 'img' && attr === 'src' || attr === 'alt' || attr === 'style' || attr === 'data-href'
-      if (checkbbox || todoDiv || img) {
-        return `${attr}="${value}"`
+    onTagAttr(tag, attr, attrVal, isWhiteAtt) {
+      if (!isWhiteAtt) {
+        //  若attr不在白名單內
+        return
+        //  無返回值的狀況，會再進入onIgnoreTag處理
+      }
+      attr = attr.trim()
+      if (tag !== 'img' && typeof attrVal !== "boolean" && !attrVal.length) {
+        //  attrVal 無值
+        return attr
+      } else {
+        return `${attr}="${attrVal}"`
       }
     },
     //  不符合白名單，會進入此過濾函數
