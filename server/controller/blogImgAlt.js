@@ -1,6 +1,7 @@
 const Opts = require('../utils/seq_findOpts')                       //  0408
 const { ErrModel, SuccModel, ErrRes, MyErr } = require('../model')  //  0408
 const BlogImgAlt = require('../server/blogImgAlt')                  //  0406
+
 //  0411
 async function modify({alt_id, blog_id, alt}) {
     await BlogImgAlt.update(alt_id, { alt })
