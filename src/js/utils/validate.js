@@ -62,7 +62,8 @@ const CONST = {
         PASSWORD: 'password',
         AVATAR: 'avatar',
         SETTING: 'setting',
-        BLOG: 'blog'
+        BLOG: 'blog',
+        IMG_ALT: 'alt'
     },
     API: {
         EMAIL: '/api/user/isEmailExist',
@@ -88,7 +89,7 @@ const SCHEMA = {
                 maxLength: 20,
                 errorMessage: {
                     type: '必須是字符串',
-                    pattern: '必須由英文、數字以及底線組成',
+                    pattern: '必須由中文、英文、數字以及底線組成',
                     maxLength: '長度需小於20個字'
                 }
             },
@@ -214,6 +215,18 @@ const SCHEMA = {
                     additionalProperties: '不允許除了blogImg_id與blogImgAlt_list以外的數據'
                 }
             },
+            blogImgAlt: {
+                type: 'string',
+                minLength: 1,
+                maxLength: 30,
+                pattern: '^[\\u4e00-\\u9fa5a-zA-Z\\d]+$',
+                errorMessage: {
+                    type: '必須是字符串',
+                    pattern: '必須由中文、英文、數字以及底線組成',
+                    minLength: '長度要1個字符以上',
+                    maxLength: '長度需小於20個字'
+                }
+            }
         }
     },
     [CONST.VALIDATE.EMAIL]: {
@@ -410,6 +423,43 @@ const SCHEMA = {
             required: '必需有值',
             minProperties: '至少需改一筆資料',
         }
+    },
+    [CONST.VALIDATE.IMG_ALT]: {
+        type: 'object',
+        $id: `${CONST.URL}/blogImgAlt.json`,
+        properties: {
+            $$alt: {
+                type: 'string',
+                errorMessage: {
+                    type: '$$alt 必須是 string'
+                }
+            },
+            alt: {
+                $ref: 'defs.json#/definitions/blogImgAlt',
+                diff: { $data: '1/$$alt' }
+            },
+            blog_id: {
+                type: 'integer',
+                minimum: 1,
+                errorMessage: {
+                    type: '必須是整數',
+                    minimum: '必須 > 0'
+                }
+            },
+            alt_id: {
+                type: 'integer',
+                minimum: 1,
+                errorMessage: {
+                    type: '必須是整數',
+                    minimum: '必須 > 0'
+                }
+            }
+        },
+        required: ['$$alt', 'alt', 'blog_id', 'alt_id'],
+        errorMessage: {
+            type: '必須是object',
+            require: '必需有值'
+        }
     }
 }
 ajv.addSchema(SCHEMA[CONST.VALIDATE.DEFS])
@@ -571,7 +621,7 @@ function diff(schema, data, parentSchema, dataCtx) {
         return true
     }
     let { instancePath } = dataCtx
-    diff.errors = [{ instancePath, message: '若沒有要異動就別鬧', keyword: 'diff' }]
+    diff.errors = [{ instancePath, message: '若沒有要更新就別鬧', keyword: 'diff' }]
     return false
 }
 async function isEmailExist(schema, data, parentSchema, dataCtx) {
@@ -597,5 +647,6 @@ export default {
     [CONST.VALIDATE.PASSWORD]: validateUserData(CONST.VALIDATE.PASSWORD),
     [CONST.VALIDATE.AVATAR]: validateUserData(CONST.VALIDATE.AVATAR),
     [CONST.VALIDATE.SETTING]: validateUserData(CONST.VALIDATE.SETTING),
-    [CONST.VALIDATE.BLOG]: validateBlogData(CONST.VALIDATE.BLOG)
+    [CONST.VALIDATE.BLOG]: validateBlogData(CONST.VALIDATE.BLOG),
+    [CONST.VALIDATE.IMG_ALT]: validateBlogData(CONST.VALIDATE.IMG_ALT)
 }

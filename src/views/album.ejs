@@ -6,26 +6,30 @@
   <%- include('wedgets/navbar.ejs') %>
   <!-- MAIN -->
   <main class="container-md" style="display: none;">
-    <h1 class="mb-3"><%%= title %>的照片列表</h1>
+    <h1 class="mb-3">
+      <%%= title %>的照片列表
+    </h1>
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
       <%% album.imgs.forEach( ({alt_id, img_id, blogImg_id, url, alt})=> { %>
-      <div>
-        <div class="card border-dark" data-my-photo="<%%= alt_id %>">
-          <div class="ratio ratio-1x1 border-bottom border-secondary">
-            <img class="card-img-top" src="<%%= url %>?blogImgAlt=<%%= alt_id %>" alt="<%%= alt %>" />
-          </div>
-          <div class="card-body">
-            <p class="card-text text-truncate mb-0" style="height: 2rem; line-height: 2rem;">
-              <%%= alt %>
-            </p>
-            <div class="my-noshow" style="height: 2rem">
-              <input class="inputCardName w-100" type="text" value="<%%= alt %>">
-              <button class="col-auto">更新</button>
+        <div>
+          <div class="card border-dark" data-my-photo="<%%= alt_id %>">
+            <div class="ratio ratio-1x1 border-bottom border-secondary">
+              <img class="card-img-top" src="<%%= url %>?blogImgAlt=<%%= alt_id %>" alt="<%%= alt %>" />
+            </div>
+            <div class="card-body">
+              <p class="card-text text-truncate mb-0" style="height: 2rem; line-height: 2rem;">
+                <%%= alt %>
+              </p>
+              <!-- Button trigger modal -->
+              <button
+                type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalBackdrop"
+                data-my-photo="<%%= alt_id %>">
+                修改照片名稱
+              </button>
             </div>
           </div>
         </div>
-      </div>
-      <%% }) %>
+        <%% }) %>
     </div>
     <div>
       <!-- 當前使用者頁面的使用者資料 -->
@@ -34,7 +38,25 @@
       </div>
     </div>
     </div>
+    <div class="modal fade" id="modalBackdrop" tabindex="-1" aria-labelledby="modalBackdrop" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">修改照片名稱</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="text">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消更新</button>
+            <button type="button" class="btn btn-primary">更新</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
+  
   <!-- FOOTER -->
   <%- include('wedgets/footer.ejs') %>
   <%- include('wedgets/cdn') %>
