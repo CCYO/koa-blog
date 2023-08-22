@@ -5,11 +5,12 @@ if (process.env.NODE_ENV === 'development') {
 import '../css/register&login.css'
 
 import UI from './utils/ui'
-import genDebounce from './utils/genDebounce'
+import Debounce from './utils/Debounce'
+import LoadingBackdrop  from './wedgets/LoadingBackdrop'
 import validate from './utils/validate.js'
 import _axios from './utils/_axios'
 
-import initPageFn from './utils/initData.js'
+import InitPage from './utils/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
 import initNavbar from './wedgets/navbar.js'
 
@@ -37,13 +38,13 @@ window.addEventListener('load', async () => {
         login: {},
         register: {}
     }
-    const { genLoadingBackdrop, feedback } = UI
-    const backdrop = new genLoadingBackdrop()
+    const { feedback } = UI
+    const backdrop = new LoadingBackdrop()
     //  初始化來自ejs在頁面上的字符數據
     try {
         backdrop.show({blockPage: true})
         //  讀取中，遮蔽畫面
-        let initPage = new initPageFn()
+        let initPage = new InitPage()
         //  幫助頁面初始化的統整函數
         await initPage.addOtherInitFn(initNavbar)
         //  初始化navbar
@@ -113,7 +114,7 @@ window.addEventListener('load', async () => {
                     /* 整理此次 input 影響的錯誤提醒，以及表格的綁定事件 */
                     for (let inp of form) {
                         let inputName = inp.name
-                        if (eventType === 'submit' || (action === CONST.REGISTER.ACTION && inputName === 'email')) {
+                        if (e.type === 'submit' || (action === CONST.REGISTER.ACTION && inputName === 'email')) {
                             /* 除了email，其有獨立的 handle*/
                             continue
                         }
@@ -159,9 +160,8 @@ window.addEventListener('load', async () => {
                         }
                     } else {
                         alert(msg)
-                        $(form)[0].reset()
                         datas = {}
-                        feedback(4)
+                        feedback(4, form)
                     }
                     return
                 }
@@ -170,7 +170,8 @@ window.addEventListener('load', async () => {
                 }
                 for (let { inp, msg } of invalidInps) {
                     feedback(2, inp, false, msg)
-                    inp._resetHandle && inp._resetHandle(_) || deb_eventHandle(inp, 'input', _)
+                    !inp.has_debHandle && deb_eventHandle(inp, 'input', _)
+                    //  未標記 has_debHandle，則綁定
                 }
                 return
             }
@@ -178,30 +179,14 @@ window.addEventListener('load', async () => {
         
         function deb_eventHandle(selectorOrEl, eventType, handle) {
             let ele = typeof selectorOrEl === 'string' ? document.querySelector(selectorOrEl) : selectorOrEl
-            const deb_handleName = `deb_${eventType}Handle`
-            const deb_handle = ele[deb_handleName] = genDebounce(handle, {
-                loading: (e) => {
-                    feedback(1, e.target)
-                }
-            })
-            ele.addEventListener(eventType, deb_handle)
-
-            ele._resetHandle = (_handle) => {
-                const deb_handle = ele[deb_handleName]
-                if (ele.type !== 'email' && deb_handle) {
-                    ele.removeEventListener('input', deb_handle)
-                    delete ele[deb_handleName]
-                }
-                deb_eventHandle(ele, 'input', _handle)
-                return true
+            if(ele.has_debHandle){
+                return
             }
-            return true
+            ele.has_debHandle = true
+            const deb_handle = new Debounce(handle, {
+                loading: (e) => feedback(1, e.target)
+            })
+            ele.addEventListener(eventType, (e) => deb_handle.call(e))
         }
     }
 })
-
-if (module.hot) {
-    module.hot.accept('./utils/genDebounce', function () {
-        console.log('genDebounce OK!');
-    })
-}

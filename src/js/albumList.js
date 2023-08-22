@@ -6,19 +6,19 @@ import '../css/albumList.css'
 
 import UI from './utils/ui'
 
-import initPageFn from './utils/initData.js'
+import InitPage from './utils/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
 import initNavbar from './wedgets/navbar.js'
 //  初始化 Navbar
 import initEJSData from './utils/initEJSData.js'
 //  初始化來自ejs在頁面上的字符數據
+import LoadingBackdrop from './wedgets/LoadingBackdrop'
 window.addEventListener('load', async () => {
-    const { genLoadingBackdrop } = UI
-    const backDrop = new genLoadingBackdrop()
+    const backDrop = new LoadingBackdrop()
     try {
         backDrop.show({ blockPage: true })
         //  讀取中，遮蔽畫面
-        let initPage = new initPageFn()
+        let initPage = new InitPage()
         await initPage.addOtherInitFn(initEJSData)
         //  初始化ejs
         await initPage.addOtherInitFn(initNavbar)

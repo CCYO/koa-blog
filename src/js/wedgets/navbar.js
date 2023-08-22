@@ -1,8 +1,7 @@
 console.log('@navbar loading...')
 import '../../css/wedgets/navbar.css'
 import _axios from '../utils/_axios'
-import genDebounce from '../utils/genDebounce'
-
+import Debounce from '../utils/Debounce'
 import UI from '../utils/ui'
 
 const CONST = {
@@ -331,7 +330,7 @@ export default async function () {
         let $$excepts = $$news.excepts
         let $$num = $$news.num
         let $$fn = $$news.fn
-        let debounce_autoReadMore = genDebounce(autoReadMore, NEWS.DEBOUNCE_CONFIG)
+        let debounce_autoReadMore = new Debounce(autoReadMore, NEWS.DEBOUNCE_CONFIG)
         /* 初始化 nav 各功能 */
         $$fn.newsList.reset(data.news)
         //  整理頁面初次渲染取得的 news(通知數據)
@@ -349,7 +348,7 @@ export default async function () {
         //  綁定「讀取更多鈕」click handle → 獲取更多通知數據、同時更新公開數據與渲染葉面
         $('#logout').click(logout)
         //  綁定「登出鈕」click handle → 登出功能
-        debounce_autoReadMore()
+        debounce_autoReadMore.call()
         //  自動讀取更多
         async function logout(e) {
             let ready = confirm('真的要登出?')

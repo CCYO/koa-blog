@@ -1,13 +1,12 @@
 console.log('@_axios loading.....')
 import axios from 'axios'
-import UI from './ui'
+import LoadingBackdrop from '../wedgets/LoadingBackdrop'
 import * as ErrRes from '../../../server/model/errRes'
 
-const { genLoadingBackdrop } = UI
-
-const backdrop = new genLoadingBackdrop()
+const instance = axios.create()
+const backdrop = new LoadingBackdrop()
 /* 配置 axios 的 請求攔截器，統一處理報錯 */
-axios.interceptors.request.use(
+instance.interceptors.request.use(
     (config) => {
         const backdropConfig = {
             blockPage: config.blockPage ? config.blockPage : false,
@@ -19,7 +18,7 @@ axios.interceptors.request.use(
     error => { throw error }
 )
 /* 配置 axios 的 響應攔截器，統一處理報錯 */
-axios.interceptors.response.use(
+instance.interceptors.response.use(
     response => {
         let { config: { url }, data: { errno } } = response
         let res = response.data
@@ -62,4 +61,4 @@ function errHandle(error) {
     return Promise.reject()
 }
 
-export default axios
+export default instance

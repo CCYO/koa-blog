@@ -3,20 +3,17 @@ if (process.env.NODE_ENV === 'development') {
 }
 import '../css/user.css'
 
-import UI from './utils/ui'
-
-import initPageFn from './utils/initData.js'
+import InitPage from './utils/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
 import initNavbar from './wedgets/navbar.js'
 //  初始化 Navbar
-
+import LoadingBackdrop from './wedgets/LoadingBackdrop'
 window.addEventListener('load', async () => {
-    const { genLoadingBackdrop } = UI
-    const backdrop = new genLoadingBackdrop()
+    const backdrop = new LoadingBackdrop()
     try {
         backdrop.show({ blockPage: true })
         //  讀取中，遮蔽畫面
-        let initPage = new initPageFn()
+        let initPage = new InitPage()
         //  幫助頁面初始化的統整函數
         await initPage.addOtherInitFn(initNavbar)
         //  初始化navbar

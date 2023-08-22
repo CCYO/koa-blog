@@ -14,27 +14,27 @@ import twResources from '../locale/tw'
 import _ from 'lodash'
 
 import UI from './utils/ui'
-import genDebounce from './utils/genDebounce'
+import Debounce from './utils/Debounce'
 import _axios from './utils/_axios'
 import _xss, { xssAndRemoveHTMLEmpty, xssAndTrim } from './utils/_xss'
 
 import SERVER_CONST from '../../server/conf/constant'
 
-import initPageFn from './utils/initData.js'
+import InitPage from './utils/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
 import initNavbar from './wedgets/navbar.js'
 //  初始化 Navbar
 import initEJSData from './utils/initEJSData.js'
 //  初始化來自ejs在頁面上的字符數據
-
+import LoadingBackdrop from './wedgets/LoadingBackdrop'
 window.addEventListener('load', async () => {
     const { BLOG: { HTML_MAX_LENGTH } } = SERVER_CONST
-    const { genLoadingBackdrop, feedback } = UI
-    const backDrop = new genLoadingBackdrop()
+    const { feedback } = UI
+    const backDrop = new LoadingBackdrop()
     try {
         backDrop.show({ blockPage: true })
         //  讀取中，遮蔽畫面
-        let initPage = new initPageFn()
+        let initPage = new InitPage()
         await initPage.addOtherInitFn(initEJSData)
         //  初始化ejs
         await initPage.addOtherInitFn(initNavbar)
@@ -178,7 +178,7 @@ window.addEventListener('load', async () => {
             $$editor = window.editor = init_editor()
             backDrop.insertEditors([$$editor])
             initImgData()
-            const debounce_handle_input = genDebounce(handle_input, {
+            const debounce_handle_input = Debounce(handle_input, {
                 loading: () => $btn_updateTitle.prop('disabled', true)
                 //  debounce階段時，限制更新鈕
             })
@@ -214,7 +214,7 @@ window.addEventListener('load', async () => {
                 //  editor 的 繁中設定
                 i18nAddResources('tw', twResources)
                 i18nChangeLanguage('tw')
-                const handle_change = genDebounce(_, {
+                const handle_change = Debounce(_, {
                     loading: () => $btn_updateBlog.prop('disabled', true)
                 })
                 //  editor config

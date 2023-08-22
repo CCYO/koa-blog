@@ -32,6 +32,7 @@ export default function (status, targetEl, valid, msg) {
     }else if(status === 4){
         //  清空form
         for (let inp of targetEl) {
+            inp.value = ''
             $(inp)
             .removeClass('is-invalid is-valid')
             .next()

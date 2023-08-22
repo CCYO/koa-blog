@@ -1,33 +1,29 @@
-//  未完成
+/* ---------------------------------------- 開發模式，自動更新ejs ---------------------------------------- */
 if (process.env.NODE_ENV === 'development') {
     require('../views/album.ejs')
 }
+/* ---------------------------------------- CSS ---------------------------------------- */
 import '../css/album.css'
-// 引入 editor css
-import { createEditor } from '@wangeditor/editor'
-// 引入 editor js
-
-import _xss, { xssAndRemoveHTMLEmpty, xssAndTrim } from './utils/_xss'
+/* ---------------------------------------- 自訂義模塊 ---------------------------------------- */
+import { xssAndTrim } from './utils/_xss'
 import validates from './utils/validate'
-import UI from './utils/ui'
-import genDebounce from './utils/genDebounce'
 import _axios from './utils/_axios'
 
-import initPageFn from './utils/initData.js'
+import InitPage from './utils/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
 import initNavbar from './wedgets/navbar.js'
 //  初始化 Navbar
 import initEJSData from './utils/initEJSData.js'
-const { genLoadingBackdrop } = UI
-const backDrop = new genLoadingBackdrop()
-const validate = window.validate = validates['alt']
+import LoadingBackdrop from './wedgets/LoadingBackdrop'
+
+const backDrop = new LoadingBackdrop()
+
 //  初始化來自ejs在頁面上的字符數據
 window.addEventListener('load', async () => {
-
     try {
         backDrop.show({ blockPage: true })
         //  讀取中，遮蔽畫面
-        let initPage = new initPageFn()
+        let initPage = new InitPage()
         await initPage.addOtherInitFn(initEJSData)
         //  初始化ejs
         await initPage.addOtherInitFn(initNavbar)
@@ -42,93 +38,111 @@ window.addEventListener('load', async () => {
         // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
     }
 })
+/* 初始化頁面功能 */
 async function renderPage(data) {
-    //  初始化頁面功能
-    //  公用變量
-    let pageData = data
-    // ----------------------------------------------------------------------------------------
-    window.pageData = pageData
-    // ----------------------------------------------------------------------------------------
-    let { blog, imgs, map_imgs } = data.album
-    let { id: owner_id } = pageData.me
-    //  handle ---
-    const $modal = $('#modalBackdrop').first()
-    let $$bs5_modal = new bootstrap.Modal($modal)
+    /* ---------------------------------------- selector ---------------------------------------- */
+    const $$selector_modal = '#modalBackdrop'
+    /* ---------------------------------------- 公用變量 ---------------------------------------- */
+    let $$album = data.album
+    let $$blog = $$album.blog
+    let $$map_imgs = $$album.map_imgs
+    let $$bs5_modal = new bootstrap.Modal($$selector_modal)
     //  生成BS5 Modal
-    $('card button').click(e => {
-        const $container = $(e.target).parents('card').first()
-        $$bs5_modal.show($container)
-    })
-    $modal[0].addEventListener('show.bs.modal', function (e) {
-        const $container = e.relatedTarget
-        //  觸發 modal show的元素
-        let alt_id = $container.data('myPhoto')
-        alt_id *= 1
-        const { alt } = pageData.album.map_imgs.get(alt_id)
-        $(e.target).data('myPhoto', alt_id)
-        //  使 modal 的 dataset 呈現 alt_id
-        console.log('@@@ => ', $(e.target).find('input').first())
-        $(e.target).find('input').first().val(alt)
-        //  使 modal 的 input 呈現當前照片名稱
-    })
-    $modal.on('shown.bs.modal', (e) => {
-        $('e.target').find('input').get(0).focus()
-        //  當 modal 顯示時，自動聚焦在 input 上
-    })
-    $modal.find('.modal-footer > button:last-child').on('click', async (e) => {
-        const alt_id = $modal.data('myPhoto')
-        const $inp = $modal.find('.modal-body').first().children('input').first()
-        const alt = xssAndTrim($inp.val())
-        const $$alt = pageData.album.map_imgs.get(alt_id).alt
-        const payload = { alt_id, alt, blog_id: blog.id }
+    /* ---------------------------------------- JQ object ---------------------------------------- */
+    const $modal = $($$selector_modal)
+    /* ---------------------------------------- 綁定事件 ---------------------------------------- */
+    $('.card button').on('click', handle_cueModale)
+    /* modal 顯示前的 handle */
+    $modal.get(0).addEventListener('show.bs.modal', handle_showModal)
+    /* modal 顯示時的 handle */
+    $modal.get(0).addEventListener('shown.bs.modal', handle_shownModal)
+    /* 點擊更新鈕的handle */
+    $modal.find('.modal-footer > button:last-child').on('click', handle_updateImgAlt)
+    /* ---------------------------------------- Event handle ---------------------------------------- */
+    /* handle 更新 imgAlt */
+    async function handle_updateImgAlt(e) {
+        const alt_id = $modal.data('myPhoto') * 1
+        const $input = $modal.find('input')
+        const alt = xssAndTrim($input.val())
+        //  img的alt
+        const $$alt = $$map_imgs.get(alt_id).alt
+        //  當前img數據
+        const payload = { alt_id, alt, blog_id: $$blog.id }
+        //  axios的payload
         const validateData = { ...payload, $$alt }
-        //  驗證
-        let errors = await validate(validateData)
+        //  待驗證資料
+        /* validate */
+        let errors = await _validate(validateData)
         if (errors) {
-            let res = Object.entries(errors).reduce((msg, [key, kvPairs]) => {
-                if (key === 'alt') {
-                    key = '相片名稱'
-                }
-                let m = Object.entries(kvPairs).reduce((acc, [k, v], ind) => {
-                    if (ind > 0) {
-                        acc += ','
-                    }
-                    console.log('xx =?> ', acc, ind, v)
-                    return acc += v
-                }, '')
-                msg += `${key}${m}`
-                return msg
-            }, '')
-            alert(res)
+            alert(errors)
             return
         }
         await _axios.patch('/api/album', payload)
         // 發出請求
-        map_imgs.get(alt_id).alt = alt
-        const $card = $(`.card[data-my-photo=${alt_id}]`).first()
-        $card.find('.card-text').first().text(alt)
-        $card.find('img').first().attr('alt', alt)
-        //  同步頁面數據
-        $inp.val()
+        /* 同步頁面數據 */
+        $$map_imgs.get(alt_id).alt = alt
+        const $card = $(`.card[data-my-photo=${alt_id}]`)
+        //  修改 card 的 data-my-photo標記
+        $card.find('.card-text').text(alt)
+        //  修改顯示的圖片名稱
+        $card.find('img').attr('alt', alt)
+        //  修改card圖片的alt
+        /* 重置 modal */
+        $input.val()
+        //  清空input
         $modal.data('myPhoto', '')
-        //  重置 modal
+        //  清空 data-my-photo 標記
         $$bs5_modal.hide()
         //  關閉 modal
-    })
-    $modal.find('.modal-footer > button:first-child').on('click', async (e) => {
-        const $target = $(e.target)
-        const $p = $modal.find('.modal-body').first().children('input').first().val()
-        $modal.data('myPhoto', '')
-        //  重置 modal
-    })
-    //  游標定位在表格最末位，確認可否更新
-    function focusChangeImgAlt(e) {
-        setTimeout(() => {
-            let $el = $(e.target)
-            $el[0].selectionStart = $el.val().length
-            //  確認照片名稱是否為新
-            toggleUpdateBtn($el)
-        }, 0)
     }
+    /* modal 顯示時的 handle */
+    function handle_shownModal(e) {
+        $modal.find('input').get(0).focus()
+        //  自動聚焦在input
+    }
+    /* modal 顯示前的 handle */
+    function handle_showModal(e) {
+        //  觸發 modal show的元素
+        let alt_id = e.relatedTarget.data('myPhoto') * 1
+        //  取得標記在$container上的data-my-photo
+        if ($modal.data('myPhoto') * 1 === alt_id) {
+            /* 若$modal已被標記data-my-photo，且等於e.relatedTarget的data-my-photo，則不需要動作 */
+            return
+        }
+        const { alt } = $$map_imgs.get(alt_id)
+        //  取得img數據
+        $modal.data('myPhoto', alt_id)
+        //  使 modal 的 dataset 呈現 alt_id
+        $modal.find('input').val(alt)
+        //  使 modal 的 input 呈現當前照片名稱
+    }
+    /* 顯示 modal */
+    function handle_cueModale(e) {
+        $$bs5_modal.show($(e.target).parents('.card'))
+        //  show BS5 Modal，並將$card作為e.relatedTarget傳給modal
+    }
+    /* ---------------------------------------- Utils ---------------------------------------- */
+    /* 驗證錯誤的處理 */
+    async function _validate(data) {
+        const validate = validates['alt']
+        const errors = await validate(data)
+        /* 驗證錯誤的處理 */
+        if (!errors) {
+            return null
+        }
+        return Object.entries(errors).reduce((msg, [key, kvPairs]) => {
+            if (key === 'alt') {
+                key = '相片名稱'
+            }
+            let m = Object.entries(kvPairs).reduce((acc, [k, v], ind) => {
+                if (ind > 0) {
+                    acc += ','
+                }
+                return acc += v
+            }, '')
+            return msg += `${key}${m}`
+        }, '')
+    }
+
 }
 

@@ -8,11 +8,12 @@ import _ from 'lodash'
 
 
 import UI from './utils/ui'
-import genDebounce from './utils/genDebounce'
+import Debounce from './utils/Debounce'
+import LoadingBackdrop  from './wedgets/LoadingBackdrop'
 import _axios from './utils/_axios'
 import _xss from './utils/_xss'
 
-import initPageFn from './utils/initData.js'
+import InitPage from './utils/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
 import initNavbar from './wedgets/navbar.js'
 //  初始化 Navbar
@@ -22,12 +23,11 @@ import ejs_str_relationShipItem from 'template-ejs-loader!../views/wedgets/user/
 import ejs_str_blogItem from 'template-ejs-loader!../views/wedgets/user/blogItem.ejs'
 
 window.addEventListener('load', async () => {
-    const { genLoadingBackdrop } = UI
-    const backDrop = new genLoadingBackdrop()
+    const backDrop = new LoadingBackdrop()
     try {
         backDrop.show({blockPage: true})
         //  讀取中，遮蔽畫面
-        let initPage = new initPageFn()
+        let initPage = new InitPage()
         await initPage.addOtherInitFn(initEJSData)
         //  初始化ejs
         await initPage.addOtherInitFn(initNavbar)
@@ -387,6 +387,7 @@ window.addEventListener('load', async () => {
             for (let $el of JQ_Eles) {
                 let el = $el[0]
                 Object.defineProperties(el, {
+                    /* 建立屬性 betterScroll，代表ele本身的betterScroll*/
                     betterScroll: {
                         value: new BetterScroll(el, {
                             scrollX: true,
@@ -395,6 +396,7 @@ window.addEventListener('load', async () => {
                         }),
                         writable: false
                     },
+                    /* 建立屬性 canScroll，代表ele本身的betterScroll是否可滾動*/
                     canScroll: {
                         get() {
                             let outerW = $el.first().outerWidth()
@@ -403,6 +405,7 @@ window.addEventListener('load', async () => {
                         }
                     }
                 })
+                /* 建立方法 handleResize，藉由確認el可否滾動，啟動|停止滾動功能*/
                 el.handleResize = function () {
                     if (el.canScroll) {
                         el.betterScroll.enable()
@@ -412,17 +415,28 @@ window.addEventListener('load', async () => {
                     el.betterScroll.refresh()
                     //  enable() 不知道為何，有時候仍沒辦法作用，搭配refresh()就不會有意外
                 }
-                window.addEventListener('resize', genDebounce(el.handleResize))
+                const debounce = new Debounce(el.handleResize)
+                //  創造 防抖動的 el.handleResize
+                window.addEventListener('resize', (e) => debounce.call(e) )
+                //  將每個防抖動的 el.handleResize 綁定到 window
                 betterScrollEles.push(el)
+                //  將每個el都放入betterScrollEles
             }
-            Object.defineProperty(betterScrollEles, 'refresh', {
-                value() {
-                    for (let el of betterScrollEles) {
-                        el.handleResize()
-                    }
-                },
-                enumerable: false
-            })
+            /* 為 betterScrollEles 創建方法，內部所有el重新啟動|停止滾動功能*/
+            betterScrollEles.refresh = function(){
+                for (let el of betterScrollEles) {
+                    console.log('@el => ', el)
+                    el.handleResize()
+                }
+            }
+            // Object.defineProperty(betterScrollEles, 'refresh', {
+            //     value() {
+            //         for (let el of betterScrollEles) {
+            //             el.handleResize()
+            //         }
+            //     },
+            //     enumerable: false
+            // })
             betterScrollEles.refresh()
             return betterScrollEles
         }
