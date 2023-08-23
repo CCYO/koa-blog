@@ -13,23 +13,24 @@ import { i18nAddResources, i18nChangeLanguage, createToolbar, createEditor } fro
 import twResources from '../locale/tw'
 import _ from 'lodash'
 
-import UI from './utils/ui'
+import { feedback } from './utils/ui'
 import Debounce from './utils/Debounce'
 import _axios from './utils/_axios'
 import _xss, { xssAndRemoveHTMLEmpty, xssAndTrim } from './utils/_xss'
 
 import SERVER_CONST from '../../server/conf/constant'
 
-import InitPage from './utils/InitPage.js'
+import InitPage from './utils/wedgets/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
-import initNavbar from './wedgets/navbar.js'
+import initNavbar from './utils/wedgets/navbar.js'
 //  初始化 Navbar
-import initEJSData from './utils/initEJSData.js'
-//  初始化來自ejs在頁面上的字符數據
-import LoadingBackdrop from './wedgets/LoadingBackdrop'
+import initEJSData from './utils/wedgets/initEJSData.js'
+//  初始化 ejs 存放在頁面上的數據
+import LoadingBackdrop  from './utils/wedgets/LoadingBackdrop'
+//  讀取遮罩
+
 window.addEventListener('load', async () => {
     const { BLOG: { HTML_MAX_LENGTH } } = SERVER_CONST
-    const { feedback } = UI
     const backDrop = new LoadingBackdrop()
     try {
         backDrop.show({ blockPage: true })
@@ -41,6 +42,7 @@ window.addEventListener('load', async () => {
         //  初始化navbar
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
+        $('main, nav, main, footer').removeAttr('style')
         backDrop.hidden()
         //  讀取完成，解除遮蔽
     } catch (error) {
@@ -164,10 +166,7 @@ window.addEventListener('load', async () => {
 
         try {
             //  初始化 input[name=show]
-            // $publicOrHidden.prop('checked', $$pageData.blog.show)
             init_pageFuc()
-
-            $('main, nav, main, footer').removeAttr('style')
             $$editor.focus()
         } catch (e) {
             console.log(`init blog-editor.ejs Err =>`, e)
@@ -178,12 +177,12 @@ window.addEventListener('load', async () => {
             $$editor = window.editor = init_editor()
             backDrop.insertEditors([$$editor])
             initImgData()
-            const debounce_handle_input = Debounce(handle_input, {
+            const debounce_handle_input = new Debounce(handle_input, {
                 loading: () => $btn_updateTitle.prop('disabled', true)
                 //  debounce階段時，限制更新鈕
             })
             //  $title handleInput => 驗證標題合法性
-            $inp_changeTitle.on('input', debounce_handle_input)
+            $inp_changeTitle.on('input', (e) => debounce_handle_input.call(e) )
             //  $title handleBlur => 若標題非法，恢復原標題
             $inp_changeTitle.on('blur', handle_blur)
             //  $btn_updateTitlebtn handleClick => 送出新標題
@@ -214,7 +213,7 @@ window.addEventListener('load', async () => {
                 //  editor 的 繁中設定
                 i18nAddResources('tw', twResources)
                 i18nChangeLanguage('tw')
-                const handle_change = Debounce(_, {
+                const handle_change = new Debounce(_, {
                     loading: () => $btn_updateBlog.prop('disabled', true)
                 })
                 //  editor config
@@ -227,7 +226,7 @@ window.addEventListener('load', async () => {
                     readOnly: true,
                     placeholder: '請開始撰寫文章內容...',
                     //  每次editor焦點/內容變動時調用
-                    onChange: handle_change,
+                    onChange: handle_change.call,
                     MENU_CONF: {
                         //  關於 upload img 的配置
                         uploadImage: {

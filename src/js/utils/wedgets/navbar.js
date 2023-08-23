@@ -1,9 +1,10 @@
-console.log('@navbar loading...')
-import '../../css/wedgets/navbar.css'
-import _axios from '../utils/_axios'
-import Debounce from '../utils/Debounce'
-import UI from '../utils/ui'
-
+/* -------------------- CSS MODULE -------------------- */
+import '../../../css/wedgets/navbar.css'
+/* -------------------- UTILS MODULE -------------------- */
+import _axios from '../_axios'
+import Debounce from '../Debounce'
+import { show } from '../ui'
+/* -------------------- CONFIG CONST -------------------- */
 const CONST = {
     REG: {
         PAGE_REGISTER_OR_LOGIN: /^\/(login)|(register)/
@@ -24,7 +25,7 @@ export default async function () {
         renderNoLoginNav()
         return _data
     }
-    const { show } = UI
+    // const { show } = UI
     let { errno, data }  = await getNews()
     // 取得「新聞」數據（含登入者資訊）
     if (!errno) {

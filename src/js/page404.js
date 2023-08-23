@@ -3,11 +3,13 @@ if (process.env.NODE_ENV === 'development') {
 }
 import '../css/user.css'
 
-import InitPage from './utils/InitPage.js'
+import InitPage from './utils/wedgets/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
-import initNavbar from './wedgets/navbar.js'
+import initNavbar from './utils/wedgets/navbar.js'
 //  初始化 Navbar
-import LoadingBackdrop from './wedgets/LoadingBackdrop'
+import LoadingBackdrop  from './utils/wedgets/LoadingBackdrop'
+//  讀取遮罩
+
 window.addEventListener('load', async () => {
     const backdrop = new LoadingBackdrop()
     try {
@@ -19,8 +21,8 @@ window.addEventListener('load', async () => {
         //  初始化navbar
         await initPage.render()
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-        backdrop.hidden()
         $('main, nav, main, footer').removeAttr('style')
+        backdrop.hidden()
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error

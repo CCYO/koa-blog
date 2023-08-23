@@ -1,21 +1,25 @@
-console.log('@validate loading...')
+/* -------------------- NPM MODULE -------------------- */
 import Ajv2019 from "ajv/dist/2019"
 import addFormats from 'ajv-formats'
 import errors from 'ajv-errors'
-import _axios from './_axios'
+/* -------------------- Utils MODULE -------------------- */
+import _axios from '../../_axios'
 
-import SERVER_CONST from '../../../server/conf/constant'
+import SERVER_CONST from '../../../../../server/conf/constant'
 
+/* -------------------- RUN -------------------- */
 const ajv = new Ajv2019({
     strict: false,
     allErrors: true,
     $data: true
 })
-
+//  建立ajv instance
 addFormats(ajv)
 //  為 ajv 添加 format 關鍵字，僅適用 string 與 number
 errors(ajv)
-//  可使用 errorMessage 自定義錯誤提示
+//  添加功能：errorMessage 自定義錯誤提示
+/* -------------------- 新增關鍵字 -------------------- */
+/* email是否已被註冊 */
 ajv.addKeyword({
     keyword: 'isEmailExist',
     async: true,
@@ -24,6 +28,7 @@ ajv.addKeyword({
     validate: isEmailExist,
     errors: true
 })
+/* 數據是否與當前值相同 */
 ajv.addKeyword({
     keyword: 'diff',
     $data: true,
@@ -32,6 +37,7 @@ ajv.addKeyword({
     validate: diff,
     errors: true
 })
+/* password是否正確匹配 */
 ajv.addKeyword({
     keyword: 'confirmPassword',
     type: 'string',
@@ -40,6 +46,7 @@ ajv.addKeyword({
     validate: confirmPassword,
     errors: true
 })
+/* 數據是否不含空格 */
 ajv.addKeyword({
     keyword: 'noSpace',
     type: 'string',

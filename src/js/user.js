@@ -6,18 +6,18 @@ import '../css/user.css'
 import BetterScroll from 'better-scroll'
 import _ from 'lodash'
 
-
-import UI from './utils/ui'
 import Debounce from './utils/Debounce'
-import LoadingBackdrop  from './wedgets/LoadingBackdrop'
 import _axios from './utils/_axios'
 import _xss from './utils/_xss'
 
-import InitPage from './utils/InitPage.js'
+import InitPage from './utils/wedgets/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
-import initNavbar from './wedgets/navbar.js'
+import initNavbar from './utils/wedgets/navbar.js'
 //  初始化 Navbar
-import initEJSData from './utils/initEJSData.js'
+import initEJSData from './utils/wedgets/initEJSData.js'
+//  初始化 ejs 存放在頁面上的數據
+import LoadingBackdrop  from './utils/wedgets/LoadingBackdrop'
+//  讀取遮罩
 
 import ejs_str_relationShipItem from 'template-ejs-loader!../views/wedgets/user/relationshipItem.ejs'
 import ejs_str_blogItem from 'template-ejs-loader!../views/wedgets/user/blogItem.ejs'
@@ -34,8 +34,8 @@ window.addEventListener('load', async () => {
         //  初始化navbar
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-        backDrop.hidden()
         $('main, nav, main, footer').removeAttr('style')
+        backDrop.hidden()
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error
@@ -425,7 +425,6 @@ window.addEventListener('load', async () => {
             /* 為 betterScrollEles 創建方法，內部所有el重新啟動|停止滾動功能*/
             betterScrollEles.refresh = function(){
                 for (let el of betterScrollEles) {
-                    console.log('@el => ', el)
                     el.handleResize()
                 }
             }

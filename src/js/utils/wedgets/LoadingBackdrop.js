@@ -1,5 +1,5 @@
-import '../../css/utils/noClick.css'
-import '../../css/wedgets/loadingBackdrop.css'
+import '../../../css/utils/noClick.css'
+import '../../../css/wedgets/loadingBackdrop.css'
 const backdropClassName = '#loadingBackdrop'
 const targetSelector = `input, a, button, *[tabindex]:not(${backdropClassName})`
 const blockClassName = 'noClick'

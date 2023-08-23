@@ -1,57 +1,35 @@
+/* -------------------- EJS MODULE -------------------- */
 if (process.env.NODE_ENV === 'development') {
     require('../views/register&login.ejs')
 }
-
+/* -------------------- CSS MODULE -------------------- */
 import '../css/register&login.css'
-
-import UI from './utils/ui'
+/* -------------------- Utils MODULE -------------------- */
+import { feedback } from './utils/ui'
 import Debounce from './utils/Debounce'
-import LoadingBackdrop  from './wedgets/LoadingBackdrop'
-import validate from './utils/validate.js'
+import validate from './utils/validate/validate.js'
 import _axios from './utils/_axios'
-
-import InitPage from './utils/InitPage.js'
+/* -------------------- Utils MODULE FOR Wedgets -------------------- */
+import InitPage from './utils/wedgets/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
-import initNavbar from './wedgets/navbar.js'
-
+import initNavbar from './utils/wedgets/navbar.js'
+//  初始化 Navbar
+import LoadingBackdrop from './utils/wedgets/LoadingBackdrop'
+//  讀取遮罩
+/* -------------------- RUN -------------------- */
+const backdrop = new LoadingBackdrop()
 window.addEventListener('load', async () => {
-    const CONST = {
-        IS_EMAIL_EXIST: {
-            ACTION: 'email'
-        },
-        REGISTER: {
-            ACTION: 'register',
-            get API() { return `/api/user/${this.ACTION}` }
-        },
-        LOGIN: {
-            ACTION: 'login',
-            get API() { return `/api/user` }
-        },
-        SELECTOR: {
-            FORM: (action) => `#${action}-form`,
-            CARD: (action) => `#${action}-card`,
-            EMAIL: '[name=email]'
-        }
-    }
-    let $$validate = validate
-    let $$payload = {
-        login: {},
-        register: {}
-    }
-    const { feedback } = UI
-    const backdrop = new LoadingBackdrop()
-    //  初始化來自ejs在頁面上的字符數據
     try {
-        backdrop.show({blockPage: true})
+        backdrop.show({ blockPage: true })
         //  讀取中，遮蔽畫面
         let initPage = new InitPage()
         //  幫助頁面初始化的統整函數
         await initPage.addOtherInitFn(initNavbar)
         //  初始化navbar
         await initPage.render(renderPage)
+        $('main, nav, main, footer').removeAttr('style')
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
         backdrop.hidden()
-        $('main, nav, main, footer').removeAttr('style')
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error
@@ -59,10 +37,35 @@ window.addEventListener('load', async () => {
     }
 
     function renderPage() {
+        /* -------------------- CONST -------------------- */
+        const CONST = {
+            IS_EMAIL_EXIST: {
+                ACTION: 'email'
+            },
+            REGISTER: {
+                ACTION: 'register',
+                get API() { return `/api/user/${this.ACTION}` }
+            },
+            LOGIN: {
+                ACTION: 'login',
+                get API() { return `/api/user` }
+            },
+            SELECTOR: {
+                FORM: (action) => `#${action}-form`,
+                CARD: (action) => `#${action}-card`,
+                EMAIL: '[name=email]'
+            }
+        }
+        /* -------------------- PUBLIC VAR -------------------- */
+        let $$validate = validate
+        let $$payload = {
+            login: {},
+            register: {}
+        }
         deb_eventHandle(`${CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)} ${CONST.SELECTOR.EMAIL}`, 'input', handle_isEmailExist)
         document.querySelector(CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)).addEventListener('submit', handle_form(CONST.REGISTER.ACTION))
         document.querySelector(CONST.SELECTOR.FORM(CONST.LOGIN.ACTION)).addEventListener('submit', handle_form(CONST.LOGIN.ACTION))
-        
+
         async function handle_isEmailExist(e) {
             let formType = CONST.REGISTER.ACTION
             let action = CONST.IS_EMAIL_EXIST.ACTION
@@ -176,10 +179,10 @@ window.addEventListener('load', async () => {
                 return
             }
         }
-        
+
         function deb_eventHandle(selectorOrEl, eventType, handle) {
             let ele = typeof selectorOrEl === 'string' ? document.querySelector(selectorOrEl) : selectorOrEl
-            if(ele.has_debHandle){
+            if (ele.has_debHandle) {
                 return
             }
             ele.has_debHandle = true

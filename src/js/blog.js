@@ -10,13 +10,15 @@ import { createEditor } from '@wangeditor/editor'
 // 引入 editor js
 import _axios from './utils/_axios'
 
-import InitPage from './utils/InitPage.js'
+import InitPage from './utils/wedgets/InitPage.js'
 //  統整頁面數據、渲染頁面的函數
-import initNavbar from './wedgets/navbar.js'
+import initNavbar from './utils/wedgets/navbar.js'
 //  初始化 Navbar
-import initEJSData from './utils/initEJSData.js'
-//  初始化來自ejs在頁面上的字符數據
-import LoadingBackdrop from './wedgets/LoadingBackdrop'
+import initEJSData from './utils/wedgets/initEJSData.js'
+//  初始化 ejs 存放在頁面上的數據
+import LoadingBackdrop  from './utils/wedgets/LoadingBackdrop'
+//  讀取遮罩
+
 window.addEventListener('load', async () => {
     const backDrop = new LoadingBackdrop()
     try {
@@ -29,9 +31,9 @@ window.addEventListener('load', async () => {
         //  初始化navbar
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
+        $('main, nav, main, footer').removeAttr('style')
         backDrop.hidden()
         //  讀取完成，解除遮蔽
-        $('main, nav, main, footer').removeAttr('style')
     } catch (error) {
         throw error
         // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`

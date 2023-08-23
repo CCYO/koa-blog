@@ -1,18 +1,20 @@
-console.log('@_axios loading.....')
 import axios from 'axios'
-import LoadingBackdrop from '../wedgets/LoadingBackdrop'
+import LoadingBackdrop from './wedgets/LoadingBackdrop'
 import * as ErrRes from '../../../server/model/errRes'
 
-const instance = axios.create()
 const backdrop = new LoadingBackdrop()
+const instance = axios.create()
+//  創建一個axios實例
 /* 配置 axios 的 請求攔截器，統一處理報錯 */
 instance.interceptors.request.use(
     (config) => {
         const backdropConfig = {
-            blockPage: config.blockPage ? config.blockPage : false,
-            editors: config.editors ? config.editors : []
+            blockPage: config && config.hasOwnProperty('blockPage') ? config.blockPage : false,
+            editors: config && config.hasOwnProperty('editors') ? config.editors : []
         }
+        //  當 axios 調用請求方法時，依據傳入的config取得backdrop的options
         backdrop.show(backdropConfig)
+        //  顯示遮罩
         return config
     },
     error => { throw error }
