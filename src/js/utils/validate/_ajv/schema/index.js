@@ -1,6 +1,13 @@
 import { CONST } from '../../../../../config/const'
-
-const SCHEMA = {
+import AVATAR from './avatar'
+import BLOG from './blog'
+import EMAIL from './email'
+import IMG_ALT from './imgAlt'
+import LOGIN from './login'
+import PASSWORD from './password'
+import REGISTER from './register'
+import SETTING from './setting'
+const DEF = {
     $id: `${CONST.URL}/defs.json`,
     definitions: {
         email: {
@@ -158,5 +165,14 @@ const SCHEMA = {
     }
 }
 
-
-export default SCHEMA
+export {
+    DEF,
+    AVATAR,
+    BLOG,
+    EMAIL,
+    IMG_ALT,
+    LOGIN,
+    PASSWORD,
+    REGISTER,
+    SETTING
+}

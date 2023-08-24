@@ -1,28 +1,29 @@
 import { CONST } from '../../../../../config/const'
 const SCHEMA = {
-    $id: `${CONST.URL}/email.json`,
+    $id: `${CONST.URL}/password.json`,
     $async: true,
     type: 'object',
     if: {
         properties: {
-            email: { $ref: 'defs.json#/definitions/email' },
+            origin_password: {
+                $ref: 'defs.json#/definitions/password'
+            },
         },
-        required: ['email'],
+        required: ['origin_password'],
     },
     then: {
         properties: {
-            email: {
-                type: 'string',
-                isEmailExist: true,
-            }
-        }
+            origin_password: {
+                confirmPassword: true
+            },
+        },
+        required: ['origin_password'],
     },
     else: {
         $ref: '#/if'
     },
     errorMessage: {
         required: '必填',
-        if: '66666666666'
     }
 }
 

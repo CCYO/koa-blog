@@ -1,532 +1,50 @@
-/* -------------------- NPM MODULE -------------------- */
-import Ajv2019 from "ajv/dist/2019"
-import addFormats from 'ajv-formats'
-import errors from 'ajv-errors'
-/* -------------------- Utils MODULE -------------------- */
-import _axios from './_axios'
+import ajv from './_ajv'
+import { EMAIL, REGISTER } from './_ajv/schema'
 
-import SERVER_CONST from '../../../server/conf/constant'
-
-/* -------------------- RUN -------------------- */
-const ajv = new Ajv2019({
-    strict: false,
-    allErrors: true,
-    $data: true
-})
-//  建立ajv instance
-addFormats(ajv)
-//  為 ajv 添加 format 關鍵字，僅適用 string 與 number
-errors(ajv)
-//  添加功能：errorMessage 自定義錯誤提示
-/* -------------------- 新增關鍵字 -------------------- */
-/* email是否已被註冊 */
-ajv.addKeyword({
-    keyword: 'isEmailExist',
-    async: true,
-    type: 'string',
-    schemaType: 'boolean',
-    validate: isEmailExist,
-    errors: true
-})
-/* 數據是否與當前值相同 */
-ajv.addKeyword({
-    keyword: 'diff',
-    $data: true,
-    type: ['string', 'number', 'boolean'],
-    schemaType: ['string', 'number', 'boolean', 'null'],
-    validate: diff,
-    errors: true
-})
-/* password是否正確匹配 */
-ajv.addKeyword({
-    keyword: 'confirmPassword',
-    type: 'string',
-    async: true,
-    schemaType: 'boolean',
-    validate: confirmPassword,
-    errors: true
-})
-/* 數據是否不含空格 */
-ajv.addKeyword({
-    keyword: 'noSpace',
-    type: 'string',
-    schemaType: 'boolean',
-    validate: noSpace,
-    errors: true
-})
-
-const CONST = {
-    BLOG: {
-        HTML_MAX_LENGTH: SERVER_CONST.BLOG.HTML_MAX_LENGTH,
-        HTML_MIN_LENGTH: SERVER_CONST.BLOG.HTML_MIN_LENGTH
-    },
-    URL: 'http://my.ajv.schema',
-    VALIDATE: {
-        DEFS: 'defs',
-        EMAIL: 'email',
-        REGISTER: 'register',
-        LOGIN: 'login',
-        PASSWORD: 'password',
-        AVATAR: 'avatar',
-        SETTING: 'setting',
-        BLOG: 'blog',
-        IMG_ALT: 'alt'
-    },
-    API: {
-        EMAIL: '/api/user/isEmailExist',
-        PASSWORD: '/api/user/confirmPassword'
-    }
-}
-
-const SCHEMA = {
-    [CONST.VALIDATE.DEFS]: {
-        $id: `${CONST.URL}/defs.json`,
-        definitions: {
-            email: {
-                type: 'string',
-                format: 'email',
-                errorMessage: {
-                    type: '必須是字符串',
-                    format: '必須是電子信箱格式'
-                }
-            },
-            nickname: {
-                type: 'string',
-                pattern: '^[\\u4e00-\\u9fa5a-zA-Z\\d]+$',
-                maxLength: 20,
-                errorMessage: {
-                    type: '必須是字符串',
-                    pattern: '必須由中文、英文、數字以及底線組成',
-                    maxLength: '長度需小於20個字'
-                }
-            },
-            origin_password: {
-                type: 'string',
-                pattern: '^[\\w]+$',
-                minLength: 6,
-                maxLength: 32,
-                errorMessage: {
-                    type: '必須是字符串',
-                    pattern: '必須由英文、數字以及底線組成',
-                    minLength: '長度須介於6-32個字符',
-                    maxLength: '長度須介於6-32個字符'
-                }
-            },
-            password: {
-                type: 'string',
-                pattern: '^[\\w]+$',
-                minLength: 6,
-                maxLength: 32,
-                errorMessage: {
-                    type: '必須是字符串',
-                    pattern: '必須由英文、數字以及底線組成',
-                    minLength: '長度須介於6-32個字符',
-                    maxLength: '長度須介於6-32個字符'
-                }
-            },
-            password_again: {
-                type: 'string',
-                const: {
-                    $data: '1/password'
-                },
-                pattern: '^[\\w]+$',
-                minLength: 6,
-                maxLength: 32,
-                errorMessage: {
-                    type: '必須是字符串',
-                    const: '請再次確認密碼是否相同',
-                    pattern: '必須由英文、數字以及底線組成',
-                    minLength: '長度須介於6-32個字符',
-                    maxLength: '長度須介於6-32個字符'
-                }
-            },
-            age: {
-                type: 'number',
-                minimum: 1,
-                maximum: 120,
-                errorMessage: {
-                    type: '必須是數字',
-                    minimum: '必需介於1-120之間',
-                    maximum: '必需介於1-120之間'
-                }
-            },
-            avatar: {
-                type: 'string',
-                format: 'binary',
-                errorMessage: {
-                    type: '必須是string',
-                    format: '頭像資料需符合url格式'
-                }
-            },
-            avatar_hash: {
-                type: 'string',
-                errorMessage: 'avatar_hash必須是字符串'
-            },
-            title: {
-                type: 'string',
-                maxLength: 20,
-                minLength: 1,
-                errorMessage: {
-                    type: '必須是字符串',
-                    maxLength: '長度需小於20個字',
-                    minLength: '長度需大於1個字',
-                }
-            },
-            html: {
-                type: 'string',
-                maxLength: CONST.BLOG.HTML_MAX_LENGTH,
-                minLength: CONST.BLOG.HTML_MIN_LENGTH,
-                errorMessage: {
-                    type: '必須是字符串',
-                    maxLength: '長度需小於65536個字',
-                    minLength: '長度需大於1個字',
-                }
-            },
-            show: {
-                type: 'boolean',
-                errorMessage: {
-                    type: '必須是boolean'
-                }
-            },
-            cancelImgs: {
-                type: 'object',
-                properties: {
-                    blogImg_id: {
-                        type: 'integer',
-                        errorMessage: {
-                            type: '只能是整數'
-                        }
-                    },
-                    blogImgAlt_list: {
-                        type: 'array',
-                        minItems: 1,
-                        uniqueItems: true,
-                        items: {
-                            type: 'integer',
-                            errorMessage: {
-                                type: '只能是整數'
-                            }
-                        },
-                        errorMessage: {
-                            type: '必須是array',
-                            minItems: '不能為空',
-                            uniqueItems: '不該有重複的值'
-                        }
-                    }
-                },
-                required: ['blogImg_id', 'blogImgAlt_list'],
-                additionalProperties: false,
-                errorMessage: {
-                    type: '必須是object',
-                    required: '必須包含blogImg_id與blogImgAlt_list數據',
-                    additionalProperties: '不允許除了blogImg_id與blogImgAlt_list以外的數據'
-                }
-            },
-            blogImgAlt: {
-                type: 'string',
-                minLength: 1,
-                maxLength: 30,
-                pattern: '^[\\u4e00-\\u9fa5a-zA-Z\\d]+$',
-                errorMessage: {
-                    type: '必須是字符串',
-                    pattern: '必須由中文、英文、數字以及底線組成',
-                    minLength: '長度要1個字符以上',
-                    maxLength: '長度需小於20個字'
-                }
-            }
-        }
-    },
-    [CONST.VALIDATE.EMAIL]: {
-        $id: `${CONST.URL}/email.json`,
-        $async: true,
-        type: 'object',
-        if: {
-            properties: {
-                email: { $ref: 'defs.json#/definitions/email' },
-            },
-            required: ['email'],
-        },
-        then: {
-            properties: {
-                email: {
-                    type: 'string',
-                    isEmailExist: true,
-                }
-            }
-        },
-        else: {
-            $ref: '#/if'
-        },
-        errorMessage: {
-            required: '必填'
-        }
-    },
-    [CONST.VALIDATE.REGISTER]: {
-        $id: `${CONST.URL}/register.json`,
-        type: 'object',
-        properties: {
-            email: { $ref: 'defs.json#/definitions/email' },
-            password: { $ref: 'defs.json#/definitions/password' },
-            password_again: { $ref: 'defs.json#/definitions/password_again' }
-        },
-        required: ['email', 'password', 'password_again'],
-        errorMessage: {
-            required: '必填'
-        }
-    },
-    [CONST.VALIDATE.LOGIN]: {
-        $id: `${CONST.URL}/login.json`,
-        type: 'object',
-        properties: {
-            email: { $ref: 'defs.json#/definitions/email' },
-            password: { $ref: 'defs.json#/definitions/password' }
-        },
-        required: ['email', 'password'],
-        errorMessage: {
-            required: '必填'
-        }
-    },
-    [CONST.VALIDATE.PASSWORD]: {
-        $id: `${CONST.URL}/password.json`,
-        $async: true,
-        type: 'object',
-        if: {
-            properties: {
-                origin_password: {
-                    $ref: 'defs.json#/definitions/password'
-                },
-            },
-            required: ['origin_password'],
-        },
-        then: {
-            properties: {
-                origin_password: {
-                    confirmPassword: true
-                },
-            },
-            required: ['origin_password'],
-        },
-        else: {
-            $ref: '#/if'
-        },
-        errorMessage: {
-            required: '必填',
-        }
-    },
-    [CONST.VALIDATE.AVATAR]: {
-        $id: `${CONST.URL}/avatar.json`,
-        type: 'object',
-        properties: {
-            avatar_base64: {
-                format: 'byte',
-                errorMessage: {
-                    format: '非base64編碼'
-                }
-            },
-            avatar_hash: {
-                diff: { $data: '1/$$me/avatar_hash' },
-                $ref: 'defs.json#/definitions/avatar_hash'
-            }
-        },
-        required: ['avatar_base64', 'avatar_hash'],
-        errorMessage: {
-            required: '必填',
-        }
-    },
-    [CONST.VALIDATE.SETTING]: {
-        $id: `${CONST.URL}/setting.json`,
-        type: 'object',
-        allOf: [
-            {
-                minProperties: 2,
-                properties: {
-                    $$me: {
-                        type: 'object',
-                        errorMessage: {
-                            type: '$$me需是object'
-                        }
-                    },
-                    email: {
-                        noSpace: true,
-                        diff: { $data: '1/$$me/email' },
-                        $ref: 'defs.json#/definitions/email'
-                    },
-                    age: {
-                        noSpace: true,
-                        diff: { $data: '1/$$me/age' },
-                        $ref: 'defs.json#/definitions/age'
-                    },
-                    nickname: {
-                        noSpace: true,
-                        diff: { $data: '1/$$me/nickname' },
-                        $ref: 'defs.json#/definitions/nickname'
-                    },
-                    password: {
-                        noSpace: true,
-                        diff: { $data: '1/$$me/password' },
-                        $ref: 'defs.json#/definitions/password'
-                    },
-                    avatar_hash: {
-                        diff: { $data: '1/$$me/avatar_hash' },
-                        $ref: 'defs.json#/definitions/avatar_hash'
-                    }
-                },
-                required: ['$$me'],
-                errorMessage: {
-                    required: '必需有值',
-                    minProperties: '至少需改一筆資料',
-                }
-            },
-            {
-                properties: {
-                    password: {
-                        $ref: 'defs.json#/definitions/password',
-                        diff: { $data: '1/$$me/origin_password' }
-                    },
-                    password_again: { $ref: 'defs.json#/definitions/password_again' },
-                },
-                dependentRequired: {
-                    password: ['password_again', 'origin_password'],
-                    password_again: ['password', 'origin_password']
-                },
-                errorMessage: {
-                    dependentRequired: '必填'
-                }
-            },
-        ],
-        errorMessage: {
-            type: '驗證數據必須是 object 格式',
-        }
-    },
-    [CONST.VALIDATE.BLOG]: {
-        $id: `${CONST.URL}/blog.json`,
-        type: 'object',
-        minProperties: 2,
-        properties: {
-            $$blog: {
-                type: 'object',
-                errorMessage: {
-                    type: '$$blog需是object'
-                }
-            },
-            title: {
-                $ref: 'defs.json#/definitions/title',
-                diff: { $data: '1/$$blog/title' }
-            },
-            html: {
-                $ref: 'defs.json#/definitions/html',
-                diff: { $data: '1/$$blog/html' }
-            },
-            show: {
-                $ref: 'defs.json#/definitions/show',
-                diff: { $data: '1/$$blog/show' }
-            },
-            cancelImgs: {
-                $ref: 'defs.json#/definitions/cancelImgs'
-            }
-        },
-        required: ['$$blog'],
-        errorMessage: {
-            required: '必需有值',
-            minProperties: '至少需改一筆資料',
-        }
-    },
-    [CONST.VALIDATE.IMG_ALT]: {
-        type: 'object',
-        $id: `${CONST.URL}/blogImgAlt.json`,
-        properties: {
-            $$alt: {
-                type: 'string',
-                errorMessage: {
-                    type: '$$alt 必須是 string'
-                }
-            },
-            alt: {
-                $ref: 'defs.json#/definitions/blogImgAlt',
-                diff: { $data: '1/$$alt' }
-            },
-            blog_id: {
-                type: 'integer',
-                minimum: 1,
-                errorMessage: {
-                    type: '必須是整數',
-                    minimum: '必須 > 0'
-                }
-            },
-            alt_id: {
-                type: 'integer',
-                minimum: 1,
-                errorMessage: {
-                    type: '必須是整數',
-                    minimum: '必須 > 0'
-                }
-            }
-        },
-        required: ['$$alt', 'alt', 'blog_id', 'alt_id'],
-        errorMessage: {
-            type: '必須是object',
-            require: '必需有值'
-        }
-    }
-}
-ajv.addSchema(SCHEMA[CONST.VALIDATE.DEFS])
-
-function validateUserData(schemaName) {
-    let validate = ajv.compile(SCHEMA[schemaName])
+function genValidate(schema) {
+    let _validate = ajv.compile(schema)
     return async (data) => {
         try {
-            await validate(data)
-            if (validate.errors) {
+            await _validate(data)
+            if (_validate.errors) {
                 let e = new Error()
-                e.errors = validate.errors
+                e.errors = _validate.errors
                 throw e
             }
             return null
         } catch (err) {
             let { errors } = err
             if (errors) {
-                return handleErr(errors)
+                return _parseValidateErrors(errors)
             } else {
                 throw err
             }
         }
     }
 }
-
-function validateBlogData(schemaName) {
-    let validate = ajv.compile(SCHEMA[schemaName])
-    return async (data) => {
-        try {
-            await validate(data)
-            if (validate.errors) {
-                let e = new Error()
-                e.errors = validate.errors
-                throw e
-            }
-            return null
-        } catch (err) {
-            let { errors } = err
-            if (errors) {
-                return handleBlogErr(errors)
-            } else {
-                throw err
-            }
-        }
-    }
-}
-
-function handleBlogErr(validateErrors) {
+function _parseValidateErrors(validateErrors) {
     /*{ 
         errors: [ { ..., message: 自定義的錯誤說明, ... }, ...],
       }*/
     console.log('@validate handle 要處理的 errors => ', validateErrors)
     return validateErrors.reduce((init, validateError) => {
-        let { params, keyword, instancePath, message } = validateError
+        let { 
+            params, //  不知如何運用
+            keyword,
+                //  "errorMessage": 代表此時顯示的驗證錯誤，是ajv-errors預先在schema設定錯誤提示
+                //  其他狀況，則代表未使用ajv-errors預先設定錯誤提醒(通常是違反了schema的最高級keyword產生的驗證錯誤，如if/else)
+            instancePath,
+                //  在將schema整體視為url的情況下，instancePath表示驗證錯誤所在的路徑
+                //  "": 代表違反 schema最高級keyword產生的驗證錯誤（如　required || if || then 等）
+            message
+                //  ajv-errors針對當前錯誤設定錯誤提示，或是原生錯誤提醒
+        } = validateError
+        /* schema 最高等級的錯誤 */
         if (!instancePath) {
-            /* 通常是 schema 最高等級的錯誤，換句話說，通常不會是 data 上能查詢到的 keyword（如　required || if || then 等） */
             if (keyword === 'errorMessage') {
                 /* 已被 ajv-errors 捕獲的錯誤 */
                 let { errors } = params
+                //  errors 是array，包含原生定義的錯誤資訊
                 let _keyword = errors[0].keyword
                 if (_keyword === 'required' || _keyword === 'dependentRequired') {
                     for (let { params: { missingProperty } } of errors) {
@@ -565,95 +83,46 @@ function handleBlogErr(validateErrors) {
     }, {})
 }
 
-function handleErr(validateErrors) {
-    /*{ 
-        errors: [ { ..., message: 自定義的錯誤說明, ... }, ...],
-      }*/
-    return validateErrors.reduce((init, { params, keyword, instancePath, message }) => {
-        if (!instancePath) {
-            /* 通常是 schema 最高等級的錯誤，換句話說，通常不會是 data 上能查詢到的 keyword（如　required || if || then 等） */
-            if (keyword === 'errorMessage') {
-                /* 已被 ajv-errors 捕獲的錯誤 */
-                let { errors } = params
-                let _keyword = errors[0].keyword
-                if (_keyword === 'required' || _keyword === 'dependentRequired') {
-                    for (let { params: { missingProperty } } of errors) {
-                        init[missingProperty] = message
-                    }
-                } else if (_keyword === 'minProperties') {
-                    init['all'] = message
-                }
-            }
-            /* 未被 ajv-errors 捕獲的錯誤，我不考慮（如 if、then、allOf 等）*/
-        } else {
-            /* 通常是 schema 非高等級的錯誤，這次的應用會是對應 properties 的內容 */
-            let name = instancePath.slice(1)
-            if (init.hasOwnProperty(name)) {
-                init[name] += `,${message}`
-            } else {
-                init[name] = message
-            }
-        }
-        return init
-    }, {})
+function handleErrors(myErrors) {
+	Object.entries(myErrors).reduce((_errors, [inputName, KVpairs]) => {
+		let msg = Object.entries(KVpairs).reduce((_msg, [keyword, message], index) => {
+			if (index > 0) {
+				msg += ','
+			}
+			return _msg += message
+		}, '')
+		_errors[_getName(inputName)] = msg
+		return _errors
+	}, {})
 }
-function noSpace(schema, data, parentSchema, dataCtx) {
-    if (!schema) {
-        return true
-    }
-    let regux = /\s/g
-    if (regux.test(data)) {
-        let { instancePath } = dataCtx
-        noSpace.errors = [{ instancePath, message: '不可包含空格' }]
-        return false
-    }
-    return true
+
+function _getName(inputName) {
+	const map = {
+		//	register
+		email: '信箱',
+		password: '密碼',
+		confirm_assword: '密碼驗證',
+		//	blog
+		title: '文章標題',
+		contetn: '文章內文',
+		show: '文章狀態',
+		//	setting
+		nickname: '暱稱',
+		age: '年齡',
+		avatar: '頭像',
+		avatar_hash: '頭像hash',
+		//	全局錯誤
+		all: '注意'
+	}
+	return map[inputName]
 }
-async function confirmPassword(schema, origin_password, parentSchema, dataCtx) {
-    if (!schema) {
-        return true
-    }
-    let payload = { origin_password: origin_password }
-    let { errno, msg } = await _axios.post(CONST.API.PASSWORD, payload)
-    if (errno) {
-        let { instancePath } = dataCtx
-        let e = new Error()
-        e.errors = [{ instancePath, message: msg }]
-        throw e
-    }
-    return true
-}
-function diff(schema, data, parentSchema, dataCtx) {
-    if (schema !== data) {
-        return true
-    }
-    let { instancePath } = dataCtx
-    diff.errors = [{ instancePath, message: '若沒有要更新就別鬧', keyword: 'diff' }]
-    return false
-}
-async function isEmailExist(schema, data, parentSchema, dataCtx) {
-    if (!schema) {
-        return true
-    }
-    const key = 'email'
-    let { errno, msg } = await _axios.post('/api/user/isEmailExist', { [key]: data })
-    if (errno) {
-        let { instancePath } = dataCtx
-        let e = new Error()
-        let message = msg[key]
-        e.errors = [{ instancePath, message }]
-        throw e
-    }
-    return true
+
+export {
+	genValidate,
+	handleErrors
 }
 
 export default {
-    [CONST.VALIDATE.EMAIL]: validateUserData(CONST.VALIDATE.EMAIL),
-    [CONST.VALIDATE.REGISTER]: validateUserData(CONST.VALIDATE.REGISTER),
-    [CONST.VALIDATE.LOGIN]: validateUserData(CONST.VALIDATE.LOGIN),
-    [CONST.VALIDATE.PASSWORD]: validateUserData(CONST.VALIDATE.PASSWORD),
-    [CONST.VALIDATE.AVATAR]: validateUserData(CONST.VALIDATE.AVATAR),
-    [CONST.VALIDATE.SETTING]: validateUserData(CONST.VALIDATE.SETTING),
-    [CONST.VALIDATE.BLOG]: validateBlogData(CONST.VALIDATE.BLOG),
-    [CONST.VALIDATE.IMG_ALT]: validateBlogData(CONST.VALIDATE.IMG_ALT)
+    email: genValidate(EMAIL),
+    register: genValidate(REGISTER)
 }
