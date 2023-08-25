@@ -9,6 +9,7 @@ import { feedback } from './utils/ui'
 import Debounce from './utils/Debounce'
 import validate from './utils/validate/index.js'
 window.go = validate.email
+window.gogo = validate.register
 import _axios from './utils/_axios'
 /* -------------------- Utils MODULE FOR Wedgets -------------------- */
 import InitPage from './utils/wedgets/InitPage.js'

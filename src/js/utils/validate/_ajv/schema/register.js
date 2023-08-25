@@ -9,6 +9,7 @@ const SCHEMA = {
     },
     required: ['email', 'password', 'password_again'],
     errorMessage: {
+        type: '必須是object',
         required: '必填'
     }
 }
