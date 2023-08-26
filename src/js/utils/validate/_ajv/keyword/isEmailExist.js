@@ -1,3 +1,4 @@
+import _axios from '../../../_axios'
 async function isEmailExist(schema, data, parentSchema, dataCtx) {
     if (!schema) {
         return true
@@ -8,7 +9,9 @@ async function isEmailExist(schema, data, parentSchema, dataCtx) {
         let { instancePath } = dataCtx
         let e = new Error()
         let message = msg[key]
-        e.errors = [{ instancePath, message }]
+        let keyword = 'isEmailExist'
+        let params = { myKeyword: true }
+        e.errors = [{ keyword, params, instancePath, message }]
         throw e
     }
     return true

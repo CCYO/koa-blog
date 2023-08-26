@@ -21,8 +21,8 @@ const SCHEMA = {
         $ref: '#/if'
     },
     errorMessage: {
+        type: '必須是object',
         required: '必填',
-        if: '66666666666'
     }
 }
 
