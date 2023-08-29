@@ -22,7 +22,7 @@ instance.interceptors.request.use(
 /* 配置 axios 的 響應攔截器，統一處理報錯 */
 instance.interceptors.response.use(
     response => {
-        let { config: { url }, data: { errno } } = response
+        let { config: { url }, data: { errno, msg } } = response
         let res = response.data
         if (errno === ErrRes.PERMISSION.NO_LOGIN.errno) {
             //  響應未登入
@@ -37,6 +37,8 @@ instance.interceptors.response.use(
                 alert('尚未登入！請先登入帳號！')
                 location.href = `/login?from=${encodeURIComponent(location.href)}`
             }
+        }else if(errno){
+            console.log('@axios response 取得後端發來「否決」結果 => \n', msg)
         }
         backdrop.hidden()
         return Promise.resolve(res)

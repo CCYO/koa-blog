@@ -2,3 +2,6 @@
     font-size: .875em;
     color: black;
 }
+.form-control + div {
+    display: none;
+}

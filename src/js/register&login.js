@@ -7,9 +7,8 @@ import '../css/register&login.css'
 /* -------------------- Utils MODULE -------------------- */
 import { feedback } from './utils/ui'
 import Debounce from './utils/Debounce'
-import validate from './utils/validate/index.js'
-window.go = validate.email
-window.gogo = validate.register
+import $$module_Validate from './utils/validate/index.js'
+
 import _axios from './utils/_axios'
 /* -------------------- Utils MODULE FOR Wedgets -------------------- */
 import InitPage from './utils/wedgets/InitPage.js'
@@ -20,6 +19,7 @@ import LoadingBackdrop from './utils/wedgets/LoadingBackdrop'
 //  讀取遮罩
 /* -------------------- RUN -------------------- */
 const backdrop = new LoadingBackdrop()
+
 window.addEventListener('load', async () => {
     try {
         backdrop.show({ blockPage: true })
@@ -29,6 +29,7 @@ window.addEventListener('load', async () => {
         await initPage.addOtherInitFn(initNavbar)
         //  初始化navbar
         await initPage.render(renderPage)
+
         $('main, nav, main, footer').removeAttr('style')
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
         backdrop.hidden()
@@ -46,10 +47,12 @@ window.addEventListener('load', async () => {
             },
             REGISTER: {
                 ACTION: 'register',
+                INPUTS: ['email', 'password', 'password_again'],
                 get API() { return `/api/user/${this.ACTION}` }
             },
             LOGIN: {
                 ACTION: 'login',
+                INPUTS: ['email', 'password'],
                 get API() { return `/api/user` }
             },
             SELECTOR: {
@@ -59,354 +62,245 @@ window.addEventListener('load', async () => {
             }
         }
         /* -------------------- PUBLIC VAR -------------------- */
-        let $$validate = validate
         let $$payload = {
             login: {},
             register: {}
         }
-        deb_eventHandle(`${CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)} ${CONST.SELECTOR.EMAIL}`, 'input', handle_isEmailExist)
-        document.querySelector(CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)).addEventListener('submit', handle_form(CONST.REGISTER.ACTION))
-        document.querySelector(CONST.SELECTOR.FORM(CONST.LOGIN.ACTION)).addEventListener('submit', handle_form(CONST.LOGIN.ACTION))
-
-        async function handle_isEmailExist(e) {
-            let formType = CONST.REGISTER.ACTION
-            let action = CONST.IS_EMAIL_EXIST.ACTION
-            let email_inp = e.target
-            let datas = $$payload[formType]
-            datas.email = email_inp.value
-            let validate = $$validate[action]
-            let validateRes = await validate(datas)
-            if (validateRes) {
-                let msg = validateRes[action]
-                console.log('@msg => ', msg)
-                feedback(2, email_inp, false, msg.feedback)
-                return
-            }
-            feedback(2, email_inp, true, '')
-            email_inp.focus()
+        const lock = {
+            [CONST.REGISTER.ACTION]: []
         }
-        async function handle_register(e) {
-            e.preventDefault()
-            const isInputEvent = e.type === 'input'
-            let ACTION = action.toLocaleUpperCase()
-            //  REGISTER
-            let ele = e.target
-            //  isInputEvent → input
-            //  !isInputEvent → submit
-            let form = document.querySelector(CONST.SELECTOR.FORM(action))
-            let datas = $$payload[action]
-            //  取得緩存在頁面、作為註冊請求使用的 payload
-            if (isInputEvent) {
-                /* input 代表是由 input 觸發*/
-                datas[ele.name] = ele.value
-                //  更新payload內的表格數據
-            } else {
-                /* submit 代表是由 form 觸發，蒐集表單數據*/
-                for (let inp of form) {
-                    if (action === CONST.REGISTER.ACTION && inp.name === 'email') {
-                        /* submit沒資料，email則有獨立handle*/
-                        continue
-                    }
-                    datas[inp.name] = inp.value
-                    //  將表格數據存入$$datas
+        $('form button[type=submit]').prop('disabled', true)
+        initRegistFn()
+        initLoginFn()
+        function initLoginFn() {
+            const api_login = CONST.LOGIN.API
+            const redir_query = 'from'
+            const success_redir = location.search ? new URLSearchParams(location.search).get(redir_query) : '/self'
+            const success_alert = '登入成功'
+            const inputs = ['email', 'password']
+            let formFeedback = genFormFeedback(CONST.LOGIN.ACTION, inputs)
+            let formType = CONST.LOGIN.ACTION
+            let formId = CONST.SELECTOR.FORM(CONST.LOGIN.ACTION)
+            let form = document.querySelector(formId)
+            let $submit = $(`${formId} button[type=submit]`).eq(0)
+            let payload = $$payload[formType]
+            let validate_login = $$module_Validate['login']
+
+            form.addEventListener('input', handle_input_login)
+            form.addEventListener('submit', handle_submit_login)
+
+            async function handle_submit_login(e) {
+                e.preventDefault()
+                let validateErrs = await validate_login(payload)
+                //  校驗
+                if (validateErrs) {
+                    _handle_validateLoginErrors(validateErrs)
+                    return
                 }
-            }
-            let validate = $$validate[action]
-            let validateErrs = await validate(datas)
-            let invalidInps = []
-            //  存放無效值的inp
-            let validInps = []
-            //  存放有效值的inp
-            if (isInputEvent) {
-                /* 整理此次 input 影響的錯誤提醒，以及表格的綁定事件 */
-                for (let inp of form) {
-                    let inputName = inp.name
-                    if (e.type === 'submit' || (action === CONST.REGISTER.ACTION && inputName === 'email')) {
-                        /* 除了email，其有獨立的 handle*/
-                        continue
-                    }
-                    if (!validateErrs || !validateErrs[inputName]) {
-                        /* datas 整體有效 || datas[inpName] 當前屬性數據有效 */
-                        validInps.push(inp)
-                    } else if (validateErrs[inputName]) {
-                        invalidInps.push({ inp, msg: validateErrs[inputName] })
-                    }
-                }
-            } else if (validateErrs) {
-                /* 處理校驗錯誤 ..............*/
-                /* 若EventType不是input，且驗證結果有錯誤 */
-                let inputNames = [...form].filter(inp => {
-                    return inp.type !== 'submit' && !(action === CONST.REGISTER.ACTION && inp.name === 'email')
-                    //  撇除 email 與 submit
-                }).map(inp => inp.name)
-                //  僅取出 inputName
-                let set_validInpName = new Set(inputNames)
-                //  用來過濾出含有效值的inpName
-                for (let inputName in validateErrs) {
-                    set_validInpName.delete(inputName)
-                    //  刪去無效值的inpName
-                    let inp = $(form).find(`input[name=${inputName}]`)[0]
-                    invalidInps.push({ inp, msg: validateErrs[inputName] })
-                }
-                for (let inpName of set_validInpName) {
-                    /* 針對通過驗證的 inpName 進行處理*/
-                    let inp = $(form).find(`input[name=${inpName}]`)[0]
-                    validInps.push(inp)
-                }
-            } else {
-                /* 送出請求 ..............*/
+                return
+                //  處理校驗錯誤
+                /* 送出請求 */
                 /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-                const api = CONST[ACTION].API
-                let { errno, msg } = await _axios.post(api, datas)
+                let { errno } = await _axios.post(api_login, payload)
                 if (!errno) {
-                    if (action === CONST.LOGIN.ACTION) {
-                        alert('登入成功')
-                        let from = location.search ? new URLSearchParams(location.search).get('from') : false
-                        location.href = from ? from : '/self'
-                    } else {
-                        alert('註冊成功，請嘗試登入')
-                        location.pathname = '/login'
-                    }
-                } else {
-                    console.log('@msg => ', msg)
-                    alert(msg)
-                    datas = {}
-                    // feedback(4, form)
+                    alert(success_alert)
+                    location.pathname = success_redir
                 }
                 return
             }
-            for (let inp of validInps) {
-                feedback(2, inp, true, '')
-            }
-            for (let { inp, msg } of invalidInps) {
-                feedback(2, inp, false, msg.feedback)
-                !inp.has_debHandle && deb_eventHandle(inp, 'input', _)
-                //  未標記 has_debHandle，則綁定
-            }
-            return
-
-            {
+            async function handle_input_login(e) {
                 e.preventDefault()
-                const isInputEvent = e.type === 'input'
-                let ACTION = action.toLocaleUpperCase()
-                //  REGISTER
-                let ele = e.target
-                //  isInputEvent → input
-                //  !isInputEvent → submit
-                let form = document.querySelector(CONST.SELECTOR.FORM(action))
-                let datas = $$payload[action]
-
-                let validate = $$validate[action]
-                let invalidInps = []
-                //  存放無效值的inp
-                let validInps = []
-
-                if (isInputEvent) {
-                    /* input 代表是由 input 觸發*/
-                    datas[ele.name] = ele.value
-                    //  更新payload內的表格數據
-
-                    /* 整理此次 input 影響的錯誤提醒，以及表格的綁定事件 */
-                    for (let inp of form) {
-                        let inputName = inp.name
-                        if (e.type === 'submit' || (action === CONST.REGISTER.ACTION && inputName === 'email')) {
-                            /* 除了email，其有獨立的 handle*/
-                            continue
-                        }
-                        if (!validateErrs || !validateErrs[inputName]) {
-                            /* datas 整體有效 || datas[inpName] 當前屬性數據有效 */
-                            validInps.push(inp)
-                        } else if (validateErrs[inputName]) {
-                            invalidInps.push({ inp, msg: validateErrs[inputName] })
-                        }
-                    }
-                    let validateErrs = await validate(datas)
-                    //  校驗
-                    /* 處理校驗錯誤 ..............*/
-                    /* 送出請求 ..............*/
-                } else {
-                    /* submit 代表是由 form 觸發，蒐集表單數據*/
-                    for (let inp of form) {
-                        if (action === CONST.REGISTER.ACTION && inp.name === 'email') {
-                            /* submit沒資料，email則有獨立handle*/
-                            continue
-                        }
-                        datas[inp.name] = inp.value
-                        //  將表格數據存入$$datas
-                    }
-                    let validateErrs = await validate(datas)
-                    //  校驗
-                    /* 處理校驗錯誤 ..............*/
-                    /* 送出請求 ..............*/
-
-                }
-
-                {
-                    /* 處理校驗錯誤 ..............*/
-                    if (validateErrs) {
-                        /* 若EventType不是input，且驗證結果有錯誤 */
-                        let inputNames = [...form].filter(inp => {
-                            return inp.type !== 'submit' && !(action === CONST.REGISTER.ACTION && inp.name === 'email')
-                            //  撇除 email 與 submit
-                        }).map(inp => inp.name)
-                        //  僅取出 inputName
-                        let set_validInpName = new Set(inputNames)
-                        //  用來過濾出含有效值的inpName
-                        for (let inputName in validateErrs) {
-                            set_validInpName.delete(inputName)
-                            //  刪去無效值的inpName
-                            let inp = $(form).find(`input[name=${inputName}]`)[0]
-                            invalidInps.push({ inp, msg: validateErrs[inputName] })
-                        }
-                        for (let inpName of set_validInpName) {
-                            /* 針對通過驗證的 inpName 進行處理*/
-                            let inp = $(form).find(`input[name=${inpName}]`)[0]
-                            validInps.push(inp)
-                        }
-                        /* feedback */
-                        for (let inp of validInps) {
-                            feedback(2, inp, true, '')
-                        }
-                        for (let { inp, msg } of invalidInps) {
-                            feedback(2, inp, false, msg.feedback)
-                            !inp.has_debHandle && deb_eventHandle(inp, 'input', _)
-                            //  未標記 has_debHandle，則綁定
-                        }
-                    }
-                }
-                {
-                    /* 送出請求 */
-                    /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-                    const api = CONST[ACTION].API
-                    let { errno, msg } = await _axios.post(api, datas)
-                    if (!errno) {
-                        if (action === CONST.LOGIN.ACTION) {
-                            alert('登入成功')
-                            let from = location.search ? new URLSearchParams(location.search).get('from') : false
-                            location.href = from ? from : '/self'
-                        } else {
-                            alert('註冊成功，請嘗試登入')
-                            location.pathname = '/login'
-                        }
-                    } else {
-                        console.log('@msg => ', msg)
-                        alert(msg)
-                        datas = {}
-                        // feedback(4, form)
-                    }
-                    return
-                }
+                //  LOGIN
+                let targetInput = e.target
+                let targetInputName = targetInput.name
+                let targetInputValue = targetInput.value
+                //  指向$$payload裡對應的數據對象
+                payload[targetInputName] = targetInputValue
+                //  更新payload內的表格數據
+                let validateErrs = await validate_login(payload)
+                _handle_validateLoginErrors(validateErrs)
+                return
             }
-        }
-        function handle_form(action) {
-            return async function _(e) {
-                e.preventDefault()
-                const isInputEvent = e.type === 'input'
-                let ACTION = action.toLocaleUpperCase()
-                let ele = e.target
-                let form = document.querySelector(CONST.SELECTOR.FORM(action))
-                //  取得 formType
-                let datas = $$payload[action]
-                let invalidInps = []
+            /* 處理校驗錯誤 ..............*/
+            function _handle_validateLoginErrors(validateErrs) {
+                let invalidInputs = []
                 //  存放無效值的inp
-                let validInps = []
+                let validInputs = []
                 //  存放有效值的inp
-                let validate = $$validate[action]
-                if (isInputEvent) {
-                    /* input 代表是由 input 觸發*/
-                    datas[ele.name] = ele.value
-                    //  更新$$datas內的表格數據
-                } else {
-                    /* submit 代表是由 form 觸發，蒐集表單數據*/
-                    for (let inp of form) {
-                        if (inp.type === 'submit' || (action === CONST.REGISTER.ACTION && inp.name === 'email')) {
-                            /* submit沒資料，email則有獨立handle*/
-                            continue
-                        }
-                        datas[inp.name] = inp.value
-                        //  將表格數據存入$$datas
-                    }
-                }
-                let validateErrs = await validate(datas)
-                //  驗證
-                if (isInputEvent) {
-                    /* 整理此次 input 影響的錯誤提醒，以及表格的綁定事件 */
-                    for (let inp of form) {
-                        let inputName = inp.name
-                        if (e.type === 'submit' || (action === CONST.REGISTER.ACTION && inputName === 'email')) {
-                            /* 除了email，其有獨立的 handle*/
-                            continue
-                        }
-                        if (!validateErrs || !validateErrs[inputName]) {
-                            /* datas 整體有效 || datas[inpName] 當前屬性數據有效 */
-                            validInps.push(inp)
-                        } else if (validateErrs[inputName]) {
-                            invalidInps.push({ inp, msg: validateErrs[inputName] })
-                        }
-                    }
-                } else if (validateErrs) {
-                    /* 若EventType不是input，且驗證結果有錯誤 */
-                    let inputNames = [...form].filter(inp => {
-                        return inp.type !== 'submit' && !(action === CONST.REGISTER.ACTION && inp.name === 'email')
-                        //  撇除 email 與 submit
-                    }).map(inp => inp.name)
-                    //  僅取出 inputName
-                    let set_validInpName = new Set(inputNames)
-                    //  用來過濾出含有效值的inpName
-                    for (let inputName in validateErrs) {
-                        set_validInpName.delete(inputName)
+                let set_validInpNames = new Set([...CONST.LOGIN.INPUTS])
+                //  用來過濾出含有效值的inpName
+                for (let invalidInputName in validateErrs) {
+                    if (set_validInpNames.has(invalidInputName)) {
+                        set_validInpNames.delete(invalidInputName)
                         //  刪去無效值的inpName
-                        let inp = $(form).find(`input[name=${inputName}]`)[0]
-                        invalidInps.push({ inp, msg: validateErrs[inputName] })
-                    }
-                    for (let inpName of set_validInpName) {
-                        /* 針對通過驗證的 inpName 進行處理*/
-                        let inp = $(form).find(`input[name=${inpName}]`)[0]
-                        validInps.push(inp)
-                    }
-                } else {
-                    /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-                    const api = CONST[ACTION].API
-                    let { errno, msg } = await _axios.post(api, datas)
-                    if (!errno) {
-                        if (action === CONST.LOGIN.ACTION) {
-                            alert('登入成功')
-                            let from = location.search ? new URLSearchParams(location.search).get('from') : false
-                            location.href = from ? from : '/self'
-                        } else {
-                            alert('註冊成功，請嘗試登入')
-                            location.pathname = '/login'
-                        }
+                        let input = $(`${formId} input[name=${invalidInputName}]`).get(0)
+                        let msg = validateErrs[invalidInputName]
+                        invalidInputs.push({ input, msg })
                     } else {
-                        console.log('@msg => ', msg)
-                        alert(msg)
-                        datas = {}
-                        // feedback(4, form)
+                        console.log('@出現一個非法表格數據，怪的是此表格名不包含在表單內，此表格名為: ', invalidInputName)
                     }
-                    return
                 }
-                for (let inp of validInps) {
-                    feedback(2, inp, true, '')
+                /* 針對通過驗證的 inpName 進行處理*/
+                for (let inputName of set_validInpNames) {
+                    let input = $(`${formId} input[name=${inputName}]`).get(0)
+                    validInputs.push(input)
                 }
-                for (let { inp, msg } of invalidInps) {
-                    feedback(2, inp, false, msg.feedback)
-                    !inp.has_debHandle && deb_eventHandle(inp, 'input', _)
-                    //  未標記 has_debHandle，則綁定
+                /* 有效表格值的提醒 */
+                for (let input of validInputs) {
+                    formFeedback(2, input, true, '')
+                }
+                /* 非法表格值的提醒 */
+                for (let { input, msg } of invalidInputs) {
+                    formFeedback(2, input, false, msg.feedback)
+                    //  若該非法表格未標記 has_debHandle，則替其inputEvent綁定驗證表格值的handle
                 }
                 return
             }
         }
+        function initRegistFn() {
+            const api_register = CONST.REGISTER.API
+            const success_redir = '/login'
+            const success_alert = '註冊成功，請嘗試登入'
+            const inputs = ['password', 'password_again']
+            let formFeedback = genFormFeedback(CONST.REGISTER.ACTION, inputs)
+            let formType = CONST.REGISTER.ACTION
+            let formId = CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)
+            let form = document.querySelector(formId)
+            
+            let payload = $$payload[formType]
+            let validate_email = $$module_Validate['email']
+            let validate_register = $$module_Validate['register']
+
+            deb_eventHandle(`${formId} ${CONST.SELECTOR.EMAIL}`, 'input', handle_isEmailExist)
+            deb_eventHandle(`${formId} input[name*=password]`, 'input', handle_input_register)
+            form.addEventListener('submit', handle_submit_register)
+
+
+            async function handle_isEmailExist(e) {
+                let input = e.target
+                let inputName = input.name
+                payload[inputName] = input.value
+                let validateErrs = await validate_email(payload)
+                let msg = validateErrs ? validateErrs[inputName] : undefined
+                if (msg) {
+                    formFeedback(2, input, false, msg.feedback)
+                } else {
+                    formFeedback(2, input, true, '')
+                }
+                input.focus()
+            }
+            async function handle_submit_register(e) {
+                e.preventDefault()
+                let validateErrs = await validate(payload)
+                //  校驗
+                if (validateErrs) {
+                    _handle_validateRegisterErrors(validateErrs)
+                    //  處理校驗錯誤
+                    return
+                }
+                return
+                /* 送出請求 */
+                /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
+                let { errno } = await _axios.post(api_register, payload)
+                if (!errno) {
+                    alert(success_alert)
+                    location.pathname = success_redir
+                }
+                return
+            }
+            /* 處理校驗錯誤 ..............*/
+            function _handle_validateRegisterErrors(validateErrs) {
+                let invalidInputs = []
+                //  存放無效值的inp
+                let validInputs = []
+                //  存放有效值的inp
+                let set_validInpNames = new Set(['password', 'password_again'])
+                //  用來過濾出含有效值的inpName
+                for (let invalidInputName in validateErrs) {
+                    if (invalidInputName === 'email') {
+                        //  email有專屬的較驗結果提醒
+                        continue
+                    }
+                    if (set_validInpNames.has(invalidInputName)) {
+                        set_validInpNames.delete(invalidInputName)
+                        //  刪去無效值的inpName
+                        let input = $(`${formId} input[name=${invalidInputName}]`).get(0)
+                        let msg = validateErrs[invalidInputName]
+                        invalidInputs.push({ input, msg })
+                    } else {
+                        console.log('@出現一個非法表格數據，怪的是此表格名不包含在表單內，此表格名為: ', invalidInputName)
+                    }
+                }
+                /* 針對通過驗證的 inpName 進行處理*/
+                for (let inputName of set_validInpNames) {
+                    let input = $(`${formId} input[name=${inputName}]`).get(0)
+                    validInputs.push(input)
+                }
+                /* 有效表格值的提醒 */
+                for (let input of validInputs) {
+                    // lock_register.delete(input.name)
+                    formFeedback(2, input, true, '')
+                }
+                /* 非法表格值的提醒 */
+                for (let { input, msg } of invalidInputs) {
+                    formFeedback(2, input, false, msg.feedback)
+                    //  若該非法表格未標記 has_debHandle，則替其inputEvent綁定驗證表格值的handle
+                }
+                return
+            }
+            async function handle_input_register(e) {
+                console.log('@開始')
+                e.preventDefault()
+                //  REGISTER
+                let targetInput = e.target
+                let targetInputName = targetInput.name
+                let targetInputValue = targetInput.value
+                //  指向$$payload裡對應的數據對象
+                payload[targetInputName] = targetInputValue
+                //  更新payload內的表格數據
+                let validateErrs = await validate_register(payload)
+                _handle_validateRegisterErrors(validateErrs)
+                return
+            }
+        }
+
 
         function deb_eventHandle(selectorOrEl, eventType, handle) {
-            let ele = typeof selectorOrEl === 'string' ? document.querySelector(selectorOrEl) : selectorOrEl
-            if (ele.has_debHandle) {
-                return
+            let eles = typeof selectorOrEl === 'string' ? document.querySelectorAll(selectorOrEl) : [selectorOrEl]
+            for (let ele of eles) {
+                console.log('@ele => ', ele)
+                if (ele.has_debHandle) {
+                    continue
+                }
+                ele.has_debHandle = true
+                const deb_handle = new Debounce(handle, {
+                    loading: (e) => {
+                        console.log('延遲loading')
+                        let input = e.target
+                        feedback(1, input)
+                        $(input).parents('form').eq(0).prop('disabled', true)
+                    }
+                })
+                ele.addEventListener(eventType, (e) => deb_handle.call(e))
             }
-            ele.has_debHandle = true
-            const deb_handle = new Debounce(handle, {
-                loading: (e) => feedback(1, e.target)
-            })
-            ele.addEventListener(eventType, (e) => deb_handle.call(e))
+        }
+        function genFormFeedback(formAction, inputs) {
+            let ACTION = formAction.toLocaleUpperCase()
+            let lock = new Set(inputs)
+            let formId = CONST.SELECTOR.FORM(formAction)
+            let $submit = $(`${formId} button[type=submit]`).eq(0)
+            return (status, input, valid, msg) => {
+                let key = input.name
+                if (status === 2) {
+                    if (valid) {
+                        lock.delete(key)
+                    } else {
+                        lock.add(key)
+                    }
+                    $submit.prop('disabled', lock.size)
+                }
+                feedback(status, input, valid, msg)
+            }
         }
     }
 })

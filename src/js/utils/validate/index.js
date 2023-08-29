@@ -1,5 +1,5 @@
 import ajv from './_ajv'
-import { EMAIL, REGISTER } from './_ajv/schema'
+import { EMAIL, REGISTER, LOGIN } from './_ajv/schema'
 
 function genValidate(schema) {
     let _validate = ajv.compile(schema)
@@ -72,12 +72,15 @@ function _parseValidateErrors(validateErrors) {
         /* 被 ajv-errors 捕獲的錯誤，會將 ajv 原本整理的錯誤資訊匯入 params 內，即 params.errors */
         for (let originError of params.errors) {
             let originKeyword = originError.keyword
-            if (!fieldName) {
+            console.log('@原錯誤 => \n', originError)
+            if (!instancePath) {
                 /* schema 最高等級的錯誤 */
                 let originParam = map_keyword_to_param[originKeyword]
                 fieldName = originParam ? originError.params[originParam] : 'all'
+                console.log(`@從最高級錯誤${originKeyword}取得fieldName => `, fieldName)
                 //  若 _param 不是列在map_keyword_to_param上的key，則代表此次的錯誤應該是使用者使用JS才發生的錯誤
             }
+            console.log('@fieldName => ', fieldName)
             if (!init.hasOwnProperty(fieldName)) {
                 init[fieldName] = {}
             }
@@ -137,5 +140,6 @@ export {
 
 export default {
     email: genValidate(EMAIL),
-    register: genValidate(REGISTER)
+    register: genValidate(REGISTER),
+    login: genValidate(LOGIN)
 }
