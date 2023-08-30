@@ -3,7 +3,10 @@ const SCHEMA = {
     $id: `${CONST.URL}/register.json`,
     type: 'object',
     properties: {
-        email: { $ref: 'defs.json#/definitions/email' },
+        email: { 
+            $ref: 'defs.json#/definitions/email',
+            lock: { $data: '1/payload/email'}
+        },
         password: { $ref: 'defs.json#/definitions/password' },
         password_again: { $ref: 'defs.json#/definitions/password_again' }
     },

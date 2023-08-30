@@ -6,7 +6,6 @@ const { getStorage } = require('firebase-admin/storage')
 const { GFB_CONF } = require('../../conf/db')
 
 const credential = applicationDefault()
-console.log('@credential => ', credential)
 const firebaseConfig = {
   //  applicationDefault() 會撈取 環境變量GOOGLE_APPLICATION_CREDENTIALS存放的路徑，作為服務帳號的密鑰(json格式)
   //  ex: $ export GOOGLE_APPLICATION_CREDENTIALS="/home/使用者帳號/koa-blog/server/conf/GFB_admin_key.json"
