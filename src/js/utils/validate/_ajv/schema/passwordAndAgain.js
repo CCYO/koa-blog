@@ -1,15 +1,12 @@
 import { CONST } from '../../../../../config/const'
 const SCHEMA = {
-    $id: `${CONST.URL}/register.json`,
+    $id: `${CONST.URL}/passwordAndAgain.json`,
     type: 'object',
     properties: {
-        email: { 
-            $ref: 'defs.json#/definitions/email',
-        },
         password: { $ref: 'defs.json#/definitions/password' },
         password_again: { $ref: 'defs.json#/definitions/password_again' }
     },
-    required: ['email', 'password', 'password_again'],
+    required: ['password', 'password_again'],
     errorMessage: {
         type: '必須是object',
         required: '必填'

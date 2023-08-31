@@ -78,13 +78,21 @@ window.addEventListener('load', async () => {
             const success_redir = location.search ? new URLSearchParams(location.search).get(redir_query) : '/self'
             const success_alert = '登入成功'
             const inputs = ['email', 'password']
-            let formFeedback = genFormFeedback(CONST.LOGIN.ACTION, inputs)
+            // let formFeedback = genFormFeedback(CONST.LOGIN.ACTION, inputs)
             let formType = CONST.LOGIN.ACTION
             let formId = CONST.SELECTOR.FORM(CONST.LOGIN.ACTION)
             let form = document.querySelector(formId)
-            let $submit = $(`${formId} button[type=submit]`).eq(0)
             let payload = $$payload[formType]
             let validate_login = $$module_Validate['login']
+            let lock = new Set()
+            for (let input of form) {
+                const { name, type } = input
+                if (type === 'submit') {
+                    continue
+                } else {
+                    lock.add(name)
+                }
+            }
 
             form.addEventListener('input', handle_input_login)
             form.addEventListener('submit', handle_submit_login)
@@ -119,7 +127,7 @@ window.addEventListener('load', async () => {
                 //  更新payload內的表格數據
                 let validateErrs = await validate_login(payload)
                 // _handle_validateLoginErrors(validateErrs)
-                _handle_validateInputErrors(validateErrs, formId, ['email', 'password'], formFeedback)
+                _handle_validateInputErrors(validateErrs, form, lock, ['email', 'password'])
                 return
             }
             /* 處理校驗錯誤 ..............*/
@@ -162,15 +170,22 @@ window.addEventListener('load', async () => {
             const api_register = CONST.REGISTER.API
             const success_redir = '/login'
             const success_alert = '註冊成功，請嘗試登入'
-            const inputs = ['password', 'password_again']
-            let formFeedback = genFormFeedback(CONST.REGISTER.ACTION, inputs)
             let formType = CONST.REGISTER.ACTION
             let formId = CONST.SELECTOR.FORM(CONST.REGISTER.ACTION)
             let form = document.querySelector(formId)
 
             let payload = $$payload[formType]
-            let validate_email = $$module_Validate['email']
-            let validate_register = $$module_Validate['register']
+            let validate_email = $$module_Validate['isEmailExist']
+            let validate_password = $$module_Validate['passwordAndAgain']
+            let lock = new Set()
+            for (let input of form) {
+                const { name, type } = input
+                if (type === 'submit') {
+                    continue
+                } else {
+                    lock.add(name)
+                }
+            }
 
             // deb_eventHandle(`${formId} ${CONST.SELECTOR.EMAIL}`, 'input', handle_isEmailExist)
             // deb_eventHandle(`${formId} input[name*=password]`, 'input', handle_input_register)
@@ -183,7 +198,7 @@ window.addEventListener('load', async () => {
                 let inputName = input.name
                 payload[inputName] = input.value
                 let validateErrs = await validate_email(payload)
-                _handle_validateInputErrors(validateErrs, formId, ['email'], formFeedback, ['password', 'password_again'])
+                _handle_validateInputErrors(validateErrs, form, ['email'], formFeedback, ['password', 'password_again'])
                 // let msg = validateErrs ? validateErrs[inputName] : undefined
                 // if (msg) {
                 //     formFeedback(2, input, false, msg.feedback)
@@ -223,61 +238,71 @@ window.addEventListener('load', async () => {
                 //  指向$$payload裡對應的數據對象
                 payload[targetInputName] = targetInputValue
                 //  更新payload內的表格數據
-                if(targetInputName === 'email'){
+                if (targetInputName === 'email') {
                     let validateErrs = await validate_email(payload)
-                    _handle_validateInputErrors(validateErrs, formId, ['email'], formFeedback, ['password', 'password_again'])
-                
-                }else{
-                    let validateErrs = await validate_register(payload)
-                // _handle_validateRegisterErrors(validateErrs)
-                _handle_validateInputErrors(validateErrs, formId, ['password', 'password_again'], formFeedback, ['email'])
+                    _handle_validateInputErrors(validateErrs, form, lock, ['email'])
+
+                } else {
+                    let validateErrs = await validate_password(payload)
+                    _handle_validateInputErrors(validateErrs, form, lock, ['password', 'password_again'])
                 }
                 return
             }
         }
 
         /* 處理校驗錯誤 ..............*/
-        function _handle_validateInputErrors(validateErrs, selector_form, inputNames, formFeedback, excludes = []) {
+        function _handle_validateInputErrors(validateErrs, form, lock, targetInputNames = []) {
+            //  inputNames 需要被校驗的 input.name
+            //  excludes 不需要 feedback 的 input.name
+
+            // let excludes = map.get(inputNames)
+            let $submit = $(form).find('[type=submit]').eq(0)
             let invalidInputs = []
             //  存放無效值的inp
             let validInputs = []
             //  存放有效值的inp
-            let set_validInpNames = new Set(inputNames)
+            let set_validInpNames = new Set(targetInputNames)
             //  用來過濾出含有效值的inpName
             for (let invalidInputName in validateErrs) {
-                if (excludes.length && excludes.some(exclude => exclude === invalidInputName)) {
-                    //  email有專屬的較驗結果提醒
-                    continue
-                }
-                if (set_validInpNames.has(invalidInputName)) {
+                if(targetInputNames.some( name => name === invalidInputName)){
                     set_validInpNames.delete(invalidInputName)
-                    //  刪去無效值的inpName
-                    let input = $(`${selector_form} input[name=${invalidInputName}]`).get(0)
-                    let msg = validateErrs[invalidInputName]
-                    invalidInputs.push({ input, msg })
+                    invalidInputs.push(invalidInputName)
                 } else {
                     console.log('@出現一個非法表格數據，怪的是此表格名不包含在表單內，此表格名為: ', invalidInputName)
                 }
             }
             /* 針對通過驗證的 inpName 進行處理*/
             for (let inputName of set_validInpNames) {
-                console.log('@被加入validInputs => ', inputName, selector_form)
-                let input = $(`${selector_form} input[name=${inputName}]`).get(0)
-                validInputs.push(input)
+                console.log('@@@ => ', inputName)
+                let input = $(form).find(`input[name=${inputName}]`).get(0)
+                formFeedback(2, input, true, '')
             }
             console.log('@validInputs => ', validInputs)
             console.log('@invalidInputs => ', invalidInputs)
             /* 有效表格值的提醒 */
-            for (let input of validInputs) {
-                // lock_register.delete(input.name)
-                formFeedback(2, input, true, '')
-            }
             /* 非法表格值的提醒 */
-            for (let { input, msg } of invalidInputs) {
+            for (let inputName of invalidInputs) {
+                console.log('@@@ => ', inputName)
+                let input = $(form).find(`input[name=${inputName}]`).get(0)
+                    let msg = validateErrs[inputName]
+                    // invalidInputs.push({ input, msg })
                 formFeedback(2, input, false, msg.feedback)
                 //  若該非法表格未標記 has_debHandle，則替其inputEvent綁定驗證表格值的handle
             }
             return
+
+            function formFeedback(status, input, valid, msg) {
+                let key = input.name
+                if (status === 2) {
+                    if (valid) {
+                        lock.delete(key)
+                    } else {
+                        lock.add(key)
+                    }
+                    $submit.prop('disabled', lock.size)
+                }
+                feedback(status, input, valid, msg)
+            }
         }
         function deb_eventHandle(selectorOrEl, eventType, handle) {
             let eles = typeof selectorOrEl === 'string' ? document.querySelectorAll(selectorOrEl) : [selectorOrEl]
@@ -298,10 +323,19 @@ window.addEventListener('load', async () => {
                 ele.addEventListener(eventType, (e) => deb_handle.call(e))
             }
         }
-        function genFormFeedback(action, inputs) {
-            let lock = new Set(inputs)
-            const formId = CONST.SELECTOR.FORM(action)
-            let $submit = $(`${formId} button[type=submit]`).eq(0)
+        function genFormFeedback(form) {
+            let $submit
+            let lock = new Set()
+            for (let input of form) {
+                const { name, type } = input
+                if (type === 'submit') {
+                    $submit = input
+                } else {
+                    lock.add(name)
+                }
+            }
+            // let lock = new Set(inputs)
+            // let $submit = $(form).find(`button[type=submit]`).eq(0)
             return (status, input, valid, msg) => {
                 let key = input.name
                 if (status === 2) {

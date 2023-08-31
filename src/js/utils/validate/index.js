@@ -1,5 +1,5 @@
 import ajv from './_ajv'
-import { EMAIL, REGISTER, LOGIN } from './_ajv/schema'
+import { IS_EMAIL_EXIST, PASSWORD_AND_AGAIN, REGISTER, LOGIN } from './_ajv/schema'
 
 function genValidate(schema) {
     let _validate = ajv.compile(schema)
@@ -139,7 +139,8 @@ export {
 }
 
 export default {
-    email: genValidate(EMAIL),
+    isEmailExist: genValidate(IS_EMAIL_EXIST),
+    passwordAndAgain: genValidate(PASSWORD_AND_AGAIN),
     register: genValidate(REGISTER),
     login: genValidate(LOGIN)
 }

@@ -1,6 +1,6 @@
 import { CONST } from '../../../../../config/const'
 const SCHEMA = {
-    $id: `${CONST.URL}/email.json`,
+    $id: `${CONST.URL}/isEmailExist.json`,
     $async: true,
     type: 'object',
     if: {

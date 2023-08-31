@@ -1,7 +1,8 @@
 import { CONST } from '../../../../../config/const'
 import AVATAR from './avatar'
 import BLOG from './blog'
-import EMAIL from './email'
+import IS_EMAIL_EXIST from './isEmailExist'
+import PASSWORD_AND_AGAIN from './passwordAndAgain'
 import IMG_ALT from './imgAlt'
 import LOGIN from './login'
 import PASSWORD from './password'
@@ -167,9 +168,10 @@ const DEF = {
 
 export {
     DEF,
+    IS_EMAIL_EXIST,
+    PASSWORD_AND_AGAIN,
     AVATAR,
     BLOG,
-    EMAIL,
     IMG_ALT,
     LOGIN,
     PASSWORD,
