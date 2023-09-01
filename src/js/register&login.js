@@ -186,27 +186,11 @@ window.addEventListener('load', async () => {
                     lock.add(name)
                 }
             }
-
-            // deb_eventHandle(`${formId} ${CONST.SELECTOR.EMAIL}`, 'input', handle_isEmailExist)
-            // deb_eventHandle(`${formId} input[name*=password]`, 'input', handle_input_register)
             deb_eventHandle(`${formId} input`, 'input', handle_input_register)
             form.addEventListener('submit', handle_submit_register)
 
 
-            async function handle_isEmailExist(e) {
-                let input = e.target
-                let inputName = input.name
-                payload[inputName] = input.value
-                let validateErrs = await validate_email(payload)
-                _handle_validateInputErrors(validateErrs, form, ['email'], formFeedback, ['password', 'password_again'])
-                // let msg = validateErrs ? validateErrs[inputName] : undefined
-                // if (msg) {
-                //     formFeedback(2, input, false, msg.feedback)
-                // } else {
-                //     formFeedback(2, input, true, '')
-                // }
-                input.focus()
-            }
+            
             async function handle_submit_register(e) {
                 e.preventDefault()
                 let validateErrs = await validate(payload)
@@ -239,12 +223,12 @@ window.addEventListener('load', async () => {
                 payload[targetInputName] = targetInputValue
                 //  更新payload內的表格數據
                 if (targetInputName === 'email') {
-                    let validateErrs = await validate_email(payload)
-                    _handle_validateInputErrors(validateErrs, form, lock, ['email'])
+                    let validateErrs = await validate_email(payload, false)
+                    _handle_validateInputErrors(validateErrs, form, lock)
 
                 } else {
-                    let validateErrs = await validate_password(payload)
-                    _handle_validateInputErrors(validateErrs, form, lock, ['password', 'password_again'])
+                    let validateErrs = await validate_password(payload, false)
+                    _handle_validateInputErrors(validateErrs, form, lock)
                 }
                 return
             }
@@ -255,37 +239,64 @@ window.addEventListener('load', async () => {
             //  inputNames 需要被校驗的 input.name
             //  excludes 不需要 feedback 的 input.name
 
+            //  撈出form的所有需要顯示提醒的input
+            let needFeedback = [...form].reduce((res, input) => {
+                if(input.type === 'submit'){
+                    res.$submit = $(input)
+                }else if(!input.mark){
+                    return res
+                }else{
+                    res.inputs.push(input)
+                    res.set_inputNames.add(input.name)
+                }
+                return res
+            }, { inputs: [], set_inputNames: new Set(), $submit: undefined})
+            //  
+
+
             // let excludes = map.get(inputNames)
-            let $submit = $(form).find('[type=submit]').eq(0)
+            // let $submit = $(form).find('[type=submit]').eq(0)
             let invalidInputs = []
             //  存放無效值的inp
             let validInputs = []
             //  存放有效值的inp
-            let set_validInpNames = new Set(targetInputNames)
+            let set_validInpNames = needFeedback.set_inputNames
+            let $submit = needFeedback.$submit
             //  用來過濾出含有效值的inpName
+            /* 蒐集無效inputs */
+            console.log('@needFeedback => ', needFeedback)
+            console.log('@validateErrs => ', validateErrs)
             for (let invalidInputName in validateErrs) {
-                if(targetInputNames.some( name => name === invalidInputName)){
+                let validateErr = validateErrs[invalidInputName]
+                console.log('@validateErr---- => ', validateErr)
+                if(validateErr.hasOwnProperty('additionalProperties')){
+                    console.log('刪除', invalidInputName)
                     set_validInpNames.delete(invalidInputName)
-                    invalidInputs.push(invalidInputName)
+                    delete validateErrs[invalidInputName]
+                    continue
+                }
+
+                if(set_validInpNames.has(invalidInputName)){
+                    set_validInpNames.delete(invalidInputName)
                 } else {
                     console.log('@出現一個非法表格數據，怪的是此表格名不包含在表單內，此表格名為: ', invalidInputName)
                 }
             }
             /* 針對通過驗證的 inpName 進行處理*/
             for (let inputName of set_validInpNames) {
-                console.log('@@@ => ', inputName)
                 let input = $(form).find(`input[name=${inputName}]`).get(0)
                 formFeedback(2, input, true, '')
             }
-            console.log('@validInputs => ', validInputs)
-            console.log('@invalidInputs => ', invalidInputs)
             /* 有效表格值的提醒 */
             /* 非法表格值的提醒 */
-            for (let inputName of invalidInputs) {
+            let _validateErrs = validateErrs.parseErrorsToForm(validateErrs)
+            console.log('@再一次撈取後的validateErrs => ', _validateErrs)
+            for (let inputName in _validateErrs) {
                 console.log('@@@ => ', inputName)
                 let input = $(form).find(`input[name=${inputName}]`).get(0)
-                    let msg = validateErrs[inputName]
+                    let msg = _validateErrs[inputName]
                     // invalidInputs.push({ input, msg })
+                    console.log('@msg => ', msg)
                 formFeedback(2, input, false, msg.feedback)
                 //  若該非法表格未標記 has_debHandle，則替其inputEvent綁定驗證表格值的handle
             }

@@ -7,9 +7,11 @@ const SCHEMA = {
         password_again: { $ref: 'defs.json#/definitions/password_again' }
     },
     required: ['password', 'password_again'],
+    additionalProperties: false,
     errorMessage: {
         type: '必須是object',
-        required: '必填'
+        required: '必填',
+        additionalProperties: '屬於非法數據'
     }
 }
 

@@ -8,6 +8,7 @@ const SCHEMA = {
             email: { $ref: 'defs.json#/definitions/email' },
         },
         required: ['email'],
+        additionalProperties: false
     },
     then: {
         properties: {
@@ -23,6 +24,7 @@ const SCHEMA = {
     errorMessage: {
         type: '必須是object',
         required: '必填',
+        additionalProperties: '屬於非法數據'
     }
 }
 

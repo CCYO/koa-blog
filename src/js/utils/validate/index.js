@@ -22,9 +22,13 @@ function genValidate(schema) {
                     _errors = _parseErrorsToForm(_errors)
                     //  { 表格名1: message1, 表格名2: message2, ... }
                     console.log('@提供給feedback使用的錯誤資訊 => ', _errors)
-                    return _errors
+                }else{
+                    // _errors.parseErrorsToForm = _parseErrorsToForm
+                    Object.defineProperty(_errors, 'parseErrorsToForm', {
+                        value: _parseErrorsToForm
+                    })
                 }
-                return res
+                return _errors
             } else {
                 throw err
             }
@@ -35,6 +39,7 @@ function genValidate(schema) {
 //  參考 https://ajv.js.org/api.html#error-parameters
 const map_keyword_to_param = {
     required: 'missingProperty',
+    additionalProperties: 'additionalProperty'
     // dependentRequired: 'missingProperty' 目前schema都沒用到
 }
 function _parseValidateErrors(validateErrors) {
