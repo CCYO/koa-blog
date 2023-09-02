@@ -26,7 +26,7 @@ instance.interceptors.response.use(
         let res = response.data
         if (errno === ErrRes.PERMISSION.NO_LOGIN.errno) {
             //  響應未登入
-            const reg = /^\/api\/news$/
+            const reg = /(^\/api\/news$)/
             let isNews = reg.test(window.location.pathname)
             if(isNews){
                 //  若是 getNews 請求的回應處理

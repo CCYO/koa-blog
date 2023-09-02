@@ -1,3 +1,4 @@
+import { dev_log as $F_log } from '../log'
 import ajv from './_ajv'
 import { IS_EMAIL_EXIST, PASSWORD_AND_AGAIN, REGISTER, LOGIN } from './_ajv/schema'
 
@@ -17,16 +18,10 @@ function genValidate(schema) {
             if (errors) {
                 let _errors = _parseValidateErrors(errors)
                 //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
-                console.log('@整理後的validateErrors => ', _errors)
+                $F_log('@整理後的validateErrors => ', _errors)
                 if (parseErrorForFeedBack) {
-                    _errors = _parseErrorsToForm(_errors)
+                    _errors = parseErrorsToForm(_errors)
                     //  { 表格名1: message1, 表格名2: message2, ... }
-                    console.log('@提供給feedback使用的錯誤資訊 => ', _errors)
-                }else{
-                    // _errors.parseErrorsToForm = _parseErrorsToForm
-                    Object.defineProperty(_errors, 'parseErrorsToForm', {
-                        value: _parseErrorsToForm
-                    })
                 }
                 return _errors
             } else {
@@ -46,7 +41,6 @@ function _parseValidateErrors(validateErrors) {
     /*{ 
         errors: [ { ..., message: 自定義的錯誤說明, ... }, ...],
       }*/
-    console.log('@validate handle 要處理的 errors => ', validateErrors)
     return validateErrors.reduce((init, validateError) => {
         let {
             keyword,
@@ -56,7 +50,7 @@ function _parseValidateErrors(validateErrors) {
             //  ajv-error捕獲到的錯誤，原生ajv錯誤資訊會放入params.errors
             instancePath,
             //  validatedData 發生錯誤的JSON Pointer(ex: "/email")
-            //  若值為""，代表JSON Pointer指向validatedData顯示不出來的位置(通常是更高級的地方，ex: schema.type)
+            //  若值為""，代表validatedData牴觸的keyword，其指向比validatedData顯示不出來的更高級的JSON Pointer位置(ex: schema.if)
             message
             //  ajv-errors針對當前錯誤設定錯誤提示，或是原生錯誤提醒
         } = validateError
@@ -65,7 +59,7 @@ function _parseValidateErrors(validateErrors) {
         /* 非 ajv-errors 捕獲的錯誤 */
         if (keyword !== 'errorMessage') {
             if (!params.myKeyword) {
-                console.log('@提醒用，不被處理的錯誤 => \n keyword: ', keyword, '\n message: ', message)
+                $F_log('@提醒用，不被處理的錯誤 => \n keyword: ', keyword, '\n message: ', message)
             }else{
                 if(!init.hasOwnProperty(fieldName)){
                     init[fieldName] = {}
@@ -74,18 +68,22 @@ function _parseValidateErrors(validateErrors) {
             }
             return init
         }
-        /* 被 ajv-errors 捕獲的錯誤，會將 ajv 原本整理的錯誤資訊匯入 params 內，即 params.errors */
+        /*
+            被 ajv-errors 捕獲的錯誤 errors，其item:error的keyword都是'errorMessage'
+            實際發生錯誤的keyword，則在 error.params.errors 裡的 item: error.keyword
+        */
         for (let originError of params.errors) {
             let originKeyword = originError.keyword
-            console.log('@原錯誤 => \n', originError)
+            //  被ajv-errors捕獲的錯誤
             if (!instancePath) {
                 /* schema 最高等級的錯誤 */
                 let originParam = map_keyword_to_param[originKeyword]
+                //  高級別的錯誤，其keyword也是指向高級別，要找到此高級別keyword是校驗出validatedData的哪些key，
+                //  ajv會將keys放入originError.params裡，而originError.params是kvPairs，
+                //  kvPair的key是ajv預先對應originKeyword設定的，可參考 https://ajv.js.org/api.html#error-parameters
                 fieldName = originParam ? originError.params[originParam] : 'all'
-                console.log(`@從最高級錯誤${originKeyword}取得fieldName => `, fieldName)
-                //  若 _param 不是列在map_keyword_to_param上的key，則代表此次的錯誤應該是使用者使用JS才發生的錯誤
+                $F_log(`@現在處理validateErr的高層級錯誤『${originKeyword}』，發生錯誤的fieldName指向 => `, fieldName)
             }
-            console.log('@fieldName => ', fieldName)
             if (!init.hasOwnProperty(fieldName)) {
                 init[fieldName] = {}
             }
@@ -95,7 +93,7 @@ function _parseValidateErrors(validateErrors) {
     }, {})
 }
 
-function _parseErrorsToForm(myErrors) {
+function parseErrorsToForm(myErrors) {
     return Object.entries(myErrors).reduce((res, [fieldName, KVpairs]) => {
         let msg = Object.entries(KVpairs).reduce((_msg, [keyword, message], index) => {
             if (index > 0) {
@@ -107,15 +105,21 @@ function _parseErrorsToForm(myErrors) {
         if (!res[fieldName]) {
             res[fieldName] = {}
         }
-        let fieldName_tw = _toTw(fieldName)
+        let fieldName_tw = en_to_tw_for_fieldName(fieldName)
         !fieldName_tw && console.log('@fieldName 找不到對應的中文 => ', fieldName)
-        res[fieldName].alert = `【${fieldName_tw}】欄位值${msg}`
-        res[fieldName].feedback = msg
+        res[fieldName] = {
+            get alert(){
+                return `【${fieldName_tw}】欄位值${msg}`
+            },
+            get feedback(){
+                return msg
+            }
+        }
         return res
     }, {})
 }
 
-function _toTw(fieldName) {
+function en_to_tw_for_fieldName(fieldName) {
     const map = {
         //	全局錯誤
         all: 'all',
@@ -139,11 +143,8 @@ function _toTw(fieldName) {
     return map[fieldName]
 }
 
-export {
-    genValidate
-}
-
 export default {
+    parseErrorsToForm,
     isEmailExist: genValidate(IS_EMAIL_EXIST),
     passwordAndAgain: genValidate(PASSWORD_AND_AGAIN),
     register: genValidate(REGISTER),

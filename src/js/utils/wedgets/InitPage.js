@@ -24,6 +24,10 @@ export default class {
         if (renderPage) {
             await renderPage(this.data)
             //  渲染頁面的函數
+            /* 初始化函數運行結束後，也將頁面元素調整至初始狀態 */
+            $('main, nav, main, footer').removeAttr('style')
+            $('form button[type=submit]').removeAttr('disabled')
+            $('form button[type=submit]').prop('disabled', true)
         }
     }
 }

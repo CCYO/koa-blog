@@ -1,3 +1,4 @@
+import { dev_log as $F_log } from '../log'
 import '../../../css/utils/noClick.css'
 import '../../../css/wedgets/loadingBackdrop.css'
 const backdropClassName = '#loadingBackdrop'
@@ -18,14 +19,14 @@ export default class {
             .removeClass(blockClassName)
             //  取消blockList不可被點擊的狀態
             .off(backdropClassName)
-            //  移除指定的事件綁定
+        //  移除指定的事件綁定
         this.$backdrop.removeAttr('style').hide()
         if (this.editors.length) {
             for (let editor of this.editors) {
                 editor.enable()
             }
         }
-        console.log('backdrop hidden')
+        $F_log('backdrop hidden')
     }
     //  顯示dropBack
     show(config = { blockPage: false, ediotrs: [] }) {
@@ -53,9 +54,9 @@ export default class {
             .addClass(blockClassName)
             //  使blockList不可被點擊
             .on(`focus.${backdropClassName}`, (e) => this.focusBackdrop(e))
-            //  focus事件綁定(且用上jq語法糖，賦予綁定事件一個指定名稱，方便後續取消綁定)
-            //  handle 讓所有 blockList 發生聚焦時，統一將聚焦轉移至 backdrop
-        console.log('backdrop show')
+        //  focus事件綁定(且用上jq語法糖，賦予綁定事件一個指定名稱，方便後續取消綁定)
+        //  handle 讓所有 blockList 發生聚焦時，統一將聚焦轉移至 backdrop
+        $F_log('backdrop show')
     }
     insertEditors(editors) {
         this.editors = this.editors.concat(editors)

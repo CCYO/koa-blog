@@ -1,115 +1,154 @@
+/* ------------------------------------------------------------------------------------------ */
+/* EJS Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 if (process.env.NODE_ENV === 'development') {
     require('../views/user.ejs')
 }
-import '../css/user.css'
-
-import BetterScroll from 'better-scroll'
-import _ from 'lodash'
-
-import Debounce from './utils/Debounce'
-import _axios from './utils/_axios'
-import _xss from './utils/_xss'
-
-import InitPage from './utils/wedgets/InitPage.js'
-//  統整頁面數據、渲染頁面的函數
-import initNavbar from './utils/wedgets/navbar.js'
-//  初始化 Navbar
-import initEJSData from './utils/wedgets/initEJSData.js'
-//  初始化 ejs 存放在頁面上的數據
-import LoadingBackdrop  from './utils/wedgets/LoadingBackdrop'
-//  讀取遮罩
-
 import ejs_str_relationShipItem from 'template-ejs-loader!../views/wedgets/user/relationshipItem.ejs'
 import ejs_str_blogItem from 'template-ejs-loader!../views/wedgets/user/blogItem.ejs'
+/* ------------------------------------------------------------------------------------------ */
+/* CSS Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 
+import '../css/user.css'
+
+/* ------------------------------------------------------------------------------------------ */
+/* NPM Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+import BetterScroll from 'better-scroll'
+import lodash from 'lodash'
+
+/* ------------------------------------------------------------------------------------------ */
+/* Utils Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+import {
+    Debounce as $M_Debounce,
+    _axios as $M_axios,
+    _xss as $M_xss,
+    wedgets as $M_wedgets
+} from './utils'
+
+/* ------------------------------------------------------------------------------------------ */
+/* Const --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+const CONS = {
+    ACTION: {
+        FOLLOW: '[data-action=follow]',
+        CANCEL_FOLLOW: '[data-action=cancelFollow]',
+        REMOVE_BLOGS: '[data-action=removeBlogs]',
+        REMOVE_BLOG: '[data-action=removeBlog]',
+        
+    },
+    SELECTOR: {
+        FANS_LIST: '[data-selector=fansList]',
+        IDOL_LIST: '[data-selector=idolList]',
+    },
+    KEY: {
+        REMOVE_BLOG_ID: 'blog_id',
+    }
+}
+/* 常數 */
+const CONST = {
+    URL: {
+        LOGIN: '/login'
+    },
+    RELATIONSHIP_LIST: ['#fansList', '#idols'],
+    CREATE_BLOG: {
+        ACTION: 'createBlog',
+        API: '/api/blog'
+    },
+    REMOVE_BLOG: {
+        ACTION: 'removeBlog',
+        API: '/api/blog'
+    },
+    REMOVE_BLOGS: {
+        ACTION: 'removeBlogs',
+        API: '/api/blog'
+    },
+    FOLLOW: {
+        ACTION: 'follow',
+        API: '/api/user/follow'
+    },
+    CANCEL_FOLLOW: {
+        ACTION: 'cancelFollow',
+        API: '/api/user/cancelFollow'
+    },
+    PAGE_NUM: {
+        ACTION: 'pageNum'
+    },
+    TURN_PAGE: {
+        ACTION: 'turnPage'
+    },
+    DATASET: {
+        PREFIX: {
+            ACTION: 'action',
+            SELECTOR: 'selector'
+        },
+        ACTION(action) { return `[data-${this.PREFIX.ACTION}=${action}]` },
+        SELECTOR(name) { return `[data-${this.PREFIX.SELECTOR}=${name}]` },
+        NAME: {
+            SHOW_CREATE_BLOG_MODAL: 'showCreateBlogModal',
+            FANS_LIST: 'fansList',
+            IDOLS: 'idolList',
+            PUBLIC_BLOG_LIST: 'publicBlogList',
+            PRIVATE_BLOG_LIST: 'privateBlogList',
+            BLOG_BTN_LIST: 'blogBtnList'
+        },
+        KEY: {
+            REMOVE_BLOG_ID: 'blog_id',
+            PAGE_IND: 'page_ind',
+            TURN_DIR: 'turn_dir'
+        }
+    }
+}
+const { DATASET } = CONST
+const { NAME } = DATASET
+
+/* ------------------------------------------------------------------------------------------ */
+/* Class --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+const $C_backdrop = new $M_wedgets.LoadingBackdrop()
+//  讀取遮罩
+
+/* ------------------------------------------------------------------------------------------ */
+/* Run --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 window.addEventListener('load', async () => {
-    const backDrop = new LoadingBackdrop()
     try {
-        backDrop.show({blockPage: true})
+        $C_backdrop.show({ blockPage: true })
         //  讀取中，遮蔽畫面
-        let initPage = new InitPage()
-        await initPage.addOtherInitFn(initEJSData)
+        let initPage = new $M_wedgets.InitPage()
+        //  幫助頁面初始化的統整函數
+        await initPage.addOtherInitFn($M_wedgets.initEJSData)
         //  初始化ejs
-        await initPage.addOtherInitFn(initNavbar)
+        await initPage.addOtherInitFn($M_wedgets.initNavbar)
         //  初始化navbar
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-        $('main, nav, main, footer').removeAttr('style')
-        backDrop.hidden()
+        $C_backdrop.hidden()
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error
-        location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
+        // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
     }
 
     async function renderPage(data) {
-        /* 常數 */
-        const CONST = {
-            URL: {
-                LOGIN: '/login'
-            },
-            RELATIONSHIP_LIST: ['#fansList', '#idols'],
-            CREATE_BLOG: {
-                ACTION: 'createBlog',
-                API: '/api/blog'
-            },
-            REMOVE_BLOG: {
-                ACTION: 'removeBlog',
-                API: '/api/blog'
-            },
-            REMOVE_BLOGS: {
-                ACTION: 'removeBlogs',
-                API: '/api/blog'
-            },
-            FOLLOW: {
-                ACTION: 'follow',
-                API: '/api/user/follow'
-            },
-            CANCEL_FOLLOW: {
-                ACTION: 'cancelFollow',
-                API: '/api/user/cancelFollow'
-            },
-            PAGE_NUM: {
-                ACTION: 'pageNum'
-            },
-            TURN_PAGE: {
-                ACTION: 'turnPage'
-            },
-            DATASET: {
-                PREFIX: {
-                    ACTION: 'action',
-                    SELECTOR: 'selector'
-                },
-                ACTION(action) { return `[data-${this.PREFIX.ACTION}=${action}]` },
-                SELECTOR(name) { return `[data-${this.PREFIX.SELECTOR}=${name}]` },
-                NAME: {
-                    SHOW_CREATE_BLOG_MODAL: 'showCreateBlogModal',
-                    FANS_LIST: 'fansList',
-                    IDOLS: 'idolList',
-                    PUBLIC_BLOG_LIST: 'publicBlogList',
-                    PRIVATE_BLOG_LIST: 'privateBlogList',
-                    BLOG_BTN_LIST: 'blogBtnList'
-                },
-                KEY: {
-                    REMOVE_BLOG_ID: 'blog_id',
-                    PAGE_IND: 'page_ind',
-                    TURN_DIR: 'turn_dir'
-                }
-            }
-        }
-        const { DATASET } = CONST
-        const { NAME } = DATASET
+        
 
         /* 公用 JQ Ele */
-        let $btn_follow = $(DATASET.ACTION(CONST.FOLLOW.ACTION))
+        let $btn_follow = $(CONS.ACTION.FOLLOW)
         //  追蹤鈕
-        let $btn_cancelFollow = $(DATASET.ACTION(CONST.CANCEL_FOLLOW.ACTION))
+        let $btn_cancelFollow = $(CONS.ACTION.CANCEL_FOLLOW)
         //  取消追蹤鈕
-        let $btn_removeBlogs = $(DATASET.ACTION(CONST.REMOVE_BLOGS.ACTION))
-        let $btn_removeBlog = $(DATASET.ACTION(CONST.REMOVE_BLOG.ACTION))
-        let $fansList = $(DATASET.SELECTOR(NAME.FANS_LIST))
+        let $btn_removeBlogs = $(CONS.ACTION.REMOVE_BLOGS)
+        let $btn_removeBlog = $(CONS.ACTION.REMOVE_BLOG)
+        let $fansList = $(CONS.SELECTOR.FANS_LIST)
         //  粉絲列表contaner
-        let $idols = $(DATASET.SELECTOR(NAME.IDOLS))
+        let $idols = $(CONS.SELECTOR.IDOLS)
         //  偶像列表contaner
 
         /* 公用 var */
@@ -141,18 +180,18 @@ window.addEventListener('load', async () => {
 
         let $$template = {
             fn: {
-                relationshipItem: _.template(ejs_str_relationShipItem),
+                relationshipItem: lodash.template(ejs_str_relationShipItem),
                 blogItem: (data) => {
-                    return _.template(ejs_str_blogItem)({
-                        ACTION: DATASET.ACTION(CONST.REMOVE_BLOG).slice(1,-1),
-                        KEY: DATASET.KEY.REMOVE_BLOG_ID,
+                    return lodash.template(ejs_str_blogItem)({
+                        ACTION: DATASET.ACTION(CONST.REMOVE_BLOG).slice(1, -1),
+                        KEY: CONS.KEY.REMOVE_BLOG_ID,
                         ...data
                     })
                 }
             },
             str: {
-                blogItem: _.template(ejs_str_blogItem)({
-                    ACTION: DATASET.ACTION(CONST.REMOVE_BLOG.ACTION).slice(1,-1),
+                blogItem: lodash.template(ejs_str_blogItem)({
+                    ACTION: DATASET.ACTION(CONST.REMOVE_BLOG.ACTION).slice(1, -1),
                     KEY: DATASET.KEY.REMOVE_BLOG_ID,
                     $$isSelf,
                     $$me,
@@ -198,7 +237,6 @@ window.addEventListener('load', async () => {
         $(DATASET.ACTION(CONST.PAGE_NUM.ACTION)).on('click', renderBlogList)
         //  文章列表 的 上下頁，綁定翻頁功能
         $(DATASET.ACTION(CONST.TURN_PAGE.ACTION)).on('click', renderBlogList)
-
         //  handle -------
         //  handle => 創建 blog
         async function handle_createBlog(e) {
@@ -211,7 +249,7 @@ window.addEventListener('load', async () => {
                 data: {
                     id
                 }
-            } = await _axios.post(CONST.CREATE_BLOG.API, {
+            } = await $M_axios.post(CONST.CREATE_BLOG.API, {
                 title
             })
             location.href = `/blog/edit/${id}?owner_id=${$$me.id}`
@@ -222,7 +260,7 @@ window.addEventListener('load', async () => {
                 if (!val.length) {
                     return false
                 }
-                return _xss(value)
+                return $M_xss.myXss(value)
             }
         }
         //  刪除當前頁碼的所有文章
@@ -347,7 +385,7 @@ window.addEventListener('load', async () => {
         async function removeBlogs(blogList) {
             let owner_id = $$me.id
             //  送出刪除命令
-            await _axios.delete(CONST.REMOVE_BLOG.API, {
+            await $M_axios.delete(CONST.REMOVE_BLOG.API, {
                 data: {
                     blogList,
                     owner_id
@@ -370,7 +408,7 @@ window.addEventListener('load', async () => {
                 /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
                 let api = isfollow ? CONST.FOLLOW.API : CONST.CANCEL_FOLLOW.API
                 //  取出URL
-                await _axios.post(api, {
+                await $M_axios.post(api, {
                     id: $$currentUser.id
                 })
                 //  發出 取消/追蹤 請求
@@ -415,15 +453,15 @@ window.addEventListener('load', async () => {
                     el.betterScroll.refresh()
                     //  enable() 不知道為何，有時候仍沒辦法作用，搭配refresh()就不會有意外
                 }
-                const debounce = new Debounce(el.handleResize)
+                const debounce = new $M_Debounce(el.handleResize)
                 //  創造 防抖動的 el.handleResize
-                window.addEventListener('resize', (e) => debounce.call(e) )
+                window.addEventListener('resize', (e) => debounce.call(e))
                 //  將每個防抖動的 el.handleResize 綁定到 window
                 betterScrollEles.push(el)
                 //  將每個el都放入betterScrollEles
             }
             /* 為 betterScrollEles 創建方法，內部所有el重新啟動|停止滾動功能*/
-            betterScrollEles.refresh = function(){
+            betterScrollEles.refresh = function () {
                 for (let el of betterScrollEles) {
                     el.handleResize()
                 }

@@ -1,6 +1,6 @@
 import xss from 'xss'
 //  表格內容xss
-export default function _xss(html) {
+function myXss(html) {
     let whiteList = {
         ...xss.whiteList,
         div: ['data-w-e-type', 'data-w-e-is-void'],
@@ -34,12 +34,12 @@ export default function _xss(html) {
     })
 }
 
-export function xssAndTrim(data) {
-    return _xss(data.trim())
+function xssAndTrim(data) {
+    return myXss(data.trim())
 }
 
 //  去除空格與進行xss
-export function xssAndRemoveHTMLEmpty(data) {
+function xssAndRemoveHTMLEmpty(data) {
     //  xss
     let curHtml = xssAndTrim(data.trim())
     //  移除開頭、結尾的空格與空行
@@ -49,3 +49,6 @@ export function xssAndRemoveHTMLEmpty(data) {
     curHtml = curHtml.replace(reg_end, '')
     return curHtml
 }
+
+export default { myXss, xssAndTrim, xssAndRemoveHTMLEmpty }
+export { myXss, xssAndTrim, xssAndRemoveHTMLEmpty }

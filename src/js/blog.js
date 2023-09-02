@@ -1,38 +1,62 @@
-//  未完成
-
+/* ------------------------------------------------------------------------------------------ */
+/* EJS Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 if (process.env.NODE_ENV === 'development') {
     require('../views/blog.ejs')
 }
+/* ------------------------------------------------------------------------------------------ */
+/* CSS Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 import '../css/blog.css'
 import '@wangeditor/editor/dist/css/style.css';
 // 引入 editor css
+
+/* ------------------------------------------------------------------------------------------ */
+/* NPM Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 import { createEditor } from '@wangeditor/editor'
 // 引入 editor js
-import _axios from './utils/_axios'
 
-import InitPage from './utils/wedgets/InitPage.js'
-//  統整頁面數據、渲染頁面的函數
-import initNavbar from './utils/wedgets/navbar.js'
-//  初始化 Navbar
-import initEJSData from './utils/wedgets/initEJSData.js'
-//  初始化 ejs 存放在頁面上的數據
-import LoadingBackdrop  from './utils/wedgets/LoadingBackdrop'
+/* ------------------------------------------------------------------------------------------ */
+/* Utils Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+import {
+    Debounce as $M_Debounce,
+
+    _axios as $M_axios,
+    wedgets as $M_wedgets
+} from './utils'
+
+/* ------------------------------------------------------------------------------------------ */
+/* Const --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+const CONS = {}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Class --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+const $C_backdrop = new $M_wedgets.LoadingBackdrop()
 //  讀取遮罩
 
+/* ------------------------------------------------------------------------------------------ */
+/* Run --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 window.addEventListener('load', async () => {
-    const backDrop = new LoadingBackdrop()
     try {
-        backDrop.show({ blockPage: true })
+        $C_backdrop.show({ blockPage: true })
         //  讀取中，遮蔽畫面
-        let initPage = new InitPage()
-        await initPage.addOtherInitFn(initEJSData)
+        let initPage = new $M_wedgets.InitPage()
+        //  幫助頁面初始化的統整函數
+        await initPage.addOtherInitFn($M_wedgets.initEJSData)
         //  初始化ejs
-        await initPage.addOtherInitFn(initNavbar)
+        await initPage.addOtherInitFn($M_wedgets.initNavbar)
         //  初始化navbar
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-        $('main, nav, main, footer').removeAttr('style')
-        backDrop.hidden()
+        $C_backdrop.hidden()
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error
@@ -69,7 +93,7 @@ window.addEventListener('load', async () => {
         //  若文章是預覽頁，或者非公開的，不需要作評論功能設定
         if (isPreview() || !data.blog.show) {
             $('.comment-container').remove()
-            backDrop.hidden()
+            $C_backdrop.hidden()
             return
         } else if (data.blog.comments.length) {
             $('.comment-list-container > .comment-list').html(data.blog.commentsHtmlStr)
@@ -133,6 +157,7 @@ window.addEventListener('load', async () => {
             }
         })
 
+        
         async function removeComment(replyBox) {
             let comment_id = replyBox.dataset.commentId * 1
             let payload = {
@@ -150,7 +175,7 @@ window.addEventListener('load', async () => {
                     data,
                     msg
                 }
-            } = await _axios.delete('/api/comment', {
+            } = await $M_axios.delete('/api/comment', {
                 data: payload
             })
             if (errno) {
@@ -193,7 +218,7 @@ window.addEventListener('load', async () => {
                 selector: container,
                 mode: 'simple'
             })
-            backDrop.insertEditors([editor])
+            $C_backdrop.insertEditors([editor])
             //  重設editor自訂的相關設定
             resetEditor()
             return editor
@@ -249,7 +274,7 @@ window.addEventListener('load', async () => {
                     }
 
                     // loading(myVar.getEditorList())
-                    backDrop.hidden()
+                    $C_backdrop.hidden()
                     //  送出請求
                     let {
                         data: {
@@ -264,7 +289,7 @@ window.addEventListener('load', async () => {
                         console.log(msg)
                         return
                     }
-                    backDrop.hidden()
+                    $C_backdrop.hidden()
 
                     //  渲染此次送出的評論
                     renderComment()
@@ -346,7 +371,7 @@ window.addEventListener('load', async () => {
                             pid: editor.id ? editor.id : null //  editor 若為 0，代表根評論
                         }
 
-                        return await _axios.post(api_comment, payload)
+                        return await $M_axios.post(api_comment, payload)
                     }
                 }
             }

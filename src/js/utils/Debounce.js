@@ -35,37 +35,3 @@ export default class {
         } , this.ms)
     }
 }
-/* 防抖動 的 工廠函數  */
-// export default function (fn, config = CONF) {
-//     /* 防抖動的函數工廠 */
-//     let {
-//         ms = CONF.ms,
-//         auto = CONF.auto,
-//         loading = CONF.loading
-//     } = config
-//     let timeSet
-//     //  setTimeout 標記
-//     let debounce = (...args) => {
-//         //  args 是傳給 fn 的參數
-//         //  例如fn若是EventHandle，則代表可藉由args[0]取得event
-//         if (timeSet) {
-//             console.log('@debounce......clear...........')
-//             /* 取消上一次的 setTimeout */
-//             clearTimeout(timeSet)
-//         } else if (loading) {
-//             console.log('@debounce......loading.........')
-//             loading.call(this, ...args)
-//         }
-//         timeSet = setTimeout(async function () {
-//             console.log('@debounce......call...........', this, args)
-//             /* 延遲調用fn，且調用完畢後自動再作一次延遲調用 */
-//             await fn.call(this, ...args)
-//             if (auto) {
-//                 console.log('@debounce......auto + 1')
-//                 debounce(fn, ms)
-//             }
-//             timeSet = undefined
-//         }, ms)
-//     }
-//     return debounce
-// }

@@ -7,11 +7,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>
-    <% if(locals.title){ %>
-      <%= title %>
-    <% } else { %>
-      <%= blog.title %>
-    <% } %>
+    <%= locals.blog ? blog.title : locals.title ? title : '錯誤頁' %>
+    
   </title>
   <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
   <!-- BS5 CSS -->
@@ -117,7 +114,7 @@
                 <input type="password" class="form-control" name='password_again' autocomplete="off">
                 <div>&nbsp;</div>
               </div>
-              <button type="submit" class="btn btn-primary">送出</button>
+              <button type="submit" class="btn btn-primary" disabled>送出</button>
             </div>
           </form>
         </div>
@@ -134,7 +131,7 @@
                 <input type="password" class="form-control" name="password" data-form-id='#form_login' autocomplete="do-not-autofill" required>
                 <div>&nbsp;</div>
               </div>
-              <button type="submit" class="btn btn-primary">送出</button>
+              <button type="submit" class="btn btn-primary" disabled>送出</button>
 
             </div>
           </form>

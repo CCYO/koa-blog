@@ -1,13 +1,15 @@
 /* -------------------- CSS MODULE -------------------- */
 import '../../../css/wedgets/navbar.css'
 /* -------------------- UTILS MODULE -------------------- */
-import _axios from '../_axios'
-import Debounce from '../Debounce'
-import { show } from '../ui'
+import {
+    _axios as $M_axios,
+    Debounce as $M_Debounce,
+    ui as $M_ui
+} from '../'
 /* -------------------- CONFIG CONST -------------------- */
 const CONST = {
     REG: {
-        PAGE_REGISTER_OR_LOGIN: /^\/(login)|(register)/
+        PAGE_REGISTER_OR_LOGIN_OR_ERR: /^\/(login)|(register)|(errPage)/
     }
 }
 const NEWS = {
@@ -21,7 +23,7 @@ export default async function () {
     let _data = { me: {} }
     activeNavItem()
     //  根據 path，顯示當前 active NavItem
-    if(CONST.REG.PAGE_REGISTER_OR_LOGIN.test(location.pathname)){
+    if(CONST.REG.PAGE_REGISTER_OR_LOGIN_OR_ERR.test(location.pathname)){
         renderNoLoginNav()
         return _data
     }
@@ -291,12 +293,12 @@ export default async function () {
                                 //  通知列表內的相應title
                                 if (!!!htmlStr) {
                                     /* 處理 htmlStr 是空字符的狀況 */
-                                    firstRender && show($title, false)
+                                    firstRender && $M_ui.show($title, false)
                                     // 初次渲染，要隱藏 $title
                                     continue
                                 }
                                 /* 處理 htmlStr 非空字符的狀況 */
-                                $title.is(':hidden') && show($title)
+                                $title.is(':hidden') && $M_ui.show($title)
                                 //  若title呈隱藏，則讓其顯示
                                 let hr = $(`[data-my-hr=${isConfirm}-news-hr]`)
                                 //  相應此通知列表的item分隔線
@@ -313,9 +315,9 @@ export default async function () {
                             }
                             let count = $$num.db.total - $$num.rendered.total
                             //  未被前端渲染的通知條目數量
-                            show($readMore, count)
+                            $M_ui.show($readMore, count)
                             //  顯示/隱藏「讀取更多」
-                            show($noNews, !count)
+                            $M_ui.show($noNews, !count)
                             //  顯示/隱藏「沒有更多」
                             $$fn.htmlStr.clear()
                         }
@@ -331,13 +333,13 @@ export default async function () {
         let $$excepts = $$news.excepts
         let $$num = $$news.num
         let $$fn = $$news.fn
-        let debounce_autoReadMore = new Debounce(autoReadMore, NEWS.DEBOUNCE_CONFIG)
+        let debounce_autoReadMore = new $M_Debounce(autoReadMore, NEWS.DEBOUNCE_CONFIG)
         /* 初始化 nav 各功能 */
         $$fn.newsList.reset(data.news)
         //  整理頁面初次渲染取得的 news(通知數據)
         $$fn.htmlStr.update()
         //  渲染 $$htmlStr 數據、更新當前與htmlStr相關的公用數據
-        show($newsCount, $$num.db.unconfirm).text($$num.db.unconfirm || '')
+        $M_ui.show($newsCount, $$num.db.unconfirm).text($$num.db.unconfirm || '')
         //  顯示 所有未確認過的通知數據 筆數
         $newsDropdown.on('show.bs.dropdown', () => { $$news.newsDropdownOpen = true })
         //  通知選單開啟時，更新 $$news.newsDropdownOpen
@@ -357,7 +359,7 @@ export default async function () {
                 alert('對嘛，再待一下嘛')
                 return
             }
-            let { data } = await _axios.get('/api/user/logout')
+            let { data } = await $M_axios.get('/api/user/logout')
             alert(data)
             location.href = '/login'
         }
@@ -369,7 +371,7 @@ export default async function () {
             }
             let count = $$num.db.unconfirm - $$num.rendered.unconfirm
             //  尚未被前端渲染的「未讀取通知」數據 的 筆數
-            show($newsCount, count).text(count || '')
+            $M_ui.show($newsCount, count).text(count || '')
             //  顯示新通知筆數
         }
         async function autoReadMore() {
@@ -396,7 +398,7 @@ export default async function () {
             //  純粹htmlStr的生成
             let count = $$num.db.unconfirm - $$num.rendered.unconfirm
             //  尚未被前端渲染的「未確認通知」數據 的 筆數
-            show($newsCount, count).text(count || '')
+            $M_ui.show($newsCount, count).text(count || '')
             //  顯示未確認數據通知筆數
             $$readMoring.status = false
             //  更新readMoring
@@ -424,7 +426,7 @@ export default async function () {
             //  插入庫存的htmlStr
             let count = $$num.db.unconfirm - $$num.rendered.unconfirm
             //  計算 前端尚未渲染到的整體未確認通知 的 筆數
-            show($newsCount, count).text(count || '')
+            $M_ui.show($newsCount, count).text(count || '')
             $$readMoring.status = false
         }
 
@@ -522,6 +524,6 @@ export default async function () {
                me: ...
            }
         */
-        return await _axios.post(`/api/news`, payload)
+        return await $M_axios.post(`/api/news`, payload)
     }
 }

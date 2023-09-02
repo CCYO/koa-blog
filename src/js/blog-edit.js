@@ -1,53 +1,75 @@
+/* ------------------------------------------------------------------------------------------ */
+/* EJS Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 if (process.env.NODE_ENV === 'development') {
     require('../views/blog-edit.ejs')
 }
+/* ------------------------------------------------------------------------------------------ */
+/* CSS Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
 import '../css/blog-edit.css'
-//  <!-- 引入 editor css -->
 import '@wangeditor/editor/dist/css/style.css';
-//  validate
-import validates from './utils/validate'
+
+/* ------------------------------------------------------------------------------------------ */
+/* NPM Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+import _ from 'lodash'
 //  <!-- 引入 Spark-MD5 -->
 import SparkMD5 from 'spark-md5'
 //  <!-- 引入 editor js -->
 import { i18nAddResources, i18nChangeLanguage, createToolbar, createEditor } from '@wangeditor/editor'
-import twResources from '../locale/tw'
-import _ from 'lodash'
 
+/* ------------------------------------------------------------------------------------------ */
+/* Utils Module --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+import {
+    Debounce as $M_Debounce,
+    _axios as $M_axios,
+    _xss as $M_xss,
+    wedgets as $M_wedgets
+} from './utils'
+//  validate
+// import validates from './utils/validate'
+import twResources from '../locale/tw'
 import { feedback } from './utils/ui'
 import Debounce from './utils/Debounce'
-import _axios from './utils/_axios'
-import _xss, { xssAndRemoveHTMLEmpty, xssAndTrim } from './utils/_xss'
 
+/* ------------------------------------------------------------------------------------------ */
+/* Const --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 import SERVER_CONST from '../../server/conf/constant'
+const CONS = {}
 
-import InitPage from './utils/wedgets/InitPage.js'
-//  統整頁面數據、渲染頁面的函數
-import initNavbar from './utils/wedgets/navbar.js'
-//  初始化 Navbar
-import initEJSData from './utils/wedgets/initEJSData.js'
-//  初始化 ejs 存放在頁面上的數據
-import LoadingBackdrop  from './utils/wedgets/LoadingBackdrop'
+/* ------------------------------------------------------------------------------------------ */
+/* Class --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+const $C_backdrop = new $M_wedgets.LoadingBackdrop()
 //  讀取遮罩
 
+/* ------------------------------------------------------------------------------------------ */
+/* Run --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
 window.addEventListener('load', async () => {
-    const { BLOG: { HTML_MAX_LENGTH } } = SERVER_CONST
-    const backDrop = new LoadingBackdrop()
     try {
-        backDrop.show({ blockPage: true })
+        $C_backdrop.show({ blockPage: true })
         //  讀取中，遮蔽畫面
-        let initPage = new InitPage()
-        await initPage.addOtherInitFn(initEJSData)
+        let initPage = new $M_wedgets.InitPage()
+        //  幫助頁面初始化的統整函數
+        await initPage.addOtherInitFn($M_wedgets.initEJSData)
         //  初始化ejs
-        await initPage.addOtherInitFn(initNavbar)
+        await initPage.addOtherInitFn($M_wedgets.initNavbar)
         //  初始化navbar
         await initPage.render(renderPage)
         //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-        $('main, nav, main, footer').removeAttr('style')
-        backDrop.hidden()
+        $C_backdrop.hidden()
         //  讀取完成，解除遮蔽
     } catch (error) {
         throw error
-        location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
+        // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
     }
 
 
@@ -175,14 +197,14 @@ window.addEventListener('load', async () => {
         function init_pageFuc() {
             //  editor
             $$editor = window.editor = init_editor()
-            backDrop.insertEditors([$$editor])
+            $C_backdrop.insertEditors([$$editor])
             initImgData()
             const debounce_handle_input = new Debounce(handle_input, {
                 loading: () => $btn_updateTitle.prop('disabled', true)
                 //  debounce階段時，限制更新鈕
             })
             //  $title handleInput => 驗證標題合法性
-            $inp_changeTitle.on('input', (e) => debounce_handle_input.call(e) )
+            $inp_changeTitle.on('input', (e) => debounce_handle_input.call(e))
             //  $title handleBlur => 若標題非法，恢復原標題
             $inp_changeTitle.on('blur', handle_blur)
             //  $btn_updateTitlebtn handleClick => 送出新標題
@@ -202,7 +224,7 @@ window.addEventListener('load', async () => {
                     blogList: [$$pageData.blog.id],
                     owner_id: $$pageData.blog.author.id
                 }
-                await _axios.delete(CONST.UPDATE_BLOG.API, { data })
+                await $M_axios.delete(CONST.UPDATE_BLOG.API, { data })
                 alert('已成功刪除此篇文章')
                 location.href = '/self'
             }
@@ -339,8 +361,8 @@ window.addEventListener('load', async () => {
                     let res = reg.exec(src)
                     let blog_id = $$pageData.blog.id
                     let alt_id = res.groups.alt_id *= 1
-                    alt = xssAndTrim(alt)
-                    await _axios.patch('/api/album', { alt_id, blog_id, alt })
+                    alt = $M_xss.xssAndTrim(alt)
+                    await $M_axios.patch('/api/album', { alt_id, blog_id, alt })
                     //  尋找相同 alt_id
                     let imgData = $$pageData.blog.map_imgs.get(alt_id)
                     imgData.alt = alt
@@ -365,11 +387,11 @@ window.addEventListener('load', async () => {
                         //  創建 formData，作為酬載數據的容器
                         formdata.append('blogImg', img)
                         //  放入圖片數據
-                        res = await _axios.post(api, formdata)
+                        res = await $M_axios.post(api, formdata)
                         //  upload
                     } else { // img為重覆的舊圖，傳給後端新建一個blogImgAlt
                         console.log('進行舊圖處理')
-                        res = await _axios.post(CONST.CREATE_IMG_ALT.API, { blogImg_id })
+                        res = await $M_axios.post(CONST.CREATE_IMG_ALT.API, { blogImg_id })
                     }
                     let { data: newImg } = res
                     console.log('完成 => ', newImg)
@@ -451,7 +473,7 @@ window.addEventListener('load', async () => {
                         return
                     }
                     const KEY = 'html'
-                    let content = xssAndRemoveHTMLEmpty(editor.getHtml())
+                    let content = $M_xss.xssAndRemoveHTMLEmpty(editor.getHtml())
                     let errors = await validate({ html: content })
                     //  僅做html驗證
                     $$payload.setKVpairs({ [KEY]: content })
@@ -511,7 +533,7 @@ window.addEventListener('load', async () => {
                 payload.blog_id = $$pageData.blog.id
                 payload.owner_id = $$pageData.blog.author.id
                 console.log('payload => ', payload)
-                await _axios.patch(CONST.UPDATE_BLOG.API, payload)
+                await $M_axios.patch(CONST.UPDATE_BLOG.API, payload)
                 for (let [key, value] of $$payload.entries()) {
                     $$pageData.blog[key] = value
                     //  同步數據
@@ -576,7 +598,7 @@ window.addEventListener('load', async () => {
                 //  清空提醒
                 if (!errors || !errors[KEY]) {
                     //  代表合法
-                    let { data } = await _axios.patch(CONST.UPDATE_BLOG.API, payload)
+                    let { data } = await $M_axios.patch(CONST.UPDATE_BLOG.API, payload)
                     $$pageData.blog[KEY] = data[KEY]
                     //  同步數據
                     msg = '標題更新完成'
@@ -598,7 +620,7 @@ window.addEventListener('load', async () => {
             async function handle_blur(e) {
                 const KEY = 'title'
                 let target = e.target
-                let title = xssAndTrim(target.value)
+                let title = $M_xss.xssAndTrim(target.value)
                 let errors = await validateAll({ [KEY]: title })
                 if (!errors || !errors[KEY]) {
                     return
@@ -617,7 +639,7 @@ window.addEventListener('load', async () => {
             async function handle_input(e) {
                 const KEY = 'title'
                 const target = e.target
-                let title = xssAndTrim(target.value)
+                let title = $M_xss.xssAndTrim(target.value)
                 let errors = await validateAll({ [KEY]: title })
                 if (!errors || !errors[KEY]) {
                     $$payload.setKVpairs({ [KEY]: title })
@@ -656,7 +678,7 @@ window.addEventListener('load', async () => {
                 if (!cancelImgs.length) { //  若cancel無值
                     return
                 }
-                const res = await _axios.patch(CONST.UPDATE_BLOG.API, {
+                const res = await $M_axios.patch(CONST.UPDATE_BLOG.API, {
                     cancelImgs,
                     blog_id: $$pageData.blog.id,
                     owner_id: $$pageData.blog.author.id

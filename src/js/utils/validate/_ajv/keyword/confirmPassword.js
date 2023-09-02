@@ -9,6 +9,7 @@ async function confirmPassword(schema, origin_password, parentSchema, dataCtx) {
         let { instancePath } = dataCtx
         let keyword = 'confrimPassword'
         let params = { myKeyword: true }
+        //  提供給 ../index 的 _parseValidateErrors 判別是否為我定義的 keyword
         let e = new Error()
         e.errors = [{ keyword, instancePath, params, message: msg }]
         throw e

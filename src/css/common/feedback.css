@@ -1,7 +1,19 @@
+@keyframes loading {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
 .loading {
     font-size: .875em;
     color: black;
+    animation: loading .6s ease infinite alternate;
 }
-.form-control + div {
-    display: none;
+
+.form-control+.loading {
+    display: block;
 }
