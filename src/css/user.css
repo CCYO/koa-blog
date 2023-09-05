@@ -43,10 +43,6 @@
     margin-right: 0;
 }
 
-.my-disabled>a {
-    pointer-events: none;
-}
-
 .blogList .text-truncate,
 .card>.text-truncate {
     color: #0d6efd

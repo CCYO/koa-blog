@@ -4,7 +4,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const glob = require('glob')
 const { resolve } = require('path')
 const CONFIG = require('./config.js')
-const isDev = process.env.NODE_ENV === 'development'
+const { isProd } = require('../server/utils/env')
+const isDev = process.env.NODE_ENV === 'development' || !isProd
 
 const entry = ((filepathList) => {
 	let res = {}

@@ -63,6 +63,7 @@ router.get('/other/:id', CHECK.isSelf, NEWS.confirm, commonCache, async (ctx, ne
     //  非文章作者，所以不傳入未公開的文章
     delete blogs.hidden
     await ctx.render('user', {
+        isSelf: false,
         title: `${currentUser.nickname}的主頁`,
         //  主要資訊數據
         currentUser,    //  window.data 數據
@@ -95,6 +96,7 @@ router.get('/self', CHECK.login, privateCache, async (ctx, next) => {
     }
     let { currentUser, fansList, idols, blogs } = relationShip
     await ctx.render('user', {
+        isSelf: user_id === currentUser.id,
         title: `${currentUser.nickname}的主頁`,
         //  主要資訊數據
         currentUser,    //  window.data 數據

@@ -84,7 +84,7 @@ app.use(async (ctx, next) => {
 app.use(json())
 app.use(logger())
 
-if (isDev) {
+if (isDev || !isProd) {
 	// 用 webpack-dev-middleware 启动 webpack 编译
 	app.use(
 		webpackDevMiddleware(compiler, {

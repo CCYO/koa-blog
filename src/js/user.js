@@ -6,6 +6,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 import ejs_str_relationShipItem from 'template-ejs-loader!../views/wedgets/user/relationshipItem.ejs'
 import ejs_str_blogItem from 'template-ejs-loader!../views/wedgets/user/blogItem.ejs'
+
 /* ------------------------------------------------------------------------------------------ */
 /* CSS Module --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
@@ -30,6 +31,7 @@ import {
     wedgets as $M_wedgets
 } from './utils'
 
+
 /* ------------------------------------------------------------------------------------------ */
 /* Const --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
@@ -40,11 +42,14 @@ const CONS = {
         CANCEL_FOLLOW: '[data-action=cancelFollow]',
         REMOVE_BLOGS: '[data-action=removeBlogs]',
         REMOVE_BLOG: '[data-action=removeBlog]',
-        
+
     },
     SELECTOR: {
         FANS_LIST: '[data-selector=fansList]',
         IDOL_LIST: '[data-selector=idolList]',
+        PRIVATE_BLOG_LIST: '[data-selector=privateBlogList]',
+        PUBLIC_BLOG_LIST: '[data-selector=publicBlogList]'
+        // NEW_BLOG_MODAL: '[data-selector=new_blog_modal]'
     },
     KEY: {
         REMOVE_BLOG_ID: 'blog_id',
@@ -90,12 +95,12 @@ const CONST = {
         ACTION(action) { return `[data-${this.PREFIX.ACTION}=${action}]` },
         SELECTOR(name) { return `[data-${this.PREFIX.SELECTOR}=${name}]` },
         NAME: {
-            SHOW_CREATE_BLOG_MODAL: 'showCreateBlogModal',
+            // SHOW_CREATE_BLOG_MODAL: 'showCreateBlogModal',
             FANS_LIST: 'fansList',
             IDOLS: 'idolList',
-            PUBLIC_BLOG_LIST: 'publicBlogList',
-            PRIVATE_BLOG_LIST: 'privateBlogList',
-            BLOG_BTN_LIST: 'blogBtnList'
+            // PUBLIC_BLOG_LIST: 'publicBlogList',
+            // PRIVATE_BLOG_LIST: 'privateBlogList',
+            // BLOG_BTN_LIST: 'blogBtnList'
         },
         KEY: {
             REMOVE_BLOG_ID: 'blog_id',
@@ -137,21 +142,10 @@ window.addEventListener('load', async () => {
     }
 
     async function renderPage(data) {
-        
-
-        /* 公用 JQ Ele */
-        let $btn_follow = $(CONS.ACTION.FOLLOW)
-        //  追蹤鈕
-        let $btn_cancelFollow = $(CONS.ACTION.CANCEL_FOLLOW)
-        //  取消追蹤鈕
-        let $btn_removeBlogs = $(CONS.ACTION.REMOVE_BLOGS)
-        let $btn_removeBlog = $(CONS.ACTION.REMOVE_BLOG)
-        let $fansList = $(CONS.SELECTOR.FANS_LIST)
-        //  粉絲列表contaner
-        let $idols = $(CONS.SELECTOR.IDOLS)
-        //  偶像列表contaner
-
-        /* 公用 var */
+        /* ------------------------------------------------------------------------------------------ */
+        /* Public Var ------------------------------------------------------------------------------- */
+        /* ------------------------------------------------------------------------------------------ */
+        window.pageData = data
         let $$pageData = {
             me: data.me,
             currentUser: data.currentUser,
@@ -168,14 +162,29 @@ window.addEventListener('load', async () => {
                     curInd: 0
                 }
             },
-            betterScrollEles: initBetterScroll([$fansList, $idols]),
+            
         }
+        const $$isSelf = $$pageData.currentUser.id === $$pageData.me.id
+        /* 公用 JQ Ele */
+        let $btn_follow = $(CONS.ACTION.FOLLOW)
+        //  追蹤鈕
+        let $btn_cancelFollow = $(CONS.ACTION.CANCEL_FOLLOW)
+        //  取消追蹤鈕
+        let $btn_removeBlogs = $(CONS.ACTION.REMOVE_BLOGS)
+        let $btn_removeBlog = $(CONS.ACTION.REMOVE_BLOG)
+        let $fansList = $(CONS.SELECTOR.FANS_LIST).length ? $(CONS.SELECTOR.FANS_LIST).eq(0) : undefined
+        //  粉絲列表contaner
+        let $idols = $(CONS.SELECTOR.IDOLS).length ? $(CONS.SELECTOR.IDOLS).eq(0) : undefined
+        //  偶像列表contaner
+
+        /* 公用 var */
         let $$me = $$pageData.me
         let $$currentUser = $$pageData.currentUser
-        let $$isSelf = $$currentUser.id === $$me.id
+
         let $$fansList = $$pageData.fansList
         let $$html_blogList = $$pageData.html_blogList
         let $$blogs = $$pageData.blogs
+        $$pageData.betterScrollEles = initBetterScroll([$fansList, $idols])
         let $$betterScrollEles = $$pageData.betterScrollEles
 
         let $$template = {
@@ -206,14 +215,15 @@ window.addEventListener('load', async () => {
         //  public Var ----------------------------------------------------------------------
         let pageData = window.pageData = data
         //  ---------------------------------------------------------------------------------
+        /* Self Page */
         if ($$isSelf) {
             /* render */
             //  顯示建立新文章btn
-            $(DATASET.SELECTOR(NAME.SHOW_CREATE_BLOG_MODAL)).removeClass('my-noshow')
+            // $(CONS.SELECTOR.NEW_BLOG_MODAL).removeClass('my-noshow')
             //  顯示編輯文章title
-            $(DATASET.SELECTOR(NAME.PRIVATE_BLOG_LIST)).removeClass('my-noshow')
+            // $(DATASET.SELECTOR(NAME.PRIVATE_BLOG_LIST)).removeClass('my-noshow')
             //  隱藏文章編輯/刪除功能
-            $(DATASET.SELECTOR(NAME.BLOG_BTN_LIST)).removeClass('my-noshow')
+            // $(DATASET.SELECTOR(NAME.BLOG_BTN_LIST)).removeClass('my-noshow')
 
             /* event handle */
             //  綁定創建文章功能
@@ -226,12 +236,12 @@ window.addEventListener('load', async () => {
             /* render */
             //  判端是否為自己的偶像，顯示追蹤/退追鈕
             const isMyIdol = $$fansList.some((fans) => fans.id === $$me.id)
-            $btn_cancelFollow.toggleClass('my-noshow', !isMyIdol)
-            $btn_follow.toggleClass('my-noshow', isMyIdol)
+            $btn_cancelFollow.toggleClass('d-none', !isMyIdol)
+            $btn_follow.toggleClass('d-none', isMyIdol)
             /* event handle */
             //  綁定追蹤/退追功能
-            $btn_follow.click(genFollowFn(true))
-            $btn_cancelFollow.click(genFollowFn(false))
+            $btn_follow.on('click', genFollowFn(true))
+            $btn_cancelFollow.on('click', genFollowFn(false))
         }
         //  文章列表 的 頁碼，綁定翻頁功能
         $(DATASET.ACTION(CONST.PAGE_NUM.ACTION)).on('click', renderBlogList)
@@ -270,8 +280,8 @@ window.addEventListener('load', async () => {
             }
             let $target = $(e.target)
             //  取得文章列表container
-            let $blogList = $target.parents(DATASET.SELECTOR(NAME.PUBLIC_BLOG_LIST))
-            $blogList = $blogList.length ? $blogList : $target.parents(DATASET.SELECTOR(NAME.PRIVATE_BLOG_LIST))
+            let $blogList = $target.parents(CONS.SELECTOR.PUBLIC_BLOG_LIST)
+            $blogList = $blogList.length ? $blogList : $target.parents(CONS.SELECTOR.PRIVATE_BLOG_LIST)
             //  取得當前文章列表的移除鈕
             let $children = [...$blogList.find(DATASET.ACTION(CONST.REMOVE_BLOG.ACTION))]
             //  取得所有移除鈕上的文章id
@@ -303,7 +313,8 @@ window.addEventListener('load', async () => {
             let $btn = $(e.target)
             let $container = $btn.parents(`[data-${DATASET.PREFIX.SELECTOR}]`).first()
             //  取得文章列表的性質(公開||隱藏)
-            let pubOrPri = $container.dataset(DATASET.PREFIX.SELECTOR) === DATASET.NAME.PUBLIC_BLOG_LIST ? 'show' : 'hidden'
+            let pubOrPri = $container.dataset('selector') === 'publicBlogList' ? 'show' : 'hidden'
+            // let pubOrPri = $container.dataset(DATASET.PREFIX.SELECTOR) === DATASET.NAME.PUBLIC_BLOG_LIST ? 'show' : 'hidden'
             //  pageData內的文章列表htmlStr數據
             let html_blogList = $$html_blogList[pubOrPri]
             //  pageData內的文章列表數據
@@ -359,7 +370,7 @@ window.addEventListener('load', async () => {
             function UI_page() {
                 const selector_pageNum = 'li.page-item'
                 //  移除 頁碼列 的 .active .my-disable
-                $container.find(selector_pageNum).removeClass('active my-disabled')
+                $container.find(selector_pageNum).removeClass('active pe-none')
                 //  上一頁btn
                 let $back = $container.find(`${selector_pageNum}:first`)
                 //  下一頁btn
@@ -368,15 +379,15 @@ window.addEventListener('load', async () => {
                 let lastPageIndex = data_blogList.length - 1
                 if (tarInd === 0) { // 若目標頁碼為0(第一頁)
                     //  上一頁 禁按
-                    $back.addClass('my-disabled')
+                    $back.addClass('pe-none')
                 } else if (tarInd === lastPageIndex) { //  //  若目標頁碼為最後一頁
                     //  下一頁 禁按
-                    $next.addClass('my-disabled')
+                    $next.addClass('pe-none')
                 }
                 //  目標頁碼紐的容器，顯示為當前頁，並禁止點擊
                 $container
                     .find(`[data-${DATASET.KEY.PAGE_IND}=${tarInd}]`).parent()
-                    .addClass('active my-disabled')
+                    .addClass('active pe-none')
             }
         }
 
@@ -423,7 +434,10 @@ window.addEventListener('load', async () => {
             let betterScrollEles = []
             // 調整粉絲、追蹤列表
             for (let $el of JQ_Eles) {
-                let el = $el[0]
+                let el = $el && $el.get(0)
+                if(!el){
+                    continue
+                }
                 Object.defineProperties(el, {
                     /* 建立屬性 betterScroll，代表ele本身的betterScroll*/
                     betterScroll: {
