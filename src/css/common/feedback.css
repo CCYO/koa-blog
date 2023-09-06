@@ -17,3 +17,7 @@
 .form-control+.loading {
     display: block;
 }
+
+.form-control + div {
+    display: none;
+}

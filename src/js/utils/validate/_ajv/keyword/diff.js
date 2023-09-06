@@ -3,7 +3,9 @@ function diff(schema, data, parentSchema, dataCtx) {
         return true
     }
     let { instancePath } = dataCtx
-    diff.errors = [{ instancePath, message: '若沒有要更新就別鬧', keyword: 'diff' }]
+    let keyword = 'diff'
+    let params = { myKeyword: true }
+    diff.errors = [{ keyword, params, instancePath, message:'若沒有要更新就別鬧' }]
     return false
 }
 export default {

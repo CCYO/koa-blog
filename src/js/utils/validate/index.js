@@ -1,6 +1,9 @@
 import { dev_log as $F_log } from '../log'
 import ajv from './_ajv'
-import { IS_EMAIL_EXIST, PASSWORD_AND_AGAIN, REGISTER, LOGIN } from './_ajv/schema'
+import { 
+    BLOG,
+    IS_EMAIL_EXIST, PASSWORD_AND_AGAIN, REGISTER, LOGIN
+} from './_ajv/schema'
 
 function genValidate(schema) {
     let _validate = ajv.compile(schema)
@@ -16,6 +19,7 @@ function genValidate(schema) {
         } catch (err) {
             let { errors } = err
             if (errors) {
+                $F_log('@整理前的validateErrors => ', errors)
                 let _errors = _parseValidateErrors(errors)
                 //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
                 $F_log('@整理後的validateErrors => ', _errors)
@@ -148,5 +152,6 @@ export default {
     isEmailExist: genValidate(IS_EMAIL_EXIST),
     passwordAndAgain: genValidate(PASSWORD_AND_AGAIN),
     register: genValidate(REGISTER),
-    login: genValidate(LOGIN)
+    login: genValidate(LOGIN),
+    blog: genValidate(BLOG)
 }

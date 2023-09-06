@@ -235,7 +235,7 @@ window.addEventListener('load', async () => {
                         continue
                     }
                     lock.delete(valid_input.name)
-                    $M_UI.feedback(2, valid_input, true, '')
+                    $M_UI.feedback(2, valid_input, true)
                 }
                 //  轉換validateErrs格式
                 if (validateErrs && Object.keys(validateErrs).length) {

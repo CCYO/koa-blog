@@ -116,18 +116,19 @@
 
            <% if(isSelf){ %>
              <!-- Button trigger modal -->
-             <button data-selector="new_blog_modal" type="button" class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#exampleModal">
+             <button type="button" class="btn btn-primary mb-1" data-bs-toggle="modal" data-bs-target="#new_blog_modal">
                撰寫新文章
              </button>
              <!-- Modal -->
-             <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+             <div class="modal fade" id="new_blog_modal" tabindex="-1" aria-labelledby="newBlogModalLabel" aria-hidden="true">
                <div class="modal-dialog">
                  <div class="modal-content">
 
                    <div class="modal-body">
                      <div class="mb-3">
                        <label for="blogTitle" class="form-label">文章標題</label>
-                       <input type="text" class="form-control" id="blogTitle" placeholder="文章標題">
+                       <input type="text" name="title" class="form-control" id="blogTitle" placeholder="文章標題">
+                       <div>&nbsp;</div>
                      </div>
                    </div>
                    <div class="modal-footer">

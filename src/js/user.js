@@ -4,8 +4,10 @@
 if (process.env.NODE_ENV === 'development') {
     require('../views/user.ejs')
 }
-import ejs_str_relationShipItem from 'template-ejs-loader!../views/wedgets/user/relationshipItem.ejs'
+import ejs_str_fansItem from 'template-ejs-loader!../views/wedgets/user/fansItem.ejs'
+//  使用 template-ejs-loader 將 偶像粉絲列表的項目ejs檔 轉譯為 純字符
 import ejs_str_blogItem from 'template-ejs-loader!../views/wedgets/user/blogItem.ejs'
+//  使用 template-ejs-loader 將 blog文章項目的ejs檔 轉譯為 純字符
 
 /* ------------------------------------------------------------------------------------------ */
 /* CSS Module --------------------------------------------------------------------------------- */
@@ -28,7 +30,9 @@ import {
     Debounce as $M_Debounce,
     _axios as $M_axios,
     _xss as $M_xss,
-    wedgets as $M_wedgets
+    wedgets as $M_wedgets,
+    validate as $M_validate,
+    ui as $M_ui
 } from './utils'
 
 
@@ -37,19 +41,25 @@ import {
 /* ------------------------------------------------------------------------------------------ */
 
 const CONS = {
+    API: {
+        FOLLOW: '/api/user/follow',
+        CANCEL_FOLLOW: '/api/user/cancelFollow',
+    },
     ACTION: {
         FOLLOW: '[data-action=follow]',
         CANCEL_FOLLOW: '[data-action=cancelFollow]',
         REMOVE_BLOGS: '[data-action=removeBlogs]',
         REMOVE_BLOG: '[data-action=removeBlog]',
-
+        CREATE_BLOG: '[data-action=createBlog]',
+        PAGE_NUM: '[data-action=pageNum]',
+        TURN_PAGE: '[data-action=turnPage]',
     },
     SELECTOR: {
+        NEW_BLOG_MODAL: '#new_blog_modal',
         FANS_LIST: '[data-selector=fansList]',
         IDOL_LIST: '[data-selector=idolList]',
         PRIVATE_BLOG_LIST: '[data-selector=privateBlogList]',
         PUBLIC_BLOG_LIST: '[data-selector=publicBlogList]'
-        // NEW_BLOG_MODAL: '[data-selector=new_blog_modal]'
     },
     KEY: {
         REMOVE_BLOG_ID: 'blog_id',
@@ -162,14 +172,16 @@ window.addEventListener('load', async () => {
                     curInd: 0
                 }
             },
-            
+
         }
+        const $$isLogin = $$pageData.me.id ? true : false
         const $$isSelf = $$pageData.currentUser.id === $$pageData.me.id
         /* 公用 JQ Ele */
         let $btn_follow = $(CONS.ACTION.FOLLOW)
         //  追蹤鈕
         let $btn_cancelFollow = $(CONS.ACTION.CANCEL_FOLLOW)
         //  取消追蹤鈕
+        let $modal_new_blog = $(CONS.SELECTOR.NEW_BLOG_MODAL)
         let $btn_removeBlogs = $(CONS.ACTION.REMOVE_BLOGS)
         let $btn_removeBlog = $(CONS.ACTION.REMOVE_BLOG)
         let $fansList = $(CONS.SELECTOR.FANS_LIST).length ? $(CONS.SELECTOR.FANS_LIST).eq(0) : undefined
@@ -179,9 +191,7 @@ window.addEventListener('load', async () => {
 
         /* 公用 var */
         let $$me = $$pageData.me
-        let $$currentUser = $$pageData.currentUser
 
-        let $$fansList = $$pageData.fansList
         let $$html_blogList = $$pageData.html_blogList
         let $$blogs = $$pageData.blogs
         $$pageData.betterScrollEles = initBetterScroll([$fansList, $idols])
@@ -189,7 +199,7 @@ window.addEventListener('load', async () => {
 
         let $$template = {
             fn: {
-                relationshipItem: lodash.template(ejs_str_relationShipItem),
+                relationshipItem: lodash.template(ejs_str_fansItem),
                 blogItem: (data) => {
                     return lodash.template(ejs_str_blogItem)({
                         ACTION: DATASET.ACTION(CONST.REMOVE_BLOG).slice(1, -1),
@@ -227,34 +237,68 @@ window.addEventListener('load', async () => {
 
             /* event handle */
             //  綁定創建文章功能
-            $(DATASET.ACTION(CONST.CREATE_BLOG.ACTION)).click(handle_createBlog)
-            $btn_removeBlogs.length && $btn_removeBlogs.click(handle_removeBlogs)
+            $(CONS.ACTION.CREATE_BLOG).on('click', handle_createBlog)
+            let x = new $M_Debounce(checkTitle, { loading: () => console.log('loading...') })
+            $modal_new_blog.on('input', x.call )
+            $btn_removeBlogs.length && $btn_removeBlogs.on('click', handle_removeBlogs)
             //  刪除全部文章btn → 綁定handle
-            $btn_removeBlog.length && $btn_removeBlog.click(handle_removeBlog)
+            $btn_removeBlog.length && $btn_removeBlog.on('click', handle_removeBlog)
             //  刪除文章btn → 綁定handle
+            $('#createBlog').prop('disabled', true)
         } else {
             /* render */
             //  判端是否為自己的偶像，顯示追蹤/退追鈕
-            const isMyIdol = $$fansList.some((fans) => fans.id === $$me.id)
-            $btn_cancelFollow.toggleClass('d-none', !isMyIdol)
-            $btn_follow.toggleClass('d-none', isMyIdol)
+            const isMyIdol = $$isLogin ? $$pageData.fansList.some((fans) => fans.id === $$me.id) : false
+            $btn_cancelFollow.toggle(isMyIdol)
+            $btn_follow.toggle(!isMyIdol)
             /* event handle */
             //  綁定追蹤/退追功能
-            $btn_follow.on('click', genFollowFn(true))
-            $btn_cancelFollow.on('click', genFollowFn(false))
+            $btn_follow.on('click', follow)
+            $btn_cancelFollow.on('click', cancelFollow)
         }
         //  文章列表 的 頁碼，綁定翻頁功能
-        $(DATASET.ACTION(CONST.PAGE_NUM.ACTION)).on('click', renderBlogList)
+        $(CONS.ACTION.PAGE_NUM).on('click', renderBlogList)
         //  文章列表 的 上下頁，綁定翻頁功能
-        $(DATASET.ACTION(CONST.TURN_PAGE.ACTION)).on('click', renderBlogList)
+        $(CONS.ACTION.TURN_PAGE).on('click', renderBlogList)
         //  handle -------
         //  handle => 創建 blog
+        async function checkTitle(e) {
+            console.log(e)
+            const $modal = $(e.currentTarget)
+            const input = e.target
+            const $submit = $modal.find('#createBlog')
+            let title = $M_xss.xssAndTrim(input.value)
+
+            let validateErrors = await $M_validate.blog({
+                $$blog: { title: '' },
+                title
+            }, false)
+            if (validateErrors) {
+                delete validateErrors.title.diff
+                validateErrors = $M_validate.parseErrorsToForm(validateErrors)
+                let msg = validateErrors[input.name]
+                $M_ui.feedback(2, input, false, msg.feedback)
+            }else{
+                $M_ui.feedback(2, input, true)
+            }
+            $submit.prop('disabled', validateErrors)
+
+            return
+        }
         async function handle_createBlog(e) {
-            let title = getBlogTitle($('#blogTitle').val())
+            let title = $(`${CONS.SELECTOR.NEW_BLOG_MODAL} input`).val()
+            console.log(typeof title)
+            title = $M_xss.xssAndTrim(title)
             if (!title) {
                 alert('標題不能為空')
                 return
             }
+            const validateErrors = await $M_validate.blog({
+                $$blog: { title: '' },
+                title
+            })
+            console.log('@validateErrors => ', validateErrors)
+            return
             const {
                 data: {
                     id
@@ -406,28 +450,6 @@ window.addEventListener('load', async () => {
             //  刷新頁面
         }
 
-        //  生成 追蹤功能handle
-        function genFollowFn(isfollow) {
-            if (!$$me.id) {
-                /* 若未登入，跳轉到登入頁 */
-                return () => {
-                    alert(`請先登入`)
-                    location.href = `${CONST.URL.LOGIN}?from=${location.pathname}`
-                }
-            }
-            return async () => {
-                /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-                let api = isfollow ? CONST.FOLLOW.API : CONST.CANCEL_FOLLOW.API
-                //  取出URL
-                await $M_axios.post(api, {
-                    id: $$currentUser.id
-                })
-                //  發出 取消/追蹤 請求
-                _updateFollowTemplate(isfollow)
-                //  更新追蹤/退追的瀏覽器數據與頁面渲染
-            }
-        }
-
         //  init ----
         //  初使化 BetterScroll
         function initBetterScroll(JQ_Eles) {
@@ -435,7 +457,7 @@ window.addEventListener('load', async () => {
             // 調整粉絲、追蹤列表
             for (let $el of JQ_Eles) {
                 let el = $el && $el.get(0)
-                if(!el){
+                if (!el) {
                     continue
                 }
                 Object.defineProperties(el, {
@@ -492,48 +514,73 @@ window.addEventListener('load', async () => {
             return betterScrollEles
         }
 
-        /* 不會親手調用的函數 */
-        function _updateFollowTemplate(isfollow) {
-            if (isfollow) {
-                follow()
+        async function follow() {
+            checkLogin()
+            //  檢查登入狀態
+            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+            await $M_axios.post(CONS.API.FOLLOW, {
+                id: $$pageData.currentUser.id
+            })
+            //  發出 取消/追蹤 請求
+            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+            $$pageData.fansList.unshift($$me)
+            //  同步 $$fansList 數據
+            let li = $$template.fn.relationshipItem({ me: $$me })
+            //  在粉絲列表中插入 粉絲htmlStr
+            if ($$pageData.fansList.length === 1) {
+                //  如果追蹤者只有當前的你
+                $fansList.html(`<ul>${li}</ul>`)
             } else {
-                cancelFollow()
+                //  如果追蹤者不只當前的你
+                $fansList.children('ul').prepend(li)
+                //  插在最前面
             }
             $$betterScrollEles.refresh()
             //  重整 BetterScroll
-            $btn_follow.toggle()
+            $btn_follow.toggle(false)
             //  追蹤鈕的toggle
-            $btn_cancelFollow.toggle()
+            $btn_cancelFollow.toggle(true)
             //  退追鈕的toggle
+            alert('已追蹤')
             return
-            //  處理關於追蹤的瀏覽器數據與頁面渲染
-            function follow() {
-                alert('已追蹤')
-                //  更新追蹤名單
-                $$fansList.unshift($$me)
-                //  生成 粉絲htmlStr
-                let li = $$template.fn.relationshipItem({ me: $$me })
-                //  在粉絲列表中插入 粉絲htmlStr
-                if ($$fansList.length === 1) { //  如果追蹤者只有當前的你
-                    $fansList.html(`<ul>${li}</ul>`)
-                } else { //  如果追蹤者不只當前的你
-                    //  插在最前面
-                    $fansList.children('ul').prepend(li)
-                }
+        }
+        async function cancelFollow() {
+            checkLogin()
+            //  檢查登入狀態
+            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+            await $M_axios.post(CONS.API.CANCEL_FOLLOW, {
+                id: $$pageData.currentUser.id
+            })
+            //  發出 取消/追蹤 請求
+            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+            $$pageData.fansList.splice($$pageData.fansList.indexOf($$me.id), 1)
+            //  在粉絲列表中移除 粉絲htmlStr
+            if ($$pageData.fansList.length > 0) {
+                //  如果仍有追蹤者
+                $(`li[data-fans-id='${$$me.id}']`).remove()
+                //  直接移除
+            } else {
+                //  如果已無追蹤者
+                $fansList.html(`<p>可憐阿，沒有朋友</p>`)
+                //  撤換掉列表內容
             }
-            //  處理關於退追的瀏覽器數據與頁面渲染
-            function cancelFollow() {
-                alert('已退追')
-                //  更新追蹤名單
-                $$fansList.splice($$fansList.indexOf($$me.id), 1)
-                //  在粉絲列表中移除 粉絲htmlStr
-                if ($$fansList.length > 0) { //  如果追蹤者不只有當前的你
-                    //  直接移除
-                    $(`li[data-fans-id='${$$me.id}']`).remove()
-                } else { //  如果沒追蹤者
-                    $fansList.html(`<p>可憐阿，沒有朋友</p>`)
-                }
+            //  同步 $$fansList 數據
+            $$betterScrollEles.refresh()
+            //  重整 BetterScroll
+            $btn_follow.toggle(true)
+            //  追蹤鈕的toggle
+            $btn_cancelFollow.toggle(false)
+            //  退追鈕的toggle
+            alert('已退追')
+            return
+        }
+        function checkLogin() {
+            if ($$isLogin) {
+                return
             }
+            /* 若未登入，跳轉到登入頁 */
+            alert(`請先登入`)
+            location.href = `${CONST.URL.LOGIN}?from=${location.pathname}`
         }
     }
 }

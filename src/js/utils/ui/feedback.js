@@ -1,6 +1,6 @@
 import '../../../css/common/feedback.css'
 
-export default function (status, targetEl, valid, msg) {
+export default function (status, targetEl, valid, msg='') {
     if(status === 1){
         //  input 讀取中
         $(targetEl)

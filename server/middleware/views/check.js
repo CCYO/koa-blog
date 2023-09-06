@@ -31,7 +31,7 @@ async function isSelf(ctx, next) {
     if (ctx.session.user) {
         await next()
     } else {
-        ctx.redirect(`/login?from=${encodeURIComponent(ctx.href)}`)
+        ctx.redirect(`/login?from=${encodeURIComponent(ctx.path)}`)
     }
     return
 }
