@@ -270,7 +270,7 @@ window.addEventListener('load', async () => {
                         $(input).parents('form').eq(0).prop('disabled', true)
                     }
                 })
-                ele.addEventListener(eventType, (e) => deb_handle.call(e))
+                ele.addEventListener(eventType, deb_handle.call)
             }
         }
     }

@@ -11,10 +11,12 @@ export default class {
         this.ms = config.ms ? config.ms : CONF.ms
         this.auto = config.auto ? config.auto : CONF.auto
         this.loading = config.loading ? config.loading : CONF.loading
+        this.call = this.call.bind(this)
     }
     timeSet = undefined
     //  setTimeout 標記
     call() {
+        //  創建call時，已將this綁定在實例上，故call若作為eventHandle使用，調用時的this也是指向實例
         const _arguments = arguments
         //  args 是傳給 fn 的參數
         if(this.timeSet){
@@ -24,7 +26,7 @@ export default class {
             this.loading(..._arguments)
         }
         /* 取消上一次的 setTimeout */
-        this.timeSet = setTimeout(async () => {
+        this.timeSet = setTimeout(async (e) => {
             /* 延遲調用fn，且調用完畢後自動再作一次延遲調用 */
             await this.fn(..._arguments)
             this.timeSet = undefined

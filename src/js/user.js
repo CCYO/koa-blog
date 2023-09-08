@@ -32,7 +32,8 @@ import {
     _xss as $M_xss,
     wedgets as $M_wedgets,
     validate as $M_validate,
-    ui as $M_ui
+    ui as $M_ui,
+    log as $M_log
 } from './utils'
 
 
@@ -56,6 +57,7 @@ const CONS = {
     },
     SELECTOR: {
         NEW_BLOG_MODAL: '#new_blog_modal',
+        NEW_BLOG_TITLE: '#new_blog_title',
         FANS_LIST: '[data-selector=fansList]',
         IDOL_LIST: '[data-selector=idolList]',
         PRIVATE_BLOG_LIST: '[data-selector=privateBlogList]',
@@ -177,25 +179,27 @@ window.addEventListener('load', async () => {
         const $$isLogin = $$pageData.me.id ? true : false
         const $$isSelf = $$pageData.currentUser.id === $$pageData.me.id
         /* 公用 JQ Ele */
+        let $input_blog_title = $(CONS.SELECTOR.NEW_BLOG_TITLE)
+        let $btn_create_blog = $(CONS.ACTION.CREATE_BLOG)
+        let $fansList = $(CONS.SELECTOR.FANS_LIST).length ? $(CONS.SELECTOR.FANS_LIST).eq(0) : undefined
+        //  粉絲列表contaner
+        let $idols = $(CONS.SELECTOR.IDOL_LIST).length ? $(CONS.SELECTOR.IDOL_LIST).eq(0) : undefined
+        //  偶像列表contaner
         let $btn_follow = $(CONS.ACTION.FOLLOW)
         //  追蹤鈕
         let $btn_cancelFollow = $(CONS.ACTION.CANCEL_FOLLOW)
         //  取消追蹤鈕
-        let $modal_new_blog = $(CONS.SELECTOR.NEW_BLOG_MODAL)
+
+
         let $btn_removeBlogs = $(CONS.ACTION.REMOVE_BLOGS)
         let $btn_removeBlog = $(CONS.ACTION.REMOVE_BLOG)
-        let $fansList = $(CONS.SELECTOR.FANS_LIST).length ? $(CONS.SELECTOR.FANS_LIST).eq(0) : undefined
-        //  粉絲列表contaner
-        let $idols = $(CONS.SELECTOR.IDOLS).length ? $(CONS.SELECTOR.IDOLS).eq(0) : undefined
-        //  偶像列表contaner
+
 
         /* 公用 var */
         let $$me = $$pageData.me
 
         let $$html_blogList = $$pageData.html_blogList
         let $$blogs = $$pageData.blogs
-        $$pageData.betterScrollEles = initBetterScroll([$fansList, $idols])
-        let $$betterScrollEles = $$pageData.betterScrollEles
 
         let $$template = {
             fn: {
@@ -221,10 +225,12 @@ window.addEventListener('load', async () => {
                 })
             }
         }
-        //  初始化BetterScroll
+
         //  public Var ----------------------------------------------------------------------
         let pageData = window.pageData = data
         //  ---------------------------------------------------------------------------------
+
+        //  初始化BetterScroll
         /* Self Page */
         if ($$isSelf) {
             /* render */
@@ -236,15 +242,23 @@ window.addEventListener('load', async () => {
             // $(DATASET.SELECTOR(NAME.BLOG_BTN_LIST)).removeClass('my-noshow')
 
             /* event handle */
+
+            let { call: debounce_check_title } = new $M_Debounce(check_title, {
+                loading(e) {
+                    $btn_create_blog.prop('disabled', true)
+                    $M_ui.feedback(1, e.target)
+                }
+            })
+            $input_blog_title.on('input', debounce_check_title)
+            //  handle 校驗blog title
+            $btn_create_blog.on('click', handle_createBlog)
             //  綁定創建文章功能
-            $(CONS.ACTION.CREATE_BLOG).on('click', handle_createBlog)
-            let x = new $M_Debounce(checkTitle, { loading: () => console.log('loading...') })
-            $modal_new_blog.on('input', x.call )
+
             $btn_removeBlogs.length && $btn_removeBlogs.on('click', handle_removeBlogs)
             //  刪除全部文章btn → 綁定handle
             $btn_removeBlog.length && $btn_removeBlog.on('click', handle_removeBlog)
             //  刪除文章btn → 綁定handle
-            $('#createBlog').prop('disabled', true)
+            $btn_create_blog.prop('disabled', true)
         } else {
             /* render */
             //  判端是否為自己的偶像，顯示追蹤/退追鈕
@@ -260,45 +274,17 @@ window.addEventListener('load', async () => {
         $(CONS.ACTION.PAGE_NUM).on('click', renderBlogList)
         //  文章列表 的 上下頁，綁定翻頁功能
         $(CONS.ACTION.TURN_PAGE).on('click', renderBlogList)
-        //  handle -------
-        //  handle => 創建 blog
-        async function checkTitle(e) {
-            console.log(e)
-            const $modal = $(e.currentTarget)
-            const input = e.target
-            const $submit = $modal.find('#createBlog')
-            let title = $M_xss.xssAndTrim(input.value)
-
-            let validateErrors = await $M_validate.blog({
-                $$blog: { title: '' },
-                title
-            }, false)
-            if (validateErrors) {
-                delete validateErrors.title.diff
-                validateErrors = $M_validate.parseErrorsToForm(validateErrors)
-                let msg = validateErrors[input.name]
-                $M_ui.feedback(2, input, false, msg.feedback)
-            }else{
-                $M_ui.feedback(2, input, true)
-            }
-            $submit.prop('disabled', validateErrors)
-
-            return
-        }
-        async function handle_createBlog(e) {
-            let title = $(`${CONS.SELECTOR.NEW_BLOG_MODAL} input`).val()
-            console.log(typeof title)
-            title = $M_xss.xssAndTrim(title)
+        $('main, nav, main, footer').removeAttr('style')
+        let $$betterScrollEles = initBetterScroll([$fansList, $idols])
+        //  初始化betterScroll
+        /* ------------------------------------------------------------------------------------------ */
+        /* Handle ------------------------------------------------------------------------------------ */
+        /* ------------------------------------------------------------------------------------------ */
+        async function handle_createBlog() {
+            let title = await check_title()
             if (!title) {
-                alert('標題不能為空')
                 return
             }
-            const validateErrors = await $M_validate.blog({
-                $$blog: { title: '' },
-                title
-            })
-            console.log('@validateErrors => ', validateErrors)
-            return
             const {
                 data: {
                     id
@@ -307,16 +293,182 @@ window.addEventListener('load', async () => {
                 title
             })
             location.href = `/blog/edit/${id}?owner_id=${$$me.id}`
-
-            //  取title值
-            function getBlogTitle(value) {
-                let val = value.trim()
-                if (!val.length) {
-                    return false
-                }
-                return $M_xss.myXss(value)
-            }
         }
+
+        async function check_title() {
+            let title = $input_blog_title.val()
+            let input = $input_blog_title.get(0)
+
+            title = $M_xss.xssAndTrim(input.value)
+            let validateErrors = await $M_validate.blog({
+                $$blog: { title: '' },
+                title
+            }, false)
+            $btn_create_blog.prop('disabled', validateErrors)
+            if (validateErrors) {
+                delete validateErrors.title.diff
+                validateErrors = $M_validate.parseErrorsToForm(validateErrors)
+                let msg = validateErrors[input.name]
+                $M_ui.feedback(2, input, false, msg.feedback)
+                return false
+            }
+            $M_ui.feedback(2, input, true)
+            return title
+        }
+        async function follow() {
+            checkLogin()
+            //  檢查登入狀態
+            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+            await $M_axios.post(CONS.API.FOLLOW, {
+                id: $$pageData.currentUser.id
+            })
+            //  發出 取消/追蹤 請求
+            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+            $$pageData.fansList.unshift($$me)
+            //  同步 $$fansList 數據
+            let li = $$template.fn.relationshipItem({ me: $$me })
+            //  在粉絲列表中插入 粉絲htmlStr
+            if ($$pageData.fansList.length === 1) {
+                //  如果追蹤者只有當前的你
+                $fansList.html(`<ul>${li}</ul>`)
+            } else {
+                //  如果追蹤者不只當前的你
+                $fansList.children('ul').prepend(li)
+                //  插在最前面
+            }
+            $$betterScrollEles.refresh()
+            //  重整 BetterScroll
+            $btn_follow.toggle(false)
+            //  追蹤鈕的toggle
+            $btn_cancelFollow.toggle(true)
+            //  退追鈕的toggle
+            alert('已追蹤')
+            return
+        }
+        async function cancelFollow() {
+            checkLogin()
+            //  檢查登入狀態
+            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+            await $M_axios.post(CONS.API.CANCEL_FOLLOW, {
+                id: $$pageData.currentUser.id
+            })
+            //  發出 取消/追蹤 請求
+            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+            $$pageData.fansList.splice($$pageData.fansList.indexOf($$me.id), 1)
+            //  在粉絲列表中移除 粉絲htmlStr
+            if ($$pageData.fansList.length > 0) {
+                //  如果仍有追蹤者
+                $(`li[data-fans-id='${$$me.id}']`).remove()
+                //  直接移除
+            } else {
+                //  如果已無追蹤者
+                $fansList.html(`<p>可憐阿，沒有朋友</p>`)
+                //  撤換掉列表內容
+            }
+            //  同步 $$fansList 數據
+            $$betterScrollEles.refresh()
+            //  重整 BetterScroll
+            $btn_follow.toggle(true)
+            //  追蹤鈕的toggle
+            $btn_cancelFollow.toggle(false)
+            //  退追鈕的toggle
+            alert('已退追')
+            return
+        }
+
+        /* ------------------------------------------------------------------------------------------ */
+        /* Utils ------------------------------------------------------------------------------------ */
+        /* ------------------------------------------------------------------------------------------ */
+        function initBetterScroll(JQ_Eles) {
+            let betterScrollEles = []
+            //  存放 betterScroll 實例的DOM Ele
+            /* 調整粉絲、追蹤列表 */
+            for (let $el of JQ_Eles) {
+                let el = $el && $el.get(0)
+                //  若$el存在，取其 DOM Ele
+                if (!el) {
+                    continue
+                    //  若 DOM Ele 不存在，跳至下個循環
+                }
+                /* 賦予DOM Ele兩個Prop，betterScroll、canScoll */
+                Object.defineProperties(el, {
+                    /* Prop:betterScroll 此屬性指向以DOM Ele本身創建的betterScroll實例 */
+                    betterScroll: {
+                        value: new BetterScroll(el, {
+                            scrollX: true,
+                            scrollY: false,
+                            mouseWheel: true
+                        }),
+                        writable: false
+                    },
+                    /* Prop:canScroll 此屬性代表DOM Ele本身的betterScroll是否可滾動 */
+                    canScroll: {
+                        get() {
+                            let outerW = $el.eq(0).outerWidth()
+                            let contentW = $el.children(':first-child').outerWidth(true)
+                            console.log(`@ outerW: ${outerW} --- contentW: ${contentW}`)
+                            return outerW < contentW
+                            //  若DOM Ele的外寬度 < first-child Ele外寬，則代表本身的 betterScroll 可滾動
+                        }
+                    },
+                    /* Method: resetBetterScroll，藉由el.canScroll啟動|停止滾動功能*/
+                    resetBetterScroll: {
+                        value() {
+                            $M_log.dev_log('resetBetterScroll...')
+                            if (el.canScroll) {
+                                /* 若當前是可滾動狀態，調用 betterScroll.enable實例方法，開啟滾動功能 */
+                                el.betterScroll.enable()
+                            } else {
+                                /* 若當前不是可滾動狀態，調用 betterScroll.disable實例方法，禁止滾動功能 */
+                                el.betterScroll.disable()
+                            }
+                            $M_log.dev_log(`${el.dataset.selector}是${el.canScroll ? '可' : '不可'}滾動狀態`)
+                            el.betterScroll.refresh()
+                            //  調用 betterScroll.refresh實例方法，重整狀態
+                            //  betterScroll.enable 不知道為何，有時候仍沒辦法作用，搭配refresh()就不會有意外
+                        }
+                    }
+                })
+                const { call: debounce_reset_betterScroll } = new $M_Debounce(el.resetBetterScroll)
+                //  創造 防抖動的 el.handleResize
+                window.addEventListener('resize', debounce_reset_betterScroll)
+                //  將每個防抖動的 el.handleResize 綁定到 window
+                betterScrollEles.push(el)
+                //  將每個el都放入betterScrollEles
+            }
+            /* 為 betterScrollEles 創建方法，內部所有el重新啟動|停止滾動功能*/
+            betterScrollEles.refresh = function () {
+                for (let el of betterScrollEles) {
+                    // el.handleResize()
+                    el.resetBetterScroll()
+                }
+            }
+            betterScrollEles.refresh()
+            return betterScrollEles
+        }
+        function checkLogin() {
+            if ($$isLogin) {
+                return
+            }
+            /* 若未登入，跳轉到登入頁 */
+            alert(`請先登入`)
+            location.href = `${CONST.URL.LOGIN}?from=${location.pathname}`
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+        //  handle -------
+        //  handle => 創建 blog
+
         //  刪除當前頁碼的所有文章
         async function handle_removeBlogs(e) {
             if (!confirm('真的要刪掉?')) {
@@ -452,136 +604,7 @@ window.addEventListener('load', async () => {
 
         //  init ----
         //  初使化 BetterScroll
-        function initBetterScroll(JQ_Eles) {
-            let betterScrollEles = []
-            // 調整粉絲、追蹤列表
-            for (let $el of JQ_Eles) {
-                let el = $el && $el.get(0)
-                if (!el) {
-                    continue
-                }
-                Object.defineProperties(el, {
-                    /* 建立屬性 betterScroll，代表ele本身的betterScroll*/
-                    betterScroll: {
-                        value: new BetterScroll(el, {
-                            scrollX: true,
-                            scrollY: false,
-                            mouseWheel: true
-                        }),
-                        writable: false
-                    },
-                    /* 建立屬性 canScroll，代表ele本身的betterScroll是否可滾動*/
-                    canScroll: {
-                        get() {
-                            let outerW = $el.first().outerWidth()
-                            let contentW = $el.children(':first-child').outerWidth(true)
-                            return outerW < contentW
-                        }
-                    }
-                })
-                /* 建立方法 handleResize，藉由確認el可否滾動，啟動|停止滾動功能*/
-                el.handleResize = function () {
-                    if (el.canScroll) {
-                        el.betterScroll.enable()
-                    } else {
-                        el.betterScroll.disable()
-                    }
-                    el.betterScroll.refresh()
-                    //  enable() 不知道為何，有時候仍沒辦法作用，搭配refresh()就不會有意外
-                }
-                const debounce = new $M_Debounce(el.handleResize)
-                //  創造 防抖動的 el.handleResize
-                window.addEventListener('resize', (e) => debounce.call(e))
-                //  將每個防抖動的 el.handleResize 綁定到 window
-                betterScrollEles.push(el)
-                //  將每個el都放入betterScrollEles
-            }
-            /* 為 betterScrollEles 創建方法，內部所有el重新啟動|停止滾動功能*/
-            betterScrollEles.refresh = function () {
-                for (let el of betterScrollEles) {
-                    el.handleResize()
-                }
-            }
-            // Object.defineProperty(betterScrollEles, 'refresh', {
-            //     value() {
-            //         for (let el of betterScrollEles) {
-            //             el.handleResize()
-            //         }
-            //     },
-            //     enumerable: false
-            // })
-            betterScrollEles.refresh()
-            return betterScrollEles
-        }
 
-        async function follow() {
-            checkLogin()
-            //  檢查登入狀態
-            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-            await $M_axios.post(CONS.API.FOLLOW, {
-                id: $$pageData.currentUser.id
-            })
-            //  發出 取消/追蹤 請求
-            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-            $$pageData.fansList.unshift($$me)
-            //  同步 $$fansList 數據
-            let li = $$template.fn.relationshipItem({ me: $$me })
-            //  在粉絲列表中插入 粉絲htmlStr
-            if ($$pageData.fansList.length === 1) {
-                //  如果追蹤者只有當前的你
-                $fansList.html(`<ul>${li}</ul>`)
-            } else {
-                //  如果追蹤者不只當前的你
-                $fansList.children('ul').prepend(li)
-                //  插在最前面
-            }
-            $$betterScrollEles.refresh()
-            //  重整 BetterScroll
-            $btn_follow.toggle(false)
-            //  追蹤鈕的toggle
-            $btn_cancelFollow.toggle(true)
-            //  退追鈕的toggle
-            alert('已追蹤')
-            return
-        }
-        async function cancelFollow() {
-            checkLogin()
-            //  檢查登入狀態
-            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-            await $M_axios.post(CONS.API.CANCEL_FOLLOW, {
-                id: $$pageData.currentUser.id
-            })
-            //  發出 取消/追蹤 請求
-            /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-            $$pageData.fansList.splice($$pageData.fansList.indexOf($$me.id), 1)
-            //  在粉絲列表中移除 粉絲htmlStr
-            if ($$pageData.fansList.length > 0) {
-                //  如果仍有追蹤者
-                $(`li[data-fans-id='${$$me.id}']`).remove()
-                //  直接移除
-            } else {
-                //  如果已無追蹤者
-                $fansList.html(`<p>可憐阿，沒有朋友</p>`)
-                //  撤換掉列表內容
-            }
-            //  同步 $$fansList 數據
-            $$betterScrollEles.refresh()
-            //  重整 BetterScroll
-            $btn_follow.toggle(true)
-            //  追蹤鈕的toggle
-            $btn_cancelFollow.toggle(false)
-            //  退追鈕的toggle
-            alert('已退追')
-            return
-        }
-        function checkLogin() {
-            if ($$isLogin) {
-                return
-            }
-            /* 若未登入，跳轉到登入頁 */
-            alert(`請先登入`)
-            location.href = `${CONST.URL.LOGIN}?from=${location.pathname}`
-        }
     }
 }
 )

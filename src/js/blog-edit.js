@@ -41,7 +41,9 @@ import Debounce from './utils/Debounce'
 /* Const --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 import SERVER_CONST from '../../server/conf/constant'
-const CONS = {}
+const CONS = {
+    HTML_MAX_LENGTH: SERVER_CONST.BLOG.HTML_MAX_LENGTH
+}
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
@@ -184,7 +186,7 @@ window.addEventListener('load', async () => {
         let $$payload = new genPayload()
         $$pageData.payload = $$payload
         //  schema
-        let $$htmlStr_maxLength = HTML_MAX_LENGTH
+        let $$htmlStr_maxLength = CONS.HTML_MAX_LENGTH
 
         try {
             //  初始化 input[name=show]
