@@ -45,6 +45,9 @@ const CONS = {
     API: {
         FOLLOW: '/api/user/follow',
         CANCEL_FOLLOW: '/api/user/cancelFollow',
+        CREATE_BLOG(blog_id, author_id){
+            return `/blog/edit/${blog_id}?owner_id=${author_id}`
+        }
     },
     ACTION: {
         FOLLOW: '[data-action=follow]',
@@ -61,10 +64,12 @@ const CONS = {
         FANS_LIST: '[data-selector=fansList]',
         IDOL_LIST: '[data-selector=idolList]',
         PRIVATE_BLOG_LIST: '[data-selector=privateBlogList]',
-        PUBLIC_BLOG_LIST: '[data-selector=publicBlogList]'
+        PUBLIC_BLOG_LIST: '[data-selector=publicBlogList]',
+        BLOG_ID: '[data-blog_id]'
     },
     KEY: {
         REMOVE_BLOG_ID: 'blog_id',
+        BLOG_ID: '[data-blog_id]'
     }
 }
 /* 常數 */
@@ -233,16 +238,7 @@ window.addEventListener('load', async () => {
         //  初始化BetterScroll
         /* Self Page */
         if ($$isSelf) {
-            /* render */
-            //  顯示建立新文章btn
-            // $(CONS.SELECTOR.NEW_BLOG_MODAL).removeClass('my-noshow')
-            //  顯示編輯文章title
-            // $(DATASET.SELECTOR(NAME.PRIVATE_BLOG_LIST)).removeClass('my-noshow')
-            //  隱藏文章編輯/刪除功能
-            // $(DATASET.SELECTOR(NAME.BLOG_BTN_LIST)).removeClass('my-noshow')
-
             /* event handle */
-
             let { call: debounce_check_title } = new $M_Debounce(check_title, {
                 loading(e) {
                     $btn_create_blog.prop('disabled', true)
@@ -254,6 +250,7 @@ window.addEventListener('load', async () => {
             $btn_create_blog.on('click', handle_createBlog)
             //  綁定創建文章功能
 
+            
             $btn_removeBlogs.length && $btn_removeBlogs.on('click', handle_removeBlogs)
             //  刪除全部文章btn → 綁定handle
             $btn_removeBlog.length && $btn_removeBlog.on('click', handle_removeBlog)
@@ -292,9 +289,8 @@ window.addEventListener('load', async () => {
             } = await $M_axios.post(CONST.CREATE_BLOG.API, {
                 title
             })
-            location.href = `/blog/edit/${id}?owner_id=${$$me.id}`
+            location.href = CONS.API.CREATE_BLOG(id, $$pageData.me.id)
         }
-
         async function check_title() {
             let title = $input_blog_title.val()
             let input = $input_blog_title.get(0)
@@ -476,8 +472,9 @@ window.addEventListener('load', async () => {
             }
             let $target = $(e.target)
             //  取得文章列表container
+
             let $blogList = $target.parents(CONS.SELECTOR.PUBLIC_BLOG_LIST)
-            $blogList = $blogList.length ? $blogList : $target.parents(CONS.SELECTOR.PRIVATE_BLOG_LIST)
+            $blogList = $blogList.length ? $blogList : $target.parents(CONS.SELECTOR)
             //  取得當前文章列表的移除鈕
             let $children = [...$blogList.find(DATASET.ACTION(CONST.REMOVE_BLOG.ACTION))]
             //  取得所有移除鈕上的文章id

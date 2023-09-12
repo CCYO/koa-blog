@@ -76,7 +76,7 @@
                  <%% if(blogs.show.length && blogs.show[0].length){ %>
                    <ul class="list-group list-group-flush">
                      <%% blogs.show[0].forEach(({id, author_id, title, time})=> { %>
-                       <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+                       <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between" data-blog_id="<%%= id %>">
                          <div class="text-truncate me-3">
                            <a href="/blog/<%%= id %>" class="stretched-link">
                              <%%= title %>
@@ -88,7 +88,7 @@
                          <%% if(isSelf){ %>
                            <div data-selector="blogBtnList" class="my-noshow flex-shrink-0">
                              <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%%= id %>?owner_id=<%%= author_id %>">編輯</a>
-                             <a class='btn btn-outline-primary btn-sm' data-action="removeBlog" data-blog_id="<%%= id %>">刪除</a>
+                             <a class='btn btn-outline-primary btn-sm' data-action="removeBlog">刪除</a>
                            </div>
                            <%% } %>
                        </li>
@@ -144,7 +144,7 @@
            <%% if(blogs.hidden.length && blogs.hidden[0].length){ %>
            <ul class="list-group list-group-flush">
              <%% blogs.hidden[0].forEach(({id, author_id, title, time})=> { %>
-             <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+             <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between" data-blog_id="<%%= id %>">
                <div class="text-truncate me-3">
                  <a class="stretched-link" href="/blog/<%%= id %>">
                    <%%= title %>
@@ -156,7 +156,7 @@
                <%% if(isSelf){ %>
                <div data-selector="blogBtnList" class="flex-shrink-0">
                  <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%%= id %>?owner_id=<%%= author_id %>">編輯</a>
-                 <a class='btn btn-outline-primary btn-sm' data-action="removeBlog" data-blog_id="<%%= id %>">刪除</a>
+                 <a class='btn btn-outline-primary btn-sm' data-action="removeBlog">刪除</a>
                </div>
                <%% } %>
              </li>
