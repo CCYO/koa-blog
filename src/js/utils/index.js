@@ -5,6 +5,7 @@ import _axios from './_axios'
 import _xss from './_xss'
 import Debounce from './Debounce'
 import log from './log'
+import redirFrom from './redirFrom'
 
-export default { ui, validate, wedgets, _axios, _xss, Debounce, log }
-export { ui, validate, wedgets, _axios, _xss, Debounce, log }
+export default { ui, validate, wedgets, _axios, _xss, Debounce, log, redirFrom }
+export { ui, validate, wedgets, _axios, _xss, Debounce, log, redirFrom }

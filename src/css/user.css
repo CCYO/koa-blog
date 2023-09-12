@@ -1,6 +1,9 @@
 /* register&login.css */
 @import './common/basic.css';
 
+.pagination .pagination > .page-item .page-link {
+    border-radius: 0;
+}
 .timestamp {
     font-size: 0.5rem
 }

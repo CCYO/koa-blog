@@ -21,7 +21,8 @@ import {
     Debounce as $M_Debounce,
     validate as $M_validate,
     _axios as $M_axios,
-    wedgets as $M_wedgets
+    wedgets as $M_wedgets,
+    redirFrom as $M_redirForm
 } from './utils'
 
 /* ------------------------------------------------------------------------------------------ */
@@ -31,7 +32,6 @@ import {
 const CONS = {
     LOGIN: {
         API: '/api/user',
-        REDIR_QUERY: 'from',
         REDIR: '/self',
         SUCC_MSG: '登入成功',
         FAIL_MSG: '登入失敗，請重新嘗試',
@@ -106,7 +106,7 @@ window.addEventListener('load', async () => {
                 let { errno } = await $M_axios.post(CONS.LOGIN.API, payload)
                 if (!errno) {
                     alert(CONS.LOGIN.SUCC_MSG)
-                    location.pathname = location.search ? new URLSearchParams(location.search).get(CONS.LOGIN.REDIR_QUERY) : CONS.LOGIN.REDIR
+                    $M_redirForm(CONS.LOGIN.REDIR)
                 }
                 return
             }
@@ -144,8 +144,6 @@ window.addEventListener('load', async () => {
                     location.reload()
                     return
                 }
-                console.log('@payload => ', payload)
-                return
                 /* 送出請求 */
                 /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
                 let { errno } = await $M_axios.post(CONS.REGISTER.API, payload)
