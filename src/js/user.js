@@ -22,6 +22,7 @@ import '../css/user.css'
 
 import BetterScroll from 'better-scroll'
 import lodash from 'lodash'
+import Bootstrap from 'bootstrap'
 
 /* ------------------------------------------------------------------------------------------ */
 /* Utils Module --------------------------------------------------------------------------------- */
@@ -275,10 +276,12 @@ window.addEventListener('load', async () => {
         }
         let $$blogList = window.$$blogList = {
             "1": {
+                currentPagination: 1,
                 currentPage: 1,
                 blogs: []
             },
             "0": {
+                currentPagination: 1,
                 currentPage: 1,
                 blogs: []
             },
@@ -307,6 +310,77 @@ window.addEventListener('load', async () => {
         // $(CONS.ACTION.PAGE_NUM).on('click', renderBlogList)
         //  文章列表 的 上下頁，綁定翻頁功能
         // $(CONS.ACTION.TURN_PAGE).on('click', renderBlogList)
+        //  初始化Tab
+        function initBootstrapTab() {
+            //  處理 pageNum 的 tab
+            let selector = `.pagination .pagination .page-link`
+            let $targets = $(selector)
+            $targets.each((index, el) => {
+                let tab = new Bootstrap.Tab(el)
+                if (!index) {
+                    tab.show()
+                }
+                let $el = $(el)
+                let pane_id = $el.href
+                let { groups: { targetPage }} = /\#page\-(?<targetPage>.+)/.exec(pane_id)
+                let $pane = $(pane_id)
+                let $blog_list = $el.parents(`[data-${CONS.KEY.SHOW}]`)
+                let show = $blog_list.data(CONS.KEY.SHOW) * 1
+                el.addEventListener('click', async(e) => {
+                    let currentPage = $$blogList[show].currentPage
+                    //  確認 pane 是否存在
+                    if(!$pane.length){
+                        //  發出請求，取得blogList數據
+                        let targetBlogs = await new Promise( (r) => {
+                            //  要跟後端要資料
+                            setTimeout( () => {
+                                let { blogs } = $$blogList[show]
+                                let targetBlogs = [...blogs].splice($$blogList.count * (targetPage - 1), $$blogList.count)
+                                console.log('經過2秒')
+                                r(targetBlogs)
+                            }, 2000)
+                        })
+                        let html = lodash.template(ejs_str_blogList)({
+                            isSelf: $$isSelf,
+                            page: targetPage,
+                            blogs: targetBlogs
+                        })
+                        $blog_list.find(`.list-group[data-page]`).last().after(html)
+                    }
+                    tab.show()
+                })
+            })
+            let $blog_list = $el.parents(`[data-${CONS.KEY.SHOW}]`)
+            $blog_list.on('click', (e) => {
+                let $target = $(e.target)
+                let mode = $target.attr('data-turn')
+                if(!mode){
+                    return
+                }
+                e.preventDefault()
+                let $blog_list = $(e.currentTarget)
+                let show = $blog_list.data(CONS.KEY.SHOW) * 1
+                let { currentPage, currentPagination } = $$blogList[show]
+                let targetPage = currentPage
+                let { count } = $$blogList
+                let targetPagination = currentPagination
+                if(mode === 'back' || mode === 'frond'){
+                    targetPagination = mode === 'back' ? targetPagination-- : targetPagination++
+                    targetPage = --targetPagination * count + 1
+                }else if(mode === 'plus' || mode === 'minus'){
+                    targetPage = mode === 'plus' ? currentPage++ : currentPage--
+                    targetPagination = Math.ceil(targetPage / count)
+                }else{
+                    targetPage = mode * 1
+                }
+                if(targetPagination !== currentPagination){
+
+                }
+                $(`[data-turn=${targetPage}]`).get(0).click()
+            })
+
+
+        }
         $blog_list.on('click', handle_turn_page)
 
         async function handle_turn_page(e) {
@@ -324,7 +398,7 @@ window.addEventListener('load', async () => {
             let targetPage = mode === 'PLUS' ? currentPage + 1 :
                 mode === 'MINUS' ? currentPage - 1 : mode
             let ul_targetPage = $(e.currentTarget).find(`ul[data-page=${targetPage}]`)
-            if(!ul_targetPage.length){
+            if (!ul_targetPage.length) {
                 //  要跟後端要資料
                 let targetBlogs = [...blogs].splice($$blogList.count * (targetPage - 1), $$blogList.count)
                 //  渲染資料
@@ -336,7 +410,7 @@ window.addEventListener('load', async () => {
                 let $el = $(e.currentTarget).find(`[data-${CONS.KEY.PAGE_NUM}]`).last()
                 console.log('@$el => ', $el)
                 $el.after(html)
-            }else{
+            } else {
                 //  使用Bootstrap JS方法
             }
             //  更改頁碼

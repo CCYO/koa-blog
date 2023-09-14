@@ -148,7 +148,7 @@
                      <% } %>
                  </div>
                  <% if(blogs.show.length && blogs.show[0].length){ %>
-                   <ul data-page="0" class="list-group list-group-flush">
+                   <ul id="page-1" data-page="page-1" class="list-group list-group-flush">
                      <% blogs.show[0].forEach(({id, author_id, title, time})=> { %>
                        <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between" data-blog_id="<%= id %>">
                          <div class="text-truncate me-3">
@@ -193,7 +193,7 @@
                </li>
                <% blogs.show.forEach((item, ind, arr)=> { %>
                <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
-                 <a class="page-link" href="#" data-turn="<%= ind %>">
+                 <a class="page-link" href="#page-<%= ind + 1 %>" data-turn="<%= ind %>">
                    <%= ind + 1 %>
                  </a>
                </li>
@@ -217,7 +217,7 @@
              <button type="button" class="btn btn-sm btn-outline-danger <%= blogs.hidden.length? '' : 'd-none'%>" data-action="removeBlogs">全部刪除</button>
            </div>
            <% if(blogs.hidden.length && blogs.hidden[0].length){ %>
-           <ul data-page="0" class="list-group list-group-flush">
+           <ul data-page="page-0" class="list-group list-group-flush">
              <% blogs.hidden[0].forEach(({id, author_id, title, time})=> { %>
              <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between" data-blog_id="<%= id %>">
                <div class="text-truncate me-3">
@@ -256,22 +256,32 @@
            </ul>
            <% if (blogs.hidden.length> 1) { %>
            <nav aria-label="...">
-             <ul class="pagination" id="hidden-list">
+             <ul class="pagination" data-piece="0" id="hidden-list">
+              <li class="page-item pe-none">
+                <a class="page-link" href="#" data-turn="back"><<</a>
+              </li>
                <li class="page-item pe-none">
                  <a class="page-link" href="#" data-turn="minus">Previous</a>
                </li>
-               <ul class="pagination">
                <% blogs.hidden.forEach((item, ind, arr)=> { %>
-               <li class="page-item <%= ind === 0 ? 'active pe-none': ''%>">
-                 <a class="page-link" href="#" data-turn="<%= ind + 1 %>">
+                <% if(!(ind % 5)){ %>
+               <ul class="pagination" id="pagination-<%= (ind / 5) + 1 %>">
+               <% } %>
+               <li class="page-item pe-none">
+                 <a class="page-link" href="#page-<%= ind + 1 %>" data-turn="<%= ind + 1 %>">
                    <%= ind + 1 %>
                  </a>
                </li>
-               <% }) %>
+               <% if(!(ind % 5)){ %>
               </ul>
+              <% } %>
+              <% }) %>
                <li class="page-item">
                  <a class="page-link" href="#" data-turn="plus">Next</a>
                </li>
+               <li class="page-item pe-none">
+                <a class="page-link" href="#" data-turn="back">>></a>
+              </li>
              </ul>
            </nav>
            <% } %>

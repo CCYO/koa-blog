@@ -21,5 +21,5 @@ function redirForm(REDIR) {
     location.href = url.pathname + dir
 }
 
-export { redirForm }
-export default { redirForm }
+// export { redirForm }
+export default redirForm
