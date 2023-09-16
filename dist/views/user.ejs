@@ -140,76 +140,7 @@
              </div>
              <% } %>
 
-               <div class="card blogList bg-light" data-show="1" data-selector="blog_list" data-my-blog-key="show">
-                 <div class="card-header blogList-header align-items-center">
-                   <h5>已發布的BLOG</h5>
-                   <% if(isSelf){ %>
-                     <button type="button" class="btn btn-sm btn-outline-danger <%= blogs.show.length? '' : 'd-none'%>" data-action="removeBlogs">全部刪除</button>
-                     <% } %>
-                 </div>
-                 <% if(blogs.show.length && blogs.show[0].length){ %>
-                   <ul id="page-1" data-page="page-1" class="list-group list-group-flush">
-                     <% blogs.show[0].forEach(({id, author_id, title, time})=> { %>
-                       <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between" data-blog_id="<%= id %>">
-                         <div class="text-truncate me-3">
-                           <a href="/blog/<%= id %>" class="stretched-link">
-                             <%= title %>
-                           </a>
-                         </div>
-                         <div class="d-none d-sm-block">
-                           <span class="timestamp">發佈於<%= time %></span>
-                         </div>
-                         <% if(isSelf){ %>
-                           <div data-selector="blogBtnList" class="my-noshow flex-shrink-0">
-                             <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?owner_id=<%= author_id %>">編輯</a>
-                             <a class='btn btn-outline-primary btn-sm' data-action="removeBlog">刪除</a>
-                           </div>
-                           <% } %>
-                       </li>
-                       <% }) %>
-                         <% if(blogs.show[0].length < 5) {%>
-             <% for(let i=5 - blogs.show[0].length; i> 0; i-- ){ %>
-              <!-- 填空START -->
-             <li class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
-               <div class="text-truncate me-3">
-                 <span class="invisible">x</span>
-               </div>
-               <% if(isSelf){ %>
-               <div data-selector="blogBtnList" class="flex-shrink-0 invisible">
-                 <a class='btn btn-outline-primary btn-sm'>編輯</a>
-                 <a class='btn btn-outline-primary btn-sm'>刪除</a>
-               </div>
-               <% } %>
-             </li>
-             <!-- 填空END -->
-             <% } %>
-             <% } %>
-           </ul>
-           <% if (blogs.show.length> 1) { %>
-           <nav aria-label="...">
-             <ul class="pagination" id="show-list">
-               <li class="page-item my-disabled">
-                 <a class="page-link" href='#' data-turn="minus">Previous</a>
-               </li>
-               <% blogs.show.forEach((item, ind, arr)=> { %>
-               <li class="page-item <%= ind === 0 ? 'active my-disabled': ''%>">
-                 <a class="page-link" href="#page-<%= ind + 1 %>" data-turn="<%= ind %>">
-                   <%= ind + 1 %>
-                 </a>
-               </li>
-               <% }) %>
-               <li class="page-item">
-                 <a class="page-link" href="#" data-turn="plus">Next</a>
-               </li>
-             </ul>
-           </nav>
-           <% } %>
-           <% } else { %>
-
-           <p class="p-3">沒有發布的BLOG</p>
-
-           <% } %>
-         </div>
+         
          <% if(isSelf && blogs.hidden){ %>
          <div class="card blogList bg-light" data-show="0" data-selector="blog_list" data-my-blog-key="hidden">
            <div class="card-header blogList-header align-items-center">
@@ -217,7 +148,10 @@
              <button type="button" class="btn btn-sm btn-outline-danger <%= blogs.hidden.length? '' : 'd-none'%>" data-action="removeBlogs">全部刪除</button>
            </div>
            <% if(blogs.hidden.length && blogs.hidden[0].length){ %>
-           <ul data-page="page-0" class="list-group list-group-flush">
+           <!-- <ul class="list-group list-group-flush"> -->
+            <ul style="list-style: none; padding: 0" class="tab-content">
+              <li id="page-1" class="tab-pane active">
+                <ul class="list-group list-group-flush">
              <% blogs.hidden[0].forEach(({id, author_id, title, time})=> { %>
              <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between" data-blog_id="<%= id %>">
                <div class="text-truncate me-3">
@@ -228,12 +162,10 @@
                <div class="d-none d-sm-block">
                  <span class="timestamp">上一次編輯<%= time %></span>
                </div>
-               <% if(isSelf){ %>
                <div data-selector="blogBtnList" class="flex-shrink-0">
                  <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?owner_id=<%= author_id %>">編輯</a>
                  <a class='btn btn-outline-primary btn-sm' data-action="removeBlog">刪除</a>
                </div>
-               <% } %>
              </li>
              <% }) %>
              <!-- 填補START -->
@@ -254,33 +186,38 @@
              <% } %>
              <!-- 填補END -->
            </ul>
+           </li>
+            </ul>
            <% if (blogs.hidden.length> 1) { %>
            <nav aria-label="...">
              <ul class="pagination" data-piece="0" id="hidden-list">
-              <li class="page-item pe-none">
-                <a class="page-link" href="#" data-turn="back"><<</a>
+              <li class="page-item pe-none" data-turn="back">
+                <a class="page-link" href="#"> << </a>
               </li>
-               <li class="page-item pe-none">
-                 <a class="page-link" href="#" data-turn="minus">Previous</a>
+               <li class="page-item pe-none"  data-turn="minus">
+                 <a class="page-link" href="#">Previous</a>
                </li>
                <% blogs.hidden.forEach((item, ind, arr)=> { %>
-                <% if(!(ind % 5)){ %>
-               <ul class="pagination" id="pagination-<%= (ind / 5) + 1 %>">
-               <% } %>
-               <li class="page-item pe-none">
-                 <a class="page-link" href="#page-<%= ind + 1 %>" data-turn="<%= ind + 1 %>">
-                   <%= ind + 1 %>
+                <% var cur = ind + 1 %>
+                <% if((cur % 5) === 1){ %>
+                  <!-- 除5若無餘數，要有ul li -->
+                <ul class="pagination list-group" id="pagination-<%= (ind / 5) + 1 %>">
+                <% } %>
+                <!-- 除5無論有無餘數，都要li -->
+               <li class="page-item <%= ind === 0 ? 'active' : '' %>" >
+                 <a class="page-link" href="#" data-turn="<%= ind + 1 %>">
+                   <%= cur %>
                  </a>
                </li>
-               <% if(!(ind % 5)){ %>
+               <% if( cur === arr.length || !(cur / 5) && !(cur % 5) ){ %>
               </ul>
               <% } %>
               <% }) %>
-               <li class="page-item">
-                 <a class="page-link" href="#" data-turn="plus">Next</a>
+               <li class="page-item" data-turn="plus">
+                 <a class="page-link" href="#">Next</a>
                </li>
-               <li class="page-item pe-none">
-                <a class="page-link" href="#" data-turn="back">>></a>
+               <li class="page-item pe-none" data-turn="back">
+                <a class="page-link" href="#"> >> </a>
               </li>
              </ul>
            </nav>

@@ -22,7 +22,7 @@ import '../css/user.css'
 
 import BetterScroll from 'better-scroll'
 import lodash from 'lodash'
-import Bootstrap from 'bootstrap'
+// import { Bootstrap } from 'bootstrap'
 
 /* ------------------------------------------------------------------------------------------ */
 /* Utils Module --------------------------------------------------------------------------------- */
@@ -299,9 +299,9 @@ window.addEventListener('load', async () => {
             let { show } = blogs[0]
             console.log('@blogs => ', blogs)
             $$blogList[show ? '1' : '0'].blogs = [...blogs]
-            // let $container = $(`[data-selector=${CONS.SELECTOR.BLOG_LIST}][data-${CONS.KEY.SHOW}=${show ? "1" : "0"}]`)
-            // let htmlStr = lodash.template(ejs_str_blogList)({ isSelf: $$isSelf, blogs })
-            // $container.append(htmlStr)
+        //     // let $container = $(`[data-selector=${CONS.SELECTOR.BLOG_LIST}][data-${CONS.KEY.SHOW}=${show ? "1" : "0"}]`)
+        //     // let htmlStr = lodash.template(ejs_str_blogList)({ isSelf: $$isSelf, blogs })
+        //     // $container.append(htmlStr)
         }
         // lodash.template(ejs_str_blogList, {
         //     blogs: 
@@ -310,23 +310,35 @@ window.addEventListener('load', async () => {
         // $(CONS.ACTION.PAGE_NUM).on('click', renderBlogList)
         //  文章列表 的 上下頁，綁定翻頁功能
         // $(CONS.ACTION.TURN_PAGE).on('click', renderBlogList)
+        initBootstrapTab()
         //  初始化Tab
         function initBootstrapTab() {
             //  處理 pageNum 的 tab
             let selector = `.pagination .pagination .page-link`
             let $targets = $(selector)
+            let $blog_list = $targets.parents(`[data-${CONS.KEY.SHOW}]`)
+            let show = $blog_list.data(CONS.KEY.SHOW) * 1
             $targets.each((index, el) => {
-                let tab = new Bootstrap.Tab(el)
+                let $tab = $(el)
+                let $li = $tab.parent('li')
+                // let tab = window.tt[index] = new bootstrap.Tab($el.get(0))
+                let targetPage = $tab.attr('data-turn')
+                
+                // let { groups: { targetPage }} = /\#page\-(?<targetPage>.+)/.exec(pane_id)
+                let $pane = $(`#page-${targetPage}`)
                 if (!index) {
-                    tab.show()
+                    // $el.addClass('active')
+                    // $pane.addClass('active')
+                    $li.addClass('active')
+                    $pane.show()
                 }
-                let $el = $(el)
-                let pane_id = $el.href
-                let { groups: { targetPage }} = /\#page\-(?<targetPage>.+)/.exec(pane_id)
-                let $pane = $(pane_id)
-                let $blog_list = $el.parents(`[data-${CONS.KEY.SHOW}]`)
-                let show = $blog_list.data(CONS.KEY.SHOW) * 1
-                el.addEventListener('click', async(e) => {
+                el.__$li = $li
+                el.__$tab = $tab
+                el.__$pane = $pane
+                // let $blog_list = $el.parents(`[data-${CONS.KEY.SHOW}]`)
+                // let show = $blog_list.data(CONS.KEY.SHOW) * 1
+                
+                el.__show = async function(e){
                     let currentPage = $$blogList[show].currentPage
                     //  確認 pane 是否存在
                     if(!$pane.length){
@@ -345,19 +357,23 @@ window.addEventListener('load', async () => {
                             page: targetPage,
                             blogs: targetBlogs
                         })
-                        $blog_list.find(`.list-group[data-page]`).last().after(html)
+                        $blog_list.find(`[id^=page-]`).last().after(html)
+                        el.__$pane =  $(`#page-${targetPage}`)
                     }
-                    tab.show()
-                })
+                    el.__$li.addClass('active')
+                    el.__$pane.show()
+                }
             })
-            let $blog_list = $el.parents(`[data-${CONS.KEY.SHOW}]`)
-            $blog_list.on('click', (e) => {
+            
+            $blog_list.on('click', async (e) => {
                 let $target = $(e.target)
+                if($target.attr('href') === '#'){
+                    e.preventDefault()
+                }
                 let mode = $target.attr('data-turn')
                 if(!mode){
-                    return
+                    return Promise.resolve()
                 }
-                e.preventDefault()
                 let $blog_list = $(e.currentTarget)
                 let show = $blog_list.data(CONS.KEY.SHOW) * 1
                 let { currentPage, currentPagination } = $$blogList[show]
@@ -376,12 +392,17 @@ window.addEventListener('load', async () => {
                 if(targetPagination !== currentPagination){
 
                 }
-                $(`[data-turn=${targetPage}]`).get(0).click()
+                let $currentTab = $(`[data-turn='${currentPage}']`)
+                let currentTab = $currentTab.get(0)
+                currentTab.__$li.removeClass('active')
+                currentTab.__$pane.hide()
+                let $targetTab = $(`[data-turn='${targetPage}']`)
+                await $targetTab[0].__show()
             })
 
 
         }
-        $blog_list.on('click', handle_turn_page)
+        // $blog_list.on('click', handle_turn_page)
 
         async function handle_turn_page(e) {
             /* 確認翻頁模式 */
