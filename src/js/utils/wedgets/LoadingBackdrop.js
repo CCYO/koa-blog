@@ -18,7 +18,7 @@ export default class {
         $(targetSelector)
             .removeClass(blockClassName)
             //  取消blockList不可被點擊的狀態
-            .off(backdropClassName)
+            .off(`.${backdropClassName}`)
         //  移除指定的事件綁定
         this.$backdrop.removeAttr('style').hide()
         if (this.editors.length) {
@@ -37,7 +37,8 @@ export default class {
             //  要新添加的wangEditor list
         } = config
         if (!blockPage) {
-            this.$backdrop.css('visibility', 'hidden')
+            // this.$backdrop.css('visibility', 'hidden')
+            this.$backdrop.css('opacity', '0')
             //  不顯示頁面遮罩，將其顯示為不可見(實際上仍存在)
         }
         if (editors.length) {
@@ -65,6 +66,8 @@ export default class {
     /* 統一 focus backdrop */
     focusBackdrop(e) {
         e.preventDefault()
+        e.target.blur()
+        console.log(e.target, ` 觸發了 focusEvent`)
         this.$backdrop.get(0).focus()
         //  聚焦到 backdrop
     }

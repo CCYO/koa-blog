@@ -278,12 +278,10 @@ window.addEventListener('load', async () => {
             "1": {
                 currentPagination: 1,
                 currentPage: 1,
-                blogs: []
             },
             "0": {
                 currentPagination: 1,
                 currentPage: 1,
-                blogs: []
             },
             count: 5
         }
@@ -296,21 +294,17 @@ window.addEventListener('load', async () => {
             if (!blogs.length) {
                 continue
             }
-            let { show } = blogs[0]
+            let { show } = blogs[1]
             console.log('@blogs => ', blogs)
             $$blogList[show ? '1' : '0'].blogs = [...blogs]
-        //     // let $container = $(`[data-selector=${CONS.SELECTOR.BLOG_LIST}][data-${CONS.KEY.SHOW}=${show ? "1" : "0"}]`)
-        //     // let htmlStr = lodash.template(ejs_str_blogList)({ isSelf: $$isSelf, blogs })
-        //     // $container.append(htmlStr)
         }
-        // lodash.template(ejs_str_blogList, {
-        //     blogs: 
-        // })
+        
         //  文章列表 的 頁碼，綁定翻頁功能
         // $(CONS.ACTION.PAGE_NUM).on('click', renderBlogList)
         //  文章列表 的 上下頁，綁定翻頁功能
         // $(CONS.ACTION.TURN_PAGE).on('click', renderBlogList)
         initBootstrapTab()
+        window._$ = $
         //  初始化Tab
         function initBootstrapTab() {
             //  處理 pageNum 的 tab
@@ -318,30 +312,21 @@ window.addEventListener('load', async () => {
             let $targets = $(selector)
             let $blog_list = $targets.parents(`[data-${CONS.KEY.SHOW}]`)
             let show = $blog_list.data(CONS.KEY.SHOW) * 1
-            $targets.each((index, el) => {
-                let $tab = $(el)
-                let $li = $tab.parent('li')
-                // let tab = window.tt[index] = new bootstrap.Tab($el.get(0))
-                let targetPage = $tab.attr('data-turn')
-                
-                // let { groups: { targetPage }} = /\#page\-(?<targetPage>.+)/.exec(pane_id)
-                let $pane = $(`#page-${targetPage}`)
-                if (!index) {
-                    // $el.addClass('active')
-                    // $pane.addClass('active')
-                    $li.addClass('active')
-                    $pane.show()
+            $targets.each((index, a) => {
+                let $a = $(a)
+                let targetPage = $a.attr('data-turn')
+                a.__$tab = $a.parent('li')
+                a.__$pane = $(`#page-${targetPage}`)
+                if(!index){
+                    a.__$tab.addClass('active')
+                    a.__$pane.addClass('show')
                 }
-                el.__$li = $li
-                el.__$tab = $tab
-                el.__$pane = $pane
-                // let $blog_list = $el.parents(`[data-${CONS.KEY.SHOW}]`)
-                // let show = $blog_list.data(CONS.KEY.SHOW) * 1
-                
-                el.__show = async function(e){
-                    let currentPage = $$blogList[show].currentPage
+                console.log(a)
+                a.__show = async function(preA, { targetPage, targetPagination, currentPage, currentPagination }){
+                    $C_backdrop.show()
+                    preA.__$pane.addClass('pane-loading loading')
                     //  確認 pane 是否存在
-                    if(!$pane.length){
+                    if(!a.__$pane.length){
                         //  發出請求，取得blogList數據
                         let targetBlogs = await new Promise( (r) => {
                             //  要跟後端要資料
@@ -358,12 +343,39 @@ window.addEventListener('load', async () => {
                             blogs: targetBlogs
                         })
                         $blog_list.find(`[id^=page-]`).last().after(html)
-                        el.__$pane =  $(`#page-${targetPage}`)
+                        a.__$pane =  $(`#page-${targetPage}`)
                     }
-                    el.__$li.addClass('active')
-                    el.__$pane.show()
+                    /* 同步數據 */
+                    $$blogList[show].currentPage = targetPage
+                    if(targetPagination){
+                        $$blogList[show].currentPagination = targetPagination
+                    }
+                    console.log('現在$$blogList => ', $$blogList)
+                    let { length: totalPagination } = $$pageData.blogs[show ? 'show' : 'hidden']
+                    if(currentPagination && targetPagination){
+                        $(`#pagination-${currentPagination}`).hide()
+                        $(`#pagination-${targetPagination}`).show()
+                        if(targetPagination === totalPagination){
+                            $('[data-turn=front]').addClass('pe-none')
+                            
+                        }
+                        if(targetPage )
+                        if(currentPagination === 1){
+                            $('[data-turn=back]').addClass('pe-none')
+                            $('[data-turn=miuns]').addClass('pe-none')
+                        }
+                    }
+                    
+                    preA.__$tab.removeClass('active')
+                    a.__$tab.addClass('active')
+                    preA.__$pane.removeClass('pane-loading loading show').hide()
+                    a.__$pane.show().addClass('show')
+                    
+                    
+                    $C_backdrop.hidden()
                 }
             })
+            $(`[id^=pagination]:not([id=pagination-1])`).hide()
             
             $blog_list.on('click', async (e) => {
                 let $target = $(e.target)
@@ -380,24 +392,26 @@ window.addEventListener('load', async () => {
                 let targetPage = currentPage
                 let { count } = $$blogList
                 let targetPagination = currentPagination
-                if(mode === 'back' || mode === 'frond'){
-                    targetPagination = mode === 'back' ? targetPagination-- : targetPagination++
-                    targetPage = --targetPagination * count + 1
+                if(mode === 'back' || mode === 'front'){
+                    targetPagination = mode === 'back' ? --targetPagination : ++targetPagination
+                    targetPage = ( targetPagination - 1 ) * 2 + 1
                 }else if(mode === 'plus' || mode === 'minus'){
-                    targetPage = mode === 'plus' ? currentPage++ : currentPage--
-                    targetPagination = Math.ceil(targetPage / count)
+                    targetPage = mode === 'plus' ? currentPage + 1 : currentPage - 1
+                    targetPagination = Math.ceil(targetPage / 2)
                 }else{
                     targetPage = mode * 1
                 }
+                let payload = {}
                 if(targetPagination !== currentPagination){
-
+                    payload = {
+                        targetPagination,
+                        currentPagination
+                    }
                 }
-                let $currentTab = $(`[data-turn='${currentPage}']`)
-                let currentTab = $currentTab.get(0)
-                currentTab.__$li.removeClass('active')
-                currentTab.__$pane.hide()
-                let $targetTab = $(`[data-turn='${targetPage}']`)
-                await $targetTab[0].__show()
+                let $currentA = $(`[data-turn='${currentPage}']`)
+                let currentA = $currentA.get(0)
+                let $targetA = $(`[data-turn='${targetPage}']`)
+                await $targetA[0].__show(currentA, { ...payload, currentPage, targetPage })
             })
 
 

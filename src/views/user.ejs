@@ -75,8 +75,8 @@
            </div>
            <%% if(blogs.hidden.length && blogs.hidden[0].length){ %>
            <!-- <ul class="list-group list-group-flush"> -->
-            <ul style="list-style: none; padding: 0" class="tab-content">
-              <li id="page-1" class="tab-pane active">
+            <ul>
+              <li id="page-1" class="fade show">
                 <ul class="list-group list-group-flush">
              <%% blogs.hidden[0].forEach(({id, author_id, title, time})=> { %>
              <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between" data-blog_id="<%%= id %>">
@@ -117,17 +117,17 @@
            <%% if (blogs.hidden.length> 1) { %>
            <nav aria-label="...">
              <ul class="pagination" data-piece="0" id="hidden-list">
-              <li class="page-item pe-none" data-turn="back">
-                <a class="page-link" href="#"> << </a>
+              <li class="page-item">
+                <a class="page-link" href="#" data-turn="back"> << </a>
               </li>
-               <li class="page-item pe-none"  data-turn="minus">
-                 <a class="page-link" href="#">Previous</a>
+               <li class="page-item">
+                 <a class="page-link" href="#" data-turn="minus">Previous</a>
                </li>
                <%% blogs.hidden.forEach((item, ind, arr)=> { %>
                 <%% var cur = ind + 1 %>
-                <%% if((cur % 5) === 1){ %>
+                <%% if((cur % 2) === 1){ %>
                   <!-- 除5若無餘數，要有ul li -->
-                <ul class="pagination list-group" id="pagination-<%%= (ind / 5) + 1 %>">
+                <ul id="pagination-<%%= (ind / 2) + 1 %>" class="pagination">
                 <%% } %>
                 <!-- 除5無論有無餘數，都要li -->
                <li class="page-item <%%= ind === 0 ? 'active' : '' %>" >
@@ -135,15 +135,15 @@
                    <%%= cur %>
                  </a>
                </li>
-               <%% if( cur === arr.length || !(cur / 5) && !(cur % 5) ){ %>
+               <%% if( cur === arr.length || !(cur % 2) ){ %>
               </ul>
               <%% } %>
               <%% }) %>
-               <li class="page-item" data-turn="plus">
-                 <a class="page-link" href="#">Next</a>
+               <li class="page-item">
+                 <a class="page-link" href="#" data-turn="plus">Next</a>
                </li>
-               <li class="page-item pe-none" data-turn="back">
-                <a class="page-link" href="#"> >> </a>
+               <li class="page-item">
+                <a class="page-link" href="#" data-turn="front"> >> </a>
               </li>
              </ul>
            </nav>
