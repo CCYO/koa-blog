@@ -1,20 +1,20 @@
 <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
   <div>
-    <a class="stretched-link" href="/blog/<%%%= id %>">
-      <%%%= title %>
+    <a class="stretched-link" href="/blog/<%%%%%= id %>">
+      <%%%%%= title %>
     </a>
   </div>
   <div class="d-none d-sm-block">
     <span class="timestamp">
-      <%%%= show ? '發佈於' : '上一次編輯' %>
-        <%%%= time %>
+      <%%%%%= show ? '發佈於' : '上一次編輯' %>
+        <%%%%%= time %>
     </span>
   </div>
-  <%%% if($$isSelf){ %>
+  <%%%%% if($$isSelf){ %>
     <div data-selector="blogBtnList">
-      <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%%%= id %>?owner_id=<%%%= $$me.id %>">編輯</a>
-      <a class='btn btn-outline-primary btn-sm' <%%%= ACTION %> data-<%%%= KEY %>="<%%%= id %>">刪除</a>
+      <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%%%%%= id %>?owner_id=<%%%%%= $$me.id %>">編輯</a>
+      <a class='btn btn-outline-primary btn-sm' <%%%%%= ACTION %> data-<%%%%%= KEY %>="<%%%%%= id %>">刪除</a>
     </div>
-    <%%% } %>
+    <%%%%% } %>
 </li>
 `
