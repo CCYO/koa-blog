@@ -316,24 +316,28 @@ window.addEventListener("load", async () => {
           currentPage: 0,
           currentPagination: 0,
           totalPage: 0,
-          totalPagination: 0
+          totalPagination: 0,
         },
         public: {
           currentPage: 0,
           currentPagination: 0,
           totalPage: 0,
-          totalPagination: 0
+          totalPagination: 0,
+        },
+      };
+      for (let status in $$pageData.blogs) {
+        if (!$$pageData.blogs[status].count) {
+          continue;
         }
-      }
-      for(let status in $$pageData.blogs){
-        if(!$$pageData.blogs[status].count){
-          continue
-        }
-        let targetBlogData = $$_blogs[status]
-        targetBlogData.currentPage = 1
-        targetBlogData.totalPage = Math.ceil($$pageData.blogs[status].count / 5)
-        targetBlogData.currentPagination = 1
-        targetBlogData.totalPagination = Math.ceil(targetBlogData.totalPage / 2)
+        let targetBlogData = $$_blogs[status];
+        targetBlogData.currentPage = 1;
+        targetBlogData.totalPage = Math.ceil(
+          $$pageData.blogs[status].count / 5
+        );
+        targetBlogData.currentPagination = 1;
+        targetBlogData.totalPagination = Math.ceil(
+          targetBlogData.totalPage / 2
+        );
       }
       //  處理 pageNum 的 tab
       let selector = `.pagination .pagination .page-link`;
@@ -341,8 +345,8 @@ window.addEventListener("load", async () => {
       $targets.each((index, a) => {
         let $blog_list = $targets.parents(`[data-${CONS.KEY.SHOW}]`);
         let $$_show = $blog_list.data(CONS.KEY.SHOW) * 1;
-        let $$_status = $$_show ? "public" : "private"
-        let $$_blogData = $$_blogs[$$_status]
+        let $$_status = $$_show ? "public" : "private";
+        let $$_blogData = $$_blogs[$$_status];
         let $_a = $(a);
         let $$_targetPage = $_a.attr("data-turn");
         a.__$tab = $_a.parent("li");
@@ -363,10 +367,12 @@ window.addEventListener("load", async () => {
             let payload = {
               author_id: $$pageData.currentUser.id,
               limit: 5,
-              offset: ( targetPage - 1 ) * 5,
-              show: $$_show
+              offset: (targetPage - 1) * 5,
+              show: $$_show,
             };
-            let { data: { blogs } } = await $M_axios.post("/api/blog/list", payload);
+            let {
+              data: { blogs },
+            } = await $M_axios.post("/api/blog/list", payload);
             let html = lodash.template(ejs_str_blogList)({
               isSelf: $$isSelf,
               page: targetPage,
@@ -420,8 +426,9 @@ window.addEventListener("load", async () => {
         }
         let $blog_list = $(e.currentTarget);
         let show = $blog_list.data(CONS.KEY.SHOW) * 1;
-        let status = show ? 'public' : 'private'
-        let { currentPage, currentPagination, totalPage, totalPagination } = $$_blogs[status];
+        let status = show ? "public" : "private";
+        let { currentPage, currentPagination, totalPage, totalPagination } =
+          $$_blogs[status];
         let targetPage = currentPage;
         let targetPagination = currentPagination;
         if (mode === "back" || mode === "front") {

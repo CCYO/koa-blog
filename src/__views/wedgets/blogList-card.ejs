@@ -1,0 +1,92 @@
+<% var blogData = blogs[isPublic ? 'public' : 'private'] %>
+<div class="card blogList bg-light" data-show="<%= isPublic %>" data-selector="blog_list">
+  <div class="card-header blogList-header align-items-center">
+    <h5><%= isPublic ? '公開的BLOG' : '編輯中的BLOG' %></h5>
+    <% if(isSelf && blogData.count) { %>
+    <button type="button" class="btn btn-sm btn-outline-danger" data-action="removeBlogs">全部刪除</button>
+    <% } %>
+  </div>
+  <% if(blogData.count){ %>
+  <!-- <ul class="list-group list-group-flush"> -->
+  <ul>
+    <li id="page-1" class="fade show">
+      <ul class="list-group list-group-flush">
+        <% blogData.blogs.forEach(({id, author_id, title, time})=> { %>
+        <li class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between" data-blog_id="<%= id %>">
+          <div class="text-truncate me-3">
+            <a class="stretched-link" href="/blog/<%= id %>">
+              <%= title %>
+            </a>
+          </div>
+          <div class="d-none d-sm-block">
+            <span class="timestamp">上一次編輯<%= time %></span>
+          </div>
+          <% if(isSelf){ %>
+          <div data-selector="blogBtnList" class="flex-shrink-0">
+            <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?owner_id=<%= author_id %>">編輯</a>
+            <a class='btn btn-outline-primary btn-sm' data-action="removeBlog">刪除</a>
+          </div>
+          <% } %>
+        </li>
+        <% }) %>
+        <!-- 填補START -->
+        <% if(blogData.blogs.length < 5) {%>
+        <% for(let i=5 - blogData.blogs.length; i> 0; i-- ){ %>
+        <li class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
+          <div class="text-truncate me-3">
+            <span class="invisible">x</span>
+          </div>
+          <% if(isSelf){ %>
+          <div data-selector="blogBtnList" class="flex-shrink-0 invisible">
+            <a class='btn btn-outline-primary btn-sm'>編輯</a>
+            <a class='btn btn-outline-primary btn-sm'>刪除</a>
+          </div>
+          <% } %>
+        </li>
+        <% } %>
+        <% } %>
+        <!-- 填補END -->
+      </ul>
+    </li>
+  </ul>
+  <% if (blogData.count> 1) { %>
+  <nav aria-label="...">
+    <ul class="pagination" data-piece="0" id="hidden-list">
+      <li class="page-item">
+        <a class="page-link pe-none" href="#" data-turn="back">
+          << </a>
+      </li>
+      <li class="page-item">
+        <a class="page-link pe-none" href="#" data-turn="minus">Previous</a>
+      </li>
+      <% var totalPage=Math.ceil(blogData.count / 5) %>
+      <% for(let page_num=1; totalPage>= page_num; page_num++){ %>
+      <% if((page_num % 2)===1){ %>
+      <!-- 除5若無餘數，要有ul li -->
+      <ul id="pagination-<%= Math.ceil(page_num / 2) %>" class="pagination">
+        <% } %>
+        <!-- 除5無論有無餘數，都要li -->
+        <li class="page-item <%= page_num === 1 ? 'active' : '' %>">
+          <a class="page-link" href="#" data-turn="<%= page_num %>">
+            <%= page_num %>
+          </a>
+        </li>
+        <% if( !(page_num % 2) || page_num===totalPage ){ %>
+      </ul>
+      <% } %>
+      <% } %>
+      <li class="page-item">
+        <a class="page-link" href="#" data-turn="plus">Next</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="#" data-turn="front"> >> </a>
+      </li>
+    </ul>
+  </nav>
+  <% } %>
+
+  <% } else { %>
+  <p class="p-3">沒有<%= isPublic ? '公開' : '編輯中' %>的BLOG <%= blogs.public.count %>
+  </p>
+  <% } %>
+</div>
