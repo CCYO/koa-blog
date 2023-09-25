@@ -1,5 +1,6 @@
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
 <%- include('wedgets/header.ejs') %>
+
 <body>
   <%- include('wedgets/pageLoading.ejs') %>
   <%- include('wedgets/navbar.ejs') %>
@@ -13,16 +14,16 @@
         <ul class="card-header-tabs nav nav-tabs">
           <!-- 頭部導行項-->
           <li class="nav-item">
-            <a class="nav-link <%%= active === 'register' ? `active` : `` %>" href="#" data-bs-toggle='tab' data-bs-target='#register-card' role="tab" aria-controls="register" aria-selected="true">註冊</a>
+            <a class="nav-link <%= active === 'register' ? `active` : `` %>" href="#" data-bs-toggle='tab' data-bs-target='#register-card' role="tab" aria-controls="register" aria-selected="true">註冊</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link <%%= active === 'login'  ? `active` : `` %>" href="#" data-bs-toggle='tab' data-bs-target='#login-card' role="tab" aria-controls="login" aria-selected="false">登入</a>
+            <a class="nav-link <%= active === 'login'  ? `active` : `` %>" href="#" data-bs-toggle='tab' data-bs-target='#login-card' role="tab" aria-controls="login" aria-selected="false">登入</a>
           </li>
         </ul>
       </div>
       <!-- 卡片主體 -->
       <div class="card-body tab-content">
-        <div class="tab-pane fade <%%= active === 'register' ? `show active` : ``%>" role="tabpanel" aria-labelledby="register-tab" id="register-card">
+        <div class="tab-pane fade <%= active === 'register' ? `show active` : ``%>" role="tabpanel" aria-labelledby="register-tab" id="register-card">
           <form id='register-form' data-my-type="register" class="row" autocomplete="do-not-autofill">
             <div class="col-8 mx-auto">
               <div class="mb-3">
@@ -44,7 +45,7 @@
             </div>
           </form>
         </div>
-        <div class="tab-pane fade <%%= active === 'login'  ? `show active` : ``%>" id="login-card" role="tabpanel" aria-labelledby="login-tab">
+        <div class="tab-pane fade <%= active === 'login'  ? `show active` : ``%>" id="login-card" role="tabpanel" aria-labelledby="login-tab">
           <form id='login-form' data-my-type="login" class="row" autocomplete="do-not-autofill">
             <div class="col-8 mx-auto">
               <div class="mb-3">
@@ -67,4 +68,5 @@
   </main>
   <%- include('wedgets/cdn') %>
 </body>
+
 </html>

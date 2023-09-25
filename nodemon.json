@@ -1,7 +1,10 @@
 {
     "ignore": [
-        "node_modules/**",
-        "src/"
+        "node_modules/**"
+    ],
+    "watch": [
+        "src/__views/",
+        "server/"
     ],
     "env": {
         "PORT": 8080
@@ -9,5 +12,6 @@
     "events": {
         "crash": "sh -c 'lsof -i :${PORT:-8080} -t | xargs kill'"
     },
-    "exec": "node server/bin/www"
+    "exec": "node server/bin/www",
+    "ext": "js,mjs,json,ejs"
 }

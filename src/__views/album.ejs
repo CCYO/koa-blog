@@ -7,39 +7,37 @@
   <!-- MAIN -->
   <main class="container-md" style="display: none;">
     <h1 class="mb-3">
-      <%%= title %>的照片列表
+      <%= title %>的照片列表
     </h1>
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
-      <%% album.imgs.forEach( ({alt_id, img_id, blogImg_id, url, alt})=> { %>
-        <div>
-          <div class="card border-dark" data-my-photo="<%%= alt_id %>">
-            <div class="ratio ratio-1x1 border-bottom border-secondary">
-              <img class="card-img-top" src="<%%= url %>?blogImgAlt=<%%= alt_id %>" alt="<%%= alt %>" />
-            </div>
-            <div class="card-body">
-              <p class="card-text text-truncate mb-0" style="height: 2rem; line-height: 2rem;">
-                <%%= alt %>
-              </p>
-              <!-- Button trigger modal -->
-              <!-- <button
+      <% album.imgs.forEach( ({alt_id, img_id, blogImg_id, url, alt})=> { %>
+      <div>
+        <div class="card border-dark" data-my-photo="<%= alt_id %>">
+          <div class="ratio ratio-1x1 border-bottom border-secondary">
+            <img class="card-img-top" src="<%= url %>?blogImgAlt=<%= alt_id %>" alt="<%= alt %>" />
+          </div>
+          <div class="card-body">
+            <p class="card-text text-truncate mb-0" style="height: 2rem; line-height: 2rem;">
+              <%= alt %>
+            </p>
+            <!-- Button trigger modal -->
+            <!-- <button
                 type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalBackdrop"
-                data-my-photo="<%%= alt_id %>">
+                data-my-photo="<%= alt_id %>">
                 修改照片名稱
               </button> -->
-              <button
-                type="button" class="btn btn-primary"
-                data-my-photo="<%%= alt_id %>">
-                修改照片名稱
-              </button>
-            </div>
+            <button type="button" class="btn btn-primary" data-my-photo="<%= alt_id %>">
+              修改照片名稱
+            </button>
           </div>
         </div>
-        <%% }) %>
+      </div>
+      <% }) %>
     </div>
     <div>
       <!-- 當前使用者頁面的使用者資料 -->
       <div data-my-data="album" style="display: none;">
-        <%%- JSON.stringify(album) %>
+        <%- JSON.stringify(album) %>
       </div>
     </div>
     </div>
@@ -61,7 +59,7 @@
       </div>
     </div>
   </main>
-  
+
   <!-- FOOTER -->
   <%- include('wedgets/footer.ejs') %>
   <%- include('wedgets/cdn') %>

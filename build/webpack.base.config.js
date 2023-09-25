@@ -23,17 +23,38 @@ const entry = ((filepathList) => {
   return res;
 })(glob.sync(resolve(__dirname, "../src/js/*.js")));
 
+function removeDir(dir) {
+  let files = fs.readdirSync(dir);
+  for (var i = 0; i < files.length; i++) {
+    let newPath = resolve(dir, files[i]);
+    let stat = fs.statSync(newPath);
+    if (stat.isDirectory()) {
+      //如果是文件夹就递归下去
+      removeDir(newPath);
+    } else {
+      //删除文件
+      fs.unlinkSync(newPath);
+    }
+  }
+  fs.rmdirSync(dir); //如果文件夹是空的，就将自己删除掉
+}
+removeDir(resolve(__dirname, "../src/views"));
+
 const HtmlWebpackPlugins = glob
-  .sync(resolve(__dirname, "../src/__views/*.ejs"))
+  // .sync(resolve(__dirname, "../src/__views/*.ejs"))
+  .sync(resolve(__dirname, "../src/__views/pages/*/index.ejs"))
   .map((filepath, i) => {
     let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
+
     data = data.replace(/\<%(?!-\s+include)/g, "<%%"); //	修改檔案內容
 
     let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
     let fileName = `${tempList[tempList.length - 1]}`; //	新檔名
+    let pageName = `${tempList[tempList.length - 2]}`;
     tempList.pop(); //	剔除舊檔名
-    tempList.pop();
-    tempList = tempList.concat("views"); //	添入新檔名
+    tempList.pop(); //  剔除page名
+    tempList.pop(); //  剔除_views
+    tempList = tempList.concat(["views", pageName]); //	添入新檔名
 
     let dirPath = tempList.join("/"); //	template 的路徑名
     if (!fs.existsSync(dirPath)) {
@@ -44,7 +65,7 @@ const HtmlWebpackPlugins = glob
     // 读取 CONFIG.EXT 文件自定义的文件后缀名，默认生成 ejs 文件，可以定义生成 html 文件
     // const filename = (name => `${name.split('.')[0]}.${CONFIG.EXT}`)(`${CONFIG.BUILD.VIEW}/${tempList[tempList.length - 1]}`)
     const filename = ((name) => `${name.split(".")[0]}.${CONFIG.EXT}`)(
-      `${CONFIG.BUILD.VIEW}/${fileName}`
+      `${CONFIG.BUILD.VIEW}/${pageName}/${fileName}`
     );
 
     // const template = filepath
@@ -52,7 +73,8 @@ const HtmlWebpackPlugins = glob
       .split(".")[0]
       .split(/[\/|\/\/|\\|\\\\]/g)
       .pop(); // eslint-disable-line
-    const chunks = isDev ? [fileChunk] : ["manifest", "vendors", fileChunk];
+    // const chunks = isDev ? [fileChunk] : ["manifest", "vendors", fileChunk];
+    const chunks = isDev ? [pageName] : ["manifest", "vendors", pageName];
     return new HtmlWebpackPlugin({
       filename,
       template,

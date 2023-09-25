@@ -7,15 +7,15 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>
-    <%%= locals.blog ? blog.title : locals.title ? title : '錯誤頁' %>
-    
+    <%= locals.blog ? blog.title : locals.title ? title : '錯誤頁' %>
   </title>
   <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
   <!-- BS5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
 <script defer src="/public/js/albumList.bundle.js"></script></head>
+
 <body>
-<div id="loadingBackdrop"
+  <div id="loadingBackdrop"
     style="
     width: 100vw;
     height: 100vh;
@@ -38,7 +38,7 @@
     LOADING
   </div>
 </div>
-<nav class="navbar navbar-expand-md navbar-light bg-light fixed-top" style="display: none">
+  <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top" style="display: none">
     <div class="container-fluid flex-nowrap">
         <!-- 首頁/廣場頁 -->
         <a class="navbar-brand" href="/square">KOA-BLOG</a>
@@ -77,46 +77,46 @@
         </div>
     </div>
 </nav>
-<!-- MAIN -->
-<main class="container-md" style="display: none;">
-    <h1><a href="/other/<%%=author.id%>"><%%=author.nickname%></a>的相簿列表</h1>
+  <!-- MAIN -->
+  <main class="container-md" style="display: none;">
+    <h1><a href="/other/<%=author.id%>"><%=author.nickname%></a>的相簿列表</h1>
     <div class="box-albumList">
-        <h3>公開的文章相簿</h3>
-        <%% if(albums.show.length){ %>
-        <%% albums.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
-        <ul class="list-group">
-            <li class="list-group-item">
-                <a href="/album/<%%= id %>?owner_id=<%%= author.id %>"><%%= title %></a>
-                <span>文章公開於 <%%= time %></span>
-            </li>
-        </ul>
-        <%% }) }) %>
-        <%% } else { %>
-        <p>沒有相簿</p>
-        <%% } %>
+      <h3>公開的文章相簿</h3>
+      <% if(albums.show.length){ %>
+      <% albums.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
+      <ul class="list-group">
+        <li class="list-group-item">
+          <a href="/album/<%= id %>?owner_id=<%= author.id %>"><%= title %></a>
+          <span>文章公開於 <%= time %></span>
+        </li>
+      </ul>
+      <% }) }) %>
+      <% } else { %>
+      <p>沒有相簿</p>
+      <% } %>
     </div>
     <div class="box-albumList">
-        <h3>未公開的文章相簿</h3>
-        <%% if(albums.hidden && albums.hidden.length){ %>
-        <%% albums.hidden.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
-        <ul class="list-group">
-            <li class="list-group-item">
-                <a href="/album/<%%= id %>?owner_id=<%%= author.id %>"><%%= title %></a>
-                <span>文章最近一次更新於 <%%= time %></span>
-            </li>
-        </ul>
-        <%% }) }) %>
-        <%% } else { %>
-        <p>沒有相簿</p>
-        <%% } %>
+      <h3>未公開的文章相簿</h3>
+      <% if(albums.hidden && albums.hidden.length){ %>
+      <% albums.hidden.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
+      <ul class="list-group">
+        <li class="list-group-item">
+          <a href="/album/<%= id %>?owner_id=<%= author.id %>"><%= title %></a>
+          <span>文章最近一次更新於 <%= time %></span>
+        </li>
+      </ul>
+      <% }) }) %>
+      <% } else { %>
+      <p>沒有相簿</p>
+      <% } %>
     </div>
-</div>
-</main>
-<!-- FOOTER -->
-<div class="footer container-fluid" style="display: none;">
+    </div>
+  </main>
+  <!-- FOOTER -->
+  <div class="footer container-fluid" style="display: none;">
   Footer
 </div>
-<!-- BS5 / POPPER -->
+  <!-- BS5 / POPPER -->
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.1/dist/umd/popper.min.js"
     integrity="sha384-W8fXfP3gkOKtndU4JGtKDvXbO53Wy8SZCQHczT5FMiiqmQfUpWbYdTil/SxwZgAN"
     crossorigin="anonymous"></script>
@@ -125,4 +125,5 @@
     integrity="sha384-skAcpIdS7UcVUC05LJ9Dxay8AXcDYfBJqt1CJ85S/CFujBsIzCIv+l9liuYLaMQ/"
     crossorigin="anonymous"></script>
 </body>
+
 </html>
