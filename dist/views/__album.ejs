@@ -13,9 +13,10 @@
   <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
   <!-- BS5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
-<script defer src="/public/js/page404.bundle.js"></script></head>
+</head>
+
 <body>
-<div id="loadingBackdrop"
+  <div id="loadingBackdrop"
     style="
     width: 100vw;
     height: 100vh;
@@ -38,7 +39,7 @@
     LOADING
   </div>
 </div>
-<nav class="navbar navbar-expand-md navbar-light bg-light fixed-top" style="display: none">
+  <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top" style="display: none">
     <div class="container-fluid flex-nowrap">
         <!-- 首頁/廣場頁 -->
         <a class="navbar-brand" href="/square">KOA-BLOG</a>
@@ -77,21 +78,69 @@
         </div>
     </div>
 </nav>
-<!-- MAIN -->
-<main class="container-md" style="display: none;">
-  <h1>發生未預期的錯誤</h1>
-  <div>
-    <%%= errno %>
-  </div>
-  <div>
-    <%%= msg %>
-  </div>
-</main>
-<!-- FOOTER -->
-<div class="footer container-fluid" style="display: none;">
+  <!-- MAIN -->
+  <main class="container-md" style="display: none;">
+    <h1 class="mb-3">
+      <%%%= title %>的照片列表
+    </h1>
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
+      <%%% album.imgs.forEach( ({alt_id, img_id, blogImg_id, url, alt})=> { %>
+        <div>
+          <div class="card border-dark" data-my-photo="<%%%= alt_id %>">
+            <div class="ratio ratio-1x1 border-bottom border-secondary">
+              <img class="card-img-top" src="<%%%= url %>?blogImgAlt=<%%%= alt_id %>" alt="<%%%= alt %>" />
+            </div>
+            <div class="card-body">
+              <p class="card-text text-truncate mb-0" style="height: 2rem; line-height: 2rem;">
+                <%%%= alt %>
+              </p>
+              <!-- Button trigger modal -->
+              <!-- <button
+                type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalBackdrop"
+                data-my-photo="<%%%= alt_id %>">
+                修改照片名稱
+              </button> -->
+              <button
+                type="button" class="btn btn-primary"
+                data-my-photo="<%%%= alt_id %>">
+                修改照片名稱
+              </button>
+            </div>
+          </div>
+        </div>
+        <%%% }) %>
+    </div>
+    <div>
+      <!-- 當前使用者頁面的使用者資料 -->
+      <div data-my-data="album" style="display: none;">
+        <%%%- JSON.stringify(album) %>
+      </div>
+    </div>
+    </div>
+    <div class="modal fade" id="modalBackdrop" tabindex="-1" aria-labelledby="modalBackdrop" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">修改照片名稱</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <input type="text">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消更新</button>
+            <button type="button" class="btn btn-primary">更新</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- FOOTER -->
+  <div class="footer container-fluid" style="display: none;">
   Footer
 </div>
-<!-- BS5 / POPPER -->
+  <!-- BS5 / POPPER -->
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.1/dist/umd/popper.min.js"
     integrity="sha384-W8fXfP3gkOKtndU4JGtKDvXbO53Wy8SZCQHczT5FMiiqmQfUpWbYdTil/SxwZgAN"
     crossorigin="anonymous"></script>
@@ -100,4 +149,5 @@
     integrity="sha384-skAcpIdS7UcVUC05LJ9Dxay8AXcDYfBJqt1CJ85S/CFujBsIzCIv+l9liuYLaMQ/"
     crossorigin="anonymous"></script>
 </body>
+
 </html>

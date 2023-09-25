@@ -23,15 +23,27 @@ const entry = ((filepathList) => {
 	return res
 })(glob.sync(resolve(__dirname, '../src/js/*.js')))
 
-const HtmlWebpackPlugins = glob.sync(resolve(__dirname, '../src/views/*.ejs')).map((filepath, i) => {
-	let data = fs.readFileSync(filepath, 'utf-8')
-	data = data.replace(/\<%(?!-)/g, '<%%')
-	filepath = '_' + filepath
-	fs.writeFileSync(filepath, data)
-	const tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g) // eslint-disable-line
+const HtmlWebpackPlugins = glob.sync(resolve(__dirname, '../src/__views/*.ejs')).map((filepath, i) => {
+	let data = fs.readFileSync(filepath, 'utf-8')	//	取得檔案內容
+	data = data.replace(/\<%(?!-\s+include)/g, '<%%')	//	修改檔案內容
+	
+	let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g) // eslint-disable-line
+	let fileName = `${tempList[tempList.length - 1]}`	//	新檔名
+	tempList.pop()	//	剔除舊檔名
+	tempList.pop()
+	tempList = tempList.concat('views')	//	添入新檔名
+	
+	let dirPath = tempList.join('/')	//	template 的路徑名
+	if(!fs.existsSync(dirPath)){
+		fs.mkdirSync(dirPath)
+	}
+	let template = dirPath + '/' + fileName	//	添入新檔名
+	fs.writeFileSync(template, data)	//	在新路徑創建新檔
 	// 读取 CONFIG.EXT 文件自定义的文件后缀名，默认生成 ejs 文件，可以定义生成 html 文件
-	const filename = (name => `${name.split('.')[0]}.${CONFIG.EXT}`)(`${CONFIG.BUILD.VIEW}/${tempList[tempList.length - 1]}`)
-	const template = filepath
+	// const filename = (name => `${name.split('.')[0]}.${CONFIG.EXT}`)(`${CONFIG.BUILD.VIEW}/${tempList[tempList.length - 1]}`)
+	const filename = (name => `${name.split('.')[0]}.${CONFIG.EXT}`)(`${CONFIG.BUILD.VIEW}/${fileName}`)
+
+	// const template = filepath
 	const fileChunk = filename.split('.')[0].split(/[\/|\/\/|\\|\\\\]/g).pop() // eslint-disable-line
 	const chunks = isDev ? [fileChunk] : ['manifest', 'vendors', fileChunk]
 	return new HtmlWebpackPlugin({
