@@ -333,13 +333,27 @@ async function find(blog_id) {
  *  } 
  * }
  */
-async function findListForUserPage(userId, options) {
-    let blogs = await Blog.readList(Opts.BLOG.findListForUserPage(userId))
-    let data = Init.browser.blog.pageTable(blogs, options)
+async function findListForUserPage(userId, opts = { public: { limit: 5, offset: 0}, private: { limit: 5, offset: 0} }) {
+    // let blogs = await Blog.readList(Opts.BLOG.findListForUserPage(userId))
+    let { data: public } = await findPublicListForUserPage(userId, opts.public)
+    let { data: private } = await findPrivateListForUserPage(userId, opts.private)
+    // let data = Init.browser.blog.pageTable(blogs, options)
+    let data = { public, private}
     return new SuccModel({ data })
 }
-
+async function findPublicListForUserPage(userId, opts = {limit: 5, offset: 0 }) {
+    let data = await Blog.readListAndCountAll(Opts.BLOG.findPublicBlogForUserPage(userId, opts))
+    // let data = Init.browser.blog.pageTable(blogs, options)
+    return new SuccModel({ data })
+}
+async function findPrivateListForUserPage(userId, opts = { limit: 5, offset: 0 }) {
+    let data = await Blog.readListAndCountAll(Opts.BLOG.findPrivateBlogForUserPage(userId, opts))
+    // let data = Init.browser.blog.pageTable(blogs, options)
+    return new SuccModel({ data })
+}
 module.exports = {
+    findPublicListForUserPage,
+    findPrivateListForUserPage,
     //  0411
     // findInfoForPageOfAlbumList,
     //  0411

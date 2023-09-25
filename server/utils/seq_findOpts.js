@@ -215,10 +215,29 @@ module.exports = {
             },
         }),
         //  0404
-        findListForUserPage: (author_id) => ({
+        findListForUserPage: (author_id, { limit = 5, offset = 0 }) => ({
             attributes: ['id', 'title', 'author_id', 'show', 'showAt', 'updatedAt'],
             where: { author_id }
+        }),
+        findPublicBlogForUserPage: (author_id, opts = { limit: 5, offset: 0 }) => ({
+            attributes: ['id', 'title', 'author_id', 'show', 'showAt', 'updatedAt'],
+            where: {
+                author_id,
+                show: true
+            },
+            limit: opts.limit,
+            offset: opts.offset
+        }),
+        findPrivateBlogForUserPage: (author_id, opts = { limit: 5, offset: 0 }) => ({
+            attributes: ['id', 'title', 'author_id', 'show', 'showAt', 'updatedAt'],
+            where: {
+                author_id,
+                show: false
+            },
+            limit: opts.limit,
+            offset: opts.offset
         })
+
     },
     //  0404
     COMMENT: {

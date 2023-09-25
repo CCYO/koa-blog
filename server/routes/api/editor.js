@@ -5,7 +5,23 @@ const BlogImgAlt = require('../../controller/blogImgAlt')    //  0409
 const Blog = require('../../controller/blog')                   //  0406
 const { CACHE, CHECK, FIREBASE } = require('../../middleware/api')           //  0406
 const router = require('koa-router')()                          //  0406
-router.prefix('/api/blog')                                      //  0406
+router.prefix('/api/blog')      
+
+router.post('/list', CHECK.login, async (ctx, next) => {
+    let { id } = ctx.session.user
+    let { author_id, show = true, limit = 5, offset = 0 } = ctx.request.body
+    if(author_id !== id){
+
+    }
+    let resModel
+    if(show){
+        resModel = await Blog.findPublicListForUserPage(author_id, { limit, offset })
+    }else{
+        resModel = await Blog.findPrivateListForUserPage(author_id, { limit, offset })
+    }
+    ctx.body = resModel
+})
+
 //  0411
 //  刪除 blogs
 router.delete('/', CHECK.login, CHECK.mustBeOwner, CACHE.modify, async (ctx, next) => {

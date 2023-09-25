@@ -6,6 +6,13 @@ const {
 } = require('../model')           //  0406
 const Init = require('../utils/init')           //  0404
 const { Blog } = require('../db/mysql/model')   //  0404
+
+async function readListAndCountAll(opts){
+    let { rows, count } = await Blog.findAndCountAll(opts)
+    let blogs = Init.blog(rows)
+    return { blogs, count }
+}
+
 //  0411
 /**批量刪除
  * 
@@ -71,6 +78,7 @@ async function readList(opts) {
 }
 
 module.exports = {
+    readListAndCountAll,
     //  0411
     deleteList,
     //  0409

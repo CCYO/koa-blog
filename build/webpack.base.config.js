@@ -2,6 +2,7 @@ const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 const glob = require('glob')
+const fs = require('fs')
 const { resolve } = require('path')
 const CONFIG = require('./config.js')
 const { isProd } = require('../server/utils/env')
@@ -23,6 +24,10 @@ const entry = ((filepathList) => {
 })(glob.sync(resolve(__dirname, '../src/js/*.js')))
 
 const HtmlWebpackPlugins = glob.sync(resolve(__dirname, '../src/views/*.ejs')).map((filepath, i) => {
+	let data = fs.readFileSync(filepath, 'utf-8')
+	data = data.replace(/\<%(?!-)/g, '<%%')
+	filepath = '_' + filepath
+	fs.writeFileSync(filepath, data)
 	const tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g) // eslint-disable-line
 	// 读取 CONFIG.EXT 文件自定义的文件后缀名，默认生成 ejs 文件，可以定义生成 html 文件
 	const filename = (name => `${name.split('.')[0]}.${CONFIG.EXT}`)(`${CONFIG.BUILD.VIEW}/${tempList[tempList.length - 1]}`)

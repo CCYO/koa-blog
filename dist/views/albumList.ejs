@@ -1,128 +1,171 @@
-<!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>
-    <%= locals.blog ? blog.title : locals.title ? title : '錯誤頁' %>
-    
-  </title>
-  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
-  <!-- BS5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
-<script defer src="/public/js/albumList.bundle.js"></script></head>
-<body>
-<div id="loadingBackdrop"
-    style="
-    width: 100vw;
-    height: 100vh;
-    color: red;
-    background: rgba(255, 255, 255, .5);
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 99999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: black;
-    font-size: 50px;
-    font-family: 'JetBrainsMono', 'NotoSerifTC', 'Courier New', Courier, monospace !important;
-    "
-    tabindex="0"
->
-  <div>
-    LOADING
-  </div>
-</div>
-<nav class="navbar navbar-expand-md navbar-light bg-light fixed-top" style="display: none">
-    <div class="container-fluid flex-nowrap">
-        <!-- 首頁/廣場頁 -->
-        <a class="navbar-brand" href="/square">KOA-BLOG</a>
-        <!-- 廣場頁 + 註冊/登入 -->
-        <ul class="nav ms-auto flex-grow-1 justify-content-end" id="noNeedCollapse-list">
-            <li class="nav-item d-none d-sm-inline-block">
-                <a class="nav-link" href="/square">廣場頁</a>
-            </li>
-            <li style="flex-grow: 1;"></li>
-            <li class="nav-item">
-                <a class="nav-link nav-tab" href="/register" data-my-tab="#register">註冊</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link nav-tab" href="/login" data-my-tab="#login">登入</a>
-            </li>
-        </ul>
-        <!-- 收合鈕 -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <!-- 收合內容 -->
-        <div class="offcanvas offcanvas-start flex-grow-0" id="offcanvasNavbar">
-            <!-- 收合內容 標題-->
-            <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
-                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
-                    aria-label="Close"></button>
-            </div>
-
-            <!-- 收合內容 表單列 -->
-            <div class="offcanvas-body">
-                <ul class="navbar-nav w-100" id="needCollapse-list">
-                </ul>
-            </div>
-        </div>
-    </div>
-</nav>
-<!-- MAIN -->
-<main class="container-md" style="display: none;">
-    <h1><a href="/other/<%=author.id%>"><%=author.nickname%></a>的相簿列表</h1>
-    <div class="box-albumList">
-        <h3>公開的文章相簿</h3>
-        <% if(albums.show.length){ %>
-        <% albums.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
-        <ul class="list-group">
-            <li class="list-group-item">
-                <a href="/album/<%= id %>?owner_id=<%= author.id %>"><%= title %></a>
-                <span>文章公開於 <%= time %></span>
-            </li>
-        </ul>
-        <% }) }) %>
-        <% } else { %>
-        <p>沒有相簿</p>
-        <% } %>
-    </div>
-    <div class="box-albumList">
-        <h3>未公開的文章相簿</h3>
-        <% if(albums.hidden && albums.hidden.length){ %>
-        <% albums.hidden.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
-        <ul class="list-group">
-            <li class="list-group-item">
-                <a href="/album/<%= id %>?owner_id=<%= author.id %>"><%= title %></a>
-                <span>文章最近一次更新於 <%= time %></span>
-            </li>
-        </ul>
-        <% }) }) %>
-        <% } else { %>
-        <p>沒有相簿</p>
-        <% } %>
-    </div>
-</div>
-</main>
-<!-- FOOTER -->
-<div class="footer container-fluid" style="display: none;">
-  Footer
-</div>
-<!-- BS5 / POPPER -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.1/dist/umd/popper.min.js"
-    integrity="sha384-W8fXfP3gkOKtndU4JGtKDvXbO53Wy8SZCQHczT5FMiiqmQfUpWbYdTil/SxwZgAN"
-    crossorigin="anonymous"></script>
-<!-- BS5 / JS Plugin -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.min.js"
-    integrity="sha384-skAcpIdS7UcVUC05LJ9Dxay8AXcDYfBJqt1CJ85S/CFujBsIzCIv+l9liuYLaMQ/"
-    crossorigin="anonymous"></script>
-</body>
-</html>
+<head><script defer src="/public/js/albumList.bundle.js"></script></head>Html Webpack Plugin:
+<pre>
+  Error: Child compilation failed:
+  Module build failed (from ../node_modules/template-ejs-loader/lib/index.js):
+  ReferenceError: /home/twccy007/koa-blog/src/views/user.ejs:18
+      16|                 <div class="avatar-box">
+      17|                   <div class="ratio ratio-1x1">
+   >> 18|                     <img src="<%= currentUser.avatar %>" class="img-fluid" alt="...">
+      19|                   </div>
+      20|                   <% if(!isSelf){ %>
+      21|                   <button data-action="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
+  
+  currentUser is not defined
+      at eval ("/home/twccy007/koa-blog/src/views/user.ejs":21:26)
+      at user (/home/twccy007/koa-blog/node_modules/template-ejs-loader/node_modules/ejs/lib/ejs.js:703:17)
+      at Object.ejsLoader (/home/twccy007/koa-blog/node_modules/template-ejs-loader/lib/index.js:104:78)
+  ModuleBuildError: Module build failed (from ../node_modules/template-ejs-loader/lib/index.js):
+  ReferenceError: /home/twccy007/koa-blog/src/views/user.ejs:18
+      16|                 <div class="avatar-box">
+      17|                   <div class="ratio ratio-1x1">
+   >> 18|                     <img src="<%= currentUser.avatar %>" class="img-fluid" alt="...">
+      19|                   </div>
+      20|                   <% if(!isSelf){ %>
+      21|                   <button data-action="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
+  
+  currentUser is not defined
+      at eval ("/home/twccy007/koa-blog/src/views/user.ejs":21:26)
+      at user (/home/twccy007/koa-blog/node_modules/template-ejs-loader/node_modules/ejs/lib/ejs.js:703:17)
+      at Object.ejsLoader (/home/twccy007/koa-blog/node_modules/template-ejs-loader/lib/index.js:104:78)
+      at processResult (/home/twccy007/koa-blog/node_modules/webpack/lib/NormalModule.js:764:19)
+      at /home/twccy007/koa-blog/node_modules/webpack/lib/NormalModule.js:866:5
+      at /home/twccy007/koa-blog/node_modules/loader-runner/lib/LoaderRunner.js:400:11
+      at /home/twccy007/koa-blog/node_modules/loader-runner/lib/LoaderRunner.js:252:18
+      at context.callback (/home/twccy007/koa-blog/node_modules/loader-runner/lib/LoaderRunner.js:124:13)
+      at Object.ejsLoader (/home/twccy007/koa-blog/node_modules/template-ejs-loader/lib/index.js:108:9)
+  
+  - user.ejs":21 eval
+    "/home/twccy007/koa-blog/src/views/user.ejs":21:26
+  
+  - ejs.js:703 user
+    [koa-blog]/[template-ejs-loader]/[ejs]/lib/ejs.js:703:17
+  
+  - index.js:104 Object.ejsLoader
+    [koa-blog]/[template-ejs-loader]/lib/index.js:104:78
+  
+  - ModuleBuildError: Module build failed (from ../node_modules/template-ejs-loader/lib/index.js):
+  
+  - ReferenceError: /home/twccy007/koa-blog/src/views/user.ejs:18
+  
+  - 16|                 <div class="avatar-box">
+  
+  - 17|                   <div class="ratio ratio-1x1">
+  
+  - >> 18|                     <img src="<%= currentUser.avatar %>" class="img-fluid" alt="...">
+  
+  - 19|                   </div>
+  
+  - 20|                   <% if(!isSelf){ %>
+  
+  - 21|                   <button data-action="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
+  
+  - currentUser is not defined
+  
+  - user.ejs":21 eval
+    "/home/twccy007/koa-blog/src/views/user.ejs":21:26
+  
+  - ejs.js:703 user
+    [koa-blog]/[template-ejs-loader]/[ejs]/lib/ejs.js:703:17
+  
+  - index.js:104 Object.ejsLoader
+    [koa-blog]/[template-ejs-loader]/lib/index.js:104:78
+  
+  - NormalModule.js:764 processResult
+    [koa-blog]/[webpack]/lib/NormalModule.js:764:19
+  
+  - NormalModule.js:866 
+    [koa-blog]/[webpack]/lib/NormalModule.js:866:5
+  
+  - LoaderRunner.js:400 
+    [koa-blog]/[loader-runner]/lib/LoaderRunner.js:400:11
+  
+  - LoaderRunner.js:252 
+    [koa-blog]/[loader-runner]/lib/LoaderRunner.js:252:18
+  
+  - LoaderRunner.js:124 context.callback
+    [koa-blog]/[loader-runner]/lib/LoaderRunner.js:124:13
+  
+  - index.js:108 Object.ejsLoader
+    [koa-blog]/[template-ejs-loader]/lib/index.js:108:9
+  
+  - child-compiler.js:169 
+    [koa-blog]/[html-webpack-plugin]/lib/child-compiler.js:169:18
+  
+  - Compiler.js:551 finalCallback
+    [koa-blog]/[webpack]/lib/Compiler.js:551:5
+  
+  - Compiler.js:577 
+    [koa-blog]/[webpack]/lib/Compiler.js:577:11
+  
+  - Compiler.js:1200 
+    [koa-blog]/[webpack]/lib/Compiler.js:1200:17
+  
+  
+  - Hook.js:18 Hook.CALL_ASYNC_DELEGATE [as _callAsync]
+    [koa-blog]/[tapable]/lib/Hook.js:18:14
+  
+  - Compiler.js:1196 
+    [koa-blog]/[webpack]/lib/Compiler.js:1196:33
+  
+  - Compilation.js:2795 finalCallback
+    [koa-blog]/[webpack]/lib/Compilation.js:2795:11
+  
+  - Compilation.js:3100 
+    [koa-blog]/[webpack]/lib/Compilation.js:3100:11
+  
+  
+  - Hook.js:18 Hook.CALL_ASYNC_DELEGATE [as _callAsync]
+    [koa-blog]/[tapable]/lib/Hook.js:18:14
+  
+  - Compilation.js:3093 
+    [koa-blog]/[webpack]/lib/Compilation.js:3093:38
+  
+  
+  - Compilation.js:493 fn
+    [koa-blog]/[webpack]/lib/Compilation.js:493:9
+  
+  
+  - Hook.js:18 Hook.CALL_ASYNC_DELEGATE [as _callAsync]
+    [koa-blog]/[tapable]/lib/Hook.js:18:14
+  
+  - Compilation.js:3065 cont
+    [koa-blog]/[webpack]/lib/Compilation.js:3065:34
+  
+  - Compilation.js:3113 
+    [koa-blog]/[webpack]/lib/Compilation.js:3113:10
+  
+  - async.js:3485 symbolIterator
+    [koa-blog]/[neo-async]/async.js:3485:9
+  
+  - async.js:3527 done
+    [koa-blog]/[neo-async]/async.js:3527:9
+  
+  - async.js:2830 
+    [koa-blog]/[neo-async]/async.js:2830:7
+  
+  - async.js:2865 done
+    [koa-blog]/[neo-async]/async.js:2865:11
+  
+  - async.js:2818 
+    [koa-blog]/[neo-async]/async.js:2818:7
+  
+  - Compilation.js:4666 
+    [koa-blog]/[webpack]/lib/Compilation.js:4666:18
+  
+  - HookWebpackError.js:68 
+    [koa-blog]/[webpack]/lib/HookWebpackError.js:68:3
+  
+  
+  - Cache.js:107 Cache.store
+    [koa-blog]/[webpack]/lib/Cache.js:107:20
+  
+  - CacheFacade.js:141 ItemCacheFacade.store
+    [koa-blog]/[webpack]/lib/CacheFacade.js:141:15
+  
+  - Compilation.js:4663 
+    [koa-blog]/[webpack]/lib/Compilation.js:4663:25
+  
+  - Cache.js:91 
+    [koa-blog]/[webpack]/lib/Cache.js:91:34
+  
+</pre>

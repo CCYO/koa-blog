@@ -1,6 +1,9 @@
 /* register&login.css */
 @import './common/basic.css';
 
+.pe-none {
+    opacity: .5;
+}
 .blogList > ul {
     list-style: none;
     margin: 0;

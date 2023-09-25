@@ -7,6 +7,7 @@ const IdolFans = require('../../controller/idolFans')               //  0406
 const User = require('../../controller/user')                       //  0404
 const router = require('koa-router')()                              //  0404
 router.prefix('/api/user')
+
 router.post('/confirmPassword', CHECK.login, async (ctx, next) => {
     let { email } = ctx.session.user
     let { origin_password: password } = ctx.request.body
