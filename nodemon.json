@@ -6,7 +6,8 @@
     ],
     "watch": [
         "server/",
-        "src/__views"
+        "src/__views",
+        "build/"
     ],
     "env": {
         "PORT": 8080

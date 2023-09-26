@@ -6,9 +6,8 @@ if (process.env.NODE_ENV === "development") {
 }
 import ejs_str_fansItem from "template-ejs-loader!../views/wedgets/user/fansItem.ejs";
 //  使用 template-ejs-loader 將 偶像粉絲列表的項目ejs檔 轉譯為 純字符
-import ejs_str_blogItem from "template-ejs-loader!../views/wedgets/user/blogItem.ejs";
-//  使用 template-ejs-loader 將 blog文章項目的ejs檔 轉譯為 純字符
 import ejs_str_blogList from "template-ejs-loader!../views/wedgets/user/blogList.ejs";
+//  使用 template-ejs-loader 將 文章列表的項目ejs檔 轉譯為 純字符
 
 /* ------------------------------------------------------------------------------------------ */
 /* CSS Module --------------------------------------------------------------------------------- */
@@ -42,7 +41,6 @@ import {
 /* Const --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-window.$j = $;
 /* 常數 */
 const CONST = {
   URL: {
@@ -221,30 +219,7 @@ window.addEventListener("load", async () => {
     let $$html_blogList = $$pageData.html_blogList;
     let $$blogs = $$pageData.blogs;
 
-    let $$template = {
-      fn: {
-        relationshipItem: lodash.template(ejs_str_fansItem),
-        blogItem: (data) => {
-          return lodash.template(ejs_str_blogItem)({
-            ACTION: DATASET.ACTION(CONST.REMOVE_BLOG).slice(1, -1),
-            KEY: CONS.KEY.BLOG_ID,
-            ...data,
-          });
-        },
-      },
-      str: {
-        blogItem: lodash.template(ejs_str_blogItem)({
-          ACTION: DATASET.ACTION(CONST.REMOVE_BLOG.ACTION).slice(1, -1),
-          KEY: DATASET.KEY.REMOVE_BLOG_ID,
-          $$isSelf,
-          $$me,
-          id: 0,
-          title: " ",
-          time: " ",
-          show: false,
-        }),
-      },
-    };
+    
 
     //  public Var ----------------------------------------------------------------------
     let pageData = (window.pageData = data);
@@ -280,36 +255,10 @@ window.addEventListener("load", async () => {
       $btn_follow.on("click", follow);
       $btn_cancelFollow.on("click", cancelFollow);
     }
-    let $$blogList = (window.$$blogList = {
-      1: {
-        currentPagination: 1,
-        currentPage: 1,
-        totalCount: 0,
-      },
-      0: {
-        currentPagination: 1,
-        currentPage: 1,
-        totalCount: 0,
-      },
-      count: 5,
-    });
-    for (let type in $$pageData.blogs) {
-      let { count, blogs } = $$pageData.blogs[type];
-      if (!blogs.length) {
-        continue;
-      }
-      let show = type === "public" ? 1 : 0;
-      $$blogList[show].blogs = [...blogs];
-      $$blogList[show].totalCount = count;
-    }
-
-    //  文章列表 的 頁碼，綁定翻頁功能
-    // $(CONS.ACTION.PAGE_NUM).on('click', renderBlogList)
-    //  文章列表 的 上下頁，綁定翻頁功能
-    // $(CONS.ACTION.TURN_PAGE).on('click', renderBlogList)
+    
     initBootstrapTab();
-    window._$ = $;
     //  初始化Tab
+
     function initBootstrapTab() {
       let $$_blogs = {
         private: {
@@ -459,152 +408,6 @@ window.addEventListener("load", async () => {
         e.target.blur();
       });
     }
-    // $blog_list.on('click', handle_turn_page)
-
-    async function handle_turn_page(e) {
-      /* 確認翻頁模式 */
-      let $target = $(e.target);
-      let num = $target.data("turn");
-      if (!num) {
-        return;
-      }
-      e.preventDefault();
-      let show = $(e.currentTarget).data(CONS.KEY.SHOW) * 1;
-      let { blogs, currentPage } = $$blogList[show];
-      let mode =
-        num === CONS.VALUE.TURN_PLUS
-          ? "PLUS"
-          : num === CONS.VALUE.TURN_MINUS
-          ? "MINUS"
-          : num * 1;
-      let targetPage =
-        mode === "PLUS"
-          ? currentPage + 1
-          : mode === "MINUS"
-          ? currentPage - 1
-          : mode;
-      let ul_targetPage = $(e.currentTarget).find(
-        `ul[data-page=${targetPage}]`
-      );
-      if (!ul_targetPage.length) {
-        //  要跟後端要資料
-        let targetBlogs = [...blogs].splice(
-          $$blogList.count * (targetPage - 1),
-          $$blogList.count
-        );
-        //  渲染資料
-        let html = lodash.template(ejs_str_blogList)({
-          isSelf: $$isSelf,
-          page: targetPage,
-          blogs: targetBlogs,
-        });
-        let $el = $(e.currentTarget).find(`[data-${CONS.KEY.PAGE_NUM}]`).last();
-        console.log("@$el => ", $el);
-        $el.after(html);
-      } else {
-        //  使用Bootstrap JS方法
-      }
-      //  更改頁碼
-    }
-    //  渲染文章列表-----------------------------------------------------------
-    function renderBlogList(e) {
-      e.preventDefault();
-
-      let $btn = $(e.target);
-      //  觸發handle的el(頁碼紐||上下頁紐)
-      let $container = $btn
-        .parents(`[data-${DATASET.PREFIX.SELECTOR}]`)
-        .first();
-      //  取得文章列表的性質(公開||隱藏)
-      let pubOrPri =
-        $container.dataset("selector") === "publicBlogList" ? "show" : "hidden";
-      // let pubOrPri = $container.dataset(DATASET.PREFIX.SELECTOR) === DATASET.NAME.PUBLIC_BLOG_LIST ? 'show' : 'hidden'
-      //  pageData內的文章列表htmlStr數據
-      let html_blogList = $$html_blogList[pubOrPri];
-      //  pageData內的文章列表數據
-      let data_blogList = $$blogs[pubOrPri];
-      //  呈現文章列表的ul
-      let $ul = $container.children("ul").first();
-      //  當前頁碼(從0開始)
-      let curInd = html_blogList.curInd;
-      //  目標頁碼(從0開始)
-      let tarInd = $btn.attr(`data-${DATASET.KEY.PAGE_IND}`)
-        ? $btn.attr(`data-${DATASET.KEY.PAGE_IND}`) * 1
-        : $btn.attr(`data-${DATASET.KEY.TURN_DIR}`) * 1 > 0
-        ? curInd + 1
-        : curInd - 1;
-      //  從 pageData 取得當前列表頁的htmlStr數據
-      let data_curList = html_blogList.html[curInd];
-      if (!data_curList) {
-        //   若無值
-        //  將當前頁htmlStr存入pageData
-        html_blogList.html[curInd] = $ul.html();
-      }
-      //  從 pageData 取得目標頁的htmlStr數據
-      if (!html_blogList.html[tarInd]) {
-        //   若無值
-        let i = 5;
-        //  創建 目標頁 htmlStr
-        let htmlStr = data_blogList[tarInd].reduce(
-          (init, { id, title, time, show }, ind) => {
-            init += $$template.fn.blogItem({
-              $$isSelf,
-              $$me,
-              id,
-              titie,
-              time,
-              show,
-            });
-            i--;
-            return init;
-          },
-          ""
-        );
-        //  未滿 5 個，填入空白排版
-        if (i > 0) {
-          for (i; i > 0; i--) {
-            htmlStr += $$template.str.blogItem;
-          }
-        }
-        //  更新pageData
-        html_blogList.html[tarInd] = htmlStr;
-      }
-
-      //  更新頁碼條UI
-      UI_page();
-      //  渲染 目標頁 htmlStr
-      $ul.html(html_blogList.html[tarInd]);
-      //  更新 pageData 的 htmlStr數據
-      html_blogList.curInd = tarInd;
-
-      //  UI 頁碼條
-      function UI_page() {
-        const selector_pageNum = "li.page-item";
-        //  移除 頁碼列 的 .active .my-disable
-        $container.find(selector_pageNum).removeClass("active pe-none");
-        //  上一頁btn
-        let $back = $container.find(`${selector_pageNum}:first`);
-        //  下一頁btn
-        let $next = $container.find(`${selector_pageNum}:last`);
-        //  當前文章列表的最後一頁頁碼(從0開始)
-        let lastPageIndex = data_blogList.length - 1;
-        if (tarInd === 0) {
-          // 若目標頁碼為0(第一頁)
-          //  上一頁 禁按
-          $back.addClass("pe-none");
-        } else if (tarInd === lastPageIndex) {
-          //  //  若目標頁碼為最後一頁
-          //  下一頁 禁按
-          $next.addClass("pe-none");
-        }
-        //  目標頁碼紐的容器，顯示為當前頁，並禁止點擊
-        $container
-          .find(`[data-${DATASET.KEY.PAGE_IND}=${tarInd}]`)
-          .parent()
-          .addClass("active pe-none");
-      }
-    }
-    //  渲染文章列表-----------------------------------------------------------
 
     $("main, nav, main, footer").removeAttr("style");
     let $$betterScrollEles = initBetterScroll([$fansList, $idols]);
@@ -689,14 +492,14 @@ window.addEventListener("load", async () => {
       /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
       $$pageData.fansList.unshift($$me);
       //  同步 $$fansList 數據
-      let li = $$template.fn.relationshipItem({ me: $$me });
+      let html = lodash.template(ejs_str_fansItem)({ me: $$me });
       //  在粉絲列表中插入 粉絲htmlStr
       if ($$pageData.fansList.length === 1) {
         //  如果追蹤者只有當前的你
-        $fansList.html(`<ul>${li}</ul>`);
+        $fansList.html(`<ul>${html}</ul>`);
       } else {
         //  如果追蹤者不只當前的你
-        $fansList.children("ul").prepend(li);
+        $fansList.children("ul").prepend(html);
         //  插在最前面
       }
       $$betterScrollEles.refresh();
