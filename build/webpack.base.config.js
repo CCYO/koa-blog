@@ -8,9 +8,11 @@ const CONFIG = require("./config.js");
 const { isProd } = require("../server/utils/env");
 const isDev = process.env.NODE_ENV === "development" || !isProd;
 
-const entry = ((filepathList) => {
+const CONS = require("../config/const.js");
+
+const entry = (filepathList => {
   let res = {};
-  filepathList.forEach((filepath) => {
+  filepathList.forEach(filepath => {
     const list = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
     const key = list[list.length - 1].replace(/\.js/g, "");
     // 如果是开发环境，才需要引入 hot module
@@ -23,101 +25,40 @@ const entry = ((filepathList) => {
   return res;
 })(glob.sync(resolve(__dirname, "../src/js/*.js")));
 
-const HtmlWebpackPlugins = glob
-  .sync(resolve(__dirname, "../src/__views/*.ejs"))
-  .map((filepath, i) => {
-    let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
-    data = data.replace(/\<%(?!-\s+include)/g, "<%%"); //	修改檔案內容
+/*  每個 entry point 的 template */
+const HtmlWebpackPlugins = [];
+glob.sync(resolve(__dirname, "../src/__views/**/*.ejs")).map((filepath, i) => {
+  let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
+  let filename = `${tempList[tempList.length - 1]}`; //	檔名
+  let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
+  data = data.replace(/\<%(?!(-\s+include)|(=?\s+CONS))/g, "<%%"); //	修改檔案內容
 
-    let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
-    let fileName = `${tempList[tempList.length - 1]}`; //	新檔名
-    tempList.pop(); //	剔除舊檔名
-    tempList.pop();
-    tempList = tempList.concat("views"); //	添入新檔名
-
-    let dirPath = tempList.join("/"); //	template 的路徑名
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath);
-    }
-    let template = dirPath + "/" + fileName; //	添入新檔名
-    fs.writeFileSync(template, data); //	在新路徑創建新檔
-    // 读取 CONFIG.EXT 文件自定义的文件后缀名，默认生成 ejs 文件，可以定义生成 html 文件
-    // const filename = (name => `${name.split('.')[0]}.${CONFIG.EXT}`)(`${CONFIG.BUILD.VIEW}/${tempList[tempList.length - 1]}`)
-    const filename = ((name) => `${name.split(".")[0]}.${CONFIG.EXT}`)(
-      `${CONFIG.BUILD.VIEW}/${fileName}`
-    );
-
-    // const template = filepath
+  let n = tempList.findIndex(item => item === "__views");
+  let ok = n === tempList.length - 2;
+  tempList[n] = "views";
+  tempList.pop();
+  let dirPath = tempList.join("/"); //	確認目標路徑副及資料夾是否存在
+  if (!fs.existsSync(dirPath)) {
+    //  若 dirPath 不存在，則新建
+    fs.mkdirSync(dirPath);
+  }
+  let template = dirPath + "/" + filename; //	添入原檔名
+  fs.writeFileSync(template, data); //	在目標資料夾創建新檔
+  if (ok) {
     const fileChunk = filename
       .split(".")[0]
       .split(/[\/|\/\/|\\|\\\\]/g)
       .pop(); // eslint-disable-line
     const chunks = isDev ? [fileChunk] : ["manifest", "vendors", fileChunk];
-    return new HtmlWebpackPlugin({
+    let item = new HtmlWebpackPlugin({
       filename,
       template,
       chunks,
       alwaysWriteToDisk: true,
     });
-  });
-
-//	處理wedgets
-glob
-  .sync(resolve(__dirname, "../src/__views/wedgets/*.ejs"))
-  .map((filepath) => {
-    let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
-    let _data = data.replace(/\<%(?!-\s+include)/g, "<%%"); //	修改檔案內容
-    _data = _data.replace(/\<%%-\s+lazyInclude/g, "<%%- include"); //	修改檔案內容
-
-    let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
-    let fileName = `${tempList[tempList.length - 1]}`; //	新檔名
-    tempList.pop(); //	剔除舊檔名
-    tempList.pop();
-    tempList.pop();
-    tempList = tempList.concat(["views", "wedgets"]); //	添入新檔名
-
-    let dirPath = tempList.join("/"); //	template 的路徑名
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath);
-    }
-    let template = dirPath + "/" + fileName; //	添入新檔名
-    fs.writeFileSync(template, _data); //	在新路徑創建新檔
-  });
-
-glob
-  .sync(resolve(__dirname, "../src/__views/wedgets/*/*.ejs"))
-  .map((filepath) => {
-    let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
-    let fileName = `${tempList[tempList.length - 1]}`; //	新檔名
-    let ind_parentDir = tempList.length - 4;
-    tempList[ind_parentDir] = "views"; //	更換views層級的資料夾
-
-    let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
-
-    let _data = data.replace(/\<%(?!-\s+include)/g, "<%%"); //	修改檔案內容
-
-    let _path = [...tempList]
-    _path.splice(_path.length - 2, 1)
-    _path.pop()
-    let _dirPath = _path.join('/')
-    if (!fs.existsSync(_dirPath)) {
-      fs.mkdirSync(_dirPath);
-    }
-    let _filepath = _dirPath + "/" + fileName; //	添入新檔名
-    fs.writeFileSync(_filepath, _data); //	在新路徑創建新檔
-
-
-    data = data.replace(/\<%(?!-\s+include)/g, "<%%%"); //	修改檔案內容
-    
-    tempList.pop(); //  剔除檔名
-
-    let dirPath = tempList.join("/"); //	template 的路徑名
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath);
-    }
-    let template = dirPath + "/" + fileName; //	添入新檔名
-    fs.writeFileSync(template, data); //	在新路徑創建新檔
-  });
+    HtmlWebpackPlugins.push(item);
+  }
+});
 
 module.exports = {
   context: resolve(__dirname),
@@ -201,6 +142,11 @@ module.exports = {
             //	<%= 必須寫成 <%%=
             options: {
               production: process.env.ENV === "production",
+
+              data: {
+                // example, too.
+                CONS,
+              },
             },
           },
         ],

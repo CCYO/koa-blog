@@ -1,20 +1,22 @@
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
 <%- include('wedgets/header.ejs') %>
+
 <body>
-<%- include('wedgets/pageLoading.ejs') %>
-<%- include('wedgets/navbar.ejs') %>
-<!-- MAIN -->
-<main class="container-md" style="display: none;">
-  <h1>發生未預期的錯誤</h1>
-  <div>
-    <%%%= errno %>
-  </div>
-  <div>
-    <%%%= msg %>
-  </div>
-</main>
-<!-- FOOTER -->
-<%- include('wedgets/footer.ejs') %>
-<%- include('wedgets/cdn') %>
+  <%- include('wedgets/pageLoading.ejs') %>
+  <%- include('wedgets/navbar.ejs') %>
+  <!-- MAIN -->
+  <main class="container-md" style="display: none;">
+    <h1>發生未預期的錯誤</h1>
+    <div>
+      <%%= errno %>
+    </div>
+    <div>
+      <%%= msg %>
+    </div>
+  </main>
+  <!-- FOOTER -->
+  <%- include('wedgets/footer.ejs') %>
+  <%- include('wedgets/cdn') %>
 </body>
+
 </html>

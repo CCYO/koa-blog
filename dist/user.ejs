@@ -92,8 +92,8 @@
                     <img src="<%= currentUser.avatar %>" class="img-fluid" alt="...">
                   </div>
                   <% if(!isSelf){ %>
-                  <button data-action="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
-                  <button data-action="follow" type="button" class="btn btn-success btn-sm follow">追蹤</button>
+                  <button id="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
+                  <button id="follow" type="button" class="btn btn-success btn-sm follow">追蹤</button>
                   <% } %>
                 </div>
 
@@ -120,7 +120,7 @@
             撰寫新文章
           </button>
           <!-- Modal -->
-          <div class="modal fade" id="new_blog_modal" tabindex="-1" aria-labelledby="newBlogModalLabel" aria-hidden="true">
+          <div class="modal fade" tabindex="-1" aria-labelledby="newBlogModalLabel" aria-hidden="true" id="new_blog_modal">
             <div class="modal-dialog">
               <div class="modal-content">
 
@@ -133,7 +133,7 @@
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消建立文章</button>
-                  <button data-action="createBlog" type="button" class="btn btn-primary">建立文章</button>
+                  <button id="new_blog" type="button" class="btn btn-primary">建立文章</button>
                 </div>
               </div>
             </div>
@@ -143,21 +143,21 @@
           <!-- Public BlogList -->
           <% var isPublic = 1 %>
           <% var blogData = blogs[isPublic ? 'public' : 'private'] %>
-<div class="card blogList bg-light" data-show="<%= isPublic %>" data-selector="blog_list">
+<div class="card blogList bg-light" data-status="<%= isPublic %>">
   <div class="card-header blogList-header align-items-center">
     <h5><%= isPublic ? '公開的BLOG' : '編輯中的BLOG' %></h5>
     <% if(isSelf && blogData.count) { %>
-    <button type="button" class="btn btn-sm btn-outline-danger" data-action="removeBlogs">全部刪除</button>
+    <button type="button" class="btn btn-sm btn-outline-danger" data-remove-blog="list">全部刪除</button>
     <% } %>
   </div>
   <% if(blogData.count){ %>
   <ul>
     <% let page = 1 %>
     <% let blogs = blogData.blogs %>
-    <li id="page-<%= page %>" class="fade">
+    <li data-page="<%= page %>" class="fade <%= page === 1 ? 'show' : '' %>">
   <ul class="list-group list-group-flush">
     <% blogs.forEach( ( {id, author_id, title, time } ) => { %>
-    <li data-blog_id="<%= id %>" class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+    <li data-blog-id="<%= id %>" class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
       <div class="text-truncate me-3">
         <a class="stretched-link" href="/blog/<%= id %>">
           <%= title %>
@@ -169,7 +169,7 @@
       <% if(isSelf){ %>
       <div data-selector="blogBtnList" class="flex-shrink-0">
         <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?owner_id=<%= author_id %>">編輯</a>
-        <a class='btn btn-outline-primary btn-sm' data-action="removeBlog">刪除</a>
+        <a class='btn btn-outline-primary btn-sm' data-remove-blog="item">刪除</a>
       </div>
       <% } %>
     </li>
@@ -199,17 +199,17 @@
   <nav aria-label="...">
     <ul class="pagination" data-piece="0" id="hidden-list">
       <li class="page-item">
-        <a class="page-link pe-none" href="#" data-turn="back">
+        <a class="page-link pe-none" href="#" data-turn="previous-pagination">
           << </a>
       </li>
       <li class="page-item">
-        <a class="page-link pe-none" href="#" data-turn="minus">Previous</a>
+        <a class="page-link pe-none" href="#" data-turn="previous-page">Previous</a>
       </li>
       <% var totalPage=Math.ceil(blogData.count / 5) %>
       <% for(let page_num=1; totalPage>= page_num; page_num++){ %>
       <% if((page_num % 2)===1){ %>
       <!-- 除5若無餘數，要有ul li -->
-      <ul id="pagination-<%= Math.ceil(page_num / 2) %>" class="pagination">
+      <ul class="pagination" data-pagination="<%= Math.ceil(page_num / 2) %>" <% if(Math.ceil(page_num / 2) > 1){ %> style="display: none;" <% } %>>
         <% } %>
         <!-- 除5無論有無餘數，都要li -->
         <li class="page-item <%= page_num === 1 ? 'active' : '' %>">
@@ -222,10 +222,10 @@
       <% } %>
       <% } %>
       <li class="page-item">
-        <a class="page-link" href="#" data-turn="plus">Next</a>
+        <a class="page-link <%= totalPage < 2 ? "pe-none" : '' %>" href="#" data-turn="next-page">Next</a>
       </li>
       <li class="page-item">
-        <a class="page-link" href="#" data-turn="front"> >> </a>
+        <a class="page-link <%= totalPage <= 2 ? "pe-none" : '' %>" href="#" data-turn="next-pagination"> >> </a>
       </li>
     </ul>
   </nav>
@@ -240,21 +240,21 @@
           <% if (isSelf) { %>
           <% isPublic = 0 %>
           <% var blogData = blogs[isPublic ? 'public' : 'private'] %>
-<div class="card blogList bg-light" data-show="<%= isPublic %>" data-selector="blog_list">
+<div class="card blogList bg-light" data-status="<%= isPublic %>">
   <div class="card-header blogList-header align-items-center">
     <h5><%= isPublic ? '公開的BLOG' : '編輯中的BLOG' %></h5>
     <% if(isSelf && blogData.count) { %>
-    <button type="button" class="btn btn-sm btn-outline-danger" data-action="removeBlogs">全部刪除</button>
+    <button type="button" class="btn btn-sm btn-outline-danger" data-remove-blog="list">全部刪除</button>
     <% } %>
   </div>
   <% if(blogData.count){ %>
   <ul>
     <% let page = 1 %>
     <% let blogs = blogData.blogs %>
-    <li id="page-<%= page %>" class="fade">
+    <li data-page="<%= page %>" class="fade <%= page === 1 ? 'show' : '' %>">
   <ul class="list-group list-group-flush">
     <% blogs.forEach( ( {id, author_id, title, time } ) => { %>
-    <li data-blog_id="<%= id %>" class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+    <li data-blog-id="<%= id %>" class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
       <div class="text-truncate me-3">
         <a class="stretched-link" href="/blog/<%= id %>">
           <%= title %>
@@ -266,7 +266,7 @@
       <% if(isSelf){ %>
       <div data-selector="blogBtnList" class="flex-shrink-0">
         <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?owner_id=<%= author_id %>">編輯</a>
-        <a class='btn btn-outline-primary btn-sm' data-action="removeBlog">刪除</a>
+        <a class='btn btn-outline-primary btn-sm' data-remove-blog="item">刪除</a>
       </div>
       <% } %>
     </li>
@@ -296,17 +296,17 @@
   <nav aria-label="...">
     <ul class="pagination" data-piece="0" id="hidden-list">
       <li class="page-item">
-        <a class="page-link pe-none" href="#" data-turn="back">
+        <a class="page-link pe-none" href="#" data-turn="previous-pagination">
           << </a>
       </li>
       <li class="page-item">
-        <a class="page-link pe-none" href="#" data-turn="minus">Previous</a>
+        <a class="page-link pe-none" href="#" data-turn="previous-page">Previous</a>
       </li>
       <% var totalPage=Math.ceil(blogData.count / 5) %>
       <% for(let page_num=1; totalPage>= page_num; page_num++){ %>
       <% if((page_num % 2)===1){ %>
       <!-- 除5若無餘數，要有ul li -->
-      <ul id="pagination-<%= Math.ceil(page_num / 2) %>" class="pagination">
+      <ul class="pagination" data-pagination="<%= Math.ceil(page_num / 2) %>" <% if(Math.ceil(page_num / 2) > 1){ %> style="display: none;" <% } %>>
         <% } %>
         <!-- 除5無論有無餘數，都要li -->
         <li class="page-item <%= page_num === 1 ? 'active' : '' %>">
@@ -319,10 +319,10 @@
       <% } %>
       <% } %>
       <li class="page-item">
-        <a class="page-link" href="#" data-turn="plus">Next</a>
+        <a class="page-link <%= totalPage < 2 ? "pe-none" : '' %>" href="#" data-turn="next-page">Next</a>
       </li>
       <li class="page-item">
-        <a class="page-link" href="#" data-turn="front"> >> </a>
+        <a class="page-link <%= totalPage <= 2 ? "pe-none" : '' %>" href="#" data-turn="next-pagination"> >> </a>
       </li>
     </ul>
   </nav>
@@ -341,7 +341,7 @@
         <div class="relationShip-container">
           <div class="relationShip-box">
             <h3>粉絲列表</h3>
-            <div data-selector="fansList" class="relationShip-list-box">
+            <div id="fansList" class="relationShip-list-box">
               <% if(fansList.length) {%>
               <ul>
                 <% fansList.forEach(fans=> { %>
@@ -365,11 +365,11 @@
           </div>
           <div class="relationShip-box">
             <h3>追蹤列表</h3>
-            <div data-selector="idolList" class="relationShip-list-box">
+            <div id="idolList" class="relationShip-list-box">
               <% if(idols.length) {%>
               <ul>
                 <% idols.forEach(idol=> { %>
-                <li class="card" data-idol-id="<%= idol.id %>">
+                <li class="card">
                   <div class="ratio ratio-1x1">
                     <img src="<%= idol.avatar %>" class="card-img-top" alt="">
                   </div>

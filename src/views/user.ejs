@@ -19,8 +19,8 @@
                     <img src="<%%= currentUser.avatar %>" class="img-fluid" alt="...">
                   </div>
                   <%% if(!isSelf){ %>
-                  <button data-action="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
-                  <button data-action="follow" type="button" class="btn btn-success btn-sm follow">追蹤</button>
+                  <button id="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
+                  <button id="follow" type="button" class="btn btn-success btn-sm follow">追蹤</button>
                   <%% } %>
                 </div>
 
@@ -47,7 +47,7 @@
             撰寫新文章
           </button>
           <!-- Modal -->
-          <div class="modal fade" id="new_blog_modal" tabindex="-1" aria-labelledby="newBlogModalLabel" aria-hidden="true">
+          <div class="modal fade" tabindex="-1" aria-labelledby="newBlogModalLabel" aria-hidden="true" id="new_blog_modal">
             <div class="modal-dialog">
               <div class="modal-content">
 
@@ -60,7 +60,7 @@
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消建立文章</button>
-                  <button data-action="createBlog" type="button" class="btn btn-primary">建立文章</button>
+                  <button id="new_blog" type="button" class="btn btn-primary">建立文章</button>
                 </div>
               </div>
             </div>
@@ -69,11 +69,11 @@
           <!-- BlogList -->
           <!-- Public BlogList -->
           <%% var isPublic = 1 %>
-          <%- include('wedgets/blogList-card') %>
+          <%- include('wedgets/user/blogList-card') %>
           <!-- Private BlogList -->
           <%% if (isSelf) { %>
           <%% isPublic = 0 %>
-          <%- include('wedgets/blogList-card') %>
+          <%- include('wedgets/user/blogList-card') %>
           <%% } %>
         </div>
       </div>
@@ -82,11 +82,11 @@
         <div class="relationShip-container">
           <div class="relationShip-box">
             <h3>粉絲列表</h3>
-            <div data-selector="fansList" class="relationShip-list-box">
+            <div id="fansList" class="relationShip-list-box">
               <%% if(fansList.length) {%>
               <ul>
                 <%% fansList.forEach(fans=> { %>
-                <li class="card" data-fans-id="<%%= fans.id %>">
+                <li class="card" data-<%= CONS.USER.DATASET.KEY.FANS_ID %>="<%%= fans.id %>">
                   <div class="ratio ratio-1x1">
                     <img src="<%%= fans.avatar %>" class="card-img-top" alt="">
                   </div>
@@ -106,11 +106,11 @@
           </div>
           <div class="relationShip-box">
             <h3>追蹤列表</h3>
-            <div data-selector="idolList" class="relationShip-list-box">
+            <div id="idolList" class="relationShip-list-box">
               <%% if(idols.length) {%>
               <ul>
                 <%% idols.forEach(idol=> { %>
-                <li class="card" data-idol-id="<%%= idol.id %>">
+                <li class="card">
                   <div class="ratio ratio-1x1">
                     <img src="<%%= idol.avatar %>" class="card-img-top" alt="">
                   </div>

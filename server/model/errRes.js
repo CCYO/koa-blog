@@ -279,7 +279,8 @@ const ErrRes = {
     PUB_SUB: {
         REMOVE_ERR: { errno: 1101, msg: 'PUB_SUB 刪除失敗' }
     },
-    SERVER_ERR: { errno: 9999, msg: '伺服器錯誤' }
+    SERVER_ERR: { errno: 9999, msg: '伺服器錯誤' },
+    NOT_FIND: { errno: 9999, msg: '頁面不存在'}
 }
 
 
