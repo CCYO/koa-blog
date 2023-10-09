@@ -1,9 +1,9 @@
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
-<%- include('wedgets/header.ejs') %>
+<%- include('../../wedgets/header.ejs') %>
 
 <body>
-  <%- include('wedgets/pageLoading.ejs') %>
-  <%- include('wedgets/navbar.ejs') %>
+  <%- include('../../wedgets/pageLoading.ejs') %>
+  <%- include('../../wedgets/navbar.ejs') %>
   <!-- MAIN -->
   <main class="container-md" style="display: none;">
     <!-- 使用者資訊 + 文章列表 -->
@@ -67,90 +67,20 @@
           </div>
           <% } %>
           <!-- BlogList -->
-          <!-- Public BlogList -->
-          <% var isPublic = 1 %>
-          <%- include('wedgets/user/blogList-card') %>
-          <!-- Private BlogList -->
-          <% if (isSelf) { %>
-          <% isPublic = 0 %>
-          <%- include('wedgets/user/blogList-card') %>
-          <% } %>
+          <%- include('components/blogList-card') %>
         </div>
       </div>
       <hr class="d-md-none">
       <div class="col-md-4">
-        <div class="relationShip-container">
-          <div class="relationShip-box">
-            <h3>粉絲列表</h3>
-            <div id="fansList" class="relationShip-list-box">
-              <% if(fansList.length) {%>
-              <ul>
-                <% fansList.forEach(fans=> { %>
-                <li class="card" data-<%= CONS.USER.DATASET.KEY.FANS_ID %>="<%= fans.id %>">
-                  <div class="ratio ratio-1x1">
-                    <img src="<%= fans.avatar %>" class="card-img-top" alt="">
-                  </div>
-                  <div class="text-truncate">
-                    <a href="/other/<%= fans.id %>" class="stretched-link">
-                      <%= fans.nickname %>
-                    </a>
-                  </div>
-                </li>
-
-                <% }) %>
-              </ul>
-              <% } else { %>
-              <p>可憐阿，沒有朋友</p>
-              <% } %>
-            </div>
-          </div>
-          <div class="relationShip-box">
-            <h3>追蹤列表</h3>
-            <div id="idolList" class="relationShip-list-box">
-              <% if(idols.length) {%>
-              <ul>
-                <% idols.forEach(idol=> { %>
-                <li class="card">
-                  <div class="ratio ratio-1x1">
-                    <img src="<%= idol.avatar %>" class="card-img-top" alt="">
-                  </div>
-                  <div class="text-truncate">
-                    <a href="/other/<%= idol.id %>" class="stretched-link">
-                      <%= idol.nickname %>
-                    </a>
-                  </div>
-                </li>
-                <% }) %>
-              </ul>
-              <% } else { %>
-              <p>沒有偶像，你最屌</p>
-              <% } %>
-            </div>
-
-          </div>
-        </div>
+        <%- include('components/relationShip') %>
       </div>
     </div>
-    <!-- EJS -->
-    <div style="display: none;">
-      <!-- 當前使用者頁面的使用者資料 -->
-      <div data-my-data="currentUser">
-        <%- JSON.stringify(currentUser) %>
-      </div>
-      <div data-my-data="fansList">
-        <%- JSON.stringify(fansList) %>
-      </div>
-      <div data-my-data="idols">
-        <%- JSON.stringify(idols) %>
-      </div>
-      <div data-my-data="blogs">
-        <%- JSON.stringify(blogs) %>
-      </div>
-    </div>
+    <!-- EJS DATA -->
+    <%- include('../../wedgets/ejs-data-list') %>
   </main>
   <!-- FOOTER -->
-  <%- include('wedgets/footer.ejs') %>
-  <%- include('wedgets/cdn') %>
+  <%- include('../../wedgets/footer') %>
+  <%- include('../../wedgets/cdn') %>
 </body>
 
 </html>

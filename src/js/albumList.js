@@ -1,55 +1,52 @@
 /* ------------------------------------------------------------------------------------------ */
 /* EJS Module --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-if (process.env.NODE_ENV === 'development') {
-    require('../views/albumList.ejs')
+if (process.env.NODE_ENV === "development") {
+  require("../views/pages/albumList/index.ejs");
 }
 /* ------------------------------------------------------------------------------------------ */
 /* CSS Module --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-import '../css/albumList.css'
+import "../css/albumList.css";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Utils Module --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-import {
-    wedgets as $M_wedgets
-} from './utils'
+import { wedgets as $M_wedgets } from "./utils";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Const --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-const CONS = {}
+const CONS = {};
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-const $C_backdrop = new $M_wedgets.LoadingBackdrop()
+const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
-
 
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-window.addEventListener('load', async () => {
-    try {
-        $C_backdrop.show({ blockPage: true })
-        //  讀取中，遮蔽畫面
-        let initPage = new $M_wedgets.InitPage()
-        //  幫助頁面初始化的統整函數
-        await initPage.addOtherInitFn($M_wedgets.initEJSData)
-        //  初始化ejs
-        await initPage.addOtherInitFn($M_wedgets.initNavbar)
-        //  初始化navbar
-        await initPage.render()
-        //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-        $C_backdrop.hidden()
-        //  讀取完成，解除遮蔽
-    } catch (error) {
-        throw error
-        // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
-    }
-})
+window.addEventListener("load", async () => {
+  try {
+    $C_backdrop.show({ blockPage: true });
+    //  讀取中，遮蔽畫面
+    let initPage = new $M_wedgets.InitPage();
+    //  幫助頁面初始化的統整函數
+    await initPage.addOtherInitFn($M_wedgets.initEJSData);
+    //  初始化ejs
+    await initPage.addOtherInitFn($M_wedgets.initNavbar);
+    //  初始化navbar
+    await initPage.render();
+    //  統整頁面數據，並渲染需要用到統整數據的頁面內容
+    $C_backdrop.hidden();
+    //  讀取完成，解除遮蔽
+  } catch (error) {
+    throw error;
+    // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
+  }
+});

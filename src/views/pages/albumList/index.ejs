@@ -1,0 +1,47 @@
+<!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
+<%- include('../../wedgets/header.ejs') %>
+
+<body>
+  <%- include('../../wedgets/pageLoading.ejs') %>
+  <%- include('../../wedgets/navbar.ejs') %>
+  <!-- MAIN -->
+  <main class="container-md" style="display: none;">
+    <h1><a href="/other/<%%=author.id%>"><%%=author.nickname%></a>的相簿列表</h1>
+    <div class="box-albumList">
+      <h3>公開的文章相簿</h3>
+      <%% if(albums.show.length){ %>
+      <%% albums.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
+      <ul class="list-group">
+        <li class="list-group-item">
+          <a href="/album/<%%= id %>?owner_id=<%%= author.id %>"><%%= title %></a>
+          <span>文章公開於 <%%= time %></span>
+        </li>
+      </ul>
+      <%% }) }) %>
+      <%% } else { %>
+      <p>沒有相簿</p>
+      <%% } %>
+    </div>
+    <div class="box-albumList">
+      <h3>未公開的文章相簿</h3>
+      <%% if(albums.hidden && albums.hidden.length){ %>
+      <%% albums.hidden.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
+      <ul class="list-group">
+        <li class="list-group-item">
+          <a href="/album/<%%= id %>?owner_id=<%%= author.id %>"><%%= title %></a>
+          <span>文章最近一次更新於 <%%= time %></span>
+        </li>
+      </ul>
+      <%% }) }) %>
+      <%% } else { %>
+      <p>沒有相簿</p>
+      <%% } %>
+    </div>
+    </div>
+  </main>
+  <!-- FOOTER -->
+  <%- include('../../wedgets/footer.ejs') %>
+  <%- include('../../wedgets/cdn') %>
+</body>
+
+</html>

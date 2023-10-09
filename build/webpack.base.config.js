@@ -1,6 +1,5 @@
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-
 const glob = require("glob");
 const fs = require("fs");
 const { resolve } = require("path");
@@ -28,30 +27,52 @@ const entry = (filepathList => {
 /*  每個 entry point 的 template */
 const HtmlWebpackPlugins = [];
 glob.sync(resolve(__dirname, "../src/__views/**/*.ejs")).map((filepath, i) => {
+  /**
+   * ~/.../__views/pages/*.ejs
+   * ~/.../__views/pages/[ejsName]/components/*.ejs
+   * ~/.../__views/wedgets/*.ejs
+   */
   let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
   let filename = `${tempList[tempList.length - 1]}`; //	檔名
-  let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
-  data = data.replace(/\<%(?!(-\s+include)|(=?\s+CONS))/g, "<%%"); //	修改檔案內容
-
   let n = tempList.findIndex(item => item === "__views");
-  let ok = n === tempList.length - 2;
   tempList[n] = "views";
   tempList.pop();
-  let dirPath = tempList.join("/"); //	確認目標路徑副及資料夾是否存在
-  if (!fs.existsSync(dirPath)) {
-    //  若 dirPath 不存在，則新建
-    fs.mkdirSync(dirPath);
+  let dir = "";
+  for (let [index, dirname] of tempList.entries()) {
+    dir += `${dirname}/`;
+    if (index < n) {
+      continue;
+    }
+    if (!fs.existsSync(dir)) {
+      //  若 dirPath 不存在，則新建
+      fs.mkdirSync(dir);
+    }
   }
-  let template = dirPath + "/" + filename; //	添入原檔名
+  let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
+  data = data.replace(/[-]{2}(CONS\.\S+?)[-]{2}/g, (match, target) => {
+    let arr = target.split(".");
+    arr.shift();
+    let constant;
+    for (let [index, item] of arr.entries()) {
+      if (index === 0) {
+        constant = CONS[item];
+        continue;
+      }
+      constant = constant[item];
+    }
+    return `"${constant}"`;
+  });
+
+  data = data.replace(/\<%(?!(-\s+include)|([=\-]?\s+.*?CONS\.))/g, "<%%"); //	修改檔案內容
+  //	修改檔案內容
+  let template = dir + filename; //	添入原檔名
   fs.writeFileSync(template, data); //	在目標資料夾創建新檔
-  if (ok) {
-    const fileChunk = filename
-      .split(".")[0]
-      .split(/[\/|\/\/|\\|\\\\]/g)
-      .pop(); // eslint-disable-line
+
+  if (tempList[n + 1] !== "wedgets" && tempList[n + 3] !== "components") {
+    const fileChunk = tempList[n + 2];
     const chunks = isDev ? [fileChunk] : ["manifest", "vendors", fileChunk];
     let item = new HtmlWebpackPlugin({
-      filename,
+      filename: `${fileChunk}.ejs`,
       template,
       chunks,
       alwaysWriteToDisk: true,
@@ -142,7 +163,6 @@ module.exports = {
             //	<%= 必須寫成 <%%=
             options: {
               production: process.env.ENV === "production",
-
               data: {
                 // example, too.
                 CONS,

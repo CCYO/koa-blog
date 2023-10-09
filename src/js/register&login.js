@@ -3,7 +3,7 @@
 /* ------------------------------------------------------------------------------------------ */
 
 if (process.env.NODE_ENV === "development") {
-  require("../views/register&login.ejs");
+  require("../views/pages/register&login/index.ejs");
 }
 
 /* ------------------------------------------------------------------------------------------ */
@@ -29,22 +29,43 @@ import {
 /* Const --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-const CONS = {
-  LOGIN: {
-    API: "/api/user",
-    REDIR: "/self",
-    SUCC_MSG: "登入成功",
-    FAIL_MSG: "登入失敗，請重新嘗試",
-    FORM_ID: "#login-form",
-  },
-  REGISTER: {
-    API: "/api/user/register",
-    REDIR: "/login",
-    SUCC_MSG: "註冊成功，請嘗試登入",
-    FAIL_MSG: "登入失敗，請重新嘗試",
-    FORM_ID: "#register-form",
-  },
-};
+import CONFIG_CONST from "../../config/const";
+
+const CONS = CONFIG_CONST.PAGES.REGISTER_LOGIN;
+
+// const CONS = {
+//   API: {
+//     LOGIN: "/api/user",
+//     REGISTER: "/api/user/register",
+//     LOGIN_SUCCESS: "/self",
+//     REGISTER_SUCCESS: "/login",
+//   },
+//   MESSAGE: {
+//     LOGIN_SUCCESS: "登入成功",
+//     LOGIN_FAIL: "登入失敗，請重新嘗試",
+//     REGISTER_SUCCESS: "註冊成功，請嘗試登入",
+//     REGISTER_FAIL: "註冊失敗，請重新嘗試",
+//   },
+//   ID: {
+//     LOGIN_FORM: "login",
+//     REGISTER_FORM: "register",
+//   },
+
+// LOGIN: {
+//   API: "/api/user",
+//   REDIR: "/self",
+//   SUCC_MSG: "登入成功",
+//   FAIL_MSG: "登入失敗，請重新嘗試",
+//   FORM_ID: "#login-form",
+// },
+// REGISTER: {
+//   API: "/api/user/register",
+//   REDIR: "/login",
+//   SUCC_MSG: "註冊成功，請嘗試登入",
+//   FAIL_MSG: "登入失敗，請重新嘗試",
+//   FORM_ID: "#register-form",
+// },
+// };
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
@@ -69,6 +90,7 @@ window.addEventListener("load", async () => {
     $C_backdrop.hidden();
     //  讀取完成，解除遮蔽
   } catch (error) {
+    let x = error;
     if (confirm("window load 時發生錯誤，前往錯誤原因頁面")) {
       location.href = `/errPage?errno=${encodeURIComponent(
         "???"
@@ -87,11 +109,11 @@ window.addEventListener("load", async () => {
 
     /* 初始化 Register Form 功能 */
     function initLoginFn() {
-      let form = document.querySelector(CONS.LOGIN.FORM_ID);
+      let form = document.querySelector(`#${CONS.ID.LOGIN_FORM}`);
       let payload = {};
       let feedback_for_Form = gen_feedback_for_Form(form);
       deb_eventHandle(
-        `${CONS.LOGIN.FORM_ID} input`,
+        `#${CONS.ID.LOGIN_FORM} input`,
         "input",
         handle_input_login
       );
@@ -110,12 +132,13 @@ window.addEventListener("load", async () => {
         //  處理校驗錯誤
         /* 送出請求 */
         /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-        let { errno } = await $M_axios.post(CONS.LOGIN.API, payload);
+        let { errno } = await $M_axios.post(CONS.API.LOGIN, payload);
         if (!errno) {
-          alert(CONS.LOGIN.SUCC_MSG);
-          $M_redirForm(CONS.LOGIN.REDIR);
+          alert(CONS.MESSAGE.LOGIN_SUCCESS);
+          $M_redirForm(CONS.API.LOGIN_SUCCESS);
+          return;
         }
-        return;
+        alert(CONS.MESSAGE.LOGIN_FAIL);
       }
       /* 登入表單內容表格的 input Event handler */
       async function handle_input_login(e) {
@@ -135,11 +158,11 @@ window.addEventListener("load", async () => {
     }
     /* 初始化 Register Form 功能 */
     function initRegistFn() {
-      const form = document.querySelector(CONS.REGISTER.FORM_ID);
+      const form = document.querySelector(`#${CONS.ID.REGISTER_FORM}`);
       let payload = {};
       let feedback_for_Form = gen_feedback_for_Form(form);
       deb_eventHandle(
-        `${CONS.REGISTER.FORM_ID} input`,
+        `#${CONS.ID.REGISTER_FORM} input`,
         "input",
         handle_input_register
       );
@@ -157,11 +180,13 @@ window.addEventListener("load", async () => {
         }
         /* 送出請求 */
         /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-        let { errno } = await $M_axios.post(CONS.REGISTER.API, payload);
+        let { errno } = await $M_axios.post(CONS.API.REGISTER, payload);
         if (!errno) {
-          alert(CONS.REGISTER.SUCC_MSG);
-          location.href = CONS.REGISTER.REDIR;
+          alert(CONS.MESSAGE.REGISTER_SUCCESS);
+          location.href = CONS.API.REGISTER_SUCCESS;
+          return;
         }
+        alert(CONS.MESSAGE.REGISTER_FAIL);
         return;
       }
       /* 註冊表單內容表格的 input Event handler */

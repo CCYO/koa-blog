@@ -1,7 +1,7 @@
-<li data-page="<%= page %>" class="fade <%= page === 1 ? 'show' : '' %>">
+<li data-<%= CONS.PAGES.USER.DATASET.KEY.PAGE_NUM %>="<%= page %>" class="fade <%= page === 1 ? 'show' : '' %>">
   <ul class="list-group list-group-flush">
     <% blogs.forEach( ( {id, author_id, title, time } ) => { %>
-    <li data-blog-id="<%= id %>" class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+    <li data-<%= CONS.PAGES.USER.DATASET.KEY.BLOG_ID %>="<%= id %>" class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
       <div class="text-truncate me-3">
         <a class="stretched-link" href="/blog/<%= id %>">
           <%= title %>
@@ -11,9 +11,9 @@
         <span class="timestamp">上一次編輯<%= time %></span>
       </div>
       <% if(isSelf){ %>
-      <div data-selector="blogBtnList" class="flex-shrink-0">
+      <div class="flex-shrink-0">
         <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?owner_id=<%= author_id %>">編輯</a>
-        <a class='btn btn-outline-primary btn-sm' data-remove-blog="item">刪除</a>
+        <a class='btn btn-outline-primary btn-sm' data-<%= CONS.PAGES.USER.DATASET.KEY.REMOVE_BLOG %>=<%= CONS.PAGES.USER.DATASET.VALUE.REMOVE_BLOG_ITEM %>>刪除</a>
       </div>
       <% } %>
     </li>
@@ -27,7 +27,7 @@
         <span class="invisible">x</span>
       </div>
       <% if(isSelf){ %>
-      <div data-selector="blogBtnList" class="flex-shrink-0 invisible">
+      <div class="flex-shrink-0 invisible">
         <a class='btn btn-outline-primary btn-sm'>編輯</a>
         <a class='btn btn-outline-primary btn-sm'>刪除</a>
       </div>

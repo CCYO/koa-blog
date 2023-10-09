@@ -1,0 +1,44 @@
+<!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
+<%- include('../../wedgets/header.ejs') %>
+
+<body>
+  <%- include('../../wedgets/pageLoading.ejs') %>
+  <%- include('../../wedgets/navbar.ejs') %>
+  <!-- 斷點提示 -->
+  <!-- <div class="d-sm-none position-fixed top-0 start-0 bg-success text-white" style="z-index: 1080;">xs</div>
+<div class="d-md-none position-fixed top-0 end-0 bg-success text-white" style="z-index: 1080;">sm</div>
+<div class="d-lg-none position-fixed bottom-0 start-0 bg-success text-white" style="z-index: 1080;">md</div>
+<div class="d-xl-none position-fixed bottom-0 end-0 bg-success text-white" style="z-index: 1080;">lg</div>
+<div class="d-xxl-none position-fixed bottom-50 end-50 bg-success text-white" style="z-index: 1080;">xl</div> -->
+  <!-- MAIN -->
+  <main class="container-md main" style="display: none;">
+    <div>
+      <input type="text" data-action="changeTitle" name="title" class="form-control" value="<%= blog.id ? blog.title : '' %>">
+      <div class="valid-feedback">
+        Looks good!
+      </div>
+      <button data-action="updateTitle" disabled>修改標題</button>
+    </div>
+    <div id="editor-wrapper">
+      <div id="toolbar-container"></div>
+      <div id="editor-container"></div>
+      <span data-selector="wordCount"></span>
+
+      <label> <input type="checkbox" id="show" data-action="pubOrPri" <%= blog.show ? 'checked' : '' %> />公開文章</label>
+      <% if (blog.show) { %>
+      <p>已於 <%= blog.showAt %> 發佈</p>
+      <% } else { %>
+      <p>最近一次於 <%= blog.updatedAt %> 編輯</p>
+      <% } %>
+      <button data-action="updateBlog" disabled>存檔</button>
+      <button data-action="removeBlog">刪除此篇文章</button>
+    </div>
+    <!-- EJS DATA -->
+    <%- include('../../wedgets/ejs-data-list') %>
+  </main>
+  <!-- FOOTER -->
+  <%- include('../../wedgets/footer.ejs') %>
+  <%- include('../../wedgets/cdn') %>
+</body>
+
+</html>

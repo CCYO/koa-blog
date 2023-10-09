@@ -1,19 +1,20 @@
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
-<%- include('wedgets/header.ejs') %>
+<%- include('../../wedgets/header.ejs') %>
+
 <body>
-  <%- include('wedgets/pageLoading.ejs') %>
-  <%- include('wedgets/navbar.ejs') %>
+  <%- include('../../wedgets/pageLoading.ejs') %>
+  <%- include('../../wedgets/navbar.ejs') %>
   <!-- MAIN -->
   <main class="container-md main" style="display: none;">
     <div>
       <h1>
-        <%= blog.title %>
+        <%%= blog.title %>
       </h1>
       <div class="editor-content-view">
 
       </div>
     </div>
-    <% if (blog.show) { %>
+    <%% if (blog.show) { %>
     <div class="comment-container">
       <div class="reply-box" data-comment-id="0">
         <div class="editor-container"></div>
@@ -24,19 +25,15 @@
         </div>
       </div>
     </div>
-    <% } %>
-  </div>
-  <div>
-    <!-- 當前使用者頁面的使用者資料 -->
-    <div data-my-data="blog" style="display: none;">
-      <%- JSON.stringify(blog) %>
+    <%% } %>
     </div>
-  </div>
-  
+    <div>
+      <!-- EJS DATA -->
+      <%- include('../../wedgets/ejs-data-list') %>
   </main>
   <!-- FOOTER -->
-  <%- include('wedgets/footer.ejs') %>
-  <%- include('wedgets/cdn') %>
+  <%- include('../../wedgets/footer.ejs') %>
+  <%- include('../../wedgets/cdn') %>
 </body>
 
 </html>

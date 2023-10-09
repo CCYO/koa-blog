@@ -1,0 +1,8 @@
+<div style="display: none;">
+  <% for(let type in locals){ %>
+  <% if( type === "partials" || type === "filename" || type === "title" || type === "isSelf"){ continue } %>
+  <div data-my-data="<%= type %>">
+    <%- JSON.stringify(locals[type]) %>
+  </div>
+  <% } %>
+</div>

@@ -1,0 +1,27 @@
+<%% for( type in relationShip){ %>
+<%% let list = relationShip[type] %>
+<div class="relationShip-box">
+  <h3><%%= type === "fansList" ? "粉絲" : "偶像" %>列表</h3>
+  <div id=<%%= type %> class="relationShip-list-box">
+    <%% if(list.length) {%>
+    <ul>
+      <%% list.forEach( user => { %>
+      <li class="card" data-<%= CONS.PAGES.USER.DATASET.KEY.USER_ID %>="<%%= user.id %>">
+        <div class="ratio ratio-1x1">
+          <img src="<%%= user.avatar %>" class="card-img-top" alt="">
+        </div>
+        <div class="text-truncate">
+          <a href="/other/<%%= user.id %>" class="stretched-link">
+            <%%= user.nickname %>
+          </a>
+        </div>
+      </li>
+
+      <%% }) %>
+    </ul>
+    <%% } else { %>
+    <p>很遺憾，列表裡沒有人</p>
+    <%% } %>
+  </div>
+</div>
+<%% } %>

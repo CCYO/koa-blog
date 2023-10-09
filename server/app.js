@@ -118,7 +118,14 @@ if (isDev || !isProd) {
 }
 //  view
 app.use(
-  koaViews(viewRoot, { extension: "ejs", map: { ejs: "ejs" }, viewExt: "ejs" })
+  koaViews(viewRoot, {
+    extension: "ejs",
+    map: { ejs: "ejs" },
+    viewExt: "ejs",
+    partials: {
+      ss: resolve(__dirname, ".ss"),
+    },
+  })
 );
 //  靜態檔案
 app.use(

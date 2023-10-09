@@ -1,0 +1,61 @@
+<%% for(let status in blogs){ %>
+<%% let isPublic = status === "public" %>
+<%% if(!isSelf && !isPublic){ continue }%>
+<%% let blogData = blogs[status] %>
+
+<div class="card blogList bg-light" data-<%= CONS.PAGES.USER.DATASET.KEY.BLOG_STATUS %>="<%%= status %>">
+  <div class="card-header blogList-header align-items-center">
+    <h5><%%= isPublic ? '公開的BLOG' : '編輯中的BLOG' %></h5>
+    <%% if(isSelf && blogData.count) { %>
+    <button type="button" class="btn btn-sm btn-outline-danger" data-<%= CONS.PAGES.USER.DATASET.KEY.REMOVE_BLOG %>="<%= CONS.PAGES.USER.DATASET.VALUE.REMOVE_BLOG_LIST %>">全部刪除</button>
+    <%% } %>
+  </div>
+  <%% if(blogData.count){ %>
+  <ul>
+    <%% let page = 1 %>
+    <%% let blogs = blogData.blogs %>
+    <%- include('blogList') %>
+  </ul>
+  <%% if (blogData.count> 1) { %>
+  <nav aria-label="...">
+    <ul class="pagination">
+      <li class="page-item">
+        <a class="page-link pe-none" href="#" data-<%= CONS.PAGES.USER.DATASET.KEY.PAGE_TURN %>="<%= CONS.PAGES.USER.DATASET.VALUE.PREVIOUS_PAGINATION %>">
+          << </a>
+      </li>
+      <li class="page-item">
+        <a class="page-link pe-none" href="#" data-<%= CONS.PAGES.USER.DATASET.KEY.PAGE_TURN %>="<%= CONS.PAGES.USER.DATASET.VALUE.PREVIOUS_PAGE %>">Previous</a>
+      </li>
+      <%% var totalPage=Math.ceil(blogData.count / 5) %>
+      <%% for(let page_num=1; totalPage>= page_num; page_num++){ %>
+      <%% if((page_num % 2)===1){ %>
+      <!-- 除5若無餘數，要有ul li -->
+      <ul class="pagination" data-<%= CONS.PAGES.USER.DATASET.KEY.PAGINATION_NUM %>="<%%= Math.ceil(page_num / 2) %>" <%% if(Math.ceil(page_num / 2) > 1){ %> style="display: none;" <%% } %>>
+        <%% } %>
+        <!-- 除5無論有無餘數，都要li -->
+        <li class="page-item <%%= page_num === 1 ? 'active' : '' %>">
+          <a class="page-link" href="#" data-<%= CONS.PAGES.USER.DATASET.KEY.PAGE_TURN %>="<%%= page_num %>">
+            <%%= page_num %>
+          </a>
+        </li>
+        <%% if( !(page_num % 2) || page_num===totalPage ){ %>
+      </ul>
+      <%% } %>
+      <%% } %>
+      <li class="page-item">
+        <a href="#" data-<%= CONS.PAGES.USER.DATASET.KEY.PAGE_TURN %>="<%= CONS.PAGES.USER.DATASET.VALUE.NEXT_PAGE %>" class="page-link <%%= totalPage < 2 ? "pe-none" : '' %>">Next</a>
+      </li>
+      <li class="page-item">
+        <a href="#" data-<%= CONS.PAGES.USER.DATASET.KEY.PAGE_TURN %>="<%= CONS.PAGES.USER.DATASET.VALUE.NEXT_PAGINATION %>" class="page-link <%%= totalPage <= 2 ? "pe-none" : '' %>"> >> </a>
+      </li>
+    </ul>
+  </nav>
+  <%% } %>
+
+  <%% } else { %>
+  <p class="p-3">沒有<%%= isPublic ? '公開' : '編輯中' %>的BLOG <%%= blogs.public.count %>
+  </p>
+  <%% } %>
+</div>
+
+<%% } %>

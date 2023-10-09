@@ -1,8 +1,11 @@
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
-<%- include('wedgets/header.ejs') %>
+<%- include('../../wedgets/header.ejs') %>
+
 <body>
-  <%- include('wedgets/pageLoading.ejs') %>
-  <%- include('wedgets/navbar.ejs') %>
+  <!-- 視窗遮蔽 -->
+  <%- include('../../wedgets/pageLoading.ejs') %>
+  <!-- NAVBAR -->
+  <%- include('../../wedgets/navbar.ejs') %>
   <!-- 數據讀取提示 -->
   <main style="display: none;">
     <!-- 註冊/登入 互動卡片-->
@@ -22,8 +25,9 @@
       </div>
       <!-- 卡片主體 -->
       <div class="card-body tab-content">
-        <div class="tab-pane fade <%= active === 'register' ? `show active` : ``%>" role="tabpanel" aria-labelledby="register-tab" id="register-card">
-          <form id='register-form' data-my-type="register" class="row" autocomplete="do-not-autofill">
+        <!-- REGISTER PANE -->
+        <div class="tab-pane fade <%= active === --CONS.PAGES.REGISTER_LOGIN.ID.REGISTER_FORM-- ? `show active` : `` %>" role="tabpanel" aria-labelledby="<%= CONS.PAGES.REGISTER_LOGIN.ID.REGISTER_FORM %>-tab" id="<%= CONS.PAGES.REGISTER_LOGIN.ID.REGISTER_FORM %>-card">
+          <form id=<%= CONS.PAGES.REGISTER_LOGIN.ID.REGISTER_FORM %> data-my-type="register" class="row" autocomplete="do-not-autofill">
             <div class="col-8 mx-auto">
               <div class="mb-3">
                 <label for="email" class="form-label">信箱</label>
@@ -44,8 +48,9 @@
             </div>
           </form>
         </div>
+        <!-- LOGIN PANE -->
         <div class="tab-pane fade <%= active === 'login'  ? `show active` : ``%>" id="login-card" role="tabpanel" aria-labelledby="login-tab">
-          <form id='login-form' data-my-type="login" class="row" autocomplete="do-not-autofill">
+          <form id=<%= CONS.PAGES.REGISTER_LOGIN.ID.LOGIN_FORM %> data-my-type="login" class="row" autocomplete="do-not-autofill">
             <div class="col-8 mx-auto">
               <div class="mb-3">
                 <label for="email" class="form-label">信箱</label>
@@ -65,6 +70,7 @@
       </div>
     </div>
   </main>
-  <%- include('wedgets/cdn') %>
+  <%- include('../../wedgets/cdn') %>
 </body>
+
 </html>

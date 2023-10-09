@@ -2,11 +2,11 @@
 /* EJS Module --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 if (process.env.NODE_ENV === "development") {
-  await import("../views/user.ejs");
+  await import("../views/pages/user/index.ejs");
 }
-import ejs_str_fansItem from "../views/wedgets/user/fansItem.ejs";
+import ejs_str_fansItem from "../views/pages/user/components/fansItem.ejs";
 //  使用 template-ejs-loader 將 偶像粉絲列表的項目ejs檔 轉譯為 純字符
-import ejs_str_blogList from "../views/wedgets/user/blogList.ejs";
+import ejs_str_blogList from "../views/pages/user/components/blogList.ejs";
 //  使用 template-ejs-loader 將 文章列表的項目ejs檔 轉譯為 純字符
 
 /* ------------------------------------------------------------------------------------------ */
@@ -40,48 +40,7 @@ import {
 /* Const --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-const CONS = {
-  API: {
-    //  api
-    FOLLOW: "/api/user/follow",
-    CANCEL_FOLLOW: "/api/user/cancelFollow",
-    CREATE_BLOG: "/api/blog",
-    REMOVE_BLOGS: "/api/blog",
-    GET_BLOG_LIST: "/api/blog/list",
-    //  view
-    EDIT_BLOG: "/blog/edit",
-  },
-  CLASS: {
-    PAGE_NUM_LINK: ".pagination .pagination .page-link",
-  },
-  ID: {
-    NEW_BLOG_TITLE: "new_blog_title",
-    NEW_BLOG: "new_blog",
-    FANS_LIST: "fansList",
-    IDOL_LIST: "idolList",
-    FOLLOW: "follow",
-    CANCEL_FOLLOW: "cancelFollow",
-  },
-  DATASET: {
-    KEY: {
-      BLOG_STATUS: "status",
-      PAGE_TURN: "turn",
-      PAGE_NUM: "page",
-      PAGINATION_NUM: "pagination",
-      REMOVE_BLOG: "remove-blog",
-      BLOG_ID: "blog-id",
-      FANS_ID: "fans-id",
-    },
-    VALUE: {
-      NEXT_PAGE: "next-page",
-      PREVIOUS_PAGE: "previous-page",
-      NEXT_PAGINATION: "next-pagination",
-      PREVIOUS_PAGINATION: "previous-pagination",
-      REMOVE_BLOG_ITEM: "item",
-      REMOVE_BLOG_LIST: "list",
-    },
-  },
-};
+import CONFIG_CONST from "../../config/const";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
@@ -91,6 +50,13 @@ const $C_initPage = new $M_wedgets.InitPage();
 //  初始化頁面
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
+
+/* ------------------------------------------------------------------------------------------ */
+/* CONST --------------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------------------------ */
+
+const PAGE_USER = CONFIG_CONST.PAGES.USER;
+const DATA_BLOG = CONFIG_CONST.DATAS.BLOG;
 
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
@@ -112,26 +78,26 @@ window.addEventListener("load", async () => {
     throw error;
   }
 
-  async function renderPage({ me, currentUser, fansList, idols, blogs }) {
+  async function renderPage({ me, currentUser, relationShip, blogs }) {
     /* ------------------------------------------------------------------------------------------ */
-    /* Public Var ------------------------------------------------------------------------------- */
+    /* Public Var in Closure -------------------------------------------------------------------- */
     /* ------------------------------------------------------------------------------------------ */
-    let $$pageData = { me, currentUser, fansList, idols, blogs };
+    let $$pageData = { me, currentUser, relationShip, blogs };
     const $$isLogin = !!me.id;
     const $$isSelf = currentUser.id === me.id;
 
     /* 公用 JQ Ele */
-    let $input_new_blog_title = $(`#${CONS.ID.NEW_BLOG_TITLE}`);
-    let $btn_new_blog = $(`#${CONS.ID.NEW_BLOG}`);
-    let $fansList = $(`#${CONS.ID.FANS_LIST}`);
+    let $input_new_blog_title = $(`#${PAGE_USER.ID.NEW_BLOG_TITLE}`);
+    let $btn_new_blog = $(`#${PAGE_USER.ID.NEW_BLOG}`);
+    let $fansList = $(`#${PAGE_USER.ID.FANS_LIST}`);
     //  粉絲列表contaner
-    let $idolList = $(`#${CONS.ID.IDOL_LIST}`);
+    let $idolList = $(`#${PAGE_USER.ID.IDOL_LIST}`);
     //  偶像列表contaner
-    let $btn_follow = $(`#${CONS.ID.FOLLOW}`);
+    let $btn_follow = $(`#${PAGE_USER.ID.FOLLOW}`);
     //  追蹤鈕
-    let $btn_cancelFollow = $(`#${CONS.ID.CANCEL_FOLLOW}`);
+    let $btn_cancelFollow = $(`#${PAGE_USER.ID.CANCEL_FOLLOW}`);
     //  退追鈕
-    let $div_blogList = $(`[data-${CONS.DATASET.KEY.BLOG_STATUS}]`);
+    let $div_blogList = $(`[data-${PAGE_USER.DATASET.KEY.BLOG_STATUS}]`);
     //  文章列表container
 
     if ($$isSelf) {
@@ -158,7 +124,9 @@ window.addEventListener("load", async () => {
     } else {
       /* render */
       const isMyIdol = $$isLogin
-        ? $$pageData.fansList.some(fans => fans.id === $$pageData.me.id)
+        ? $$pageData.relationShip.fansList.some(
+            fans => fans.id === $$pageData.me.id
+          )
         : false;
       //  判端是否為自己的偶像
       $btn_cancelFollow.toggle(isMyIdol);
@@ -186,34 +154,34 @@ window.addEventListener("load", async () => {
     /* ------------------------------------------------------------------------------------------ */
     async function handle_removeBlogs(e) {
       let $target = $(e.target);
-      let action = $target.data(CONS.DATASET.KEY.REMOVE_BLOG);
+      let action = $target.data(PAGE_USER.DATASET.KEY.REMOVE_BLOG);
       if (!action || (action && !confirm("真的要刪除嗎?"))) {
         return;
       }
       e.preventDefault();
-      checkLogin();
+      _checkLogin();
       let blogList = [];
-      if (action === CONS.DATASET.VALUE.REMOVE_BLOG_ITEM) {
+      if (action === PAGE_USER.DATASET.VALUE.REMOVE_BLOG_ITEM) {
         blogList.push(
           $target
-            .parents(`[data-${CONS.DATASET.KEY.BLOG_ID}]`)
-            .data(CONS.DATASET.KEY.BLOG_ID)
+            .parents(`[data-${PAGE_USER.DATASET.KEY.BLOG_ID}]`)
+            .data(PAGE_USER.DATASET.KEY.BLOG_ID)
         );
       } else {
         let $container = $target.parents(
-          `[data-${CONS.DATASET.KEY.BLOG_STATUS}]`
+          `[data-${PAGE_USER.DATASET.KEY.BLOG_STATUS}]`
         );
         let $li_blogItem_list = $container
-          .find(`.show[data-${CONS.DATASET.KEY.PAGE_NUM}]`)
-          .find(`[data-${CONS.DATASET.KEY.BLOG_ID}]`);
+          .find(`.show[data-${PAGE_USER.DATASET.KEY.PAGE_NUM}]`)
+          .find(`[data-${PAGE_USER.DATASET.KEY.BLOG_ID}]`);
         blogList = Array.from($li_blogItem_list).map(li =>
-          $(li).data(CONS.DATASET.KEY.BLOG_ID)
+          $(li).data(PAGE_USER.DATASET.KEY.BLOG_ID)
         );
       }
 
       let owner_id = $$pageData.me.id;
       //  送出刪除命令
-      let { errno } = await $M_axios.delete(CONS.API.REMOVE_BLOGS, {
+      let { errno } = await $M_axios.delete(PAGE_USER.API.REMOVE_BLOGS, {
         data: {
           blogList,
           owner_id,
@@ -233,13 +201,13 @@ window.addEventListener("load", async () => {
       }
       const {
         data: { id: blog_id },
-      } = await $M_axios.post(CONS.API.CREATE_BLOG, {
+      } = await $M_axios.post(PAGE_USER.API.CREATE_BLOG, {
         title,
       });
       alert("創建成功，開始編輯文章");
       $input_new_blog_title.val("");
       //  清空表格
-      let redir = `${CONS.API.EDIT_BLOG}/${blog_id}?owner_id=${$$pageData.me.id}`;
+      let redir = `${PAGE_USER.API.EDIT_BLOG}/${blog_id}?owner_id=${$$pageData.me.id}`;
       location.href = redir;
     }
     async function check_title() {
@@ -266,19 +234,19 @@ window.addEventListener("load", async () => {
       return title;
     }
     async function follow() {
-      checkLogin();
+      _checkLogin();
       //  檢查登入狀態
       /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-      await $M_axios.post(CONS.API.FOLLOW, {
+      await $M_axios.post(PAGE_USER.API.FOLLOW, {
         id: $$pageData.currentUser.id,
       });
       //  發出 取消/追蹤 請求
       /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-      $$pageData.fansList.unshift($$pageData.me);
+      $$pageData.relationShip.fansList.unshift($$pageData.me);
       //  同步 $$fansList 數據
-      let html = template_fansItem({ me: $$pageData.me });
+      let html = _template_fansItem({ me: $$pageData.me });
       //  在粉絲列表中插入 粉絲htmlStr
-      if ($$pageData.fansList.length === 1) {
+      if ($$pageData.relationShip.fansList.length === 1) {
         //  如果追蹤者只有當前的你
         $fansList.html(`<ul>${html}</ul>`);
       } else {
@@ -296,22 +264,24 @@ window.addEventListener("load", async () => {
       return;
     }
     async function cancelFollow() {
-      checkLogin();
+      _checkLogin();
       //  檢查登入狀態
       /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-      await $M_axios.post(CONS.API.CANCEL_FOLLOW, {
+      await $M_axios.post(PAGE_USER.API.CANCEL_FOLLOW, {
         id: $$pageData.currentUser.id,
       });
       //  發出 取消/追蹤 請求
       /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-      $$pageData.fansList.splice(
-        $$pageData.fansList.indexOf($$pageData.me.id),
+      $$pageData.relationShip.fansList.splice(
+        $$pageData.relationShip.fansList.indexOf($$pageData.me.id),
         1
       );
       //  在粉絲列表中移除 粉絲htmlStr
-      if ($$pageData.fansList.length > 0) {
+      if ($$pageData.relationShip.fansList.length > 0) {
         //  如果仍有追蹤者
-        $(`li[data-${CONS.DATASET.KEY.FANS_ID}=${$$pageData.me.id}]`).remove();
+        $fansList
+          .find(`li[data-${PAGE_USER.DATASET.KEY.USER_ID}=${$$pageData.me.id}]`)
+          .remove();
         //  直接移除
       } else {
         //  如果已無追蹤者
@@ -335,62 +305,47 @@ window.addEventListener("load", async () => {
     /*  初始化文章列表的分頁功能 */
     function initPagination() {
       //  Closure Var
-      const PUBLIC = 1;
-      const PRIVATE = 0;
-      let $$pagination_list = {
-        [PRIVATE]: {
-          currentPage: 0,
-          currentPagination: 0,
-          totalPage: 0,
-          totalPagination: 0,
-        },
-        [PUBLIC]: {
-          currentPage: 0,
-          currentPagination: 0,
-          totalPage: 0,
-          totalPagination: 0,
-        },
-      };
+      let $$pagination_list = {};
       for (let status in $$pageData.blogs) {
         if (!$$pageData.blogs[status].count) {
           continue;
         }
-        let targetBlogData =
-          $$pagination_list[status === "public" ? PUBLIC : PRIVATE];
+
+        let targetBlogData = ($$pagination_list[status] = {});
         targetBlogData.currentPage = 1;
         targetBlogData.totalPage = Math.ceil(
-          $$pageData.blogs[status].count / 5
+          $$pageData.blogs[status].count / DATA_BLOG.PAGINATION.BLOG_COUNT
         );
         targetBlogData.currentPagination = 1;
         targetBlogData.totalPagination = Math.ceil(
-          targetBlogData.totalPage / 2
+          targetBlogData.totalPage / DATA_BLOG.PAGINATION.PAGE_COUNT
         );
       }
       //  處理 pageNum 的 tab
-      $(CONS.CLASS.PAGE_NUM_LINK).each((index, link) => {
+      $(PAGE_USER.CLASS.PAGE_NUM_LINK).each((index, link) => {
         let $link = $(link);
         let $container = $link.parents(
-          `[data-${CONS.DATASET.KEY.BLOG_STATUS}]`
+          `[data-${PAGE_USER.DATASET.KEY.BLOG_STATUS}]`
         );
-        let $$status = $container.data(CONS.DATASET.KEY.BLOG_STATUS) * 1;
+        let $$status = $container.data(PAGE_USER.DATASET.KEY.BLOG_STATUS);
         let $$pagination = $$pagination_list[$$status];
 
-        let $$targetPage = $link.data(CONS.DATASET.KEY.PAGE_TURN) * 1;
+        let $$targetPage = $link.data(PAGE_USER.DATASET.KEY.PAGE_TURN) * 1;
         link.$tab = $link.parent("li");
-        let $$pane_selector = `[data-${CONS.DATASET.KEY.PAGE_NUM}=${$$targetPage}]`;
+        let $$pane_selector = `[data-${PAGE_USER.DATASET.KEY.PAGE_NUM}=${$$targetPage}]`;
         link.$pane = $container.find($$pane_selector);
 
         let $tab_pagination_turn_next = $container.find(
-          `[data-${CONS.DATASET.KEY.PAGE_TURN}=${CONS.DATASET.VALUE.NEXT_PAGINATION}]`
+          `[data-${PAGE_USER.DATASET.KEY.PAGE_TURN}=${PAGE_USER.DATASET.VALUE.NEXT_PAGINATION}]`
         );
         let $tab_pagination_turn_previous = $container.find(
-          `[data-${CONS.DATASET.KEY.PAGE_TURN}=${CONS.DATASET.VALUE.PREVIOUS_PAGINATION}]`
+          `[data-${PAGE_USER.DATASET.KEY.PAGE_TURN}=${PAGE_USER.DATASET.VALUE.PREVIOUS_PAGINATION}]`
         );
         let $tab_page_turn_next = $container.find(
-          `[data-${CONS.DATASET.KEY.PAGE_TURN}=${CONS.DATASET.VALUE.NEXT_PAGE}]`
+          `[data-${PAGE_USER.DATASET.KEY.PAGE_TURN}=${PAGE_USER.DATASET.VALUE.NEXT_PAGE}]`
         );
         let $tab_page_turn_previous = $container.find(
-          `[data-${CONS.DATASET.KEY.PAGE_TURN}=${CONS.DATASET.VALUE.PREVIOUS_PAGE}]`
+          `[data-${PAGE_USER.DATASET.KEY.PAGE_TURN}=${PAGE_USER.DATASET.VALUE.PREVIOUS_PAGE}]`
         );
 
         link.tab = async function (preLink, paramsObj) {
@@ -402,20 +357,20 @@ window.addEventListener("load", async () => {
             //  發出請求，取得blogList數據
             let {
               data: { blogs },
-            } = await $M_axios.post(CONS.API.GET_BLOG_LIST, {
+            } = await $M_axios.post(PAGE_USER.API.GET_BLOG_LIST, {
               author_id: $$pageData.currentUser.id,
-              limit: 5,
-              offset: (targetPage - 1) * 5,
+              limit: DATA_BLOG.PAGINATION.BLOG_COUNT,
+              offset: (targetPage - 1) * DATA_BLOG.PAGINATION.BLOG_COUNT,
               show: $$status,
             });
-            let html = template_blogList_page({
+            let html = _template_blogList_page({
               isPublic: $$status ? true : false,
               isSelf: $$isSelf,
               page: targetPage,
               blogs,
             });
             $container
-              .find(`[data-${CONS.DATASET.KEY.PAGE_NUM}]`)
+              .find(`[data-${PAGE_USER.DATASET.KEY.PAGE_NUM}]`)
               .last()
               .after(html);
             link.$pane = $container.find($$pane_selector);
@@ -426,12 +381,12 @@ window.addEventListener("load", async () => {
             $$pagination.currentPagination = targetPagination;
             $container
               .find(
-                `[data-${CONS.DATASET.KEY.PAGINATION_NUM}=${currentPagination}]`
+                `[data-${PAGE_USER.DATASET.KEY.PAGINATION_NUM}=${currentPagination}]`
               )
               .hide();
             $container
               .find(
-                `[data-${CONS.DATASET.KEY.PAGINATION_NUM}=${targetPagination}]`
+                `[data-${PAGE_USER.DATASET.KEY.PAGINATION_NUM}=${targetPagination}]`
               )
               .show();
 
@@ -467,36 +422,36 @@ window.addEventListener("load", async () => {
         if ($tab.attr("href") === "#") {
           e.preventDefault();
         }
-        let mode = $tab.data(CONS.DATASET.KEY.PAGE_TURN);
+        let mode = $tab.data(PAGE_USER.DATASET.KEY.PAGE_TURN);
         if (!mode) {
           return Promise.resolve();
         }
         let $container = $(e.currentTarget);
-        const status = $container.data(CONS.DATASET.KEY.BLOG_STATUS) * 1;
+        const status = $container.data(PAGE_USER.DATASET.KEY.BLOG_STATUS);
         let { currentPage, currentPagination } = $$pagination_list[status];
         let targetPage = currentPage;
         let targetPagination = currentPagination;
-        console.log(mode);
-        console.log(CONS.DATASET.VALUE.PREVIOUS_PAGINATION);
-
         if (
-          mode === CONS.DATASET.VALUE.NEXT_PAGINATION ||
-          mode === CONS.DATASET.VALUE.PREVIOUS_PAGINATION
+          mode === PAGE_USER.DATASET.VALUE.NEXT_PAGINATION ||
+          mode === PAGE_USER.DATASET.VALUE.PREVIOUS_PAGINATION
         ) {
           targetPagination =
-            mode === CONS.DATASET.VALUE.PREVIOUS_PAGINATION
+            mode === PAGE_USER.DATASET.VALUE.PREVIOUS_PAGINATION
               ? --targetPagination
               : ++targetPagination;
-          targetPage = (targetPagination - 1) * 2 + 1;
+          targetPage =
+            (targetPagination - 1) * DATA_BLOG.PAGINATION.PAGE_COUNT + 1;
         } else if (
-          mode === CONS.DATASET.VALUE.NEXT_PAGE ||
-          mode === CONS.DATASET.VALUE.PREVIOUS_PAGE
+          mode === PAGE_USER.DATASET.VALUE.NEXT_PAGE ||
+          mode === PAGE_USER.DATASET.VALUE.PREVIOUS_PAGE
         ) {
           targetPage =
-            mode === CONS.DATASET.VALUE.NEXT_PAGE
+            mode === PAGE_USER.DATASET.VALUE.NEXT_PAGE
               ? currentPage + 1
               : currentPage - 1;
-          targetPagination = Math.ceil(targetPage / 2);
+          targetPagination = Math.ceil(
+            targetPage / DATA_BLOG.PAGINATION.PAGE_COUNT
+          );
         } else {
           targetPage = mode * 1;
         }
@@ -508,10 +463,10 @@ window.addEventListener("load", async () => {
           };
         }
         let current_page_link = $container
-          .find(`[data-${CONS.DATASET.KEY.PAGE_TURN}='${currentPage}']`)
+          .find(`[data-${PAGE_USER.DATASET.KEY.PAGE_TURN}='${currentPage}']`)
           .get(0);
         let target_page_link = $container
-          .find(`[data-${CONS.DATASET.KEY.PAGE_TURN}='${targetPage}']`)
+          .find(`[data-${PAGE_USER.DATASET.KEY.PAGE_TURN}='${targetPage}']`)
           .get(0);
         await target_page_link.tab(current_page_link, {
           targetPage,
@@ -590,7 +545,7 @@ window.addEventListener("load", async () => {
       return betterScrollEles;
     }
     /*  確認登入狀態 */
-    function checkLogin() {
+    function _checkLogin() {
       if ($$isLogin) {
         return;
       }
@@ -600,7 +555,9 @@ window.addEventListener("load", async () => {
         location.href
       )}`;
     }
-    let template_blogList_page = lodash.template(ejs_str_blogList);
-    let template_fansItem = lodash.template(ejs_str_fansItem);
+    /*  blogList 的 template 函數 */
+    let _template_blogList_page = lodash.template(ejs_str_blogList);
+    /*  fansItem 的 template 函數 */
+    let _template_fansItem = lodash.template(ejs_str_fansItem);
   }
 });
