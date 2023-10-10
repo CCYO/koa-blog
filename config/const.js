@@ -14,6 +14,12 @@ module.exports = {
         BLOG_COUNT: 5,
         PAGE_COUNT: 2,
       },
+      EDITOR: {
+        HTML_MAX_LENGTH: 65535,
+      },
+      SEARCH_PARAMS: {
+        PREVIEW: "preview",
+      },
     },
   },
   PAGES: {
@@ -46,7 +52,7 @@ module.exports = {
         //  view
         EDIT_BLOG: "/blog/edit",
       },
-      CLASS: {
+      SELECTOR: {
         PAGE_NUM_LINK: ".pagination .pagination .page-link",
       },
       ID: {
@@ -75,6 +81,51 @@ module.exports = {
           REMOVE_BLOG_ITEM: "item",
           REMOVE_BLOG_LIST: "list",
         },
+      },
+    },
+    BLOG_EDIT: {
+      API: {
+        UPDATE_BLOG: "/api/blog",
+        CREATE_IMG: "/api/blog/img",
+        CREATE_IMG_ALT: "/api/blog/blogImgAlt",
+        UPDATE_ALBUM: "/api/album",
+      },
+      ID: {
+        TITLE: "title",
+        STATUS: "status",
+        UPDATE_TITLE: "update_title",
+        UPDATE_BLOG: "update_blog",
+        REMOVE_BLOG: "remove_blog",
+        BLOG_HTML_STRING_COUNT: "content_count",
+      },
+      REG: {
+        IMG_NAME_AND_EXT: /^(.+)\.(.+?)$/,
+        IMG_ALT_ID: /alt_id=(?<alt_id>\w+)/,
+        IMG_PARSE_TO_X_IMG:
+          /<img.+?src=".+?alt_id=(?<alt_id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g,
+      },
+    },
+    BLOG: {
+      API: {
+        CREATE_COMMENT: "/api/comment",
+        REMOVE_COMMENT: "/api/comment",
+      },
+      ID: {
+        BLOG_CONTENT: "blog-content",
+        COMMENT_CONTAINER: "comment-container",
+        COMMENT_LIST_CONTAINER: "comment-list-container",
+      },
+      CLASS: {
+        COMMENT_LIST: "comment-list",
+        COMMENT_EDITOR_CONTAINER: "editor-container",
+      },
+      DATASET: {
+        KEY: {
+          COMMENT_ID: "comment_id",
+        },
+      },
+      REG: {
+        BLOG_CONTENT_TRIM: /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g,
       },
     },
   },

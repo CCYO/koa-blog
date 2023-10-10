@@ -4,6 +4,9 @@
 if (process.env.NODE_ENV === "development") {
   require("../views/pages/blog/index.ejs");
 }
+import ejs_str_commentList from "../views/pages/blog/components/comment-list.ejs";
+//  使用 template-ejs-loader 將 文章列表的項目ejs檔 轉譯為 純字符
+
 /* ------------------------------------------------------------------------------------------ */
 /* CSS Module --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
@@ -16,6 +19,7 @@ import "@wangeditor/editor/dist/css/style.css";
 /* ------------------------------------------------------------------------------------------ */
 import { createEditor } from "@wangeditor/editor";
 // 引入 editor js
+import lodash from "lodash";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Utils Module --------------------------------------------------------------------------------- */
@@ -28,17 +32,47 @@ import {
 } from "./utils";
 
 /* ------------------------------------------------------------------------------------------ */
-/* Const --------------------------------------------------------------------------------- */
+/* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-const CONS = {};
+import CONFIG_CONST from "../../config/const";
+import { COMMENT } from "../../server/model/errRes";
+
+/* ------------------------------------------------------------------------------------------ */
+/* Const ------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------ */
+
+const PAGE_BLOG = CONFIG_CONST.PAGES.BLOG;
+const DATA_BLOG = CONFIG_CONST.DATAS.BLOG;
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
+const $C_initPage = new $M_wedgets.InitPage();
+//  初始化頁面
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
+class $C_map_editor_list {
+  map = new Map([["editorList", []]]);
+  get() {
+    return this.map.get("editorList");
+  }
+  add(editor) {
+    let editorList = this.get();
+    editorList.push(editor);
+    this.map.set("editorList", editorList);
+  }
+  remove(id) {
+    let editorList = this.get();
+    let index = editorList.findIndex(editor => editor.id === id);
+    if (index < 0) {
+      return;
+    }
+    editorList.splice(index, 1);
+    this.map.set("editorList", editorList);
+  }
+}
 
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
@@ -47,13 +81,11 @@ window.addEventListener("load", async () => {
   try {
     $C_backdrop.show({ blockPage: true });
     //  讀取中，遮蔽畫面
-    let initPage = new $M_wedgets.InitPage();
-    //  幫助頁面初始化的統整函數
-    await initPage.addOtherInitFn($M_wedgets.initEJSData);
+    await $C_initPage.addOtherInitFn($M_wedgets.initEJSData);
     //  初始化ejs
-    await initPage.addOtherInitFn($M_wedgets.initNavbar);
+    await $C_initPage.addOtherInitFn($M_wedgets.initNavbar);
     //  初始化navbar
-    await initPage.render(renderPage);
+    await $C_initPage.render(initMain);
     //  統整頁面數據，並渲染需要用到統整數據的頁面內容
     $C_backdrop.hidden();
     //  讀取完成，解除遮蔽
@@ -62,58 +94,46 @@ window.addEventListener("load", async () => {
     // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
   }
 
-  async function renderPage(data) {
-    class initMyVar {
-      myVar = new Map([["editorList", []]]);
-      getEditorList() {
-        return this.myVar.get("editorList");
-      }
-      addEditor(editor) {
-        let editorList = this.getEditorList();
-        editorList.push(editor);
-        this.myVar.set("editorList", editorList);
-      }
-      removeEditor(id) {
-        let editorList = this.getEditorList();
-        let index = editorList.findIndex(editor => editor.id === id);
-        if (index < 0) {
-          return;
-        }
-        editorList.splice(index, 1);
-        this.myVar.set("editorList", editorList);
-      }
-    }
-    let myVar = new initMyVar();
+  async function initMain({ me, blog }) {
+    /* ------------------------------------------------------------------------------------------ */
+    /* JQ Ele in Closure -------------------------------------------------------------------- */
+    /* ------------------------------------------------------------------------------------------ */
+    const $blog_content = $(`${PAGE_BLOG.ID.BLOG_CONTENT}`);
+    const $comment_container = $(`#${PAGE_BLOG.ID.COMMENT_CONTAINER}`);
+    /* ------------------------------------------------------------------------------------------ */
+    /* Public Var in Closure -------------------------------------------------------------------- */
+    /* ------------------------------------------------------------------------------------------ */
+    let $$pageData = { me, blog };
+    let $$map_editor_list = new $C_map_editor_list();
+
     //  初始化畫面
+
+    $blog_content.html($$pageData.blog.html);
     //  渲染文章內容
-    $(".editor-content-view").html(data.blog.html);
+
     //  若文章是預覽頁，或者非公開的，不需要作評論功能設定
-    if (isPreview() || !data.blog.show) {
-      $(".comment-container").remove();
-      $C_backdrop.hidden();
+
+    let template_fn = lodash.template(ejs_str_commentList);
+    window.tt = template_fn;
+    if (!$$pageData.blog.showComment) {
       return;
-    } else if (data.blog.comments.length) {
-      $(".comment-list-container > .comment-list").html(
-        data.blog.commentsHtmlStr
-      );
-      delete data.blog.commentsHtmlStr;
+    }
+    if ($$pageData.blog.comments.length) {
+      $comment_container
+        .children(`.${PAGE_BLOG.CLASS.COMMENT_LIST}`)
+        .html(template_fn($$pageData.blog.comments));
+      // .html($$pageData.blog.commentsHtmlStr);
+      delete $$pageData.blog.commentsHtmlStr;
     }
 
     //  初始化頁面功能
     //  公用變量
-    let pageData = data;
-    // ----------------------------------------------------------------------------------------
-    window.pageData = pageData;
-    // ----------------------------------------------------------------------------------------
-    let api_comment = "/api/comment";
-    let commentEditor_root =
-      ".comment-container > .reply-box > .editor-container";
 
     //  移除非當前使用者留言的「刪除鈕」
-    if (pageData.me.id) {
+    if ($$pageData.me.id) {
       $("button[data-remove]").each((index, btn) => {
         let $btn = $(btn);
-        let notMyComment = $btn.data("user") * 1 !== pageData.me.id;
+        let notMyComment = $btn.data("user") * 1 !== $$pageData.me.id;
         if (notMyComment) {
           $btn.remove();
         }
@@ -125,15 +145,18 @@ window.addEventListener("load", async () => {
     }
 
     //  初始化根評論editor
-    let editor = init_editor(document.querySelector(commentEditor_root));
-    let container =
-      editor.getEditableContainer().parentNode.parentNode.dataset.commentId;
+    let $root_editor = $comment_container
+      .children(`[data-${PAGE_BLOG.DATASET.KEY.COMMENT_ID}=0]`)
+      .children(`.${PAGE_BLOG.CLASS.COMMENT_EDITOR_CONTAINER}`)
+      .first();
+    init_editor($root_editor.get(0));
 
-    $(".comment-list-container").on("click", e => {
+    $(`${PAGE_BLOG.ID.COMMENT_LIST_CONTAINER}`).on("click", e => {
       let target = e.target;
       if (target.tagName !== "BUTTON") {
         return;
       }
+      e.preventDefault();
       let replyBox = target.parentElement.nextElementSibling;
       let editorContainer = replyBox.firstElementChild;
       let isExist = typeof editorContainer.show === "function";
@@ -162,22 +185,22 @@ window.addEventListener("load", async () => {
     async function removeComment(replyBox) {
       let comment_id = replyBox.dataset.commentId * 1;
       let payload = {
-        author_id: pageData.blog.author.id,
-        commenter_id: pageData.me.id,
+        author_id: $$pageData.blog.author.id,
+        commenter_id: $$pageData.me.id,
         comment_id,
-        blog_id: pageData.blog.id,
+        blog_id: $$pageData.blog.id,
         pid: $(replyBox)
-          .parents(".comment-list")
+          .parents(`.${PAGE_BLOG.CLASS.COMMENT_LIST}`)
           .first()
           .prev()
           .first()
-          .data("commentId"),
+          .data(PAGE_BLOG.DATASET.KEY.COMMENT_ID),
       };
       console.log("# => ", payload);
 
       let {
         data: { errno, data, msg },
-      } = await $M_axios.delete("/api/comment", {
+      } = await $M_axios.delete(PAGE_BLOG.API.REMOVE_COMMENT, {
         data: payload,
       });
       if (errno) {
@@ -246,11 +269,13 @@ window.addEventListener("load", async () => {
           if (pid) {
             $(replyBox.nextElementSibling).append(str);
           } else {
-            $(document.querySelector(".comment-list")).prepend(str);
+            $(
+              document.querySelector(`.${PAGE_BLOG.CLASS.COMMENT_LIST}`)
+            ).prepend(str);
           }
         });
         //  將editor存入editorList，以便 loadEnd 關閉 editor 的功能
-        myVar.addEditor(editor);
+        $$map_editor_list.add(editor);
         //  為container綁定判斷登入狀態的handle
         container.addEventListener("click", isLogin);
         //  為container綁定送出留言的handle
@@ -267,8 +292,7 @@ window.addEventListener("load", async () => {
             return;
           }
           let htmlStr = editor.getHtml();
-          let reg = /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g;
-          let html = htmlStr.replace(reg, "");
+          let html = htmlStr.replace(PAGE_BLOG.REG.BLOG_CONTENT_TRIM, "");
           //  撇除空留言
           if (!html.trim()) {
             editor.setHtml();
@@ -276,7 +300,7 @@ window.addEventListener("load", async () => {
             return;
           }
 
-          // loading(myVar.getEditorList())
+          // loading(map_editor_list.get())
           $C_backdrop.hidden();
           //  送出請求
           let {
@@ -300,8 +324,8 @@ window.addEventListener("load", async () => {
           //  更新評論數據，comment: { id, html, time, pid, commenter: { id, email, nickname}}
           function updateComment(comment) {
             let { id, pid, html, time } = comment;
-            let commentId = pageData.blog.map_commentId;
-            let commentPid = pageData.blog.map_commentPid;
+            let commentId = $$pageData.blog.map_commentId;
+            let commentPid = $$pageData.blog.map_commentPid;
             //  新建此評論為pid的commentPid
             commentPid.set(id, []);
             //  找出此評論的父評論列
@@ -322,11 +346,17 @@ window.addEventListener("load", async () => {
           //  要修改
           //  ------------------------------------------------------------------------
           function renderComment() {
+            let template = template_fn({
+              ...data,
+              reply: [],
+              isDeleted: false,
+            });
             //  創建評論htmlStr，data: { id, html, time, pid, commenter: { id, email, nickname}}
-            let template = templateComment(data);
+            // let template = templateComment(data);
             console.log("@進入渲染函數");
             //  渲染
             editor.render(template);
+
             //  創建評論
             function templateComment({ id, html, time, commenter }) {
               return `
@@ -338,7 +368,7 @@ window.addEventListener("load", async () => {
                                         <button data-remove=${id} data-user=${commenter.id}>刪除</button>
                                     </div>
 
-                                    <div class="reply-box" data-comment-id="${id}">
+                                    <div data-comment-id="${id}">
                                         <div class="editor-container"></div>
                                     </div>
                                     <div class="comment-list"></div>
@@ -348,34 +378,29 @@ window.addEventListener("load", async () => {
           }
           //  送出創建評論的請求
           async function postComment() {
-            let article_id = pageData.blog.id;
-            let commenter_id = pageData.me.id;
+            let article_id = $$pageData.blog.id;
+            let commenter_id = $$pageData.me.id;
             //  若 文章作者 = 留言者，payload加入author: 留言者id，否則undefined
 
             let payload = {
               article_id,
               commenter_id, //  留言者
-              author_id: pageData.blog.author.id, //  文章作者
+              author_id: $$pageData.blog.author.id, //  文章作者
               html,
               pid: editor.id ? editor.id : null, //  editor 若為 0，代表根評論
             };
-
-            return await $M_axios.post(api_comment, payload);
+            return await $M_axios.post(PAGE_BLOG.API.CREATE_COMMENT, payload);
           }
         }
       }
     }
-    //  確認是否為文章預覽頁面
-    function isPreview() {
-      let reg = /preview=(?<preview>.+)&?/;
-      let query = window.location.search;
-      let res = reg.exec(query);
-      let preview = res ? res.groups.preview : false;
-      return preview;
-    }
+
+    /* ------------------------------------------------------------------------------------------ */
+    /* Utils ------------------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------------------------ */
     //  確認是否登入
     function isLogin() {
-      if (pageData.me.id) {
+      if ($$pageData.me.id) {
         //  若登入，無需動作
         return true;
       }

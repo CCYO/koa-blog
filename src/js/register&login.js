@@ -26,51 +26,23 @@ import {
 } from "./utils";
 
 /* ------------------------------------------------------------------------------------------ */
-/* Const --------------------------------------------------------------------------------- */
+/* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
 import CONFIG_CONST from "../../config/const";
 
-const CONS = CONFIG_CONST.PAGES.REGISTER_LOGIN;
+/* ------------------------------------------------------------------------------------------ */
+/* Const ------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------ */
 
-// const CONS = {
-//   API: {
-//     LOGIN: "/api/user",
-//     REGISTER: "/api/user/register",
-//     LOGIN_SUCCESS: "/self",
-//     REGISTER_SUCCESS: "/login",
-//   },
-//   MESSAGE: {
-//     LOGIN_SUCCESS: "登入成功",
-//     LOGIN_FAIL: "登入失敗，請重新嘗試",
-//     REGISTER_SUCCESS: "註冊成功，請嘗試登入",
-//     REGISTER_FAIL: "註冊失敗，請重新嘗試",
-//   },
-//   ID: {
-//     LOGIN_FORM: "login",
-//     REGISTER_FORM: "register",
-//   },
-
-// LOGIN: {
-//   API: "/api/user",
-//   REDIR: "/self",
-//   SUCC_MSG: "登入成功",
-//   FAIL_MSG: "登入失敗，請重新嘗試",
-//   FORM_ID: "#login-form",
-// },
-// REGISTER: {
-//   API: "/api/user/register",
-//   REDIR: "/login",
-//   SUCC_MSG: "註冊成功，請嘗試登入",
-//   FAIL_MSG: "登入失敗，請重新嘗試",
-//   FORM_ID: "#register-form",
-// },
-// };
+const PAGE_REGISTER_LOGIN = CONFIG_CONST.PAGES.REGISTER_LOGIN;
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
+const $C_initPage = new $M_wedgets.InitPage();
+//  初始化頁面
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
 
@@ -81,11 +53,9 @@ window.addEventListener("load", async () => {
   try {
     $C_backdrop.show({ blockPage: true });
     //  讀取中，遮蔽畫面
-    let initPage = new $M_wedgets.InitPage();
-    //  幫助頁面初始化的統整函數
-    await initPage.addOtherInitFn($M_wedgets.initNavbar);
+    await $C_initPage.addOtherInitFn($M_wedgets.initNavbar);
     //  初始化navbar
-    await initPage.render(initMain);
+    await $C_initPage.render(initMain);
     //  統整頁面數據，並渲染需要用到統整數據的頁面內容
     $C_backdrop.hidden();
     //  讀取完成，解除遮蔽
@@ -107,13 +77,19 @@ window.addEventListener("load", async () => {
     initLoginFn();
     //  初始化 Register Form 功能
 
+    /* ------------------------------------------------------------------------------------------ */
+    /* Init ------------------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------------------------ */
+
     /* 初始化 Register Form 功能 */
     function initLoginFn() {
-      let form = document.querySelector(`#${CONS.ID.LOGIN_FORM}`);
+      let form = document.querySelector(
+        `#${PAGE_REGISTER_LOGIN.ID.LOGIN_FORM}`
+      );
       let payload = {};
       let feedback_for_Form = gen_feedback_for_Form(form);
       deb_eventHandle(
-        `#${CONS.ID.LOGIN_FORM} input`,
+        `#${PAGE_REGISTER_LOGIN.ID.LOGIN_FORM} input`,
         "input",
         handle_input_login
       );
@@ -125,20 +101,23 @@ window.addEventListener("load", async () => {
         //  校驗
         if (validateErrs) {
           payload = {};
-          alert(CONS.LOGIN.FAIL_MSG);
+          alert(PAGE_REGISTER_LOGIN.LOGIN.FAIL_MSG);
           location.reload();
           return;
         }
         //  處理校驗錯誤
         /* 送出請求 */
         /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-        let { errno } = await $M_axios.post(CONS.API.LOGIN, payload);
+        let { errno } = await $M_axios.post(
+          PAGE_REGISTER_LOGIN.API.LOGIN,
+          payload
+        );
         if (!errno) {
-          alert(CONS.MESSAGE.LOGIN_SUCCESS);
-          $M_redirForm(CONS.API.LOGIN_SUCCESS);
+          alert(PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_SUCCESS);
+          $M_redirForm(PAGE_REGISTER_LOGIN.API.LOGIN_SUCCESS);
           return;
         }
-        alert(CONS.MESSAGE.LOGIN_FAIL);
+        alert(PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_FAIL);
       }
       /* 登入表單內容表格的 input Event handler */
       async function handle_input_login(e) {
@@ -158,11 +137,13 @@ window.addEventListener("load", async () => {
     }
     /* 初始化 Register Form 功能 */
     function initRegistFn() {
-      const form = document.querySelector(`#${CONS.ID.REGISTER_FORM}`);
+      const form = document.querySelector(
+        `#${PAGE_REGISTER_LOGIN.ID.REGISTER_FORM}`
+      );
       let payload = {};
       let feedback_for_Form = gen_feedback_for_Form(form);
       deb_eventHandle(
-        `#${CONS.ID.REGISTER_FORM} input`,
+        `#${PAGE_REGISTER_LOGIN.ID.REGISTER_FORM} input`,
         "input",
         handle_input_register
       );
@@ -174,19 +155,22 @@ window.addEventListener("load", async () => {
         //  校驗
         if (validateErrs) {
           payload = {};
-          alert(CONS.REGISTER.FAIL_MSG);
+          alert(PAGE_REGISTER_LOGIN.REGISTER.FAIL_MSG);
           location.reload();
           return;
         }
         /* 送出請求 */
         /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-        let { errno } = await $M_axios.post(CONS.API.REGISTER, payload);
+        let { errno } = await $M_axios.post(
+          PAGE_REGISTER_LOGIN.API.REGISTER,
+          payload
+        );
         if (!errno) {
-          alert(CONS.MESSAGE.REGISTER_SUCCESS);
-          location.href = CONS.API.REGISTER_SUCCESS;
+          alert(PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_SUCCESS);
+          location.href = PAGE_REGISTER_LOGIN.API.REGISTER_SUCCESS;
           return;
         }
-        alert(CONS.MESSAGE.REGISTER_FAIL);
+        alert(PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_FAIL);
         return;
       }
       /* 註冊表單內容表格的 input Event handler */

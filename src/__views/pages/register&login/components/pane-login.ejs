@@ -1,0 +1,17 @@
+<div class="tab-pane fade <%= active === form_id ? `show active` : `` %>" role="tabpanel" aria-labelledby="<%= form_id %>-tab" id="<%= form_id %>-card">
+  <form id="<%= form_id %>" data-my-type="<%= form_id %>" class="row" autocomplete="do-not-autofill">
+    <div class="col-8 mx-auto">
+      <div class="mb-3">
+        <label for="email" class="form-label">信箱</label>
+        <input type="email" class="form-control" name="email" data-form-id='#form_login' autocomplete="off" aria-describedby="email_help" required>
+        <div>&nbsp;</div>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">密碼</label>
+        <input type="password" class="form-control" name="password" data-form-id='#form_login' autocomplete="do-not-autofill" required>
+        <div>&nbsp;</div>
+      </div>
+      <button type="submit" class="btn btn-primary" disabled>送出</button>
+    </div>
+  </form>
+</div>

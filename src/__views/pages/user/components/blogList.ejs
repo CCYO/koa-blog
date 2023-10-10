@@ -11,7 +11,7 @@
         <span class="timestamp">上一次編輯<%= time %></span>
       </div>
       <% if(isSelf){ %>
-      <div class="flex-shrink-0">
+      <div class="flex-shrink-0" style="z-index: 200;">
         <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?owner_id=<%= author_id %>">編輯</a>
         <a class='btn btn-outline-primary btn-sm' data-<%= CONS.PAGES.USER.DATASET.KEY.REMOVE_BLOG %>=<%= CONS.PAGES.USER.DATASET.VALUE.REMOVE_BLOG_ITEM %>>刪除</a>
       </div>

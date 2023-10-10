@@ -1,3 +1,4 @@
+<%% let G_CONST = JSON.parse('{"API":{"LOGIN":"/api/user","REGISTER":"/api/user/register","LOGIN_SUCCESS":"/self","REGISTER_SUCCESS":"/login"},"MESSAGE":{"LOGIN_SUCCESS":"登入成功","LOGIN_FAIL":"登入失敗，請重新嘗試","REGISTER_SUCCESS":"註冊成功，請嘗試登入","REGISTER_FAIL":"註冊失敗，請重新嘗試"},"ID":{"LOGIN_FORM":"login","REGISTER_FORM":"register"}}') %>
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
 <%- include('../../wedgets/header.ejs') %>
 
@@ -15,58 +16,27 @@
         <!-- 頭部導行列-->
         <ul class="card-header-tabs nav nav-tabs">
           <!-- 頭部導行項-->
+          <%% for( let type in G_CONST.ID ){ %>
+          <%% let form_id = G_CONST.ID[type] %>
+          <%% let tab_txt = form_id === G_CONST.ID.REGISTER_FORM ? "註冊" : "登入" %>
           <li class="nav-item">
-            <a class="nav-link <%%= active === 'register' ? `active` : `` %>" href="#" data-bs-toggle='tab' data-bs-target='#register-card' role="tab" aria-controls="register" aria-selected="true">註冊</a>
+            <a class="nav-link <%%= active === form_id ? `active` : `` %>" href="#" data-bs-toggle='tab' data-bs-target='#<%%= form_id %>-card' role="tab" aria-controls=<%%= form_id %> aria-selected="true"><%%= tab_txt %></a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link <%%= active === 'login'  ? `active` : `` %>" href="#" data-bs-toggle='tab' data-bs-target='#login-card' role="tab" aria-controls="login" aria-selected="false">登入</a>
-          </li>
+          <%% } %>
         </ul>
       </div>
       <!-- 卡片主體 -->
       <div class="card-body tab-content">
         <!-- REGISTER PANE -->
-        <div class="tab-pane fade <%= active === 'register' ? `show active` : `` %>" role="tabpanel" aria-labelledby="<%= CONS.PAGES.REGISTER_LOGIN.ID.REGISTER_FORM %>-tab" id="<%= CONS.PAGES.REGISTER_LOGIN.ID.REGISTER_FORM %>-card">
-          <form id=<%= CONS.PAGES.REGISTER_LOGIN.ID.REGISTER_FORM %> data-my-type="register" class="row" autocomplete="do-not-autofill">
-            <div class="col-8 mx-auto">
-              <div class="mb-3">
-                <label for="email" class="form-label">信箱</label>
-                <input type="email" class="form-control" name="email" aria-describedby="email_help" autocomplete="off" required>
-                <div>&nbsp;</div>
-              </div>
-              <div class="mb-3">
-                <label for="input_password" class="form-label">密碼</label>
-                <input type="password" class="form-control" name="password" data-retry='yes' autocomplete="new-password" required>
-                <div>&nbsp;</div>
-              </div>
-              <div class="mb-3">
-                <label for="input_check_password" class="form-label">密碼確認</label>
-                <input type="password" class="form-control" name='password_again' autocomplete="off">
-                <div>&nbsp;</div>
-              </div>
-              <button type="submit" class="btn btn-primary" disabled>送出</button>
-            </div>
-          </form>
-        </div>
-        <!-- LOGIN PANE -->
-        <div class="tab-pane fade <%%= active === 'login'  ? `show active` : ``%>" id="login-card" role="tabpanel" aria-labelledby="login-tab">
-          <form id=<%= CONS.PAGES.REGISTER_LOGIN.ID.LOGIN_FORM %> data-my-type="login" class="row" autocomplete="do-not-autofill">
-            <div class="col-8 mx-auto">
-              <div class="mb-3">
-                <label for="email" class="form-label">信箱</label>
-                <input type="email" class="form-control" name="email" data-form-id='#form_login' autocomplete="off" aria-describedby="email_help" required>
-                <div>&nbsp;</div>
-              </div>
-              <div class="mb-3">
-                <label for="password" class="form-label">密碼</label>
-                <input type="password" class="form-control" name="password" data-form-id='#form_login' autocomplete="do-not-autofill" required>
-                <div>&nbsp;</div>
-              </div>
-              <button type="submit" class="btn btn-primary" disabled>送出</button>
 
-            </div>
-          </form>
-        </div>
+        <%% for( let type in G_CONST.ID ){ %>
+        <%% let form_id = G_CONST.ID[type] %>
+        <%% if(form_id === G_CONST.ID.REGISTER_FORM ){ %>
+        <%- include('components/pane-register') %>
+        <%% } else if (form_id === G_CONST.ID.LOGIN_FORM ){ %>
+        <%- include('components/pane-login') %>
+        <%% } %>
+        <%% } %>
       </div>
     </div>
   </main>

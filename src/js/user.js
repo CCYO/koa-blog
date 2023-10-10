@@ -37,10 +37,17 @@ import {
 } from "./utils";
 
 /* ------------------------------------------------------------------------------------------ */
-/* Const --------------------------------------------------------------------------------- */
+/* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
 import CONFIG_CONST from "../../config/const";
+
+/* ------------------------------------------------------------------------------------------ */
+/* Const ------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------ */
+
+const PAGE_USER = CONFIG_CONST.PAGES.USER;
+const DATA_BLOG = CONFIG_CONST.DATAS.BLOG;
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
@@ -50,13 +57,6 @@ const $C_initPage = new $M_wedgets.InitPage();
 //  初始化頁面
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
-
-/* ------------------------------------------------------------------------------------------ */
-/* CONST --------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------------ */
-
-const PAGE_USER = CONFIG_CONST.PAGES.USER;
-const DATA_BLOG = CONFIG_CONST.DATAS.BLOG;
 
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
@@ -70,7 +70,7 @@ window.addEventListener("load", async () => {
     //  初始化ejs
     await $C_initPage.addOtherInitFn($M_wedgets.initNavbar);
     //  初始化navbar
-    await $C_initPage.render(renderPage);
+    await $C_initPage.render(initMain);
     //  統整頁面數據，並渲染需要用到統整數據的頁面內容
     $C_backdrop.hidden();
     //  讀取完成，解除遮蔽
@@ -78,15 +78,14 @@ window.addEventListener("load", async () => {
     throw error;
   }
 
-  async function renderPage({ me, currentUser, relationShip, blogs }) {
-    /* ------------------------------------------------------------------------------------------ */
-    /* Public Var in Closure -------------------------------------------------------------------- */
-    /* ------------------------------------------------------------------------------------------ */
-    let $$pageData = { me, currentUser, relationShip, blogs };
-    const $$isLogin = !!me.id;
-    const $$isSelf = currentUser.id === me.id;
+  /* ------------------------------------------------------------------------------------------ */
+  /* Init ------------------------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------------------------------ */
 
-    /* 公用 JQ Ele */
+  async function initMain({ me, currentUser, relationShip, blogs }) {
+    /* ------------------------------------------------------------------------------------------ */
+    /* JQ Ele in Closure -------------------------------------------------------------------- */
+    /* ------------------------------------------------------------------------------------------ */
     let $input_new_blog_title = $(`#${PAGE_USER.ID.NEW_BLOG_TITLE}`);
     let $btn_new_blog = $(`#${PAGE_USER.ID.NEW_BLOG}`);
     let $fansList = $(`#${PAGE_USER.ID.FANS_LIST}`);
@@ -99,6 +98,13 @@ window.addEventListener("load", async () => {
     //  退追鈕
     let $div_blogList = $(`[data-${PAGE_USER.DATASET.KEY.BLOG_STATUS}]`);
     //  文章列表container
+
+    /* ------------------------------------------------------------------------------------------ */
+    /* Public Var in Closure -------------------------------------------------------------------- */
+    /* ------------------------------------------------------------------------------------------ */
+    let $$pageData = { me, currentUser, relationShip, blogs };
+    const $$isLogin = !!me.id;
+    const $$isSelf = currentUser.id === me.id;
 
     if ($$isSelf) {
       /*  自己的頁面，會擁有「建立文章」、「移除文章」功能 */
@@ -150,162 +156,15 @@ window.addEventListener("load", async () => {
     $$betterScrollEles.refresh();
 
     /* ------------------------------------------------------------------------------------------ */
-    /* Handle ------------------------------------------------------------------------------------ */
-    /* ------------------------------------------------------------------------------------------ */
-    async function handle_removeBlogs(e) {
-      let $target = $(e.target);
-      let action = $target.data(PAGE_USER.DATASET.KEY.REMOVE_BLOG);
-      if (!action || (action && !confirm("真的要刪除嗎?"))) {
-        return;
-      }
-      e.preventDefault();
-      _checkLogin();
-      let blogList = [];
-      if (action === PAGE_USER.DATASET.VALUE.REMOVE_BLOG_ITEM) {
-        blogList.push(
-          $target
-            .parents(`[data-${PAGE_USER.DATASET.KEY.BLOG_ID}]`)
-            .data(PAGE_USER.DATASET.KEY.BLOG_ID)
-        );
-      } else {
-        let $container = $target.parents(
-          `[data-${PAGE_USER.DATASET.KEY.BLOG_STATUS}]`
-        );
-        let $li_blogItem_list = $container
-          .find(`.show[data-${PAGE_USER.DATASET.KEY.PAGE_NUM}]`)
-          .find(`[data-${PAGE_USER.DATASET.KEY.BLOG_ID}]`);
-        blogList = Array.from($li_blogItem_list).map(li =>
-          $(li).data(PAGE_USER.DATASET.KEY.BLOG_ID)
-        );
-      }
-
-      let owner_id = $$pageData.me.id;
-      //  送出刪除命令
-      let { errno } = await $M_axios.delete(PAGE_USER.API.REMOVE_BLOGS, {
-        data: {
-          blogList,
-          owner_id,
-        },
-      });
-      if (errno) {
-        return;
-      }
-      alert("刪除成功");
-      location.reload();
-      //  刷新頁面
-    }
-    async function handle_createBlog(e) {
-      let title = await check_title();
-      if (!title) {
-        return;
-      }
-      const {
-        data: { id: blog_id },
-      } = await $M_axios.post(PAGE_USER.API.CREATE_BLOG, {
-        title,
-      });
-      alert("創建成功，開始編輯文章");
-      $input_new_blog_title.val("");
-      //  清空表格
-      let redir = `${PAGE_USER.API.EDIT_BLOG}/${blog_id}?owner_id=${$$pageData.me.id}`;
-      location.href = redir;
-    }
-    async function check_title() {
-      let title = $input_new_blog_title.val();
-      let input = $input_new_blog_title.get(0);
-
-      title = $M_xss.xssAndTrim(input.value);
-      let validateErrors = await $M_validate.blog(
-        {
-          $$blog: { title: "" },
-          title,
-        },
-        false
-      );
-      $btn_new_blog.prop("disabled", validateErrors);
-      if (validateErrors) {
-        delete validateErrors.title.diff;
-        validateErrors = $M_validate.parseErrorsToForm(validateErrors);
-        let msg = validateErrors[input.name];
-        $M_ui.feedback(2, input, false, msg.feedback);
-        return false;
-      }
-      $M_ui.feedback(2, input, true);
-      return title;
-    }
-    async function follow() {
-      _checkLogin();
-      //  檢查登入狀態
-      /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-      await $M_axios.post(PAGE_USER.API.FOLLOW, {
-        id: $$pageData.currentUser.id,
-      });
-      //  發出 取消/追蹤 請求
-      /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-      $$pageData.relationShip.fansList.unshift($$pageData.me);
-      //  同步 $$fansList 數據
-      let html = _template_fansItem({ me: $$pageData.me });
-      //  在粉絲列表中插入 粉絲htmlStr
-      if ($$pageData.relationShip.fansList.length === 1) {
-        //  如果追蹤者只有當前的你
-        $fansList.html(`<ul>${html}</ul>`);
-      } else {
-        //  如果追蹤者不只當前的你
-        $fansList.children("ul").prepend(html);
-        //  插在最前面
-      }
-      $$betterScrollEles.refresh();
-      //  重整 BetterScroll
-      $btn_follow.toggle(false);
-      //  追蹤鈕的toggle
-      $btn_cancelFollow.toggle(true);
-      //  退追鈕的toggle
-      alert("已追蹤");
-      return;
-    }
-    async function cancelFollow() {
-      _checkLogin();
-      //  檢查登入狀態
-      /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-      await $M_axios.post(PAGE_USER.API.CANCEL_FOLLOW, {
-        id: $$pageData.currentUser.id,
-      });
-      //  發出 取消/追蹤 請求
-      /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-      $$pageData.relationShip.fansList.splice(
-        $$pageData.relationShip.fansList.indexOf($$pageData.me.id),
-        1
-      );
-      //  在粉絲列表中移除 粉絲htmlStr
-      if ($$pageData.relationShip.fansList.length > 0) {
-        //  如果仍有追蹤者
-        $fansList
-          .find(`li[data-${PAGE_USER.DATASET.KEY.USER_ID}=${$$pageData.me.id}]`)
-          .remove();
-        //  直接移除
-      } else {
-        //  如果已無追蹤者
-        $fansList.html(`<p>可憐阿，沒有朋友</p>`);
-        //  撤換掉列表內容
-      }
-      /*  同步 $$fansList 數據 */
-      $$betterScrollEles.refresh();
-      //  重整 BetterScroll
-      $btn_follow.toggle(true);
-      //  追蹤鈕的toggle
-      $btn_cancelFollow.toggle(false);
-      //  退追鈕的toggle
-      alert("已退追");
-      return;
-    }
-    /* ------------------------------------------------------------------------------------------ */
-    /* Utils ------------------------------------------------------------------------------------ */
+    /* Init ------------------------------------------------------------------------------------ */
     /* ------------------------------------------------------------------------------------------ */
 
     /*  初始化文章列表的分頁功能 */
     function initPagination() {
       //  Closure Var
       let $$pagination_list = {};
+      /*  blogList 的 template 函數 */
+      let $$fn_template_blogList_page = lodash.template(ejs_str_blogList);
       for (let status in $$pageData.blogs) {
         if (!$$pageData.blogs[status].count) {
           continue;
@@ -322,7 +181,7 @@ window.addEventListener("load", async () => {
         );
       }
       //  處理 pageNum 的 tab
-      $(PAGE_USER.CLASS.PAGE_NUM_LINK).each((index, link) => {
+      $(PAGE_USER.SELECTOR.PAGE_NUM_LINK).each((index, link) => {
         let $link = $(link);
         let $container = $link.parents(
           `[data-${PAGE_USER.DATASET.KEY.BLOG_STATUS}]`
@@ -363,7 +222,7 @@ window.addEventListener("load", async () => {
               offset: (targetPage - 1) * DATA_BLOG.PAGINATION.BLOG_COUNT,
               show: $$status,
             });
-            let html = _template_blogList_page({
+            let html = $$fn_template_blogList_page({
               isPublic: $$status ? true : false,
               isSelf: $$isSelf,
               page: targetPage,
@@ -544,6 +403,160 @@ window.addEventListener("load", async () => {
       };
       return betterScrollEles;
     }
+
+    /* ------------------------------------------------------------------------------------------ */
+    /* Handle ------------------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------------------------ */
+    async function handle_removeBlogs(e) {
+      let $target = $(e.target);
+      let action = $target.data(PAGE_USER.DATASET.KEY.REMOVE_BLOG);
+      if (!action || (action && !confirm("真的要刪除嗎?"))) {
+        return;
+      }
+      e.preventDefault();
+      _checkLogin();
+      let blogList = [];
+      if (action === PAGE_USER.DATASET.VALUE.REMOVE_BLOG_ITEM) {
+        blogList.push(
+          $target
+            .parents(`[data-${PAGE_USER.DATASET.KEY.BLOG_ID}]`)
+            .data(PAGE_USER.DATASET.KEY.BLOG_ID)
+        );
+      } else {
+        let $container = $target.parents(
+          `[data-${PAGE_USER.DATASET.KEY.BLOG_STATUS}]`
+        );
+        let $li_blogItem_list = $container
+          .find(`.show[data-${PAGE_USER.DATASET.KEY.PAGE_NUM}]`)
+          .find(`[data-${PAGE_USER.DATASET.KEY.BLOG_ID}]`);
+        blogList = Array.from($li_blogItem_list).map(li =>
+          $(li).data(PAGE_USER.DATASET.KEY.BLOG_ID)
+        );
+      }
+
+      let owner_id = $$pageData.me.id;
+      //  送出刪除命令
+      let { errno } = await $M_axios.delete(PAGE_USER.API.REMOVE_BLOGS, {
+        data: {
+          blogList,
+          owner_id,
+        },
+      });
+      if (errno) {
+        return;
+      }
+      alert("刪除成功");
+      location.reload();
+      //  刷新頁面
+    }
+    async function handle_createBlog(e) {
+      let title = await check_title();
+      if (!title) {
+        return;
+      }
+      const {
+        data: { id: blog_id },
+      } = await $M_axios.post(PAGE_USER.API.CREATE_BLOG, {
+        title,
+      });
+      alert("創建成功，開始編輯文章");
+      $input_new_blog_title.val("");
+      //  清空表格
+      let redir = `${PAGE_USER.API.EDIT_BLOG}/${blog_id}?owner_id=${$$pageData.me.id}`;
+      location.href = redir;
+    }
+    async function check_title() {
+      let title = $input_new_blog_title.val();
+      let input = $input_new_blog_title.get(0);
+
+      title = $M_xss.xssAndTrim(input.value);
+      let validateErrors = await $M_validate.blog(
+        {
+          $$blog: { title: "" },
+          title,
+        },
+        false
+      );
+      $btn_new_blog.prop("disabled", validateErrors);
+      if (validateErrors) {
+        delete validateErrors.title.diff;
+        validateErrors = $M_validate.parseErrorsToForm(validateErrors);
+        let msg = validateErrors[input.name];
+        $M_ui.feedback(2, input, false, msg.feedback);
+        return false;
+      }
+      $M_ui.feedback(2, input, true);
+      return title;
+    }
+    async function follow() {
+      _checkLogin();
+      //  檢查登入狀態
+      /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+      await $M_axios.post(PAGE_USER.API.FOLLOW, {
+        id: $$pageData.currentUser.id,
+      });
+      //  發出 取消/追蹤 請求
+      /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+      $$pageData.relationShip.fansList.unshift($$pageData.me);
+      //  同步 $$fansList 數據
+      let html = lodash.template(ejs_str_fansItem)({ me: $$pageData.me });
+      //  在粉絲列表中插入 粉絲htmlStr
+      if ($$pageData.relationShip.fansList.length === 1) {
+        //  如果追蹤者只有當前的你
+        $fansList.html(`<ul>${html}</ul>`);
+      } else {
+        //  如果追蹤者不只當前的你
+        $fansList.children("ul").prepend(html);
+        //  插在最前面
+      }
+      $$betterScrollEles.refresh();
+      //  重整 BetterScroll
+      $btn_follow.toggle(false);
+      //  追蹤鈕的toggle
+      $btn_cancelFollow.toggle(true);
+      //  退追鈕的toggle
+      alert("已追蹤");
+      return;
+    }
+    async function cancelFollow() {
+      _checkLogin();
+      //  檢查登入狀態
+      /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+      await $M_axios.post(PAGE_USER.API.CANCEL_FOLLOW, {
+        id: $$pageData.currentUser.id,
+      });
+      //  發出 取消/追蹤 請求
+      /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
+      $$pageData.relationShip.fansList.splice(
+        $$pageData.relationShip.fansList.indexOf($$pageData.me.id),
+        1
+      );
+      //  在粉絲列表中移除 粉絲htmlStr
+      if ($$pageData.relationShip.fansList.length > 0) {
+        //  如果仍有追蹤者
+        $fansList
+          .find(`li[data-${PAGE_USER.DATASET.KEY.USER_ID}=${$$pageData.me.id}]`)
+          .remove();
+        //  直接移除
+      } else {
+        //  如果已無追蹤者
+        $fansList.html(`<p>可憐阿，沒有朋友</p>`);
+        //  撤換掉列表內容
+      }
+      /*  同步 $$fansList 數據 */
+      $$betterScrollEles.refresh();
+      //  重整 BetterScroll
+      $btn_follow.toggle(true);
+      //  追蹤鈕的toggle
+      $btn_cancelFollow.toggle(false);
+      //  退追鈕的toggle
+      alert("已退追");
+      return;
+    }
+    /* ------------------------------------------------------------------------------------------ */
+    /* Utils ------------------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------------------------ */
+
     /*  確認登入狀態 */
     function _checkLogin() {
       if ($$isLogin) {
@@ -555,9 +568,5 @@ window.addEventListener("load", async () => {
         location.href
       )}`;
     }
-    /*  blogList 的 template 函數 */
-    let _template_blogList_page = lodash.template(ejs_str_blogList);
-    /*  fansItem 的 template 函數 */
-    let _template_fansItem = lodash.template(ejs_str_fansItem);
   }
 });

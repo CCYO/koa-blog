@@ -76,12 +76,15 @@ async function initBlog(blog) {
   //  當前是否為 編輯頁
   let isEdit = REG.BLOG.EDIT.test(location.pathname);
   //  當前是否為 預覽頁
-  let isPreview = REG.BLOG.PREVIEW.test(location.search);
-  if (!isEdit && !isPreview) {
+  // let isPreview = REG.BLOG.PREVIEW.test(location.search);
+  // if (!isEdit && !isPreview) {
+  if (blog.showComment) {
     /* 不是編輯頁與預覽頁，請求comment數據 */
     let { data } = await _axios.get(`/api/comment/${blog.id}`);
-    let { comments, commentsHtmlStr } = data;
-    blog = { ...blog, comments, commentsHtmlStr, ...mapComments(comments) };
+    // let { comments, commentsHtmlStr } = data;
+    let { comments } = data;
+    // blog = { ...blog, comments, commentsHtmlStr, ...mapComments(comments) };
+    blog = { ...blog, comments, ...mapComments(comments) };
   }
   return blog; //  再將整體轉為字符
 

@@ -26,6 +26,9 @@ const entry = (filepathList => {
 
 /*  每個 entry point 的 template */
 const HtmlWebpackPlugins = [];
+//  存放 template
+let map_CONS = new Map();
+//  關於 CONS 的 KEY 與 VAL 的 map
 glob.sync(resolve(__dirname, "../src/__views/**/*.ejs")).map((filepath, i) => {
   /**
    * ~/.../__views/pages/*.ejs
@@ -50,6 +53,9 @@ glob.sync(resolve(__dirname, "../src/__views/**/*.ejs")).map((filepath, i) => {
   }
   let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
   data = data.replace(/[-]{2}(CONS\.\S+?)[-]{2}/g, (match, target) => {
+    if (map_CONS.has(match)) {
+      return map_CONS.get(match);
+    }
     let arr = target.split(".");
     arr.shift();
     let constant;
@@ -60,10 +66,17 @@ glob.sync(resolve(__dirname, "../src/__views/**/*.ejs")).map((filepath, i) => {
       }
       constant = constant[item];
     }
-    return `"${constant}"`;
+    let res;
+    if (typeof constant === "string") {
+      res = `"${constant}"`;
+    } else if (typeof constant === "object") {
+      res = `'${JSON.stringify(constant)}'`;
+    }
+    map_CONS.set(match, res);
+    return res;
   });
-
   data = data.replace(/\<%(?!(-\s+include)|([=\-]?\s+.*?CONS\.))/g, "<%%"); //	修改檔案內容
+  data = data.replace(/\<%%loop%(?=[=-]?\s+include)/g, "<%%"); //	修改檔案內容
   //	修改檔案內容
   let template = dir + filename; //	添入原檔名
   fs.writeFileSync(template, data); //	在目標資料夾創建新檔

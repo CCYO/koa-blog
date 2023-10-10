@@ -1,3 +1,4 @@
+<% let G_CONST = JSON.parse(--CONS.PAGES.BLOG--) %>
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
 <%- include('../../wedgets/header.ejs') %>
 
@@ -10,17 +11,15 @@
       <h1>
         <%= blog.title %>
       </h1>
-      <div class="editor-content-view">
-
-      </div>
+      <div id="<%= G_CONST.ID.BLOG_CONTENT %>"></div>
     </div>
-    <% if (blog.show) { %>
-    <div class="comment-container">
-      <div class="reply-box" data-comment-id="0">
-        <div class="editor-container"></div>
+    <% if (blog.showComment) { %>
+    <div id="<%= G_CONST.ID.COMMENT_CONTAINER %>">
+      <div data-<%= G_CONST.DATASET.KEY.COMMENT_ID %>="0">
+        <div class="<%= G_CONST.CLASS.COMMENT_EDITOR_CONTAINER %>"></div>
       </div>
-      <div class="comment-list-container">
-        <div class="comment-list">
+      <div id="<%= G_CONST.ID.COMMENT_LIST_CONTAINER %>">
+        <div class="<%= G_CONST.CLASS.COMMENT_LIST %>">
 
         </div>
       </div>
