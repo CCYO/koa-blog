@@ -20,7 +20,9 @@
       </div>
       <div id="<%= G_CONST.ID.COMMENT_LIST_CONTAINER %>">
         <div class="<%= G_CONST.CLASS.COMMENT_LIST %>">
-
+          <% if(blog.comments.length){ %>
+            <%- temFn({comments: blog.comments, temFn, isLogin, me_id}) %>
+            <% } %>
         </div>
       </div>
     </div>

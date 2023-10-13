@@ -1,4 +1,4 @@
-<% let G_CONST = JSON.parse('{"API":{"CREATE_COMMENT":"/api/comment","REMOVE_COMMENT":"/api/comment"},"ID":{"BLOG_CONTENT":"blog-content","COMMENT_CONTAINER":"comment-container","COMMENT_LIST_CONTAINER":"comment-list-container"},"CLASS":{"COMMENT_LIST":"comment-list","COMMENT_EDITOR_CONTAINER":"editor-container"},"DATASET":{"KEY":{"COMMENT_ID":"comment_id"}},"REG":{"BLOG_CONTENT_TRIM":{}}}') %>
+<% let G_CONST = JSON.parse('{"API":{"CREATE_COMMENT":"/api/comment","REMOVE_COMMENT":"/api/comment"},"ID":{"BLOG_CONTENT":"blog-content","COMMENT_CONTAINER":"comment-container","COMMENT_LIST_CONTAINER":"comment-list-container"},"CLASS":{"COMMENT_LIST":"comment-list","COMMENT_EDITOR_CONTAINER":"editor-container"},"DATASET":{"KEY":{"COMMENT_ID":"comment_id","EDITOR_ID":"editor_id","REMOVE_COMMENT":"remove"}},"REG":{"BLOG_CONTENT_TRIM":{}}}') %>
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
 <!DOCTYPE html>
 <html lang="en">
@@ -93,7 +93,9 @@
       </div>
       <div id="<%= G_CONST.ID.COMMENT_LIST_CONTAINER %>">
         <div class="<%= G_CONST.CLASS.COMMENT_LIST %>">
-
+          <% if(blog.comments.length){ %>
+            <%- temFn({comments: blog.comments, temFn, isLogin, me_id}) %>
+            <% } %>
         </div>
       </div>
     </div>
@@ -103,7 +105,7 @@
       <!-- EJS DATA -->
       <div style="display: none;">
   <% for(let type in locals){ %>
-  <% if( type === "partials" || type === "filename" || type === "title" || type === "isSelf"){ continue } %>
+  <% if( type === "partials" || type === "filename" || type === "title" || type === "isSelf" || type === "temFn"){ continue } %>
   <div data-my-data="<%= type %>">
     <%- JSON.stringify(locals[type]) %>
   </div>

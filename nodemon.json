@@ -1,20 +1,12 @@
 {
-    "ignore": [
-        "node_modules/**",
-        "src/js",
-        "src/css"
-    ],
-    "watch": [
-        "server/",
-        "src/__views",
-        "build/"
-    ],
-    "env": {
-        "PORT": 8080
-    },
-    "events": {
-        "crash": "sh -c 'lsof -i :${PORT:-8080} -t | xargs kill'"
-    },
-    "exec": "node server/bin/www",
-    "ext": "js,mjs,json,ejs"
+  "ignore": ["node_modules/**", "src/js", "src/css", "server/views"],
+  "watch": ["server/", "src/__views", "build/"],
+  "env": {
+    "PORT": 8080
+  },
+  "events": {
+    "crash": "sh -c 'lsof -i :${PORT:-8080} -t | xargs kill'"
+  },
+  "exec": "node server/bin/www",
+  "ext": "js,mjs,json,ejs"
 }
