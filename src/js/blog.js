@@ -5,6 +5,7 @@ if (process.env.NODE_ENV === "development") {
   require("../views/pages/blog/index.ejs");
 }
 import ejs_str_commentList from "../views/pages/blog/template/list.ejs";
+import ejs_str_commentItem from "../views/pages/blog/template/item.ejs";
 //  使用 template-ejs-loader 將 文章列表的項目ejs檔 轉譯為 純字符
 
 /* ------------------------------------------------------------------------------------------ */
@@ -35,7 +36,7 @@ import {
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-import CONFIG_CONST from "../../config/const";
+import CONFIG_CONST, { PAGES } from "../../config/const";
 import { COMMENT } from "../../server/model/errRes";
 
 /* ------------------------------------------------------------------------------------------ */
@@ -65,7 +66,7 @@ class $C_map_editor_list {
   }
   remove(id) {
     let editorList = this.get();
-    let index = editorList.findIndex(editor => editor.id === id);
+    let index = editorList.findIndex((editor) => editor.id === id);
     if (index < 0) {
       return;
     }
@@ -105,6 +106,7 @@ window.addEventListener("load", async () => {
     /* Public Var in Closure -------------------------------------------------------------------- */
     /* ------------------------------------------------------------------------------------------ */
     let $$pageData = { me, blog };
+    window.$$pageData = $$pageData;
     let $$map_editor_list = new $C_map_editor_list();
     let $$template_fn = lodash.template(ejs_str_commentList);
 
@@ -122,7 +124,8 @@ window.addEventListener("load", async () => {
       .first();
     init_editor($root_editor.get(0));
 
-    $(`${PAGE_BLOG.ID.COMMENT_LIST_CONTAINER}`).on("click", e => {
+    $(`#${PAGE_BLOG.ID.COMMENT_LIST_CONTAINER}`).on("click", (e) => {
+      console.log(123);
       let target = e.target;
       if (target.tagName !== "BUTTON") {
         return;
@@ -141,8 +144,8 @@ window.addEventListener("load", async () => {
           return;
         }
         //  執行刪除
-        // removeComment(replyBox);
-        removeComment(remove_comment_id);
+        removeComment(target);
+        // removeComment(remove_comment_id);
         return;
       }
 
@@ -156,38 +159,47 @@ window.addEventListener("load", async () => {
       }
     });
 
-    async function removeComment(remove_comment_id) {
-      let $replyBox = $(
-        `[data-${PAGE_BLOG.DATASET.KEY.EDITOR_ID}=${remove_comment_id}]`
+    async function removeComment(div_comment) {
+      let $div_comment = $(div_comment)
+        .parents(`[data-${PAGE_BLOG.DATASET.KEY.COMMENT_ID}]`)
+        .first();
+      let $remove_comment_id = $div_comment.data(
+        PAGE_BLOG.DATASET.KEY.COMMENT_ID
       );
-      let pid = $replyBox;
+      let $pid = $div_comment
+        .parents(`[data-${PAGE_BLOG.DATASET.KEY.PID}]`)
+        .first()
+        .data(PAGE_BLOG.DATASET.KEY.PID);
       let payload = {
         author_id: $$pageData.blog.author.id,
         commenter_id: $$pageData.me.id,
-        comment_id: remove_comment_id,
         blog_id: $$pageData.blog.id,
-        pid: $(replyBox)
-          .parents(`.${PAGE_BLOG.CLASS.COMMENT_LIST}`)
-          .first()
-          .prev()
-          .first()
-          .data(PAGE_BLOG.DATASET.KEY.COMMENT_ID),
+        comment_id: $remove_comment_id,
+        pid: $pid,
       };
       console.log("# => ", payload);
-
-      let {
-        data: { errno, data, msg },
-      } = await $M_axios.delete(PAGE_BLOG.API.REMOVE_COMMENT, {
-        data: payload,
+      
+      // let { errno, data, msg } = await $M_axios.delete(
+      //   PAGE_BLOG.API.REMOVE_COMMENT,
+      //   {
+      //     data: payload,
+      //   }
+      // );
+      // if (errno) {
+      //   alert(msg);
+      //   return;
+      // }
+      let htmlStr = lodash.template(ejs_str_commentItem)({
+        isDeleted: true,
+        isLogin: true,
+        commenter: $$pageData.me,
+        time: 456465
       });
-      if (errno) {
-        alert(msg);
-        return;
-      }
-      let commentBox = (replyBox.parentElement.firstElementChild.innerHTML =
-        "<p>此留言已刪除</p>");
-      replyBox.previousElementSibling.innerHTML = "";
-      replyBox.innerHTML = "";
+      $div_comment.get(0).innerHTML = htmlStr
+      //  同步$$pageData
+      let index = $$pageData.blog.comments.findIndex( item => item.id === $remove_comment_id )
+      $$pageData.blog.comments[index] = data
+      return;
     }
 
     // async function removeComment(replyBox) {
@@ -274,7 +286,7 @@ window.addEventListener("load", async () => {
         let pid = (editor.id =
           $(replyBox).data(PAGE_BLOG.DATASET.KEY.COMMENT_ID) * 1);
         //  editor 用來對 postComment 後，渲染 res 的方法
-        editor.render = str => {
+        editor.render = (str) => {
           if (pid) {
             $(replyBox.nextElementSibling).append(str);
           } else {
@@ -331,7 +343,7 @@ window.addEventListener("load", async () => {
           editor.setHtml();
 
           //  更新評論數據，comment: { id, html, time, pid, commenter: { id, email, nickname}}
-          function updateComment(comment) {
+          function map_commentId(comment) {
             let { id, pid, html, time } = comment;
             let commentId = $$pageData.blog.map_commentId;
             let commentPid = $$pageData.blog.map_commentPid;

@@ -124,6 +124,7 @@ module.exports = {
           COMMENT_ID: "comment_id",
           EDITOR_ID: "editor_id",
           REMOVE_COMMENT: "remove",
+          PID: "pid"
         },
       },
       REG: {

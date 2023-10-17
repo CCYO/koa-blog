@@ -80,11 +80,42 @@ async function initBlog(blog) {
   // if (!isEdit && !isPreview) {
   if (blog.showComment) {
     /* 不是編輯頁與預覽頁，請求comment數據 */
-    let { data } = await _axios.get(`/api/comment/${blog.id}`);
+    // let { data } = await _axios.get(`/api/comment/${blog.id}`);
     // let { comments, commentsHtmlStr } = data;
-    let { comments } = data;
+    // let { comments } = data;
     // blog = { ...blog, comments, commentsHtmlStr, ...mapComments(comments) };
-    blog = { ...blog, comments, ...mapComments(comments) };
+    let comments = [
+      {
+        id: 111,
+        html: "<p>222</p>",
+        time: "111time111",
+        isDeleted: false,
+        commenter: { id: 1, nickname: "user1" }
+      },
+      {
+        id: 222,
+        html: "<p>222</p>",
+        time: "222time222",
+        isDeleted: false,
+        commenter: { id: 2, nickname: "user2" }
+      },
+      {
+        id: 333,
+        html: `<p>333</p>`,
+        time: "333time333",
+        isDeleted: false,
+        commenter: { id: 3, nickname: "user3" },
+      },
+      {
+        id: 444,
+        html: "<p>444</p>",
+        time: "444time444",
+        isDeleted: true,
+        commenter: { id: 4, nickname: "user4" },
+      }
+    ];
+    blog = { ...blog, comments };
+    // blog = { ...blog, comments, ...mapComments(comments) };
   }
   return blog; //  再將整體轉為字符
 

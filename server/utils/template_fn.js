@@ -3,13 +3,16 @@ const lodash = require("lodash");
 const { resolve } = require("path");
 const filePath = {
   // comments: resolve(__dirname, "../../src/views/pages/blog/template/list.ejs"),
-  comments: resolve(__dirname, "../views/template/list.ejs"),
+  comment_list: resolve(__dirname, "../views/template/list.ejs"),
+  comment_item: resolve(__dirname, "../views/template/item.ejs"),
 };
 
 const template_string = {
-  comments: fs.readFileSync(filePath.comments, "utf-8"),
+  comment_list: fs.readFileSync(filePath.comment_list, "utf-8"),
+  comment_item: fs.readFileSync(filePath.comment_item, "utf-8"),
 };
 
 module.exports = {
-  comments: lodash.template(template_string.comments),
+  comment_list: lodash.template(template_string.comment_list),
+  comment_item: lodash.template(template_string.comment_item),
 };

@@ -1,0 +1,21 @@
+<% let G_CONST = JSON.parse(--CONS.PAGES.BLOG--) %>
+
+<% if (isDeleted || !html) { %>
+<div>
+  <p>此留言已刪除</p>
+</div>
+<div>
+  By<a href="/other/<%= commenter.id %>"><%=commenter.nickname%></a> 於 <%= time %> 刪除
+</div>
+<% } else { %>
+<div>
+  <%= html %>
+</div>
+<div>
+  By<a href="/other/<%= commenter.id %>"><%=commenter.nickname%></a> 於 <%=time%> 發佈
+  <button>回覆</button>
+  <% if( isLogin && me_id === commenter.id ){ %>
+  <button data-<%= G_CONST.DATASET.KEY.REMOVE_COMMENT %>="<%=id%>">刪除</button>
+  <% } %>
+</div>
+<% } %>

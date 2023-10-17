@@ -1,37 +1,16 @@
-<%% let G_CONST = JSON.parse('{"API":{"CREATE_COMMENT":"/api/comment","REMOVE_COMMENT":"/api/comment"},"ID":{"BLOG_CONTENT":"blog-content","COMMENT_CONTAINER":"comment-container","COMMENT_LIST_CONTAINER":"comment-list-container"},"CLASS":{"COMMENT_LIST":"comment-list","COMMENT_EDITOR_CONTAINER":"editor-container"},"DATASET":{"KEY":{"COMMENT_ID":"comment_id","EDITOR_ID":"editor_id","REMOVE_COMMENT":"remove"}},"REG":{"BLOG_CONTENT_TRIM":{}}}') %>
-<%% comments.forEach(({ id, html, time, commenter, reply, isDeleted,}) => { %>
-    <%% if (html || reply.length) { %>
-    
-    <div class="comment-box" data-<%%= G_CONST.DATASET.KEY.COMMENT_ID %>="<%%= id %>">
-    
-      <%% if (isDeleted || !html) { %>
-      <div>
-        <p>此留言已刪除</p>
-      </div>
-      <div>
-        By<a href="/other/<%%= commenter.id %>"><%%=commenter.nickname%></a> 於 <%%= time %> 刪除
-      </div>
-      <%% } else { %>
-      <div>
-        <%%= html %>
-      </div>
-      <div>
-        By<a href="/other/<%%= commenter.id %>"><%%=commenter.nickname%></a> 於 <%%=time%> 發佈
-        <button>回覆</button>
-        <%% if( isLogin && me_id === commenter.id ){ %> 
-        <button data-<%%= G_CONST.DATASET.KEY.REMOVE_COMMENT %>="<%%=id%>">刪除</button>
-        <%% } %>
-      </div>
-      <%% } %>
-    
-    
-    
-      <div class="reply-box" data-<%%= G_CONST.DATASET.KEY.EDITOR_ID %>="<%%=id%>">
+<%% let G_CONST = JSON.parse('{"API":{"CREATE_COMMENT":"/api/comment","REMOVE_COMMENT":"/api/comment"},"ID":{"BLOG_CONTENT":"blog-content","COMMENT_CONTAINER":"comment-container","COMMENT_LIST_CONTAINER":"comment-list-container"},"CLASS":{"COMMENT_LIST":"comment-list","COMMENT_EDITOR_CONTAINER":"editor-container"},"DATASET":{"KEY":{"COMMENT_ID":"comment_id","EDITOR_ID":"editor_id","REMOVE_COMMENT":"remove","PID":"pid"}},"REG":{"BLOG_CONTENT_TRIM":{}}}') %>
+<%% comments.forEach( comment => { %>
+    <%% if (comment.html || comment.reply.length) { %>
+    <!-- comment-box 是一個留言串的 container -->
+    <div class="comment-box" data-<%%= G_CONST.DATASET.KEY.COMMENT_ID %>="<%%= comment.id %>">
+      <%%= temFn_comment_item({...comment, isLogin, me_id}) %>
+    <!-- reply-box 是這個留言的回覆串 -->
+      <div class="reply-box" data-<%%= G_CONST.DATASET.KEY.EDITOR_ID %>="<%%= comment.id %>">
         <div class="editor-container"></div>
       </div>
-      <div class="comment-list">
-        <%% if(reply.length){ %>
-            <%%= temFn({ comments: reply, temFn, isLogin, me_id}) %>
+      <div class="comment-list" data-<%% G_CONST.DATASET.KEY.PID %>="<%% comment.id %>">
+        <%% if(comment.reply.length){ %>
+            <%%= temFn_comment_list({ comments: comment.reply, isLogin, me_id, temFn_comment_list, temFn_comment_item}) %>
         <%% } %>
       </div>
     </div>

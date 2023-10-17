@@ -142,7 +142,8 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
   let me_id = isLogin ? ctx.session.user.id : 0;
   return await ctx.render("blog", {
     blog: { ...cache.data, showComment, comments },
-    temFn: template_fn.comments,
+    temFn_comment_list: template_fn.comment_list,
+    temFn_comment_item: template_fn.comment_item,
     isLogin,
     me_id,
   });
