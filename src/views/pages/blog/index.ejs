@@ -15,9 +15,7 @@
     </div>
     <%% if (blog.showComment) { %>
     <div id="<%%= G_CONST.ID.COMMENT_CONTAINER %>">
-      <div data-<%%= G_CONST.DATASET.KEY.COMMENT_ID %>="0">
-        <div class="<%%= G_CONST.CLASS.COMMENT_EDITOR_CONTAINER %>"></div>
-      </div>
+      <div class="<%%= G_CONST.CLASS.COMMENT_EDITOR_CONTAINER %>"></div>
       <div id="<%%= G_CONST.ID.COMMENT_LIST_CONTAINER %>">
         <div class="<%%= G_CONST.CLASS.COMMENT_LIST %>" data-<%%= G_CONST.DATASET.KEY.PID %>="0">
           <%% if(blog.comments.length){ %>
