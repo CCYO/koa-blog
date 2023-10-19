@@ -103,45 +103,45 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
   let showComment =
     !params.get(CONFIG_CONST.DATAS.BLOG.SEARCH_PARAMS.PREVIEW) &&
     cache.data.show;
-  let comments = [
-    {
-      id: 111,
-      html: "<p>222</p>",
-      time: "111time111",
-      isDeleted: false,
-      commenter: { id: 1, nickname: "user1" },
-      reply: [],
-    },
-    {
-      id: 222,
-      html: "<p>222</p>",
-      time: "222time222",
-      isDeleted: false,
-      commenter: { id: 2, nickname: "user2" },
-      reply: [
-        {
-          id: 333,
-          html: `<p>333</p>`,
-          time: "333time333",
-          isDeleted: false,
-          commenter: { id: 3, nickname: "user3" },
-          reply: [],
-        },
-        {
-          id: 444,
-          html: "<p>444</p>",
-          time: "444time444",
-          isDeleted: true,
-          commenter: { id: 4, nickname: "user4" },
-          reply: [],
-        },
-      ],
-    },
-  ];
+  // let comments = [
+  //   {
+  //     id: 111,
+  //     html: "<p>222</p>",
+  //     time: "111time111",
+  //     isDeleted: false,
+  //     commenter: { id: 1, nickname: "user1" },
+  //     reply: [],
+  //   },
+  //   {
+  //     id: 222,
+  //     html: "<p>222</p>",
+  //     time: "222time222",
+  //     isDeleted: false,
+  //     commenter: { id: 2, nickname: "user2" },
+  //     reply: [
+  //       {
+  //         id: 333,
+  //         html: `<p>333</p>`,
+  //         time: "333time333",
+  //         isDeleted: false,
+  //         commenter: { id: 3, nickname: "user3" },
+  //         reply: [],
+  //       },
+  //       {
+  //         id: 444,
+  //         html: "<p>444</p>",
+  //         time: "444time444",
+  //         isDeleted: true,
+  //         commenter: { id: 4, nickname: "user4" },
+  //         reply: [],
+  //       },
+  //     ],
+  //   },
+  // ];
   let isLogin = ctx.session.user ? true : false;
   let me_id = isLogin ? ctx.session.user.id : 0;
   return await ctx.render("blog", {
-    blog: { ...cache.data, showComment, comments },
+    blog: { ...cache.data, showComment },
     temFn_comment_list: template_fn.comment_list,
     temFn_comment_item: template_fn.comment_item,
     isLogin,

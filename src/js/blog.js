@@ -378,8 +378,6 @@ window.addEventListener("load", async () => {
               html,
               pid: $$comment_pid,
             };
-            console.log(payload);
-            return;
             return await $M_axios.post(PAGE_BLOG.API.CREATE_COMMENT, payload);
           }
         }

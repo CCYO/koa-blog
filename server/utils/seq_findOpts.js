@@ -202,6 +202,14 @@ module.exports = {
                             attributes: [['id', 'alt_id'], 'alt']
                         }
                     ]
+                },
+                {
+                    association: 'replys',
+                    attributes: ['id', 'html', 'commenter_id', 'pid'],
+                    include: { 
+                        association: 'commenter',
+                        attributes: ['id', 'email', 'nickname']
+                    }
                 }
             ]
         }),

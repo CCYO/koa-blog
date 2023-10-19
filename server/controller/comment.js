@@ -297,7 +297,8 @@ async function _findItemForPageOfBlog(comment_id) {
     if (!comment) {
         return ErrModel(ErrRes.COMMENT.READ.NOT_EXIST)
     }
-    let data = Init.browser.comment(comment)
+    let data = Init.comment(comment)
+    // let data = Init.browser.comment(comment)
     return new SuccModel({ data })
 }
 //  0420

@@ -32,7 +32,7 @@ function initComment(data) {
         let data = { ...comment }
         let map = new Map(Object.entries(data))
         if (map.has('pid')) {
-            data.pid = comment.pid === null ? 0 : pid
+            data.pid = comment.pid === null ? 0 : comment.pid
         }
         if (map.has('commenter')) {
             data.commenter = initUser(data.commenter)
@@ -60,7 +60,8 @@ function initBlog(data) {
             delete blog.BlogImgs
         }
         if(map.has('replys')){
-            blog.replys = initComment(data.replys)
+            blog.comments = initComment(data.replys)
+            delete blog.replys
         }
         return blog
     }
