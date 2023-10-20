@@ -61,6 +61,7 @@ function initBlog(data) {
         }
         if(map.has('replys')){
             blog.comments = initComment(data.replys)
+            blog.tree_comments = initListForBrowser(blog.comments)
             delete blog.replys
         }
         return blog

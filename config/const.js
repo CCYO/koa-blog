@@ -20,6 +20,7 @@ module.exports = {
       SEARCH_PARAMS: {
         PREVIEW: "preview",
       },
+      TIME_FORMAT: "YYYY/MM/DD HH:mm:ss",
     },
   },
   PAGES: {
@@ -110,21 +111,19 @@ module.exports = {
         CREATE_COMMENT: "/api/comment",
         REMOVE_COMMENT: "/api/comment",
       },
-      ID: {
-        BLOG_CONTENT: "blog-content",
-        COMMENT_CONTAINER: "comment-container",
-        COMMENT_LIST_CONTAINER: "comment-list-container",
-      },
       CLASS: {
         COMMENT_LIST: "comment-list",
         COMMENT_EDITOR_CONTAINER: "editor-container",
+        COMMENT_LIST_CONTAINER: "comment-list-container",
+        COMMENT_ITEM_CONTAINER: "comment-item-container",
+        COMMENT_ITEM_CONTENT: "comment-item-content",
       },
       DATASET: {
         KEY: {
           COMMENT_ID: "comment_id",
           EDITOR_ID: "editor_id",
           REMOVE_COMMENT: "remove",
-          PID: "pid"
+          PID: "pid",
         },
       },
       REG: {

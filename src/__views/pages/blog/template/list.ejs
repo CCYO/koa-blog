@@ -1,16 +1,16 @@
 <% let G_CONST = JSON.parse(--CONS.PAGES.BLOG--) %>
-<% comments.forEach( comment => { %>
-    <% if (comment.html || comment.reply.length) { %>
-    <!-- comment-box 是一個留言串的 container -->
-    <div class="comment-box" data-<%= G_CONST.DATASET.KEY.COMMENT_ID %>="<%= comment.id %>">
-      <%= temFn_comment_item({...comment, isLogin, me_id}) %>
-    <!-- reply-box 是這個留言的回覆串 -->
-      <div class="<%= G_CONST.CLASS.COMMENT_EDITOR_CONTAINER %>" data-<%= G_CONST.DATASET.KEY.PID %>="<%= comment.id %>"></div>
-      <div class="comment-list">
-        <% if(comment.reply.length){ %>
-            <%= temFn_comment_list({ comments: comment.reply, isLogin, me_id, temFn_comment_list, temFn_comment_item}) %>
-        <% } %>
-      </div>
-    </div>
+<% tree_comments.forEach( comment => { %>
+<% if (comment.html || comment.reply.length) { %>
+<!-- comment-box 是一個留言串的 container -->
+<div class="<%= G_CONST.CLASS.COMMENT_ITEM_CONTAINER %>">
+  <%= temFn_comment_item({...comment, isLogin, me_id}) %>
+  <!-- reply-box 是這個留言的回覆串 -->
+  <div class="<%= G_CONST.CLASS.COMMENT_EDITOR_CONTAINER %>" data-<%= G_CONST.DATASET.KEY.PID %>="<%= comment.id %>"></div>
+  <div class="comment-list" data-<%= G_CONST.DATASET.KEY.PID %>="<%= comment.id %>">
+    <% if(comment.reply.length){ %>
+    <%= temFn_comment_list({ tree_comments: comment.reply, isLogin, me_id, temFn_comment_list, temFn_comment_item}) %>
     <% } %>
-    <% }) %>
+  </div>
+</div>
+<% } %>
+<% }) %>

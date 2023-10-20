@@ -13,8 +13,6 @@ const EJS_DATA = {
 };
 const REG = {
   BLOG: {
-    EDIT: /^\/blog\/edit\/\d+/,
-    PREVIEW: /\?preview=true/,
     X_IMG:
       /<x-img.+?data-alt-id='(?<alt_id>\w+?)'.+?(data-style='(?<style>.+?)')?.*?\/>/g,
   },
@@ -71,51 +69,10 @@ async function initBlog(blog) {
   //  blog.map_imgs: alt_id → img
   blog.html = parseBlogContent(blog.html);
   //  對 blog.html(百分比編碼格式) 進行解碼
-
-  /* 處理blog內的comment數據 */
-  //  當前是否為 編輯頁
-  let isEdit = REG.BLOG.EDIT.test(location.pathname);
-  //  當前是否為 預覽頁
-  // let isPreview = REG.BLOG.PREVIEW.test(location.search);
-  // if (!isEdit && !isPreview) {
-  if (blog.showComment) {
+  if (!blog.showComment) {
     /* 不是編輯頁與預覽頁，請求comment數據 */
-    // let { data } = await _axios.get(`/api/comment/${blog.id}`);
-    // let { comments, commentsHtmlStr } = data;
-    // let { comments } = data;
-    // blog = { ...blog, comments, commentsHtmlStr, ...mapComments(comments) };
-    let comments = [
-      {
-        id: 111,
-        html: "<p>222</p>",
-        time: "111time111",
-        isDeleted: false,
-        commenter: { id: 1, nickname: "user1" }
-      },
-      {
-        id: 222,
-        html: "<p>222</p>",
-        time: "222time222",
-        isDeleted: false,
-        commenter: { id: 2, nickname: "user2" }
-      },
-      {
-        id: 333,
-        html: `<p>333</p>`,
-        time: "333time333",
-        isDeleted: false,
-        commenter: { id: 3, nickname: "user3" },
-      },
-      {
-        id: 444,
-        html: "<p>444</p>",
-        time: "444time444",
-        isDeleted: true,
-        commenter: { id: 4, nickname: "user4" },
-      }
-    ];
-    blog = { ...blog, comments };
-    // blog = { ...blog, comments, ...mapComments(comments) };
+    delete blog.comments
+    delete blog.tree_comments
   }
   return blog; //  再將整體轉為字符
 

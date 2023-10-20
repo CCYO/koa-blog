@@ -11,16 +11,18 @@
       <h1>
         <%= blog.title %>
       </h1>
-      <div id="<%= G_CONST.ID.BLOG_CONTENT %>"></div>
+      <div class="editor-content-view">
+        <%- blog.html %>
+      </div>
     </div>
     <% if (blog.showComment) { %>
-    <div id="<%= G_CONST.ID.COMMENT_CONTAINER %>">
+    <div class="comment-container">
       <div class="<%= G_CONST.CLASS.COMMENT_EDITOR_CONTAINER %>"></div>
-      <div id="<%= G_CONST.ID.COMMENT_LIST_CONTAINER %>">
+      <div class="<%= G_CONST.CLASS.COMMENT_LIST_CONTAINER %>">
         <div class="<%= G_CONST.CLASS.COMMENT_LIST %>" data-<%= G_CONST.DATASET.KEY.PID %>="0">
           <% if(blog.comments.length){ %>
-            <%- temFn_comment_list({comments: blog.comments, temFn_comment_list, temFn_comment_item, isLogin, me_id}) %>
-            <% } %>
+          <%- temFn_comment_list({tree_comments: blog.tree_comments, temFn_comment_list, temFn_comment_item, isLogin, me_id}) %>
+          <% } %>
         </div>
       </div>
     </div>
