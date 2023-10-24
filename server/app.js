@@ -52,9 +52,14 @@ const app = new Koa();
 //  負責捕捉意外的錯誤（預期可能發生的邏輯問題，已預先以ErrModel處理）
 app.use(async (ctx, next) => {
   try {
-    await seq.transaction(async t => {
+    //  刪除comment，controller裡面必須 manual commit，才能取得 deletedAt。
+    if (ctx.method === "DELETE" && ctx.path === "/api/comment") {
       await next();
-    });
+    } else {
+      await seq.transaction(async (t) => {
+        await next();
+      });
+    }
     if (ctx.status === 404) {
       //  待處理
       return ctx.render("page404", ErrRes.NOT_FIND);

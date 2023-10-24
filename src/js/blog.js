@@ -21,7 +21,6 @@ import "@wangeditor/editor/dist/css/style.css";
 import { createEditor } from "@wangeditor/editor";
 // 引入 editor js
 import lodash from "lodash";
-import dateAndTime from "date-and-time";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Utils Module --------------------------------------------------------------------------------- */
@@ -182,20 +181,20 @@ window.addEventListener("load", async () => {
         comment_id: $remove_comment_id,
         pid: $pid,
       };
-      let responseData = await $M_axios.delete(PAGE_BLOG.API.REMOVE_COMMENT, {
+      let response = await $M_axios.delete(PAGE_BLOG.API.REMOVE_COMMENT, {
         data: payload,
       });
-      if (responseData.errno) {
-        alert(responseData.msg);
+      if (response.errno) {
+        alert(response.msg);
         return;
       }
       let htmlStr = lodash.template(ejs_str_commentItem)({
         commenter: $$pageData.me,
-        time: dateAndTime.format(new Date(), DATA_BLOG.TIME_FORMAT),
+        time: response.data.time,
         isDeleted: true,
         isLogin: true,
       });
-      let $div_comment_item_content = $btn_remove
+      $btn_remove
         .parents(`.${PAGE_BLOG.CLASS.COMMENT_ITEM_CONTENT}`)
         .first()
         .html(htmlStr);
@@ -360,8 +359,9 @@ window.addEventListener("load", async () => {
           //  更新評論數據    { id, html, time, pid, commenter: { id, email, nickname}}
           $$pageData.blog.comments.push(responseData.data);
           //  清空評論框
-          editor.setHtml();
+          editor.clear();
 
+          return true;
           //  渲染評論 ---------------------------------------------------------------
           //  要修改
           //  ------------------------------------------------------------------------

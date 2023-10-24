@@ -399,6 +399,7 @@ module.exports = {
         id,
         deletedAt: { [Op.not]: null },
       },
+      paranoid: false,
       include: {
         association: "commenter",
         attributes: ["id", "email", "nickname"],
