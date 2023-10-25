@@ -206,36 +206,6 @@ window.addEventListener("load", async () => {
       return;
     }
 
-    // async function removeComment(replyBox) {
-    //   let comment_id = replyBox.dataset.commentId * 1;
-    //   let payload = {
-    //     author_id: $$pageData.blog.author.id,
-    //     commenter_id: $$pageData.me.id,
-    //     comment_id,
-    //     blog_id: $$pageData.blog.id,
-    //     pid: $(replyBox)
-    //       .parents(`.${PAGE_BLOG.CLASS.COMMENT_LIST}`)
-    //       .first()
-    //       .prev()
-    //       .first()
-    //       .data(PAGE_BLOG.DATASET.KEY.COMMENT_ID),
-    //   };
-    //   console.log("# => ", payload);
-
-    //   let {
-    //     data: { errno, data, msg },
-    //   } = await $M_axios.delete(PAGE_BLOG.API.REMOVE_COMMENT, {
-    //     data: payload,
-    //   });
-    //   if (errno) {
-    //     alert(msg);
-    //     return;
-    //   }
-    //   let commentBox = (replyBox.parentElement.firstElementChild.innerHTML =
-    //     "<p>此留言已刪除</p>");
-    //   replyBox.previousElementSibling.innerHTML = "";
-    //   replyBox.innerHTML = "";
-    // }
     //  初始化editor
     function init_editor(container) {
       const $container = $(container);

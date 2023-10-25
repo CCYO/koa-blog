@@ -248,13 +248,12 @@ async function remove({ comment_id }) {
 
     //  更新數據
     if (updateList.length) {
-      await C_MsgReceiver.addList(updateList);
+      await C_MsgReceiver.addList(updateList, transaction);
     }
     //  硬刪除
     if (deleteList.length) {
-      await C_MsgReceiver.forceRemoveList(deleteList);
+      await C_MsgReceiver.forceRemoveList(deleteList, transaction);
     }
-    // let x = await transaction.rollback();
     await transaction.commit();
     let { data } = await _findDeletedItem(comment_id);
     return new SuccModel({ cache, data });

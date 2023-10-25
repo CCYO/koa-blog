@@ -7,11 +7,12 @@ const CONFIG = require("./config.js");
 const { isProd } = require("../server/utils/env");
 const isDev = process.env.NODE_ENV === "development" || !isProd;
 const CONS = require("../config/const.js");
+const TEMPLATE = require("../config/template.js");
 
 // ejsLoader()
-const entry = (filepathList => {
+const entry = ((filepathList) => {
   let res = {};
-  filepathList.forEach(filepath => {
+  filepathList.forEach((filepath) => {
     const list = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
     const key = list[list.length - 1].replace(/\.js/g, "");
     // 如果是开发环境，才需要引入 hot module
@@ -41,7 +42,7 @@ glob
      */
     let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
     let filename = `${tempList[tempList.length - 1]}`; //	檔名
-    let n = tempList.findIndex(item => item === "__views");
+    let n = tempList.findIndex((item) => item === "__views");
     tempList[n] = "views";
     tempList.pop();
     let dir = "";

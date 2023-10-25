@@ -29,7 +29,9 @@ const logger = require("koa-logger");
 const json = require("koa-json");
 //  連接redis-session
 const store = require("./db/cache/redis/sessionStore");
-const { seq } = require("./db/mysql/model");
+
+const Middleware = require("./middleware/api");
+
 //  router - API
 const apiUser = require("./routes/api/user");
 const apiEditor = require("./routes/api/editor");
@@ -47,19 +49,11 @@ const { isProd } = require("./utils/env");
 const { REDIS_CONF } = require("./conf/constant");
 
 const app = new Koa();
-
 //  Middleware - 錯誤處理
 //  負責捕捉意外的錯誤（預期可能發生的邏輯問題，已預先以ErrModel處理）
 app.use(async (ctx, next) => {
   try {
-    //  刪除comment，controller裡面必須 manual commit，才能取得 deletedAt。
-    if (ctx.method === "DELETE" && ctx.path === "/api/comment") {
-      await next();
-    } else {
-      await seq.transaction(async (t) => {
-        await next();
-      });
-    }
+    await next();
     if (ctx.status === 404) {
       //  待處理
       return ctx.render("page404", ErrRes.NOT_FIND);
@@ -157,6 +151,8 @@ app.use(
     enableTypes: ["json", "form", "text"],
   })
 );
+
+app.use(Middleware.need_manual_transaction);
 
 // app.use(views(__dirname + '/views', {
 //     extension: 'ejs'
