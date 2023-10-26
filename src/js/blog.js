@@ -4,10 +4,9 @@
 if (process.env.NODE_ENV === "development") {
   require("../views/pages/blog/index.ejs");
 }
-import ejs_str_commentList from "../views/pages/blog/template/tree.ejs";
-import ejs_str_commentItem from "../views/pages/blog/template/item.ejs";
-const ejs_template = require("../../server/utils/ejs_template");
-console.log("ejs_template", ejs_template);
+import ejs_str_comment_tree from "../views/pages/blog/template/tree.ejs";
+import ejs_str_comment_item from "../views/pages/blog/template/item.ejs";
+
 //  使用 template-ejs-loader 將 文章列表的項目ejs檔 轉譯為 純字符
 
 /* ------------------------------------------------------------------------------------------ */
@@ -115,8 +114,8 @@ window.addEventListener("load", async () => {
     let $$pageData = { me, blog };
     window.$$pageData = $$pageData;
     let $$map_editor_list = new $C_map_editor_list();
-    let $$template_fn_comment_list = lodash.template(ejs_str_commentList);
-    let $$template_fn_comment_item = lodash.template(ejs_str_commentItem);
+    let $$template_comment_tree = lodash.template(ejs_str_comment_tree);
+    let $$template_comment_item = lodash.template(ejs_str_comment_item);
     //  若是因為comment通知前來此頁面，可以直接滑動至錨點
     if (location.hash) {
       location.href = location.hash;
@@ -150,7 +149,6 @@ window.addEventListener("load", async () => {
         }
         //  執行刪除
         removeComment(e.target);
-        // removeComment(remove_comment_id);
         return;
       }
 
@@ -190,7 +188,7 @@ window.addEventListener("load", async () => {
         alert(response.msg);
         return;
       }
-      let htmlStr = lodash.template(ejs_str_commentItem)({
+      let htmlStr = $$template_comment_item(ejs_str_commentItem)({
         commenter: $$pageData.me,
         time: response.data.time,
         isDeleted: true,
@@ -201,10 +199,10 @@ window.addEventListener("load", async () => {
         .first()
         .html(htmlStr);
       //  同步$$pageData
-      let index = $$pageData.blog.comments.findIndex(
+      let index = $$pageData.blog.comment.findIndex(
         (comment) => comment.id === $remove_comment_id
       );
-      $$pageData.blog.comments.splice(index, 1);
+      $$pageData.blog.comment.splice(index, 1);
       return;
     }
 
@@ -329,7 +327,7 @@ window.addEventListener("load", async () => {
           //  渲染此次送出的評論
           renderComment(responseData.data);
           //  更新評論數據    { id, html, time, pid, commenter: { id, email, nickname}}
-          $$pageData.blog.comments.push(responseData.data);
+          $$pageData.blog.comment.push(responseData.data);
           //  清空評論框
           editor.clear();
 
@@ -340,7 +338,7 @@ window.addEventListener("load", async () => {
           function renderComment(new_comment) {
             let commenter_id = $$pageData.me.id;
             let template_values = {
-              tree_comments: [
+              tree: [
                 {
                   ...new_comment,
                   reply: [],
@@ -349,10 +347,14 @@ window.addEventListener("load", async () => {
               ],
               isLogin: isLogin(),
               me_id: commenter_id,
-              temFn_comment_list: $$template_fn_comment_list,
-              temFn_comment_item: $$template_fn_comment_item,
+              ejs_template: {
+                comment: {
+                  tree: $$template_comment_tree,
+                  item: $$template_comment_item,
+                },
+              },
             };
-            let html_str = $$template_fn_comment_list(template_values);
+            let html_str = $$template_comment_tree(template_values);
             //  創建評論htmlStr，data: { id, html, time, pid, commenter: { id, email, nickname}}
             //  渲染
             editor.render(html_str);
