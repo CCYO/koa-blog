@@ -2,7 +2,7 @@
  * @description Router/Views blog
  */
 
-const template_fn = require("../../utils/template_fn");
+const ejs_template = require("../../utils/ejs_template");
 const CONFIG_CONST = require("../../../config/const");
 //  0501
 const {
@@ -107,8 +107,7 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
   let me_id = isLogin ? ctx.session.user.id : 0;
   let ejs_data = {
     blog: { ...cache.data, showComment },
-    temFn_comment_list: template_fn.comment_list,
-    temFn_comment_item: template_fn.comment_item,
+    ejs_template,
     isLogin,
     me_id,
   };

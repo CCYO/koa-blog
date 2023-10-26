@@ -71,8 +71,7 @@ async function initBlog(blog) {
   //  對 blog.html(百分比編碼格式) 進行解碼
   if (!blog.showComment) {
     /* 不是編輯頁與預覽頁，請求comment數據 */
-    delete blog.comments
-    delete blog.tree_comments
+    delete blog.comment;
   }
   return blog; //  再將整體轉為字符
 
@@ -106,43 +105,12 @@ async function initBlog(blog) {
     }
     return htmlStr;
   }
-  //  將comment數據Map化
-  function mapComments(comments) {
-    return comments.reduce(
-      (initVal, comment) => {
-        let { map_commentId, map_commentPid } = initVal;
-        return set(comment);
-
-        function set(comment) {
-          let { id, p_id: pid, reply } = comment;
-          map_commentId.set(id, comment);
-          //  map_commentId 是一個 map，數據格式為 id → comment
-          let commentsOfPid = map_commentPid.get(pid) || [];
-          //  如果 pid → comments 不存在，初始化一個數組
-          map_commentPid.set(pid, [...commentsOfPid, comment]);
-          //  map_commentPid 是一個 map，數據格式為 pid(即parentId) → comments
-          /* 遞歸處理當前comment的回覆 */
-          if (reply.length) {
-            reply.forEach(item => set(item));
-          } else {
-            map_commentPid.set(id, []);
-            //  若當前comment沒有回覆，則順便先將自己作為map_commentPid的一份數據
-          }
-          return { map_commentId, map_commentPid };
-        }
-      },
-      {
-        map_commentId: new Map(),
-        map_commentPid: new Map().set(0, []),
-      }
-    );
-  }
 }
 //  將 img 數據 map化
 function init_map_imgs(imgs) {
   let map = new Map();
   /* 以 alt_id 作為 Map key，整理為格式 img.key → img 的數據 */
-  imgs.forEach(img => {
+  imgs.forEach((img) => {
     map.set(img.alt_id * 1, { ...img });
   });
   return map;

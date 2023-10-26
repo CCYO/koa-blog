@@ -1,14 +1,14 @@
 <%% let G_CONST = JSON.parse('{"API":{"CREATE_COMMENT":"/api/comment","REMOVE_COMMENT":"/api/comment"},"CLASS":{"COMMENT_LIST":"comment-list","COMMENT_EDITOR_CONTAINER":"editor-container","COMMENT_LIST_CONTAINER":"comment-list-container","COMMENT_ITEM_CONTAINER":"comment-item-container","COMMENT_ITEM_CONTENT":"comment-item-content"},"DATASET":{"KEY":{"COMMENT_ID":"comment_id","EDITOR_ID":"editor_id","REMOVE_COMMENT":"remove","PID":"pid"}},"REG":{"BLOG_CONTENT_TRIM":{}}}') %>
-<%% tree_comments.forEach( comment => { %>
+<%% tree.forEach( comment => { %>
 <%% if (comment.html || comment.reply.length) { %>
 <!-- comment-box 是一個留言串的 container -->
 <div class="<%%= G_CONST.CLASS.COMMENT_ITEM_CONTAINER %>">
-  <%%= temFn_comment_item({...comment, isLogin, me_id}) %>
+  <%%= ejs_template.comment.item({...comment, isLogin, me_id}) %>
   <!-- reply-box 是這個留言的回覆串 -->
   <div class="<%%= G_CONST.CLASS.COMMENT_EDITOR_CONTAINER %>" data-<%%= G_CONST.DATASET.KEY.PID %>="<%%= comment.id %>"></div>
   <div class="comment-list" data-<%%= G_CONST.DATASET.KEY.PID %>="<%%= comment.id %>">
     <%% if(comment.reply.length){ %>
-    <%%= temFn_comment_list({ tree_comments: comment.reply, isLogin, me_id, temFn_comment_list, temFn_comment_item}) %>
+    <%%= ejs_template.comment.tree({ tree: comment.reply, isLogin, me_id, ejs_template }) %>
     <%% } %>
   </div>
 </div>

@@ -4,8 +4,10 @@
 if (process.env.NODE_ENV === "development") {
   require("../views/pages/blog/index.ejs");
 }
-import ejs_str_commentList from "../views/pages/blog/template/list.ejs";
+import ejs_str_commentList from "../views/pages/blog/template/tree.ejs";
 import ejs_str_commentItem from "../views/pages/blog/template/item.ejs";
+const ejs_template = require("../../server/utils/ejs_template");
+console.log("ejs_template", ejs_template);
 //  使用 template-ejs-loader 將 文章列表的項目ejs檔 轉譯為 純字符
 
 /* ------------------------------------------------------------------------------------------ */

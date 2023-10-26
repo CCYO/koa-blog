@@ -104,12 +104,13 @@
     <!-- EJS DATA -->
     <div style="display: none;">
   <% for(let type in locals){ %>
-    <% if( TEMPLATEtype==="blogs" || type==="currentUser" || type==="relationShip" || type==="blog" || type==="album" ){ %>
-      <div data-my-data="<%= type %>">
-        <%- JSON.stringify(locals[type]) %>
-      </div>
-      <% } %>
-        <% } %>
+  <%# if( type === "partials" || type === "filename" || type === "title" || type === "isSelf" || type === "temFn"){ continue } %>
+  <% if( type === "blogs" || type === "currentUser" || type === "relationShip" || type === "blog" || type === "album"){ %>
+  <div data-my-data="<%= type %>">
+    <%- JSON.stringify(locals[type]) %>
+  </div>
+  <% } %>
+  <% } %>
 </div>
   </main>
   <!-- FOOTER -->

@@ -234,6 +234,7 @@ module.exports = {
           },
         },
       ],
+      order: [["replys", "id"]],
     }),
     //  0404
     find: (id) => ({
