@@ -4,10 +4,8 @@
 if (process.env.NODE_ENV === "development") {
   require("../views/pages/blog/index.ejs");
 }
-import ejs_str_comment_tree from "../views/pages/blog/template/tree.ejs";
-import ejs_str_comment_item from "../views/pages/blog/template/item.ejs";
-
-//  使用 template-ejs-loader 將 文章列表的項目ejs檔 轉譯為 純字符
+import $M_template from "./utils/template";
+//  包裝好的ejs template
 
 /* ------------------------------------------------------------------------------------------ */
 /* CSS Module --------------------------------------------------------------------------------- */
@@ -21,7 +19,6 @@ import "@wangeditor/editor/dist/css/style.css";
 /* ------------------------------------------------------------------------------------------ */
 import { createEditor } from "@wangeditor/editor";
 // 引入 editor js
-import lodash from "lodash";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Utils Module --------------------------------------------------------------------------------- */
@@ -29,7 +26,7 @@ import lodash from "lodash";
 
 import {
   Debounce as $M_Debounce,
-  _axios as $M_axios,
+  _axios as $C_axios,
   wedgets as $M_wedgets,
 } from "./utils";
 
@@ -54,28 +51,9 @@ const DATA_BLOG = CONFIG_CONST.DATAS.BLOG;
 const $C_initPage = new $M_wedgets.InitPage();
 //  初始化頁面
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
+
+const $$axios = new $C_axios({ backdrop: $C_backdrop });
 //  讀取遮罩
-class $C_map_editor_list {
-  map = new Map([["editorList", []]]);
-  get() {
-    return this.map.get("editorList");
-  }
-  add(editor) {
-    let editorList = this.get();
-    editorList.push(editor);
-    this.map.set("editorList", editorList);
-  }
-  remove(id) {
-    let editorList = this.get();
-    let index = editorList.findIndex((editor) => editor.id === id);
-    if (index < 0) {
-      return;
-    }
-    editorList.splice(index, 1);
-    this.map.set("editorList", editorList);
-  }
-}
-//  用來蒐集所有的editor，以便 dackdrop 使用
 
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
@@ -113,9 +91,7 @@ window.addEventListener("load", async () => {
     /* ------------------------------------------------------------------------------------------ */
     let $$pageData = { me, blog };
     window.$$pageData = $$pageData;
-    let $$map_editor_list = new $C_map_editor_list();
-    let $$template_comment_tree = lodash.template(ejs_str_comment_tree);
-    let $$template_comment_item = lodash.template(ejs_str_comment_item);
+
     //  若是因為comment通知前來此頁面，可以直接滑動至錨點
     if (location.hash) {
       location.href = location.hash;
@@ -123,9 +99,7 @@ window.addEventListener("load", async () => {
 
     //  初始化根評論editor
     init_editor($root_editor_container.get(0));
-    console.log(123, $root_comment_list_container);
     $root_comment_list_container.on("click", (e) => {
-      console.log(123);
       let target = e.target;
       if (target.tagName !== "BUTTON") {
         return;
@@ -181,14 +155,14 @@ window.addEventListener("load", async () => {
         comment_id: $remove_comment_id,
         pid: $pid,
       };
-      let response = await $M_axios.delete(PAGE_BLOG.API.REMOVE_COMMENT, {
+      let response = await $$axios.delete(PAGE_BLOG.API.REMOVE_COMMENT, {
         data: payload,
       });
       if (response.errno) {
         alert(response.msg);
         return;
       }
-      let htmlStr = $$template_comment_item(ejs_str_commentItem)({
+      let htmlStr = $M_template.comment.item({
         commenter: $$pageData.me,
         time: response.data.time,
         isDeleted: true,
@@ -199,10 +173,7 @@ window.addEventListener("load", async () => {
         .first()
         .html(htmlStr);
       //  同步$$pageData
-      let index = $$pageData.blog.comment.findIndex(
-        (comment) => comment.id === $remove_comment_id
-      );
-      $$pageData.blog.comment.splice(index, 1);
+      $$pageData.blog.comment.map.delete($remove_comment_id);
       return;
     }
 
@@ -271,8 +242,6 @@ window.addEventListener("load", async () => {
             $(`[data-${PAGE_BLOG.DATASET.KEY.PID}=0]`).prepend(html);
           }
         };
-        //  將editor存入editorList，以便 loadEnd 關閉 editor 的功能
-        $$map_editor_list.add(editor);
         //  為container綁定判斷登入狀態的handle
         container.addEventListener("click", isLogin);
         container.addEventListener("keydown", cancelNewLine);
@@ -327,7 +296,7 @@ window.addEventListener("load", async () => {
           //  渲染此次送出的評論
           renderComment(responseData.data);
           //  更新評論數據    { id, html, time, pid, commenter: { id, email, nickname}}
-          $$pageData.blog.comment.push(responseData.data);
+          $$pageData.blog.comment.map.set(responseData.data);
           //  清空評論框
           editor.clear();
 
@@ -347,14 +316,9 @@ window.addEventListener("load", async () => {
               ],
               isLogin: isLogin(),
               me_id: commenter_id,
-              ejs_template: {
-                comment: {
-                  tree: $$template_comment_tree,
-                  item: $$template_comment_item,
-                },
-              },
+              ejs_template: $M_template,
             };
-            let html_str = $$template_comment_tree(template_values);
+            let html_str = $M_template.comment.tree(template_values);
             //  創建評論htmlStr，data: { id, html, time, pid, commenter: { id, email, nickname}}
             //  渲染
             editor.render(html_str);
@@ -372,7 +336,7 @@ window.addEventListener("load", async () => {
               html,
               pid: $$comment_pid,
             };
-            return await $M_axios.post(PAGE_BLOG.API.CREATE_COMMENT, payload);
+            return await $$axios.post(PAGE_BLOG.API.CREATE_COMMENT, payload);
           }
         }
       }

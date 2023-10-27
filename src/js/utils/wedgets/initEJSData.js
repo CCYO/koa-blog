@@ -1,4 +1,3 @@
-import _axios from "../_axios";
 //  初始化數據
 //  取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
 //  如 { html: `<p>56871139</p>`}
@@ -69,12 +68,36 @@ async function initBlog(blog) {
   //  blog.map_imgs: alt_id → img
   blog.html = parseBlogContent(blog.html);
   //  對 blog.html(百分比編碼格式) 進行解碼
-  if (!blog.showComment) {
+  if (blog.showComment) {
     /* 不是編輯頁與預覽頁，請求comment數據 */
-    delete blog.comment;
+    blog.comment.map = init_map_comment(blog.comment);
   }
+  delete blog.comment.tree;
+  delete blog.comment.list;
   return blog; //  再將整體轉為字符
 
+  function init_map_comment({ tree, list }) {
+    class Comment {
+      #map;
+      constructor({ tree, list }) {
+        let kv_list = list.map((comment) => [comment.id, comment]);
+        this.#map = new Map(kv_list);
+      }
+      get(id) {
+        return this.#map.get(id);
+      }
+      set(comment) {
+        this.#map.set(comment.id, comment);
+        return this._map.get(comment.id);
+      }
+      delete(id) {
+        this.#map.delete(id);
+        return true;
+      }
+    }
+
+    return new Comment({ tree, list });
+  }
   //  因為「後端存放的blog.html數據」是以
   //  1.百分比編碼存放
   //  2.<img>是以<x-img>存放
