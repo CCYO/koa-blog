@@ -19,7 +19,7 @@ import {
   ui as $M_UI,
   Debounce as $M_Debounce,
   validate as $M_validate,
-  _axios as $M_axios,
+  _axios as $C_axios,
   wedgets as $M_wedgets,
   redirFrom as $M_redirForm,
 } from "./utils";
@@ -44,7 +44,7 @@ const $C_initPage = new $M_wedgets.InitPage();
 //  初始化頁面
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
-
+const $$axios = new $C_axios({ backdrop: $C_backdrop });
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
@@ -52,7 +52,7 @@ window.addEventListener("load", async () => {
   try {
     $C_backdrop.show({ blockPage: true });
     //  讀取中，遮蔽畫面
-    await $C_initPage.addOtherInitFn($M_wedgets.initNavbar);
+    await $C_initPage.addOtherInitFn(() => $M_wedgets.initNavbar({ $$axios }));
     //  初始化navbar
     await $C_initPage.render(initMain);
     //  統整頁面數據，並渲染需要用到統整數據的頁面內容
@@ -107,7 +107,7 @@ window.addEventListener("load", async () => {
         //  處理校驗錯誤
         /* 送出請求 */
         /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-        let { errno } = await $M_axios.post(
+        let { errno } = await $$axios.post(
           PAGE_REGISTER_LOGIN.API.LOGIN,
           payload
         );
@@ -160,7 +160,7 @@ window.addEventListener("load", async () => {
         }
         /* 送出請求 */
         /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-        let { errno } = await $M_axios.post(
+        let { errno } = await $$axios.post(
           PAGE_REGISTER_LOGIN.API.REGISTER,
           payload
         );
@@ -185,6 +185,7 @@ window.addEventListener("load", async () => {
         //  更新payload內的表格數據
 
         if (targetInputName === "email") {
+          payload.$$axios = $$axios;
           let validateErrs = await $M_validate.isEmailExist(payload, false);
           feedback_for_Form(validateErrs);
         } else {
@@ -231,7 +232,7 @@ window.addEventListener("load", async () => {
       }
       let lock = new Lock(form);
       /* 藉由validateErrors，判斷form可否submit，並於input顯示校驗錯誤 */
-      return validateErrs => {
+      return (validateErrs) => {
         let valid_inputs = [...lock.inputs];
         /* 蒐集無效inputs */
         for (let invalid_inputName in validateErrs) {
@@ -286,7 +287,7 @@ window.addEventListener("load", async () => {
         }
         ele.has_debHandle = true;
         const deb_handle = new $M_Debounce(handle, {
-          loading: e => {
+          loading: (e) => {
             let input = e.target;
             $M_UI.feedback(1, input);
             $(input).parents("form").eq(0).prop("disabled", true);

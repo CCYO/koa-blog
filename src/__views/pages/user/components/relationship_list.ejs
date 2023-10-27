@@ -6,17 +6,7 @@
     <% if(list.length) {%>
     <ul>
       <% list.forEach( user => { %>
-      <li class="card" data-<%= CONS.PAGES.USER.DATASET.KEY.USER_ID %>="<%= user.id %>">
-        <div class="ratio ratio-1x1">
-          <img src="<%= user.avatar %>" class="card-img-top" alt="">
-        </div>
-        <div class="text-truncate">
-          <a href="/other/<%= user.id %>" class="stretched-link">
-            <%= user.nickname %>
-          </a>
-        </div>
-      </li>
-
+      <%- ejs_template.relationShip_item({ user }) %>
       <% }) %>
     </ul>
     <% } else { %>

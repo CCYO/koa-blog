@@ -1,6 +1,7 @@
 /**
  * @description Router/Views user
  */
+const ejs_template = require("../../utils/ejs_template");
 //  0516
 const {
   VIEWS: { CHECK, NEWS },
@@ -110,6 +111,7 @@ router.get("/self", CHECK.login, privateCache, async (ctx, next) => {
   // let { currentUser, fansList, idols, blogs } = relationShip
   let { currentUser, relationShip, blogs } = data;
   await ctx.render("user", {
+    ejs_template,
     isSelf: user_id === currentUser.id,
     title: `${currentUser.nickname}的主頁`,
     //  主要資訊數據

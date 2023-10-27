@@ -4,10 +4,7 @@
 if (process.env.NODE_ENV === "development") {
   await import("../views/pages/user/index.ejs");
 }
-import ejs_str_fansItem from "../views/pages/user/components/fansItem.ejs";
-//  使用 template-ejs-loader 將 偶像粉絲列表的項目ejs檔 轉譯為 純字符
-import ejs_str_blogList from "../views/pages/user/components/blogList.ejs";
-//  使用 template-ejs-loader 將 文章列表的項目ejs檔 轉譯為 純字符
+import $M_template from "./utils/template";
 
 /* ------------------------------------------------------------------------------------------ */
 /* CSS Module --------------------------------------------------------------------------------- */
@@ -20,7 +17,6 @@ import "../css/user.css";
 /* ------------------------------------------------------------------------------------------ */
 
 import BetterScroll from "better-scroll";
-import lodash from "lodash";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Utils Module --------------------------------------------------------------------------------- */
@@ -28,7 +24,7 @@ import lodash from "lodash";
 
 import {
   Debounce as $M_Debounce,
-  _axios as $M_axios,
+  _axios as $C_axios,
   _xss as $M_xss,
   wedgets as $M_wedgets,
   validate as $M_validate,
@@ -57,6 +53,7 @@ const $C_initPage = new $M_wedgets.InitPage();
 //  初始化頁面
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
+const $$axios = new $C_axios({ backdrop: $C_backdrop });
 
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
@@ -103,6 +100,7 @@ window.addEventListener("load", async () => {
     /* Public Var in Closure -------------------------------------------------------------------- */
     /* ------------------------------------------------------------------------------------------ */
     let $$pageData = { me, currentUser, relationShip, blogs };
+    window.$$pageData = $$pageData;
     const $$isLogin = !!me.id;
     const $$isSelf = currentUser.id === me.id;
 
@@ -131,7 +129,7 @@ window.addEventListener("load", async () => {
       /* render */
       const isMyIdol = $$isLogin
         ? $$pageData.relationShip.fansList.some(
-            fans => fans.id === $$pageData.me.id
+            (fans) => fans.id === $$pageData.me.id
           )
         : false;
       //  判端是否為自己的偶像
@@ -164,7 +162,6 @@ window.addEventListener("load", async () => {
       //  Closure Var
       let $$pagination_list = {};
       /*  blogList 的 template 函數 */
-      let $$fn_template_blogList_page = lodash.template(ejs_str_blogList);
       for (let status in $$pageData.blogs) {
         if (!$$pageData.blogs[status].count) {
           continue;
@@ -216,13 +213,13 @@ window.addEventListener("load", async () => {
             //  發出請求，取得blogList數據
             let {
               data: { blogs },
-            } = await $M_axios.post(PAGE_USER.API.GET_BLOG_LIST, {
+            } = await $$axios.post(PAGE_USER.API.GET_BLOG_LIST, {
               author_id: $$pageData.currentUser.id,
               limit: DATA_BLOG.PAGINATION.BLOG_COUNT,
               offset: (targetPage - 1) * DATA_BLOG.PAGINATION.BLOG_COUNT,
               show: $$status,
             });
-            let html = $$fn_template_blogList_page({
+            let html = $M_template.blog_list({
               isPublic: $$status ? true : false,
               isSelf: $$isSelf,
               page: targetPage,
@@ -275,7 +272,7 @@ window.addEventListener("load", async () => {
         };
       });
 
-      $div_blogList.on("click", async e => {
+      $div_blogList.on("click", async (e) => {
         let $tab = $(e.target);
 
         if ($tab.attr("href") === "#") {
@@ -429,14 +426,14 @@ window.addEventListener("load", async () => {
         let $li_blogItem_list = $container
           .find(`.show[data-${PAGE_USER.DATASET.KEY.PAGE_NUM}]`)
           .find(`[data-${PAGE_USER.DATASET.KEY.BLOG_ID}]`);
-        blogList = Array.from($li_blogItem_list).map(li =>
+        blogList = Array.from($li_blogItem_list).map((li) =>
           $(li).data(PAGE_USER.DATASET.KEY.BLOG_ID)
         );
       }
 
       let owner_id = $$pageData.me.id;
       //  送出刪除命令
-      let { errno } = await $M_axios.delete(PAGE_USER.API.REMOVE_BLOGS, {
+      let { errno } = await $$axios.delete(PAGE_USER.API.REMOVE_BLOGS, {
         data: {
           blogList,
           owner_id,
@@ -456,7 +453,7 @@ window.addEventListener("load", async () => {
       }
       const {
         data: { id: blog_id },
-      } = await $M_axios.post(PAGE_USER.API.CREATE_BLOG, {
+      } = await $$axios.post(PAGE_USER.API.CREATE_BLOG, {
         title,
       });
       alert("創建成功，開始編輯文章");
@@ -492,14 +489,14 @@ window.addEventListener("load", async () => {
       _checkLogin();
       //  檢查登入狀態
       /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-      await $M_axios.post(PAGE_USER.API.FOLLOW, {
+      await $$axios.post(PAGE_USER.API.FOLLOW, {
         id: $$pageData.currentUser.id,
       });
       //  發出 取消/追蹤 請求
       /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
       $$pageData.relationShip.fansList.unshift($$pageData.me);
       //  同步 $$fansList 數據
-      let html = lodash.template(ejs_str_fansItem)({ me: $$pageData.me });
+      let html = $M_template.fans_Item({ user: $$pageData.me });
       //  在粉絲列表中插入 粉絲htmlStr
       if ($$pageData.relationShip.fansList.length === 1) {
         //  如果追蹤者只有當前的你
@@ -522,7 +519,7 @@ window.addEventListener("load", async () => {
       _checkLogin();
       //  檢查登入狀態
       /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-      await $M_axios.post(PAGE_USER.API.CANCEL_FOLLOW, {
+      await $$axios.post(PAGE_USER.API.CANCEL_FOLLOW, {
         id: $$pageData.currentUser.id,
       });
       //  發出 取消/追蹤 請求

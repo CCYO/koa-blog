@@ -3,11 +3,6 @@ import "../../../css/wedgets/navbar.css";
 /* -------------------- UTILS MODULE -------------------- */
 import $C_Debounce from "../Debounce";
 import $M_ui from "../ui";
-import $C_axios from "../_axios";
-import $C_backdrop from "./LoadingBackdrop";
-
-const $$backdrop = new $C_backdrop();
-const $$axios = new $C_axios({ backdrop: $$backdrop });
 
 /* -------------------- CONFIG CONST -------------------- */
 const CONST = {
@@ -22,7 +17,7 @@ const NEWS = {
   },
 };
 /* 初始化 通知列表 功能 */
-export default async function () {
+export default async function ({ $$axios }) {
   let _data = { me: {} };
   activeNavItem();
   //  根據 path，顯示當前 active NavItem

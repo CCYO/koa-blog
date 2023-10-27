@@ -1,3 +1,5 @@
+const date = require("date-and-time");
+const CONST = require("../../conf/constant");
 const { initListForBrowser } = require("./comment"); //  0411
 const {
   //  0404
@@ -69,6 +71,15 @@ function initBlog(data) {
       let tree = initListForBrowser(list);
       blog.comment = { list, tree };
       delete blog.replys;
+    }
+    if (map.has("show")) {
+      let status = map.get("show");
+      // let status = map.get('show') ? 'public' : 'private'
+      if (status && map.has("showAt")) {
+        blog.time = date.format(map.get("showAt"), CONST.BLOG.TIME_FORMAT);
+      } else if (!status && map.get("updatedAt")) {
+        blog.time = date.format(map.get("updatedAt"), CONST.BLOG.TIME_FORMAT);
+      }
     }
     return blog;
   }

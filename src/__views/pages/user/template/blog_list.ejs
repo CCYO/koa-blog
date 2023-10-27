@@ -1,19 +1,20 @@
-<li data-<%= CONS.PAGES.USER.DATASET.KEY.PAGE_NUM %>="<%= page %>" class="fade <%= page === 1 ? 'show' : '' %>">
+<% let G_PAGE = JSON.parse(--CONS.PAGES.USER--) %>
+<li data-<%= G_PAGE.DATASET.KEY.PAGE_NUM %>="<%= page %>" class="fade <%= page === 1 ? 'show' : '' %>">
   <ul class="list-group list-group-flush">
     <% blogs.forEach( ( {id, author_id, title, time } ) => { %>
-    <li data-<%= CONS.PAGES.USER.DATASET.KEY.BLOG_ID %>="<%= id %>" class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
+    <li data-<%= G_PAGE.DATASET.KEY.BLOG_ID %>="<%= id %>" class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
       <div class="text-truncate me-3">
         <a class="stretched-link" href="/blog/<%= id %>">
           <%= title %>
         </a>
       </div>
       <div class="d-none d-sm-block">
-        <span class="timestamp">上一次編輯<%= time %></span>
+        <span class="timestamp"><%= isPublic ? '發布時間' : '上一次編輯時間' %><%= time %></span>
       </div>
       <% if(isSelf){ %>
       <div class="flex-shrink-0" style="z-index: 200;">
         <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%= id %>?owner_id=<%= author_id %>">編輯</a>
-        <a class='btn btn-outline-primary btn-sm' data-<%= CONS.PAGES.USER.DATASET.KEY.REMOVE_BLOG %>=<%= CONS.PAGES.USER.DATASET.VALUE.REMOVE_BLOG_ITEM %>>刪除</a>
+        <a class='btn btn-outline-primary btn-sm' data-<%= G_PAGE.DATASET.KEY.REMOVE_BLOG %>=<%= G_PAGE.DATASET.VALUE.REMOVE_BLOG_ITEM %>>刪除</a>
       </div>
       <% } %>
     </li>
