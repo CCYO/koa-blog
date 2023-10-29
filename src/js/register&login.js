@@ -18,7 +18,7 @@ import "../css/register&login.css";
 import {
   ui as $M_UI,
   Debounce as $M_Debounce,
-  validate as $M_validate,
+  M_Ajv as $M_validate,
   _axios as $C_axios,
   wedgets as $M_wedgets,
   redirFrom as $M_redirForm,
@@ -45,6 +45,11 @@ const $C_initPage = new $M_wedgets.InitPage();
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
 const $$axios = new $C_axios({ backdrop: $C_backdrop });
+const $$ajv = new $M_validate.C_ajv();
+const $$validate_login = (data) => $M_validate.login(ajv, data);
+const $$validate_register = (data) => $M_validate.register(ajv, data);
+const $$validate_passwordAndAgain = (data) =>
+  $M_validate.passwordAndAgain(ajv, data);
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
@@ -96,7 +101,7 @@ window.addEventListener("load", async () => {
       /* 登入表單 submit Event handler */
       async function handle_submit_login(e) {
         e.preventDefault();
-        let validateErrs = await $M_validate.login(payload);
+        let validateErrs = await $$validate_login(payload);
         //  校驗
         if (validateErrs) {
           payload = {};
@@ -185,7 +190,7 @@ window.addEventListener("load", async () => {
         //  更新payload內的表格數據
 
         if (targetInputName === "email") {
-          payload.$$axios = $$axios;
+          // payload.$$axios = $$axios;
           let validateErrs = await $M_validate.isEmailExist(payload, false);
           feedback_for_Form(validateErrs);
         } else {

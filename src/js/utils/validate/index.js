@@ -1,5 +1,6 @@
 import { dev_log as $F_log } from "../log";
-import ajv from "./_ajv";
+
+import C_ajv from "./_ajv";
 import {
   BLOG,
   IS_EMAIL_EXIST,
@@ -8,7 +9,7 @@ import {
   LOGIN,
 } from "./_ajv/schema";
 
-function genValidate(schema) {
+function genValidate(ajv, schema) {
   let _validate = ajv.compile(schema);
   return async (data, parseErrorForFeedBack = true) => {
     try {
@@ -161,10 +162,11 @@ function en_to_tw_for_fieldName(fieldName) {
 }
 
 export default {
+  C_ajv,
   parseErrorsToForm,
-  isEmailExist: genValidate(IS_EMAIL_EXIST),
-  passwordAndAgain: genValidate(PASSWORD_AND_AGAIN),
-  register: genValidate(REGISTER),
-  login: genValidate(LOGIN),
-  blog: genValidate(BLOG),
+  isEmailExist: genValidate(ajv, IS_EMAIL_EXIST),
+  passwordAndAgain: genValidate(ajv, PASSWORD_AND_AGAIN),
+  register: genValidate(ajv, REGISTER),
+  login: genValidate(ajv, LOGIN),
+  blog: genValidate(ajv, BLOG),
 };

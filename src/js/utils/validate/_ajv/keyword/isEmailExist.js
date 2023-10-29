@@ -5,10 +5,8 @@ async function isEmailExist(schema, data, parentSchema, dataCtx) {
     return true;
   }
   const key = "email";
-  let payload = { ...data };
-  delete payload.$$axios;
-  let { errno, msg } = await data.$$axios.post("/api/user/isEmailExist", {
-    [key]: payload,
+  let { errno, msg } = await this.$$axios.post("/api/user/isEmailExist", {
+    [key]: data,
   });
   if (errno) {
     let { instancePath } = dataCtx;
