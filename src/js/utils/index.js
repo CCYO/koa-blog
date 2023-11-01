@@ -1,4 +1,4 @@
-import _Ajv from "./_Ajv";
+import _Ajv from "./_ajv";
 import ui from "./ui";
 
 import wedgets from "./wedgets";
