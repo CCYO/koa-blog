@@ -4,4 +4,4 @@ import noSpace from "./noSpace";
 import isEmailExist from "./isEmailExist";
 import confirmPassword from "./confirmPassword";
 
-export { confirmPassword, isEmailExist, diff, noSpace };
+export default [confirmPassword, isEmailExist, diff, noSpace];

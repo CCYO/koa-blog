@@ -1,50 +1,45 @@
-import { dev_log as $F_log } from "../log";
+/* -------------------- NPM MODULE -------------------- */
+import Ajv2019 from "ajv/dist/2019";
+import addFormats from "ajv-formats";
+import errors from "ajv-errors";
+/* -------------------- Utils MODULE -------------------- */
 
-import C_ajv from "./_ajv";
-import {
-  BLOG,
-  IS_EMAIL_EXIST,
-  PASSWORD_AND_AGAIN,
-  REGISTER,
-  LOGIN,
-} from "./_ajv/schema";
+import keyword_list from "./keyword";
 
-function genValidate(ajv, schema) {
-  let _validate = ajv.compile(schema);
-  return async (data, parseErrorForFeedBack = true) => {
-    try {
-      await _validate(data);
-      if (_validate.errors) {
-        let e = new Error();
-        e.errors = _validate.errors;
-        throw e;
-      }
-      return null;
-    } catch (err) {
-      let { errors } = err;
-      if (errors) {
-        $F_log("@整理前的validateErrors => ", errors);
-        let _errors = _parseValidateErrors(errors);
-        //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
-        $F_log("@整理後的validateErrors => ", _errors);
-        if (parseErrorForFeedBack) {
-          _errors = parseErrorsToForm(_errors);
-          //  { 表格名1: message1, 表格名2: message2, ... }
-        }
-        return _errors;
-      } else {
-        throw err;
-      }
-    }
-  };
-}
+/* -------------------- RUN -------------------- */
 
+import CONSTANT from "../../../../config/constant";
+import schema from "./schema";
+
+const AJV = CONSTANT.AJV;
 //  參考 https://ajv.js.org/api.html#error-parameters
 const map_keyword_to_param = {
   required: "missingProperty",
   additionalProperties: "additionalProperty",
   // dependentRequired: 'missingProperty' 目前schema都沒用到
 };
+function en_to_tw_for_fieldName(fieldName) {
+  const map = {
+    //	全局錯誤
+    all: "all",
+    //	register
+    email: "信箱",
+    password: "密碼",
+    password_again: "密碼確認",
+    //	blog
+    title: "文章標題",
+    contetn: "文章內文",
+    show: "文章狀態",
+    //	setting
+    nickname: "暱稱",
+    age: "年齡",
+    avatar: "頭像",
+    avatar_hash: "頭像hash",
+    // myKeyword
+    confirm_password: "密碼驗證",
+  };
+  return map[fieldName];
+}
 function _parseValidateErrors(validateErrors) {
   /*{ 
         errors: [ { ..., message: 自定義的錯誤說明, ... }, ...],
@@ -108,7 +103,6 @@ function _parseValidateErrors(validateErrors) {
     return init;
   }, {});
 }
-
 function parseErrorsToForm(myErrors) {
   return Object.entries(myErrors).reduce((res, [fieldName, KVpairs]) => {
     let msg = Object.entries(KVpairs).reduce(
@@ -138,35 +132,77 @@ function parseErrorsToForm(myErrors) {
   }, {});
 }
 
-function en_to_tw_for_fieldName(fieldName) {
-  const map = {
-    //	全局錯誤
-    all: "all",
-    //	register
-    email: "信箱",
-    password: "密碼",
-    password_again: "密碼確認",
-    //	blog
-    title: "文章標題",
-    contetn: "文章內文",
-    show: "文章狀態",
-    //	setting
-    nickname: "暱稱",
-    age: "年齡",
-    avatar: "頭像",
-    avatar_hash: "頭像hash",
-    // myKeyword
-    confirm_password: "密碼驗證",
-  };
-  return map[fieldName];
-}
+// export default Validator;
+// export default {
+//   parseErrorsToForm,
+//   Validator,
+//   isEmailExist: new Validator(schema_list.IS_EMAIL_EXIST),
+//   passwordAndAgain: new Validator(schema_list.PASSWORD_AND_AGAIN),
+//   register: new Validator(schema_list.REGISTER),
+//   login: new Validator(schema_list.LOGIN),
+//   blog: new Validator(schema_list.BLOG),
+// };
 
-export default {
-  C_ajv,
-  parseErrorsToForm,
-  isEmailExist: genValidate(ajv, IS_EMAIL_EXIST),
-  passwordAndAgain: genValidate(ajv, PASSWORD_AND_AGAIN),
-  register: genValidate(ajv, REGISTER),
-  login: genValidate(ajv, LOGIN),
-  blog: genValidate(ajv, BLOG),
-};
+export default class {
+  constructor(axios) {
+    const ajv = new Ajv2019({
+      strict: false,
+      allErrors: true,
+      $data: true,
+    });
+    //  建立ajv instance
+    addFormats(ajv);
+    //  為 ajv 添加 format 關鍵字，僅適用 string 與 number
+    errors(ajv);
+    //  添加功能：errorMessage 自定義錯誤提示
+    ajv.addSchema(schema.default);
+    //  添加基本定義schema
+
+    for (let keyword of keyword_list) {
+      ajv.addKeyword(keyword);
+      //  添加關鍵字
+    }
+    for (let sync_schema of schema.sync) {
+      ajv.addSchema(sync_schema, sync_schema.$id);
+    }
+    if (axios) {
+      ajv.$$axios = axios;
+      for (let async_schema of schema.async) {
+        ajv.addSchema(async_schema, async_schema.$id);
+      }
+    }
+
+    return ajv;
+  }
+
+  async check(key, data, parseErrorForFeedBack = true) {
+    try {
+      let schema_id = AJV.ref(key);
+      let validate = this.getSchema(schema_id);
+      let valid = await validate(data);
+      if (!valid) {
+        let e = new Error();
+        e.errors = validate.errors;
+        throw e;
+      }
+      return null;
+    } catch (e) {
+      let { errors } = e;
+      if (errors) {
+        $F_log("@整理前的validateErrors => ", errors);
+        let _errors = _parseValidateErrors(errors);
+        //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
+        $F_log("@整理後的validateErrors => ", _errors);
+        if (parseErrorForFeedBack) {
+          _errors = parseErrorsToForm(_errors);
+          //  { 表格名1: message1, 表格名2: message2, ... }
+        }
+        return _errors;
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  static parseErrorsToForm;
+}

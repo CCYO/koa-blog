@@ -155,7 +155,7 @@ window.addEventListener("load", async () => {
       //  debounce階段時，限制更新鈕
     });
     //  $title handleInput => 驗證標題合法性
-    $inp_title.on("input", e => debounce_handle_input.call(e));
+    $inp_title.on("input", (e) => debounce_handle_input.call(e));
     //  $title handleBlur => 若標題非法，恢復原標題
     $inp_title.on("blur", handle_blur);
     //  $btn_updateTitlebtn handleClick => 送出新標題
@@ -390,7 +390,7 @@ window.addEventListener("load", async () => {
             //  利用hash，確認此時要上傳的img是否為舊圖
             let imgs = [...map_imgs.values()];
             //  img { alt_id, alt, blogImg_id, name, img_id, hash, url }
-            let target = imgs.find(img => img.hash === res.hash);
+            let target = imgs.find((img) => img.hash === res.hash);
             if (target) {
               res.blogImg_id = target.blogImg_id;
               res.exist = true;
@@ -403,14 +403,14 @@ window.addEventListener("load", async () => {
               let fr = new FileReader();
               fr.readAsArrayBuffer(file);
 
-              fr.addEventListener("load", evt => {
+              fr.addEventListener("load", (evt) => {
                 if (fr.readyState === FileReader.DONE) {
                   let hash = SparkMD5.ArrayBuffer.hash(fr.result);
                   resolve(hash);
                   return;
                 }
               });
-              fr.addEventListener("error", error => {
+              fr.addEventListener("error", (error) => {
                 reject(error);
                 return;
               });
@@ -676,7 +676,7 @@ window.addEventListener("load", async () => {
       console.log("@@處理img res =>", res);
       //  整理img數據
       cancelImgs.forEach(({ blogImgAlt_list }) => {
-        blogImgAlt_list.forEach(alt_id => {
+        blogImgAlt_list.forEach((alt_id) => {
           $$pageData.blog.map_imgs.delete(alt_id);
         });
       });
@@ -700,7 +700,7 @@ window.addEventListener("load", async () => {
       let cancelImgs = Array.from(map_imgs_needRemove).reduce(
         (cancelImgs, [alt_id, { blogImg_id }]) => {
           const index = cancelImgs.findIndex(
-            img => img.blogImg_id === blogImg_id
+            (img) => img.blogImg_id === blogImg_id
           );
           if (index < 0) {
             //  代表還沒有與此圖檔相同的檔案，將此圖檔整筆記錄下來

@@ -6,7 +6,7 @@ async function confirmPassword(schema, data, parentSchema, dataCtx) {
   }
   let payload = { ...data };
   delete payload.$$axios;
-  let { errno, msg } = await data.$$axios.post(CONST.API.PASSWORD, payload);
+  let { errno, msg } = await this.$$axios.post(CONST.API.PASSWORD, payload);
   if (errno) {
     let { instancePath } = dataCtx;
     let keyword = "confrimPassword";

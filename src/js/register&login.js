@@ -18,7 +18,7 @@ import "../css/register&login.css";
 import {
   ui as $M_UI,
   Debounce as $M_Debounce,
-  M_Ajv as $M_validate,
+  validate as $M_validate,
   _axios as $C_axios,
   wedgets as $M_wedgets,
   redirFrom as $M_redirForm,

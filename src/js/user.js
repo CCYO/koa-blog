@@ -27,11 +27,11 @@ import {
   _axios as $C_axios,
   _xss as $M_xss,
   wedgets as $M_wedgets,
-  validate as $M_validate,
+  Validator as $M_validate,
   ui as $M_ui,
   log as $M_log,
 } from "./utils";
-
+export { ui, valicate, wedgets };
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
