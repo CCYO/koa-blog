@@ -34,10 +34,10 @@ export default class extends Ajv2019 {
     }
   }
 
-  _getSchema(CONST_AJV_TYPE) {
-    let validator = this.getSchema(CONST_AJV_TYPE.ref);
+  get_validate(CONST_AJV_TYPE) {
+    let validate = this.getSchema(CONST_AJV_TYPE.ref);
     // this[CONST_AJV_TYPE.ref] = validate
-    validator.check = validator.$async ? check : async_check;
+    return async_check.bind(validate);
   }
 
   static parseErrorsToForm = parseErrorsToForm;
@@ -46,18 +46,16 @@ export default class extends Ajv2019 {
 async function async_check(data, parseErrorForFeedBack = true) {
   try {
     let validate = this;
-    await validate(data);
-    return null;
+    // await validate(data);
+    // return null;
     // let validate = this.getSchema(CONST_AJV_TYPE.ref);
     // let { $async } = validate.schema;
-    // if ($async) {
-    //   let x = await validate(data);
-    //   console.log("async validate ok => RV: ", x);
-    //   return;
-    // } else if (!validate(data)) {
-    //   return handle_validate_errors(validate, parseErrorForFeedBack);
-    // }
-    // return null;
+    if (validate.$async) {
+      await validate(data);
+    } else if (!validate(data)) {
+      return handle_validate_errors(validate, parseErrorForFeedBack);
+    }
+    return null;
   } catch (e) {
     return handle_validate_errors(e, parseErrorForFeedBack);
   }

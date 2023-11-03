@@ -55,10 +55,10 @@ const $$ajv = new $C_ajv($$axios);
 //   await $$ajv.check(AJV.TYPE.PASSOWRD_AGAIN, ...args);
 // let $$validate_isEmailExist = async (...args) =>
 //   await $$ajv.check(AJV.TYPE.IS_EMAIL_EXIST, ...args);
-let $$validate_login = $$ajv._getSchema(AJV.TYPE.LOGIN);
-let $$validate_register = $$ajv._getSchema(AJV.TYPE.REGISTER);
-let $$validate_passwordAndAgain = $$ajv._getSchema(AJV.TYPE.PASSOWRD_AGAIN);
-let $$validate_isEmailExist = $$ajv._getSchema(AJV.TYPE.IS_EMAIL_EXIST);
+let $$validate_login = $$ajv.get_validate(AJV.TYPE.LOGIN);
+let $$validate_register = $$ajv.get_validate(AJV.TYPE.REGISTER);
+let $$validate_passwordAndAgain = $$ajv.get_validate(AJV.TYPE.PASSOWRD_AGAIN);
+let $$validate_isEmailExist = $$ajv.get_validate(AJV.TYPE.IS_EMAIL_EXIST);
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
