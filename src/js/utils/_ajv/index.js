@@ -5,13 +5,97 @@ import errors from "ajv-errors";
 /* -------------------- Utils MODULE -------------------- */
 
 import keyword_list from "./keyword";
+import { dev_log as $F_log } from "../log";
 
 /* -------------------- RUN -------------------- */
+import schema_list from "./schema";
 
-import CONSTANT from "../../../../config/constant";
-import schema from "./schema";
+export default class extends Ajv2019 {
+  constructor(axios) {
+    super({
+      strict: false,
+      allErrors: true,
+      $data: true,
+    });
+    // const ajv = new Ajv2019();
+    //  建立ajv instance
+    addFormats(this);
+    //  為 ajv 添加 format 關鍵字，僅適用 string 與 number
+    errors(this);
+    //  添加功能：errorMessage 自定義錯誤提示
 
-const AJV = CONSTANT.AJV;
+    for (let keyword of keyword_list) {
+      this.addKeyword(keyword);
+      //  添加關鍵字
+    }
+    this.addSchema(schema_list);
+    if (axios) {
+      this.$$axios = axios;
+    }
+  }
+
+  _getSchema(CONST_AJV_TYPE) {
+    let validator = this.getSchema(CONST_AJV_TYPE.ref);
+    // this[CONST_AJV_TYPE.ref] = validate
+    validator.check = validator.$async ? check : async_check;
+  }
+
+  static parseErrorsToForm = parseErrorsToForm;
+}
+
+async function async_check(data, parseErrorForFeedBack = true) {
+  try {
+    let validate = this;
+    await validate(data);
+    return null;
+    // let validate = this.getSchema(CONST_AJV_TYPE.ref);
+    // let { $async } = validate.schema;
+    // if ($async) {
+    //   let x = await validate(data);
+    //   console.log("async validate ok => RV: ", x);
+    //   return;
+    // } else if (!validate(data)) {
+    //   return handle_validate_errors(validate, parseErrorForFeedBack);
+    // }
+    // return null;
+  } catch (e) {
+    return handle_validate_errors(e, parseErrorForFeedBack);
+  }
+}
+function check(data, parseErrorForFeedBack = true) {
+  let validate = this;
+  if (!validate(data)) {
+    return handle_validate_errors(validate.errors, parseErrorForFeedBack);
+  }
+  return null;
+  // let validate = this.getSchema(CONST_AJV_TYPE.ref);
+  // let { $async } = validate.schema;
+  // if ($async) {
+  //   let x = await validate(data);
+  //   console.log("async validate ok => RV: ", x);
+  //   return;
+  // } else if (!validate(data)) {
+  //   return handle_validate_errors(validate, parseErrorForFeedBack);
+  // }
+  // return null;
+}
+function handle_validate_errors(error, parseErrorForFeedBack) {
+  let { errors } = error;
+  if (errors) {
+    $F_log("@整理前的validateErrors => ", errors);
+    let _errors = _parseValidateErrors(errors);
+    //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
+    $F_log("@整理後的validateErrors => ", _errors);
+    if (parseErrorForFeedBack) {
+      _errors = parseErrorsToForm(_errors);
+      //  { 表格名1: message1, 表格名2: message2, ... }
+    }
+    return _errors;
+  } else {
+    throw err;
+  }
+}
+
 //  參考 https://ajv.js.org/api.html#error-parameters
 const map_keyword_to_param = {
   required: "missingProperty",
@@ -130,79 +214,4 @@ function parseErrorsToForm(myErrors) {
     };
     return res;
   }, {});
-}
-
-// export default Validator;
-// export default {
-//   parseErrorsToForm,
-//   Validator,
-//   isEmailExist: new Validator(schema_list.IS_EMAIL_EXIST),
-//   passwordAndAgain: new Validator(schema_list.PASSWORD_AND_AGAIN),
-//   register: new Validator(schema_list.REGISTER),
-//   login: new Validator(schema_list.LOGIN),
-//   blog: new Validator(schema_list.BLOG),
-// };
-
-export default class {
-  constructor(axios) {
-    const ajv = new Ajv2019({
-      strict: false,
-      allErrors: true,
-      $data: true,
-    });
-    //  建立ajv instance
-    addFormats(ajv);
-    //  為 ajv 添加 format 關鍵字，僅適用 string 與 number
-    errors(ajv);
-    //  添加功能：errorMessage 自定義錯誤提示
-    ajv.addSchema(schema.default);
-    //  添加基本定義schema
-
-    for (let keyword of keyword_list) {
-      ajv.addKeyword(keyword);
-      //  添加關鍵字
-    }
-    for (let sync_schema of schema.sync) {
-      ajv.addSchema(sync_schema, sync_schema.$id);
-    }
-    if (axios) {
-      ajv.$$axios = axios;
-      for (let async_schema of schema.async) {
-        ajv.addSchema(async_schema, async_schema.$id);
-      }
-    }
-
-    return ajv;
-  }
-
-  async check(key, data, parseErrorForFeedBack = true) {
-    try {
-      let schema_id = AJV.ref(key);
-      let validate = this.getSchema(schema_id);
-      let valid = await validate(data);
-      if (!valid) {
-        let e = new Error();
-        e.errors = validate.errors;
-        throw e;
-      }
-      return null;
-    } catch (e) {
-      let { errors } = e;
-      if (errors) {
-        $F_log("@整理前的validateErrors => ", errors);
-        let _errors = _parseValidateErrors(errors);
-        //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
-        $F_log("@整理後的validateErrors => ", _errors);
-        if (parseErrorForFeedBack) {
-          _errors = parseErrorsToForm(_errors);
-          //  { 表格名1: message1, 表格名2: message2, ... }
-        }
-        return _errors;
-      } else {
-        throw err;
-      }
-    }
-  }
-
-  static parseErrorsToForm;
 }

@@ -1,4 +1,4 @@
-<% let G_PAGE = JSON.parse(--CONS.PAGES.USER--) %>
+<% let G_PAGE = JSON.parse(--CONS.PAGE.USER--) %>
 <li data-<%= G_PAGE.DATASET.KEY.PAGE_NUM %>="<%= page %>" class="fade <%= page === 1 ? 'show' : '' %>">
   <ul class="list-group list-group-flush">
     <% blogs.forEach( ( {id, author_id, title, time } ) => { %>

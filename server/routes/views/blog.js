@@ -3,7 +3,7 @@
  */
 
 const ejs_template = require("../../utils/ejs_template");
-const CONFIG_CONST = require("../../../config/const");
+const CONFIG_CONST = require("../../../config/constant");
 //  0501
 const {
   CACHE: { TYPE, STATUS },
@@ -101,7 +101,7 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
   let params = url.searchParams;
 
   let showComment =
-    !params.get(CONFIG_CONST.DATAS.BLOG.SEARCH_PARAMS.PREVIEW) &&
+    !params.get(CONFIG_CONST.SERVER.BLOG.SEARCH_PARAMS.PREVIEW) &&
     cache.data.show;
   let isLogin = ctx.session.user ? true : false;
   let me_id = isLogin ? ctx.session.user.id : 0;

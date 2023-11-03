@@ -1,16 +1,15 @@
 import CONSTANT from "../../../../../config/constant";
 
-const AJV = CONSTANT.AJV;
-const $id = AJV.ref("IS_EMAIL_EXIST");
-const ref_def = AJV.ref("DEFAULT");
+let AJV = CONSTANT.AJV;
+const TYPE = AJV.TYPE;
 
 export default {
-  $id,
+  $id: TYPE.IS_EMAIL_EXIST.ref,
   $async: true,
   type: "object",
   if: {
     properties: {
-      email: { $ref: `${ref_def}#/definitions/email` },
+      email: { $ref: `${TYPE.DEFAULT.ref}#/definitions/email` },
     },
     required: ["email"],
     additionalProperties: false,

@@ -1,4 +1,4 @@
-import _Ajv from "./_ajv";
+import _ajv from "./_ajv";
 import ui from "./ui";
 
 import wedgets from "./wedgets";
@@ -8,11 +8,11 @@ import Debounce from "./Debounce";
 import log from "./log";
 import redirFrom from "./redirFrom";
 
-export { _Ajv, ui, wedgets, _axios, _xss, Debounce, log, redirFrom };
+export { _ajv, ui, wedgets, _axios, _xss, Debounce, log, redirFrom };
 
 export default {
+  _ajv,
   ui,
-  _Ajv,
   wedgets,
   _axios,
   _xss,

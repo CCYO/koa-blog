@@ -1,18 +1,17 @@
 import CONSTANT from "../../../../../config/constant";
 
-const AJV = CONSTANT.AJV;
-const $id = AJV.ref("REGISTER");
-const ref_def = AJV.ref("DEFAULT");
+let AJV = CONSTANT.AJV;
+const TYPE = AJV.TYPE;
 
 export default {
-  $id,
+  $id: TYPE.REGISTER.ref,
   type: "object",
   properties: {
     email: {
-      $ref: `${AJV.TYPE.DEFAULT}#/definitions/email`,
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
     },
-    password: { $ref: `${ref_def}#/definitions/password` },
-    password_again: { $ref: `${ref_def}#/definitions/password_again` },
+    password: { $ref: `${TYPE.DEFAULT.ref}#/definitions/password` },
+    password_again: { $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again` },
   },
   required: ["email", "password", "password_again"],
   errorMessage: {

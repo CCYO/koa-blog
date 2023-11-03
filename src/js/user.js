@@ -23,27 +23,27 @@ import BetterScroll from "better-scroll";
 /* ------------------------------------------------------------------------------------------ */
 
 import {
-  Debounce as $M_Debounce,
+  _ajv as $C_ajv,
   _axios as $C_axios,
+  Debounce as $M_Debounce,
   _xss as $M_xss,
   wedgets as $M_wedgets,
-  Validator as $M_validate,
   ui as $M_ui,
   log as $M_log,
 } from "./utils";
-export { ui, valicate, wedgets };
+
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-import CONFIG_CONST from "../../config/const";
+import { AJV, PAGE, SERVER } from "../../config/constant";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Const ------------------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------------------------ */
 
-const PAGE_USER = CONFIG_CONST.PAGES.USER;
-const DATA_BLOG = CONFIG_CONST.DATAS.BLOG;
+const PAGE_USER = PAGE.USER;
+const DATA_BLOG = SERVER.BLOG;
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
@@ -54,7 +54,9 @@ const $C_initPage = new $M_wedgets.InitPage();
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
 const $$axios = new $C_axios({ backdrop: $C_backdrop });
-
+const $$ajv = new $C_ajv($$axios);
+let $$validate_blog = async (...args) =>
+  await $$ajv.check(AJV.TYPE.BLOG.$id, ...args);
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
@@ -467,7 +469,7 @@ window.addEventListener("load", async () => {
       let input = $input_new_blog_title.get(0);
 
       title = $M_xss.xssAndTrim(input.value);
-      let validateErrors = await $M_validate.blog(
+      let validateErrors = await $$validate_blog(
         {
           $$blog: { title: "" },
           title,
@@ -477,7 +479,7 @@ window.addEventListener("load", async () => {
       $btn_new_blog.prop("disabled", validateErrors);
       if (validateErrors) {
         delete validateErrors.title.diff;
-        validateErrors = $M_validate.parseErrorsToForm(validateErrors);
+        validateErrors = $C_ajv.parseErrorsToForm(validateErrors);
         let msg = validateErrors[input.name];
         $M_ui.feedback(2, input, false, msg.feedback);
         return false;

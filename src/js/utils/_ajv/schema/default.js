@@ -1,11 +1,11 @@
 import CONSTANT from "../../../../../config/constant";
 
-const AJV = CONSTANT.AJV;
-const SERVER = CONSTANT.SERVER;
-const $id = AJV.ref("DEFAULT");
+let SERVER = CONSTANT.SERVER;
+let AJV = CONSTANT.AJV;
+const TYPE = AJV.TYPE;
 
 export default {
-  $id,
+  $id: TYPE.DEFAULT.ref,
   definitions: {
     email: {
       type: "string",

@@ -1,6 +1,7 @@
 // import _axios from '../../../_axios'
 
 async function isEmailExist(schema, data, parentSchema, dataCtx) {
+  console.log(888);
   if (!schema) {
     return true;
   }

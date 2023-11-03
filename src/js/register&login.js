@@ -18,7 +18,7 @@ import "../css/register&login.css";
 import {
   ui as $M_UI,
   Debounce as $M_Debounce,
-  validate as $M_validate,
+  _ajv as $C_ajv,
   _axios as $C_axios,
   wedgets as $M_wedgets,
   redirFrom as $M_redirForm,
@@ -28,13 +28,13 @@ import {
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-import CONFIG_CONST from "../../config/const";
+import { AJV, PAGE } from "../../config/constant";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Const ------------------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------------------------ */
 
-const PAGE_REGISTER_LOGIN = CONFIG_CONST.PAGES.REGISTER_LOGIN;
+const PAGE_REGISTER_LOGIN = PAGE.REGISTER_LOGIN;
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
@@ -45,11 +45,20 @@ const $C_initPage = new $M_wedgets.InitPage();
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
 const $$axios = new $C_axios({ backdrop: $C_backdrop });
-const $$ajv = new $M_validate.C_ajv();
-const $$validate_login = (data) => $M_validate.login(ajv, data);
-const $$validate_register = (data) => $M_validate.register(ajv, data);
-const $$validate_passwordAndAgain = (data) =>
-  $M_validate.passwordAndAgain(ajv, data);
+const $$ajv = new $C_ajv($$axios);
+
+// let $$validate_login = async (...args) =>
+//   await $$ajv.check(AJV.TYPE.LOGIN, ...args);
+// let $$validate_register = async (...args) =>
+//   await $$ajv.check(AJV.TYPE.REGISTER, ...args);
+// let $$validate_passwordAndAgain = async (...args) =>
+//   await $$ajv.check(AJV.TYPE.PASSOWRD_AGAIN, ...args);
+// let $$validate_isEmailExist = async (...args) =>
+//   await $$ajv.check(AJV.TYPE.IS_EMAIL_EXIST, ...args);
+let $$validate_login = $$ajv._getSchema(AJV.TYPE.LOGIN);
+let $$validate_register = $$ajv._getSchema(AJV.TYPE.REGISTER);
+let $$validate_passwordAndAgain = $$ajv._getSchema(AJV.TYPE.PASSOWRD_AGAIN);
+let $$validate_isEmailExist = $$ajv._getSchema(AJV.TYPE.IS_EMAIL_EXIST);
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
@@ -134,7 +143,7 @@ window.addEventListener("load", async () => {
         //  指向$$payload裡對應的數據對象
         payload[targetInputName] = targetInputValue;
         //  更新payload內的表格數據
-        let validateErrs = await $M_validate.login(payload, false);
+        let validateErrs = await $$validate_login(payload, false);
         feedback_for_Form(validateErrs);
         return;
       }
@@ -155,7 +164,7 @@ window.addEventListener("load", async () => {
       /* 註冊表單 submit Event handler */
       async function handle_submit_register(e) {
         e.preventDefault();
-        let validateErrs = await $M_validate.register(payload);
+        let validateErrs = await $$validate_register(payload);
         //  校驗
         if (validateErrs) {
           payload = {};
@@ -191,10 +200,10 @@ window.addEventListener("load", async () => {
 
         if (targetInputName === "email") {
           // payload.$$axios = $$axios;
-          let validateErrs = await $M_validate.isEmailExist(payload, false);
+          let validateErrs = await $$validate_isEmailExist(payload, false);
           feedback_for_Form(validateErrs);
         } else {
-          let validateErrs = await $M_validate.passwordAndAgain(payload, false);
+          let validateErrs = await $$validate_passwordAndAgain(payload, false);
           feedback_for_Form(validateErrs);
         }
         return;
@@ -264,7 +273,7 @@ window.addEventListener("load", async () => {
         }
         //  轉換validateErrs格式
         if (validateErrs && Object.keys(validateErrs).length) {
-          validateErrs = $M_validate.parseErrorsToForm(validateErrs);
+          validateErrs = $C_ajv.parseErrorsToForm(validateErrs);
         }
         /* 無效表格值的提醒 */
         for (let inputName in validateErrs) {

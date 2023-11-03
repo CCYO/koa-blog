@@ -1,11 +1,10 @@
 import CONSTANT from "../../../../../config/constant";
 
-const AJV = CONSTANT.AJV;
-const $id = AJV.ref("AVATAR");
-const ref_def = AJV.ref("DEFAULT");
+let AJV = CONSTANT.AJV;
+const TYPE = AJV.TYPE;
 
 export default {
-  $id,
+  $id: TYPE.AVATAR.ref,
   type: "object",
   properties: {
     avatar_base64: {
@@ -16,7 +15,7 @@ export default {
     },
     avatar_hash: {
       diff: { $data: "1/$$me/avatar_hash" },
-      $ref: `${ref_def}#/definitions/avatar_hash`,
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/avatar_hash`,
     },
   },
   required: ["avatar_base64", "avatar_hash"],

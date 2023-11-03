@@ -1,11 +1,10 @@
 import CONSTANT from "../../../../../config/constant";
 
-const AJV = CONSTANT.AJV;
-const $id = AJV.ref("BLOG");
-const ref_def = AJV.ref("DEFAULT");
+let AJV = CONSTANT.AJV;
+const TYPE = AJV.TYPE;
 
 export default {
-  $id,
+  $id: TYPE.BLOG.ref,
   type: "object",
   minProperties: 2,
   properties: {
@@ -16,19 +15,19 @@ export default {
       },
     },
     title: {
-      $ref: `${ref_def}#/definitions/title`,
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/title`,
       diff: { $data: "1/$$blog/title" },
     },
     html: {
-      $ref: `${ref_def}#/definitions/html`,
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/html`,
       diff: { $data: "1/$$blog/html" },
     },
     show: {
-      $ref: `${ref_def}#/definitions/show`,
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/show`,
       diff: { $data: "1/$$blog/show" },
     },
     cancelImgs: {
-      $ref: `${ref_def}#/definitions/cancelImgs`,
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/cancelImgs`,
     },
   },
   required: ["$$blog"],

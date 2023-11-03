@@ -6,8 +6,7 @@ const { resolve } = require("path");
 const CONFIG = require("./config.js");
 const { isProd } = require("../server/utils/env");
 const isDev = process.env.NODE_ENV === "development" || !isProd;
-const CONS = require("../config/const.js");
-const TEMPLATE = require("../config/template.js");
+const CONS = require("../config/constant");
 
 // ejsLoader()
 const entry = ((filepathList) => {

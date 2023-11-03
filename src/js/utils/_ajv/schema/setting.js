@@ -1,11 +1,10 @@
 import CONSTANT from "../../../../../config/constant";
 
-const AJV = CONSTANT.AJV;
-const $id = AJV.ref("REGISTER");
-const ref_def = AJV.ref("DEFAULT");
+let AJV = CONSTANT.AJV;
+const TYPE = AJV.TYPE;
 
 export default {
-  $id,
+  $id: TYPE.SETTING.ref,
   type: "object",
   allOf: [
     {
@@ -20,26 +19,26 @@ export default {
         email: {
           noSpace: true,
           diff: { $data: "1/$$me/email" },
-          $ref: `${ref_def}#/definitions/email`,
+          $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
         },
         age: {
           noSpace: true,
           diff: { $data: "1/$$me/age" },
-          $ref: `${ref_def}#/definitions/age`,
+          $ref: `${TYPE.DEFAULT.ref}#/definitions/age`,
         },
         nickname: {
           noSpace: true,
           diff: { $data: "1/$$me/nickname" },
-          $ref: `${ref_def}#/definitions/nickname`,
+          $ref: `${TYPE.DEFAULT.ref}#/definitions/nickname`,
         },
         password: {
           noSpace: true,
           diff: { $data: "1/$$me/password" },
-          $ref: `${ref_def}#/definitions/password`,
+          $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
         },
         avatar_hash: {
           diff: { $data: "1/$$me/avatar_hash" },
-          $ref: `${ref_def}#/definitions/avatar_hash`,
+          $ref: `${TYPE.DEFAULT.ref}#/definitions/avatar_hash`,
         },
       },
       required: ["$$me"],
@@ -51,10 +50,12 @@ export default {
     {
       properties: {
         password: {
-          $ref: `${ref_def}#/definitions/password`,
+          $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
           diff: { $data: "1/$$me/origin_password" },
         },
-        password_again: { $ref: `${ref_def}#/definitions/password_again` },
+        password_again: {
+          $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again`,
+        },
       },
       dependentRequired: {
         password: ["password_again", "origin_password"],

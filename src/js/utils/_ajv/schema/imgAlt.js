@@ -1,11 +1,10 @@
 import CONSTANT from "../../../../../config/constant";
 
-const AJV = CONSTANT.AJV;
-const $id = AJV.ref("IMG_ALT");
-const ref_def = AJV.ref("DEFAULT");
+let AJV = CONSTANT.AJV;
+const TYPE = AJV.TYPE;
 
 export default {
-  $id,
+  $id: TYPE.IMG_ALT.ref,
   type: "object",
   properties: {
     $$alt: {
@@ -15,7 +14,7 @@ export default {
       },
     },
     alt: {
-      $ref: `${ref_def}#/definitions/blogImgAlt`,
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/blogImgAlt`,
       diff: { $data: "1/$$alt" },
     },
     blog_id: {

@@ -13,9 +13,9 @@ import "../css/album.css";
 /* Utils Module --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-import validates from "./utils/validate";
 import {
-  _axios as $M_axios,
+  _ajv as $C_ajv,
+  _axios as $C_axios,
   _xss as $M_xss,
   wedgets as $M_wedgets,
 } from "./utils";
@@ -24,7 +24,7 @@ import {
 /* Const --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-const CONS = {};
+import { AJV } from "../../config/constant";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
@@ -32,7 +32,10 @@ const CONS = {};
 
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
-
+const $$axios = new $C_axios({ backdrop: $C_backdrop });
+const $$ajv = new $C_ajv($$axios);
+let $$validate_img_alt = async (...args) =>
+  await $$ajv.check(AJV.TYPE.IMG_ALT.$id, ...args);
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
@@ -98,7 +101,7 @@ window.addEventListener("load", async () => {
         alert(errors);
         return;
       }
-      await $M_axios.patch("/api/album", payload);
+      await $$axios.patch("/api/album", payload);
       // 發出請求
       /* 同步頁面數據 */
       $$map_imgs.get(alt_id).alt = alt;
@@ -145,8 +148,7 @@ window.addEventListener("load", async () => {
     /* ---------------------------------------- Utils ---------------------------------------- */
     /* 驗證錯誤的處理 */
     async function _validate(data) {
-      const validate = validates["alt"];
-      const errors = await validate(data);
+      const errors = await $$validate_img_alt(data);
       /* 驗證錯誤的處理 */
       if (!errors) {
         return null;

@@ -1,5 +1,5 @@
-<% let G_DATA = JSON.parse(--CONS.DATAS.BLOG--) %>
-<% let G_PAGE = JSON.parse(--CONS.PAGES.USER--) %>
+<% let G_DATA = JSON.parse(--CONS.SERVER.BLOG--) %>
+<% let G_PAGE = JSON.parse(--CONS.PAGE.USER--) %>
 <% for(let status in blogs){ %>
 <% let isPublic = status === G_DATA.STATUS.PUBLIC %>
 <% if(!isSelf && !isPublic){ continue }%>

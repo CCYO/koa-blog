@@ -10,7 +10,8 @@ import LOGIN from "./login";
 import REGISTER from "./register";
 import SETTING from "./setting";
 
-let list = [
+let schema_list = [
+  DEFAULT,
   AVATAR,
   BLOG,
   IS_EMAIL_EXIST,
@@ -19,22 +20,7 @@ let list = [
   IMG_ALT,
   LOGIN,
   REGISTER,
-  LOGIN,
   SETTING,
 ];
 
-let schema = list.reduce(
-  (acc, cur) => {
-    if (cur.$async) {
-      acc.async.push(cur);
-    } else {
-      acc.sync.push(cur);
-    }
-    return acc;
-  },
-  { sync: [], async: [] }
-);
-
-schema.default = DEFAULT;
-
-export default schema;
+export default schema_list;

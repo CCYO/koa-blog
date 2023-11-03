@@ -31,14 +31,12 @@ import {
 /* ------------------------------------------------------------------------------------------ */
 
 import {
-  Debounce as $M_Debounce,
-  _axios as $M_axios,
+  _ajv as $C_ajv,
+  _axios as $C_axios,
   _xss as $M_xss,
   wedgets as $M_wedgets,
-  validate as $M_validate,
 } from "./utils";
-//  validate
-// import validates from './utils/validate'
+
 import twResources from "../locale/tw";
 import { feedback } from "./utils/ui";
 import Debounce from "./utils/Debounce";
@@ -46,14 +44,14 @@ import Debounce from "./utils/Debounce";
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-import CONFIG_CONST from "../../config/const";
+import { AJV, SERVER, PAGE } from "../../config/constant";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Const ------------------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------------------------ */
 
-const DATA_BLOG = CONFIG_CONST.DATAS.BLOG;
-const PAGE_BLOG_EDIT = CONFIG_CONST.PAGES.BLOG_EDIT;
+const SERVER_BLOG = SERVER.BLOG;
+const PAGE_BLOG_EDIT = PAGE.BLOG_EDIT;
 
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
@@ -63,6 +61,11 @@ const $C_initPage = new $M_wedgets.InitPage();
 //  初始化頁面
 const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 //  讀取遮罩
+let $$axios = new $C_axios({ backdrop: $C_backdrop });
+let $$ajv = new $C_ajv($$axios);
+let $$validate_blog = async (...args) =>
+  await $$ajv.check(AJV.TYPE.BLOG.$id, ...args);
+
 class $C_genPayload extends Map {
   setKVpairs(dataObj) {
     //  將kv資料存入
@@ -246,7 +249,7 @@ window.addEventListener("load", async () => {
       editor.on("modalOrPanelShow", handle_modalShow);
       $span_content_count.text(
         `還能輸入${
-          DATA_BLOG.EDITOR.HTML_MAX_LENGTH - editor.getHtml().length
+          SERVER_BLOG.EDITOR.HTML_MAX_LENGTH - editor.getHtml().length
         }個字`
       );
       //  初始化 payload.html
@@ -314,7 +317,7 @@ window.addEventListener("load", async () => {
         let blog_id = $$pageData.blog.id;
         let alt_id = (res.groups.alt_id *= 1);
         alt = $M_xss.xssAndTrim(alt);
-        await $M_axios.patch(PAGE_BLOG_EDIT.API.UPDATE_ALBUM, {
+        await $$axios.patch(PAGE_BLOG_EDIT.API.UPDATE_ALBUM, {
           alt_id,
           blog_id,
           alt,
@@ -344,12 +347,12 @@ window.addEventListener("load", async () => {
           //  創建 formData，作為酬載數據的容器
           formdata.append("blogImg", img);
           //  放入圖片數據
-          res = await $M_axios.post(api, formdata);
+          res = await $$axios.post(api, formdata);
           //  upload
         } else {
           // img為重覆的舊圖，傳給後端新建一個blogImgAlt
           console.log("進行舊圖處理");
-          res = await $M_axios.post(PAGE_BLOG_EDIT.API.CREATE_IMG_ALT, {
+          res = await $$axios.post(PAGE_BLOG_EDIT.API.CREATE_IMG_ALT, {
             blogImg_id,
           });
         }
@@ -446,7 +449,9 @@ window.addEventListener("load", async () => {
         if (!error) {
           $span_content_count
             .text(
-              `還能輸入${DATA_BLOG.EDITOR.HTML_MAX_LENGTH - content.length}個字`
+              `還能輸入${
+                SERVER_BLOG.EDITOR.HTML_MAX_LENGTH - content.length
+              }個字`
             )
             .removeClass("text-danger");
           //  若html通過驗證，提示可輸入字數
@@ -454,7 +459,7 @@ window.addEventListener("load", async () => {
           $span_content_count
             .text(
               `文章內容已超過${
-                content.length - DATA_BLOG.EDITOR.HTML_MAX_LENGTH
+                content.length - SERVER_BLOG.EDITOR.HTML_MAX_LENGTH
               }個字`
             )
             .addClass("text-danger");
@@ -483,7 +488,7 @@ window.addEventListener("load", async () => {
         blogList: [$$pageData.blog.id],
         owner_id: $$pageData.blog.author.id,
       };
-      await $M_axios.delete(PAGE_BLOG_EDIT.API.UPDATE_BLOG, { data });
+      await $$axios.delete(PAGE_BLOG_EDIT.API.UPDATE_BLOG, { data });
       alert("已成功刪除此篇文章");
       location.href = "/self";
     }
@@ -522,7 +527,7 @@ window.addEventListener("load", async () => {
       }
       payload.blog_id = $$pageData.blog.id;
       payload.owner_id = $$pageData.blog.author.id;
-      await $M_axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, payload);
+      await $$axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, payload);
       for (let [key, value] of $$payload.entries()) {
         $$pageData.blog[key] = value;
         //  同步數據
@@ -533,7 +538,7 @@ window.addEventListener("load", async () => {
       //  此時文章更新鈕無法點擊
       if (confirm("儲存成功！是否預覽？（新開視窗）")) {
         window.open(
-          `/blog/${$$pageData.blog.id}?${DATA_BLOG.SEARCH_PARAMS.PREVIEW}=true`
+          `/blog/${$$pageData.blog.id}?${SERVER_BLOG.SEARCH_PARAMS.PREVIEW}=true`
         );
       }
       return;
@@ -585,7 +590,7 @@ window.addEventListener("load", async () => {
       //  清空提醒
       if (!errors || !errors[KEY]) {
         //  代表合法
-        let { data } = await $M_axios.patch(
+        let { data } = await $$axios.patch(
           PAGE_BLOG_EDIT.API.UPDATE_BLOG,
           payload
         );
@@ -668,7 +673,7 @@ window.addEventListener("load", async () => {
         //  若cancel無值
         return;
       }
-      const res = await $M_axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, {
+      const res = await $$axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, {
         cancelImgs,
         blog_id: $$pageData.blog.id,
         owner_id: $$pageData.blog.author.id,
@@ -724,8 +729,10 @@ window.addEventListener("load", async () => {
     }
     //  校驗blog數據，且決定submit可否點擊
     async function validate(data) {
-      const _validate = $M_validate.blog;
-      const errors = await _validate({ ...data, $$blog: $$pageData.blog });
+      const errors = await $$validate_blog({
+        ...data,
+        $$blog: $$pageData.blog,
+      });
       $btn_updateBlog.prop("disabled", !!errors);
       return errors;
     }

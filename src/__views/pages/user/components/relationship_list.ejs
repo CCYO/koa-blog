@@ -1,7 +1,7 @@
 <% for( type in relationShip){ %>
 <% let list = relationShip[type] %>
 <div class="relationShip-box">
-  <h3><%= type === --CONS.DATAS.RELATIONSHIP.TYPE.FANSLIST-- ? "粉絲" : "偶像" %>列表</h3>
+  <h3><%= type === --CONS.SERVER.RELATIONSHIP.TYPE.FANSLIST-- ? "粉絲" : "偶像" %>列表</h3>
   <div id=<%= type %> class="relationShip-list-box">
     <% if(list.length) {%>
     <ul>

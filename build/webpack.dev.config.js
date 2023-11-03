@@ -1,5 +1,4 @@
 const webpack = require("webpack");
-const { resolve } = require("path");
 const { merge } = require("webpack-merge");
 const webpackBaseConfig = require("./webpack.base.config");
 const HtmlWebpackHarddiskPlugin = require("html-webpack-harddisk-plugin");

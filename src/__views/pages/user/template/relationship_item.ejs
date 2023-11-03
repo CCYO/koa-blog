@@ -1,5 +1,5 @@
-<% let G_PAGE = JSON.parse(--CONS.PAGES.USER--) %>
-<li class="card" data-<%= CONS.PAGES.USER.DATASET.KEY.USER_ID %>="<%= user.id %>">
+<% let G_PAGE = JSON.parse(--CONS.PAGE.USER--) %>
+<li class="card" data-<%= G_PAGE.DATASET.KEY.USER_ID %>="<%= user.id %>">
   <div class="ratio ratio-1x1">
     <img src="<%= user.avatar %>" class="card-img-top" alt="">
   </div>
