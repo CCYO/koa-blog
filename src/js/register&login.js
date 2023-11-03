@@ -47,14 +47,6 @@ const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 const $$axios = new $C_axios({ backdrop: $C_backdrop });
 const $$ajv = new $C_ajv($$axios);
 
-// let $$validate_login = async (...args) =>
-//   await $$ajv.check(AJV.TYPE.LOGIN, ...args);
-// let $$validate_register = async (...args) =>
-//   await $$ajv.check(AJV.TYPE.REGISTER, ...args);
-// let $$validate_passwordAndAgain = async (...args) =>
-//   await $$ajv.check(AJV.TYPE.PASSOWRD_AGAIN, ...args);
-// let $$validate_isEmailExist = async (...args) =>
-//   await $$ajv.check(AJV.TYPE.IS_EMAIL_EXIST, ...args);
 let $$validate_login = $$ajv.get_validate(AJV.TYPE.LOGIN);
 let $$validate_register = $$ajv.get_validate(AJV.TYPE.REGISTER);
 let $$validate_passwordAndAgain = $$ajv.get_validate(AJV.TYPE.PASSOWRD_AGAIN);
@@ -220,8 +212,11 @@ window.addEventListener("load", async () => {
       class Lock {
         constructor(form) {
           this.lock = new Set();
+          //  lock.size === 0 則解鎖
           this.$submit = undefined;
+          //  submit的jq_ele
           this.inputs = [];
+          //  除了submit_ele以外的input
           for (let input of form) {
             const { name, type } = input;
             if (type === "submit") {
@@ -251,10 +246,10 @@ window.addEventListener("load", async () => {
         /* 蒐集無效inputs */
         for (let invalid_inputName in validateErrs) {
           let validateErr = validateErrs[invalid_inputName];
+          //  invalid_input的校驗錯誤資訊
           if (validateErr.hasOwnProperty("additionalProperties")) {
-            /* 處理校驗結果中的「未預期的額外數據」錯誤 */
+            //  若校驗錯誤資訊包含 additionalProperties屬性，刪除此校驗錯誤資訊
             delete validateErrs[invalid_inputName];
-            //  從validateErrs內刪除該預期外的指定數據
           }
           let index = valid_inputs.findIndex(
             ({ name }) => name === invalid_inputName

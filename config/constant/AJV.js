@@ -26,12 +26,15 @@ const AJV = {
     IMG_ALT: new Ajv_type("alt"),
     PASSOWRD_AGAIN: new Ajv_type("password_again"),
   },
-  API: {
-    EMAIL: "/api/user/isEmailExist",
-    PASSWORD: "/api/)user/confirmPassword",
+  //  參考 https://ajv.js.org/api.html#error-parameters
+  ERROR_PARAMS: {
+    required: "missingProperty",
+    additionalProperties: "additionalProperty",
+    // dependentRequired: 'missingProperty' 目前schema都沒用到
+  },
+  FIELD_NAME: {
+    TOP: "all",
   },
 };
-
-AJV.ref = (key) => `${this.host}/${this.TYPE[key]}.json`;
 
 module.exports = AJV;
