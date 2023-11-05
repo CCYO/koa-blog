@@ -242,27 +242,24 @@ window.addEventListener("load", async () => {
       let lock = new Lock(form);
       /* 藉由validateErrors，判斷form可否submit，並於input顯示校驗錯誤 */
       return (validateErrs) => {
-        let valid_inputs = [...lock.inputs];
+        let valid_inputs;
         /* 蒐集無效inputs */
-        for (let invalid_inputName in validateErrs) {
-          let validateErr = validateErrs[invalid_inputName];
+        for (let field in validateErrs) {
+          let list_field_validateErr = validateErrs[field];
           //  invalid_input的校驗錯誤資訊
-          if (validateErr.hasOwnProperty("additionalProperties")) {
+          if (list_field_validateErr.hasOwnProperty("additionalProperties")) {
             //  若校驗錯誤資訊包含 additionalProperties屬性，刪除此校驗錯誤資訊
-            delete validateErrs[invalid_inputName];
+            delete validateErrs[field];
           }
-          let index = valid_inputs.findIndex(
-            ({ name }) => name === invalid_inputName
-          );
-          if (index) {
-            valid_inputs.splice(index, 1);
-          }
+          valid_inputs = [...lock.inputs].filter(({ name }) => name !== field);
         }
         /* 有效表格值的提醒 */
         for (let valid_input of valid_inputs) {
           if (!valid_input.mark) {
+            //  如果未標示，代表未曾驗證過，那就不需要顯示提醒
             continue;
           }
+          //  已標示，代表未曾驗證過，那就不需要顯示提醒
           lock.delete(valid_input.name);
           $M_UI.feedback(2, valid_input, true);
         }

@@ -119,22 +119,24 @@ function _parseValidateErrors(validateErrors) {
     //  去除'/'
     let handled_by_ajv_error = keyword === "errorMessage" ? true : false;
     /* 非 ajv-errors 捕獲的錯誤 */
-    if (handled_by_ajv_error) {
+    if (!handled_by_ajv_error) {
       // ↓ 確認校驗錯誤是否來自custom_keyword
-      // if (!params.myKeyword) {
-      //   $F_log(
-      //     "@提醒用，不被處理的錯誤 => \n keyword: ",
-      //     keyword,
-      //     "\n message: ",
-      //     message
-      //   );
-      // } else {
-      if (!init.hasOwnProperty(fieldName)) {
-        init[fieldName] = {};
+      if (!params.myKeyword) {
+        $F_log(
+          "@提醒用，不被處理的錯誤 => \n keyword: ",
+          keyword,
+          "\n message: ",
+          message
+        );
+        return;
+      } else {
+        if (!init.hasOwnProperty(fieldName)) {
+          init[fieldName] = {};
+        }
+        init[fieldName][keyword] = message;
+        // }
+        return init;
       }
-      init[fieldName][keyword] = message;
-      // }
-      return init;
     }
     /*
             被 ajv-errors 捕獲的錯誤 errors，其item:error的keyword都是'errorMessage'
@@ -153,8 +155,10 @@ function _parseValidateErrors(validateErrors) {
           ? originError.params[originParam]
           : AJV.FIELD_NAME.TOP;
         $F_log(
-          `@現在處理validateErr的高層級錯誤『${originKeyword}』，發生錯誤的fieldName指向 => `,
-          fieldName
+          `@ajv-errors自定義的validateErr：\n
+          --JSON Pointer--\n
+          keyword → 高於『${originKeyword}』設定的schema\n
+          fieldName → ${fieldName}`
         );
       }
       if (!init.hasOwnProperty(fieldName)) {
