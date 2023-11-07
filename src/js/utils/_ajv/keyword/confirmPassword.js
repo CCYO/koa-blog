@@ -1,5 +1,5 @@
-// import _axios from '../../../_axios'
-
+const keyword = "confrimPassword";
+const myKeyword = true;
 async function confirmPassword(schema, data, parentSchema, dataCtx) {
   if (!schema) {
     return true;
@@ -9,17 +9,15 @@ async function confirmPassword(schema, data, parentSchema, dataCtx) {
   let { errno, msg } = await this.$$axios.post(CONST.API.PASSWORD, payload);
   if (errno) {
     let { instancePath } = dataCtx;
-    let keyword = "confrimPassword";
-    let params = { myKeyword: true };
     //  提供給 ../index 的 _parseValidateErrors 判別是否為我定義的 keyword
     let e = new Error();
-    e.errors = [{ keyword, instancePath, params, message: msg }];
+    e.errors = [{ keyword, myKeyword, instancePath, params, message: msg }];
     throw e;
   }
   return true;
 }
 export default {
-  keyword: "confirmPassword",
+  keyword,
   type: "string",
   async: true,
   schemaType: "boolean",

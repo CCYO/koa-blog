@@ -1,7 +1,9 @@
 // import _axios from '../../../_axios'
-
+import Ajv from "ajv";
+const keyword = "isEmailExist";
+const myKeyword = true;
 async function isEmailExist(schema, data, parentSchema, dataCtx) {
-  console.log(888);
+  console.log("@isEmailExist");
   if (!schema) {
     return true;
   }
@@ -10,19 +12,18 @@ async function isEmailExist(schema, data, parentSchema, dataCtx) {
     [key]: data,
   });
   if (errno) {
+    console.log("失敗", msg);
     let { instancePath } = dataCtx;
-    let e = new Error();
     let message = msg[key];
-    let keyword = "isEmailExist";
-    let params = { myKeyword: true };
-    e.errors = [{ keyword, params, instancePath, message }];
-    throw e;
+    let errors = [{ keyword, myKeyword, instancePath, message }];
+    throw new Ajv.ValidationError(errors);
   }
+  console.log("成功");
   return true;
 }
 
 export default {
-  keyword: "isEmailExist",
+  keyword,
   async: true,
   type: "string",
   schemaType: "boolean",

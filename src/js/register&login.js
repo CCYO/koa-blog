@@ -24,6 +24,8 @@ import {
   redirFrom as $M_redirForm,
 } from "./utils";
 
+import ajv_custom_keyword_required from "./utils/_ajv/keyword/_required";
+
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
@@ -189,15 +191,18 @@ window.addEventListener("load", async () => {
         //  指向$$payload裡對應的數據對象
         payload[targetInputName] = targetInputValue;
         //  更新payload內的表格數據
-
+        let validateErrs;
         if (targetInputName === "email") {
           // payload.$$axios = $$axios;
-          let validateErrs = await $$validate_isEmailExist(payload, false);
-          feedback_for_Form(validateErrs);
+          validateErrs = await $$validate_isEmailExist(payload, false);
         } else {
-          let validateErrs = await $$validate_passwordAndAgain(payload, false);
-          feedback_for_Form(validateErrs);
+          validateErrs = await $$validate_passwordAndAgain(payload, false);
         }
+        console.log("@ validateErrs ->", validateErrs);
+        if (validateErrs && !Object.getOwnPropertyNames(validateErrs).length) {
+          validateErrs = null;
+        }
+        feedback_for_Form(validateErrs);
         return;
       }
     }
@@ -243,6 +248,9 @@ window.addEventListener("load", async () => {
       /* 藉由validateErrors，判斷form可否submit，並於input顯示校驗錯誤 */
       return (validateErrs) => {
         let valid_inputs;
+        if (!validateErrs) {
+          valid_inputs = [...lock.inputs];
+        }
         /* 蒐集無效inputs */
         for (let field in validateErrs) {
           let list_field_validateErr = validateErrs[field];
@@ -265,10 +273,14 @@ window.addEventListener("load", async () => {
         }
         //  轉換validateErrs格式
         if (validateErrs && Object.keys(validateErrs).length) {
-          validateErrs = $C_ajv.parseErrorsToForm(validateErrs);
+          // validateErrs = $C_ajv.parseErrorsToForm(validateErrs);
+          validateErrs = parseErrorsToForm(validateErrs);
         }
         /* 無效表格值的提醒 */
         for (let inputName in validateErrs) {
+          if (inputName === AJV.FIELD_NAME.TOP) {
+            continue;
+          }
           let input = $(form).find(`input[name=${inputName}]`).get(0);
           if (!input.mark) {
             continue;
@@ -304,3 +316,38 @@ window.addEventListener("load", async () => {
     }
   }
 });
+
+function parseErrorsToForm(invalid_errors) {
+  let entries = Object.entries(invalid_errors);
+  return entries.reduce((res, [fieldName, KVpairs]) => {
+    let feedback_string;
+    if (KVpairs.hasOwnProperty(ajv_custom_keyword_required.keyword)) {
+      feedback_string = KVpairs[ajv_custom_keyword_required.keyword];
+    } else {
+      feedback_string = Object.entries(KVpairs).reduce(
+        (all_message, [keyword, message], index) => {
+          if (index > 0) {
+            all_message += ",";
+          }
+          return (all_message += message);
+        },
+        ""
+      );
+    }
+    if (!res[fieldName]) {
+      res[fieldName] = {};
+    }
+    let fieldName_tw = AJV.EN_TO_TW[fieldName]
+      ? AJV.EN_TO_TW[fieldName]
+      : fieldName;
+    res[fieldName] = {
+      get alert() {
+        return `【${fieldName_tw}】欄位值${feedback_string}`;
+      },
+      get feedback() {
+        return feedback_string;
+      },
+    };
+    return res;
+  }, {});
+}

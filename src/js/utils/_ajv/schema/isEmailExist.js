@@ -6,21 +6,26 @@ const TYPE = AJV.TYPE;
 export default {
   $id: TYPE.IS_EMAIL_EXIST.ref,
   $async: true,
-  type: "object",
   if: {
+    type: "object",
     properties: {
-      email: { $ref: `${TYPE.DEFAULT.ref}#/definitions/email` },
+      email: {
+        type: "string",
+        $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
+        _required: true,
+      },
     },
     required: ["email"],
-    additionalProperties: false,
   },
   then: {
+    type: "object",
     properties: {
       email: {
         type: "string",
         isEmailExist: true,
       },
     },
+    additionalProperties: false,
   },
   else: {
     $ref: "#/if",

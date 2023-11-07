@@ -10,9 +10,11 @@ export default {
     email: {
       type: "string",
       format: "email",
+      minLength: 1,
       errorMessage: {
         type: "必須是字符串",
         format: "必須是電子信箱格式",
+        minLength: "不可為空",
       },
     },
     nickname: {

@@ -11,6 +11,7 @@ export default {
     properties: {
       origin_password: {
         $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
+        _required: true,
       },
     },
     required: ["origin_password"],
@@ -19,6 +20,7 @@ export default {
     properties: {
       origin_password: {
         confirmPassword: true,
+        _required: true,
       },
     },
     required: ["origin_password"],

@@ -35,6 +35,25 @@ const AJV = {
   FIELD_NAME: {
     TOP: "all",
   },
+  EN_TO_TW: {
+    //	全局錯誤
+    all: "all",
+    //	register
+    email: "信箱",
+    password: "密碼",
+    password_again: "密碼確認",
+    //	blog
+    title: "文章標題",
+    contetn: "文章內文",
+    show: "文章狀態",
+    //	setting
+    nickname: "暱稱",
+    age: "年齡",
+    avatar: "頭像",
+    avatar_hash: "頭像hash",
+    // myKeyword
+    confirm_password: "密碼驗證",
+  },
 };
 
 module.exports = AJV;

@@ -7,9 +7,15 @@ export default {
   $id: TYPE.PASSOWRD_AGAIN.ref,
   type: "object",
   properties: {
-    password: { $ref: `${TYPE.DEFAULT.ref}#/definitions/password` },
+    password: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
+      _required: true,
+    },
     password_again: {
+      type: "string",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again`,
+      _required: true,
     },
   },
   required: ["password", "password_again"],

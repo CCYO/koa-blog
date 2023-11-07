@@ -7,8 +7,16 @@ export default {
   $id: TYPE.LOGIN.ref,
   type: "object",
   properties: {
-    email: { $ref: `${TYPE.DEFAULT.ref}#/definitions/email` },
-    password: { $ref: `${TYPE.DEFAULT.ref}#/definitions/password` },
+    email: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
+      _required: true,
+    },
+    password: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
+      _required: true,
+    },
   },
   required: ["email", "password"],
   errorMessage: {

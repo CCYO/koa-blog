@@ -8,10 +8,20 @@ export default {
   type: "object",
   properties: {
     email: {
+      type: "string",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
+      _required: true,
     },
-    password: { $ref: `${TYPE.DEFAULT.ref}#/definitions/password` },
-    password_again: { $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again` },
+    password: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
+      _required: true,
+    },
+    password_again: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again`,
+      _required: true,
+    },
   },
   required: ["email", "password", "password_again"],
   errorMessage: {

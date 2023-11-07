@@ -4,7 +4,7 @@ import addFormats from "ajv-formats";
 import errors from "ajv-errors";
 /* -------------------- Utils MODULE -------------------- */
 
-import keyword_list from "./keyword";
+import list_ajv_keyword from "./keyword";
 import { dev_log as $F_log } from "../log";
 
 /* -------------------- CONSTANT MODULE -------------------- */
@@ -16,7 +16,7 @@ import schema_list from "./schema";
 export default class extends Ajv2019 {
   constructor(axios) {
     super({
-      strict: false,
+      // strict: false,
       allErrors: true,
       $data: true,
     });
@@ -27,7 +27,7 @@ export default class extends Ajv2019 {
     errors(this);
     //  添加功能：errorMessage 自定義錯誤提示
 
-    for (let keyword of keyword_list) {
+    for (let keyword of list_ajv_keyword) {
       this.addKeyword(keyword);
       //  添加關鍵字
     }
@@ -41,8 +41,6 @@ export default class extends Ajv2019 {
     let validate = this.getSchema(CONST_AJV_TYPE.ref);
     return async_check.bind(validate);
   }
-
-  static parseErrorsToForm = parseErrorsToForm;
 }
 
 async function async_check(data, parseErrorForFeedBack = true) {
@@ -66,10 +64,10 @@ function handle_validate_errors(error, parseErrorForFeedBack) {
     let _errors = _parseValidateErrors(errors);
     //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
     $F_log("@整理後的validateErrors => ", _errors);
-    if (parseErrorForFeedBack) {
-      _errors = parseErrorsToForm(_errors);
-      //  { 表格名1: message1, 表格名2: message2, ... }
-    }
+    // if (parseErrorForFeedBack) {
+    //   _errors = parseErrorsToForm(_errors);
+    //  { 表格名1: message1, 表格名2: message2, ... }
+    // }
     return _errors;
   } else {
     throw err;
@@ -104,6 +102,7 @@ function _parseValidateErrors(validateErrors) {
       }*/
   return validateErrors.reduce((init, validateError) => {
     let {
+      myKeyword,
       keyword,
       //  "errorMessage": 代表該錯誤訊息是利用ajv-errors在schema預先設定的
       //  "其他狀況"：代表該錯誤則否(通常是schema最高級的keyword，ex: if/else)
@@ -121,22 +120,21 @@ function _parseValidateErrors(validateErrors) {
     /* 非 ajv-errors 捕獲的錯誤 */
     if (!handled_by_ajv_error) {
       // ↓ 確認校驗錯誤是否來自custom_keyword
-      if (!params.myKeyword) {
+      if (!myKeyword) {
         $F_log(
           "@提醒用，不被處理的錯誤 => \n keyword: ",
           keyword,
           "\n message: ",
           message
         );
-        return;
+        console.log("validateError ===> ", validateError);
       } else {
         if (!init.hasOwnProperty(fieldName)) {
           init[fieldName] = {};
         }
         init[fieldName][keyword] = message;
-        // }
-        return init;
       }
+      return init;
     }
     /*
             被 ajv-errors 捕獲的錯誤 errors，其item:error的keyword都是'errorMessage'
@@ -145,21 +143,31 @@ function _parseValidateErrors(validateErrors) {
     for (let originError of params.errors) {
       let originKeyword = originError.keyword;
       //  被ajv-errors捕獲的原生錯誤keyword
+      let key;
       if (!instancePath) {
+        key = AJV.FIELD_NAME.TOP;
         //  代表發生錯誤的keyword，JSON pointer級別高於validatedData
         let originParam = AJV.ERROR_PARAMS[originKeyword];
         //  高級別的錯誤，其keyword也是指向高級別，要找到此高級別keyword是校驗出validatedData的哪些key，
         //  ajv會將keys放入originError.params裡，而originError.params是kvPairs，
         //  kvPair的key是ajv預先對應originKeyword設定的，可參考 https://ajv.js.org/api.html#error-parameters
-        fieldName = originParam
-          ? originError.params[originParam]
-          : AJV.FIELD_NAME.TOP;
+        //  field 是代表全局錯誤的常量
+        fieldName = originError.params[originParam];
+        //  message 是實際發生問題的 field
         $F_log(
           `@ajv-errors自定義的validateErr：\n
           --JSON Pointer--\n
-          keyword → 高於『${originKeyword}』設定的schema\n
-          fieldName → ${fieldName}`
+          keyword → ${originKeyword}
+          fieldName → ${fieldName}\n
+          但因為${originKeyword}是高於${fieldName}的keyword，所以這筆錯誤會放入代表全局field的『${key}』內`
         );
+        if (!init.hasOwnProperty(key)) {
+          init[key] = {};
+        }
+        if (!init[key].hasOwnProperty(originKeyword)) {
+          init[key][originKeyword] = [];
+        }
+        init[key][originKeyword].push(fieldName);
       }
       if (!init.hasOwnProperty(fieldName)) {
         init[fieldName] = {};
@@ -167,33 +175,5 @@ function _parseValidateErrors(validateErrors) {
       init[fieldName][originKeyword] = message;
     }
     return init;
-  }, {});
-}
-function parseErrorsToForm(myErrors) {
-  return Object.entries(myErrors).reduce((res, [fieldName, KVpairs]) => {
-    let msg = Object.entries(KVpairs).reduce(
-      (_msg, [keyword, message], index) => {
-        if (index > 0) {
-          _msg += ",";
-        }
-
-        return (_msg += message);
-      },
-      ""
-    );
-    if (!res[fieldName]) {
-      res[fieldName] = {};
-    }
-    let fieldName_tw = en_to_tw_for_fieldName(fieldName);
-    !fieldName_tw && console.log("@fieldName 找不到對應的中文 => ", fieldName);
-    res[fieldName] = {
-      get alert() {
-        return `【${fieldName_tw}】欄位值${msg}`;
-      },
-      get feedback() {
-        return msg;
-      },
-    };
-    return res;
   }, {});
 }
