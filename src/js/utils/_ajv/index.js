@@ -12,6 +12,7 @@ import { dev_log as $F_log } from "../log";
 import { AJV } from "../../../../config/constant";
 /* -------------------- RUN -------------------- */
 import schema_list from "./schema";
+import Ajv from "ajv";
 
 export default class extends Ajv2019 {
   constructor(axios) {
@@ -39,68 +40,28 @@ export default class extends Ajv2019 {
 
   get_validate(CONST_AJV_TYPE) {
     let validate = this.getSchema(CONST_AJV_TYPE.ref);
-    return async_check.bind(validate);
+    return check.bind(validate);
   }
 }
 
-async function async_check(data, parseErrorForFeedBack = true) {
+async function check(data) {
   try {
     let validate = this;
     if (validate.$async) {
       await validate(data);
     } else if (!validate(data)) {
-      return handle_validate_errors(validate, parseErrorForFeedBack);
+      throw new Ajv.ValidationError(validate.errors);
+      // return handle_validate_errors(validate);
     }
     return null;
-  } catch (e) {
-    return handle_validate_errors(e, parseErrorForFeedBack);
+  } catch (invalid_error) {
+    return handle_validate_errors(invalid_error.errors);
   }
 }
 
-function handle_validate_errors(error, parseErrorForFeedBack) {
-  let { errors } = error;
-  if (errors) {
-    $F_log("@整理前的validateErrors => ", errors);
-    let _errors = _parseValidateErrors(errors);
-    //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
-    $F_log("@整理後的validateErrors => ", _errors);
-    // if (parseErrorForFeedBack) {
-    //   _errors = parseErrorsToForm(_errors);
-    //  { 表格名1: message1, 表格名2: message2, ... }
-    // }
-    return _errors;
-  } else {
-    throw err;
-  }
-}
-
-function en_to_tw_for_fieldName(fieldName) {
-  const map = {
-    //	全局錯誤
-    all: "all",
-    //	register
-    email: "信箱",
-    password: "密碼",
-    password_again: "密碼確認",
-    //	blog
-    title: "文章標題",
-    contetn: "文章內文",
-    show: "文章狀態",
-    //	setting
-    nickname: "暱稱",
-    age: "年齡",
-    avatar: "頭像",
-    avatar_hash: "頭像hash",
-    // myKeyword
-    confirm_password: "密碼驗證",
-  };
-  return map[fieldName];
-}
-function _parseValidateErrors(validateErrors) {
-  /*{ 
-        errors: [ { ..., message: 自定義的錯誤說明, ... }, ...],
-      }*/
-  return validateErrors.reduce((init, validateError) => {
+function handle_validate_errors(invalid_errors) {
+  $F_log("@整理前的validateErrors => ", invalid_errors);
+  let res = invalid_errors.reduce((init, invalid_error) => {
     let {
       myKeyword,
       keyword,
@@ -113,7 +74,7 @@ function _parseValidateErrors(validateErrors) {
       //  若值為""，代表validatedData牴觸的keyword，其指向比validatedData顯示不出來的更高級的JSON Pointer位置(ex: schema.if)
       message,
       //  ajv-errors針對當前錯誤設定錯誤提示，或是原生錯誤提醒
-    } = validateError;
+    } = invalid_error;
     let fieldName = instancePath.split("/").pop();
     //  去除'/'
     let handled_by_ajv_error = keyword === "errorMessage" ? true : false;
@@ -122,12 +83,9 @@ function _parseValidateErrors(validateErrors) {
       // ↓ 確認校驗錯誤是否來自custom_keyword
       if (!myKeyword) {
         $F_log(
-          "@提醒用，不被處理的錯誤 => \n keyword: ",
-          keyword,
-          "\n message: ",
-          message
+          `@提醒用，發現一個「非custom_keyword」或「未使用ajv-errors預處理」的錯誤訊息:`,
+          invalid_error
         );
-        console.log("validateError ===> ", validateError);
       } else {
         if (!init.hasOwnProperty(fieldName)) {
           init[fieldName] = {};
@@ -137,43 +95,45 @@ function _parseValidateErrors(validateErrors) {
       return init;
     }
     /*
-            被 ajv-errors 捕獲的錯誤 errors，其item:error的keyword都是'errorMessage'
-            實際發生錯誤的原生keyword，則在 error.params.errors 裡的 item: error.keyword
-        */
-    for (let originError of params.errors) {
-      let originKeyword = originError.keyword;
+              被 ajv-errors 捕獲的錯誤 errors，其item:error的keyword都是'errorMessage'
+              實際發生錯誤的原生keyword，則在 error.params.errors 裡的 item: error.keyword
+          */
+    for (let origin_error of params.errors) {
+      let origin_keyword = origin_error.keyword;
       //  被ajv-errors捕獲的原生錯誤keyword
-      let key;
       if (!instancePath) {
-        key = AJV.FIELD_NAME.TOP;
+        let key = AJV.FIELD_NAME.TOP;
         //  代表發生錯誤的keyword，JSON pointer級別高於validatedData
-        let originParam = AJV.ERROR_PARAMS[originKeyword];
+        let origin_param = AJV.ERROR_PARAMS[origin_keyword];
         //  高級別的錯誤，其keyword也是指向高級別，要找到此高級別keyword是校驗出validatedData的哪些key，
         //  ajv會將keys放入originError.params裡，而originError.params是kvPairs，
         //  kvPair的key是ajv預先對應originKeyword設定的，可參考 https://ajv.js.org/api.html#error-parameters
         //  field 是代表全局錯誤的常量
-        fieldName = originError.params[originParam];
+        fieldName = origin_error.params[origin_param];
         //  message 是實際發生問題的 field
         $F_log(
           `@ajv-errors自定義的validateErr：\n
-          --JSON Pointer--\n
-          keyword → ${originKeyword}
-          fieldName → ${fieldName}\n
-          但因為${originKeyword}是高於${fieldName}的keyword，所以這筆錯誤會放入代表全局field的『${key}』內`
+            --JSON Pointer--\n
+            keyword → ${origin_keyword}
+            fieldName → ${fieldName}\n
+            但因為${origin_keyword}是高於${fieldName}的keyword，所以這筆錯誤會放入代表全局field的『${key}』內`
         );
         if (!init.hasOwnProperty(key)) {
           init[key] = {};
         }
-        if (!init[key].hasOwnProperty(originKeyword)) {
-          init[key][originKeyword] = [];
+        if (!init[key].hasOwnProperty(origin_keyword)) {
+          init[key][origin_keyword] = [];
         }
-        init[key][originKeyword].push(fieldName);
+        init[key][origin_keyword].push(fieldName);
       }
       if (!init.hasOwnProperty(fieldName)) {
         init[fieldName] = {};
       }
-      init[fieldName][originKeyword] = message;
+      init[fieldName][origin_keyword] = message;
     }
     return init;
   }, {});
+  //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
+  $F_log("@整理後的validateErrors => ", res);
+  return res;
 }

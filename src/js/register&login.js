@@ -79,9 +79,9 @@ window.addEventListener("load", async () => {
   }
   /* 初始化頁面內容功能 */
   function initMain() {
-    initRegistFn();
+    initRegistFn(`#${PAGE_REGISTER_LOGIN.ID.REGISTER_FORM}`);
     //  初始化 Register Form 功能
-    initLoginFn();
+    initLoginFn(`#${PAGE_REGISTER_LOGIN.ID.LOGIN_FORM}`);
     //  初始化 Register Form 功能
 
     /* ------------------------------------------------------------------------------------------ */
@@ -89,10 +89,8 @@ window.addEventListener("load", async () => {
     /* ------------------------------------------------------------------------------------------ */
 
     /* 初始化 Register Form 功能 */
-    function initLoginFn() {
-      let form = document.querySelector(
-        `#${PAGE_REGISTER_LOGIN.ID.LOGIN_FORM}`
-      );
+    function initLoginFn(form_id) {
+      let form = document.querySelector(form_id);
       let payload = {};
       let feedback_for_Form = gen_feedback_for_Form(form);
       deb_eventHandle(
@@ -133,7 +131,7 @@ window.addEventListener("load", async () => {
         let targetInput = e.target;
         let targetInputName = targetInput.name;
         let targetInputValue = targetInput.value;
-        e.target.mark = true;
+        e.target.validated = true;
         //  指向$$payload裡對應的數據對象
         payload[targetInputName] = targetInputValue;
         //  更新payload內的表格數據
@@ -143,27 +141,25 @@ window.addEventListener("load", async () => {
       }
     }
     /* 初始化 Register Form 功能 */
-    function initRegistFn() {
-      const form = document.querySelector(
-        `#${PAGE_REGISTER_LOGIN.ID.REGISTER_FORM}`
-      );
-      let payload = {};
-      let feedback_for_Form = gen_feedback_for_Form(form);
+    function initRegistFn(form_id) {
+      const el_form = document.querySelector(form_id);
+      let register_payload = {};
+      let feedback_for_Form = gen_feedback_for_Form(el_form);
       deb_eventHandle(
         `#${PAGE_REGISTER_LOGIN.ID.REGISTER_FORM} input`,
         "input",
         handle_input_register
       );
-      form.addEventListener("submit", handle_submit_register);
+      el_form.addEventListener("submit", handle_submit_register);
       /* 註冊表單 submit Event handler */
       async function handle_submit_register(e) {
         e.preventDefault();
-        let validateErrs = await $$validate_register(payload);
+        let validateErrs = await $$validate_register(register_payload);
         //  校驗
         if (validateErrs) {
-          payload = {};
+          register_payload = {};
           alert(PAGE_REGISTER_LOGIN.REGISTER.FAIL_MSG);
-          location.reload();
+          feedback_for_Form.reset();
           return;
         }
         /* 送出請求 */
@@ -186,23 +182,48 @@ window.addEventListener("load", async () => {
         //  REGISTER
         let targetInput = e.target;
         let targetInputName = targetInput.name;
-        let targetInputValue = targetInput.value;
-        e.target.mark = true;
-        //  指向$$payload裡對應的數據對象
-        payload[targetInputName] = targetInputValue;
+        targetInput.validated = true;
         //  更新payload內的表格數據
-        let validateErrs;
-        if (targetInputName === "email") {
-          // payload.$$axios = $$axios;
-          validateErrs = await $$validate_isEmailExist(payload, false);
+        let $form = $(el_form);
+        let data = { invalid_errors: undefined, valid_inputs: [] };
+        let payload;
+        if (targetInputName === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
+          let el_email = $form
+            .find(`[name=${PAGE_REGISTER_LOGIN.NAME.EMAIL}]`)
+            .get(0);
+          payload = { email: el_email.value };
+          let errors = await $$validate_isEmailExist(payload);
+          if (errors) {
+            data.invalid_errors = errors;
+          } else {
+            data.valid_inputs.push(el_email);
+          }
         } else {
-          validateErrs = await $$validate_passwordAndAgain(payload, false);
+          let el_password = $form
+            .find(`[name=${PAGE_REGISTER_LOGIN.NAME.PASSWORD}]`)
+            .get(0);
+          let el_password_again = $form
+            .find(`[name=${PAGE_REGISTER_LOGIN.NAME.PASSWORD_AGAIN}]`)
+            .get(0);
+          payload = {
+            password: el_password.value,
+            password_again: el_password_again.value,
+          };
+          let errors = await $$validate_passwordAndAgain(payload);
+          let valid_input_set = new Set([el_password, el_password_again]);
+          if (errors) {
+            data.invalid_errors = errors;
+            if (errors.password) {
+              valid_input_set.delete(el_password);
+            }
+            if (errors.password_again) {
+              valid_input_set.delete(el_password_again);
+            }
+          }
+          data.valid_inputs = [...valid_input_set];
         }
-        console.log("@ validateErrs ->", validateErrs);
-        if (validateErrs && !Object.getOwnPropertyNames(validateErrs).length) {
-          validateErrs = null;
-        }
-        feedback_for_Form(validateErrs);
+        register_payload = { ...register_payload, ...payload };
+        feedback_for_Form.update(data);
         return;
       }
     }
@@ -212,25 +233,18 @@ window.addEventListener("load", async () => {
     /* ------------------------------------------------------------------------------------------ */
 
     /* genFn => 處理校驗錯誤 ..............*/
-    function gen_feedback_for_Form(form) {
+    function gen_feedback_for_Form(form, not_required = []) {
       /* 管理form可否submit的鎖 */
       class Lock {
-        constructor(form) {
+        constructor(form, not_required) {
+          this.form = form;
+          this.not_required = not_required;
           this.lock = new Set();
           //  lock.size === 0 則解鎖
           this.$submit = undefined;
           //  submit的jq_ele
           this.inputs = [];
-          //  除了submit_ele以外的input
-          for (let input of form) {
-            const { name, type } = input;
-            if (type === "submit") {
-              this.$submit = $(input);
-            } else {
-              this.inputs.push(input);
-              this.lock.add(name);
-            }
-          }
+          this.reset();
         }
         add(inputName) {
           this.lock.add(inputName);
@@ -243,55 +257,64 @@ window.addEventListener("load", async () => {
         checkSubmit() {
           this.$submit.prop("disabled", this.lock.size);
         }
+        reset() {
+          //  除了submit_ele以外的input
+          for (let input of this.form) {
+            const { name, type } = input;
+            if (type === "submit") {
+              this.$submit = $(input);
+            } else {
+              this.inputs.push(input);
+              if (
+                !this.not_required.length ||
+                !this.not_required.some((field_name) => field_name === name)
+              ) {
+                this.lock.add(name);
+              }
+            }
+          }
+          $M_UI.feedback(4, this.form);
+          this.checkSubmit();
+        }
+        update(data) {
+          let { invalid_errors, valid_inputs } = data;
+          if (valid_inputs.length) {
+            /* 有效表格值的提醒 */
+            for (let input of valid_inputs) {
+              let { validated, name } = input;
+              if (!validated) {
+                //  如果未標示，代表未曾驗證過，那就不需要顯示提醒
+                continue;
+              }
+              //  已標示，代表未曾驗證過，那就不需要顯示提醒
+              this.lock.delete(name);
+              $M_UI.feedback(2, input, true);
+            }
+          }
+          if (invalid_errors) {
+            let validateErrs = parseErrorsToForm(invalid_errors);
+            /* 無效表格值的提醒 */
+            for (let inputName in validateErrs) {
+              if (inputName === AJV.FIELD_NAME.TOP) {
+                continue;
+              }
+              let input = $(form).find(`input[name=${inputName}]`).get(0);
+              if (!input.validated) {
+                continue;
+              }
+              let msg = validateErrs[inputName];
+              this.lock.add(inputName);
+              $M_UI.feedback(2, input, false, msg.feedback);
+              //  若該非法表格未標記 has_debHandle，則替其inputEvent綁定驗證表格值的handle
+            }
+          }
+          this.checkSubmit();
+          console.log("@lock => ", [...this.lock]);
+          return;
+        }
       }
-      let lock = new Lock(form);
+      return new Lock(form);
       /* 藉由validateErrors，判斷form可否submit，並於input顯示校驗錯誤 */
-      return (validateErrs) => {
-        let valid_inputs;
-        if (!validateErrs) {
-          valid_inputs = [...lock.inputs];
-        }
-        /* 蒐集無效inputs */
-        for (let field in validateErrs) {
-          let list_field_validateErr = validateErrs[field];
-          //  invalid_input的校驗錯誤資訊
-          if (list_field_validateErr.hasOwnProperty("additionalProperties")) {
-            //  若校驗錯誤資訊包含 additionalProperties屬性，刪除此校驗錯誤資訊
-            delete validateErrs[field];
-          }
-          valid_inputs = [...lock.inputs].filter(({ name }) => name !== field);
-        }
-        /* 有效表格值的提醒 */
-        for (let valid_input of valid_inputs) {
-          if (!valid_input.mark) {
-            //  如果未標示，代表未曾驗證過，那就不需要顯示提醒
-            continue;
-          }
-          //  已標示，代表未曾驗證過，那就不需要顯示提醒
-          lock.delete(valid_input.name);
-          $M_UI.feedback(2, valid_input, true);
-        }
-        //  轉換validateErrs格式
-        if (validateErrs && Object.keys(validateErrs).length) {
-          // validateErrs = $C_ajv.parseErrorsToForm(validateErrs);
-          validateErrs = parseErrorsToForm(validateErrs);
-        }
-        /* 無效表格值的提醒 */
-        for (let inputName in validateErrs) {
-          if (inputName === AJV.FIELD_NAME.TOP) {
-            continue;
-          }
-          let input = $(form).find(`input[name=${inputName}]`).get(0);
-          if (!input.mark) {
-            continue;
-          }
-          let msg = validateErrs[inputName];
-          lock.add(inputName);
-          $M_UI.feedback(2, input, false, msg.feedback);
-          //  若該非法表格未標記 has_debHandle，則替其inputEvent綁定驗證表格值的handle
-        }
-        return;
-      };
     }
     /* 將事件做防抖動設置，並綁定事件 */
     function deb_eventHandle(selectorOrEl, eventType, handle) {

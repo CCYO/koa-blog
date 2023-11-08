@@ -26,6 +26,10 @@ export default {
       },
     },
     additionalProperties: false,
+    errorMessage: {
+      type: "必須是object",
+      additionalProperties: "屬於非法數據",
+    },
   },
   else: {
     $ref: "#/if",
@@ -33,6 +37,5 @@ export default {
   errorMessage: {
     type: "必須是object",
     required: "必填",
-    additionalProperties: "屬於非法數據",
   },
 };

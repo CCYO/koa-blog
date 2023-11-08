@@ -16,6 +16,11 @@ const PAGE = {
       LOGIN_FORM: "login",
       REGISTER_FORM: "register",
     },
+    NAME: {
+      EMAIL: "email",
+      PASSWORD: "password",
+      PASSWORD_AGAIN: "password_again",
+    },
   },
   USER: {
     API: {
