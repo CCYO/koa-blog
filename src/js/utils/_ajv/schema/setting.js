@@ -41,9 +41,8 @@ export default {
           $ref: `${TYPE.DEFAULT.ref}#/definitions/avatar_hash`,
         },
       },
-      required: ["$$me"],
+      _required: ["$$me"],
       errorMessage: {
-        required: "必需有值",
         minProperties: "至少需改一筆資料",
       },
     },

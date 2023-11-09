@@ -10,22 +10,18 @@ export default {
     email: {
       type: "string",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
-      _required: true,
     },
     password: {
       type: "string",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
-      _required: true,
     },
     password_again: {
       type: "string",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again`,
-      _required: true,
     },
   },
-  required: ["email", "password", "password_again"],
+  _required: ["email", "password", "password_again"],
   errorMessage: {
     type: "必須是object",
-    required: "必填",
   },
 };

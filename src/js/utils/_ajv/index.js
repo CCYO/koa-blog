@@ -75,9 +75,40 @@ function handle_validate_errors(invalid_errors) {
       message,
       //  ajv-errors針對當前錯誤設定錯誤提示，或是原生錯誤提醒
     } = invalid_error;
-    let fieldName = instancePath.split("/").pop();
+    // let fieldName = instancePath.split("/").pop();
     //  去除'/'
     let handled_by_ajv_error = keyword === "errorMessage" ? true : false;
+
+    /* 全局錯誤 */
+    if (!instancePath) {
+      if (keyword === "errorMessage" || keyword === "myKeyword") {
+        let key = AJV.ERROR_PARAMS[keyword];
+        let properties = params.map((param) => param[key]);
+        init[AJV.FIELD_NAME.TOP] = { [keyword]: { list: properties, message } };
+      } else {
+        console.log(
+          `全局錯誤${keyword}，因為ajv-errors未預先設定，所以忽略不不需處理`
+        );
+      }
+      return init;
+    }
+    /* 局部錯誤 */
+    if (myKeyword || keyword === "errorMessage") {
+      let origin_error = params.errors[0];
+      keyword = origin_error.keyword;
+    } else {
+      console.log(
+        `局部錯誤${keyword}，因為ajv-errors未預先設定，所以忽略不不需處理`
+      );
+      return init;
+    }
+    let fieldName = instancePath.split("/").pop();
+    if (!init.hasOwnProperty(fieldName)) {
+      init[fieldName] = {};
+    }
+    init[fieldName] = { [keyword]: message };
+    return init;
+
     /* 非 ajv-errors 捕獲的錯誤 */
     if (!handled_by_ajv_error) {
       // ↓ 確認校驗錯誤是否來自custom_keyword
@@ -86,6 +117,7 @@ function handle_validate_errors(invalid_errors) {
           `@提醒用，發現一個「非custom_keyword」或「未使用ajv-errors預處理」的錯誤訊息:`,
           invalid_error
         );
+      } else if (!instancePath) {
       } else {
         if (!init.hasOwnProperty(fieldName)) {
           init[fieldName] = {};

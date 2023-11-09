@@ -141,11 +141,10 @@ export default {
           },
         },
       },
-      required: ["blogImg_id", "blogImgAlt_list"],
+      _required: ["blogImg_id", "blogImgAlt_list"],
       additionalProperties: false,
       errorMessage: {
         type: "必須是object",
-        required: "必須包含blogImg_id與blogImgAlt_list數據",
         additionalProperties: "不允許除了blogImg_id與blogImgAlt_list以外的數據",
       },
     },

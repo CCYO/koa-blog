@@ -243,7 +243,6 @@ window.addEventListener("load", async () => {
           //  lock.size === 0 則解鎖
           this.$submit = undefined;
           //  submit的jq_ele
-          this.inputs = [];
           this.reset();
         }
         add(inputName) {
@@ -263,14 +262,10 @@ window.addEventListener("load", async () => {
             const { name, type } = input;
             if (type === "submit") {
               this.$submit = $(input);
-            } else {
-              this.inputs.push(input);
-              if (
-                !this.not_required.length ||
-                !this.not_required.some((field_name) => field_name === name)
-              ) {
-                this.lock.add(name);
-              }
+            } else if (
+              !this.not_required.some((field_name) => field_name === name)
+            ) {
+              this.lock.add(name);
             }
           }
           $M_UI.feedback(4, this.form);
@@ -313,7 +308,7 @@ window.addEventListener("load", async () => {
           return;
         }
       }
-      return new Lock(form);
+      return new Lock(form, not_required);
       /* 藉由validateErrors，判斷form可否submit，並於input顯示校驗錯誤 */
     }
     /* 將事件做防抖動設置，並綁定事件 */
@@ -341,22 +336,35 @@ window.addEventListener("load", async () => {
 });
 
 function parseErrorsToForm(invalid_errors) {
-  let entries = Object.entries(invalid_errors);
-  return entries.reduce((res, [fieldName, KVpairs]) => {
-    let feedback_string;
-    if (KVpairs.hasOwnProperty(ajv_custom_keyword_required.keyword)) {
-      feedback_string = KVpairs[ajv_custom_keyword_required.keyword];
-    } else {
-      feedback_string = Object.entries(KVpairs).reduce(
-        (all_message, [keyword, message], index) => {
-          if (index > 0) {
-            all_message += ",";
+  if (invalid_errors.hasOwnProperty(AJV.FIELD_NAME.TOP)) {
+    let top = invalid_errors[AJV.FIELD_NAME.TOP];
+    let res = Object.entries(top).reduce(
+      (acc, [keyword, { list, message }]) => {
+        if (keyword === ajv_custom_keyword_required.keyword) {
+          for (let item of list) {
+            acc[item] = { keyword: message };
           }
-          return (all_message += message);
-        },
-        ""
-      );
-    }
+        } else {
+          console.log(`忽略data發生的全局錯誤${keyword}`);
+        }
+        return acc;
+      },
+      {}
+    );
+    delete invalid_errors[AJV.FIELD_NAME.TOP];
+    invalid_errors = { ...invalid_errors, ...res };
+  }
+  return Object.entries(invalid_errors).reduce((res, [fieldName, KVpairs]) => {
+    let feedback_string = Object.entries(KVpairs).reduce(
+      (all_message, [keyword, message], index) => {
+        if (index > 0) {
+          all_message += ",";
+        }
+        return (all_message += message);
+      },
+      ""
+    );
+
     if (!res[fieldName]) {
       res[fieldName] = {};
     }

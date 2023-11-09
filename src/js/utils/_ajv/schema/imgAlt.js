@@ -34,9 +34,8 @@ export default {
       },
     },
   },
-  required: ["$$alt", "alt", "blog_id", "alt_id"],
+  _required: ["$$alt", "alt", "blog_id", "alt_id"],
   errorMessage: {
     type: "必須是object",
-    require: "必需有值",
   },
 };

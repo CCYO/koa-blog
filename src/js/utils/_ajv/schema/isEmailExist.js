@@ -12,10 +12,9 @@ export default {
       email: {
         type: "string",
         $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
-        _required: true,
       },
     },
-    required: ["email"],
+    _required: ["email"],
   },
   then: {
     type: "object",
@@ -36,6 +35,5 @@ export default {
   },
   errorMessage: {
     type: "必須是object",
-    required: "必填",
   },
 };

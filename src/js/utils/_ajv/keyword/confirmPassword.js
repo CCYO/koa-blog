@@ -11,7 +11,7 @@ async function confirmPassword(schema, data, parentSchema, dataCtx) {
     let { instancePath } = dataCtx;
     //  提供給 ../index 的 _parseValidateErrors 判別是否為我定義的 keyword
     let e = new Error();
-    e.errors = [{ keyword, myKeyword, instancePath, params, message: msg }];
+    e.errors = [{ keyword, myKeyword, instancePath, message: msg }];
     throw e;
   }
   return true;

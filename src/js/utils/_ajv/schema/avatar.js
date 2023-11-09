@@ -18,8 +18,5 @@ export default {
       $ref: `${TYPE.DEFAULT.ref}#/definitions/avatar_hash`,
     },
   },
-  required: ["avatar_base64", "avatar_hash"],
-  errorMessage: {
-    required: "必填",
-  },
+  _required: ["avatar_base64", "avatar_hash"],
 };

@@ -11,24 +11,19 @@ export default {
     properties: {
       origin_password: {
         $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
-        _required: true,
       },
     },
-    required: ["origin_password"],
+    _required: ["origin_password"],
   },
   then: {
     properties: {
       origin_password: {
         confirmPassword: true,
-        _required: true,
       },
     },
-    required: ["origin_password"],
+    _required: ["origin_password"],
   },
   else: {
     $ref: "#/if",
-  },
-  errorMessage: {
-    required: "必填",
   },
 };

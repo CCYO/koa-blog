@@ -5,9 +5,8 @@ function diff(schema, data, parentSchema, dataCtx) {
   let { instancePath } = dataCtx;
   let keyword = "diff";
   let myKeyword = true;
-  let params = { myKeyword: true };
   diff.errors = [
-    { keyword, myKeyword, params, instancePath, message: "若沒有要更新就別鬧" },
+    { keyword, myKeyword, instancePath, message: "若沒有要更新就別鬧" },
   ];
   return false;
 }

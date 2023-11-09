@@ -30,9 +30,8 @@ export default {
       $ref: `${TYPE.DEFAULT.ref}#/definitions/cancelImgs`,
     },
   },
-  required: ["$$blog"],
+  _required: ["$$blog"],
   errorMessage: {
-    required: "必需有值",
     minProperties: "至少需改一筆資料",
   },
 };
