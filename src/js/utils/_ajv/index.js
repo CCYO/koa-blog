@@ -12,7 +12,6 @@ import { dev_log as $F_log } from "../log";
 import { AJV } from "../../../../config/constant";
 /* -------------------- RUN -------------------- */
 import schema_list from "./schema";
-import Ajv from "ajv";
 
 export default class extends Ajv2019 {
   constructor(axios) {
@@ -50,8 +49,7 @@ async function check(data) {
     if (validate.$async) {
       await validate(data);
     } else if (!validate(data)) {
-      throw new Ajv.ValidationError(validate.errors);
-      // return handle_validate_errors(validate);
+      throw new Ajv2019.ValidationError(validate.errors);
     }
     return null;
   } catch (invalid_error) {
@@ -61,6 +59,7 @@ async function check(data) {
 
 function handle_validate_errors(invalid_errors) {
   $F_log("@整理前的validateErrors => ", invalid_errors);
+  let ignore_properties = [];
   let res = invalid_errors.reduce((init, invalid_error) => {
     let {
       myKeyword,
@@ -78,13 +77,17 @@ function handle_validate_errors(invalid_errors) {
     // let fieldName = instancePath.split("/").pop();
     //  去除'/'
     let handled_by_ajv_error = keyword === "errorMessage" ? true : false;
-
     /* 全局錯誤 */
     if (!instancePath) {
-      if (keyword === "errorMessage" || keyword === "myKeyword") {
+      if (keyword === "errorMessage" || myKeyword) {
         let key = AJV.ERROR_PARAMS[keyword];
-        let properties = params.map((param) => param[key]);
-        init[AJV.FIELD_NAME.TOP] = { [keyword]: { list: properties, message } };
+        let origin_errors = params.errors;
+        let origin_keyword = origin_errors[0].keyword;
+        let properties = origin_errors.map((error) => error.params[key]);
+        ignore_properties.concat(properties);
+        init[AJV.FIELD_NAME.TOP] = {
+          [origin_keyword]: { list: properties, message },
+        };
       } else {
         console.log(
           `全局錯誤${keyword}，因為ajv-errors未預先設定，所以忽略不不需處理`
@@ -93,79 +96,73 @@ function handle_validate_errors(invalid_errors) {
       return init;
     }
     /* 局部錯誤 */
-    if (myKeyword || keyword === "errorMessage") {
-      let origin_error = params.errors[0];
-      keyword = origin_error.keyword;
-    } else {
+    let fieldName = instancePath.split("/").pop();
+    let ignore = ignore_properties.some((property) => property === fieldName);
+    if (ignore || (keyword !== "errorMessage" && !myKeyword)) {
       console.log(
-        `局部錯誤${keyword}，因為ajv-errors未預先設定，所以忽略不不需處理`
+        `${fieldName}發生局部錯誤${keyword}，因為未預先設定錯誤訊息，所以忽略不不需處理`
       );
       return init;
     }
-    let fieldName = instancePath.split("/").pop();
+    if (keyword === "errorMessage") {
+      let origin_error = params.errors[0];
+      keyword = origin_error.keyword;
+    }
     if (!init.hasOwnProperty(fieldName)) {
       init[fieldName] = {};
     }
-    init[fieldName] = { [keyword]: message };
-    return init;
-
-    /* 非 ajv-errors 捕獲的錯誤 */
-    if (!handled_by_ajv_error) {
-      // ↓ 確認校驗錯誤是否來自custom_keyword
-      if (!myKeyword) {
-        $F_log(
-          `@提醒用，發現一個「非custom_keyword」或「未使用ajv-errors預處理」的錯誤訊息:`,
-          invalid_error
-        );
-      } else if (!instancePath) {
-      } else {
-        if (!init.hasOwnProperty(fieldName)) {
-          init[fieldName] = {};
-        }
-        init[fieldName][keyword] = message;
-      }
-      return init;
-    }
-    /*
-              被 ajv-errors 捕獲的錯誤 errors，其item:error的keyword都是'errorMessage'
-              實際發生錯誤的原生keyword，則在 error.params.errors 裡的 item: error.keyword
-          */
-    for (let origin_error of params.errors) {
-      let origin_keyword = origin_error.keyword;
-      //  被ajv-errors捕獲的原生錯誤keyword
-      if (!instancePath) {
-        let key = AJV.FIELD_NAME.TOP;
-        //  代表發生錯誤的keyword，JSON pointer級別高於validatedData
-        let origin_param = AJV.ERROR_PARAMS[origin_keyword];
-        //  高級別的錯誤，其keyword也是指向高級別，要找到此高級別keyword是校驗出validatedData的哪些key，
-        //  ajv會將keys放入originError.params裡，而originError.params是kvPairs，
-        //  kvPair的key是ajv預先對應originKeyword設定的，可參考 https://ajv.js.org/api.html#error-parameters
-        //  field 是代表全局錯誤的常量
-        fieldName = origin_error.params[origin_param];
-        //  message 是實際發生問題的 field
-        $F_log(
-          `@ajv-errors自定義的validateErr：\n
-            --JSON Pointer--\n
-            keyword → ${origin_keyword}
-            fieldName → ${fieldName}\n
-            但因為${origin_keyword}是高於${fieldName}的keyword，所以這筆錯誤會放入代表全局field的『${key}』內`
-        );
-        if (!init.hasOwnProperty(key)) {
-          init[key] = {};
-        }
-        if (!init[key].hasOwnProperty(origin_keyword)) {
-          init[key][origin_keyword] = [];
-        }
-        init[key][origin_keyword].push(fieldName);
-      }
-      if (!init.hasOwnProperty(fieldName)) {
-        init[fieldName] = {};
-      }
-      init[fieldName][origin_keyword] = message;
-    }
+    init[fieldName][keyword] = message;
     return init;
   }, {});
   //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
   $F_log("@整理後的validateErrors => ", res);
   return res;
+}
+
+function parseErrorsToForm(invalid_errors) {
+  if (invalid_errors.hasOwnProperty(AJV.FIELD_NAME.TOP)) {
+    let top = invalid_errors[AJV.FIELD_NAME.TOP];
+    let res = Object.entries(top).reduce(
+      (acc, [keyword, { list, message }]) => {
+        if (keyword === ajv_custom_keyword._required) {
+          for (let item of list) {
+            acc[item] = { [keyword]: message };
+          }
+        } else {
+          console.log(`忽略data發生的全局錯誤${keyword}`);
+        }
+        return acc;
+      },
+      {}
+    );
+    delete invalid_errors[AJV.FIELD_NAME.TOP];
+    invalid_errors = { ...invalid_errors, ...res };
+  }
+  return Object.entries(invalid_errors).reduce((res, [fieldName, KVpairs]) => {
+    let feedback_string = Object.entries(KVpairs).reduce(
+      (all_message, [keyword, message], index) => {
+        if (index > 0) {
+          all_message += ",";
+        }
+        return (all_message += message);
+      },
+      ""
+    );
+
+    if (!res[fieldName]) {
+      res[fieldName] = {};
+    }
+    let fieldName_tw = AJV.EN_TO_TW[fieldName]
+      ? AJV.EN_TO_TW[fieldName]
+      : fieldName;
+    res[fieldName] = {
+      get alert() {
+        return `【${fieldName_tw}】欄位值${feedback_string}`;
+      },
+      get feedback() {
+        return feedback_string;
+      },
+    };
+    return res;
+  }, {});
 }

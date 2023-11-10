@@ -1,23 +1,20 @@
 const keyword = "noSpace";
 const myKeyword = true;
-function noSpace(schema, data, parentSchema, dataCtx) {
+function validate(schema, data, parentSchema, dataCtx) {
   if (!schema) {
     return true;
   }
   let regux = /\s/g;
-  if (regux.test(data)) {
-    let { instancePath } = dataCtx;
-    noSpace.errors = [
-      { instancePath, keyword, myKeyword, message: "不可包含空格" },
-    ];
-    return false;
+  if (!regux.test(data)) {
+    return true;
   }
-  return true;
+  validate.errors = [{ keyword, myKeyword, message: "不可包含空格" }];
+  return false;
 }
 export default {
   keyword,
   type: "string",
   schemaType: "boolean",
-  validate: noSpace,
+  validate,
   errors: true,
 };

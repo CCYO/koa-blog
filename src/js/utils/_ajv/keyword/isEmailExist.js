@@ -1,9 +1,7 @@
-// import _axios from '../../../_axios'
 import Ajv from "ajv";
 const keyword = "isEmailExist";
 const myKeyword = true;
-async function isEmailExist(schema, data, parentSchema, dataCtx) {
-  console.log("@isEmailExist");
+async function validate(schema, data, parentSchema, dataCtx) {
   if (!schema) {
     return true;
   }
@@ -11,15 +9,11 @@ async function isEmailExist(schema, data, parentSchema, dataCtx) {
   let { errno, msg } = await this.$$axios.post("/api/user/isEmailExist", {
     [key]: data,
   });
-  if (errno) {
-    console.log("失敗", msg);
-    let { instancePath } = dataCtx;
-    let message = msg[key];
-    let errors = [{ keyword, myKeyword, instancePath, message }];
-    throw new Ajv.ValidationError(errors);
+  if (!errno) {
+    return true;
   }
-  console.log("成功");
-  return true;
+  let errors = [{ keyword, myKeyword, message: msg[key] }];
+  throw new Ajv.ValidationError(errors);
 }
 
 export default {
@@ -27,6 +21,6 @@ export default {
   async: true,
   type: "string",
   schemaType: "boolean",
-  validate: isEmailExist,
+  validate,
   errors: true,
 };

@@ -24,7 +24,7 @@ import {
   redirFrom as $M_redirForm,
 } from "./utils";
 
-import ajv_custom_keyword_required from "./utils/_ajv/keyword/_required";
+import { ajv_custom_keyword } from "./utils/_ajv/keyword";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
@@ -334,51 +334,3 @@ window.addEventListener("load", async () => {
     }
   }
 });
-
-function parseErrorsToForm(invalid_errors) {
-  if (invalid_errors.hasOwnProperty(AJV.FIELD_NAME.TOP)) {
-    let top = invalid_errors[AJV.FIELD_NAME.TOP];
-    let res = Object.entries(top).reduce(
-      (acc, [keyword, { list, message }]) => {
-        if (keyword === ajv_custom_keyword_required.keyword) {
-          for (let item of list) {
-            acc[item] = { keyword: message };
-          }
-        } else {
-          console.log(`忽略data發生的全局錯誤${keyword}`);
-        }
-        return acc;
-      },
-      {}
-    );
-    delete invalid_errors[AJV.FIELD_NAME.TOP];
-    invalid_errors = { ...invalid_errors, ...res };
-  }
-  return Object.entries(invalid_errors).reduce((res, [fieldName, KVpairs]) => {
-    let feedback_string = Object.entries(KVpairs).reduce(
-      (all_message, [keyword, message], index) => {
-        if (index > 0) {
-          all_message += ",";
-        }
-        return (all_message += message);
-      },
-      ""
-    );
-
-    if (!res[fieldName]) {
-      res[fieldName] = {};
-    }
-    let fieldName_tw = AJV.EN_TO_TW[fieldName]
-      ? AJV.EN_TO_TW[fieldName]
-      : fieldName;
-    res[fieldName] = {
-      get alert() {
-        return `【${fieldName_tw}】欄位值${feedback_string}`;
-      },
-      get feedback() {
-        return feedback_string;
-      },
-    };
-    return res;
-  }, {});
-}
