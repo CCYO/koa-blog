@@ -30,7 +30,8 @@ const AJV = {
   ERROR_PARAMS: {
     required: "missingProperty",
     additionalProperties: "additionalProperty",
-    _required: "missingProperty",
+    _required: "_missingProperty",
+    _notEmpty: "_notEmpty",
     // dependentRequired: 'missingProperty' 目前schema都沒用到
   },
   FIELD_NAME: {

@@ -1,7 +1,6 @@
 import { AJV } from "../../../../../config/constant";
 
 const keyword = "_required";
-const myKeyword = true;
 const message = "必填";
 let valid = true;
 let errors = undefined;
@@ -13,7 +12,7 @@ function validate(schema, data, parentSchema, dataCtx) {
   if (invalid_properties.length) {
     valid = false;
     errors = invalid_properties.map((property) => ({
-      keyword: "required",
+      keyword: "_required",
       params: { [AJV.ERROR_PARAMS._required]: property },
     }));
   }
@@ -27,12 +26,12 @@ function validate(schema, data, parentSchema, dataCtx) {
   if (invalid_entries.length) {
     valid = false;
     errors = invalid_entries.map(([property, value]) => ({
-      keyword,
-      params: { [AJV.ERROR_PARAMS._required]: property },
+      keyword: "_notEmpty",
+      params: { [AJV.ERROR_PARAMS._notEmpty]: property },
     }));
   }
   if (errors) {
-    validate.errors = [{ keyword, params: { errors }, message, myKeyword }];
+    validate.errors = [{ keyword: "myKeyword", params: { errors }, message }];
   }
   return valid;
 }

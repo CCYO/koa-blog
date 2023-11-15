@@ -5,6 +5,7 @@ import errors from "ajv-errors";
 /* -------------------- Utils MODULE -------------------- */
 
 import list_ajv_keyword from "./keyword";
+import { ajv_custom_keyword } from "./keyword";
 import { dev_log as $F_log } from "../log";
 
 /* -------------------- CONSTANT MODULE -------------------- */
@@ -41,6 +42,8 @@ export default class extends Ajv2019 {
     let validate = this.getSchema(CONST_AJV_TYPE.ref);
     return check.bind(validate);
   }
+
+  static parseErrorsToForm = parseErrorsToForm;
 }
 
 async function check(data) {
@@ -53,16 +56,15 @@ async function check(data) {
     }
     return null;
   } catch (invalid_error) {
-    return handle_validate_errors(invalid_error.errors);
+    return init_errors(invalid_error.errors);
   }
 }
 
-function handle_validate_errors(invalid_errors) {
+function init_errors(invalid_errors) {
   $F_log("@整理前的validateErrors => ", invalid_errors);
-  let ignore_properties = [];
-  let res = invalid_errors.reduce((init, invalid_error) => {
+
+  let res = invalid_errors.reduce((acc, invalid_error) => {
     let {
-      myKeyword,
       keyword,
       //  "errorMessage": 代表該錯誤訊息是利用ajv-errors在schema預先設定的
       //  "其他狀況"：代表該錯誤則否(通常是schema最高級的keyword，ex: if/else)
@@ -74,52 +76,147 @@ function handle_validate_errors(invalid_errors) {
       message,
       //  ajv-errors針對當前錯誤設定錯誤提示，或是原生錯誤提醒
     } = invalid_error;
-    // let fieldName = instancePath.split("/").pop();
-    //  去除'/'
-    let handled_by_ajv_error = keyword === "errorMessage" ? true : false;
-    /* 全局錯誤 */
+    if (keyword !== "errorMessage" && keyword !== "myKeyword") {
+      console.log(`keyword: ${keyword} 沒有預定義錯誤訊息，故忽略`);
+      return acc;
+    }
+    let key;
+    let { errors } = params;
     if (!instancePath) {
-      if (keyword === "errorMessage" || myKeyword) {
-        let key = AJV.ERROR_PARAMS[keyword];
-        let origin_errors = params.errors;
-        let origin_keyword = origin_errors[0].keyword;
-        let properties = origin_errors.map((error) => error.params[key]);
-        ignore_properties.concat(properties);
-        init[AJV.FIELD_NAME.TOP] = {
-          [origin_keyword]: { list: properties, message },
-        };
-      } else {
-        console.log(
-          `全局錯誤${keyword}，因為ajv-errors未預先設定，所以忽略不不需處理`
-        );
+      key = AJV.FIELD_NAME.TOP;
+      if (!acc[key]) {
+        acc[key] = [];
       }
-      return init;
+      console.log("@errors => ", errors);
+      errors.reduce((_acc, error) => {
+        let { keyword: origin_keyword, params: origin_params } = error;
+        let param = AJV.ERROR_PARAMS[origin_keyword];
+        let field_name = origin_params[param];
+        let item = _acc.find((item) => {
+          console.log("x=> ", item, origin_keyword);
+          return item.keyword === origin_keyword;
+        });
+        console.log("@item =>");
+        if (!item) {
+          item = { keyword: origin_keyword, list: [field_name], message };
+          _acc.push(item);
+        } else {
+          item.list.push(field_name);
+        }
+        return _acc;
+      }, acc[key]);
+
+      // acc[key].concat(top_errors);
+    } else {
+      let key = instancePath.split("/").pop();
+      let { keyword: origin_keyword } = errors[0];
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push({ keyword: origin_keyword, message });
     }
-    /* 局部錯誤 */
-    let fieldName = instancePath.split("/").pop();
-    let ignore = ignore_properties.some((property) => property === fieldName);
-    if (ignore || (keyword !== "errorMessage" && !myKeyword)) {
-      console.log(
-        `${fieldName}發生局部錯誤${keyword}，因為未預先設定錯誤訊息，所以忽略不不需處理`
-      );
-      return init;
-    }
-    if (keyword === "errorMessage") {
-      let origin_error = params.errors[0];
-      keyword = origin_error.keyword;
-    }
-    if (!init.hasOwnProperty(fieldName)) {
-      init[fieldName] = {};
-    }
-    init[fieldName][keyword] = message;
-    return init;
+    return acc;
   }, {});
-  //  { fieldName: { keyword1: message1,  keyword2: message2, ...}, ... }
   $F_log("@整理後的validateErrors => ", res);
   return res;
 }
 
-function parseErrorsToForm(invalid_errors) {
+function parseErrorsToForm(invalid_errors, data, ignore_list = []) {
+  let valid_list = [];
+  let invalid_list = [];
+  if (invalid_errors) {
+    let top_errors = invalid_errors[AJV.FIELD_NAME.TOP]
+      ? invalid_errors[AJV.FIELD_NAME.TOP]
+      : [];
+    for (let error of top_errors) {
+      let { keyword, message, list } = error;
+      for (let field_name of list) {
+        invalid_errors[field_name] = message;
+      }
+    }
+    delete invalid_errors[AJV.FIELD_NAME.TOP];
+  }
+  if (ignore_list.length) {
+    for (let field_name of ignore_list) {
+      delete data[field_name];
+    }
+    let keys = Object.keys(data);
+    for (let field_name of keys) {
+      let valid = !invalid_errors
+        ? true
+        : !invalid_errors.hasOwnProperty(field_name);
+      if (valid) {
+        valid_list.push(field_name);
+      }
+    }
+  }
+  if (invalid_errors) {
+    for (let field_name in invalid_errors) {
+      if (ignore_list && ignore_list.includes(field_name)) {
+        delete invalid_errors[field_name];
+        continue;
+      }
+      let errors = invalid_errors[field_name];
+      if (typeof errors === "string") {
+        invalid_list.push({ field_name, message: errors });
+        continue;
+      }
+      let error_message = errors.reduce((acc, { message }, index) => {
+        if (!index) {
+          return message;
+        }
+        acc += `,${message}`;
+        if (index === errors.length - 1) {
+          acc += "。";
+        }
+        return acc;
+      }, "");
+      invalid_list.push({ field_name, message: error_message });
+    }
+  }
+  return { data, valid_list, invalid_list };
+
+  for (let field_name of ignore_list) {
+    //  data去掉ignore_list
+    delete data[field_name];
+    //  invalid_errors去掉ignore_list
+    delete invalid_errors[field_name];
+  }
+
+  let res = {
+    valid_list: [],
+    invalid_list: [],
+  };
+  for (let field_name in data) {
+    if (!invalid_errors[field_name]) {
+      res.valid_list.push(field_name);
+    } else {
+      res.invalid_list.push(field_name);
+    }
+  }
+  let valid = res.valid_list;
+  let invalid = res.invalid_list.reduce((acc, field_name) => {
+    let item = invalid_errors[field_name];
+    let message = item;
+    if (typeof item !== "string") {
+      message = item.reduce((_acc, { keyword, message }, index) => {
+        if (!_acc) {
+          _acc = message;
+        } else {
+          _acc += `,${message}`;
+        }
+        if (item.length === index - 1) {
+          _acc += "。";
+        }
+        return _acc;
+      }, "");
+    }
+    acc.push({ field_name, message });
+    return acc;
+  }, []);
+  console.log({ valid, invalid });
+  return { valid, invalid };
+
   if (invalid_errors.hasOwnProperty(AJV.FIELD_NAME.TOP)) {
     let top = invalid_errors[AJV.FIELD_NAME.TOP];
     let res = Object.entries(top).reduce(

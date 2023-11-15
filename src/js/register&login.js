@@ -185,43 +185,59 @@ window.addEventListener("load", async () => {
         targetInput.validated = true;
         //  更新payload內的表格數據
         let $form = $(el_form);
-        let data = { invalid_errors: undefined, valid_inputs: [] };
-        let payload;
-        if (targetInputName === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
-          let el_email = $form
-            .find(`[name=${PAGE_REGISTER_LOGIN.NAME.EMAIL}]`)
-            .get(0);
-          payload = { email: el_email.value };
-          let errors = await $$validate_isEmailExist(payload);
-          if (errors) {
-            data.invalid_errors = errors;
-          } else {
-            data.valid_inputs.push(el_email);
+        let payload = {};
+        for (let input of $form[0]) {
+          console.log(input);
+          if (input.type === "submit") {
+            continue;
           }
-        } else {
-          let el_password = $form
-            .find(`[name=${PAGE_REGISTER_LOGIN.NAME.PASSWORD}]`)
-            .get(0);
-          let el_password_again = $form
-            .find(`[name=${PAGE_REGISTER_LOGIN.NAME.PASSWORD_AGAIN}]`)
-            .get(0);
-          payload = {
-            password: el_password.value,
-            password_again: el_password_again.value,
-          };
-          let errors = await $$validate_passwordAndAgain(payload);
-          let valid_input_set = new Set([el_password, el_password_again]);
-          if (errors) {
-            data.invalid_errors = errors;
-            if (errors.password) {
-              valid_input_set.delete(el_password);
-            }
-            if (errors.password_again) {
-              valid_input_set.delete(el_password_again);
-            }
-          }
-          data.valid_inputs = [...valid_input_set];
+          payload[input.name] = input.value;
         }
+
+        // let data = { invalid_errors: undefined, valid_inputs: [] };
+        // let payload;
+        let valid_res;
+        let ignore_list;
+        if (targetInputName === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
+          // let el_email = $form
+          //   .find(`[name=${PAGE_REGISTER_LOGIN.NAME.EMAIL}]`)
+          //   .get(0);
+          // payload = { email: el_email.value };
+          valid_res = await $$validate_isEmailExist(payload);
+          ignore_list = ["password", "password_again"];
+          // if (errors) {
+          //   data.invalid_errors = errors;
+          // } else {
+          //   data.valid_inputs.push(el_email);
+          // }
+        } else {
+          // let el_password = $form
+          //   .find(`[name=${PAGE_REGISTER_LOGIN.NAME.PASSWORD}]`)
+          //   .get(0);
+          // let el_password_again = $form
+          //   .find(`[name=${PAGE_REGISTER_LOGIN.NAME.PASSWORD_AGAIN}]`)
+          //   .get(0);
+          // payload = {
+          //   password: el_password.value,
+          //   password_again: el_password_again.value,
+          // };
+          valid_res = await $$validate_passwordAndAgain(payload);
+          ignore_list = ["email"];
+          // let valid_input_set = new Set([el_password, el_password_again]);
+          // if (errors) {
+          //   data.invalid_errors = errors;
+          //   if (errors.password) {
+          //     valid_input_set.delete(el_password);
+          //   }
+          //   if (errors.password_again) {
+          //     valid_input_set.delete(el_password_again);
+          //   }
+          // }
+          // data.valid_inputs = [...valid_input_set];
+        }
+        let x = $C_ajv.parseErrorsToForm(valid_res, payload, ignore_list);
+        console.log(x);
+        return;
         register_payload = { ...register_payload, ...payload };
         feedback_for_Form.update(data);
         return;
@@ -287,7 +303,7 @@ window.addEventListener("load", async () => {
             }
           }
           if (invalid_errors) {
-            let validateErrs = parseErrorsToForm(invalid_errors);
+            let validateErrs = $C_ajv.parseErrorsToForm(invalid_errors);
             /* 無效表格值的提醒 */
             for (let inputName in validateErrs) {
               if (inputName === AJV.FIELD_NAME.TOP) {
