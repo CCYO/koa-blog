@@ -93,10 +93,8 @@ function init_errors(invalid_errors) {
         let param = AJV.ERROR_PARAMS[origin_keyword];
         let field_name = origin_params[param];
         let item = _acc.find((item) => {
-          console.log("x=> ", item, origin_keyword);
           return item.keyword === origin_keyword;
         });
-        console.log("@item =>");
         if (!item) {
           item = { keyword: origin_keyword, list: [field_name], message };
           _acc.push(item);
@@ -122,7 +120,7 @@ function init_errors(invalid_errors) {
 }
 
 function parseErrorsToForm(invalid_errors, data, ignore_list = []) {
-  let valid_list = [];
+  let valid_list = Object.keys(data);
   let invalid_list = [];
   if (invalid_errors) {
     let top_errors = invalid_errors[AJV.FIELD_NAME.TOP]
@@ -135,20 +133,26 @@ function parseErrorsToForm(invalid_errors, data, ignore_list = []) {
       }
     }
     delete invalid_errors[AJV.FIELD_NAME.TOP];
+    for (let field_name in invalid_errors) {
+      valid_list = valid_list.filter((key) => key !== field_name);
+    }
   }
+
   if (ignore_list.length) {
     for (let field_name of ignore_list) {
       delete data[field_name];
+      valid_list = valid_list.filter((item) => item !== field_name);
+      delete invalid_errors[field_name];
     }
-    let keys = Object.keys(data);
-    for (let field_name of keys) {
-      let valid = !invalid_errors
-        ? true
-        : !invalid_errors.hasOwnProperty(field_name);
-      if (valid) {
-        valid_list.push(field_name);
-      }
-    }
+    // let keys = Object.keys(data);
+    // for (let field_name of keys) {
+    //   let valid = !invalid_errors
+    //     ? true
+    //     : !invalid_errors.hasOwnProperty(field_name);
+    //   if (valid) {
+    //     valid_list.push(field_name);
+    //   }
+    // }
   }
   if (invalid_errors) {
     for (let field_name in invalid_errors) {
@@ -174,6 +178,7 @@ function parseErrorsToForm(invalid_errors, data, ignore_list = []) {
       invalid_list.push({ field_name, message: error_message });
     }
   }
+  // valid_list = Object.keys(data);
   return { data, valid_list, invalid_list };
 
   for (let field_name of ignore_list) {

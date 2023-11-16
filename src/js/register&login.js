@@ -184,62 +184,23 @@ window.addEventListener("load", async () => {
         let targetInputName = targetInput.name;
         targetInput.validated = true;
         //  更新payload內的表格數據
-        let $form = $(el_form);
+        let $input_list = $(e.target).parents("fieldset").find("input");
         let payload = {};
-        for (let input of $form[0]) {
-          console.log(input);
-          if (input.type === "submit") {
-            continue;
-          }
+        for (let input of $input_list) {
           payload[input.name] = input.value;
         }
-
-        // let data = { invalid_errors: undefined, valid_inputs: [] };
-        // let payload;
         let valid_res;
-        let ignore_list;
         if (targetInputName === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
-          // let el_email = $form
-          //   .find(`[name=${PAGE_REGISTER_LOGIN.NAME.EMAIL}]`)
-          //   .get(0);
-          // payload = { email: el_email.value };
           valid_res = await $$validate_isEmailExist(payload);
-          ignore_list = ["password", "password_again"];
-          // if (errors) {
-          //   data.invalid_errors = errors;
-          // } else {
-          //   data.valid_inputs.push(el_email);
-          // }
         } else {
-          // let el_password = $form
-          //   .find(`[name=${PAGE_REGISTER_LOGIN.NAME.PASSWORD}]`)
-          //   .get(0);
-          // let el_password_again = $form
-          //   .find(`[name=${PAGE_REGISTER_LOGIN.NAME.PASSWORD_AGAIN}]`)
-          //   .get(0);
-          // payload = {
-          //   password: el_password.value,
-          //   password_again: el_password_again.value,
-          // };
           valid_res = await $$validate_passwordAndAgain(payload);
-          ignore_list = ["email"];
-          // let valid_input_set = new Set([el_password, el_password_again]);
-          // if (errors) {
-          //   data.invalid_errors = errors;
-          //   if (errors.password) {
-          //     valid_input_set.delete(el_password);
-          //   }
-          //   if (errors.password_again) {
-          //     valid_input_set.delete(el_password_again);
-          //   }
-          // }
-          // data.valid_inputs = [...valid_input_set];
         }
-        let x = $C_ajv.parseErrorsToForm(valid_res, payload, ignore_list);
-        console.log(x);
-        return;
+        let { data, invalid_list, valid_list } = $C_ajv.parseErrorsToForm(
+          valid_res,
+          payload
+        );
         register_payload = { ...register_payload, ...payload };
-        feedback_for_Form.update(data);
+        feedback_for_Form.update({ invalid_list, valid_list });
         return;
       }
     }
@@ -253,11 +214,20 @@ window.addEventListener("load", async () => {
       /* 管理form可否submit的鎖 */
       class Lock {
         constructor(form, not_required) {
+          let $form = $(form);
           this.form = form;
-          this.not_required = not_required;
+          let $input_list = $form.find("input");
+          this.input_list = [];
+          this.not_required = [];
+          for (let input of $input_list) {
+            this.input_list.push(input);
+            if (!input.required) {
+              this.not_required.push(input.name);
+            }
+          }
           this.lock = new Set();
           //  lock.size === 0 則解鎖
-          this.$submit = undefined;
+          this.$submit = $form.find("[type=submit]").eq(0);
           //  submit的jq_ele
           this.reset();
         }
@@ -274,13 +244,9 @@ window.addEventListener("load", async () => {
         }
         reset() {
           //  除了submit_ele以外的input
-          for (let input of this.form) {
+          for (let input of this.input_list) {
             const { name, type } = input;
-            if (type === "submit") {
-              this.$submit = $(input);
-            } else if (
-              !this.not_required.some((field_name) => field_name === name)
-            ) {
+            if (!this.not_required.some((field_name) => field_name === name)) {
               this.lock.add(name);
             }
           }
@@ -288,7 +254,37 @@ window.addEventListener("load", async () => {
           this.checkSubmit();
         }
         update(data) {
-          let { invalid_errors, valid_inputs } = data;
+          // let { invalid_errors, valid_inputs } = data;
+          let { valid_list, invalid_list } = data;
+          if (valid_list.length) {
+            for (let field_name of valid_list) {
+              let input = $(form).find(`input[name=${field_name}]`).get(0);
+              if (!input.validated) {
+                continue;
+              }
+              //  已標示，代表未曾驗證過，那就不需要顯示提醒
+              this.lock.delete(field_name);
+              $M_UI.feedback(2, input, true);
+            }
+          }
+          if (invalid_list.length) {
+            // let validateErrs = $C_ajv.parseErrorsToForm(invalid_errors);
+            /* 無效表格值的提醒 */
+            for (let { field_name, message } of invalid_list) {
+              console.log(field_name, message);
+              let input = $(form).find(`input[name=${field_name}]`).get(0);
+              if (!input.validated) {
+                continue;
+              }
+              this.lock.add(field_name);
+              $M_UI.feedback(2, input, false, message);
+              //  若該非法表格未標記 has_debHandle，則替其inputEvent綁定驗證表格值的handle
+            }
+          }
+          this.checkSubmit();
+          console.log("@lock => ", [...this.lock]);
+          return;
+
           if (valid_inputs.length) {
             /* 有效表格值的提醒 */
             for (let input of valid_inputs) {

@@ -12,8 +12,10 @@ async function validate(schema, data, parentSchema, dataCtx) {
   if (!errno) {
     return true;
   }
-  let errors = [{ keyword, myKeyword, message: msg[key] }];
-  throw new Ajv.ValidationError(errors);
+  let errors = [{ keyword }];
+  let params = { errors };
+  let invalid_errors = [{ keyword: "myKeyword", params, message: msg[key] }];
+  throw new Ajv.ValidationError(invalid_errors);
 }
 
 export default {

@@ -2,9 +2,9 @@ import { AJV } from "../../../../../config/constant";
 
 const keyword = "_required";
 const message = "必填";
-let valid = true;
-let errors = undefined;
 function validate(schema, data, parentSchema, dataCtx) {
+  let valid = true;
+  let errors = undefined;
   let data_keys = Object.keys(data);
   let invalid_properties = schema.filter((property) => {
     return !data_keys.some((key) => key === property);
