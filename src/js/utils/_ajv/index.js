@@ -47,6 +47,7 @@ export default class extends Ajv2019 {
 }
 
 async function check(data) {
+  console.log(data);
   try {
     let validate = this;
     if (validate.$async) {

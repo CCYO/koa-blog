@@ -16,10 +16,12 @@ export default {
       $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again`,
     },
   },
-  _required: ["password", "password_again"],
+  required: ["password", "password_again"],
+  _notEmpty: ["password", "password_again"],
   additionalProperties: false,
   errorMessage: {
     type: "必須是object",
     additionalProperties: "屬於非法數據",
+    required: "缺少此數據",
   },
 };

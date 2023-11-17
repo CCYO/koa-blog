@@ -28,7 +28,7 @@ export default function (status, targetEl, valid, msg = "") {
   } else if (status === 4) {
     //  清空form
     for (let inp of targetEl) {
-      if (inp.tagName !== "input") {
+      if (inp.tagName !== "INPUT") {
         continue;
       }
       inp.value = "";

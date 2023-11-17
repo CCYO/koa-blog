@@ -16,5 +16,12 @@ export default {
       $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
     },
   },
-  _required: ["email", "password"],
+  required: ["email", "password"],
+  _notEmpty: ["email", "password"],
+  additionalProperties: false,
+  errorMessage: {
+    type: "必須是object",
+    additionalProperties: "屬於非法數據",
+    required: "缺少此數據",
+  },
 };

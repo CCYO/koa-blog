@@ -1,6 +1,5 @@
 import Ajv from "ajv";
 const keyword = "isEmailExist";
-const myKeyword = true;
 async function validate(schema, data, parentSchema, dataCtx) {
   if (!schema) {
     return true;

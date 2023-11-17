@@ -14,7 +14,14 @@ export default {
         $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
       },
     },
-    _required: ["email"],
+    _notEmpty: ["email"],
+    required: ["email"],
+    additionalProperties: false,
+    errorMessage: {
+      type: "必須是object",
+      additionalProperties: "屬於非法數據",
+      required: "缺少此數據",
+    },
   },
   then: {
     type: "object",
@@ -24,16 +31,8 @@ export default {
         isEmailExist: true,
       },
     },
-    additionalProperties: false,
-    errorMessage: {
-      type: "必須是object",
-      additionalProperties: "屬於非法數據",
-    },
   },
   else: {
     $ref: "#/if",
-  },
-  errorMessage: {
-    type: "必須是object",
   },
 };

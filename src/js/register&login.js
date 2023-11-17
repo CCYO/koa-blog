@@ -91,7 +91,7 @@ window.addEventListener("load", async () => {
     /* 初始化 Register Form 功能 */
     function initLoginFn(form_id) {
       let form = document.querySelector(form_id);
-      let payload = {};
+      let login_payload = {};
       let feedback_for_Form = gen_feedback_for_Form(form);
       deb_eventHandle(
         `#${PAGE_REGISTER_LOGIN.ID.LOGIN_FORM} input`,
@@ -102,41 +102,56 @@ window.addEventListener("load", async () => {
       /* 登入表單 submit Event handler */
       async function handle_submit_login(e) {
         e.preventDefault();
-        let validateErrs = await $$validate_login(payload);
-        //  校驗
-        if (validateErrs) {
-          payload = {};
-          alert(PAGE_REGISTER_LOGIN.LOGIN.FAIL_MSG);
-          location.reload();
-          return;
-        }
-        //  處理校驗錯誤
-        /* 送出請求 */
-        /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-        let { errno } = await $$axios.post(
-          PAGE_REGISTER_LOGIN.API.LOGIN,
-          payload
+        let validate_res = await $$validate_login(login_payload);
+        let { invalid_list } = $C_ajv.parseErrorsToForm(
+          validate_res,
+          login_payload
         );
-        if (!errno) {
-          alert(PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_SUCCESS);
-          $M_redirForm(PAGE_REGISTER_LOGIN.API.LOGIN_SUCCESS);
-          return;
+
+        let axios_response = undefined;
+        //  校驗
+        if (!invalid_list.length) {
+          /* 送出請求 */
+          /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
+          axios_response = await $$axios.post(
+            PAGE_REGISTER_LOGIN.API.LOGIN,
+            login_payload
+          );
+          if (!axios_response.errno) {
+            alert(PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_SUCCESS);
+            $M_redirForm(PAGE_REGISTER_LOGIN.API.LOGIN_SUCCESS);
+            return;
+          }
         }
-        alert(PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_FAIL);
+        let alert_message = PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_FAIL;
+        login_payload = {};
+        feedback_for_Form.reset();
+        if (axios_response) {
+          alert_message = `${PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_FAIL}: ${axios_response.msg}`;
+        }
+        alert(alert_message);
+        return;
       }
       /* 登入表單內容表格的 input Event handler */
       async function handle_input_login(e) {
         e.preventDefault();
         //  LOGIN
-        let targetInput = e.target;
-        let targetInputName = targetInput.name;
-        let targetInputValue = targetInput.value;
         e.target.validated = true;
-        //  指向$$payload裡對應的數據對象
-        payload[targetInputName] = targetInputValue;
+        let payload = {};
+        for (let { type, name, value } of form) {
+          if (type === "submit") {
+            continue;
+          }
+          payload[name] = value;
+        }
         //  更新payload內的表格數據
-        let validateErrs = await $$validate_login(payload, false);
-        feedback_for_Form(validateErrs);
+        let validate_res = await $$validate_login(payload);
+        let { data, invalid_list, valid_list } = $C_ajv.parseErrorsToForm(
+          validate_res,
+          payload
+        );
+        login_payload = { ...login_payload, ...data };
+        feedback_for_Form.update({ invalid_list, valid_list });
         return;
       }
     }
@@ -154,25 +169,27 @@ window.addEventListener("load", async () => {
       /* 註冊表單 submit Event handler */
       async function handle_submit_register(e) {
         e.preventDefault();
-        let validateErrs = await $$validate_register(register_payload);
-        //  校驗
-        if (validateErrs) {
-          register_payload = {};
-          alert(PAGE_REGISTER_LOGIN.REGISTER.FAIL_MSG);
-          feedback_for_Form.reset();
-          return;
-        }
-        /* 送出請求 */
-        /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-        let { errno } = await $$axios.post(
-          PAGE_REGISTER_LOGIN.API.REGISTER,
-          payload
+        let validate_res = await $$validate_register(register_payload);
+        let { invalid_list } = $C_ajv.parseErrorsToForm(
+          validate_res,
+          register_payload
         );
-        if (!errno) {
-          alert(PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_SUCCESS);
-          location.href = PAGE_REGISTER_LOGIN.API.REGISTER_SUCCESS;
-          return;
+        //  校驗
+        if (!invalid_list.length) {
+          /* 送出請求 */
+          /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
+          let { errno } = await $$axios.post(
+            PAGE_REGISTER_LOGIN.API.REGISTER,
+            register_payload
+          );
+          if (!errno) {
+            alert(PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_SUCCESS);
+            location.href = PAGE_REGISTER_LOGIN.API.REGISTER_SUCCESS;
+            return;
+          }
         }
+        register_payload = {};
+        feedback_for_Form.reset();
         alert(PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_FAIL);
         return;
       }
@@ -186,20 +203,20 @@ window.addEventListener("load", async () => {
         //  更新payload內的表格數據
         let $input_list = $(e.target).parents("fieldset").find("input");
         let payload = {};
-        for (let input of $input_list) {
-          payload[input.name] = input.value;
+        for (let { name, value } of $input_list) {
+          payload[name] = value;
         }
-        let valid_res;
+        let validate_res;
         if (targetInputName === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
-          valid_res = await $$validate_isEmailExist(payload);
+          validate_res = await $$validate_isEmailExist(payload);
         } else {
-          valid_res = await $$validate_passwordAndAgain(payload);
+          validate_res = await $$validate_passwordAndAgain(payload);
         }
         let { data, invalid_list, valid_list } = $C_ajv.parseErrorsToForm(
-          valid_res,
+          validate_res,
           payload
         );
-        register_payload = { ...register_payload, ...payload };
+        register_payload = { ...register_payload, ...data };
         feedback_for_Form.update({ invalid_list, valid_list });
         return;
       }
@@ -213,7 +230,7 @@ window.addEventListener("load", async () => {
     function gen_feedback_for_Form(form, not_required = []) {
       /* 管理form可否submit的鎖 */
       class Lock {
-        constructor(form, not_required) {
+        constructor(form) {
           let $form = $(form);
           this.form = form;
           let $input_list = $form.find("input");
@@ -246,6 +263,7 @@ window.addEventListener("load", async () => {
           //  除了submit_ele以外的input
           for (let input of this.input_list) {
             const { name, type } = input;
+            input.validated = false;
             if (!this.not_required.some((field_name) => field_name === name)) {
               this.lock.add(name);
             }
