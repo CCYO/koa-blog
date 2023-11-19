@@ -102,11 +102,11 @@ window.addEventListener("load", async () => {
       /* 登入表單 submit Event handler */
       async function handle_submit_login(e) {
         e.preventDefault();
-        let validate_res = await $$validate_login(login_payload);
-        let { invalid_list } = $C_ajv.parseErrorsToForm(
-          validate_res,
-          login_payload
-        );
+        let validated_list = await $$validate_login(login_payload);
+        // let { invalid_list } = $C_ajv.parseErrorsToForm(
+        //   validated_list,
+        //   login_payload
+        // );
 
         let axios_response = undefined;
         //  校驗
@@ -142,16 +142,11 @@ window.addEventListener("load", async () => {
           if (type === "submit") {
             continue;
           }
-          payload[name] = value;
+          login_payload[name] = value;
         }
         //  更新payload內的表格數據
-        let validate_res = await $$validate_login(payload);
-        let { data, invalid_list, valid_list } = $C_ajv.parseErrorsToForm(
-          validate_res,
-          payload
-        );
-        login_payload = { ...login_payload, ...data };
-        feedback_for_Form.update({ invalid_list, valid_list });
+        let validated_list = await $$validate_login(login_payload);
+        feedback_for_Form.update(validated_list);
         return;
       }
     }
@@ -169,11 +164,7 @@ window.addEventListener("load", async () => {
       /* 註冊表單 submit Event handler */
       async function handle_submit_register(e) {
         e.preventDefault();
-        let validate_res = await $$validate_register(register_payload);
-        let { invalid_list } = $C_ajv.parseErrorsToForm(
-          validate_res,
-          register_payload
-        );
+        let validated_list = await $$validate_register(register_payload);
         //  校驗
         if (!invalid_list.length) {
           /* 送出請求 */
@@ -204,20 +195,15 @@ window.addEventListener("load", async () => {
         let $input_list = $(e.target).parents("fieldset").find("input");
         let payload = {};
         for (let { name, value } of $input_list) {
-          payload[name] = value;
+          register_payload[name] = value;
         }
-        let validate_res;
+        let validated_list;
         if (targetInputName === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
-          validate_res = await $$validate_isEmailExist(payload);
+          validated_list = await $$validate_isEmailExist(register_payload);
         } else {
-          validate_res = await $$validate_passwordAndAgain(payload);
+          validated_list = await $$validate_passwordAndAgain(register_payload);
         }
-        let { data, invalid_list, valid_list } = $C_ajv.parseErrorsToForm(
-          validate_res,
-          payload
-        );
-        register_payload = { ...register_payload, ...data };
-        feedback_for_Form.update({ invalid_list, valid_list });
+        feedback_for_Form.update(validated_list);
         return;
       }
     }
@@ -271,66 +257,20 @@ window.addEventListener("load", async () => {
           $M_UI.feedback(4, this.form);
           this.checkSubmit();
         }
-        update(data) {
-          // let { invalid_errors, valid_inputs } = data;
-          let { valid_list, invalid_list } = data;
-          if (valid_list.length) {
-            for (let field_name of valid_list) {
-              let input = $(form).find(`input[name=${field_name}]`).get(0);
-              if (!input.validated) {
-                continue;
-              }
-              //  已標示，代表未曾驗證過，那就不需要顯示提醒
+        update(validated_list) {
+          for (let { valid, field_name, message } of validated_list) {
+            let input = $(form).find(`input[name=${field_name}]`).get(0);
+            //  ↓ 未曾驗證過，那就不需要顯示提醒
+            if (!input.validated) {
+              continue;
+            }
+            //  處理驗證成功的lock數據以及表格提醒
+            if (valid) {
               this.lock.delete(field_name);
               $M_UI.feedback(2, input, true);
-            }
-          }
-          if (invalid_list.length) {
-            // let validateErrs = $C_ajv.parseErrorsToForm(invalid_errors);
-            /* 無效表格值的提醒 */
-            for (let { field_name, message } of invalid_list) {
-              console.log(field_name, message);
-              let input = $(form).find(`input[name=${field_name}]`).get(0);
-              if (!input.validated) {
-                continue;
-              }
+            } else {
               this.lock.add(field_name);
               $M_UI.feedback(2, input, false, message);
-              //  若該非法表格未標記 has_debHandle，則替其inputEvent綁定驗證表格值的handle
-            }
-          }
-          this.checkSubmit();
-          console.log("@lock => ", [...this.lock]);
-          return;
-
-          if (valid_inputs.length) {
-            /* 有效表格值的提醒 */
-            for (let input of valid_inputs) {
-              let { validated, name } = input;
-              if (!validated) {
-                //  如果未標示，代表未曾驗證過，那就不需要顯示提醒
-                continue;
-              }
-              //  已標示，代表未曾驗證過，那就不需要顯示提醒
-              this.lock.delete(name);
-              $M_UI.feedback(2, input, true);
-            }
-          }
-          if (invalid_errors) {
-            let validateErrs = $C_ajv.parseErrorsToForm(invalid_errors);
-            /* 無效表格值的提醒 */
-            for (let inputName in validateErrs) {
-              if (inputName === AJV.FIELD_NAME.TOP) {
-                continue;
-              }
-              let input = $(form).find(`input[name=${inputName}]`).get(0);
-              if (!input.validated) {
-                continue;
-              }
-              let msg = validateErrs[inputName];
-              this.lock.add(inputName);
-              $M_UI.feedback(2, input, false, msg.feedback);
-              //  若該非法表格未標記 has_debHandle，則替其inputEvent綁定驗證表格值的handle
             }
           }
           this.checkSubmit();

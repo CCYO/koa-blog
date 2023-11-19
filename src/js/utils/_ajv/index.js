@@ -46,19 +46,22 @@ export default class extends Ajv2019 {
   static parseErrorsToForm = parseErrorsToForm;
 }
 
-async function check(data) {
-  console.log(data);
+async function check(data, ignore_list = []) {
+  console.log("@data => ", data);
+  let errors = undefined;
   try {
     let validate = this;
     if (validate.$async) {
-      await validate(data);
+      errors = await validate(data);
     } else if (!validate(data)) {
       throw new Ajv2019.ValidationError(validate.errors);
     }
-    return null;
+    errors = null;
   } catch (invalid_error) {
-    return init_errors(invalid_error.errors);
+    errors = init_errors(invalid_error.errors);
   }
+  console.log("@errors => ", errors);
+  return parseErrorsToForm(errors, data, ignore_list);
 }
 
 function init_errors(invalid_errors) {
@@ -77,18 +80,19 @@ function init_errors(invalid_errors) {
       message,
       //  ajv-errors針對當前錯誤設定錯誤提示，或是原生錯誤提醒
     } = invalid_error;
+    //  ↓ 忽略未自定義message的校驗錯誤
     if (keyword !== "errorMessage" && keyword !== "myKeyword") {
       console.log(`keyword: ${keyword} 沒有預定義錯誤訊息，故忽略`);
       return acc;
     }
     let key;
     let { errors } = params;
+    //  ↓ 處理 JSON Pointer 一級 object 角度來說，(properties之上)最高級別的校驗錯誤
     if (!instancePath) {
       key = AJV.FIELD_NAME.TOP;
       if (!acc[key]) {
         acc[key] = [];
       }
-      console.log("@errors => ", errors);
       errors.reduce((_acc, error) => {
         let { keyword: origin_keyword, params: origin_params } = error;
         let param = AJV.ERROR_PARAMS[origin_keyword];
@@ -104,8 +108,7 @@ function init_errors(invalid_errors) {
         }
         return _acc;
       }, acc[key]);
-
-      // acc[key].concat(top_errors);
+      //  ↓ 處理 JSON Pointer 一級 object 角度來說，properties級別的校驗錯誤
     } else {
       let key = instancePath.split("/").pop();
       let { keyword: origin_keyword } = errors[0];
@@ -121,9 +124,12 @@ function init_errors(invalid_errors) {
 }
 
 function parseErrorsToForm(invalid_errors, data, ignore_list = []) {
+  let res_list = [];
+  //  先將傳入的 data properties 皆視為 valid，待會進行過濾
   let valid_list = Object.keys(data);
   let invalid_list = [];
   if (invalid_errors) {
+    //  ↓ 處理 JSON Pointer 一級 object 角度來說，(properties之上)最高級別的校驗錯誤
     let top_errors = invalid_errors[AJV.FIELD_NAME.TOP]
       ? invalid_errors[AJV.FIELD_NAME.TOP]
       : [];
@@ -134,38 +140,31 @@ function parseErrorsToForm(invalid_errors, data, ignore_list = []) {
       }
     }
     delete invalid_errors[AJV.FIELD_NAME.TOP];
+    //  ↓ 將校驗錯誤的property從valid_list過濾出來
     for (let field_name in invalid_errors) {
       valid_list = valid_list.filter((key) => key !== field_name);
     }
   }
-
+  //  ↓ 從 invalid_errors 與 valid_list 過濾掉 ignore_list
   if (ignore_list.length) {
     for (let field_name of ignore_list) {
-      delete data[field_name];
       valid_list = valid_list.filter((item) => item !== field_name);
       delete invalid_errors[field_name];
     }
-    // let keys = Object.keys(data);
-    // for (let field_name of keys) {
-    //   let valid = !invalid_errors
-    //     ? true
-    //     : !invalid_errors.hasOwnProperty(field_name);
-    //   if (valid) {
-    //     valid_list.push(field_name);
-    //   }
-    // }
   }
+
+  let valid;
+  //  ↓ 從 valid_errors 整理出校驗錯誤的各別結果給 res_list
   if (invalid_errors) {
+    valid = false;
     for (let field_name in invalid_errors) {
-      if (ignore_list && ignore_list.includes(field_name)) {
-        delete invalid_errors[field_name];
-        continue;
-      }
       let errors = invalid_errors[field_name];
+      //  ↓ 若是 JSON Pointer 一級 object 定義的最高級別錯誤，在先前已被處理為錯誤 string
       if (typeof errors === "string") {
-        invalid_list.push({ field_name, message: errors });
+        res_list.push({ valid, field_name, message: errors });
         continue;
       }
+      //  處理 JSON Pointer 一級 object 最高級別以下各個property的錯誤訊息
       let error_message = errors.reduce((acc, { message }, index) => {
         if (!index) {
           return message;
@@ -176,96 +175,16 @@ function parseErrorsToForm(invalid_errors, data, ignore_list = []) {
         }
         return acc;
       }, "");
-      invalid_list.push({ field_name, message: error_message });
+      res_list.push({ valid, field_name, message: error_message });
     }
   }
-  // valid_list = Object.keys(data);
-  return { data, valid_list, invalid_list };
-
-  for (let field_name of ignore_list) {
-    //  data去掉ignore_list
-    delete data[field_name];
-    //  invalid_errors去掉ignore_list
-    delete invalid_errors[field_name];
-  }
-
-  let res = {
-    valid_list: [],
-    invalid_list: [],
-  };
-  for (let field_name in data) {
-    if (!invalid_errors[field_name]) {
-      res.valid_list.push(field_name);
-    } else {
-      res.invalid_list.push(field_name);
+  if (valid_list.length) {
+    valid = true;
+    for (let field_name of valid_list) {
+      res_list.push({ field_name, valid });
     }
   }
-  let valid = res.valid_list;
-  let invalid = res.invalid_list.reduce((acc, field_name) => {
-    let item = invalid_errors[field_name];
-    let message = item;
-    if (typeof item !== "string") {
-      message = item.reduce((_acc, { keyword, message }, index) => {
-        if (!_acc) {
-          _acc = message;
-        } else {
-          _acc += `,${message}`;
-        }
-        if (item.length === index - 1) {
-          _acc += "。";
-        }
-        return _acc;
-      }, "");
-    }
-    acc.push({ field_name, message });
-    return acc;
-  }, []);
-  console.log({ valid, invalid });
-  return { valid, invalid };
 
-  if (invalid_errors.hasOwnProperty(AJV.FIELD_NAME.TOP)) {
-    let top = invalid_errors[AJV.FIELD_NAME.TOP];
-    let res = Object.entries(top).reduce(
-      (acc, [keyword, { list, message }]) => {
-        if (keyword === ajv_custom_keyword._required) {
-          for (let item of list) {
-            acc[item] = { [keyword]: message };
-          }
-        } else {
-          console.log(`忽略data發生的全局錯誤${keyword}`);
-        }
-        return acc;
-      },
-      {}
-    );
-    delete invalid_errors[AJV.FIELD_NAME.TOP];
-    invalid_errors = { ...invalid_errors, ...res };
-  }
-  return Object.entries(invalid_errors).reduce((res, [fieldName, KVpairs]) => {
-    let feedback_string = Object.entries(KVpairs).reduce(
-      (all_message, [keyword, message], index) => {
-        if (index > 0) {
-          all_message += ",";
-        }
-        return (all_message += message);
-      },
-      ""
-    );
-
-    if (!res[fieldName]) {
-      res[fieldName] = {};
-    }
-    let fieldName_tw = AJV.EN_TO_TW[fieldName]
-      ? AJV.EN_TO_TW[fieldName]
-      : fieldName;
-    res[fieldName] = {
-      get alert() {
-        return `【${fieldName_tw}】欄位值${feedback_string}`;
-      },
-      get feedback() {
-        return feedback_string;
-      },
-    };
-    return res;
-  }, {});
+  console.log("@res_list => ", res_list);
+  return res_list;
 }
