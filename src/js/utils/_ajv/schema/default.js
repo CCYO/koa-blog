@@ -141,7 +141,8 @@ export default {
           },
         },
       },
-      _required: ["blogImg_id", "blogImgAlt_list"],
+      required: ["blogImg_id", "blogImgAlt_list"],
+      _notEmpty: ["blogImg_id", "blogImgAlt_list"],
       additionalProperties: false,
       errorMessage: {
         type: "必須是object",

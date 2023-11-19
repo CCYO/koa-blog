@@ -38,13 +38,13 @@ import {
 } from "./utils";
 
 import twResources from "../locale/tw";
-import { feedback } from "./utils/ui";
+import { form_feedback } from "./utils/ui";
 import Debounce from "./utils/Debounce";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-import { AJV, SERVER, PAGE } from "../../config/constant";
+import { AJV, SERVER, PAGE, FORM_FEEDBACK } from "../../config/constant";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Const ------------------------------------------------------------------------------------ */
@@ -586,7 +586,7 @@ window.addEventListener("load", async () => {
       let msg;
       let errors = await validate(payload);
       //  驗證
-      feedback(3);
+      form_feedback(FORM_FEEDBACK.STATUS.CLEAR, e.target);
       //  清空提醒
       if (!errors || !errors[KEY]) {
         //  代表合法
@@ -625,7 +625,7 @@ window.addEventListener("load", async () => {
         //  恢復原標題
         errors[KEY].hasOwnProperty("diff") && (await validateAll());
         //  若驗證錯誤是與原值相同，則測試當前payload
-        return feedback(3, target);
+        return form_feedback(FORM_FEEDBACK.STATUS.CLEAR, target);
         //  移除非法提醒
       }
     }
@@ -638,7 +638,7 @@ window.addEventListener("load", async () => {
       if (!errors || !errors[KEY]) {
         $$payload.setKVpairs({ [KEY]: title });
         //  存入 payload
-        return feedback(2, target, true, "");
+        return form_feedback(FORM_FEEDBACK.STATUS.VALIDATED, target, true);
         //  合法提醒
       }
       const error = errors[KEY];
@@ -652,14 +652,14 @@ window.addEventListener("load", async () => {
       let msg;
       const values = Object.values(error);
       if (!values.length) {
-        return feedback(3, target);
+        return form_feedback(FORM_FEEDBACK.STATUS.CLEAR, target);
       } else if (values.length === 1) {
         msg = "文章標題" + values[0];
       } else {
         msg = "文章標題" + values.join(",");
       }
       //  若驗證錯誤是與原值相同，則測試當前payload
-      return feedback(2, target, false, msg);
+      return form_feedback(FORM_FEEDBACK.STATUS.VALIDATED, target, false, msg);
       //  顯示非法提醒
     }
 

@@ -15,22 +15,27 @@ export default {
       },
     },
     title: {
+      type: "string",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/title`,
       diff: { $data: "1/$$blog/title" },
     },
     html: {
+      type: "string",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/html`,
       diff: { $data: "1/$$blog/html" },
     },
     show: {
+      type: "boolean",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/show`,
       diff: { $data: "1/$$blog/show" },
     },
     cancelImgs: {
+      type: "string",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/cancelImgs`,
     },
   },
-  _required: ["$$blog"],
+  required: ["$$blog"],
+  _notEmpty: ["$$blog"],
   errorMessage: {
     minProperties: "至少需改一筆資料",
   },

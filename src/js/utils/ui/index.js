@@ -1,10 +1,7 @@
-import feedback from './feedback.js'
-import show from './show.js'
+import form_feedback from "./form_feedback.js";
+import show from "./show.js";
 export default {
-    feedback,
-    show
-}
-export {
-    feedback,
-    show
-}
+  form_feedback,
+  show,
+};
+export { form_feedback, show };

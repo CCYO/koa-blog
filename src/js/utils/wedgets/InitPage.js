@@ -1,6 +1,10 @@
 export default class {
   data = {};
   promises = [];
+
+  constructor($$axios) {
+    this.$$axios = $$axios;
+  }
   /**
    *
    * @param {*} otherInitFn 用來取得頁面初使化所需數據，通常都是異步請求函數
@@ -11,7 +15,9 @@ export default class {
   }
   async render(renderPage) {
     let allRes = await Promise.all(this.promises);
+
     for (let res of allRes) {
+      console.log("@res => ", res);
       for (let prop in res) {
         if (prop === "news") {
           //  省略news數據
@@ -21,6 +27,7 @@ export default class {
         //  將所有初始化頁面的函數結果，存放在瀏覽器
       }
     }
+    console.log("@this.data => ", this.data);
     if (renderPage) {
       await renderPage(this.data);
       //  渲染頁面的函數

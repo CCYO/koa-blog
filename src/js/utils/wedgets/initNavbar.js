@@ -375,7 +375,7 @@ export default async function ({ $$axios }) {
     //  綁定「讀取更多鈕」click handle → 獲取更多通知數據、同時更新公開數據與渲染葉面
     $("#logout").click(logout);
     //  綁定「登出鈕」click handle → 登出功能
-    debounce_autoReadMore.call();
+    debounce_autoReadMore.debounce();
     //  自動讀取更多
     async function logout(e) {
       let ready = confirm("真的要登出?");

@@ -67,7 +67,7 @@ window.addEventListener("load", async () => {
     //  幫助頁面初始化的統整函數
     await $C_initPage.addOtherInitFn($M_wedgets.initEJSData);
     //  初始化ejs
-    await $C_initPage.addOtherInitFn($M_wedgets.initNavbar);
+    await $C_initPage.addOtherInitFn(() => $M_wedgets.initNavbar({ $$axios }));
     //  初始化navbar
     await $C_initPage.render(initMain);
     //  統整頁面數據，並渲染需要用到統整數據的頁面內容

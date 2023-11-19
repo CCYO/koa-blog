@@ -16,21 +16,19 @@ import "../css/register&login.css";
 /* ------------------------------------------------------------------------------------------ */
 
 import {
-  ui as $M_UI,
-  Debounce as $M_Debounce,
   _ajv as $C_ajv,
   _axios as $C_axios,
-  wedgets as $M_wedgets,
+  Debounce as $M_Debounce,
   redirFrom as $M_redirForm,
+  ui as $M_UI,
+  wedgets as $M_wedgets,
 } from "./utils";
-
-import { ajv_custom_keyword } from "./utils/_ajv/keyword";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-import { AJV, PAGE } from "../../config/constant";
+import { AJV, PAGE, FORM_FEEDBACK } from "../../config/constant";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Const ------------------------------------------------------------------------------------ */
@@ -67,7 +65,6 @@ window.addEventListener("load", async () => {
     $C_backdrop.hidden();
     //  讀取完成，解除遮蔽
   } catch (error) {
-    let x = error;
     if (confirm("window load 時發生錯誤，前往錯誤原因頁面")) {
       location.href = `/errPage?errno=${encodeURIComponent(
         "???"
@@ -93,24 +90,16 @@ window.addEventListener("load", async () => {
       let form = document.querySelector(form_id);
       let login_payload = {};
       let feedback_for_Form = gen_feedback_for_Form(form);
-      deb_eventHandle(
-        `#${PAGE_REGISTER_LOGIN.ID.LOGIN_FORM} input`,
-        "input",
-        handle_input_login
-      );
+      deb_eventHandle(form, "input", handle_input_login);
       form.addEventListener("submit", handle_submit_login);
       /* 登入表單 submit Event handler */
       async function handle_submit_login(e) {
         e.preventDefault();
         let validated_list = await $$validate_login(login_payload);
-        // let { invalid_list } = $C_ajv.parseErrorsToForm(
-        //   validated_list,
-        //   login_payload
-        // );
-
         let axios_response = undefined;
         //  校驗
-        if (!invalid_list.length) {
+        let valid = !validated_list.some(({ valid }) => !valid);
+        if (valid) {
           /* 送出請求 */
           /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
           axios_response = await $$axios.post(
@@ -137,7 +126,6 @@ window.addEventListener("load", async () => {
         e.preventDefault();
         //  LOGIN
         e.target.validated = true;
-        let payload = {};
         for (let { type, name, value } of form) {
           if (type === "submit") {
             continue;
@@ -155,18 +143,14 @@ window.addEventListener("load", async () => {
       const el_form = document.querySelector(form_id);
       let register_payload = {};
       let feedback_for_Form = gen_feedback_for_Form(el_form);
-      deb_eventHandle(
-        `#${PAGE_REGISTER_LOGIN.ID.REGISTER_FORM} input`,
-        "input",
-        handle_input_register
-      );
+      deb_eventHandle(el_form, "input", handle_input_register);
       el_form.addEventListener("submit", handle_submit_register);
       /* 註冊表單 submit Event handler */
       async function handle_submit_register(e) {
         e.preventDefault();
         let validated_list = await $$validate_register(register_payload);
         //  校驗
-        if (!invalid_list.length) {
+        if (!validated_list.length) {
           /* 送出請求 */
           /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
           let { errno } = await $$axios.post(
@@ -195,13 +179,14 @@ window.addEventListener("load", async () => {
         let $input_list = $(e.target).parents("fieldset").find("input");
         let payload = {};
         for (let { name, value } of $input_list) {
-          register_payload[name] = value;
+          payload[name] = value;
         }
+        register_payload = { ...register_payload, ...payload };
         let validated_list;
         if (targetInputName === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
-          validated_list = await $$validate_isEmailExist(register_payload);
+          validated_list = await $$validate_isEmailExist(payload);
         } else {
-          validated_list = await $$validate_passwordAndAgain(register_payload);
+          validated_list = await $$validate_passwordAndAgain(payload);
         }
         feedback_for_Form.update(validated_list);
         return;
@@ -213,7 +198,7 @@ window.addEventListener("load", async () => {
     /* ------------------------------------------------------------------------------------------ */
 
     /* genFn => 處理校驗錯誤 ..............*/
-    function gen_feedback_for_Form(form, not_required = []) {
+    function gen_feedback_for_Form(form) {
       /* 管理form可否submit的鎖 */
       class Lock {
         constructor(form) {
@@ -254,7 +239,7 @@ window.addEventListener("load", async () => {
               this.lock.add(name);
             }
           }
-          $M_UI.feedback(4, this.form);
+          $M_UI.form_feedback(FORM_FEEDBACK.STATUS.RESET, this.form);
           this.checkSubmit();
         }
         update(validated_list) {
@@ -267,10 +252,15 @@ window.addEventListener("load", async () => {
             //  處理驗證成功的lock數據以及表格提醒
             if (valid) {
               this.lock.delete(field_name);
-              $M_UI.feedback(2, input, true);
+              $M_UI.form_feedback(FORM_FEEDBACK.STATUS.VALIDATED, input, true);
             } else {
               this.lock.add(field_name);
-              $M_UI.feedback(2, input, false, message);
+              $M_UI.form_feedback(
+                FORM_FEEDBACK.STATUS.VALIDATED,
+                input,
+                false,
+                message
+              );
             }
           }
           this.checkSubmit();
@@ -278,28 +268,23 @@ window.addEventListener("load", async () => {
           return;
         }
       }
-      return new Lock(form, not_required);
+      return new Lock(form);
       /* 藉由validateErrors，判斷form可否submit，並於input顯示校驗錯誤 */
     }
     /* 將事件做防抖動設置，並綁定事件 */
-    function deb_eventHandle(selectorOrEl, eventType, handle) {
-      let eles =
-        typeof selectorOrEl === "string"
-          ? document.querySelectorAll(selectorOrEl)
-          : [selectorOrEl];
-      for (let ele of eles) {
-        if (ele.has_debHandle) {
+    function deb_eventHandle(form, eventType, handle) {
+      for (let input of form) {
+        if (input.tagName !== "INPUT") {
           continue;
         }
-        ele.has_debHandle = true;
-        const deb_handle = new $M_Debounce(handle, {
-          loading: (e) => {
-            let input = e.target;
-            $M_UI.feedback(1, input);
-            $(input).parents("form").eq(0).prop("disabled", true);
-          },
+        function loading() {
+          $M_UI.form_feedback(FORM_FEEDBACK.STATUS.LOADING, input);
+          $(form).eq(0).prop("disabled", true);
+        }
+        const { debounce } = new $M_Debounce(handle, {
+          loading,
         });
-        ele.addEventListener(eventType, deb_handle.call);
+        input.addEventListener(eventType, debounce);
       }
     }
   }

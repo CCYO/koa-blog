@@ -28,7 +28,7 @@ export default {
     properties: {
       email: {
         type: "string",
-        isEmailExist: true,
+        _isEmailExist: true,
       },
     },
   },
