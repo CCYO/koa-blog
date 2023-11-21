@@ -1,5 +1,4 @@
 import axios from "axios";
-import LoadingBackdrop from "./wedgets/LoadingBackdrop";
 import * as ErrRes from "../../../server/model/errRes";
 
 export default class {

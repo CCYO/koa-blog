@@ -17,7 +17,6 @@ import "../css/register&login.css";
 
 import {
   _ajv as $C_ajv,
-  _axios as $C_axios,
   Debounce as $M_Debounce,
   redirFrom as $M_redirForm,
   ui as $M_UI,
@@ -41,251 +40,254 @@ const PAGE_REGISTER_LOGIN = PAGE.REGISTER_LOGIN;
 /* ------------------------------------------------------------------------------------------ */
 
 const $C_initPage = new $M_wedgets.InitPage();
-//  初始化頁面
-const $C_backdrop = new $M_wedgets.LoadingBackdrop();
-//  讀取遮罩
-const $$axios = new $C_axios({ backdrop: $C_backdrop });
-const $$ajv = new $C_ajv($$axios);
+let { utils: G_utils, data: G_data } = await $C_initPage.init();
+const $$ajv = new $C_ajv(G_utils.$$axios);
 
-let $$validate_login = $$ajv.get_validate(AJV.TYPE.LOGIN);
-let $$validate_register = $$ajv.get_validate(AJV.TYPE.REGISTER);
-let $$validate_passwordAndAgain = $$ajv.get_validate(AJV.TYPE.PASSOWRD_AGAIN);
-let $$validate_isEmailExist = $$ajv.get_validate(AJV.TYPE.IS_EMAIL_EXIST);
+let G_validate = {
+  login: $$ajv.get_validate(AJV.TYPE.LOGIN),
+  register: $$ajv.get_validate(AJV.TYPE.REGISTER),
+  passwordAndAgain: $$ajv.get_validate(AJV.TYPE.PASSOWRD_AGAIN),
+  isEmailExist: $$ajv.get_validate(AJV.TYPE.IS_EMAIL_EXIST),
+};
+
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 window.addEventListener("load", async () => {
-  try {
-    $C_backdrop.show({ blockPage: true });
-    //  讀取中，遮蔽畫面
-    await $C_initPage.addOtherInitFn(() => $M_wedgets.initNavbar({ $$axios }));
-    //  初始化navbar
-    await $C_initPage.render(initMain);
-    //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-    $C_backdrop.hidden();
-    //  讀取完成，解除遮蔽
-  } catch (error) {
-    if (confirm("window load 時發生錯誤，前往錯誤原因頁面")) {
-      location.href = `/errPage?errno=${encodeURIComponent(
-        "???"
-      )}&msg=${encodeURIComponent(error.message)}`;
+  await $C_initPage.render(initMain);
+  //  統整頁面數據，並渲染需要用到統整數據的頁面內容
+});
+
+/* 初始化頁面內容功能 */
+function initMain() {
+  initRegistFn(`#${PAGE_REGISTER_LOGIN.ID.REGISTER_FORM}`);
+  //  初始化 Register Form 功能
+  initLoginFn(`#${PAGE_REGISTER_LOGIN.ID.LOGIN_FORM}`);
+  //  初始化 Register Form 功能
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Init ------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------ */
+
+/* 初始化 Register Form 功能 */
+function initLoginFn(form_id) {
+  let form = document.querySelector(form_id);
+  let axios_payload = {};
+  //  依據 input 數據，自動判斷 form 可否開放 submit 功能
+  let lock = gen_form_lock(form);
+  //  將 input 的 inputEvent handler 進行 debounce 化，並註冊在所有 input 上
+  add_form_debounce_inputEvent_handler(form, handle_input_login);
+  form.addEventListener("submit", handle_submit_login);
+  /* 登入表單 submit Event handler */
+  async function handle_submit_login(e) {
+    e.preventDefault();
+    let alert_message = PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_FAIL;
+    let validated_list = await G_validate.login(axios_payload);
+    //  校驗 payload
+    let valid = !validated_list.some((item) => !item.valid);
+    //  當前進度是否順利
+    let status = valid;
+    if (valid) {
+      /* 送出請求 */
+      /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
+      let { errno, msg } = await G_utils.$$axios.post(
+        PAGE_REGISTER_LOGIN.API.LOGIN,
+        axios_payload
+      );
+      status = !errno;
+      alert_message = msg;
+    }
+    if (status) {
+      ////  請求成功
+      alert(PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_SUCCESS);
+      $M_redirForm(PAGE_REGISTER_LOGIN.API.LOGIN_SUCCESS);
     } else {
-      console.warn("↓↓↓ window load 報錯 ↓↓↓↓ ");
-      throw error;
+      ////  校驗失敗or請求失敗
+      //  重置 payload
+      axios_payload = {};
+      //  重置 lock
+      lock.reset();
+      alert(alert_message);
     }
+    return;
   }
-  /* 初始化頁面內容功能 */
-  function initMain() {
-    initRegistFn(`#${PAGE_REGISTER_LOGIN.ID.REGISTER_FORM}`);
-    //  初始化 Register Form 功能
-    initLoginFn(`#${PAGE_REGISTER_LOGIN.ID.LOGIN_FORM}`);
-    //  初始化 Register Form 功能
-
-    /* ------------------------------------------------------------------------------------------ */
-    /* Init ------------------------------------------------------------------------------------ */
-    /* ------------------------------------------------------------------------------------------ */
-
-    /* 初始化 Register Form 功能 */
-    function initLoginFn(form_id) {
-      let form = document.querySelector(form_id);
-      let login_payload = {};
-      let feedback_for_Form = gen_feedback_for_Form(form);
-      deb_eventHandle(form, "input", handle_input_login);
-      form.addEventListener("submit", handle_submit_login);
-      /* 登入表單 submit Event handler */
-      async function handle_submit_login(e) {
-        e.preventDefault();
-        let validated_list = await $$validate_login(login_payload);
-        let axios_response = undefined;
-        //  校驗
-        let valid = !validated_list.some(({ valid }) => !valid);
-        if (valid) {
-          /* 送出請求 */
-          /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-          axios_response = await $$axios.post(
-            PAGE_REGISTER_LOGIN.API.LOGIN,
-            login_payload
-          );
-          if (!axios_response.errno) {
-            alert(PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_SUCCESS);
-            $M_redirForm(PAGE_REGISTER_LOGIN.API.LOGIN_SUCCESS);
-            return;
-          }
-        }
-        let alert_message = PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_FAIL;
-        login_payload = {};
-        feedback_for_Form.reset();
-        if (axios_response) {
-          alert_message = `${PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_FAIL}: ${axios_response.msg}`;
-        }
-        alert(alert_message);
-        return;
+  /* 登入表單內容表格的 input Event handler */
+  async function handle_input_login(e) {
+    e.preventDefault();
+    //  LOGIN
+    e.target.validated = true;
+    for (let { type, name, value } of form) {
+      if (type === "submit") {
+        continue;
       }
-      /* 登入表單內容表格的 input Event handler */
-      async function handle_input_login(e) {
-        e.preventDefault();
-        //  LOGIN
-        e.target.validated = true;
-        for (let { type, name, value } of form) {
-          if (type === "submit") {
-            continue;
-          }
-          login_payload[name] = value;
-        }
-        //  更新payload內的表格數據
-        let validated_list = await $$validate_login(login_payload);
-        feedback_for_Form.update(validated_list);
-        return;
-      }
+      axios_payload[name] = value;
     }
-    /* 初始化 Register Form 功能 */
-    function initRegistFn(form_id) {
-      const el_form = document.querySelector(form_id);
-      let register_payload = {};
-      let feedback_for_Form = gen_feedback_for_Form(el_form);
-      deb_eventHandle(el_form, "input", handle_input_register);
-      el_form.addEventListener("submit", handle_submit_register);
-      /* 註冊表單 submit Event handler */
-      async function handle_submit_register(e) {
-        e.preventDefault();
-        let validated_list = await $$validate_register(register_payload);
-        //  校驗
-        if (!validated_list.length) {
-          /* 送出請求 */
-          /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-          let { errno } = await $$axios.post(
-            PAGE_REGISTER_LOGIN.API.REGISTER,
-            register_payload
-          );
-          if (!errno) {
-            alert(PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_SUCCESS);
-            location.href = PAGE_REGISTER_LOGIN.API.REGISTER_SUCCESS;
-            return;
-          }
-        }
-        register_payload = {};
-        feedback_for_Form.reset();
-        alert(PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_FAIL);
-        return;
-      }
-      /* 註冊表單內容表格的 input Event handler */
-      async function handle_input_register(e) {
-        e.preventDefault();
-        //  REGISTER
-        let targetInput = e.target;
-        let targetInputName = targetInput.name;
-        targetInput.validated = true;
-        //  更新payload內的表格數據
-        let $input_list = $(e.target).parents("fieldset").find("input");
-        let payload = {};
-        for (let { name, value } of $input_list) {
-          payload[name] = value;
-        }
-        register_payload = { ...register_payload, ...payload };
-        let validated_list;
-        if (targetInputName === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
-          validated_list = await $$validate_isEmailExist(payload);
-        } else {
-          validated_list = await $$validate_passwordAndAgain(payload);
-        }
-        feedback_for_Form.update(validated_list);
-        return;
-      }
+    //  更新payload內的表格數據
+    let validated_list = await G_validate.login(axios_payload);
+    lock.update(validated_list);
+    return;
+  }
+}
+/* 初始化 Register Form 功能 */
+function initRegistFn(form_id) {
+  const form = document.querySelector(form_id);
+  let axios_payload = {};
+  //  依據 input 數據，自動判斷 form 可否開放 submit 功能
+  let lock = gen_form_lock(form);
+  //  將 input 的 inputEvent handler 進行 debounce 化，並註冊在所有 input 上
+  add_form_debounce_inputEvent_handler(form, handle_input_register);
+  form.addEventListener("submit", handle_submit_register);
+  /* 註冊表單 submit Event handler */
+  async function handle_submit_register(e) {
+    e.preventDefault();
+    let alert_message = PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_SUCCESS;
+    //  校驗 payload
+    let validated_list = await G_validate.register(axios_payload);
+    let valid = !validated_list.some((item) => !item.valid);
+    //  當前進度是否順利
+    let status = valid;
+    if (valid) {
+      ////  校驗成功
+      let { errno } = await $$axios.post(
+        PAGE_REGISTER_LOGIN.API.REGISTER,
+        axios_payload
+      );
+      status = !errno;
+      alert_message = !status
+        ? PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_FAIL
+        : alert_message;
     }
+    if (status) {
+      ////  請求成功
+      alert(alert_message);
+      location.href = PAGE_REGISTER_LOGIN.API.REGISTER_SUCCESS;
+    } else {
+      ////  校驗失敗or請求失敗
+      //  重置 payload
+      axios_payload = {};
+      //  重置 lock
+      lock.reset();
+      alert(alert_message);
+    }
+    return status;
+  }
+  /* 註冊表單內容表格的 input Event handler */
+  async function handle_input_register(e) {
+    e.preventDefault();
+    //  REGISTER
+    let targetInput = e.target;
+    let targetInputName = targetInput.name;
+    targetInput.validated = true;
+    //  更新payload內的表格數據
+    let $input_list = $(e.target).parents("fieldset").find("input");
+    let payload = {};
+    for (let { name, value } of $input_list) {
+      payload[name] = value;
+    }
+    axios_payload = { ...axios_payload, ...payload };
+    let validated_list;
+    if (targetInputName === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
+      validated_list = await G_validate.isEmailExist(payload);
+    } else {
+      validated_list = await G_validate.passwordAndAgain(payload);
+    }
+    lock.update(validated_list);
+    return;
+  }
+}
 
-    /* ------------------------------------------------------------------------------------------ */
-    /* Utils ------------------------------------------------------------------------------------ */
-    /* ------------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------ */
+/* Utils ------------------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------------------------ */
 
-    /* genFn => 處理校驗錯誤 ..............*/
-    function gen_feedback_for_Form(form) {
-      /* 管理form可否submit的鎖 */
-      class Lock {
-        constructor(form) {
-          let $form = $(form);
-          this.form = form;
-          let $input_list = $form.find("input");
-          this.input_list = [];
-          this.not_required = [];
-          for (let input of $input_list) {
-            this.input_list.push(input);
-            if (!input.required) {
-              this.not_required.push(input.name);
-            }
-          }
-          this.lock = new Set();
-          //  lock.size === 0 則解鎖
-          this.$submit = $form.find("[type=submit]").eq(0);
-          //  submit的jq_ele
-          this.reset();
-        }
-        add(inputName) {
-          this.lock.add(inputName);
-          this.checkSubmit();
-        }
-        delete(inputName) {
-          this.lock.delete(inputName);
-          this.checkSubmit();
-        }
-        checkSubmit() {
-          this.$submit.prop("disabled", this.lock.size);
-        }
-        reset() {
-          //  除了submit_ele以外的input
-          for (let input of this.input_list) {
-            const { name, type } = input;
-            input.validated = false;
-            if (!this.not_required.some((field_name) => field_name === name)) {
-              this.lock.add(name);
-            }
-          }
-          $M_UI.form_feedback(FORM_FEEDBACK.STATUS.RESET, this.form);
-          this.checkSubmit();
-        }
-        update(validated_list) {
-          for (let { valid, field_name, message } of validated_list) {
-            let input = $(form).find(`input[name=${field_name}]`).get(0);
-            //  ↓ 未曾驗證過，那就不需要顯示提醒
-            if (!input.validated) {
-              continue;
-            }
-            //  處理驗證成功的lock數據以及表格提醒
-            if (valid) {
-              this.lock.delete(field_name);
-              $M_UI.form_feedback(FORM_FEEDBACK.STATUS.VALIDATED, input, true);
-            } else {
-              this.lock.add(field_name);
-              $M_UI.form_feedback(
-                FORM_FEEDBACK.STATUS.VALIDATED,
-                input,
-                false,
-                message
-              );
-            }
-          }
-          this.checkSubmit();
-          console.log("@lock => ", [...this.lock]);
-          return;
+/* genFn => 處理校驗錯誤 ..............*/
+function gen_form_lock(form) {
+  /* 管理form可否submit的鎖 */
+  class Lock {
+    constructor(form) {
+      let $form = $(form);
+      this.form = form;
+      let $input_list = $form.find("input");
+      this.input_list = [];
+      this.not_required = [];
+      for (let input of $input_list) {
+        this.input_list.push(input);
+        if (!input.required) {
+          this.not_required.push(input.name);
         }
       }
-      return new Lock(form);
-      /* 藉由validateErrors，判斷form可否submit，並於input顯示校驗錯誤 */
+      this.lock = new Set();
+      //  lock.size === 0 則解鎖
+      this.$submit = $form.find("[type=submit]").eq(0);
+      //  submit的jq_ele
+      this.reset();
     }
-    /* 將事件做防抖動設置，並綁定事件 */
-    function deb_eventHandle(form, eventType, handle) {
-      for (let input of form) {
-        if (input.tagName !== "INPUT") {
+    add(inputName) {
+      this.lock.add(inputName);
+      this.checkSubmit();
+    }
+    delete(inputName) {
+      this.lock.delete(inputName);
+      this.checkSubmit();
+    }
+    checkSubmit() {
+      this.$submit.prop("disabled", this.lock.size);
+    }
+    reset() {
+      //  除了submit_ele以外的input
+      for (let input of this.input_list) {
+        const { name, type } = input;
+        input.validated = false;
+        if (!this.not_required.some((field_name) => field_name === name)) {
+          this.lock.add(name);
+        }
+      }
+      $M_UI.form_feedback(FORM_FEEDBACK.STATUS.RESET, this.form);
+      this.checkSubmit();
+    }
+    update(validated_list) {
+      for (let { valid, field_name, message } of validated_list) {
+        let input = $(form).find(`input[name=${field_name}]`).get(0);
+        //  ↓ 未曾驗證過，那就不需要顯示提醒
+        if (!input.validated) {
           continue;
         }
-        function loading() {
-          $M_UI.form_feedback(FORM_FEEDBACK.STATUS.LOADING, input);
-          $(form).eq(0).prop("disabled", true);
+        //  處理驗證成功的lock數據以及表格提醒
+        if (valid) {
+          this.lock.delete(field_name);
+          $M_UI.form_feedback(FORM_FEEDBACK.STATUS.VALIDATED, input, true);
+        } else {
+          this.lock.add(field_name);
+          $M_UI.form_feedback(
+            FORM_FEEDBACK.STATUS.VALIDATED,
+            input,
+            false,
+            message
+          );
         }
-        const { debounce } = new $M_Debounce(handle, {
-          loading,
-        });
-        input.addEventListener(eventType, debounce);
       }
+      this.checkSubmit();
+      console.log("@lock => ", [...this.lock]);
+      return;
     }
   }
-});
+  return new Lock(form);
+  /* 藉由validateErrors，判斷form可否submit，並於input顯示校驗錯誤 */
+}
+//  將 input 的 inputEvent handler 進行 debounce 化，並註冊在所有 input 上
+function add_form_debounce_inputEvent_handler(form, handle) {
+  for (let input of form) {
+    if (input.tagName !== "INPUT") {
+      continue;
+    }
+    function loading() {
+      $M_UI.form_feedback(FORM_FEEDBACK.STATUS.LOADING, input);
+      $(form).eq(0).prop("disabled", true);
+    }
+    const { debounce } = new $M_Debounce(handle, {
+      loading,
+    });
+    input.addEventListener("input", debounce);
+  }
+}

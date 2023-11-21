@@ -5,27 +5,21 @@ import $C_Debounce from "../Debounce";
 import $M_ui from "../ui";
 
 /* -------------------- CONFIG CONST -------------------- */
-const CONST = {
-  REG: {
-    PAGE_REGISTER_OR_LOGIN_OR_ERR: /^\/(login)|(register)|(errPage)/,
-  },
-};
-const NEWS = {
-  DEBOUNCE_CONFIG: {
-    auto: true,
-    ms: 300 * 1000,
-  },
-};
+import { INIT_PAGE } from "../../../../config/constant";
+let { NAVBAR: DEF_OPTS } = INIT_PAGE;
+
 /* 初始化 通知列表 功能 */
 export default async function ({ $$axios }) {
-  let _data = { me: {} };
+  if (!$$axios) {
+    throw new Error("沒提供$$axios給initNavbar");
+  }
+  let _data = { me: {}, news: undefined };
   activeNavItem();
   //  根據 path，顯示當前 active NavItem
-  if (CONST.REG.PAGE_REGISTER_OR_LOGIN_OR_ERR.test(location.pathname)) {
+  if (DEF_OPTS.REG.IGNORE_PAGES.test(location.pathname)) {
     renderNoLoginNav();
     return _data;
   }
-  // const { show } = UI
   let { errno, data } = await getNews();
   // 取得「新聞」數據（含登入者資訊）
   if (!errno) {
@@ -352,7 +346,7 @@ export default async function ({ $$axios }) {
     let $$fn = $$news.fn;
     let debounce_autoReadMore = new $C_Debounce(
       autoReadMore,
-      NEWS.DEBOUNCE_CONFIG
+      DEF_OPTS.LOAD_NEWS
     );
     /* 初始化 nav 各功能 */
     $$fn.newsList.reset(data.news);
@@ -550,6 +544,6 @@ export default async function ({ $$axios }) {
                me: ...
            }
         */
-    return await $$axios.post(`/api/news`, payload);
+    return await $$axios.post(DEF_OPTS.API.NEWS, payload);
   }
 }

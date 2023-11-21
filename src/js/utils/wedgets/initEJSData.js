@@ -1,29 +1,21 @@
+import { INIT_PAGE } from "../../../../config/constant";
+let { EJS_DATA: DEF_OPTS } = INIT_PAGE;
+
 //  初始化數據
 //  取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
 //  如 { html: `<p>56871139</p>`}
 //     無轉譯 => { "html":"<p>56871139</p>") 會造成<p>直接渲染至頁面
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
-const EJS_DATA = {
-  DATA_SET: "my-data",
-  KEYS: {
-    BLOG: "blog",
-    ALBUM: "album",
-  },
-};
-const REG = {
-  BLOG: {
-    X_IMG:
-      /<x-img.+?data-alt-id='(?<alt_id>\w+?)'.+?(data-style='(?<style>.+?)')?.*?\/>/g,
-  },
-};
+
 //  將ejs傳入el[data-my-data]的純字符數據，轉化為物件數據
-export default async function (selector = `[data-${EJS_DATA.DATA_SET}]`) {
+export default async function (options = DEF_OPTS) {
+  let $target = $(options.SELECTOR);
   let $ejs_eles = [];
-  $(selector).each((index, ejs_ele) => $ejs_eles.push($(ejs_ele).first()));
+  $target.each((index, ejs_ele) => $ejs_eles.push($(ejs_ele).first()));
   //  取得存放ejs數據的元素
   let res = await $ejs_eles.reduce(async (kvPairs, $ejs_ele) => {
     //  數據的用途
-    let key = $ejs_ele.data(EJS_DATA.DATA_SET);
+    let key = $ejs_ele.data(options.DATA_SET);
     //  該ejs數據元素內，所存放的數據種類名稱
     try {
       let kv;
@@ -31,10 +23,10 @@ export default async function (selector = `[data-${EJS_DATA.DATA_SET}]`) {
       //  該ejs數據元素內的數據(JSON string 格式)
       let val = JSON.parse(JSON_string);
       // JSON String → JSON Obj
-      if (key === EJS_DATA.KEYS.BLOG) {
+      if (key === options.KEYS.BLOG) {
         /* blog 相關數據 */
         kv = { [key]: await initBlog(val) };
-      } else if (key === EJS_DATA.KEYS.ALBUM) {
+      } else if (key === options.KEYS.ALBUM) {
         /* album 相關數據 */
         kv = { [key]: await initAlbum(val) };
       } else {
@@ -48,7 +40,7 @@ export default async function (selector = `[data-${EJS_DATA.DATA_SET}]`) {
       throw e;
     }
   }, {});
-  $(selector).parent().remove();
+  $target.parent().remove();
   //  移除存放ejs數據的元素
   return res;
   //  返回整理後的EJS數據
