@@ -9,9 +9,9 @@ import { INIT_PAGE } from "../../../../config/constant";
 let { NAVBAR: DEF_OPTS } = INIT_PAGE;
 
 /* 初始化 通知列表 功能 */
-export default async function ({ $$axios }) {
-  if (!$$axios) {
-    throw new Error("沒提供$$axios給initNavbar");
+export default async function ({ axios }) {
+  if (!axios) {
+    throw new Error("沒提供axios給initNavbar");
   }
   let _data = { me: {}, news: undefined };
   activeNavItem();
@@ -377,7 +377,7 @@ export default async function ({ $$axios }) {
         alert("對嘛，再待一下嘛");
         return;
       }
-      let { data } = await $$axios.get("/api/user/logout");
+      let { data } = await axios.get("/api/user/logout");
       alert(data);
       location.href = "/login";
     }
@@ -544,6 +544,6 @@ export default async function ({ $$axios }) {
                me: ...
            }
         */
-    return await $$axios.post(DEF_OPTS.API.NEWS, payload);
+    return await axios.post(DEF_OPTS.API.NEWS, payload);
   }
 }

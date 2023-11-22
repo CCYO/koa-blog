@@ -1,3 +1,4 @@
+import { dev_log as $F_log } from "../log";
 import { INIT_PAGE } from "../../../../config/constant";
 let { EJS_DATA: DEF_OPTS } = INIT_PAGE;
 
@@ -8,39 +9,41 @@ let { EJS_DATA: DEF_OPTS } = INIT_PAGE;
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
 
 //  將ejs傳入el[data-my-data]的純字符數據，轉化為物件數據
-export default async function (options = DEF_OPTS) {
-  let $target = $(options.SELECTOR);
-  let $ejs_eles = [];
-  $target.each((index, ejs_ele) => $ejs_eles.push($(ejs_ele).first()));
-  //  取得存放ejs數據的元素
-  let res = await $ejs_eles.reduce(async (kvPairs, $ejs_ele) => {
-    //  數據的用途
-    let key = $ejs_ele.data(options.DATA_SET);
+export default function (options = DEF_OPTS) {
+  let $container = $(options.SELECTOR);
+  if (!$container.length) {
+    $F_log("此頁無EJS DATA");
+    return;
+  }
+
+  //  收集存放ejs data的元素
+
+  let $box_list = Array.from($container, (box) => $(box).first());
+  let res = $box_list.reduce((acc, $box) => {
+    //  取得data-set，同時代表此數據的類型
+    let key = $box.data(options.DATA_SET);
+    console.log("@key => ", key);
     //  該ejs數據元素內，所存放的數據種類名稱
-    try {
-      let kv;
-      let JSON_string = $ejs_ele.html();
-      //  該ejs數據元素內的數據(JSON string 格式)
-      let val = JSON.parse(JSON_string);
-      // JSON String → JSON Obj
-      if (key === options.KEYS.BLOG) {
-        /* blog 相關數據 */
-        kv = { [key]: await initBlog(val) };
-      } else if (key === options.KEYS.ALBUM) {
-        /* album 相關數據 */
-        kv = { [key]: await initAlbum(val) };
-      } else {
-        /* 其餘數據 */
-        kv = { [key]: val };
-      }
-      let _kvPairs = await kvPairs;
-      return { ..._kvPairs, ...kv };
-      //  儲存整理後的ejs數據
-    } catch (e) {
-      throw e;
+    let kv;
+    //  取出元素內的字符，其為ejs data的JSON string 格式
+    let JSON_string = $box.html();
+    //  JSON String → JSON Obj
+    let val = JSON.parse(JSON_string);
+    //  統整ejs data
+    if (key === options.KEYS.BLOG) {
+      //  blog 數據
+      kv = { [key]: initBlog(val) };
+    } else if (key === options.KEYS.ALBUM) {
+      //  album 數據
+      kv = { [key]: initAlbum(val) };
+    } else {
+      //  其餘數據
+      kv = { [key]: val };
     }
+    return { ...acc, ...kv };
+    //  儲存整理後的ejs數據
   }, {});
-  $target.parent().remove();
+  $container.parent().remove();
   //  移除存放ejs數據的元素
   return res;
   //  返回整理後的EJS數據

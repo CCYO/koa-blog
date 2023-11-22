@@ -14,11 +14,11 @@ export default class {
       options = { ...this.#options, ...options };
     }
     let loading_backdrop = new Loading_backdrop(options.LOADING_BACKDROP);
-    let $$axios = new _axios({ backdrop: loading_backdrop });
-    let navbar_data = await initNavbar({ $$axios });
+    let axios = new _axios({ backdrop: loading_backdrop });
+    let navbar_data = await initNavbar({ axios });
     let ejs_data = initEJSData(options.EJS_DATA);
 
-    this.utils.$$axios = $$axios;
+    this.utils.axios = axios;
     this.utils.loading_backdrop = loading_backdrop;
     this.data = { ...ejs_data, ...navbar_data };
 

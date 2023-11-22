@@ -41,13 +41,13 @@ const PAGE_REGISTER_LOGIN = PAGE.REGISTER_LOGIN;
 
 const $C_initPage = new $M_wedgets.InitPage();
 let { utils: G_utils, data: G_data } = await $C_initPage.init();
-const $$ajv = new $C_ajv(G_utils.$$axios);
+const ajv = new $C_ajv(G_utils.axios);
 
 let G_validate = {
-  login: $$ajv.get_validate(AJV.TYPE.LOGIN),
-  register: $$ajv.get_validate(AJV.TYPE.REGISTER),
-  passwordAndAgain: $$ajv.get_validate(AJV.TYPE.PASSOWRD_AGAIN),
-  isEmailExist: $$ajv.get_validate(AJV.TYPE.IS_EMAIL_EXIST),
+  login: ajv.get_validate(AJV.TYPE.LOGIN),
+  register: ajv.get_validate(AJV.TYPE.REGISTER),
+  passwordAndAgain: ajv.get_validate(AJV.TYPE.PASSOWRD_AGAIN),
+  isEmailExist: ajv.get_validate(AJV.TYPE.IS_EMAIL_EXIST),
 };
 
 /* ------------------------------------------------------------------------------------------ */
@@ -76,8 +76,9 @@ function initLoginFn(form_id) {
   let axios_payload = {};
   //  依據 input 數據，自動判斷 form 可否開放 submit 功能
   let lock = gen_form_lock(form);
-  //  將 input 的 inputEvent handler 進行 debounce 化，並註冊在所有 input 上
+  //  為所有input註冊debounce化的inputEvent handler
   add_form_debounce_inputEvent_handler(form, handle_input_login);
+  //  為 form 註冊 submitEvent handler
   form.addEventListener("submit", handle_submit_login);
   /* 登入表單 submit Event handler */
   async function handle_submit_login(e) {
@@ -90,8 +91,7 @@ function initLoginFn(form_id) {
     let status = valid;
     if (valid) {
       /* 送出請求 */
-      /* 若 eventType != input，且表單都是有效數據，發送 register 請求 */
-      let { errno, msg } = await G_utils.$$axios.post(
+      let { errno, msg } = await G_utils.axios.post(
         PAGE_REGISTER_LOGIN.API.LOGIN,
         axios_payload
       );
@@ -115,16 +115,18 @@ function initLoginFn(form_id) {
   /* 登入表單內容表格的 input Event handler */
   async function handle_input_login(e) {
     e.preventDefault();
-    //  LOGIN
-    e.target.validated = true;
+    //  標記，是否呈現標單提醒
+    e.target.show_feedback = true;
+    //  更新 axios_payload
     for (let { type, name, value } of form) {
       if (type === "submit") {
         continue;
       }
       axios_payload[name] = value;
     }
-    //  更新payload內的表格數據
+    //  校驗 axios_payload
     let validated_list = await G_validate.login(axios_payload);
+    //  更新 lock
     lock.update(validated_list);
     return;
   }
@@ -135,25 +137,29 @@ function initRegistFn(form_id) {
   let axios_payload = {};
   //  依據 input 數據，自動判斷 form 可否開放 submit 功能
   let lock = gen_form_lock(form);
-  //  將 input 的 inputEvent handler 進行 debounce 化，並註冊在所有 input 上
+  //  為所有input註冊debounce化的inputEvent handler
   add_form_debounce_inputEvent_handler(form, handle_input_register);
+  //  為 form 註冊 submitEvent handler
   form.addEventListener("submit", handle_submit_register);
   /* 註冊表單 submit Event handler */
   async function handle_submit_register(e) {
     e.preventDefault();
     let alert_message = PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_SUCCESS;
-    //  校驗 payload
+    //  校驗 axios_payload
     let validated_list = await G_validate.register(axios_payload);
+    //  axios_payload 是否有效
     let valid = !validated_list.some((item) => !item.valid);
-    //  當前進度是否順利
+    //  當前進度狀態是否順利
     let status = valid;
     if (valid) {
       ////  校驗成功
-      let { errno } = await $$axios.post(
+      let { errno } = await G_utils.axios.post(
         PAGE_REGISTER_LOGIN.API.REGISTER,
         axios_payload
       );
+      //  更新進度狀態
       status = !errno;
+      //  更新提醒內容
       alert_message = !status
         ? PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_FAIL
         : alert_message;
@@ -176,22 +182,26 @@ function initRegistFn(form_id) {
   async function handle_input_register(e) {
     e.preventDefault();
     //  REGISTER
-    let targetInput = e.target;
-    let targetInputName = targetInput.name;
-    targetInput.validated = true;
-    //  更新payload內的表格數據
+    let target = e.target;
+    let target_name = target.name;
+    //  標記，是否呈現標單提醒
+    target.show_feedback = true;
+    //  取得當前fieldset內的表單數據
     let $input_list = $(e.target).parents("fieldset").find("input");
     let payload = {};
     for (let { name, value } of $input_list) {
       payload[name] = value;
     }
+    //  更新 axios_payload
     axios_payload = { ...axios_payload, ...payload };
+    //  校驗
     let validated_list;
-    if (targetInputName === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
+    if (target_name === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
       validated_list = await G_validate.isEmailExist(payload);
     } else {
       validated_list = await G_validate.passwordAndAgain(payload);
     }
+    //  更新 lock
     lock.update(validated_list);
     return;
   }
@@ -238,7 +248,7 @@ function gen_form_lock(form) {
       //  除了submit_ele以外的input
       for (let input of this.input_list) {
         const { name, type } = input;
-        input.validated = false;
+        input.show_feedback = false;
         if (!this.not_required.some((field_name) => field_name === name)) {
           this.lock.add(name);
         }
@@ -250,7 +260,7 @@ function gen_form_lock(form) {
       for (let { valid, field_name, message } of validated_list) {
         let input = $(form).find(`input[name=${field_name}]`).get(0);
         //  ↓ 未曾驗證過，那就不需要顯示提醒
-        if (!input.validated) {
+        if (!input.show_feedback) {
           continue;
         }
         //  處理驗證成功的lock數據以及表格提醒
@@ -268,7 +278,6 @@ function gen_form_lock(form) {
         }
       }
       this.checkSubmit();
-      console.log("@lock => ", [...this.lock]);
       return;
     }
   }
