@@ -40,10 +40,11 @@ const PAGE_REGISTER_LOGIN = PAGE.REGISTER_LOGIN;
 /* ------------------------------------------------------------------------------------------ */
 
 const $C_initPage = new $M_wedgets.InitPage();
-let { utils: G_utils, data: G_data } = await $C_initPage.init();
+let G = await $C_initPage.init();
+let { utils: G_utils, data: G_data } = G;
 const ajv = new $C_ajv(G_utils.axios);
 
-let G_validate = {
+G_utils.validate = {
   login: ajv.get_validate(AJV.TYPE.LOGIN),
   register: ajv.get_validate(AJV.TYPE.REGISTER),
   passwordAndAgain: ajv.get_validate(AJV.TYPE.PASSOWRD_AGAIN),
@@ -84,7 +85,7 @@ function initLoginFn(form_id) {
   async function handle_submit_login(e) {
     e.preventDefault();
     let alert_message = PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_FAIL;
-    let validated_list = await G_validate.login(axios_payload);
+    let validated_list = await G_utils.validate.login(axios_payload);
     //  校驗 payload
     let valid = !validated_list.some((item) => !item.valid);
     //  當前進度是否順利
@@ -125,7 +126,7 @@ function initLoginFn(form_id) {
       axios_payload[name] = value;
     }
     //  校驗 axios_payload
-    let validated_list = await G_validate.login(axios_payload);
+    let validated_list = await G_utils.validate.login(axios_payload);
     //  更新 lock
     lock.update(validated_list);
     return;
@@ -146,7 +147,7 @@ function initRegistFn(form_id) {
     e.preventDefault();
     let alert_message = PAGE_REGISTER_LOGIN.MESSAGE.REGISTER_SUCCESS;
     //  校驗 axios_payload
-    let validated_list = await G_validate.register(axios_payload);
+    let validated_list = await G_utils.validate.register(axios_payload);
     //  axios_payload 是否有效
     let valid = !validated_list.some((item) => !item.valid);
     //  當前進度狀態是否順利
@@ -197,9 +198,9 @@ function initRegistFn(form_id) {
     //  校驗
     let validated_list;
     if (target_name === PAGE_REGISTER_LOGIN.NAME.EMAIL) {
-      validated_list = await G_validate.isEmailExist(payload);
+      validated_list = await G_utils.validate.isEmailExist(payload);
     } else {
-      validated_list = await G_validate.passwordAndAgain(payload);
+      validated_list = await G_utils.validate.passwordAndAgain(payload);
     }
     //  更新 lock
     lock.update(validated_list);

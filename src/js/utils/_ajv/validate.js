@@ -9,11 +9,20 @@ export default async function (data, ignore_list = []) {
     let validate = this;
     if (validate.$async) {
       await validate(data);
-    } else if (!validate(data)) {
-      throw new Ajv2019.ValidationError(validate.errors);
+      // } else if (!validate(data)) {
+    } else {
+      let valid = validate(data);
+      if (!valid) {
+        console.log(validate.errors);
+        throw new Ajv2019.ValidationError(validate.errors);
+      }
     }
   } catch (invalid_errors) {
-    validated_errors = _init_errors(invalid_errors.errors);
+    if (invalid_errors instanceof Ajv2019.ValidationError) {
+      validated_errors = _init_errors(invalid_errors.errors);
+    } else {
+      throw invalid_errors;
+    }
   }
   return _parseErrorsToForm(validated_errors, data, ignore_list);
 }
@@ -141,8 +150,10 @@ function _parseErrorsToForm(invalid_errors, data, ignore_list = []) {
   if (valid_list.length) {
     valid = true;
     for (let field_name of valid_list) {
-      res_list.push({ field_name, valid });
+      let value = data[field_name];
+      res_list.push({ field_name, valid, value });
     }
   }
+  $F_log("整理後的驗證結果 res_list => ", res_list);
   return res_list;
 }

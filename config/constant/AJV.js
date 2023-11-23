@@ -33,6 +33,8 @@ const AJV = {
     // _required: "_missingProperty",
     _notEmpty: "_notEmpty",
     // dependentRequired: 'missingProperty' 目前schema都沒用到
+    _notRepeat: "_notRepeat",
+    _noSpace: "noSpace",
   },
   FIELD_NAME: {
     TOP: "all",

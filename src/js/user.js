@@ -52,7 +52,7 @@ const $C_initPage = new $M_wedgets.InitPage();
 let { utils: G_utils } = await $C_initPage.init();
 const $$ajv = new $C_ajv(G_utils.axios);
 
-let G_validate = {
+G_utils.validate = {
   blog: $$ajv.get_validate(AJV.TYPE.BLOG),
 };
 
@@ -164,6 +164,7 @@ async function initMain({ me, currentUser, relationShip, blogs }) {
   let $$betterScrollEles = initBetterScroll([$fansList, $idolList]);
   //  初始化betterScrol
   $("main, nav, main, footer").removeAttr("style");
+
   //  展示頁面各部件
   $$betterScrollEles.refresh();
 
@@ -465,6 +466,7 @@ async function initMain({ me, currentUser, relationShip, blogs }) {
     if (!title) {
       return;
     }
+    return;
     const {
       data: { id: blog_id },
     } = await $$axios.post(PAGE_USER.API.CREATE_BLOG, {
@@ -482,10 +484,10 @@ async function initMain({ me, currentUser, relationShip, blogs }) {
 
     title = $M_xss.xssAndTrim(input.value);
     let data = {
-      $$blog: { title: "" },
+      _old: { title: "a" },
       title,
     };
-    let validated_list = await G_validate.blog(data);
+    let validated_list = await G_utils.validate.blog(data);
     let valid = !validated_list.some((item) => !item.valid);
     let msg = "";
     let res = title;
@@ -494,10 +496,12 @@ async function initMain({ me, currentUser, relationShip, blogs }) {
       let error = validated_list.find(({ valid, field_name }) => {
         return !valid && field_name === input.name;
       });
+      if (!error) {
+        throw new Error(`發生預料外錯誤 => ${JSON.stringify(validated_list)}`);
+      }
       msg = error.message;
       res = valid;
     }
-    console.log(validated_list);
     $M_ui.form_feedback(FORM_FEEDBACK.STATUS.VALIDATED, input, valid, msg);
     $btn_new_blog.prop("disabled", !valid);
     return res;

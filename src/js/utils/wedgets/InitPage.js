@@ -47,6 +47,7 @@ export default class {
   }
 
   _render() {
+    console.log("_render");
     $("main, nav, main, footer").removeAttr("style");
     $("form button[type=submit]").removeAttr("disabled");
     $("form button[type=submit]").prop("disabled", true);
