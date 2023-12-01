@@ -25,29 +25,17 @@ export default class {
     return this;
   }
   async render(renderPage) {
-    try {
-      if (renderPage) {
-        this.utils.loading_backdrop.show({ blockPage: true });
-        await renderPage(this.data);
-        this.utils.loading_backdrop.hidden();
-        //  渲染頁面的函數
-      }
-      /* 初始化函數運行結束後，也將頁面元素調整至初始狀態 */
-      this._render();
-    } catch (error) {
-      if (confirm("window load 時發生錯誤，前往錯誤原因頁面")) {
-        location.href = `/errPage?errno=${encodeURIComponent(
-          "???"
-        )}&msg=${encodeURIComponent(error.message)}`;
-      } else {
-        console.warn("↓↓↓ window load 報錯 ↓↓↓↓ ");
-        throw error;
-      }
+    if (renderPage) {
+      this.utils.loading_backdrop.show({ blockPage: true });
+      await renderPage(this.data);
+      this.utils.loading_backdrop.hidden();
+      //  渲染頁面的函數
     }
+    /* 初始化函數運行結束後，也將頁面元素調整至初始狀態 */
+    this._render();
   }
 
   _render() {
-    console.log("_render");
     $("main, nav, main, footer").removeAttr("style");
     $("form button[type=submit]").removeAttr("disabled");
     $("form button[type=submit]").prop("disabled", true);

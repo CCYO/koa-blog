@@ -1,30 +1,4 @@
 {
     "$schema": "https://dbclient-release.oss-cn-hongkong.aliyuncs.com/dbclient/schema.json",
-    "database": {
-        "1697707489336": {
-            "host": "127.0.0.1",
-            "port": 3306,
-            "user": "ccy008ccy",
-            "password": "tt309091238",
-            "dbType": "MySQL",
-            "database": "koa_blog",
-            "name": "vscode_koa_blog",
-            "timezone": "+00:00",
-            "usingSSH": false,
-            "useSocksProxy": false,
-            "global": false,
-            "savePassword": "Forever",
-            "hideSystemSchema": true,
-            "readonly": false,
-            "sort": 11,
-            "useSSL": false,
-            "encrypt": true,
-            "authType": "default",
-            "esAuth": "none",
-            "showHidden": true,
-            "srv": false,
-            "key": "1697707489336",
-            "connectionKey": "database.connections"
-        }
-    }
+    "database": {}
 }

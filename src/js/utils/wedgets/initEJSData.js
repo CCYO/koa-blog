@@ -22,7 +22,6 @@ export default function (options = DEF_OPTS) {
   let res = $box_list.reduce((acc, $box) => {
     //  取得data-set，同時代表此數據的類型
     let key = $box.data(options.DATA_SET);
-    console.log("@key => ", key);
     //  該ejs數據元素內，所存放的數據種類名稱
     let kv;
     //  取出元素內的字符，其為ejs data的JSON string 格式

@@ -2,6 +2,11 @@ import lodash from "lodash";
 import comment_tree from "../../views/pages/blog/template/tree.ejs";
 import comment_item from "../../views/pages/blog/template/item.ejs";
 
+import navbar_login_uncollapse_list from "../../views/wedgets/navbar_login_uncollapse_list.ejs";
+import navbar_login_collapse_list from "../../views/wedgets/navbar_login_collapse_list.ejs";
+
+import news_item_fansIdol from "../../views/wedgets/news_idolFans.ejs";
+
 import relationship_item from "../../views/pages/user/template/relationship_item.ejs";
 //  使用 template-ejs-loader 將 偶像粉絲列表的項目ejs檔 轉譯為 純字符
 import blog_list from "../../views/pages/user/template/blog_list.ejs";
@@ -12,7 +17,18 @@ const comment = {
   item: lodash.template(comment_item),
 };
 
+const navbar = {
+  uncollapse_list: lodash.template(navbar_login_uncollapse_list),
+  collapse_list: lodash.template(navbar_login_collapse_list),
+};
+
+const news_item = {
+  fansIdol: lodash.template(news_item_fansIdol),
+};
+
 export default {
+  news_item,
+  navbar,
   comment,
   relationship_item: lodash.template(relationship_item),
   blog_list: lodash.template(blog_list),

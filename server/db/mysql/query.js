@@ -1,15 +1,15 @@
-const { MyErr } = require('../../model')
-const C_Comment = require('../../controller/comment')
-const C_Blog = require('../../controller/blog')
-const C_User = require('../../controller/user')
-const moment = require('moment')
-const { QueryTypes } = require('sequelize')
-const { seq } = require('./model')
-const { NEWS } = require('../../conf/constant')
+const { MyErr } = require("../../model");
+const C_Comment = require("../../controller/comment");
+const C_Blog = require("../../controller/blog");
+const C_User = require("../../controller/user");
+const moment = require("moment");
+const { QueryTypes } = require("sequelize");
+const { seq } = require("./model");
+const { NEWS } = require("../../conf/constant");
 
 //  0404
-async function count({ user_id }) {
-    let query = `
+async function count(user_id) {
+  let query = `
     SELECT
         COUNT(if(confirm < 1, true, null)) as unconfirm, 
         COUNT(if(confirm = 1, true, null)) as confirm, 
@@ -34,20 +34,23 @@ async function count({ user_id }) {
             receiver_id=${user_id}
             AND deletedAt IS NULL 
     ) AS X
-    `
-    let [{ unconfirm, confirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })
-    return { num: { unconfirm, confirm, total } }
+    `;
+  let [{ unconfirm, confirm, total }] = await seq.query(query, {
+    type: QueryTypes.SELECT,
+  });
+  return { num: { unconfirm, confirm, total } };
 }
 //  0404
 async function readNews({ user_id, excepts }) {
-    // let { people, blogs, comments } = excepts
-    let list = { idolFans: '', articleReader: '', msgReceiver: '' }
-    if (excepts) {
-        for (key in list) {
-            list[key] = excepts[key].length && ` AND id NOT IN (${excepts[key].join(',')})` || ''
-        }
-    }
-    let query = `
+  // let { people, blogs, comments } = excepts
+  let list = { idolFans: "", articleReader: "", msgReceiver: "" };
+
+  for (key in list) {
+    list[key] =
+      (excepts[key].length && ` AND id NOT IN (${excepts[key].join(",")})`) ||
+      "";
+  }
+  let query = `
     SELECT type, id, target_id, follow_id, confirm, createdAt
     FROM (
         SELECT ${NEWS.TYPE.IDOL_FANS} as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt
@@ -77,8 +80,8 @@ async function readNews({ user_id, excepts }) {
     ) AS X
     ORDER BY confirm=1, createdAt DESC
     LIMIT ${NEWS.LIMIT}
-    `
-    /*
+    `;
+  /*
     {
         unconfirm: [
         { type, id, timestamp, confirm, fans: ... },
@@ -87,65 +90,67 @@ async function readNews({ user_id, excepts }) {
         ... ],
         confirm: [...] 
     }*/
-    let newsList = await seq.query(query, { type: QueryTypes.SELECT })
-    return await initNews(newsList)
+  let newsList = await seq.query(query, { type: QueryTypes.SELECT });
+  return await initNews(newsList);
 }
 //  0404
 async function initNews(newsList) {
-    let list = await Promise.all(newsList.map(findNews))
-    //  分為 讀過/未讀過
-    let res = list.reduce((acc, news) => {
-        if (news.confirm) {
-            acc.confirm.push(news)
-        } else {
-            acc.unconfirm.push(news)
-        }
-        return acc
-    }, { unconfirm: [], confirm: [] })
-    return res
-    //  0404
-    async function findNews(news) {
-        let { type, id, target_id, follow_id, confirm, createdAt } = news
-        //  序列化時間數據
-        let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow()
-        //  結果的預設值
-        let res = { type, id, timestamp, confirm }
-        if (type === NEWS.TYPE.IDOL_FANS) {
-            let resModel = await C_User.find(follow_id)
-            if (resModel.errno) {
-                throw new MyErr(resModel) 
-            }
-            return { ...res, fans: resModel.data }
-        } else if (type === NEWS.TYPE.ARTICLE_READER) {
-            let resModel = await C_Blog.find(target_id)
-            if (resModel.errno) {
-                throw new MyErr(resModel)
-            }
-            return { ...res, blog: resModel.data }
-        } else if (type === NEWS.TYPE.MSG_RECEIVER) {
-            let { data: comment } = await C_Comment.findInfoForNews(target_id)
-            return { ...res, comment }
-        }
+  let list = await Promise.all(newsList.map(findNews));
+  //  分為 讀過/未讀過
+  let res = list.reduce(
+    (acc, news) => {
+      if (news.confirm) {
+        acc.confirm.push(news);
+      } else {
+        acc.unconfirm.push(news);
+      }
+      return acc;
+    },
+    { unconfirm: [], confirm: [] }
+  );
+  return res;
+  //  0404
+  async function findNews(news) {
+    let { type, id, target_id, follow_id, confirm, createdAt } = news;
+    //  序列化時間數據
+    let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow();
+    //  結果的預設值
+    let res = { type, id, timestamp, confirm };
+    if (type === NEWS.TYPE.IDOL_FANS) {
+      let resModel = await C_User.find(follow_id);
+      if (resModel.errno) {
+        throw new MyErr(resModel);
+      }
+      return { ...res, fans: resModel.data };
+    } else if (type === NEWS.TYPE.ARTICLE_READER) {
+      let resModel = await C_Blog.find(target_id);
+      if (resModel.errno) {
+        throw new MyErr(resModel);
+      }
+      return { ...res, blog: resModel.data };
+    } else if (type === NEWS.TYPE.MSG_RECEIVER) {
+      let { data: comment } = await C_Comment.findInfoForNews(target_id);
+      return { ...res, comment };
     }
+  }
 }
 
 module.exports = {
-    //  0404
-    count,
-    //  0404
-    readNews,
-    countNewsTotalAndUnconfirm
-}
+  //  0404
+  count,
+  //  0404
+  readNews,
+  countNewsTotalAndUnconfirm,
+};
 
 async function countNewsTotalAndUnconfirm({ user_id, options }) {
-    let { markTime, fromFront } = options
+  let { markTime, fromFront } = options;
 
-    let select =
-        !fromFront ?
-            `SELECT COUNT(if(confirm < 1, true, null))` :
-            `SELECT COUNT(if(DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T'), true, null)) `
+  let select = !fromFront
+    ? `SELECT COUNT(if(confirm < 1, true, null))`
+    : `SELECT COUNT(if(DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T'), true, null)) `;
 
-    let query = `
+  let query = `
     ${select} as numOfUnconfirm, COUNT(*) as total
     FROM (
         SELECT 1 as type, id, confirm, createdAt
@@ -168,10 +173,10 @@ async function countNewsTotalAndUnconfirm({ user_id, options }) {
         WHERE
             follower_id=${user_id}
     ) AS X
-    `
-    let [{ numOfUnconfirm, total }] = await seq.query(query, { type: QueryTypes.SELECT })
+    `;
+  let [{ numOfUnconfirm, total }] = await seq.query(query, {
+    type: QueryTypes.SELECT,
+  });
 
-    return { numOfUnconfirm, total }
+  return { numOfUnconfirm, total };
 }
-
-

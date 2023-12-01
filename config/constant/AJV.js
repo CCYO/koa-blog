@@ -13,6 +13,7 @@ const AJV = {
   TYPE: {
     AVATAR: new Ajv_type("avatar"),
     BLOG: new Ajv_type("blog"),
+    BLOG_TITLE: new Ajv_type("blog_title"),
     DEFAULT: new Ajv_type("default"),
 
     IS_EMAIL_EXIST: new Ajv_type("is_email_exist"),

@@ -68,11 +68,14 @@ router.get(
         return await ctx.render("page404", { ...resModel });
       }
       //  將 DB 數據賦予給 ctx.cache
-      cache.data = resModel.data;
+      // cache.data = resModel.data;
+      data = cache.data = resModel.data;
     }
-    let { currentUser, fansList, idols, blogs } = cache.data;
+    // let { currentUser, fansList, idols, blogs } = cache.data;
+    let { currentUser, relationShip, blogs } = data;
     //  非文章作者，所以不傳入未公開的文章
     delete blogs.hidden;
+    /*
     await ctx.render("user", {
       isSelf: false,
       title: `${currentUser.nickname}的主頁`,
@@ -81,6 +84,18 @@ router.get(
       blogs, //  window.data 數據
       fansList, //  window.data 數據
       idols, //  window.data 數據
+    });
+    */
+    await ctx.render("user", {
+      ejs_template,
+      isSelf: user_id === currentUser.id,
+      title: `${currentUser.nickname}的主頁`,
+      //  主要資訊數據
+      currentUser, //  window.data 數據
+      blogs, //  window.data 數據
+      relationShip,
+      // fansList,       //  window.data 數據
+      // idols,       //  window.data 數據
     });
   }
 );

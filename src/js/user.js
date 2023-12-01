@@ -2,7 +2,7 @@
 /* EJS Module --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 if (process.env.NODE_ENV === "development") {
-  await import("../views/pages/user/index.ejs");
+  import("../views/pages/user/index.ejs");
 }
 import $M_template from "./utils/template";
 
@@ -23,6 +23,7 @@ import BetterScroll from "better-scroll";
 /* ------------------------------------------------------------------------------------------ */
 
 import {
+  common as $M_Common,
   wedgets as $M_wedgets,
   _ajv as $C_ajv,
   Debounce as $M_Debounce,
@@ -47,48 +48,43 @@ const DATA_BLOG = SERVER.BLOG;
 /* ------------------------------------------------------------------------------------------ */
 /* Class --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
+try {
+  const $C_initPage = new $M_wedgets.InitPage();
+  let { utils: G_utils } = await $C_initPage.init();
+  const $$ajv = new $C_ajv(G_utils.axios);
 
-const $C_initPage = new $M_wedgets.InitPage();
-let { utils: G_utils } = await $C_initPage.init();
-const $$ajv = new $C_ajv(G_utils.axios);
+  G_utils.validate = {
+    blog_title: $$ajv.get_validate(AJV.TYPE.BLOG_TITLE),
+  };
 
-G_utils.validate = {
-  blog: $$ajv.get_validate(AJV.TYPE.BLOG),
-};
-
-// const $C_initPage = new $M_wedgets.InitPage();
-//  初始化頁面
-// const $C_backdrop = new $M_wedgets.LoadingBackdrop();
-//  讀取遮罩
-// const $$axios = new $C_axios({ backdrop: $C_backdrop });
-// const $$ajv = new $C_ajv($$axios);
-// let $$validate_blog = async (...args) =>
-//   await $$ajv.check(AJV.TYPE.BLOG.$id, ...args);
-/* ------------------------------------------------------------------------------------------ */
-/* Run --------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------------ */
-// window.addEventListener("load", async () => {
-//   try {
-//     $C_backdrop.show({ blockPage: true });
-//     //  讀取中，遮蔽畫面
-//     //  幫助頁面初始化的統整函數
-//     await $C_initPage.addOtherInitFn($M_wedgets.initEJSData);
-//     //  初始化ejs
-//     await $C_initPage.addOtherInitFn(() => $M_wedgets.initNavbar({ $$axios }));
-//     //  初始化navbar
-//     await $C_initPage.render(initMain);
-//     //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-//     $C_backdrop.hidden();
-//     //  讀取完成，解除遮蔽
-//   } catch (error) {
-//     throw error;
-//   }
-
-window.addEventListener("load", async () => {
-  await $C_initPage.render(initMain);
-  //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-});
-
+  window.addEventListener("load", async () => {
+    try {
+      await $C_initPage.render(initMain);
+      //  統整頁面數據，並渲染需要用到統整數據的頁面內容
+    } catch (error) {
+      $M_Common.error_handle(error);
+    }
+    return;
+  });
+  window.onerror = (e) => {
+    console.log("在window.onerror 捕捉到錯誤", e);
+  };
+  window.addEventListener("error", () => {
+    console.log("在window.addEventListener('error') 捕捉到錯誤", e);
+  });
+  window.addEventListener(
+    "unhandledrejection",
+    function (promiseRejectionEvent) {
+      this.alert("發生未知錯誤");
+      // handle error here, for example log
+      console.log("reason => ", promiseRejectionEvent.reason);
+      //  阻止冒泡
+      promiseRejectionEvent.preventDefault();
+    }
+  );
+} catch (e) {
+  $M_Common.error_handle(e);
+}
 /* ------------------------------------------------------------------------------------------ */
 /* Init ------------------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------------------------ */
@@ -134,8 +130,10 @@ async function initMain({ me, currentUser, relationShip, blogs }) {
         },
       }
     );
+
     //  debounce版本的 校驗文章標題 函數
     $input_new_blog_title.on("input", handle_debounce_check_title);
+
     //  handle 校驗文章標題
     $btn_new_blog.on("click", handle_createBlog);
     //  hanlde 創建文章
@@ -479,25 +477,25 @@ async function initMain({ me, currentUser, relationShip, blogs }) {
     location.href = redir;
   }
   async function check_title() {
+    throw new Error("tt");
     let title = $input_new_blog_title.val();
     let input = $input_new_blog_title.get(0);
 
-    title = $M_xss.xssAndTrim(input.value);
     let data = {
-      _old: { title: "a" },
-      title,
+      title: $M_xss.xssAndTrim(input.value),
     };
-    let validated_list = await G_utils.validate.blog(data);
+    let validated_list = await G_utils.validate.blog_title(data);
     let valid = !validated_list.some((item) => !item.valid);
     let msg = "";
     let res = title;
     if (!valid) {
-      // delete validateErrors.title.diff;
       let error = validated_list.find(({ valid, field_name }) => {
         return !valid && field_name === input.name;
       });
       if (!error) {
-        throw new Error(`發生預料外錯誤 => ${JSON.stringify(validated_list)}`);
+        throw new Error(
+          `發生預料外的驗證錯誤 => ${JSON.stringify(validated_list)}`
+        );
       }
       msg = error.message;
       res = valid;

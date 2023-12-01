@@ -6,7 +6,7 @@ module.exports = {
     IGNORE_PAGES: /^\/(login)|(register)|(errPage)/,
   },
   LOAD_NEWS: {
-    auto: true,
-    ms: 300 * 1000,
+    //  5 min
+    ms: 5 * 1000 * 60,
   },
 };
