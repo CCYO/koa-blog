@@ -61,6 +61,8 @@ export default async function ({ axios }) {
       //     $readMore.children("button").prop("disabled", value);
       //   },
       // },
+
+      //  既存的數據
       excepts: {
         idolFans: [],
         articleReader: [],
@@ -73,6 +75,7 @@ export default async function ({ axios }) {
           );
         },
       },
+      //  readyRender待渲染的html
       htmlStr: {
         confirm: "",
         unconfirm: "",
@@ -94,7 +97,7 @@ export default async function ({ axios }) {
             return this.confirm + this.unconfirm;
           },
         },
-        //  news在後端的數量資訊
+        //  後端server db的總數據量
         db: {
           confirm: 0,
           unconfirm: 0,
@@ -191,6 +194,7 @@ export default async function ({ axios }) {
           _template(list) {
             let { idolFans, articleReader, msgReceiver } = this._gen;
             return list.reduce((htmlStr, item) => {
+              // let { confirm, id, fans, timestamp } = item;
               let { type, confirm } = item;
               if (type === 1) {
                 htmlStr += idolFans(item);
@@ -210,19 +214,6 @@ export default async function ({ axios }) {
             idolFans(item) {
               // let { confirm, id, fans, timestamp } = item;
               return $M_template.news_item.fansIdol(item);
-              /*
-              let query = confirm ? "" : `?type=1&id=${id}`;
-              return `
-                                        <!-- 新通知 of fans -->
-                                        <li class="dropdown-item position-relative news-item">
-                                            <a href="/other/${fans.id}${query}" class="stretched-link text-wrap ">
-                                                <div>
-                                                    <span>${fans.nickname}追蹤你囉！</span><br>
-                                                    <span class='text-end mb-0'>${timestamp}</span>
-                                                </div>
-                                            </a>
-                                        </li>`;
-                                        */
             },
             articleReader({ confirm, id, blog, timestamp }) {
               let query = confirm ? "" : `?type=2&id=${id}`;
@@ -383,6 +374,7 @@ export default async function ({ axios }) {
       }
       //  前端尚未渲染的筆數
       let count = $$num.db.unconfirm - $$num.rendered.unconfirm;
+      console.log(123);
       $M_ui.show($newsCount, count).text(count || "");
     }
     ////  ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓

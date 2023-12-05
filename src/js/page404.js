@@ -29,21 +29,15 @@ const $C_backdrop = new $M_wedgets.LoadingBackdrop();
 /* ------------------------------------------------------------------------------------------ */
 /* Run --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-window.addEventListener("load", async () => {
+window.addEventListener("load", init);
+
+async function init() {
   try {
-    $C_backdrop.show({ blockPage: true });
-    //  讀取中，遮蔽畫面
-    let initPage = new $M_wedgets.InitPage();
-    //  幫助頁面初始化的統整函數
-    await initPage.addOtherInitFn($M_wedgets.initNavbar);
-    //  初始化navbar
-    await initPage.render();
-    //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-    $("main, nav, main, footer").removeAttr("style");
-    $C_backdrop.hidden();
-    //  讀取完成，解除遮蔽
+    const $C_initPage = new $M_wedgets.InitPage();
+    await $C_initPage.init();
+    await $C_initPage.render();
   } catch (error) {
     throw error;
     // location.href = `/errPage?errno=${encodeURIComponent('???')}&msg=${encodeURIComponent(error.message)}`
   }
-});
+}

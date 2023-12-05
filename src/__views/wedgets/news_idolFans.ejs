@@ -1,0 +1,11 @@
+<!-- 新通知 of fans -->
+<% let query = confirm ? "" : `type=1&id=${id}` %>
+<li class="dropdown-item position-relative news-item">
+  <a href="/other/<%= fans.id %><%= query %>" class="stretched-link text-wrap "></a>
+
+  <div>
+    <span><%= fans.nickname %>追蹤你囉！</span><br>
+    <span class='text-end mb-0'><%= timestamp %></span>
+  </div>
+  </a>
+</li>

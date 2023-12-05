@@ -86,9 +86,10 @@ router.get(
       idols, //  window.data 數據
     });
     */
+    let isSelf = ctx.session && ctx.session.user.id === user_id;
     await ctx.render("user", {
       ejs_template,
-      isSelf: user_id === currentUser.id,
+      isSelf,
       title: `${currentUser.nickname}的主頁`,
       //  主要資訊數據
       currentUser, //  window.data 數據
