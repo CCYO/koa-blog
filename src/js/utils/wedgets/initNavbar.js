@@ -29,7 +29,7 @@ export default async function ({ axios }) {
     navbar_data = data;
     // renderLoginNav(data.me.id);
     renderLoginNav(navbar_data);
-    initNavFn(data);
+    await initNavFn(data);
   } else {
     ////  登出狀態
     renderLogoutNav();
@@ -38,7 +38,7 @@ export default async function ({ axios }) {
   //  返回 getNews的數據，提供統整初始化頁面的函數initPageFn使用
 
   /* 初始化Nav功能 */
-  function initNavFn(data) {
+  async function initNavFn(data) {
     /* 公用ele */
     let $readMore = $("#readMore");
     //  更多通知BTN
@@ -49,19 +49,6 @@ export default async function ({ axios }) {
     let $newsDropdown = $("#newsDropdown");
     //  下拉選單按鈕
     let $$news = {
-      // newsDropdownOpen: false,
-      //  標記，用來規避 autoReadMore 跟 readMore 同時進行
-      // readMoring: {
-      //   _value: false,
-      //   get status() {
-      //     return this._value;
-      //   },
-      //   set status(value) {
-      //     this._value = value;
-      //     $readMore.children("button").prop("disabled", value);
-      //   },
-      // },
-
       //  既存的數據
       excepts: {
         idolFans: [],
@@ -126,6 +113,27 @@ export default async function ({ axios }) {
           },
         },
       },
+      clear() {
+        this.fn.newsDropdown.clear();
+        this.fn.newsList.clear();
+        this.fn.htmlStr.clear();
+      },
+      update(data, insert) {
+        //  更新news數據
+        //  db.num更新
+        this.fn.newsList.update(data);
+        //  更新news的htmlStr數據
+        //  更新num.unReader
+        this.fn.htmlStr.update(data.newsList);
+        if (insert) {
+          ////  如果參數insert=true，立即渲染news
+          this.fn.newsDropdown.insert();
+        }
+        //  未渲染的條目數量
+        checkReadMore();
+        //  前端未渲染的條目數量
+        checkNewsCount();
+      },
       fn: {
         //  取得 list 內共有多少條 news 數據
         listTotal(list) {
@@ -167,7 +175,7 @@ export default async function ({ axios }) {
           //  更新 newsList、num.db、excepts
           update(news) {
             let { newsList, num } = news;
-            //  更新news的數量數據
+            //  更新後端news的數量
             $$news.num.db = num;
             if ($$news.fn.listTotal(newsList)) {
               ////  若news有數據，進行更新
@@ -268,13 +276,12 @@ export default async function ({ axios }) {
           },
           //  更新htmlStr、num.unRender
           update(newsList) {
-            let _newList = newsList ? newsList : $$news.newsList;
-            if ($$news.fn.listTotal(_newList)) {
+            if ($$news.fn.listTotal(newsList)) {
               ////  若news有數據，進行更新
-              for (let isConfirm in _newList) {
-                let str = this._template(_newList[isConfirm]);
+              for (let isConfirm in newsList) {
+                let str = this._template(newsList[isConfirm]);
                 $$news.htmlStr[isConfirm] += str;
-                $$news.num.unRender[isConfirm] += _newList[isConfirm].length;
+                $$news.num.unRender[isConfirm] += newsList[isConfirm].length;
               }
             }
             return;
@@ -298,46 +305,41 @@ export default async function ({ axios }) {
           },
           //  將未渲染的通知數據 渲染到頁面
           insert() {
-            if (!$$num.unRender.total) {
-              //  確認是否存在 未渲染的數據
+            if (!$$news.num.unRender.total) {
+              //  不存在 未渲染的數據
               return;
             }
-            let firstRender = $$num.unRender.total && !$$num.rendered.total;
-            //  是否為通知列表的初次渲染(包含清空後的第一次)
-            for (let isConfirm in $$htmlStr) {
-              /* 渲染存放在 $$htmlStr 內的 htmlStr 數據 */
+            //  是否第一次渲染 = 已渲染總數為0
+            let firstRender = !$$num.rendered.total;
+            //  渲染存放在 $$htmlStr 內的 htmlStr 數據
+            for (let isConfirm in $$news.htmlStr) {
               let htmlStr = $$htmlStr[isConfirm];
+              //  通知列表title
               let $title = $(`#${isConfirm}-news-title`);
-              //  通知列表內的相應title
               if (!!!htmlStr) {
-                /* 處理 htmlStr 是空字符的狀況 */
-                firstRender && $M_ui.show($title, false);
+                ////  當 htmlStr 是空字符
                 // 初次渲染，要隱藏 $title
+                firstRender && $M_ui.show($title, false);
                 continue;
               }
-              /* 處理 htmlStr 非空字符的狀況 */
+              ////  當 htmlStr 非空字符
+              // 顯示 $title
               $title.is(":hidden") && $M_ui.show($title);
-              //  若title呈隱藏，則讓其顯示
+              //  通知列表item的hr
               let hr = $(`[data-my-hr=${isConfirm}-news-hr]`);
-              //  相應此通知列表的item分隔線
               if (!hr.length) {
-                //  此類型通知hr不存在，代表是首次渲染此類型通知，item要渲染在title的後方
+                ////  hr不存在，代表是首次渲染，要渲染在title後方
                 $title.after(htmlStr);
               } else {
-                //  此類型通知hr存在，代表非首次渲染此類型通知，item要渲染在最後一個hr的後方
-                //  渲染在相應通知列的後方
+                ////  hr存在，代表非首次渲染，渲染在最後一個hr的後方
                 hr.last().after(htmlStr);
               }
-              $$num.rendered[isConfirm] += $$num.unRender[isConfirm];
-              //  更新 代表已被渲染的通知 數量
+              //  更新 已被渲染的通知數量
+              $$news.num.rendered[isConfirm] += $$num.unRender[isConfirm];
+              //  更新 未被渲染的通知數量
+              $$news.num.unRender[isConfirm] = 0;
             }
-            let count = $$num.db.total - $$num.rendered.total;
-            //  未被前端渲染的通知條目數量
-            $M_ui.show($readMore, count);
-            //  顯示/隱藏「讀取更多」
-            $M_ui.show($noNews, !count);
-            //  顯示/隱藏「沒有更多」
-            $$fn.htmlStr.clear();
+            $$news.fn.htmlStr.clear();
           },
         },
       },
@@ -349,37 +351,27 @@ export default async function ({ axios }) {
     let $$excepts = $$news.excepts;
     let $$num = $$news.num;
     let $$fn = $$news.fn;
-    async function readMore(insert = false) {
-      //  當前已收到的通知數據，提供給後端濾
-      let excepts = { ...$$excepts };
 
-      let {
-        data: { news },
-      } = await getNews({ excepts });
+    //  讓readMore自動循環的類
+    let loop = new $C_Loop(readMore.bind(false), DEF_OPTS.LOAD_NEWS);
+    //  啟動 readMore 自動循環
+    loop.start();
+    //  unRender 條目更新
+    $$news.update(data.news, false);
 
-      let { newsList, hasNews } = news;
-      if (hasNews) {
-        ////  如果有後端數據有變動，清空前端news數據
-        $$fn.newsDropdown.clear();
-        $$fn.newsList.clear();
-        $$fn.htmlStr.clear();
-      }
-      //  更新news數據
-      $$fn.newsList.update(news);
-      //  更新news的htmlStr數據
-      $$fn.htmlStr.update(newsList);
-      if (insert) {
-        ////  如果參數insert=true，立即渲染news
-        $$fn.newsDropdown.insert();
-      }
-      //  前端尚未渲染的筆數
-      let count = $$num.db.unconfirm - $$num.rendered.unconfirm;
-      console.log(123);
-      $M_ui.show($newsCount, count).text(count || "");
-    }
-    ////  ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-    let loop = new $C_Loop(readMore, DEF_OPTS.LOAD_NEWS);
-    loop.now();
+    //  為 BS5 下拉選單元件 註冊 hide.bs.dropdown handler(選單展開時回調)
+    ////  暫停 readMore自動循環
+    $newsDropdown.on("show.bs.dropdown", loop.stop);
+    //  為 BS5 下拉選單元件 註冊 hide.bs.dropdown handler(選單收起時回調)
+    $newsDropdown.on("hide.bs.dropdown", () => {
+      console.log(666);
+      ////  暫停 readMore自動循環
+      loop.start();
+    });
+
+    //  綁定「通知鈕」click handle → 顯示通知筆數
+    $newsDropdown.on("click", renderUnconfirmNewsCount);
+
     //  綁定「讀取更多鈕」click handle → 獲取更多通知數據、同時更新公開數據與渲染葉面
     $readMore.on("click", loop.now.bind(loop, true));
     //  綁定「登出鈕」click handle → 登出功能
@@ -395,38 +387,41 @@ export default async function ({ axios }) {
       location.href = "/login";
       return;
     }
-    ////  ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
-    /* 初始化 nav 各功能 */
-    $$fn.newsList.reset(data.news);
-
-    //  整理頁面初次渲染取得的 news(通知數據)
-    $$fn.htmlStr.update();
-    //  渲染 $$htmlStr 數據、更新當前與htmlStr相關的公用數據
-    $M_ui.show($newsCount, $$num.db.unconfirm).text($$num.db.unconfirm || "");
-    //  顯示 所有未確認過的通知數據 筆數
-    $newsDropdown.on("show.bs.dropdown", async () => {
-      loop.stop();
-      // $$news.newsDropdownOpen = true;
-    });
-    //  通知選單開啟時，更新 $$news.newsDropdownOpen
-    $newsDropdown.on("hide.bs.dropdown", () => {
-      loop.start();
-      // $$news.newsDropdownOpen = false;
-    });
-    //  通知選單開啟時，更新 $$news.newsDropdownOpen
-    $newsDropdown.click(renderUnconfirmNewsCount);
-    //  綁定「通知鈕」click handle → 顯示通知筆數
-
     function renderUnconfirmNewsCount() {
       /*  渲染新通知筆數的提醒 */
       if ($$num.unRender.total) {
         /* 若存在未渲染的通知數據，即進行渲染 */
         $$fn.newsDropdown.insert();
       }
+      checkReadMore();
+      checkNewsCount();
+    }
+    function checkNewsCount() {
       let count = $$num.db.unconfirm - $$num.rendered.unconfirm;
       //  尚未被前端渲染的「未讀取通知」數據 的 筆數
       $M_ui.show($newsCount, count).text(count || "");
       //  顯示新通知筆數
+    }
+    function checkReadMore() {
+      //  未渲染的條目數量
+      let more = $$news.num.db.total - $$news.num.rendered.total;
+      //  顯示/隱藏「讀取更多」
+      $M_ui.show($readMore, more);
+      //  顯示/隱藏「沒有更多」
+      $M_ui.show($noNews, !more);
+    }
+    async function readMore(insert = true) {
+      //  當前已收到的通知數據，提供給後端過濾
+      let excepts = { ...$$excepts };
+      let {
+        data: { news },
+      } = await getNews({ excepts });
+      if (news.hasNews) {
+        ////  此次請求導致『後端重新處理news緩存』，清空前端news數據
+        $$news.clear();
+      }
+      //  unRender 條目更新
+      $$news.update(news, insert);
     }
   }
 
@@ -455,6 +450,7 @@ export default async function ({ axios }) {
     let { pathname, albumList } = reg_pathname.exec(location.pathname).groups;
     $(`.nav-link[href^="/${pathname}"]`).addClass("active");
   }
+
   //  請求 news
   async function getNews(payload) {
     /* 響應的數據 { 

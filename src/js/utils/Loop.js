@@ -25,6 +25,7 @@ export default class {
   }
 
   stop() {
+    console.log(123);
     if (this.timeSet) {
       console.log(`loop stop --- 從【編號${this.timeSet}】setTimeout 開始暫停`);
       this.timeSet = clearTimeout(this.timeSet);
@@ -33,9 +34,10 @@ export default class {
   async now() {
     this.stop();
     console.log(`loop now --- 立即運行一次 callback/${this.callback.name}`);
-    await this.callback(...arguments);
+    let res = await this.callback(...arguments);
     console.log(`loop now --- 這次跑完了`);
     this.start();
+    return res;
   }
   //  setTimeout 標記
   start() {
