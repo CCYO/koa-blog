@@ -1,69 +1,69 @@
 /* navbar.css */
 .dropdown-menu {
-    min-width: 40vw;
+  min-width: 40vw;
 }
 
 @media (max-width: 576px) {
-    .dropdown-menu {
-        font-size: 0.6rem;
-        max-width: 70vw;
-    }
+  .dropdown-menu {
+    font-size: 0.6rem;
+    max-width: 70vw;
+  }
 }
 
 @media (min-width: 577px) {
-    .dropdown-menu {
-        max-width: 40vw;
-    }
+  .dropdown-menu {
+    max-width: 40vw;
+  }
 }
 
-#newList {
-    max-height: 50vh;
-    overflow-y: scroll;
+#newsList {
+  max-height: 50vh;
+  overflow-y: scroll;
 }
 
 .news-item {
-    padding: 0;
+  padding: 0;
 }
 
 .news-item a {
-    background: rgba(200, 200, 200, .5);
-    display: block;
-    padding: 0.25rem 1rem;
+  background: rgba(200, 200, 200, 0.5);
+  display: block;
+  padding: 0.25rem 1rem;
 }
 
 .news-item a:visited {
-    background: #fff;
+  background: #fff;
 }
 
 .news-count {
-    top: 15%;
-    left: 10%;
-}
-
-nav .nav-link{
-    color: rgba(0,0,0,.55)
-}
-
-nav .nav {
-    flex-wrap: nowrap;
-}
-
-nav .nav-item {
-    padding: 0 0.5rem;
+  top: 15%;
+  left: 10%;
 }
 
 nav .nav-link {
-    white-space: nowrap;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+nav .nav {
+  flex-wrap: nowrap;
+}
+
+nav .nav-item {
+  padding: 0 0.5rem;
+}
+
+nav .nav-link {
+  white-space: nowrap;
 }
 
 nav .nav-link:hover {
-    background: rgba(200, 200, 200, .5);
-    color: #0d6efd !important;
-    border-bottom: 1.5px solid;
+  background: rgba(200, 200, 200, 0.5);
+  color: #0d6efd !important;
+  border-bottom: 1.5px solid;
 }
 
 nav .nav-link.active {
-    pointer-events: none;
-    border-bottom: 1.5px solid;
-    color: rgba(0,0,0,.9)
+  pointer-events: none;
+  border-bottom: 1.5px solid;
+  color: rgba(0, 0, 0, 0.9);
 }

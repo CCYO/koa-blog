@@ -25,7 +25,7 @@ export default class {
   }
 
   stop() {
-    console.log(123);
+    console.log(123, this);
     if (this.timeSet) {
       console.log(`loop stop --- 從【編號${this.timeSet}】setTimeout 開始暫停`);
       this.timeSet = clearTimeout(this.timeSet);
@@ -60,6 +60,7 @@ export default class {
         this.timeSet = undefined;
         this.start(...this.args);
       } catch (e) {
+        console.log(this);
         console.log("捕獲到loop內setTimeout的報錯，並傳入error_handle");
         this.stop();
         this.error_handle(e);

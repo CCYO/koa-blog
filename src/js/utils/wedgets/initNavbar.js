@@ -15,8 +15,6 @@ export default async function ({ axios }) {
   }
   // let _data = { me: {}, news: undefined };
   let navbar_data = { me: undefined, news: undefined };
-  //  根據 path，顯示當前 active NavItem
-  activeNavItem();
   if (DEF_OPTS.REG.IGNORE_PAGES.test(location.pathname)) {
     renderLogoutNav();
     // return _data;
@@ -34,20 +32,24 @@ export default async function ({ axios }) {
     ////  登出狀態
     renderLogoutNav();
   }
+  //  根據 path，顯示當前 active NavItem
+  activeNavItem();
   return navbar_data;
   //  返回 getNews的數據，提供統整初始化頁面的函數initPageFn使用
 
   /* 初始化Nav功能 */
   async function initNavFn(data) {
     /* 公用ele */
-    let $readMore = $("#readMore");
     //  更多通知BTN
-    let $noNews = $("#noNews");
+    let $readMore = $("#readMore");
     //  沒有更多通知BTN
-    let $newsCount = $(".news-count");
+    let $noNews = $("#noNews");
     //  未讀取通知數
-    let $newsDropdown = $("#newsDropdown");
+    let $newsCount = $(".news-count");
     //  下拉選單按鈕
+    let $newsDropdown = $("#newsDropdown");
+    //  下拉選單
+
     let $$news = {
       //  既存的數據
       excepts: {
@@ -358,14 +360,14 @@ export default async function ({ axios }) {
     loop.start();
     //  unRender 條目更新
     $$news.update(data.news, false);
-
     //  為 BS5 下拉選單元件 註冊 hide.bs.dropdown handler(選單展開時回調)
-    ////  暫停 readMore自動循環
-    $newsDropdown.on("show.bs.dropdown", loop.stop);
+    $newsDropdown[0].addEventListener("show.bs.dropdown", () => {
+      ////  暫停 readMore自動循環，使用箭頭函數是因為 loop.stop 內部有 this，必須確保this指向loop
+      loop.stop();
+    });
     //  為 BS5 下拉選單元件 註冊 hide.bs.dropdown handler(選單收起時回調)
-    $newsDropdown.on("hide.bs.dropdown", () => {
-      console.log(666);
-      ////  暫停 readMore自動循環
+    $newsDropdown[0].addEventListener("hide.bs.dropdown", () => {
+      ////  開始 readMore自動循環，使用箭頭函數是因為 loop.start 內部有 this，必須確保this指向loop
       loop.start();
     });
 
@@ -448,6 +450,7 @@ export default async function ({ axios }) {
   function activeNavItem() {
     let reg_pathname = /^\/(?<pathname>\w+)\/?(?<albumList>list)?/;
     let { pathname, albumList } = reg_pathname.exec(location.pathname).groups;
+    console.log("pathname => ", pathname);
     $(`.nav-link[href^="/${pathname}"]`).addClass("active");
   }
 
