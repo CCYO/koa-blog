@@ -3,9 +3,8 @@ import "../../../css/utils/noClick.css";
 import "../../../css/wedgets/loadingBackdrop.css";
 
 import { INIT_PAGE } from "../../../../config/constant";
-let { LOADING_BACKDROP: DEF_OPTS } = INIT_PAGE;
 export default class {
-  constructor(options = DEF_OPTS) {
+  constructor(options = INIT_PAGE.LOADING_BACKDROP) {
     this.options = { ...options };
     this.$backdrop = $(`#${options.ID}`);
     this.$backdrop.on("focus", (e) => {

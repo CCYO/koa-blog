@@ -39,9 +39,11 @@ const PAGE_REGISTER_LOGIN = PAGE.REGISTER_LOGIN;
 /* Class --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 
-const $C_initPage = new $M_wedgets.InitPage();
-let G = await $C_initPage.init();
-let { utils: G_utils, data: G_data } = G;
+// const $C_initPage = new $M_wedgets.InitPage();
+// let G = await $C_initPage.init();
+const $C_initPage = $M_wedgets.InitPage;
+// let { utils: G_utils, data: G_data } = G;
+let { utils: G_utils, data: G_data } = $C_initPage;
 const ajv = new $C_ajv(G_utils.axios);
 
 G_utils.validate = {

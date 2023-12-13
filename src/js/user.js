@@ -58,8 +58,10 @@ async function init() {
     /* Class --------------------------------------------------------------------------------- */
     /* ------------------------------------------------------------------------------------------ */
 
+    // const $C_initPage = new $M_wedgets.InitPage();
     const $C_initPage = new $M_wedgets.InitPage();
-    let { utils: G_utils } = await $C_initPage.init();
+    let { utils: G_utils } = $C_initPage;
+    // let { utils: G_utils } = await $C_initPage.init();
     const $$ajv = new $C_ajv(G_utils.axios);
     G_utils.validate = {
       blog_title: $$ajv.get_validate(AJV.TYPE.BLOG_TITLE),

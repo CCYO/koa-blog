@@ -3,25 +3,17 @@ import _axios from "../_axios";
 import initEJSData from "./initEJSData";
 import initNavbar from "./initNavbar";
 
-import { INIT_PAGE as DEF_OPTS } from "../../../../config/constant";
-
-export default class {
-  #options = DEF_OPTS;
+class initPage {
   utils = {};
   data = {};
-  async init(options = this.#options) {
-    if (options) {
-      options = { ...this.#options, ...options };
-    }
-    let loading_backdrop = new Loading_backdrop(options.LOADING_BACKDROP);
+  async init() {
+    let loading_backdrop = new Loading_backdrop();
     let axios = new _axios({ backdrop: loading_backdrop });
-    let navbar_data = await initNavbar({ axios });
-    let ejs_data = initEJSData(options.EJS_DATA);
-
-    this.utils.axios = axios;
-    this.utils.loading_backdrop = loading_backdrop;
-    this.data = { ...ejs_data, ...navbar_data };
-
+    //  { news, me }
+    let navbar_data = await initNavbar(axios);
+    let ejs_data = initEJSData();
+    this.utils = { loading_backdrop, axios };
+    this.data = { ...navbar_data, ...ejs_data };
     return this;
   }
   async render(renderPage) {
@@ -41,3 +33,7 @@ export default class {
     $("form button[type=submit]").prop("disabled", true);
   }
 }
+
+let ins = new initPage();
+let G = await ins.init();
+export default G;
