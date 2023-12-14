@@ -136,7 +136,7 @@ async function init() {
       let $$payload = new $C_genPayload();
 
       //  初始化 頁面各功能
-      G.utils.editor = init_editor();
+      G.utils.editor = create_editor();
       G.utils.loading_backdrop.insertEditors([G.utils.editor]);
 
       await initImgData();
@@ -163,8 +163,7 @@ async function init() {
       /* Init ------------------------------------------------------------------------------------ */
       /* ------------------------------------------------------------------------------------------ */
 
-      // 初始化 編輯文章頁 的功能
-      function init_editor() {
+      function create_editor() {
         //  editor 的 繁中設定
         i18nAddResources("tw", twResources);
         i18nChangeLanguage("tw");
@@ -210,29 +209,19 @@ async function init() {
             },
           },
         };
-        // const toolbarConfig = {
-        //     insertKeys: {
-        //         index: 22,
-        //         key: 'group-video',
-        //         menuKeys: ['insertVideo', 'uploadVideo'],
-        //         title: '影片'
-        //     }
-        // }
         //  editor 編輯欄 創建
         const editor = createEditor({
           //  插入後端取得的 html
           html: G.data.blog.html || "",
-          selector: "#editor-container",
+          selector: `#${PAGE_BLOG_EDIT.ID.EDITOR_CONTAINER}`,
           config: editorConfig,
           // mode: 'simple'
         });
         //  editor 工具欄 創建
-        const toolbar = (window.toolbar = createToolbar({
+        createToolbar({
           editor,
           selector: "#toolbar-container",
-          // config: toolbarConfig,
-          // mode: 'simple'
-        }));
+        });
         const handle_modalShow = gen_handle_modalShow();
         //  handle 用來隱藏 image modal 的 src & url 編輯功能
         editor.on("modalOrPanelShow", handle_modalShow);
@@ -729,7 +718,7 @@ async function init() {
       }
       //  校驗blog數據，且決定submit可否點擊
       async function validate(data) {
-        const errors = await $$validate_blog({
+        const errors = await G.utils.validate.blog({
           ...data,
           $$blog: G.data.blog,
         });

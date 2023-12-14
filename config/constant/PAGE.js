@@ -72,6 +72,7 @@ const PAGE = {
       UPDATE_ALBUM: "/api/album",
     },
     ID: {
+      EDITOR_CONTAINER: "editor-container",
       TITLE: "title",
       STATUS: "status",
       UPDATE_TITLE: "update_title",
