@@ -28,7 +28,7 @@ export default class {
     $F_log("backdrop hidden");
   }
   //  顯示dropBack
-  show(config = { blockPage: false, ediotrs: [] }) {
+  show(config = { blockPage: false, editors: [] }) {
     const {
       blockPage = false,
       //  是否顯示頁面遮罩

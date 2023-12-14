@@ -2,7 +2,7 @@
 /* EJS Module --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 if (process.env.NODE_ENV === "development") {
-  await import("../views/pages/user/index.ejs");
+  import("../views/pages/user/index.ejs");
 }
 import $M_template from "./utils/template";
 
@@ -53,23 +53,19 @@ async function init() {
 
     const PAGE_USER = PAGE.USER;
     const DATA_BLOG = SERVER.BLOG;
-
+    const { G } = $M_wedgets;
     /* ------------------------------------------------------------------------------------------ */
     /* Class --------------------------------------------------------------------------------- */
     /* ------------------------------------------------------------------------------------------ */
 
-    // const $C_initPage = new $M_wedgets.InitPage();
-    const $C_initPage = new $M_wedgets.InitPage();
-    let { utils: G_utils } = $C_initPage;
-    // let { utils: G_utils } = await $C_initPage.init();
-    const $$ajv = new $C_ajv(G_utils.axios);
-    G_utils.validate = {
+    const $$ajv = new $C_ajv(G.utils.axios);
+    G.utils.validate = {
       blog_title: $$ajv.get_validate(AJV.TYPE.BLOG_TITLE),
     };
-    await $C_initPage.render(initMain);
+    await G.main(initMain);
 
     //  統整頁面數據，並渲染需要用到統整數據的頁面內容
-    async function initMain({ me, currentUser, relationShip, blogs }) {
+    async function initMain() {
       /* ------------------------------------------------------------------------------------------ */
       /* JQ Ele in Closure -------------------------------------------------------------------- */
       /* ------------------------------------------------------------------------------------------ */
@@ -89,11 +85,11 @@ async function init() {
       /* ------------------------------------------------------------------------------------------ */
       /* Public Var in Closure -------------------------------------------------------------------- */
       /* ------------------------------------------------------------------------------------------ */
-      let G_data = { me, currentUser, relationShip, blogs };
-      const $$isLogin = !!G_data.me.id;
-      const $$isSelf = currentUser.id === G_data.me.id;
+      //  let { me, currentUser, relationShip, blogs } = G.data
+      const $$isLogin = !!G.data.me.id;
+      const $$isSelf = G.data.currentUser.id === G.data.me.id;
       //  初始化追蹤名單滾動功能
-      G_utils.betterScroll = initBetterScroll([$fansList, $idolList]);
+      G.utils.betterScroll = initBetterScroll([$fansList, $idolList]);
 
       //  初始化文章列表的分頁功能
       initPagination();
@@ -105,7 +101,7 @@ async function init() {
         init_login_permission();
       }
       //  刷新追蹤名單的滾動功能(要在最後執行，確保其他元素都已成形)
-      G_utils.betterScroll.refresh();
+      G.utils.betterScroll.refresh();
 
       /* ------------------------------------------------------------------------------------------ */
       /* Init ------------------------------------------------------------------------------------ */
@@ -124,8 +120,8 @@ async function init() {
         };
 
         //  初始化 Closure Var
-        for (let status in G_data.blogs) {
-          if (!G_data.blogs[status].count) {
+        for (let status in G.data.blogs) {
+          if (!G.data.blogs[status].count) {
             continue;
           }
 
@@ -133,7 +129,7 @@ async function init() {
           //  初始頁碼index從1開始
           targetBlogData.currentPage = 1;
           targetBlogData.totalPage = Math.ceil(
-            G_data.blogs[status].count / DATA_BLOG.PAGINATION.BLOG_COUNT
+            G.data.blogs[status].count / DATA_BLOG.PAGINATION.BLOG_COUNT
           );
           //  初始分頁index從1開始
           targetBlogData.currentPagination = 1;
@@ -180,7 +176,7 @@ async function init() {
             //  取出 目標頁、目標分頁、當前分頁
             let { targetPage, targetPagination, currentPagination } = paramsObj;
             //  頁面讀取過渡
-            G_utils.loading_backdrop.show();
+            G.utils.loading_backdrop.show();
             //  文章列表讀取過渡
             preLink.$pane.addClass("pane-loading loading");
             //  確認目標頁 pane 是否存在
@@ -188,8 +184,8 @@ async function init() {
               //  發出請求，取得blogList數據
               let {
                 data: { blogs },
-              } = await G_utils.axios.post(PAGE_USER.API.GET_BLOG_LIST, {
-                author_id: G_data.currentUser.id,
+              } = await G.utils.axios.post(PAGE_USER.API.GET_BLOG_LIST, {
+                author_id: G.data.currentUser.id,
                 limit: DATA_BLOG.PAGINATION.BLOG_COUNT,
                 //  前端分頁index從1開始，後端分頁index從0開始，所以要-1
                 offset: (targetPage - 1) * DATA_BLOG.PAGINATION.BLOG_COUNT,
@@ -254,7 +250,7 @@ async function init() {
             //  顯示目標頁碼pane
             link.$pane.show().addClass("show");
             //  移除頁面讀取過渡
-            G_utils.loading_backdrop.hidden();
+            G.utils.loading_backdrop.hidden();
           };
         });
         //  為div註冊clickEvent handler
@@ -415,8 +411,8 @@ async function init() {
       function init_login_permission() {
         //  判端是否為自己的偶像
         const isMyIdol = $$isLogin
-          ? G_data.relationShip.fansList.some(
-              (fans) => fans.id === G_data.me.id
+          ? G.data.relationShip.fansList.some(
+              (fans) => fans.id === G.data.me.id
             )
           : false;
         //  依據 isMyIdol 顯示 退追紐
@@ -436,17 +432,17 @@ async function init() {
           _checkLogin();
           //  檢查登入狀態
           /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-          await G_utils.axios.post(PAGE_USER.API.FOLLOW, {
-            id: G_data.currentUser.id,
+          await G.utils.axios.post(PAGE_USER.API.FOLLOW, {
+            id: G.data.currentUser.id,
           });
           //  發出 取消/追蹤 請求
           /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
           //  同步 fansList 數據
-          G_data.relationShip.fansList.unshift(G_data.me);
+          G.data.relationShip.fansList.unshift(G.data.me);
 
-          let html = $M_template.fans_Item({ user: G_data.me });
+          let html = $M_template.fans_Item({ user: G.data.me });
           //  在粉絲列表中插入 粉絲htmlStr
-          if (G_data.relationShip.fansList.length === 1) {
+          if (G.data.relationShip.fansList.length === 1) {
             //  如果追蹤者只有當前的你
             $fansList.html(`<ul>${html}</ul>`);
           } else {
@@ -454,7 +450,7 @@ async function init() {
             $fansList.children("ul").prepend(html);
             //  插在最前面
           }
-          G_utils.betterScroll.refresh();
+          G.utils.betterScroll.refresh();
           //  重整 BetterScroll
           $btn_follow.toggle(false);
           //  追蹤鈕的toggle
@@ -468,19 +464,19 @@ async function init() {
           _checkLogin();
           //  檢查登入狀態
           /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-          await G_utils.axios.post(PAGE_USER.API.CANCEL_FOLLOW, {
-            id: G_data.currentUser.id,
+          await G.utils.axios.post(PAGE_USER.API.CANCEL_FOLLOW, {
+            id: G.data.currentUser.id,
           });
           /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
-          G_data.relationShip.fansList.splice(
-            G_data.relationShip.fansList.indexOf(G_data.me.id),
+          G.data.relationShip.fansList.splice(
+            G.data.relationShip.fansList.indexOf(G.data.me.id),
             1
           );
           //  在粉絲列表中移除 粉絲htmlStr
-          if (G_data.relationShip.fansList.length > 0) {
+          if (G.data.relationShip.fansList.length > 0) {
             //  如果仍有追蹤者
             $fansList
-              .find(`li[data-${PAGE_USER.DATASET.KEY.USER_ID}=${G_data.me.id}]`)
+              .find(`li[data-${PAGE_USER.DATASET.KEY.USER_ID}=${G.data.me.id}]`)
               .remove();
             //  直接移除
           } else {
@@ -489,7 +485,7 @@ async function init() {
             //  撤換掉列表內容
           }
           /*  同步 $$fansList 數據 */
-          G_utils.betterScroll.refresh();
+          G.utils.betterScroll.refresh();
           //  重整 BetterScroll
           $btn_follow.toggle(true);
           //  追蹤鈕的toggle
@@ -551,9 +547,9 @@ async function init() {
             );
           }
 
-          let owner_id = G_data.me.id;
+          let owner_id = G.data.me.id;
           //  送出刪除命令
-          let { errno } = await G_utils.axios.delete(
+          let { errno } = await G.utils.axios.delete(
             PAGE_USER.API.REMOVE_BLOGS,
             {
               data: {
@@ -579,13 +575,13 @@ async function init() {
           }
           const {
             data: { id: blog_id },
-          } = await G_utils.axios.post(PAGE_USER.API.CREATE_BLOG, {
+          } = await G.utils.axios.post(PAGE_USER.API.CREATE_BLOG, {
             title,
           });
           alert("創建成功，開始編輯文章");
           $input_new_blog_title.val("");
           //  清空表格
-          let redir = `${PAGE_USER.API.EDIT_BLOG}/${blog_id}?owner_id=${G_data.me.id}`;
+          let redir = `${PAGE_USER.API.EDIT_BLOG}/${blog_id}?owner_id=${G.data.me.id}`;
           location.href = redir;
         }
         //  校驗文章標題
@@ -596,7 +592,7 @@ async function init() {
           let data = {
             title: $M_xss.xssAndTrim(input.value),
           };
-          let validated_list = await G_utils.validate.blog_title(data);
+          let validated_list = await G.utils.validate.blog_title(data);
           let valid = !validated_list.some((item) => !item.valid);
           let msg = "";
           let res = title;
