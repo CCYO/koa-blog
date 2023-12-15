@@ -24,7 +24,7 @@ export default function (status, targetEl, valid, msg = "") {
       .removeClass("is-invalid is-valid")
       .next()
       .removeClass("invalid-feedback valid-feedback loading")
-      .text("");
+      .text(msg);
     return undefined;
   } else if (status === FORM_FEEDBACK.STATUS.RESET) {
     //  清空form
@@ -37,7 +37,7 @@ export default function (status, targetEl, valid, msg = "") {
         .removeClass("is-invalid is-valid")
         .next()
         .removeClass("invalid-feedback valid-feedback loading")
-        .text("");
+        .text(msg);
     }
     return undefined;
   }

@@ -62,55 +62,11 @@ async function init() {
     const SERVER_BLOG = SERVER.BLOG;
     const PAGE_BLOG_EDIT = PAGE.BLOG_EDIT;
     const { G } = $M_wedgets;
-
-    /* ------------------------------------------------------------------------------------------ */
-    /* Class --------------------------------------------------------------------------------- */
-    /* ------------------------------------------------------------------------------------------ */
-
     const $$ajv = new $C_ajv(G.utils.axios);
     G.utils.validate = {
       blog: $$ajv.get_validate(AJV.TYPE.BLOG),
     };
     await G.main(initMain);
-
-    class $C_genPayload extends Map {
-      setKVpairs(dataObj) {
-        //  將kv資料存入
-        const entries = Object.entries(dataObj);
-        if (entries.length) {
-          for (let [key, value] of entries) {
-            this._set(key, value);
-          }
-        }
-      }
-      getPayload(kvPairs) {
-        let res = {};
-        for (let [key, value] of [...this]) {
-          res[key] = value;
-        }
-        if (kvPairs) {
-          for (let key in kvPairs) {
-            res[key] = kvPairs[key];
-          }
-        }
-        return res;
-      }
-      _set(key, value) {
-        if (key === "title") {
-          //  若刪除的是title，開啟更新鈕
-          $btn_updateTitle.prop("disabled", false);
-        }
-        this.set(key, value);
-      }
-      //  刪除數據
-      _del(key) {
-        this.delete(key);
-        if (key === "title") {
-          //  若刪除的是title，關閉更新鈕
-          $btn_updateTitle.prop("disabled", true);
-        }
-      }
-    }
 
     /* ------------------------------------------------------------------------------------------ */
     /* Init ------------------------------------------------------------------------------------ */
@@ -133,12 +89,49 @@ async function init() {
       /* ------------------------------------------------------------------------------------------ */
       //  let { blog } = G.data
 
+      class $C_genPayload extends Map {
+        setKVpairs(dataObj) {
+          //  將kv資料存入
+          const entries = Object.entries(dataObj);
+          if (entries.length) {
+            for (let [key, value] of entries) {
+              this.#set(key, value);
+            }
+          }
+        }
+        getPayload(kvPairs) {
+          let res = {};
+          for (let [key, value] of [...this]) {
+            res[key] = value;
+          }
+          if (kvPairs) {
+            for (let key in kvPairs) {
+              res[key] = kvPairs[key];
+            }
+          }
+          return res;
+        }
+        //  刪除數據
+        del(key) {
+          this.delete(key);
+          if (key === "title") {
+            //  若刪除的是title，關閉更新鈕
+            $btn_updateTitle.prop("disabled", true);
+          }
+        }
+        #set(key, value) {
+          if (key === "title") {
+            //  若設定的是title，開啟更新鈕
+            $btn_updateTitle.prop("disabled", false);
+          }
+          this.set(key, value);
+        }
+      }
       let $$payload = new $C_genPayload();
 
       //  初始化 頁面各功能
       G.utils.editor = create_editor();
       G.utils.loading_backdrop.insertEditors([G.utils.editor]);
-
       await initImgData();
       G.utils.editor.focus();
       let { debounce: handle_debounce_input } = new $M_Debounce(handle_input, {
@@ -164,12 +157,26 @@ async function init() {
       /* ------------------------------------------------------------------------------------------ */
 
       function create_editor() {
+        const KEY = "html";
+        let cache_content = "";
         //  editor 的 繁中設定
         i18nAddResources("tw", twResources);
         i18nChangeLanguage("tw");
-        const { debounce: handle_debounce_change } = new $M_Debounce(_, {
-          loading: () => $btn_updateBlog.prop("disabled", true),
-        });
+        const { debounce: handle_debounce_change } = new $M_Debounce(
+          handle_change,
+          {
+            loading: () => {
+              $btn_updateBlog.prop("disabled", true);
+              let content = G.utils.editor.getHtml();
+              cache_content = $M_xss.xssAndRemoveHTMLEmpty(content);
+              if ($$payload.has(KEY) || cache_content !== G.data.blog.html) {
+                $span_content_count
+                  .text("確認中...")
+                  .removeClass("text-danger");
+              }
+            },
+          }
+        );
         //  editor config
         const editorConfig = {
           hoverbarKeys: {
@@ -295,7 +302,7 @@ async function init() {
           let blog_id = G.data.blog.id;
           let alt_id = (res.groups.alt_id *= 1);
           alt = $M_xss.xssAndTrim(alt);
-          await $$axios.patch(PAGE_BLOG_EDIT.API.UPDATE_ALBUM, {
+          await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_ALBUM, {
             alt_id,
             blog_id,
             alt,
@@ -325,12 +332,12 @@ async function init() {
             //  創建 formData，作為酬載數據的容器
             formdata.append("blogImg", img);
             //  放入圖片數據
-            res = await $$axios.post(api, formdata);
+            res = await G.utils.axios.post(api, formdata);
             //  upload
           } else {
             // img為重覆的舊圖，傳給後端新建一個blogImgAlt
             console.log("進行舊圖處理");
-            res = await $$axios.post(PAGE_BLOG_EDIT.API.CREATE_IMG_ALT, {
+            res = await G.utils.axios.post(PAGE_BLOG_EDIT.API.CREATE_IMG_ALT, {
               blogImg_id,
             });
           }
@@ -409,20 +416,44 @@ async function init() {
           }
         }
         //  handle：editor選區改變、內容改變時觸發
-        async function _() {
-          console.log(
-            "handle_change 抓到囉！-------------------------------------------------"
-          );
+        async function handle_change() {
           if (!editor) {
             //  editor尚未建構完成
+            console.log("editor尚未建構完成");
             return;
           }
-          const KEY = "html";
-          let content = $M_xss.xssAndRemoveHTMLEmpty(editor.getHtml());
-          let errors = await validate({ html: content });
-          //  僅做html驗證
-          $$payload.setKVpairs({ [KEY]: content });
+
+          // let content = editor.getHtml();
+          // content = $M_xss.xssAndRemoveHTMLEmpty(content);
+
+          // if (!G.data.blog.html.length && !content.length) {
+          //   return;
+          // }
+          let newData = { [KEY]: cache_content };
+          //  校證html
+          // let errors = await validate({ html: content });
+          let result = await validate(newData);
+          let invalid = result.some(({ valid }) => !valid);
+          let { keyword, message } = result.find(
+            ({ field_name }) => field_name === KEY
+          );
+          console.log("{ keyword, message }", { keyword, message });
+          if (invalid && keyword.length !== 1) {
+            throw new Error(JSON.stringify(result));
+          }
+          let text = `還能輸入${
+            SERVER_BLOG.EDITOR.HTML_MAX_LENGTH - cache_content.length
+          }個字`;
+          if (!invalid) {
+            $$payload.setKVpairs(newData);
+          } else {
+            $$payload.del(KEY);
+          }
+          $span_content_count.removeClass("text-danger").text(text);
+          return;
           //  先存入payload
+          $$payload.setKVpairs({ [KEY]: content });
+
           const error = !errors ? null : errors[KEY];
           if (!error) {
             $span_content_count
@@ -448,7 +479,7 @@ async function init() {
               .addClass("text-danger");
             //  提示html不可為空
           } else if (error["diff"]) {
-            $$payload._del(KEY);
+            $$payload.del(KEY);
             //  若html與原本相同，刪去payload的html數據
           }
           await validateAll();
@@ -468,7 +499,7 @@ async function init() {
           blogList: [G.data.blog.id],
           owner_id: G.data.blog.author.id,
         };
-        await $$axios.delete(PAGE_BLOG_EDIT.API.UPDATE_BLOG, { data });
+        await G.utils.axios.delete(PAGE_BLOG_EDIT.API.UPDATE_BLOG, { data });
         alert("已成功刪除此篇文章");
         location.href = "/self";
       }
@@ -485,6 +516,29 @@ async function init() {
           //  若cancel有值
           payload.cancelImgs = cancelImgs; //  放入payload
         }
+        let result = await validate(payload);
+        let invalid = result.some(({ valid }) => !valid);
+        if (invalid) {
+          throw new Error(JSON.stringify(result));
+        }
+        payload.blog_id = G.data.blog.id;
+        payload.owner_id = G.data.blog.author.id;
+        await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, payload);
+        for (let [key, value] of $$payload.entries()) {
+          G.data.blog[key] = value;
+          //  同步數據
+        }
+        $$payload.clear();
+        //  清空$$payload
+        $btn_updateBlog.prop("disabled", true);
+        //  此時文章更新鈕無法點擊
+        if (confirm("儲存成功！是否預覽？（新開視窗）")) {
+          window.open(
+            `/blog/${G.data.blog.id}?${SERVER_BLOG.SEARCH_PARAMS.PREVIEW}=true`
+          );
+        }
+        return;
+
         const errors = await validateAll();
         if (errors) {
           let msg = "";
@@ -507,7 +561,7 @@ async function init() {
         }
         payload.blog_id = G.data.blog.id;
         payload.owner_id = G.data.blog.author.id;
-        await $$axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, payload);
+        await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, payload);
         for (let [key, value] of $$payload.entries()) {
           G.data.blog[key] = value;
           //  同步數據
@@ -541,18 +595,23 @@ async function init() {
       }
       //  關於 設定文章公開/隱藏時的操作
       async function handle_pubOrPri(e) {
-        let show = e.target.checked;
         let KEY = "show";
-        let errors = await validateAll({ show });
-        if (!errors || !errors[KEY]) {
-          //  代表合法，存入 payload
-          $$payload.setKVpairs({ [KEY]: show });
-        } else if (errors[KEY]) {
-          //  代表非法
-          $$payload._del(KEY);
-          errors[KEY].hasOwnProperty("diff") && (await validateAll());
-          //  若驗證錯誤是與原值相同，則測試當前payload
+        let newData = { [KEY]: e.target.checked };
+        let result = await validate(newData);
+        let invalid = result.some(({ valid }) => !valid);
+        if (!invalid) {
+          $$payload.setKVpairs(newData);
         }
+        // let errors = await validateAll({ show });
+        // if (!errors || !errors[KEY]) {
+        //   //  代表合法，存入 payload
+        //   $$payload.setKVpairs({ [KEY]: show });
+        // } else if (errors[KEY]) {
+        //   //  代表非法
+        //   $$payload.del(KEY);
+        //   errors[KEY].hasOwnProperty("diff") && (await validateAll());
+        //   //  若驗證錯誤是與原值相同，則測試當前payload
+        // }
         return;
       }
       //  關於 更新title 的相關操作
@@ -563,14 +622,15 @@ async function init() {
           blog_id: G.data.blog.id,
           title: $$payload.get(KEY),
         };
-        let msg;
-        let errors = await validate(payload);
+        // let msg;
+        // let errors = await validate(payload);
         //  驗證
-        $M_ui.form_feedback(FORM_FEEDBACK.STATUS.CLEAR, e.target);
-        //  清空提醒
+        // $M_ui.form_feedback(FORM_FEEDBACK.STATUS.CLEAR, e.target);
+        // //  清空提醒
+        /*
         if (!errors || !errors[KEY]) {
           //  代表合法
-          let { data } = await $$axios.patch(
+          let { data } = await G.utils.axios.patch(
             PAGE_BLOG_EDIT.API.UPDATE_BLOG,
             payload
           );
@@ -586,13 +646,52 @@ async function init() {
             msg = "文章標題" + values.join(",");
           }
         }
-        $$payload._del(KEY);
-        await validateAll();
-        alert(msg);
+*/
+        let response = await G.utils.axios.patch(
+          PAGE_BLOG_EDIT.API.UPDATE_BLOG,
+          payload
+        );
+        //  同步數據
+        G.data.blog[KEY] = response.data[KEY];
+
+        // G.data.blog[KEY] = data[KEY];
+        //  同步數據
+        // msg = "標題更新完成";
+
+        $$payload.del(KEY);
+        // await validateAll();
+        $M_ui.form_feedback(FORM_FEEDBACK.STATUS.CLEAR, e.target);
+        //  清空提醒
+        alert("標題更新完成");
         return;
       }
       //  關於 title 輸入新值後，又沒立即更新的相關操作
       async function handle_blur(e) {
+        const KEY = "title";
+        const target = e.target;
+        let title = $M_xss.xssAndTrim(target.value);
+        let newData = { [KEY]: title };
+        let result = await validate(newData);
+        let result_title = result.find(
+          ({ field_name }) => field_name === "title"
+        );
+        if (!result_title.valid) {
+          target.value = G.data.blog.title;
+          $M_ui.form_feedback(FORM_FEEDBACK.STATUS.CLEAR, target);
+        }
+        return;
+        /*
+        if (invalid) {
+          $$payload.setKVpairs(newData);
+        }
+        $M_ui.form_feedback(
+          FORM_FEEDBACK.STATUS.VALIDATED,
+          target,
+          result_title.valid,
+          result_title.message
+        );
+        return;
+
         const KEY = "title";
         let target = e.target;
         let title = $M_xss.xssAndTrim(target.value);
@@ -608,13 +707,30 @@ async function init() {
           return $M_ui.form_feedback(FORM_FEEDBACK.STATUS.CLEAR, target);
           //  移除非法提醒
         }
+        */
       }
       //  關於 title 輸入新值時的相關操作
       async function handle_input(e) {
         const KEY = "title";
         const target = e.target;
         let title = $M_xss.xssAndTrim(target.value);
-        let errors = await validateAll({ [KEY]: title });
+        let newData = { [KEY]: title };
+        let result = await validate(newData);
+        let invalid = result.some(({ valid }) => !valid);
+        let result_title = result.find(
+          ({ field_name }) => field_name === "title"
+        );
+        $M_ui.form_feedback(
+          FORM_FEEDBACK.STATUS.VALIDATED,
+          target,
+          result_title.valid,
+          result_title.message
+        );
+        if (!invalid) {
+          $$payload.setKVpairs(newData);
+        }
+        return;
+        // let errors = await validateAll({ [KEY]: title });
         if (!errors || !errors[KEY]) {
           $$payload.setKVpairs({ [KEY]: title });
           //  存入 payload
@@ -627,7 +743,7 @@ async function init() {
         }
         const error = errors[KEY];
         if (error) {
-          $$payload._del(KEY);
+          $$payload.del(KEY);
         }
         if (error.hasOwnProperty("diff")) {
           delete error.diff;
@@ -662,7 +778,7 @@ async function init() {
           //  若cancel無值
           return;
         }
-        const res = await $$axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, {
+        const res = await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, {
           cancelImgs,
           blog_id: G.data.blog.id,
           owner_id: G.data.blog.author.id,
@@ -717,13 +833,15 @@ async function init() {
         return cancelImgs;
       }
       //  校驗blog數據，且決定submit可否點擊
-      async function validate(data) {
-        const errors = await G.utils.validate.blog({
-          ...data,
-          $$blog: G.data.blog,
+      async function validate(newData) {
+        let result = await G.utils.validate.blog({
+          ...newData,
+          _old: G.data.blog,
         });
-        $btn_updateBlog.prop("disabled", !!errors);
-        return errors;
+        result = result.filter(({ field_name }) => field_name !== "_old");
+        let disable = result.some(({ valid }) => !valid);
+        $btn_updateBlog.prop("disabled", disable);
+        return result;
       }
       async function validateAll(kvPairs) {
         const blogData = $$payload.getPayload(kvPairs);

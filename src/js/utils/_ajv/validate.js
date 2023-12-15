@@ -9,11 +9,9 @@ export default async function (data, ignore_list = []) {
     let validate = this;
     if (validate.$async) {
       await validate(data);
-      // } else if (!validate(data)) {
     } else {
       let valid = validate(data);
       if (!valid) {
-        console.log(validate.errors);
         throw new Ajv2019.ValidationError(validate.errors);
       }
     }
@@ -91,7 +89,7 @@ function _init_errors(invalid_errors) {
 }
 //  將轉化後的校驗錯誤再轉化為
 //  [
-//    { [keyword], [message], valid: boolean }, ...
+//    { field_name, valid: boolean, <message|value>, }, ...
 //  ]
 function _parseErrorsToForm(invalid_errors, data, ignore_list = []) {
   let res_list = [];
@@ -105,7 +103,16 @@ function _parseErrorsToForm(invalid_errors, data, ignore_list = []) {
     for (let error of top_errors) {
       let { keyword, message, list } = error;
       for (let field_name of list) {
-        invalid_errors[field_name] = message;
+        if (!invalid_errors[field_name]) {
+          invalid_errors[field_name] = {
+            message,
+            top: true,
+            keyword: [keyword],
+          };
+        } else {
+          invalid_errors[field_name].message += ",message";
+          invalid_errors[field_name].keyword.push(keyword);
+        }
       }
     }
     delete invalid_errors[AJV.FIELD_NAME.TOP];
@@ -129,22 +136,34 @@ function _parseErrorsToForm(invalid_errors, data, ignore_list = []) {
     for (let field_name in invalid_errors) {
       let errors = invalid_errors[field_name];
       //  ↓ 若是 JSON Pointer 一級 object 定義的最高級別錯誤，在先前已被處理為錯誤 string
-      if (typeof errors === "string") {
-        res_list.push({ valid, field_name, message: errors });
+      // if (typeof errors === "string") {
+      if (errors.top) {
+        res_list.push({
+          valid,
+          field_name,
+          message: errors.message,
+          keyword: errors.keyword,
+        });
         continue;
       }
       //  處理 JSON Pointer 一級 object 最高級別以下各個property的錯誤訊息
-      let error_message = errors.reduce((acc, { message }, index) => {
-        if (!index) {
-          return message;
-        }
-        acc += `,${message}`;
-        if (index === errors.length - 1) {
-          acc += "。";
-        }
-        return acc;
-      }, "");
-      res_list.push({ valid, field_name, message: error_message });
+      let error = errors.reduce(
+        (acc, { message, keyword }, index) => {
+          acc.keyword.push(keyword);
+          if (!index) {
+            acc.message += message;
+            return acc;
+          }
+          acc.message += `,${message}`;
+          if (index === errors.length - 1) {
+            acc.message += "。";
+          }
+          return acc;
+          // }, "");
+        },
+        { keyword: [], message: "" }
+      );
+      res_list.push({ valid, field_name, ...error });
     }
   }
   if (valid_list.length) {

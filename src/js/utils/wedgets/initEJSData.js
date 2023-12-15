@@ -54,7 +54,7 @@ function initAlbum({ blog, imgs }) {
   return { blog, imgs, map_imgs };
 }
 //  初始化blog數據
-async function initBlog(blog) {
+function initBlog(blog) {
   blog.map_imgs = init_map_imgs(blog.imgs);
   //  處理blog內的img數據
   //  blog.imgs: [ img { alt_id, alt, blogImg_id, name, img_id, hash, url }]
@@ -107,7 +107,7 @@ async function initBlog(blog) {
     //  複製一份htmlStr
     let res;
     //  存放 reg 匹配後 的 img src 數據
-    while ((res = REG.BLOG.X_IMG.exec(copy))) {
+    while ((res = INIT_PAGE.EJS_DATA.REG.BLOG.X_IMG.exec(copy))) {
       let { alt_id, style } = res.groups;
       //  找出對應的img數據
       let tt = [...blog.map_imgs];
