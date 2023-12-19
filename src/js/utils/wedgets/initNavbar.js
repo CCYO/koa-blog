@@ -4,6 +4,7 @@ import "../../../css/wedgets/navbar.css";
 import $C_Loop from "../Loop";
 import $M_ui from "../ui";
 import $M_template from "../template";
+import $M_log from "../log";
 /* -------------------- CONFIG CONST -------------------- */
 import { INIT_PAGE } from "../../../../config/constant";
 
@@ -19,6 +20,7 @@ export default async function (axios, options = INIT_PAGE.NAVBAR) {
     if (!errno) {
       navbar_data = data;
     }
+    $M_log.dev("初次取得LoginData => ", data);
   }
   render(navbar_data);
   //  初始化nav功能

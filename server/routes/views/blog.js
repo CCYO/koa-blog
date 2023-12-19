@@ -96,15 +96,21 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
     //  將 DB 數據賦予給 ctx.cache
     cache.data = resModel.data;
     // cache.data.html = encodeURI(cache.data.html);
+    cache.data.html = cache.data.html && encodeURI(cache.data.html);
+    //  若html有值，則進行解碼
   }
   let url = new URL(ctx.href);
   let params = url.searchParams;
 
   let showComment =
+    //  是否由預覽文章發來的請求
     !params.get(CONFIG_CONST.SERVER.BLOG.SEARCH_PARAMS.PREVIEW) &&
+    //  是否為發布狀態
     cache.data.show;
   let isLogin = ctx.session.user ? true : false;
   let me_id = isLogin ? ctx.session.user.id : 0;
+  console.log("blog => ", cache.data.html);
+  console.log(typeof cache.data.html);
   let ejs_data = {
     blog: { ...cache.data, showComment },
     ejs_template,

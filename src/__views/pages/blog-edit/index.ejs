@@ -15,8 +15,8 @@
       <button id="<%= G_CONST.ID.UPDATE_TITLE %>" disabled>修改標題</button>
     </div>
     <div id="editor-wrapper">
-      <div id="toolbar-container"></div>
-      <div id="editor-container"></div>
+      <div id="<%= G_CONST.ID.EDITOR_TOOLBAR_CONTAINER %>"></div>
+      <div id="<%= G_CONST.ID.EDITOR_CONTAINER %>"></div>
       <span id="<%= G_CONST.ID.BLOG_HTML_STRING_COUNT %>"></span>
 
       <label> <input type="checkbox" id="<%= G_CONST.ID.STATUS %>" <%= blog.show ? 'checked' : '' %> />公開文章</label>

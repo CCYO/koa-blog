@@ -7,15 +7,15 @@ export default {
   $id: TYPE.IMG_ALT.ref,
   type: "object",
   properties: {
-    $$alt: {
-      type: "string",
+    _old: {
+      type: "object",
       errorMessage: {
-        type: "$$alt 必須是 string",
+        type: "_old需是object",
       },
     },
     alt: {
+      type: "string",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/blogImgAlt`,
-      diff: { $data: "1/$$alt" },
     },
     blog_id: {
       type: "integer",
@@ -34,8 +34,13 @@ export default {
       },
     },
   },
-  _required: ["$$alt", "alt", "blog_id", "alt_id"],
+  _notEmpty: ["alt", "blog_id", "alt_id"],
+  _notRepeat: ["alt"],
+  minProperties: 2,
+  additionalProperties: false,
   errorMessage: {
+    minProperties: "至少需改一筆資料",
+    additionalProperties: "多了",
     type: "必須是object",
   },
 };

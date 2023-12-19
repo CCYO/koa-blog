@@ -43,14 +43,14 @@ function myXss(html) {
   });
 }
 
-function xssAndTrim(data) {
+function trim(data) {
   return myXss(data.trim());
 }
 
 //  去除空格與進行xss
-function xssAndRemoveHTMLEmpty(data) {
+function remove_editor_empty(data) {
   //  xss
-  let curHtml = xssAndTrim(data.trim());
+  let curHtml = trim(data.trim());
   //  移除開頭、結尾的空格與空行
   let reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g;
   let reg_end = /((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*$/g;
@@ -59,5 +59,5 @@ function xssAndRemoveHTMLEmpty(data) {
   return curHtml;
 }
 
-export default { myXss, xssAndTrim, xssAndRemoveHTMLEmpty };
-export { myXss, xssAndTrim, xssAndRemoveHTMLEmpty };
+export default { myXss, trim, remove_editor_empty };
+export { myXss, trim, remove_editor_empty };

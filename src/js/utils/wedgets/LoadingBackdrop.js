@@ -1,4 +1,4 @@
-import { dev_log as $F_log } from "../log";
+import $M_log from "../log";
 import "../../../css/utils/noClick.css";
 import "../../../css/wedgets/loadingBackdrop.css";
 
@@ -25,7 +25,7 @@ export default class {
         editor.enable();
       }
     }
-    $F_log("backdrop hidden");
+    $M_log.dev("backdrop hidden");
   }
   //  顯示dropBack
   show(config = { blockPage: false, editors: [] }) {
@@ -58,7 +58,7 @@ export default class {
       );
     //  focus事件綁定(且用上jq語法糖，賦予綁定事件一個指定名稱，方便後續取消綁定)
     //  handle 讓所有 blockList 發生聚焦時，統一將聚焦轉移至 backdrop
-    $F_log("backdrop show");
+    $M_log.dev("backdrop show");
   }
   insertEditors(editors) {
     this.editors = this.editors.concat(editors);

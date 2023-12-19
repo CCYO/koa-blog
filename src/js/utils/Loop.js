@@ -1,5 +1,5 @@
 import { error_handle } from "./common";
-
+import $M_log from "./log";
 export default class {
   ms = 5 * 1000 * 60;
   timeSet = undefined;
@@ -25,17 +25,16 @@ export default class {
   }
 
   stop() {
-    console.log(123, this);
     if (this.timeSet) {
-      console.log(`loop stop --- 從【編號${this.timeSet}】setTimeout 開始暫停`);
+      $M_log.dev(`loop stop --- 從【編號${this.timeSet}】setTimeout 開始暫停`);
       this.timeSet = clearTimeout(this.timeSet);
     }
   }
   async now() {
     this.stop();
-    console.log(`loop now --- 立即運行一次 callback/${this.callback.name}`);
+    $M_log.dev(`loop now --- 立即運行一次 callback/${this.callback.name}`);
     let res = await this.callback(...arguments);
-    console.log(`loop now --- 這次跑完了`);
+    $M_log.dev(`loop now --- 這次跑完了`);
     this.start();
     return res;
   }
@@ -54,19 +53,18 @@ export default class {
       try {
         await this.callback(...this.args);
         //  清除timeSet，讓下一次loading順利調用
-        console.log(
+        $M_log.dev(
           `auto 設定的【編號${this.timeSet}】setTimeout 這次跑完了，將自動進行下一次 --- 2`
         );
         this.timeSet = undefined;
         this.start(...this.args);
       } catch (e) {
-        console.log(this);
-        console.log("捕獲到loop內setTimeout的報錯，並傳入error_handle");
+        $M_log.dev("捕獲到loop內setTimeout的報錯，並傳入error_handle");
         this.stop();
         this.error_handle(e);
       }
       return;
     }, this.ms);
-    console.log(`auto 已設定【編號${this.timeSet}】setTimeout --- 1`);
+    $M_log.dev(`auto 已設定【編號${this.timeSet}】setTimeout --- 1`);
   }
 }

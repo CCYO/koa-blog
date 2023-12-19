@@ -1,4 +1,4 @@
-<% let G_CONST = JSON.parse('{"API":{"CREATE_COMMENT":"/api/comment","REMOVE_COMMENT":"/api/comment"},"CLASS":{"COMMENT_LIST":"comment-list","COMMENT_EDITOR_CONTAINER":"editor-container","COMMENT_LIST_CONTAINER":"comment-list-container","COMMENT_ITEM_CONTAINER":"comment-item-container","COMMENT_ITEM_CONTENT":"comment-item-content"},"DATASET":{"KEY":{"COMMENT_ID":"comment_id","EDITOR_ID":"editor_id","REMOVE_COMMENT":"remove","PID":"pid"}},"REG":{"BLOG_CONTENT_TRIM":{}}}') %>
+<% let G_CONST = JSON.parse('{"API":{"CREATE_COMMENT":"/api/comment","REMOVE_COMMENT":"/api/comment"},"CLASS":{"BLOG_CONTENT":"editor-content-view","COMMENT_LIST":"comment-list","COMMENT_EDITOR_CONTAINER":"editor-container","COMMENT_LIST_CONTAINER":"comment-list-container","COMMENT_ITEM_CONTAINER":"comment-item-container","COMMENT_ITEM_CONTENT":"comment-item-content"},"DATASET":{"KEY":{"COMMENT_ID":"comment_id","EDITOR_ID":"editor_id","REMOVE_COMMENT":"remove","PID":"pid"}},"REG":{"BLOG_CONTENT_TRIM":{}}}') %>
 <div class="<%= G_CONST.CLASS.COMMENT_ITEM_CONTENT %>">
   <% if (isDeleted || !html) { %>
   <div>

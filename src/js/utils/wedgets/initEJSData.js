@@ -1,4 +1,4 @@
-import { dev_log as $F_log } from "../log";
+import $M_log from "../log";
 import { INIT_PAGE } from "../../../../config/constant";
 
 //  初始化數據
@@ -11,7 +11,7 @@ import { INIT_PAGE } from "../../../../config/constant";
 export default function (options = INIT_PAGE.EJS_DATA) {
   let $container = $(options.SELECTOR);
   if (!$container.length) {
-    $F_log("此頁無EJS DATA");
+    $M_log.dev("此頁無EJS DATA");
     return;
   }
 

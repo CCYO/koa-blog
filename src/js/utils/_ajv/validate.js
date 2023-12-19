@@ -1,6 +1,6 @@
 import Ajv2019 from "ajv/dist/2019";
 
-import { dev_log as $F_log } from "../log";
+import $M_log from "../log";
 import { AJV } from "../../../../config/constant";
 
 export default async function (data, ignore_list = []) {
@@ -30,7 +30,7 @@ export default async function (data, ignore_list = []) {
 //    [property]: [ { [keyword], [message] }, ... ], ...
 //  }
 function _init_errors(invalid_errors) {
-  $F_log("@整理前的validateErrors => ", invalid_errors);
+  $M_log.dev("@整理前的validateErrors => ", invalid_errors);
 
   let res = invalid_errors.reduce((acc, invalid_error) => {
     let {
@@ -47,7 +47,7 @@ function _init_errors(invalid_errors) {
     } = invalid_error;
     //  ↓ 忽略未自定義message的校驗錯誤
     if (keyword !== "errorMessage" && keyword !== "myKeyword") {
-      $F_log(`@keyword: ${keyword} 沒有預定義錯誤訊息，故忽略`);
+      $M_log.dev(`@keyword: ${keyword} 沒有預定義錯誤訊息，故忽略`);
       return acc;
     }
     let key;
@@ -84,7 +84,7 @@ function _init_errors(invalid_errors) {
     }
     return acc;
   }, {});
-  $F_log("@整理後的validateErrors => ", res);
+  $M_log.dev("@整理後的validateErrors => ", res);
   return res;
 }
 //  將轉化後的校驗錯誤再轉化為
@@ -103,14 +103,14 @@ function _parseErrorsToForm(invalid_errors, data, ignore_list = []) {
     for (let error of top_errors) {
       let { keyword, message, list } = error;
       for (let field_name of list) {
-        if (!invalid_errors[field_name]) {
+        if (!invalid_errors[field_name] || !invalid_errors[field_name].top) {
           invalid_errors[field_name] = {
             message,
             top: true,
             keyword: [keyword],
           };
         } else {
-          invalid_errors[field_name].message += ",message";
+          invalid_errors[field_name].message += `,${message}`;
           invalid_errors[field_name].keyword.push(keyword);
         }
       }
@@ -173,6 +173,6 @@ function _parseErrorsToForm(invalid_errors, data, ignore_list = []) {
       res_list.push({ field_name, valid, value });
     }
   }
-  $F_log("整理後的驗證結果 res_list => ", res_list);
+  $M_log.dev("整理後的驗證結果 res_list => ", res_list);
   return res_list;
 }

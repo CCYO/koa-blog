@@ -1,7 +1,7 @@
 window.onerror = (e) => {
   console.log("在window.onerror 捕捉到錯誤", e);
 };
-window.addEventListener("error", () => {
+window.addEventListener("error", (e) => {
   console.log("在window.addEventListener('error') 捕捉到錯誤", e);
 });
 window.addEventListener("unhandledrejection", function (promiseRejectionEvent) {

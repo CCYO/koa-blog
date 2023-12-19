@@ -7,6 +7,9 @@
   border: 1px solid #fff;
   padding: 0.5rem;
 }
+.editor-content-view img {
+  width: 100%;
+}
 .editor-container {
   margin-top: 0.5rem;
 }

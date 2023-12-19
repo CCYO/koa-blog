@@ -1,5 +1,8 @@
 const PAGE = {
   REGISTER_LOGIN: {
+    VIEW: {
+      LOGIN: "/login",
+    },
     API: {
       LOGIN: "/api/user",
       REGISTER: "/api/user/register",
@@ -73,6 +76,7 @@ const PAGE = {
     },
     ID: {
       EDITOR_CONTAINER: "editor-container",
+      EDITOR_TOOLBAR_CONTAINER: "toolbar-container",
       TITLE: "title",
       STATUS: "status",
       UPDATE_TITLE: "update_title",
@@ -93,6 +97,7 @@ const PAGE = {
       REMOVE_COMMENT: "/api/comment",
     },
     CLASS: {
+      BLOG_CONTENT: "editor-content-view",
       COMMENT_LIST: "comment-list",
       COMMENT_EDITOR_CONTAINER: "editor-container",
       COMMENT_LIST_CONTAINER: "comment-list-container",
@@ -109,6 +114,11 @@ const PAGE = {
     },
     REG: {
       BLOG_CONTENT_TRIM: /(<p><br><\/p>)|(<p>[\s&nbsp;]+<\/p>)/g,
+    },
+  },
+  ALBUM: {
+    ID: {
+      MODAL: "modal_album",
     },
   },
 };

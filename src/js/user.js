@@ -1,33 +1,31 @@
 /* ------------------------------------------------------------------------------------------ */
-/* EJS Module --------------------------------------------------------------------------------- */
+/* EJS Module ------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
 if (process.env.NODE_ENV === "development") {
   import("../views/pages/user/index.ejs");
 }
-import $M_template from "./utils/template";
 
 /* ------------------------------------------------------------------------------------------ */
-/* CSS Module --------------------------------------------------------------------------------- */
+/* CSS Module ------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-
 import "../css/user.css";
 
 /* ------------------------------------------------------------------------------------------ */
-/* NPM Module --------------------------------------------------------------------------------- */
+/* NPM Module ------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-
 import BetterScroll from "better-scroll";
 
 /* ------------------------------------------------------------------------------------------ */
-/* Utils Module --------------------------------------------------------------------------------- */
+/* Utils Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-
 import {
   common as $M_Common,
-  wedgets as $M_wedgets,
+  G,
   _ajv as $C_ajv,
-  Debounce as $M_Debounce,
+  Debounce as $C_Debounce,
   _xss as $M_xss,
+  template as $M_template,
+  redir as $M_redir,
   ui as $M_ui,
   log as $M_log,
 } from "./utils";
@@ -38,25 +36,16 @@ import {
 
 import { AJV, PAGE, SERVER, FORM_FEEDBACK } from "../../config/constant";
 
-//  webpack打包後自動插入的script預設為defer，會在DOM parse後、DOMContentLoaded前
-//  為了避免其他JS庫遺失，故綁定在load
+//  webpack打包後的js，會自動插入< script defer>，而defer的調用會發生在DOM parse後、DOMContentLoaded前，
+//  為了確保此js能應用到頁面上可能存在以CDN獲取到的其他JS庫，故將所有內容放入window.load
 window.addEventListener("load", init);
-
-/* ------------------------------------------------------------------------------------------ */
-/* Init ------------------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------------------------ */
 async function init() {
   try {
     /* ------------------------------------------------------------------------------------------ */
     /* Const ------------------------------------------------------------------------------------ */
     /* ------------------------------------------------------------------------------------------ */
-
     const PAGE_USER = PAGE.USER;
     const DATA_BLOG = SERVER.BLOG;
-    const { G } = $M_wedgets;
-    /* ------------------------------------------------------------------------------------------ */
-    /* Class --------------------------------------------------------------------------------- */
-    /* ------------------------------------------------------------------------------------------ */
 
     const $$ajv = new $C_ajv(G.utils.axios);
     G.utils.validate = {
@@ -373,7 +362,7 @@ async function init() {
                   /* 若當前不是可滾動狀態，調用 betterScroll.disable實例方法，禁止滾動功能 */
                   el.betterScroll.disable();
                 }
-                $M_log.dev_log(
+                $M_log.dev(
                   `resetBetterScroll: #${el.id}已${
                     el.canScroll ? "啟" : "禁"
                   }用滾動狀態`
@@ -384,7 +373,7 @@ async function init() {
               },
             },
           });
-          const { debounce: debounce_reset_betterScroll } = new $M_Debounce(
+          const { debounce: debounce_reset_betterScroll } = new $C_Debounce(
             el.resetBetterScroll
           );
           //  創造 防抖動的 el.handleResize
@@ -429,7 +418,7 @@ async function init() {
         /* ------------------------------------------------------------------------------------------ */
         //  追蹤
         async function follow() {
-          _checkLogin();
+          $M_redir.check_login(G.data);
           //  檢查登入狀態
           /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
           await G.utils.axios.post(PAGE_USER.API.FOLLOW, {
@@ -461,7 +450,7 @@ async function init() {
         }
         //  退追
         async function cancelFollow() {
-          _checkLogin();
+          $M_redir.check_login(G.data);
           //  檢查登入狀態
           /* 更新追蹤/退追的瀏覽器數據與頁面渲染 */
           await G.utils.axios.post(PAGE_USER.API.CANCEL_FOLLOW, {
@@ -500,7 +489,7 @@ async function init() {
         //  禁用 創建文章鈕
         $btn_new_blog.prop("disabled", true);
         //  debouncer event handle
-        let { debounce: handle_debounce_check_title } = new $M_Debounce(
+        let { debounce: handle_debounce_check_title } = new $C_Debounce(
           check_title,
           {
             loading(e) {
@@ -527,7 +516,7 @@ async function init() {
             return;
           }
           e.preventDefault();
-          _checkLogin();
+          $M_redir.check_login(data);
           let blogList = [];
           if (action === PAGE_USER.DATASET.VALUE.REMOVE_BLOG_ITEM) {
             blogList.push(
@@ -568,7 +557,7 @@ async function init() {
         //  創建文章
         async function handle_createBlog(e) {
           e.preventDefault();
-          _checkLogin();
+          $M_redir.check_login(G.data);
           let title = await check_title();
           if (!title) {
             return;
@@ -590,7 +579,7 @@ async function init() {
           let input = $input_new_blog_title.get(0);
 
           let data = {
-            title: $M_xss.xssAndTrim(input.value),
+            title: $M_xss.trim(input.value),
           };
           let validated_list = await G.utils.validate.blog_title(data);
           let valid = !validated_list.some((item) => !item.valid);
@@ -617,17 +606,6 @@ async function init() {
           $btn_new_blog.prop("disabled", !valid);
           return res;
         }
-      }
-      /*  確認登入狀態 */
-      function _checkLogin() {
-        if ($$isLogin) {
-          return;
-        }
-        /* 若未登入，跳轉到登入頁 */
-        alert(`請先登入`);
-        location.href = `${CONST.URL.LOGIN}?from=${encodeURIComponent(
-          location.href
-        )}`;
       }
     }
   } catch (e) {

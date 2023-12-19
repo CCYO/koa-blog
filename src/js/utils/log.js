@@ -1,4 +1,4 @@
-function dev_log(...msg) {
+function dev(...msg) {
   if (process.env.NODE_ENV === "production") {
     return;
   }
@@ -6,7 +6,7 @@ function dev_log(...msg) {
 }
 
 export default {
-  dev_log,
+  dev,
 };
 
-export { dev_log };
+export { dev };

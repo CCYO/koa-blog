@@ -1,4 +1,4 @@
-<%% let G_CONST = JSON.parse('{"API":{"CREATE_COMMENT":"/api/comment","REMOVE_COMMENT":"/api/comment"},"CLASS":{"COMMENT_LIST":"comment-list","COMMENT_EDITOR_CONTAINER":"editor-container","COMMENT_LIST_CONTAINER":"comment-list-container","COMMENT_ITEM_CONTAINER":"comment-item-container","COMMENT_ITEM_CONTENT":"comment-item-content"},"DATASET":{"KEY":{"COMMENT_ID":"comment_id","EDITOR_ID":"editor_id","REMOVE_COMMENT":"remove","PID":"pid"}},"REG":{"BLOG_CONTENT_TRIM":{}}}') %>
+<%% let G_CONST = JSON.parse('{"API":{"CREATE_COMMENT":"/api/comment","REMOVE_COMMENT":"/api/comment"},"CLASS":{"BLOG_CONTENT":"editor-content-view","COMMENT_LIST":"comment-list","COMMENT_EDITOR_CONTAINER":"editor-container","COMMENT_LIST_CONTAINER":"comment-list-container","COMMENT_ITEM_CONTAINER":"comment-item-container","COMMENT_ITEM_CONTENT":"comment-item-content"},"DATASET":{"KEY":{"COMMENT_ID":"comment_id","EDITOR_ID":"editor_id","REMOVE_COMMENT":"remove","PID":"pid"}},"REG":{"BLOG_CONTENT_TRIM":{}}}') %>
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
 <%- include('../../wedgets/header.ejs') %>
 
@@ -11,9 +11,7 @@
       <h1>
         <%%= blog.title %>
       </h1>
-      <div class="editor-content-view">
-        <%%- blog.html %>
-      </div>
+      <div class="<%%= G_CONST.CLASS.BLOG_CONTENT %>"></div>
     </div>
     <%% if (blog.showComment) { %>
     <div class="comment-container">
