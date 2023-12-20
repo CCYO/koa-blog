@@ -120,6 +120,11 @@ const PAGE = {
     ID: {
       MODAL: "modal_album",
     },
+    DATASET: {
+      KEY: {
+        ALT_ID: "alt_id",
+      },
+    },
   },
 };
 

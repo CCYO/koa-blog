@@ -88,7 +88,7 @@ async function init() {
         if (status) {
           ////  請求成功
           alert(PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_SUCCESS);
-          $M_redir.form(PAGE_REGISTER_LOGIN.API.LOGIN_SUCCESS);
+          $M_redir.from(PAGE_REGISTER_LOGIN.API.LOGIN_SUCCESS);
         } else {
           ////  校驗失敗or請求失敗
           //  重置 payload

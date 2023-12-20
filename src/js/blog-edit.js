@@ -462,8 +462,6 @@ async function init() {
           payload.html = parseImgToXImg(payload.html);
           //  將<img>轉換為自定義<x-img>
         }
-        console.log("html => ", payload.html);
-        return;
         //  整理出「預計刪除BLOG→IMG關聯」的數據
         let cancelImgs = getBlogImgIdList_needToRemoveAssociate();
         if (cancelImgs.length) {

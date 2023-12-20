@@ -1,4 +1,4 @@
-<!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
+<%% let G_CONST = JSON.parse('{"ID":{"MODAL":"modal_album"},"DATASET":{"KEY":{"ALT_ID":"alt_id"}}}') %>
 <%- include('../../wedgets/header.ejs') %>
 
 <body>
@@ -12,7 +12,7 @@
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
       <%% album.imgs.forEach( ({alt_id, img_id, blogImg_id, url, alt})=> { %>
       <div>
-        <div class="card border-dark" data-my-photo="<%%= alt_id %>">
+        <div class="card border-dark" data-<%%= G_CONST.DATASET.KEY.ALT_ID %>="<%%= alt_id %>">
           <div class="ratio ratio-1x1 border-bottom border-secondary">
             <img class="card-img-top" src="<%%= url %>?blogImgAlt=<%%= alt_id %>" alt="<%%= alt %>" />
           </div>
@@ -20,13 +20,7 @@
             <p class="card-text text-truncate mb-0" style="height: 2rem; line-height: 2rem;">
               <%%= alt %>
             </p>
-            <!-- Button trigger modal -->
-            <!-- <button
-                type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalBackdrop"
-                data-my-photo="<%%= alt_id %>">
-                修改照片名稱
-              </button> -->
-            <button type="button" class="btn btn-primary" data-my-photo="<%%= alt_id %>">
+            <button type="button" class="btn btn-primary">
               修改照片名稱
             </button>
           </div>
