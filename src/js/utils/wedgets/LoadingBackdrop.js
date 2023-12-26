@@ -41,23 +41,23 @@ export default class {
       //  不顯示頁面遮罩，將其顯示為不可見(實際上仍存在)
     }
     if (editors.length) {
-      this.insertEditors(editors);
       //  存入this.editors
+      this.insertEditors(editors);
     }
     for (let editor of this.editors) {
-      editor.disable();
       //  關閉所有editor作用
+      editor.disable();
     }
     this.$backdrop.show();
-    //  放上遮罩
+    ////  focus事件綁定(且用上jq語法糖，賦予綁定事件一個指定名稱，方便後續取消綁定)
+    ////  handle 讓所有 blockList 發生聚焦時，統一將聚焦轉移至 backdrop
     $(this.options.targetSelector)
       .addClass(this.options.blockClassName)
       //  使blockList不可被點擊
       .on(`focus.${this.options.backdropClassName}`, (e) =>
         this.focusBackdrop(e)
       );
-    //  focus事件綁定(且用上jq語法糖，賦予綁定事件一個指定名稱，方便後續取消綁定)
-    //  handle 讓所有 blockList 發生聚焦時，統一將聚焦轉移至 backdrop
+
     $M_log.dev("backdrop show");
   }
   insertEditors(editors) {

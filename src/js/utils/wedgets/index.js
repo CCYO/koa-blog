@@ -22,9 +22,8 @@ class G {
       this.utils.loading_backdrop.show({ blockPage: true });
       await fn();
       this.utils.loading_backdrop.hidden();
-      //  渲染頁面的函數
     }
-    /* 初始化函數運行結束後，也將頁面元素調整至初始狀態 */
+    //  初始化函數運行結束後，也將頁面元素調整至初始狀態
     this._render();
   }
 

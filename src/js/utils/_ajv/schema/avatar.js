@@ -8,15 +8,18 @@ export default {
   type: "object",
   properties: {
     avatar_base64: {
+      type: "string",
       format: "byte",
       errorMessage: {
         format: "非base64編碼",
       },
     },
     avatar_hash: {
-      diff: { $data: "1/$$me/avatar_hash" },
+      type: "string",
       $ref: `${TYPE.DEFAULT.ref}#/definitions/avatar_hash`,
     },
   },
-  _required: ["avatar_base64", "avatar_hash"],
+  required: ["avatar_base64", "avatar_hash"],
+  _notEmpty: ["avatar_base64", "avatar_hash"],
+  _notRepeat: ["avatar_hash"],
 };

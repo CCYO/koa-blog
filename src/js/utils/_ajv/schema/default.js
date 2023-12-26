@@ -20,10 +20,12 @@ export default {
     nickname: {
       type: "string",
       pattern: "^[\\u4e00-\\u9fa5a-zA-Z\\d]+$",
+      minLength: 1,
       maxLength: 20,
       errorMessage: {
         type: "必須是字符串",
         pattern: "必須由中文、英文、數字以及底線組成",
+        minLength: "不可為空",
         maxLength: "長度需小於20個字",
       },
     },
@@ -152,7 +154,7 @@ export default {
     blogImgAlt: {
       type: "string",
       minLength: 1,
-      maxLength: 30,
+      maxLength: 20,
       pattern: "^[\\u4e00-\\u9fa5a-zA-Z\\d]+$",
       errorMessage: {
         type: "必須是字符串",

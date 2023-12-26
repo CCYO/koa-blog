@@ -30,10 +30,10 @@ const AJV = {
   //  參考 https://ajv.js.org/api.html#error-parameters
   ERROR_PARAMS: {
     required: "missingProperty",
+    dependentRequired: "missingProperty",
     additionalProperties: "additionalProperty",
     // _required: "_missingProperty",
     _notEmpty: "_notEmpty",
-    // dependentRequired: 'missingProperty' 目前schema都沒用到
     _notRepeat: "_notRepeat",
     _noSpace: "noSpace",
   },

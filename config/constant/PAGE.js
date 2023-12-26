@@ -126,6 +126,18 @@ const PAGE = {
       },
     },
   },
+  SETTING: {
+    API: {
+      CHECK_PASSWORD: "/api/user/confirmPassword",
+    },
+    AVATAR_URL: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+    ID: {
+      MODAL_ORIGIN_PASSWORD: "modal_origin_password",
+    },
+    NAME: {
+      ORIGIN_PASSWORD: "origin_password",
+    },
+  },
 };
 
 module.exports = PAGE;

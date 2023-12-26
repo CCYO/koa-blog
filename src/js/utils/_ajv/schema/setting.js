@@ -6,53 +6,64 @@ const TYPE = AJV.TYPE;
 export default {
   $id: TYPE.SETTING.ref,
   type: "object",
+  /*
   allOf: [
     {
-      minProperties: 2,
-      properties: {
-        $$me: {
-          type: "object",
-          errorMessage: {
-            type: "$$me需是object",
-          },
-        },
-        email: {
-          noSpace: true,
-          diff: { $data: "1/$$me/email" },
-          $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
-        },
-        age: {
-          noSpace: true,
-          diff: { $data: "1/$$me/age" },
-          $ref: `${TYPE.DEFAULT.ref}#/definitions/age`,
-        },
-        nickname: {
-          noSpace: true,
-          diff: { $data: "1/$$me/nickname" },
-          $ref: `${TYPE.DEFAULT.ref}#/definitions/nickname`,
-        },
-        password: {
-          noSpace: true,
-          diff: { $data: "1/$$me/password" },
-          $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
-        },
-        avatar_hash: {
-          diff: { $data: "1/$$me/avatar_hash" },
-          $ref: `${TYPE.DEFAULT.ref}#/definitions/avatar_hash`,
-        },
-      },
-      _required: ["$$me"],
+      */
+  minProperties: 2,
+  properties: {
+    _old: {
+      type: "object",
       errorMessage: {
-        minProperties: "至少需改一筆資料",
+        type: "_old需是object",
       },
+    },
+    email: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
+    },
+    age: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/age`,
+    },
+    nickname: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/nickname`,
+    },
+    password: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
+    },
+    password_again: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again`,
+    },
+    avatar_hash: {
+      type: "string",
+      $ref: `${TYPE.DEFAULT.ref}#/definitions/avatar_hash`,
+    },
+  },
+  _notRepeat: ["email", "age", "nickname", "password", "avatar_hash"],
+  _noSpace: ["email", "age", "nickname", "password"],
+  required: ["_old"],
+  dependentRequired: {
+    password: ["password_again", "origin_password"],
+    password_again: ["password", "origin_password"],
+  },
+  errorMessage: {
+    minProperties: "至少需改一筆資料",
+    dependentRequired: "必填",
+  },
+  /*
     },
     {
       properties: {
         password: {
+          type: "string",
           $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
-          diff: { $data: "1/$$me/origin_password" },
         },
         password_again: {
+          type: "string",
           $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again`,
         },
       },
@@ -64,8 +75,10 @@ export default {
         dependentRequired: "必填",
       },
     },
+    
   ],
   errorMessage: {
     type: "驗證數據必須是 object 格式",
   },
+*/
 };

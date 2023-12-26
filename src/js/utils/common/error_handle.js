@@ -7,7 +7,14 @@ window.addEventListener("error", (e) => {
 window.addEventListener("unhandledrejection", function (promiseRejectionEvent) {
   this.alert("發生未知錯誤");
   // handle error here, for example log
-  console.log("reason => ", promiseRejectionEvent.reason);
+  let reason = undefined;
+  try {
+    reason = JSON.parse(promiseRejectionEvent.reason.message);
+    console.log("parse reason => ", reason);
+    console.log("reason stack => ", promiseRejectionEvent.reason);
+  } catch (e) {
+    console.log("reason stack => ", promiseRejectionEvent.reason);
+  }
   //  阻止冒泡
   promiseRejectionEvent.preventDefault();
 });
