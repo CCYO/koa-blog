@@ -1,0 +1,188 @@
+<% let G_CONST = JSON.parse('{"API":{"CHECK_PASSWORD":"/api/user/confirmPassword","SETTING":"/api/user"},"AVATAR_URL":"https://cdn-icons-png.flaticon.com/512/149/149071.png","ID":{"MODAL_ORIGIN_PASSWORD":"modal_origin_password"},"NAME":{"ORIGIN_PASSWORD":"origin_password"},"AVATAR":{"MAX_SIZE":1048576,"EXT":["JPG","PNG"]},"REG":{"AVATAR_EXT":{},"AVATAR_data_url":{}}}') %>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= locals.blog ? blog.title : locals.title ? title : '錯誤頁' %>
+  </title>
+  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
+  <!-- BS5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+<script defer src="/public/js/setting.bundle.js"></script></head>
+
+<body>
+  <div id="loadingBackdrop"
+    style="
+    width: 100vw;
+    height: 100vh;
+    color: red;
+    background: rgba(255, 255, 255, .5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: black;
+    font-size: 50px;
+    font-family: 'JetBrainsMono', 'NotoSerifTC', 'Courier New', Courier, monospace !important;
+    "
+    tabindex="0"
+>
+  <div>
+    LOADING
+  </div>
+</div>
+  <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top" style="display: none">
+  <div class="container-fluid flex-nowrap">
+    <!-- 首頁/廣場頁 -->
+    <a class="navbar-brand" href="/square">KOA-BLOG</a>
+    <!-- 廣場頁 + 註冊/登入 -->
+    <ul class="nav ms-auto flex-grow-1 justify-content-end" id="noNeedCollapse-list">
+      <li class="nav-item d-none d-sm-inline-block">
+        <a class="nav-link" href="/square">廣場頁</a>
+      </li>
+      <li style="flex-grow: 1;"></li>
+      <li class="nav-item">
+        <a class="nav-link nav-tab" href="/register" data-my-tab="#register">註冊</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link nav-tab" href="/login" data-my-tab="#login">登入</a>
+      </li>
+    </ul>
+    <!-- 收合鈕 -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <!-- 收合內容 -->
+    <div class="offcanvas offcanvas-start flex-grow-0" id="offcanvasNavbar">
+      <!-- 收合內容 標題-->
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+
+      <!-- 收合內容 表單列 -->
+      <div class="offcanvas-body">
+        <ul class="navbar-nav w-100" id="needCollapse-list">
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+  <!-- MAIN -->
+  <main class="container-md" style="display: none;">
+    <div class="modal fade" id="<%= G_CONST.ID.MODAL_ORIGIN_PASSWORD %>" tabindex="-1" aria-labelledby="<%= G_CONST.ID.MODAL_ORIGIN_PASSWORD %>" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">請先驗證原密碼</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="input-box">
+              <label class="form-label">原密碼
+                <input type="password" class="form-control" name="<%= G_CONST.NAME.ORIGIN_PASSWORD %>" data-retry='yes' autocomplete="off">
+                <div>&nbsp;</div>
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" id="checkOrginPassword" class="btn btn-primary">確定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-md main">
+      <h3>修改個人資訊</h3>
+      <form class="row" id="setting">
+        <div class="col-sm-8 mx-auto">
+          <div class="input-box">
+            <label class="form-label">信箱
+              <input type="text" class="form-control" name="email" aria-describedby="email_help" autocomplete="off">
+              <div>&nbsp;</div>
+            </label>
+          </div>
+
+          <div class="input-box">
+            <label class="form-label">新密碼
+              <input type="password" class="form-control" name="password" data-retry='yes' autocomplete="off">
+              <div>&nbsp;</div>
+            </label>
+          </div>
+          <div class="input-box">
+            <label class="form-label">密碼確認
+              <input type="password" class="form-control" name="password_again" data-retry='yes' autocomplete="off">
+              <div>&nbsp;</div>
+            </label>
+          </div>
+          <div class="input-box">
+            <label for="nickname" class="form-label">暱稱
+              <input type="text" class="form-control" name="nickname" autocomplete="off">
+              <div>&nbsp;</div>
+            </label>
+          </div>
+          <div class="input-box">
+            <label class="form-label">年齡
+              <input type="number" class="form-control" name="age" min="0" max="120">
+              <div>&nbsp;</div>
+            </label>
+          </div>
+          <div class="input-box">
+            <span class="p-1">頭像</span>
+            <div class="avatar-box">
+              <div class="ratio ratio-1x1">
+                <img id="avatar-img" src="<%= G_CONST.AVATAR_URL %>" alt="">
+              </div>
+            </div>
+            <label class="form-label mt-1">
+              <input type="file" id="avatar" class="form-control" name="avatar" autocomplete="off">
+              <div>&nbsp;</div>
+            </label>
+
+          </div>
+          <button type="submit" name="submit" class="btn btn-primary mt-3">送出</button>
+        </div>
+      </form>
+    </div>
+
+    <div>
+      <!-- 當前使用者頁面的使用者資料 -->
+      <div data-my-data="currentUser" style="display: none;">
+        <%- JSON.stringify(currentUser) %>
+      </div>
+    </div>
+    <!-- EJS DATA -->
+    <div style="display: none;">
+  <% for(let type in locals){ %>
+  <%# if( type === "partials" || type === "filename" || type === "title" || type === "isSelf" || type === "temFn"){ continue } %>
+  <% if( type === "blogs" || type === "currentUser" || type === "relationShip" || type === "blog" || type === "album"){ %>
+  <div data-my-data="<%= type %>">
+    <%- JSON.stringify(locals[type]) %>
+  </div>
+  <% } %>
+  <% } %>
+</div>
+  </main>
+  <!-- FOOTER -->
+  <div class="footer container-fluid" style="display: none;">
+  Footer
+</div>
+  <!-- BS5 / POPPER -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.1/dist/umd/popper.min.js"
+    integrity="sha384-W8fXfP3gkOKtndU4JGtKDvXbO53Wy8SZCQHczT5FMiiqmQfUpWbYdTil/SxwZgAN"
+    crossorigin="anonymous"></script>
+<!-- BS5 / JS Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.min.js"
+    integrity="sha384-skAcpIdS7UcVUC05LJ9Dxay8AXcDYfBJqt1CJ85S/CFujBsIzCIv+l9liuYLaMQ/"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>

@@ -1,0 +1,99 @@
+<% let G_CONST = JSON.parse(--CONS.PAGE.SETTING--) %>
+<%- include('../../wedgets/header.ejs') %>
+
+<body>
+  <%- include('../../wedgets/pageLoading.ejs') %>
+  <%- include('../../wedgets/navbar.ejs') %>
+  <!-- MAIN -->
+  <main class="container-md" style="display: none;">
+    <div class="modal fade" id="<%= G_CONST.ID.MODAL_ORIGIN_PASSWORD %>" tabindex="-1" aria-labelledby="<%= G_CONST.ID.MODAL_ORIGIN_PASSWORD %>" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">請先驗證原密碼</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="input-box">
+              <label class="form-label">原密碼
+                <input type="password" class="form-control" name="<%= G_CONST.NAME.ORIGIN_PASSWORD %>" data-retry='yes' autocomplete="off">
+                <div>&nbsp;</div>
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" id="checkOrginPassword" class="btn btn-primary">確定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-md main">
+      <h3>修改個人資訊</h3>
+      <form class="row" id="setting">
+        <div class="col-sm-8 mx-auto">
+          <div class="input-box">
+            <label class="form-label">信箱
+              <input type="text" class="form-control" name="email" aria-describedby="email_help" autocomplete="off">
+              <div>&nbsp;</div>
+            </label>
+          </div>
+
+          <div class="input-box">
+            <label class="form-label">新密碼
+              <input type="password" class="form-control" name="password" data-retry='yes' autocomplete="off">
+              <div>&nbsp;</div>
+            </label>
+          </div>
+          <div class="input-box">
+            <label class="form-label">密碼確認
+              <input type="password" class="form-control" name="password_again" data-retry='yes' autocomplete="off">
+              <div>&nbsp;</div>
+            </label>
+          </div>
+          <div class="input-box">
+            <label for="nickname" class="form-label">暱稱
+              <input type="text" class="form-control" name="nickname" autocomplete="off">
+              <div>&nbsp;</div>
+            </label>
+          </div>
+          <div class="input-box">
+            <label class="form-label">年齡
+              <input type="number" class="form-control" name="age" min="0" max="120">
+              <div>&nbsp;</div>
+            </label>
+          </div>
+          <div class="input-box">
+            <span class="p-1">頭像</span>
+            <div class="avatar-box">
+              <div class="ratio ratio-1x1">
+                <img id="avatar-img" src="<%= G_CONST.AVATAR_URL %>" alt="">
+              </div>
+            </div>
+            <label class="form-label mt-1">
+              <input type="file" id="avatar" class="form-control" name="avatar" autocomplete="off">
+              <div>&nbsp;</div>
+            </label>
+
+          </div>
+          <button type="submit" name="submit" class="btn btn-primary mt-3">送出</button>
+        </div>
+      </form>
+    </div>
+
+    <div>
+      <!-- 當前使用者頁面的使用者資料 -->
+      <div data-my-data="currentUser" style="display: none;">
+        <%- JSON.stringify(currentUser) %>
+      </div>
+    </div>
+    <!-- EJS DATA -->
+    <%- include('../../wedgets/ejs-data-list') %>
+  </main>
+  <!-- FOOTER -->
+  <%- include('../../wedgets/footer.ejs') %>
+  <%- include('../../wedgets/cdn') %>
+</body>
+
+</html>

@@ -1,0 +1,29 @@
+/* setting.css */
+@import "./common/basic.css";
+
+.form-label {
+  width: 100%;
+  margin: 0;
+  padding: 0.25rem;
+}
+
+.input-box {
+  margin-top: 0.25rem;
+  /* background: rgba(255, 255, 255, .5); */
+  border-radius: 0.25rem;
+}
+
+.input-box:first-child {
+  margin: 0;
+}
+
+.avatar-box {
+  margin: 0 auto;
+  max-width: 10rem;
+}
+
+@media (min-width: 768px) {
+  .avatar-box {
+    max-width: 13rem;
+  }
+}

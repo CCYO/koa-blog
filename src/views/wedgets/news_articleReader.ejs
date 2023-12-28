@@ -1,0 +1,11 @@
+<!-- 新通知 of fans -->
+<%% let query=confirm ? "" : `?type=2&id=${id}` %>
+<li class="dropdown-item  position-relative news-item">
+  <a href="/blog/<%%= blog.id %><%%= query %>" class="stretched-link text-wrap">
+    <div>
+      <span><%%= blog.author.nickname %>有新文章唷！</span><br>
+      <span>-<%%= blog.title %>-</span><br>
+      <span class='text-end mb-0'><%%= timestamp %></span>
+    </div>
+  </a>
+</li>;
