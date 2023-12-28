@@ -7,19 +7,38 @@ export default {
   $id: TYPE.AVATAR.ref,
   type: "object",
   properties: {
-    avatar_base64: {
+    hash: {
+      type: "string",
+      errorMessage: {
+        type: "必須是字符串",
+      },
+    },
+    url: {
+      type: "string",
+      format: "uri",
+      errorMessage: {
+        type: "必須是字符串",
+        format: "必須是url",
+      },
+    },
+    size: {
+      type: "number",
+      maximum: 1 * 1024 * 1024,
+    },
+    ext: {
+      type: "string",
+      pattern: "^(EXT)$|^(JPG)$",
+    },
+    data_url: {
       type: "string",
       format: "byte",
       errorMessage: {
-        format: "非base64編碼",
+        type: "必須是string",
+        format: "預覽網址必須符合base64編碼",
       },
     },
-    avatar_hash: {
-      type: "string",
-      $ref: `${TYPE.DEFAULT.ref}#/definitions/avatar_hash`,
-    },
   },
-  required: ["avatar_base64", "avatar_hash"],
-  _notEmpty: ["avatar_base64", "avatar_hash"],
-  _notRepeat: ["avatar_hash"],
+  required: ["hash", "url", "size", "ext", "data_url"],
+  _notEmpty: ["hash", "url", "size", "ext", "data_url"],
+  _notRepeat: ["hash"],
 };

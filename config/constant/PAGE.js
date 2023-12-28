@@ -129,6 +129,7 @@ const PAGE = {
   SETTING: {
     API: {
       CHECK_PASSWORD: "/api/user/confirmPassword",
+      SETTING: "/api/user",
     },
     AVATAR_URL: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
     ID: {
@@ -136,6 +137,14 @@ const PAGE = {
     },
     NAME: {
       ORIGIN_PASSWORD: "origin_password",
+    },
+    AVATAR: {
+      MAX_SIZE: 1024 * 1024 * 1,
+      EXT: ["JPG", "PNG"],
+    },
+    REG: {
+      AVATAR_EXT: /\b.+\.(?<ext>\w+)\b/,
+      AVATAR_data_url: /\bdata:.*;base64,(?<data_url>.*)/,
     },
   },
 };

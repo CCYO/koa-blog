@@ -33,6 +33,10 @@ export default function (status, targetEl, valid, msg = "") {
         continue;
       }
       inp.value = "";
+      if (inp.type === "file") {
+        inp.files = undefined;
+        continue;
+      }
       $(inp)
         .removeClass("is-invalid is-valid")
         .next()

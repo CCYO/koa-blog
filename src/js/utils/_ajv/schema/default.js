@@ -79,18 +79,6 @@ export default {
         maximum: "必需介於1-120之間",
       },
     },
-    avatar: {
-      type: "string",
-      format: "binary",
-      errorMessage: {
-        type: "必須是string",
-        format: "頭像資料需符合url格式",
-      },
-    },
-    avatar_hash: {
-      type: "string",
-      errorMessage: "avatar_hash必須是字符串",
-    },
     title: {
       type: "string",
       maxLength: 20,

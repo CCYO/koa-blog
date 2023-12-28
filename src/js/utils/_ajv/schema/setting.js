@@ -40,15 +40,34 @@ export default {
     },
     avatar_hash: {
       type: "string",
-      $ref: `${TYPE.DEFAULT.ref}#/definitions/avatar_hash`,
+      errorMessage: {
+        type: "必須是字符串",
+      },
+    },
+    avatar_ext: {
+      type: "string",
+      pattern: "^(PNG)$|^(JPG)$",
+      errorMessage: {
+        type: "必須是字符串",
+        pattern: "必須是jpg或png類型",
+      },
     },
   },
   _notRepeat: ["email", "age", "nickname", "password", "avatar_hash"],
-  _noSpace: ["email", "age", "nickname", "password"],
+  _noSpace: [
+    "email",
+    "age",
+    "nickname",
+    "password",
+    "avatar_hash",
+    "avatar_ext",
+  ],
   required: ["_old"],
   dependentRequired: {
     password: ["password_again", "origin_password"],
     password_again: ["password", "origin_password"],
+    avatar_hash: ["avatar_ext"],
+    avatar_ext: ["avatar_hash"],
   },
   errorMessage: {
     minProperties: "至少需改一筆資料",

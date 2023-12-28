@@ -5,7 +5,7 @@ const message = "沒有要改就別鬧了";
 function validate(schema, data, parentSchema, dataCtx) {
   let { _old } = data;
   if (!_old) {
-    console.warn("來自 keyword diff 的警告，驗證數據未提供 _old");
+    console.warn("來自 keyword _notEmpty 的警告，驗證數據未提供 _old");
     return true;
   }
   let error = { keyword: "myKeyword", message };
@@ -31,23 +31,7 @@ function validate(schema, data, parentSchema, dataCtx) {
     validate.errors = [error];
   }
   return !params_errors.length;
-
-  for (let property in schema) {
-  }
-  if (schema !== data) {
-    return true;
-  }
-  validate.errors = [{ keyword, myKeyword, message: "若沒有要更新就別鬧" }];
-  return false;
 }
-// export default {
-//   keyword,
-//   $data: true,
-//   type: "object",
-//   schemaType: 'array',
-//   validate,
-//   errors: true,
-// };
 
 export default {
   keyword,
