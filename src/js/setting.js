@@ -202,9 +202,10 @@ async function init() {
             continue;
           }
           if (valid) {
-            if (field_name === "password" && !el_password_again.validated) {
+            if (field_name === "password" && !el_password_again.value) {
               ////  password 與 password_again 為關聯關係，必須做特別處理
               el_password_again.validated = true;
+              $(el_password_again).prop("disabled", false);
               $M_UI.form_feedback(
                 FORM_FEEDBACK.STATUS.VALIDATED,
                 el_password_again,
@@ -221,6 +222,8 @@ async function init() {
             if (field_name === "password" && el_password_again.validated) {
               ////  password 與 password_again 為關聯關係，必須做特別處理
               el_password_again.validated = false;
+              $(el_password_again).prop("disabled", true);
+              G.utils.payload.delete("password_again");
               el_password_again.value = "";
               $M_UI.form_feedback(
                 FORM_FEEDBACK.STATUS.CLEAR,
@@ -247,20 +250,22 @@ async function init() {
           let payload = G.utils.payload.getPayload();
           let newData = { ...payload, ...inputEvent_data };
           if (
-            newData.hasOwnProperty("password") &&
-            el_password_again.validated
+            newData.hasOwnProperty("password")
+            // &&
+            // el_password_again.validated
           ) {
             ////  需驗證的資料存在password 且 password_again已經輸入過
-            //  添入 password_again
+            //  el_password_again value 一併校驗
             newData.password_again = el_password_again.value;
           }
-          if (
-            payload.hasOwnProperty("password") &&
-            !el_password_again.validated
-          ) {
-            ////  當前inputEvent_data 存在password 且 password_again 未輸入過
-            newData.password_again = el_password_again.value;
-          }
+          // if (
+          //   payload.hasOwnProperty("password") &&
+          //   !el_password_again.validated
+          // ) {
+          //   ////  當前payload已存在有效password 且 password_again 未輸入過
+          //   //  el_password_again value 一併校驗
+          //   newData.password_again = el_password_again.value;
+          // }
           newData._old = G.data.me;
           if (newData.hasOwnProperty("origin_password")) {
             newData._old.password = newData.origin_password;
