@@ -396,7 +396,14 @@ async function findPrivateListForUserPage(
   // let data = Init.browser.blog.pageTable(blogs, options)
   return new SuccModel({ data });
 }
+
+async function find_id_list_by_author_id(user_id) {
+  let data = await Blog.readList(Opts.BLOG.find_id_List_by_author(user_id));
+  return new SuccModel({ data });
+}
+
 module.exports = {
+  find_id_list_by_author_id,
   findPublicListForUserPage,
   findPrivateListForUserPage,
   //  0411

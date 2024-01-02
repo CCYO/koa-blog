@@ -137,6 +137,8 @@ async function init() {
       /* ------------------------- 公用 JQ Ele ------------------------- */
       let $checkOrginPassword = $("#checkOrginPassword");
       $checkOrginPassword.on("click", handle_originPassword);
+      let jq_avatar = $("#avatar");
+      let jq_avatar_previes = $("#avatar-img");
       //  設置原密碼
       async function handle_originPassword(e) {
         e.preventDefault();
@@ -191,8 +193,8 @@ async function init() {
         if (KEY === "age") {
           value *= 1;
         }
-        let newData = { [KEY]: value };
-        let result = await _validate(newData);
+        let inputEvent_data = { [KEY]: value };
+        let result = await _validate(inputEvent_data);
 
         for (let { field_name, valid, keyword, message, value } of result) {
           let el = document.querySelector(`[name=${field_name}]`);
@@ -240,23 +242,30 @@ async function init() {
         }
 
         ////  驗證setting
-        async function _validate(kv) {
+        async function _validate(inputEvent_data) {
           ////  除了當前最新的kv，因為origin_password、password、password_again是關聯關係，需要依情況額外添加需驗證的資料
           let payload = G.utils.payload.getPayload();
-          let newData = { ...payload, ...kv };
+          let newData = { ...payload, ...inputEvent_data };
           if (
             newData.hasOwnProperty("password") &&
             el_password_again.validated
           ) {
+            ////  需驗證的資料存在password 且 password_again已經輸入過
+            //  添入 password_again
             newData.password_again = el_password_again.value;
           }
-          if (kv.hasOwnProperty("password") && !el_password_again.validated) {
+          if (
+            payload.hasOwnProperty("password") &&
+            !el_password_again.validated
+          ) {
+            ////  當前inputEvent_data 存在password 且 password_again 未輸入過
             newData.password_again = el_password_again.value;
           }
           newData._old = G.data.me;
           if (newData.hasOwnProperty("origin_password")) {
             newData._old.password = newData.origin_password;
           }
+
           let result = await G.utils.validate.setting(newData);
           return result.filter(({ field_name }) => {
             let exclude = ["_old", "avatar_hash", "avatar_ext"];
@@ -265,20 +274,29 @@ async function init() {
         }
       }
 
-      let $$api_avatar = CONST.API.SETTING;
-      let jq_avatar = $("#avatar");
-      let jq_avatar_previes = $("#avatar-img");
       jq_settingForm.on("change", handle_change);
       async function handle_change(e) {
         e.preventDefault();
         if (e.target.name !== "avatar") {
           return;
         }
+        if (
+          G.utils.payload.has("avatar_hash") &&
+          !confirm("要重新傳一顆頭嗎?")
+        ) {
+          return;
+        }
         let files = jq_avatar.prop("files");
+
         let { valid, message, hash, ext } = await _avatar_data(files);
         if (!valid) {
           alert(message);
           jq_avatar.prop("files", undefined);
+          G.utils.payload.delete("avatar_hash");
+          G.utils.payload.delete("avatar_ext");
+          jq_avatar.val(null);
+          jq_avatar_previes.attr("src", G.data.me.avatar);
+          G.utils.payload.check_submit();
           //  檔案名稱需手動清空?
           return;
         }
@@ -378,16 +396,15 @@ async function init() {
           });
         }
       }
-
       jq_settingForm.on("submit", handle_submit);
       async function handle_submit(e) {
         e.preventDefault();
         let api = PAGE.SETTING.API.SETTING;
         let payload = G.utils.payload.getPayload();
+
         let formData = new FormData();
-        console.log("payload => ", payload);
         if (payload.hasOwnProperty("avatar_hash")) {
-          api += `?hash=${payload.avartar_hash}&ext=${payload.ext}`;
+          api += `?hash=${payload.avatar_hash}&ext=${payload.avatar_ext}`;
           formData.append("avatar", jq_avatar.prop("files")[0]);
           delete payload.avatar_hash;
           delete payload.avatar_ext;
@@ -397,12 +414,10 @@ async function init() {
           let data = payload[prop];
           formData.append(prop, data);
         }
-        console.log("formData => ", [...formData.entries()]);
-        return;
+        console.log([...formData.entries()]);
+        console.log(api);
         let { data } = await G.utils.axios.patch(api, formData);
 
-        alert("測試沒問題，重整頁面");
-        return;
         //  清空avatar數據
         jq_avatar.prop("files", undefined);
         jq_avatar.prop("value", "");
@@ -412,27 +427,11 @@ async function init() {
         for (let prop in data) {
           G.data.me[prop] = data;
           let el_input = document.querySelector(`[name=${prop}]`);
-          if (!el_input) {
+          if (!el_input || !data[prop]) {
             continue;
           }
           el_input.placeholder = data[prop];
         }
-        //  清空 payload
-        for (let prop in data) {
-          //  同步 $$me 數據
-          $$me[prop] = data[prop];
-        }
-        /*
-        document.addEventListener(
-          "click",
-          () => {
-            //  當頁面被點擊，隨即取消所有表單提醒，並重整 placeholder
-            feedback_UI(false);
-            reset_placeholder();
-          },
-          { once: true }
-        );
-        */
       }
       //  重新選擇要上傳的頭像
       function handle_resetAvatar(e) {
@@ -442,10 +441,15 @@ async function init() {
         }
         if (confirm("要重新傳一顆頭嗎?")) {
           //  重設頭像表格
-          previewAvatar();
-        } else {
-          e.preventDefault();
+          G.utils.payload.delete("avatar_hash");
+          G.utils.payload.delete("avatar_ext");
+          $avatar_img.src = G.data.me.avatar;
+          $avatar.val(null);
+          G.utils.payload.check_submit();
         }
+        // else {
+        //   e.preventDefault();
+        // }
       }
     }
   } catch (error) {

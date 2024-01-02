@@ -80,7 +80,10 @@ function _init_errors(invalid_errors) {
       if (!acc[key]) {
         acc[key] = [];
       }
-      acc[key].push({ keyword: origin_keyword, message });
+      if (!acc[key].some((item) => item.keyword === origin_keyword)) {
+        ////  忽略掉重複性的keyword(錯誤)，通常會因為如allOf設定的條件，指定一個property重複的keyword而發生
+        acc[key].push({ keyword: origin_keyword, message });
+      }
     }
     return acc;
   }, {});
@@ -96,14 +99,16 @@ function _parseErrorsToForm(invalid_errors, data, ignore_list = []) {
   //  先將傳入的 data properties 皆視為 valid，待會進行過濾
   let valid_list = Object.keys(data);
   if (Object.getOwnPropertyNames(invalid_errors).length) {
-    //  ↓ 處理 JSON Pointer 一級 object 角度來說，(properties之上)最高級別的校驗錯誤
     let top_errors = invalid_errors[AJV.FIELD_NAME.TOP]
       ? invalid_errors[AJV.FIELD_NAME.TOP]
       : [];
     for (let error of top_errors) {
+      ////  處理 JSON Pointer 一級 object 角度來說，(properties之上)最高級別的校驗錯誤
+      ////  若同一個field有一級(top)與普通級別錯誤，這裡採以一級為主，忽略掉普通級
       let { keyword, message, list } = error;
       for (let field_name of list) {
         if (!invalid_errors[field_name] || !invalid_errors[field_name].top) {
+          ////  新添加一級，覆蓋掉普通級
           invalid_errors[field_name] = {
             message,
             top: true,

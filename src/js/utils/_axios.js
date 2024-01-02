@@ -80,7 +80,7 @@ function errHandle(error) {
       errno
     )}&msg=${encodeURIComponent(msg)}`;
   }
-  alert(msg);
+  alert(`AXIOS 捕捉到的錯誤 => msg`);
   location.href = redir;
   return Promise.reject();
 }

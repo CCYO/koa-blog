@@ -106,7 +106,7 @@
         <div class="col-sm-8 mx-auto">
           <div class="input-box">
             <label class="form-label">信箱
-              <input type="text" class="form-control" name="email" aria-describedby="email_help" autocomplete="off">
+              <input type="text" class="form-control" name="email" aria-describedby="email_help" autocomplete="off" placeholder="<%= currentUser.email %>">
               <div>&nbsp;</div>
             </label>
           </div>
@@ -125,13 +125,13 @@
           </div>
           <div class="input-box">
             <label for="nickname" class="form-label">暱稱
-              <input type="text" class="form-control" name="nickname" autocomplete="off">
+              <input type="text" class="form-control" name="nickname" autocomplete="off" placeholder="<%= currentUser.nickname ? currentUser.nickname : '' %>">
               <div>&nbsp;</div>
             </label>
           </div>
           <div class="input-box">
             <label class="form-label">年齡
-              <input type="number" class="form-control" name="age" min="0" max="120">
+              <input type="number" class="form-control" name="age" min="0" max="120" placeholder="<%= currentUser.age ? currentUser.age : '' %>">
               <div>&nbsp;</div>
             </label>
           </div>
@@ -139,7 +139,7 @@
             <span class="p-1">頭像</span>
             <div class="avatar-box">
               <div class="ratio ratio-1x1">
-                <img id="avatar-img" src="<%= G_CONST.AVATAR_URL %>" alt="">
+                <img id="avatar-img" src="<%= currentUser.avatar ? currentUser.avatar : G_CONST.AVATAR_URL %>" alt="">
               </div>
             </div>
             <label class="form-label mt-1">

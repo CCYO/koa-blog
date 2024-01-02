@@ -13,7 +13,7 @@ async function validate(schema, data, parentSchema, dataCtx) {
   }
   let errors = [{ keyword }];
   let params = { errors };
-  let invalid_errors = [{ keyword: "myKeyword", params, message: msg[key] }];
+  let invalid_errors = [{ keyword: "myKeyword", params, message: msg }];
   throw new Ajv.ValidationError(invalid_errors);
 }
 

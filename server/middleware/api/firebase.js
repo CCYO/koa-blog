@@ -60,9 +60,10 @@ async function user(ctx, next) {
   if (data.age) {
     data.age = Number.parseInt(data.age);
   }
-  let $$me = ctx.session.user;
-  let res = { ...data, $$me };
-  ctx.request.body = res;
+  // let $$me = ctx.session.user;
+  // let res = { ...data, $$me };
+  // ctx.request.body = res;
+  ctx.request.body = { ...ctx.request.body, ...data };
   await next();
   return;
 }

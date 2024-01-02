@@ -26,52 +26,66 @@ const User = require("../server/user"); //  0404
 
 //  0514
 //  更新user
-async function modify(newData, user_id) {
-  let cache = {
-    [PAGE.USER]: [user_id],
-    [PAGE.BLOG]: [],
-    [API.COMMENT]: [],
-    [NEWS]: [],
-  };
-  if (newData.nickname || newData.email || newData.avatar) {
-    let {
-      data: { fansList, idols, blogs },
-    } = await findInfoForUserPage(user_id);
-    //  找出 idolFans
-    let people = [...fansList, ...idols].map(({ id }) => id);
-    cache[PAGE.USER] = cache[PAGE.USER].concat(people);
-    let blogList = [];
-    //  找出 自己的 blog
-    for (let isShow in blogs) {
-      //  公開/隱藏的blog
-      for (let pagination of blogs[isShow]) {
-        //  分頁
-        let blog_id_list = pagination.map(({ id }) => id);
-        blogList = blogList.concat(blog_id_list);
+async function modify({ _origin, ...newData }) {
+  let { id: user_id } = _origin;
+  let cache = undefined;
+  if (process.env.NODE_ENV !== "nocache") {
+    cache = {
+      [PAGE.USER]: [user_id],
+      [PAGE.BLOG]: [],
+      [API.COMMENT]: [],
+      [NEWS]: [],
+    };
+    if (newData.nickname || newData.email || newData.avatar) {
+      ////  處理cache
+      let {
+        data: { fansList, idolList },
+      } = await findRelationShip(user_id);
+
+      //   let { data: {
+      //     relationShip: { fansList, idolList },
+      //     blogs,
+      //   }
+      // } = await findInfoForUserPage(user_id);
+      //  找出 idolFans
+      // let people = [...fansList, ...idols].map(({ id }) => id);
+      let people = [...fansList, ...idolList].map(({ id }) => id);
+      cache[PAGE.USER] = cache[PAGE.USER].concat(people);
+      let { data: blogList } = await C_Blog.find_id_list_by_author_id(user_id);
+      // let blogList = [];
+      //  找出 自己的 blog
+      // for (let isShow in blogs) {
+      //   //  公開/隱藏的blog
+      //   for (let pagination of blogs[isShow]) {
+      //     //  分頁
+      //     let blog_id_list = pagination.map(({ id }) => id);
+      //     blogList = blogList.concat(blog_id_list);
+      //   }
+      // }
+      cache[PAGE.BLOG] = cache[PAGE.BLOG].concat(blogList);
+      //  找出 reader
+      let { data: readers } =
+        await C_ArticlReader.findReadersForModifiedUserData(blogList);
+      cache[NEWS] = cache[NEWS].concat(readers);
+      //  找出 評論 與 被評論的文章
+      let {
+        data: { articles, comments },
+      } = await C_Comment.findArticlesOfCommented(user_id);
+      cache[API.COMMENT] = cache[API.COMMENT].concat(articles);
+      if (comments.length) {
+        //  找出 receiver
+        let { data: receivers } =
+          await C_MsgReceiver.findListForModifiedUserData(comments);
+        cache[NEWS] = cache[NEWS].concat(receivers);
       }
     }
-    cache[PAGE.BLOG] = cache[PAGE.BLOG].concat(blogList);
-    //  找出 reader
-    let { data: readers } = await C_ArticlReader.findReadersForModifiedUserData(
-      blogList
-    );
-    cache[NEWS] = cache[NEWS].concat(readers);
-    //  找出 評論 與 被評論的文章
-    let {
-      data: { articles, comments },
-    } = await C_Comment.findArticlesOfCommented(user_id);
-    cache[API.COMMENT] = cache[API.COMMENT].concat(articles);
-    if (comments.length) {
-      //  找出 receiver
-      let { data: receivers } = await C_MsgReceiver.findListForModifiedUserData(
-        comments
-      );
-      cache[NEWS] = cache[NEWS].concat(receivers);
-    }
   }
-  if (newData.hasOwnProperty("origin_password")) {
-    delete newData.origin_password;
-    delete newData.password_again;
+  //  測試舊密碼是否正確
+  if (newData.hasOwnProperty("password")) {
+    let { errno } = await login(_origin.email, newData.origin_password);
+    if (errno) {
+      return new ErrModel(ErrRes.USER.READ.PASSWORD_WRONG);
+    }
   }
   let user = await User.update({ newData, id: user_id });
   return new SuccModel({ data: user, cache });
@@ -86,7 +100,9 @@ async function findAlbumListOfUser(user_id, pagination) {
   let albums = Init.browser.blog.pageTable(blogs, pagination);
   return new SuccModel({ data: { albums, author } });
 }
-
+async function check_origin_password({ user_id, origin_password }) {
+  await User.read(Opts.USER.login);
+}
 //  0406
 async function findInfoForFollowIdol({ fans_id, idol_id }) {
   let user = await User.read(

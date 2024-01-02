@@ -245,6 +245,10 @@ module.exports = {
         attributes: ["id", "email", "nickname"],
       },
     }),
+    find_id_List_by_author: (author_id) => ({
+      attributes: ["id"],
+      where: { author_id },
+    }),
     //  0404
     findListForUserPage: (author_id, { limit = 5, offset = 0 }) => ({
       attributes: ["id", "title", "author_id", "show", "showAt", "updatedAt"],
