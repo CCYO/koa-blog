@@ -409,7 +409,7 @@ async function init() {
 
         let formData = new FormData();
         if (payload.hasOwnProperty("avatar_hash")) {
-          api += `?hash=${payload.avatar_hash}&ext=${payload.avatar_ext}`;
+          api += `?avatar_hash=${payload.avatar_hash}&avatar_ext=${payload.avatar_ext}`;
           formData.append("avatar", jq_avatar.prop("files")[0]);
           delete payload.avatar_hash;
           delete payload.avatar_ext;
@@ -419,8 +419,6 @@ async function init() {
           let data = payload[prop];
           formData.append(prop, data);
         }
-        console.log([...formData.entries()]);
-        console.log(api);
         let { data } = await G.utils.axios.patch(api, formData);
 
         //  清空avatar數據
@@ -430,13 +428,15 @@ async function init() {
         $M_UI.form_feedback(FORM_FEEDBACK.STATUS.RESET, jq_settingForm[0]);
         G.utils.payload.clear();
         for (let prop in data) {
-          G.data.me[prop] = data;
+          G.data.me[prop] = data[prop];
           let el_input = document.querySelector(`[name=${prop}]`);
           if (!el_input || !data[prop]) {
             continue;
           }
+          el_input.validated = false;
           el_input.placeholder = data[prop];
         }
+        alert("資料更新完成");
       }
       //  重新選擇要上傳的頭像
       function handle_resetAvatar(e) {

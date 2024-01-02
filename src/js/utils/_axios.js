@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as ErrRes from "../../../server/model/errRes";
+import { error_handle } from "./common/index";
 
 export default class {
   //  創建一個axios實例
@@ -55,34 +56,11 @@ export default class {
         return Promise.resolve(res);
       },
       (error) => {
-        /* axios 結果一律以 resolve 方式處理，響應都會是 { errno, data || msg } 方式呈現*/
-        return errHandle(error);
+        console.log("@_axios error => ", error);
+        error_handle(error);
       }
     );
 
     return instance;
   }
 }
-
-function errHandle(error) {
-  //  response.status 4xx以上的響應
-  console.log("@_axios error => ", error);
-  let {
-    data: { errno, msg },
-  } = error.response;
-  let redir;
-  if (errno === ErrRes.PERMISSION.NO_LOGIN.errno) {
-    //  針對未登入的錯誤處理
-    redir = `/login?from=${encodeURIComponent(location.href)}`;
-  } else {
-    //  針對未登入以外的錯誤處理
-    redir = `/errPage?errno=${encodeURIComponent(
-      errno
-    )}&msg=${encodeURIComponent(msg)}`;
-  }
-  alert(`AXIOS 捕捉到的錯誤 => msg`);
-  location.href = redir;
-  return Promise.reject();
-}
-
-// export default instance

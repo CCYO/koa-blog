@@ -40,6 +40,9 @@ module.exports = async (ctx, next) => {
     case "PATCH-/":
       action = "更新";
       ctx.request.body._origin = { ...ctx.session.user };
+      if (ctx.request.body.hasOwnProperty("avatar")) {
+        ctx.request.body.avatar_hash = ctx.request.query["avatar_hash"];
+      }
       validate_result = await validator.user(VALIDATE.USER.SETTING)(
         ctx.request.body
       );

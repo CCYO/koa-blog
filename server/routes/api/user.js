@@ -26,13 +26,6 @@ router.patch(
   VALIDATE.user,
   async (ctx, next) => {
     let { body: newData } = ctx.request;
-    // let { user } = ctx.session;
-    // newData.origin = { user_id: user.id };
-    // if (newData.hasOwnProperty("origin_password")) {
-    //   newData.origin.email = user.email;
-    //   newData.origin.password = user.origin_password;
-    //   delete newData.origin_password;
-    // }
     ctx.body = await User.modify(newData);
   }
 );

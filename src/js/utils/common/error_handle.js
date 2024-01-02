@@ -6,6 +6,7 @@ window.addEventListener("error", (e) => {
 });
 window.addEventListener("unhandledrejection", function (promiseRejectionEvent) {
   alert("發生未知錯誤");
+  console.log("在window.addEventListener('unhandledrejection') 捕捉到錯誤");
   // handle error here, for example log
   let reason = undefined;
   try {

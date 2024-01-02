@@ -57,13 +57,14 @@ async function blogImg(ctx) {
 
 async function user(ctx, next) {
   let data = await parse.user(ctx);
-  if (data.age) {
+  if (data.hasOwnProperty("age")) {
     data.age = Number.parseInt(data.age);
   }
   // let $$me = ctx.session.user;
   // let res = { ...data, $$me };
   // ctx.request.body = res;
   ctx.request.body = { ...ctx.request.body, ...data };
+
   await next();
   return;
 }

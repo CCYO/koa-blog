@@ -147,25 +147,25 @@ const parse = {
       gceFile: undefined,
     };
     let ref = undefined;
-    let { ext, hash } = ctx.request.query;
+    let { avatar_ext, avatar_hash } = ctx.request.query;
     //  avatar 的 hash 與 ext
-    if (ext && hash) {
-      if (hash === ctx.session.user.avatar_hash) {
+    if (avatar_ext && avatar_hash) {
+      if (avatar_hash === ctx.session.user.avatar_hash) {
         throw new MyErr(ErrRes.UPDATE.AVATAR_HASH_ERR);
       }
-      ext = ext.toUpperCase();
-      if (ext !== "JPG" && ext !== "PNG") {
+      avatar_ext = avatar_ext.toUpperCase();
+      if (avatar_ext !== "JPG" && avatar_ext !== "PNG") {
         throw new MyErr(ErrRes.UPDATE.AVATAR_FORMAT_ERR);
       }
       //  即將存入遠端庫的圖片路徑
-      ref = storage.bucket().file(`${AVATAR}/${hash}.${ext}`);
+      ref = storage.bucket().file(`${AVATAR}/${avatar_hash}.${avatar_ext}`);
       let [exist] = await ref.exists();
       if (!exist) {
         ctx._my.gceFile = { ref };
       }
-    } else if (ext && !hash) {
+    } else if (avatar_ext && !avatar_hash) {
       throw new MyErr(ErrRes.UPDATE.NO_HASH);
-    } else if (!ext && hash) {
+    } else if (!avatar_ext && avatar_hash) {
       throw new MyErr(ErrRes.UPDATE.NO_EXT);
     }
     let { fields } = await _parse(ctx);
