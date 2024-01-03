@@ -17,7 +17,6 @@ const logger = require("koa-logger");
 const json = require("koa-json");
 
 ////  MY MODULE
-const { isProd } = require("./utils/env");
 const webpackDevMiddleware = require("./middleware/_webpackDev");
 let CONF = require("./config");
 const { ErrRes } = require("./model");
@@ -72,7 +71,7 @@ app.use(async (ctx, next) => {
     responseErr = ErrRes.SERVER_ERR;
     //  公版錯誤提醒
     // }
-    if (isProd) {
+    if (CONF.SERVER_ENV.isProd) {
     }
     if (isAPI) {
       ctx.body = responseErr;
@@ -90,7 +89,7 @@ app.use(json());
 app.use(logger());
 
 let viewRoot;
-if (!isProd) {
+if (!CONF.SERVER_ENV.isProd) {
   let webpackConfig = CONF.WEBPACK.DEV_CONFIG;
   // let webpackConfig = require("../build/webpack.dev.config");
   let compiler = webpack(webpackConfig);
