@@ -1,11 +1,13 @@
-const webpack = require("webpack");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
+////  NODE MODULE
 const glob = require("glob");
 const fs = require("fs");
 const { resolve } = require("path");
+////  NPM MODULE
+const webpack = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+////  MY MODULE
+const { isDev, isProd } = require("../config/env");
 const CONFIG = require("./config.js");
-const { isProd } = require("../server/utils/env");
-const isDev = process.env.NODE_ENV === "development" || !isProd;
 const CONS = require("../config/constant");
 
 // ejsLoader()
@@ -170,7 +172,8 @@ module.exports = {
           {
             loader: "image-webpack-loader",
             options: {
-              disable: process.env.NODE_ENV !== "production",
+              // disable: process.env.NODE_ENV !== "production",
+              disable: !isProd,
               pngquant: {
                 quality: [0.3, 0.5],
               },
@@ -205,7 +208,8 @@ module.exports = {
             //	認得<%-
             //	<%= 必須寫成 <%%=
             options: {
-              production: process.env.ENV === "production",
+              // production: process.env.ENV === "production",
+              production: isProd,
               data: {
                 // example, too.
                 CONS,

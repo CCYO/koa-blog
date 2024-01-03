@@ -2,12 +2,6 @@
  * @description 環境變量
  */
 
-const ENV = process.env.NODE_ENV
+const ENV = require("../../config/env");
 
-console.log('@ENV => ', ENV)
-
-module.exports = {
-    isNoCache: ENV === 'nocache',
-    isDev: ENV === 'dev',
-    isProd: ENV === 'production'
-}
+module.exports = ENV;

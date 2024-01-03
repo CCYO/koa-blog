@@ -1,12 +1,12 @@
 const webpack = require("webpack");
 const { merge } = require("webpack-merge");
-const webpackBaseConfig = require("./webpack.base.config");
 const HtmlWebpackHarddiskPlugin = require("html-webpack-harddisk-plugin");
+const webpackBaseConfig = require("./webpack.base.config");
 module.exports = merge(webpackBaseConfig, {
   plugins: [
-    new webpack.DefinePlugin({
-      "process.env.NODE_ENV": JSON.stringify("development"),
-    }),
+    // new webpack.DefinePlugin({
+    //   "process.env.NODE_ENV": JSON.stringify("development"),
+    // }),
     new HtmlWebpackHarddiskPlugin(),
     new webpack.HotModuleReplacementPlugin(),
     // Use NoErrorsPlugin for webpack 1.x

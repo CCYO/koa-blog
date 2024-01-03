@@ -1,34 +1,33 @@
+////  NODE.JS MODULE
+const { resolve } = require("path");
+////  NPM MODULE
 const webpack = require("webpack");
+const webpackHotMiddleware = require("koa-webpack-hot-middleware"); //  警告：沒有TS檔
+const Koa = require("koa");
 const koaMount = require("koa-mount");
 const koaConvert = require("koa-convert");
 const koaViews = require("@ladjs/koa-views");
-const webpackDevMiddleware = require("./middleware/_webpackDev");
-const webpackHotMiddleware = require("koa-webpack-hot-middleware"); //  警告：沒有TS檔
-
-require("dotenv").config();
-//  設定環境變量，以 ~/.env 作為設定檔
-const CONFIG = require("../build/config");
-const isDev = process.env.NODE_ENV === "development";
-let webpackConfig = require("../build/webpack.dev.config");
-let compiler = webpack(webpackConfig);
-let viewRoot;
-
-const { ErrRes } = require("./model");
-
-const { resolve } = require("path");
-
-const Koa = require("koa");
 const session = require("koa-generic-session");
-// const views = require('koa-views')
-const koaStatic = require("koa-static");
 //  解析前端傳來的POST數據（存入ctx.request.body）
-const bodyparser = require("koa-bodyparser");
+const koaStatic = require("koa-static");
 //  打印請求跟響應的url
-const logger = require("koa-logger");
+const bodyparser = require("koa-bodyparser");
 //  提高終端顯示數據的可讀性
+const logger = require("koa-logger");
 const json = require("koa-json");
+
+////  MY MODULE
+const { isProd } = require("./utils/env");
+const webpackDevMiddleware = require("./middleware/_webpackDev");
+let CONF = require("./config");
+const { ErrRes } = require("./model");
 //  連接redis-session
 const store = require("./db/cache/redis/sessionStore");
+
+//  設定環境變量，以 ~/.env 作為設定檔
+// require("dotenv").config();
+// const CONFIG = require("../build/config");
+// const views = require('koa-views')
 
 const Middleware = require("./middleware/api");
 
@@ -45,10 +44,14 @@ const viewAlbum = require("./routes/views/album");
 const viewSquare = require("./routes/views/square");
 const viewErrPage = require("./routes/views/errPage");
 
-const { isProd } = require("./utils/env");
-const { REDIS_CONF } = require("./conf/constant");
+// const isDev = process.env.NODE_ENV === "development";
 
 const app = new Koa();
+//  加密 session
+// const { REDIS_CONF } = require("./conf/constant");
+// app.keys = [REDIS_CONF.SESSION_KEY];
+app.keys = [CONF.SESSION.KEY];
+
 //  Middleware - 錯誤處理
 //  負責捕捉意外的錯誤（預期可能發生的邏輯問題，已預先以ErrModel處理）
 app.use(async (ctx, next) => {
@@ -61,7 +64,7 @@ app.use(async (ctx, next) => {
   } catch (error) {
     ctx.status = 500;
     let isAPI = /^\/api\//.test(ctx.path);
-    let isMyErr = error.isMyErr;
+    // let isMyErr = error.isMyErr;
     let responseErr = error;
     // if (!isMyErr || error.err) {
     /* 完全無預期的錯誤，或是捕捉到第三方模塊生成的錯誤 */
@@ -86,7 +89,11 @@ app.use(async (ctx, next) => {
 app.use(json());
 app.use(logger());
 
-if (isDev || !isProd) {
+let viewRoot;
+if (!isProd) {
+  let webpackConfig = CONF.WEBPACK.DEV_CONFIG;
+  // let webpackConfig = require("../build/webpack.dev.config");
+  let compiler = webpack(webpackConfig);
   // 用 webpack-dev-middleware 启动 webpack 编译
   app.use(
     webpackDevMiddleware(compiler, {
@@ -111,9 +118,9 @@ if (isDev || !isProd) {
   // 	CONFIG.PUBLIC_PATH,
   // 	koaStatic(resolve(__dirname, '../src'), { maxage: 60 * 60 * 1000 })
   // ))
-  viewRoot = resolve(__dirname, `../${CONFIG.BUILD.DIST}`);
+  viewRoot = resolve(__dirname, `../${CONF.WEBPACK.CONST.BUILD.DIST}`);
 } else {
-  viewRoot = resolve(__dirname, `./${CONFIG.BUILD.VIEW}`);
+  viewRoot = resolve(__dirname, `./${CONF.WEBPACK.CONST.BUILD.VIEW}`);
 }
 //  view
 app.use(
@@ -129,13 +136,10 @@ app.use(
 //  靜態檔案
 app.use(
   koaMount(
-    CONFIG.PUBLIC_PATH,
+    CONF.WEBPACK.CONST.PUBLIC_PATH,
     koaStatic(resolve(__dirname, `./assets`), { maxage: 60 * 60 * 1000 })
   )
 );
-
-//  加密 session
-app.keys = [REDIS_CONF.SESSION_KEY];
 
 // 串連redis，實現session
 app.use(
