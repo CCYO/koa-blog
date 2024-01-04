@@ -6,124 +6,131 @@ const { resolve } = require("path");
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 ////  MY MODULE
-const { isDev, isProd } = require("../config/env");
+const SERVER = require("../config/server");
 const CONFIG = require("./config.js");
 const CONS = require("../config/constant");
 
 // ejsLoader()
+////  列出 要打包的js檔
+const js_dir = resolve(__dirname, "../src/js/*.js");
+////  entry: [ { [js檔名]: js路徑位置 | [路徑位置, webpack熱重載參數] }, ... ]
 const entry = ((filepathList) => {
   let res = {};
   filepathList.forEach((filepath) => {
     const list = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
-    const key = list[list.length - 1].replace(/\.js/g, "");
+    const filename = list[list.length - 1].replace(/\.js/g, "");
     // 如果是开发环境，才需要引入 hot module
     // res[key] = filepath
-    res[key] = isDev
+    res[filename] = SERVER.ENV.isDev
       ? // filepath
         [filepath, "webpack-hot-middleware/client?reload=true"]
       : filepath;
   });
   return res;
-})(glob.sync(resolve(__dirname, "../src/js/*.js")));
+})(glob.sync(js_dir));
 
 /*  每個 entry point 的 template */
+//  存放 html template
 const HtmlWebpackPlugins = [];
-//  存放 template
-let map_CONS = new Map();
-//  關於 CONS 的 KEY 與 VAL 的 map
-glob
-  .sync(resolve(__dirname, "../src/__views/**/*.ejs"))
-  .forEach((filepath, i) => {
-    /**
-     * ~/.../__views/pages/*.ejs
-     * ~/.../__views/pages/[ejsName]/components/*.ejs
-     * ~/.../__views/wedgets/*.ejs
+////  生成 html template 的階段，需將template內的 --CONS-- 替換為擬定好的常量
+//  緩存替換過的常量
+let cache_CONS = new Map();
+//  尚未替換--CONS--的template的位置
+let template_dir = resolve(__dirname, "../src/__views/**/*.ejs");
+glob.sync(template_dir).forEach((filepath, i) => {
+  /**
+     * ~/.../__views/pages/*.ejs ------------------------ 無
+     * ~/.../__views/pages/[ejsName]/components/*.ejs --- 被 ~/.../__views/pages/[ejsName]/index.ejs 使用
+     * ~/.../__views/pages/[ejsName]/template/*.ejs ----- 被 ~/.../__views/pages/[ejsName]/components/*.ejs 作為參數使用
+     * ~/.../__views/wedgets/*.ejs ----------------------
      *
-     * ~/.../__views/pages/[ejsName]/template/*.ejs
+     
      */
-    let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
-    let filename = `${tempList[tempList.length - 1]}`; //	檔名
-    let n = tempList.findIndex((item) => item === "__views");
-    tempList[n] = "views";
-    tempList.pop();
-    let dir = "";
-    for (let [index, dirname] of tempList.entries()) {
-      dir += `${dirname}/`;
+  let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
+  let filename = `${tempList[tempList.length - 1]}`; //	檔名
+  let n = tempList.findIndex((item) => item === "__views");
+  tempList[n] = "views";
+  tempList.pop();
+  let dir = "";
+  for (let [index, dirname] of tempList.entries()) {
+    dir += `${dirname}/`;
+    if (index < n) {
+      continue;
+    }
+    if (!fs.existsSync(dir)) {
+      //  若 dirPath 不存在，則新建
+      fs.mkdirSync(dir);
+    }
+  }
+  let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
+  data = data.replace(/[-]{2}(CONS\.\S+?)[-]{2}/g, (match, target) => {
+    if (cache_CONS.has(match)) {
+      return cache_CONS.get(match);
+    }
+    let arr = target.split(".");
+    arr.shift();
+    let constant;
+    for (let [index, item] of arr.entries()) {
+      if (index === 0) {
+        constant = CONS[item];
+        continue;
+      }
+      constant = constant[item];
+    }
+    let res;
+    if (typeof constant === "string") {
+      res = `"${constant}"`;
+    } else if (typeof constant === "object") {
+      res = `'${JSON.stringify(constant)}'`;
+    }
+    cache_CONS.set(match, res);
+    return res;
+  });
+
+  if (tempList[tempList.length - 1] === "template") {
+    let server_views = resolve(__dirname, "../server/views/template");
+    let path_list = server_views.split(/[\/|\/\/|\\|\\\\]/g);
+    let n = path_list.length - 2;
+    let server_dir = "";
+    for (let [index, dirname] of path_list.entries()) {
+      server_dir += `${dirname}/`;
       if (index < n) {
         continue;
       }
-      if (!fs.existsSync(dir)) {
+      if (!fs.existsSync(server_dir)) {
         //  若 dirPath 不存在，則新建
-        fs.mkdirSync(dir);
+        fs.mkdirSync(server_dir);
       }
     }
-    let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
-    data = data.replace(/[-]{2}(CONS\.\S+?)[-]{2}/g, (match, target) => {
-      if (map_CONS.has(match)) {
-        return map_CONS.get(match);
-      }
-      let arr = target.split(".");
-      arr.shift();
-      let constant;
-      for (let [index, item] of arr.entries()) {
-        if (index === 0) {
-          constant = CONS[item];
-          continue;
-        }
-        constant = constant[item];
-      }
-      let res;
-      if (typeof constant === "string") {
-        res = `"${constant}"`;
-      } else if (typeof constant === "object") {
-        res = `'${JSON.stringify(constant)}'`;
-      }
-      map_CONS.set(match, res);
-      return res;
+    let target_filename = `${server_dir}${filename}`;
+    // fs.copyFileSync(filepath, target_filename);
+    fs.writeFileSync(target_filename, data);
+  }
+  console.log(`--------${tempList[tempList.length - 1]}/${filename}`);
+
+  data = data.replace(/\<%(?!(-\s+include)|([=\-]?\s+.*?CONS\.))/g, "<%%"); //	修改檔案內容
+  //	修改檔案內容
+  let template = dir + filename; //	添入原檔名
+  fs.writeFileSync(template, data); //	在目標資料夾創建新檔
+
+  if (
+    tempList[n + 1] !== "wedgets" &&
+    tempList[n + 3] !== "components" &&
+    tempList[n + 3] !== "template"
+  ) {
+    const fileChunk = tempList[n + 2];
+    const chunks = SERVER.ENV.isDev
+      ? [fileChunk]
+      : ["manifest", "vendors", fileChunk];
+    let item = new HtmlWebpackPlugin({
+      filename: `${fileChunk}.ejs`,
+      template,
+      chunks,
+      alwaysWriteToDisk: true,
     });
-
-    if (tempList[tempList.length - 1] === "template") {
-      let server_views = resolve(__dirname, "../server/views/template");
-      let path_list = server_views.split(/[\/|\/\/|\\|\\\\]/g);
-      let n = path_list.length - 2;
-      let server_dir = "";
-      for (let [index, dirname] of path_list.entries()) {
-        server_dir += `${dirname}/`;
-        if (index < n) {
-          continue;
-        }
-        if (!fs.existsSync(server_dir)) {
-          //  若 dirPath 不存在，則新建
-          fs.mkdirSync(server_dir);
-        }
-      }
-      let target_filename = `${server_dir}${filename}`;
-      // fs.copyFileSync(filepath, target_filename);
-      fs.writeFileSync(target_filename, data);
-    }
-    console.log(`--------${tempList[tempList.length - 1]}/${filename}`);
-
-    data = data.replace(/\<%(?!(-\s+include)|([=\-]?\s+.*?CONS\.))/g, "<%%"); //	修改檔案內容
-    //	修改檔案內容
-    let template = dir + filename; //	添入原檔名
-    fs.writeFileSync(template, data); //	在目標資料夾創建新檔
-
-    if (
-      tempList[n + 1] !== "wedgets" &&
-      tempList[n + 3] !== "components" &&
-      tempList[n + 3] !== "template"
-    ) {
-      const fileChunk = tempList[n + 2];
-      const chunks = isDev ? [fileChunk] : ["manifest", "vendors", fileChunk];
-      let item = new HtmlWebpackPlugin({
-        filename: `${fileChunk}.ejs`,
-        template,
-        chunks,
-        alwaysWriteToDisk: true,
-      });
-      HtmlWebpackPlugins.push(item);
-    }
-  });
+    HtmlWebpackPlugins.push(item);
+  }
+});
 
 module.exports = {
   context: resolve(__dirname),
@@ -173,7 +180,7 @@ module.exports = {
             loader: "image-webpack-loader",
             options: {
               // disable: process.env.NODE_ENV !== "production",
-              disable: !isProd,
+              disable: !SERVER.ENV.isProd,
               pngquant: {
                 quality: [0.3, 0.5],
               },
@@ -209,7 +216,7 @@ module.exports = {
             //	<%= 必須寫成 <%%=
             options: {
               // production: process.env.ENV === "production",
-              production: isProd,
+              production: SERVER.ENV.isProd,
               data: {
                 // example, too.
                 CONS,
