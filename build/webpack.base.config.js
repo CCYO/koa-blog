@@ -7,7 +7,7 @@ const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 ////  MY MODULE
 const SERVER = require("../config/server");
-const CONFIG = require("./config.js");
+const CONFIG = require("./config");
 const CONS = require("../config/constant");
 
 // ejsLoader()
@@ -34,67 +34,89 @@ const entry = ((filepathList) => {
 const HtmlWebpackPlugins = [];
 ////  生成 html template 的階段，需將template內的 --CONS-- 替換為擬定好的常量
 //  緩存替換過的常量
-let cache_CONS = new Map();
+let cache_ejs_args = new Map();
 //  尚未替換--CONS--的template的位置
 let template_dir = resolve(__dirname, "../src/__views/**/*.ejs");
 glob.sync(template_dir).forEach((filepath, i) => {
   /**
-     * ~/.../__views/pages/*.ejs ------------------------ 無
-     * ~/.../__views/pages/[ejsName]/components/*.ejs --- 被 ~/.../__views/pages/[ejsName]/index.ejs 使用
-     * ~/.../__views/pages/[ejsName]/template/*.ejs ----- 被 ~/.../__views/pages/[ejsName]/components/*.ejs 作為參數使用
-     * ~/.../__views/wedgets/*.ejs ----------------------
-     *
-     
-     */
-  let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
-  let filename = `${tempList[tempList.length - 1]}`; //	檔名
-  let n = tempList.findIndex((item) => item === "__views");
-  tempList[n] = "views";
-  tempList.pop();
-  let dir = "";
-  for (let [index, dirname] of tempList.entries()) {
-    dir += `${dirname}/`;
-    if (index < n) {
+   * ~/.../__views/pages/*.ejs ------------------------ 無
+   * ~/.../__views/pages/[ejsName]/components/*.ejs --- 被 ~/.../__views/pages/[ejsName]/index.ejs 使用
+   * ~/.../__views/pages/[ejsName]/template/*.ejs ----- 在後端生成view時，被拿來當作生成 ejs.render 的參數(key:ejs_template)使用
+   * -------------------------------------------------- ejs_template 可能出現在 views/pages/[ejsName]/index.ejs 或是 views/pages/[ejsName]/components/index.ejs 作為參數使用
+   * ~/.../__views/wedgets/*.ejs ----------------------
+   */
+  // let tempList = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
+  let array_filepath = filepath.split(/[\/|\/\/|\\|\\\\]/g); // eslint-disable-line
+  let filename = `${array_filepath[array_filepath.length - 1]}`; //	檔名(含ext)
+  let index_views = array_filepath.findIndex((item) => item === "__views");
+  //  將array_filepath內的__views，改為最後要放入的資料夾名 "views"
+  // tempList[index_views] = 'views';
+  array_filepath[index_views] = CONFIG.BUILD.VIEW;
+  //  移除檔名的部分
+  array_filepath.pop();
+  // let dir = "";
+  //  要存放的完整位置
+  let target_dir = "";
+  for (let [index, folder] of array_filepath.entries()) {
+    target_dir += `${folder}/`;
+    if (index < index_views) {
       continue;
     }
-    if (!fs.existsSync(dir)) {
+    if (!fs.existsSync(target_dir)) {
       //  若 dirPath 不存在，則新建
-      fs.mkdirSync(dir);
+      fs.mkdirSync(target_dir);
     }
   }
-  let data = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
-  data = data.replace(/[-]{2}(CONS\.\S+?)[-]{2}/g, (match, target) => {
-    if (cache_CONS.has(match)) {
-      return cache_CONS.get(match);
-    }
-    let arr = target.split(".");
-    arr.shift();
-    let constant;
-    for (let [index, item] of arr.entries()) {
-      if (index === 0) {
-        constant = CONS[item];
-        continue;
+  let ejs_string = fs.readFileSync(filepath, "utf-8"); //	取得檔案內容
+  //  替換所有 ejs 預先設置的常數
+  ejs_string = ejs_string.replace(
+    CONFIG.EJS.REG.REPLACE,
+    (match, target_string) => {
+      if (cache_ejs_args.has(match)) {
+        return cache_ejs_args.get(match);
       }
-      constant = constant[item];
+      let target_list = target_string.split(".");
+      //  移除掉固定的前綴
+      target_list.shift();
+      let last_index = target_list.length - 1;
+      let ejs_arg;
+      for (let [index, item] of target_list.entries()) {
+        if (index === 0) {
+          ejs_arg = CONS[item];
+          continue;
+        }
+        ejs_arg = ejs_arg[item];
+        if (index !== last_index) {
+          continue;
+        }
+        if (typeof ejs_arg === "string") {
+          //  因為 ejs 的 --CONS.xxx.xxx-- 沒有被 "" 包覆，故這裡要在 `` 內部補上 ""
+          ejs_arg = `"${ejs_arg}"`;
+        } else if (typeof ejs_arg === "object") {
+          ejs_arg = `'${JSON.stringify(ejs_arg)}'`;
+        }
+      }
+      // let res;
+      // if (typeof ejs_arg === "string") {
+      //   res = `"${constant}"`;
+      // } else if (typeof constant === "object") {
+      //   res = `'${JSON.stringify(constant)}'`;
+      // }
+      cache_ejs_args.set(match, ejs_arg);
+      // cache_ejs_args.set(match, res);
+      return ejs_arg;
     }
-    let res;
-    if (typeof constant === "string") {
-      res = `"${constant}"`;
-    } else if (typeof constant === "object") {
-      res = `'${JSON.stringify(constant)}'`;
-    }
-    cache_CONS.set(match, res);
-    return res;
-  });
-
-  if (tempList[tempList.length - 1] === "template") {
-    let server_views = resolve(__dirname, "../server/views/template");
-    let path_list = server_views.split(/[\/|\/\/|\\|\\\\]/g);
-    let n = path_list.length - 2;
+  );
+  ////  針對 template 類型的 ejs 做處理
+  if (array_filepath[array_filepath.length - 1] === "template") {
+    let dir_server_views = resolve(__dirname, "../server/views/template");
+    let dir_server_views_list = dir_server_views.split(/[\/|\/\/|\\|\\\\]/g);
+    // let n = dir_server_views_list.length - 2;
+    let index_views = dir_server_views_list.length - 2;
     let server_dir = "";
-    for (let [index, dirname] of path_list.entries()) {
-      server_dir += `${dirname}/`;
-      if (index < n) {
+    for (let [index, item] of dir_server_views_list.entries()) {
+      server_dir += `${item}/`;
+      if (index < index_views) {
         continue;
       }
       if (!fs.existsSync(server_dir)) {
@@ -104,15 +126,22 @@ glob.sync(template_dir).forEach((filepath, i) => {
     }
     let target_filename = `${server_dir}${filename}`;
     // fs.copyFileSync(filepath, target_filename);
+    // 因為server進行ctx.render需要用到，所以先存一份至 dir_server_views
     fs.writeFileSync(target_filename, data);
   }
-  console.log(`--------${tempList[tempList.length - 1]}/${filename}`);
-
-  data = data.replace(/\<%(?!(-\s+include)|([=\-]?\s+.*?CONS\.))/g, "<%%"); //	修改檔案內容
-  //	修改檔案內容
-  let template = dir + filename; //	添入原檔名
+  console.log(
+    `--------${array_filepath[array_filepath.length - 1]}/${filename}`
+  );
+  //  針對 ejs 要帶入參數的部分，除了 include 與 CONS 以外的 <% 標記，都轉換成 <%%
+  //  * include 會在 webpack 打包時，將指定路徑的 ejs 傳入
+  //  * CONS 則是已經在前面就準備好了，編譯時會直接放入
+  ejs_string = ejs_string.replace(CONFIG.EJS.REG.IGNORE, "<%%");
+  //	最終要存放的檔案路徑
+  let template = target_dir + filename;
+  // let template = dir + filename; //	添入原檔名
   fs.writeFileSync(template, data); //	在目標資料夾創建新檔
 
+  //////////////////////////////////////////////////////////////////////////////////
   if (
     tempList[n + 1] !== "wedgets" &&
     tempList[n + 3] !== "components" &&
