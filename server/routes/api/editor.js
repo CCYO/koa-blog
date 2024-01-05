@@ -1,7 +1,9 @@
 /**
  * @description API editor 相關
  */
-const CONS = require("../../../config/constant");
+const {
+  DEFAULT: { BLOG },
+} = require("../../config");
 const BlogImgAlt = require("../../controller/blogImgAlt"); //  0409
 const Blog = require("../../controller/blog"); //  0406
 const { CACHE, CHECK, FIREBASE } = require("../../middleware/api"); //  0406
@@ -10,7 +12,7 @@ router.prefix("/api/blog");
 
 router.post("/list", CHECK.login, async (ctx, next) => {
   let { id } = ctx.session.user;
-  let { STATUS, PAGINATION } = CONS.SERVER.BLOG;
+  let { STATUS, PAGINATION } = BLOG;
   let {
     author_id,
     show: status = STATUS.PUBLIC,

@@ -6,10 +6,10 @@ import $M_ui from "../ui";
 import $M_template from "../template";
 import $M_log from "../log";
 /* -------------------- CONFIG CONST -------------------- */
-import { INIT_PAGE } from "../../../../config/constant";
+import { NAVBAR } from "../../config";
 
 /* 初始化 通知列表 功能 */
-export default async function (axios, options = INIT_PAGE.NAVBAR) {
+export default async function (axios, options = NAVBAR) {
   if (!axios) {
     throw new Error("沒提供axios給initNavbar");
   }

@@ -4,8 +4,17 @@ import REDIR from "./redir";
 import { AJV } from "../utils/_ajv/config";
 import LOADING_BACKDROP from "./loading_backdrop";
 import EJS_DATA from "./ejs_data";
-
-export { REDIR, PAGE, SERVER, FORM_FEEDBACK, AJV, LOADING_BACKDROP, EJS_DATA };
+import NAVBAR from "./navbar";
+export {
+  REDIR,
+  PAGE,
+  SERVER,
+  FORM_FEEDBACK,
+  AJV,
+  LOADING_BACKDROP,
+  EJS_DATA,
+  NAVBAR,
+};
 export default {
   REDIR,
   PAGE,
@@ -14,4 +23,5 @@ export default {
   AJV,
   LOADING_BACKDROP,
   EJS_DATA,
+  NAVBAR,
 };
