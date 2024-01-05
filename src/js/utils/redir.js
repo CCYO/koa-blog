@@ -1,4 +1,4 @@
-import { PAGE, REDIR } from "../../../config/constant";
+import { PAGE, REDIR } from "../../js/config";
 
 function from(url) {
   let searchParams = new URLSearchParams(location.search);
