@@ -11,8 +11,10 @@ const {
 const User = require("../../controller/user");
 //  0501
 const {
-  CACHE: { TYPE, STATUS },
-} = require("../../conf/constant");
+  DEFAULT: {
+    CACHE: { TYPE, STATUS },
+  },
+} = require("../../config");
 //  0504
 const privateCache = GEN_CACHE_FN.private(TYPE.PAGE.USER);
 //  0504

@@ -18,8 +18,8 @@ const json = require("koa-json");
 
 ////  MY MODULE
 const webpackDevMiddleware = require("./middleware/_webpackDev");
-let { WEBPACK } = require("../config");
-let SERVER = require("./config");
+let BUILD = require("../build");
+let SERVER_CONFIG = require("./config");
 const { ErrRes } = require("./model");
 //  連接redis-session
 const store = require("./db/cache/redis/sessionStore");
@@ -49,8 +49,8 @@ const viewErrPage = require("./routes/views/errPage");
 const app = new Koa();
 //  加密 session
 // const { REDIS_CONF } = require("./conf/constant");
-// app.keys = [REDIS_SERVER.SESSION_KEY];
-app.keys = [SERVER.SESSION.KEY];
+// app.keys = [REDIS_SERVER_CONFIG.SESSION_KEY];
+app.keys = [SERVER_CONFIG.SESSION.KEY];
 
 //  Middleware - 錯誤處理
 //  負責捕捉意外的錯誤（預期可能發生的邏輯問題，已預先以ErrModel處理）
@@ -72,7 +72,7 @@ app.use(async (ctx, next) => {
     responseErr = ErrRes.SERVER_ERR;
     //  公版錯誤提醒
     // }
-    if (SERVER.ENV.isProd) {
+    if (SERVER_CONFIG.ENV.isProd) {
     }
     if (isAPI) {
       ctx.body = responseErr;
@@ -90,13 +90,13 @@ app.use(json());
 app.use(logger());
 
 let viewRoot;
-if (!SERVER.ENV.isProd) {
+if (!SERVER_CONFIG.ENV.isProd) {
   // let webpackConfig = require("../build/webpack.dev.config");
-  let compiler = webpack(WEBPACK.DEV);
+  let compiler = webpack(BUILD.DEV);
   // 用 webpack-dev-middleware 启动 webpack 编译
   app.use(
     webpackDevMiddleware(compiler, {
-      publicPath: WEBPACK.DEV.output.publicPath,
+      publicPath: BUILD.DEV.output.publicPath,
       stats: {
         colors: true,
       },
@@ -106,7 +106,7 @@ if (!SERVER.ENV.isProd) {
   app.use(
     koaConvert(
       webpackHotMiddleware(compiler, {
-        publicPath: WEBPACK.DEV.output.publicPath,
+        publicPath: BUILD.DEV.output.publicPath,
         noInfo: true,
         reload: true,
       })
@@ -114,12 +114,12 @@ if (!SERVER.ENV.isProd) {
   );
   // 指定开发环境下的静态资源目录
   // app.use(koaMount(
-  // 	SERVER.PUBLIC_PATH,
+  // 	SERVER_CONFIG.PUBLIC_PATH,
   // 	koaStatic(resolve(__dirname, '../src'), { maxage: 60 * 60 * 1000 })
   // ))
-  viewRoot = resolve(__dirname, `../${WEBPACK.CONST.BUILD.DIST}`);
+  viewRoot = resolve(__dirname, `../${BUILD.CONFIG.BUILD.DIST}`);
 } else {
-  viewRoot = resolve(__dirname, `./${WEBPACK.CONST.BUILD.VIEW}`);
+  viewRoot = resolve(__dirname, `./${BUILD.CONFIG.BUILD.VIEW}`);
 }
 //  view
 app.use(
@@ -135,7 +135,7 @@ app.use(
 //  靜態檔案
 app.use(
   koaMount(
-    WEBPACK.CONST.PUBLIC_PATH,
+    BUILD.CONFIG.PUBLIC_PATH,
     koaStatic(resolve(__dirname, `./assets`), { maxage: 60 * 60 * 1000 })
   )
 );

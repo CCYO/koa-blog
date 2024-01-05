@@ -8,8 +8,6 @@ const {
   //  0409
   BlogImgAlt,
   Comment,
-  User,
-  Blog,
 } = require("../db/mysql/model");
 const { hash } = require("../utils/crypto"); //  0228
 module.exports = {

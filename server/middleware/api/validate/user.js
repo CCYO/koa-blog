@@ -1,7 +1,7 @@
 /**
  * @description middleware validate
  */
-const { VALIDATE } = require("../../../conf/constant");
+const { TYPE } = require("../../../utils/validator/config");
 const { ErrRes, MyErr, ErrModel } = require("../../../model");
 const validator = require("../../../utils/validator");
 
@@ -21,21 +21,15 @@ module.exports = async (ctx, next) => {
   switch (condition) {
     case "POST-/isEmailExist":
       action = "確認信箱是否可用";
-      validate_result = await validator.user(VALIDATE.USER.EMAIL)(
-        ctx.request.body
-      );
+      validate_result = await validator.user(TYPE.EMAIL)(ctx.request.body);
       break;
     case "POST-/register":
       action = "註冊";
-      validate_result = await validator.user(VALIDATE.USER.REGISTER)(
-        ctx.request.body
-      );
+      validate_result = await validator.user(TYPE.REGISTER)(ctx.request.body);
       break;
     case "POST-/":
       action = "登入";
-      validate_result = await validator.user(VALIDATE.USER.LOGIN)(
-        ctx.request.body
-      );
+      validate_result = await validator.user(TYPE.LOGIN)(ctx.request.body);
       break;
     case "PATCH-/":
       action = "更新";
@@ -43,9 +37,7 @@ module.exports = async (ctx, next) => {
       if (ctx.request.body.hasOwnProperty("avatar")) {
         ctx.request.body.avatar_hash = ctx.request.query["avatar_hash"];
       }
-      validate_result = await validator.user(VALIDATE.USER.SETTING)(
-        ctx.request.body
-      );
+      validate_result = await validator.user(TYPE.SETTING)(ctx.request.body);
       break;
   }
   //    validate_result [ item, ... ]
@@ -54,7 +46,7 @@ module.exports = async (ctx, next) => {
   if (invalid_list.length) {
     console.log("VALIDATE 捕捉到資料校驗錯誤");
     throw new Error("VALIDATE 捕捉到資料校驗錯誤");
-    ctx.body = new ErrModel(ErrRes.VALIDATE.USER(validate_result));
+    ctx.body = new ErrModel(ErrRes.TYPE(validate_result));
     return;
   }
   return await next();

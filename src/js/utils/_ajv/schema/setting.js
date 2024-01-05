@@ -1,10 +1,7 @@
-import CONSTANT from "../../../../../config/constant";
-
-let AJV = CONSTANT.AJV;
-const TYPE = AJV.TYPE;
+import AJV_CONFIG from "../config";
 
 export default {
-  $id: TYPE.SETTING.ref,
+  $id: AJV_CONFIG.TYPE.SETTING.ref,
   type: "object",
   $async: true,
   minProperties: 2,
@@ -22,19 +19,19 @@ export default {
     {
       properties: {
         email: {
-          $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
+          $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/email`,
         },
         age: {
-          $ref: `${TYPE.DEFAULT.ref}#/definitions/age`,
+          $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/age`,
         },
         nickname: {
-          $ref: `${TYPE.DEFAULT.ref}#/definitions/nickname`,
+          $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/nickname`,
         },
         password: {
-          $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
+          $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/password`,
         },
         password_again: {
-          $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again`,
+          $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/password_again`,
         },
         avatar_hash: {
           type: "string",
@@ -78,7 +75,7 @@ export default {
         properties: {
           email: {
             type: "string",
-            $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
+            $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/email`,
           },
         },
         // _notRepeat: ["email"],
@@ -96,7 +93,7 @@ export default {
         properties: {
           email: {
             type: "string",
-            $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
+            $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/email`,
           },
         },
       },

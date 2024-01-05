@@ -9,8 +9,10 @@ const { storage } = require("../db/firebase");
 const { ErrRes, MyErr } = require("../model");
 //  0516
 const {
-  GCS_ref: { BLOG, AVATAR },
-} = require("../conf/constant");
+  DEFAULT: {
+    GCS_ref: { BLOG, AVATAR },
+  },
+} = require("../config");
 
 /** 自行封裝 formidable parse，內部包含「圖檔上傳FireBase」的判斷
  * @param {object} ctx ctx

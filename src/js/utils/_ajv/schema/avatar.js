@@ -1,10 +1,7 @@
-import CONSTANT from "../../../../../config/constant";
-
-let AJV = CONSTANT.AJV;
-const TYPE = AJV.TYPE;
+import AJV_CONFIG from "../config";
 
 export default {
-  $id: TYPE.AVATAR.ref,
+  $id: AJV_CONFIG.TYPE.AVATAR.ref,
   type: "object",
   properties: {
     hash: {

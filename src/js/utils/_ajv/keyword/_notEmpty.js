@@ -1,4 +1,4 @@
-import { AJV } from "../../../../../config/constant";
+import CONFIG from "../config";
 
 const keyword = "_notEmpty";
 const message = "必填";
@@ -12,7 +12,7 @@ function validate(schema, data, parentSchema, dataCtx) {
     if (!valid) {
       acc.push({
         keyword,
-        params: { [AJV.ERROR_PARAMS._notEmpty]: prorperty },
+        params: { [CONFIG.ERROR_PARAMS._notEmpty]: prorperty },
       });
     }
     return acc;

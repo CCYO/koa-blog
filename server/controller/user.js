@@ -2,19 +2,16 @@
  * @description Controller user相關
  */
 const {
-  BLOG: {
-    ORGANIZED: {
-      TYPE: { POSITIVE, NEGATIVE },
+  DEFAULT: {
+    CACHE: {
+      TYPE: {
+        API,
+        PAGE, //  0228
+        NEWS, //  0228
+      },
     },
   },
-  CACHE: {
-    TYPE: {
-      API,
-      PAGE, //  0228
-      NEWS, //  0228
-    },
-  },
-} = require("../conf/constant");
+} = require("../config");
 const C_MsgReceiver = require("./msgReceiver");
 const C_Comment = require("./comment");
 const C_ArticlReader = require("./articleReader");

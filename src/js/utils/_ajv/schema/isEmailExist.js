@@ -1,17 +1,14 @@
-import CONSTANT from "../../../../../config/constant";
-
-let AJV = CONSTANT.AJV;
-const TYPE = AJV.TYPE;
+import AJV_CONFIG from "../config";
 
 export default {
-  $id: TYPE.IS_EMAIL_EXIST.ref,
+  $id: AJV_CONFIG.TYPE.IS_EMAIL_EXIST.ref,
   $async: true,
   if: {
     type: "object",
     properties: {
       email: {
         type: "string",
-        $ref: `${TYPE.DEFAULT.ref}#/definitions/email`,
+        $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/email`,
       },
     },
     _notEmpty: ["email"],

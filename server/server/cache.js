@@ -4,14 +4,16 @@ const { MyErr, ErrRes } = require("../model");
 const Redis = require("../db/cache/redis/_redis");
 //  0503
 const {
-  CACHE: {
-    //  0503
-    STATUS,
-    TYPE: { PAGE, API, NEWS },
+  ENV,
+  DEFAULT: {
+    CACHE: {
+      //  0503
+      STATUS,
+      TYPE: { NEWS },
+    },
   },
-} = require("../conf/constant");
-//  0501
-const { SERVER_ENV } = require("../config");
+} = require("../config");
+
 //  0228
 async function modify(cache) {
   for (let [type, list] of Object.entries(cache)) {
@@ -61,7 +63,7 @@ async function getTYPE(type) {
     //  取得 blog 緩存
     async get(id, ifNoneMatch) {
       let res = { exist: STATUS.NO_CACHE, data: undefined, etag: undefined };
-      if (SERVER_ENV.isNoCache) {
+      if (ENV.isNoCache) {
         return res;
       }
 
@@ -91,7 +93,7 @@ async function getTYPE(type) {
     //  0501
     //  設置 user 緩存
     async set(id, data) {
-      if (SERVER_ENV.isNoCache) {
+      if (ENV.isNoCache) {
         return false;
       }
       let etag = await cacheType.set(id, data);

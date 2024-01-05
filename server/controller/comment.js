@@ -1,4 +1,6 @@
-const { CACHE } = require("../conf/constant"); //  0411
+const {
+  DEFAULT: { CACHE },
+} = require("../config"); //  0411
 const C_MsgReceiver = require("./msgReceiver"); //  0411
 const Init = require("../utils/init"); //  0404
 const { SuccModel, ErrModel, MyErr, ErrRes } = require("../model"); //  0404

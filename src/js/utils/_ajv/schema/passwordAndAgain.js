@@ -1,19 +1,16 @@
-import CONSTANT from "../../../../../config/constant";
-
-let AJV = CONSTANT.AJV;
-const TYPE = AJV.TYPE;
+import AJV_CONFIG from "../config";
 
 export default {
-  $id: TYPE.PASSOWRD_AGAIN.ref,
+  $id: AJV_CONFIG.TYPE.PASSOWRD_AGAIN.ref,
   type: "object",
   properties: {
     password: {
       type: "string",
-      $ref: `${TYPE.DEFAULT.ref}#/definitions/password`,
+      $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/password`,
     },
     password_again: {
       type: "string",
-      $ref: `${TYPE.DEFAULT.ref}#/definitions/password_again`,
+      $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/password_again`,
     },
   },
   required: ["password", "password_again"],

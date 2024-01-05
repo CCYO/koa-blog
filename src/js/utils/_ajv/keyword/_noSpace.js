@@ -1,4 +1,4 @@
-import { AJV } from "../../../../../config/constant";
+import CONFIG from "../config";
 
 const keyword = "_noSpace";
 const message = "不可包含空格";
@@ -11,7 +11,7 @@ function validate(schema, data, parentSchema, dataCtx) {
       if (!valid) {
         acc.push({
           keyword,
-          params: { [AJV.ERROR_PARAMS._noSpace]: prorperty },
+          params: { [CONFIG.ERROR_PARAMS._noSpace]: prorperty },
         });
       }
     }

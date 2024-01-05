@@ -1,6 +1,6 @@
 {
-  "ignore": ["node_modules/**", "src/js", "src/css", "server/views"],
-  "watch": ["server/", "src/__views", "build/"],
+  "ignore": ["node_modules/**", "src/js", "src/css"],
+  "watch": ["server/!views", "src/__views", "build/"],
   "env": {
     "PORT": 8080
   },

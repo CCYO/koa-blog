@@ -1,5 +1,5 @@
 const date = require("date-and-time");
-const CONST = require("../../conf/constant");
+const SERVER_CONFIG = require("../../config");
 const { initListForBrowser } = require("./comment"); //  0411
 const {
   //  0404
@@ -10,9 +10,7 @@ const {
   filterEmptyAndFranferFns,
   filterEmptyAndFranferFnsForArray,
 } = require("../filterEmpty"); //  0404
-const {
-  USER: { AVATAR },
-} = require("../../conf/constant"); //  0404
+
 //  0409
 function initAlt(data) {
   return init(data, go);
@@ -76,9 +74,15 @@ function initBlog(data) {
       let status = map.get("show");
       // let status = map.get('show') ? 'public' : 'private'
       if (status && map.has("showAt")) {
-        blog.time = date.format(map.get("showAt"), CONST.BLOG.TIME_FORMAT);
+        blog.time = date.format(
+          map.get("showAt"),
+          SERVER_CONFIG.DEFAULT.BLOG.TIME_FORMAT
+        );
       } else if (!status && map.get("updatedAt")) {
-        blog.time = date.format(map.get("updatedAt"), CONST.BLOG.TIME_FORMAT);
+        blog.time = date.format(
+          map.get("updatedAt"),
+          SERVER_CONFIG.DEFAULT.BLOG.TIME_FORMAT
+        );
       }
     }
     return blog;
@@ -147,7 +151,7 @@ function initUser(data) {
     }
     //  設置默認的avatar
     if (map.has("avatar") && !map.get("avatar")) {
-      data.avatar = AVATAR;
+      data.avatar = SERVER_CONFIG.DEFAULT.USER.AVATAR;
     }
     // if (map.has('comments') && data.comments.length) {
     //     let comments = data.comments

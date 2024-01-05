@@ -40,7 +40,8 @@ import twResources from "../locale/tw";
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-import { AJV, SERVER, PAGE, FORM_FEEDBACK } from "../../config/constant";
+// import { AJV, SERVER, PAGE, FORM_FEEDBACK } from "../../config/constant";
+import { PAGE, SERVER, FORM_FEEDBACK, AJV } from "./config";
 
 //  webpack打包後的js，會自動插入< script defer>，而defer的調用會發生在DOM parse後、DOMContentLoaded前，
 //  為了確保此js能應用到頁面上可能存在以CDN獲取到的其他JS庫，故將所有內容放入window.load

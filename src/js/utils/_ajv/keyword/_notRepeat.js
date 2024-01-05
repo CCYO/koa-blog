@@ -1,4 +1,4 @@
-import { AJV } from "../../../../../config/constant";
+import CONFIG from "../config";
 
 const keyword = "_notRepeat";
 const message = "沒有要改就別鬧了";
@@ -21,7 +21,7 @@ function validate(schema, data, parentSchema, dataCtx) {
     if (!valid) {
       acc.push({
         keyword,
-        params: { [AJV.ERROR_PARAMS._notRepeat]: prorperty },
+        params: { [CONFIG.ERROR_PARAMS._notRepeat]: prorperty },
       });
     }
     return acc;

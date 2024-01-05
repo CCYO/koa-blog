@@ -5,7 +5,9 @@ const C_User = require("../../controller/user");
 const moment = require("moment");
 const { QueryTypes } = require("sequelize");
 const { seq } = require("./model");
-const { NEWS } = require("../../conf/constant");
+const {
+  DEFAULT: { NEWS },
+} = require("../../config");
 
 //  0404
 async function count(user_id) {

@@ -4,8 +4,10 @@ const {
 } = require("../filterEmpty"); //  0411
 const date = require("date-and-time"); //  0411
 const {
-  COMMENT: { CHECK_IS_DELETED, TIME_FORMAT, SORT_BY },
-} = require("../../conf/constant"); //  0411
+  DEFAULT: {
+    COMMENT: { CHECK_IS_DELETED, TIME_FORMAT, SORT_BY },
+  },
+} = require("../../config"); //  0411
 //  0404
 function initListForBrowser(data) {
   //  排序 + 時間數據序列化

@@ -6,11 +6,13 @@ const { ErrRes, MyErr } = require("../../../model");
 //  0501
 const crypto = require("../../../utils/crypto");
 //  0501
-const {
-  CACHE: { TYPE },
-} = require("../../../conf/constant");
 //  0501
-const { DB } = require("../../../config");
+const {
+  DEFAULT: {
+    CACHE: { TYPE },
+  },
+  DB,
+} = require("../../../config");
 //  0501
 const redis = require("redis");
 const cli = redis.createClient(DB.REDIS_CONF.port, DB.REDIS_CONF.host);

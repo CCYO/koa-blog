@@ -1,10 +1,7 @@
-import CONSTANT from "../../../../../config/constant";
-
-let AJV = CONSTANT.AJV;
-const TYPE = AJV.TYPE;
+import AJV_CONFIG from "../config";
 
 export default {
-  $id: TYPE.BLOG.ref,
+  $id: AJV_CONFIG.TYPE.BLOG.ref,
   type: "object",
   properties: {
     _old: {
@@ -15,19 +12,19 @@ export default {
     },
     title: {
       type: "string",
-      $ref: `${TYPE.DEFAULT.ref}#/definitions/title`,
+      $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/title`,
     },
     html: {
       type: "string",
-      $ref: `${TYPE.DEFAULT.ref}#/definitions/html`,
+      $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/html`,
     },
     show: {
       type: "boolean",
-      $ref: `${TYPE.DEFAULT.ref}#/definitions/show`,
+      $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/show`,
     },
     cancelImgs: {
       type: "string",
-      $ref: `${TYPE.DEFAULT.ref}#/definitions/cancelImgs`,
+      $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/cancelImgs`,
     },
   },
   _notRepeat: ["title", "html", "show"],

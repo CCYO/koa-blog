@@ -4,10 +4,12 @@ const { ErrRes, MyErr } = require("../model");
 const { IdolFans, ArticleReader, MsgReceiver } = require("../db/mysql/model");
 //  0430
 const {
-  NEWS: {
-    TYPE: { IDOL_FANS, ARTICLE_READER, MSG_RECEIVER },
+  DEFAULT: {
+    NEWS: {
+      TYPE: { IDOL_FANS, ARTICLE_READER, MSG_RECEIVER },
+    },
   },
-} = require("../conf/constant");
+} = require("../config");
 //  0423
 const rawQuery = require("../db/mysql/query");
 //  0430

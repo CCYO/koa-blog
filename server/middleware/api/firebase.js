@@ -3,16 +3,18 @@
  */
 //  0406
 const { SuccModel } = require("../../model");
-//  0406
-const {
-  CACHE: {
-    TYPE: { PAGE },
-  },
-} = require("../../conf/constant");
+
 //  0406
 const C_BlogImgAlt = require("../../controller/blogImgAlt");
 //  0406
-const { GCS_ref } = require("../../conf/constant");
+const {
+  DEFAULT: {
+    GCS_ref,
+    CACHE: {
+      TYPE: { PAGE },
+    },
+  },
+} = require("../../config");
 //  0406
 const { parse } = require("../../utils/gcs");
 //  0406

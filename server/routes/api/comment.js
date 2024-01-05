@@ -12,14 +12,16 @@ const { commentsToHtml } = require("../../utils/ejs-render");
 const removeDeletedComment = require("../../utils/hiddenRemovedComments");
 const Comment = require("../../controller/comment"); //  0411
 const {
-  //  0411
-  CACHE: {
-    //  0503
-    STATUS,
+  DEFAULT: {
     //  0411
-    TYPE,
+    CACHE: {
+      //  0503
+      STATUS,
+      //  0411
+      TYPE,
+    },
   },
-} = require("../../conf/constant");
+} = require("../../config");
 const router = require("koa-router")(); //  0411
 router.prefix("/api/comment"); //  0411
 //  0504

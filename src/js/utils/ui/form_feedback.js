@@ -1,5 +1,5 @@
 import "../../../css/common/form_feedback.css";
-import { FORM_FEEDBACK } from "../../../../config/constant";
+import { FORM_FEEDBACK } from "../../config";
 
 export default function (status, targetEl, valid, msg = "") {
   if (status === FORM_FEEDBACK.STATUS.LOADING) {

@@ -1,12 +1,19 @@
-import CONSTANT from "../../../../../config/constant";
-
-let SERVER = CONSTANT.SERVER;
-let AJV = CONSTANT.AJV;
-const TYPE = AJV.TYPE;
+import DEFAULT from "../../../../../server/config/default";
+import AJV_CONFIG from "../config";
 
 export default {
-  $id: TYPE.DEFAULT.ref,
+  $id: AJV_CONFIG.TYPE.DEFAULT.ref,
   definitions: {
+    html: {
+      type: "string",
+      maxLength: DEFAULT.BLOG.EDITOR.HTML_MAX_LENGTH,
+      minLength: DEFAULT.BLOG.EDITOR.HTML_MIN_LENGTH,
+      errorMessage: {
+        type: "必須是字符串",
+        maxLength: "長度需小於65536個字",
+        minLength: "長度需大於1個字",
+      },
+    },
     email: {
       type: "string",
       format: "email",
@@ -86,16 +93,6 @@ export default {
       errorMessage: {
         type: "必須是字符串",
         maxLength: "長度需小於20個字",
-        minLength: "長度需大於1個字",
-      },
-    },
-    html: {
-      type: "string",
-      maxLength: SERVER.BLOG.EDITOR.HTML_MAX_LENGTH,
-      minLength: SERVER.BLOG.EDITOR.HTML_MIN_LENGTH,
-      errorMessage: {
-        type: "必須是字符串",
-        maxLength: "長度需小於65536個字",
         minLength: "長度需大於1個字",
       },
     },

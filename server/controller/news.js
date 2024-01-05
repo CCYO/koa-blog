@@ -2,10 +2,12 @@
 const { SuccModel, ErrRes, MyErr } = require("../model");
 //  0430
 const {
-  NEWS: {
-    TYPE: { IDOL_FANS, ARTICLE_READER, MSG_RECEIVER },
+  DEFAULT: {
+    NEWS: {
+      TYPE: { IDOL_FANS, ARTICLE_READER, MSG_RECEIVER },
+    },
   },
-} = require("../conf/constant");
+} = require("../config");
 /**
  * @description Controller news相關
  */

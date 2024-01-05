@@ -3,11 +3,14 @@
  */
 
 const ejs_template = require("../../utils/ejs_template");
-const CONFIG_CONST = require("../../../config/constant");
+
 //  0501
 const {
-  CACHE: { TYPE, STATUS },
-} = require("../../conf/constant");
+  DEFAULT: {
+    BLOG,
+    CACHE: { TYPE, STATUS },
+  },
+} = require("../../config");
 //  0501
 const {
   VIEWS: { CHECK, NEWS },
@@ -104,7 +107,7 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
 
   let showComment =
     //  是否由預覽文章發來的請求
-    !params.get(CONFIG_CONST.SERVER.BLOG.SEARCH_PARAMS.PREVIEW) &&
+    !params.get(BLOG.SEARCH_PARAMS.PREVIEW) &&
     //  是否為發布狀態
     cache.data.show;
   let isLogin = ctx.session.user ? true : false;

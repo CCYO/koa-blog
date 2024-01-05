@@ -3,7 +3,9 @@ const C_Comment = require("./comment"); //  0425
 const C_BlogImg = require("./blogImg"); //  0408
 const C_BlogImgAlt = require("./blogImgAlt"); //  0408
 const C_ArticleReader = require("./articleReader"); //  0406
-const { CACHE } = require("../conf/constant"); //  0406
+const {
+  DEFAULT: { CACHE },
+} = require("../config"); //  0406
 const my_xxs = require("../utils/xss"); //  0406
 const { MyErr, ErrRes, ErrModel, SuccModel } = require("../model"); //  0404
 const Init = require("../utils/init"); //  0404
