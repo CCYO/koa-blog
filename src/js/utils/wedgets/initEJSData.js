@@ -1,5 +1,5 @@
 import $M_log from "../log";
-import { INIT_PAGE } from "../../../../config/constant";
+import { EJS_DATA } from "../../config";
 
 //  初始化數據
 //  取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
@@ -8,7 +8,7 @@ import { INIT_PAGE } from "../../../../config/constant";
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
 
 //  將ejs傳入el[data-my-data]的純字符數據，轉化為物件數據
-export default function (options = INIT_PAGE.EJS_DATA) {
+export default function (options = EJS_DATA) {
   let $container = $(options.SELECTOR);
   if (!$container.length) {
     $M_log.dev("此頁無EJS DATA");
