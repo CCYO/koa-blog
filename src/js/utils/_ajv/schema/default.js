@@ -1,4 +1,3 @@
-import DEFAULT from "../../../../../server/config/default";
 import AJV_CONFIG from "../config";
 
 export default {
@@ -6,8 +5,8 @@ export default {
   definitions: {
     html: {
       type: "string",
-      maxLength: DEFAULT.BLOG.EDITOR.HTML_MAX_LENGTH,
-      minLength: DEFAULT.BLOG.EDITOR.HTML_MIN_LENGTH,
+      maxLength: AJV_CONFIG.SERVER.BLOG.EDITOR.HTML_MAX_LENGTH,
+      minLength: AJV_CONFIG.SERVER.BLOG.EDITOR.HTML_MIN_LENGTH,
       errorMessage: {
         type: "必須是字符串",
         maxLength: "長度需小於65536個字",

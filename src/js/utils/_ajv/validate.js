@@ -3,6 +3,8 @@ import Ajv2019 from "ajv/dist/2019";
 import $M_log from "../log";
 import AJV_CONFIG from "./config";
 
+const TOP_FIELD = "all";
+
 export default async function (data, ignore_list = []) {
   let validated_errors = {};
   try {
@@ -54,7 +56,7 @@ function _init_errors(invalid_errors) {
     let { errors } = params;
     //  ↓ 處理 JSON Pointer 一級 object 角度來說，(properties之上)最高級別的校驗錯誤
     if (!instancePath) {
-      key = AJV_CONFIG.FIELD_NAME.TOP;
+      key = TOP_FIELD;
       if (!acc[key]) {
         acc[key] = [];
       }
@@ -99,9 +101,7 @@ function _parseErrorsToForm(invalid_errors, data, ignore_list = []) {
   //  先將傳入的 data properties 皆視為 valid，待會進行過濾
   let valid_list = Object.keys(data);
   if (Object.getOwnPropertyNames(invalid_errors).length) {
-    let top_errors = invalid_errors[AJV_CONFIG.FIELD_NAME.TOP]
-      ? invalid_errors[AJV_CONFIG.FIELD_NAME.TOP]
-      : [];
+    let top_errors = invalid_errors[TOP_FIELD] ? invalid_errors[TOP_FIELD] : [];
     for (let error of top_errors) {
       ////  處理 JSON Pointer 一級 object 角度來說，(properties之上)最高級別的校驗錯誤
       ////  若同一個field有一級(top)與普通級別錯誤，這裡採以一級為主，忽略掉普通級
@@ -120,7 +120,7 @@ function _parseErrorsToForm(invalid_errors, data, ignore_list = []) {
         }
       }
     }
-    delete invalid_errors[AJV_CONFIG.FIELD_NAME.TOP];
+    delete invalid_errors[TOP_FIELD];
     //  ↓ 將校驗錯誤的property從valid_list過濾出來
     for (let field_name in invalid_errors) {
       valid_list = valid_list.filter((key) => key !== field_name);

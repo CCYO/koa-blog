@@ -40,8 +40,7 @@ import twResources from "../locale/tw";
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-// import { AJV, SERVER, PAGE, FORM_FEEDBACK } from "../../config/constant";
-import { PAGE, SERVER, FORM_FEEDBACK, AJV } from "./config";
+import { PAGE, SERVER, AJV } from "./config";
 
 //  webpack打包後的js，會自動插入< script defer>，而defer的調用會發生在DOM parse後、DOMContentLoaded前，
 //  為了確保此js能應用到頁面上可能存在以CDN獲取到的其他JS庫，故將所有內容放入window.load
@@ -534,7 +533,7 @@ async function init() {
         //  同步數據
         G.data.blog[KEY] = response.data[KEY];
         $$payload.del(KEY);
-        $M_ui.form_feedback(FORM_FEEDBACK.STATUS.CLEAR, e.target);
+        $M_ui.form_feedback.clear(e.target);
         //  清空提醒
         alert("標題更新完成");
         return;
@@ -551,7 +550,7 @@ async function init() {
         );
         if (!result_title.valid) {
           target.value = G.data.blog.title;
-          $M_ui.form_feedback(FORM_FEEDBACK.STATUS.CLEAR, target);
+          $M_ui.form_feedback.clear(target);
         }
         return;
       }
@@ -566,8 +565,7 @@ async function init() {
         let result_title = result.find(
           ({ field_name }) => field_name === "title"
         );
-        $M_ui.form_feedback(
-          FORM_FEEDBACK.STATUS.VALIDATED,
+        $M_ui.form_feedback.validated(
           target,
           result_title.valid,
           result_title.message

@@ -1,9 +1,10 @@
-import { PAGE, REDIR } from "../../js/config";
+const API_LOGIN = "/login";
+const REDIR = "from";
 
 function from(url) {
   let searchParams = new URLSearchParams(location.search);
   if (searchParams.size) {
-    url = decodeURIComponent(searchParams.get(REDIR.FROM));
+    url = decodeURIComponent(searchParams.get(REDIR));
   }
   location.href = url;
 }
@@ -15,9 +16,7 @@ function check_login(data) {
   }
   /* 若未登入，跳轉到登入頁 */
   alert(`請先登入`);
-  location.href = `${PAGE.REGISTER_LOGIN.VIEW.LOGIN}?${
-    REDIR.FROM
-  }=${encodeURIComponent(location.href)}`;
+  location.href = `${API_LOGIN}?${REDIR}=${encodeURIComponent(location.href)}`;
   return false;
 }
 

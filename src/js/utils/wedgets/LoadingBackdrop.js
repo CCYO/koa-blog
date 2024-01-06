@@ -2,11 +2,13 @@ import $M_log from "../log";
 import "../../../css/utils/noClick.css";
 import "../../../css/wedgets/loadingBackdrop.css";
 
-import { LOADING_BACKDROP } from "../../config";
+const ID = "loadingBackdrop";
+const targetSelector = `input, a, button, *[tabindex]:not(#${ID})`;
+const blockClassName = "noClick";
+
 export default class {
-  constructor(options = LOADING_BACKDROP) {
-    this.options = { ...options };
-    this.$backdrop = $(`#${options.ID}`);
+  constructor() {
+    this.$backdrop = $(`#${ID}`);
     this.$backdrop.on("focus", (e) => {
       e.preventDefault();
       this.$backdrop.get(0).blur();
@@ -14,10 +16,10 @@ export default class {
   }
   editors = [];
   hidden() {
-    $(this.options.targetSelector)
-      .removeClass(this.options.blockClassName)
+    $(targetSelector)
+      .removeClass(blockClassName)
       //  取消blockList不可被點擊的狀態
-      .off(`.${this.options.backdropClassName}`);
+      .off(`.${this.backdropClassName}`);
     //  移除指定的事件綁定
     this.$backdrop.removeAttr("style").hide();
     if (this.editors.length) {
@@ -51,12 +53,10 @@ export default class {
     this.$backdrop.show();
     ////  focus事件綁定(且用上jq語法糖，賦予綁定事件一個指定名稱，方便後續取消綁定)
     ////  handle 讓所有 blockList 發生聚焦時，統一將聚焦轉移至 backdrop
-    $(this.options.targetSelector)
-      .addClass(this.options.blockClassName)
+    $(targetSelector)
+      .addClass(blockClassName)
       //  使blockList不可被點擊
-      .on(`focus.${this.options.backdropClassName}`, (e) =>
-        this.focusBackdrop(e)
-      );
+      .on(`focus.${this.backdropClassName}`, (e) => this.focusBackdrop(e));
 
     $M_log.dev("backdrop show");
   }

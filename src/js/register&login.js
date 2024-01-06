@@ -25,7 +25,7 @@ import {
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-import { PAGE, FORM_FEEDBACK, AJV } from "./config";
+import { PAGE, AJV } from "./config";
 
 //  webpack打包後的js，會自動插入< script defer>，而defer的調用會發生在DOM parse後、DOMContentLoaded前，
 //  為了確保此js能應用到頁面上可能存在以CDN獲取到的其他JS庫，故將所有內容放入window.load
@@ -240,7 +240,7 @@ async function init() {
               this.lock.add(name);
             }
           }
-          $M_UI.form_feedback(FORM_FEEDBACK.STATUS.RESET, this.form);
+          $M_UI.form_feedback.reset(this.form);
           this.checkSubmit();
         }
         update(validated_list) {
@@ -253,15 +253,10 @@ async function init() {
             //  處理驗證成功的lock數據以及表格提醒
             if (valid) {
               this.lock.delete(field_name);
-              $M_UI.form_feedback(FORM_FEEDBACK.STATUS.VALIDATED, input, true);
+              $M_UI.form_feedback.validated(input, true);
             } else {
               this.lock.add(field_name);
-              $M_UI.form_feedback(
-                FORM_FEEDBACK.STATUS.VALIDATED,
-                input,
-                false,
-                message
-              );
+              $M_UI.form_feedback.validated(input, false, message);
             }
           }
           this.checkSubmit();
@@ -278,7 +273,7 @@ async function init() {
           continue;
         }
         function loading() {
-          $M_UI.form_feedback(FORM_FEEDBACK.STATUS.LOADING, input);
+          $M_UI.form_feedback.loading(input);
           $(form).eq(0).prop("disabled", true);
         }
         const { debounce } = new $C_Debounce(handle, {

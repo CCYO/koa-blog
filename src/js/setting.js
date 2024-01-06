@@ -29,7 +29,7 @@ import {
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-import { AJV, PAGE, FORM_FEEDBACK } from "./config";
+import { AJV, PAGE } from "./config";
 
 //  webpack打包後的js，會自動插入< script defer>，而defer的調用會發生在DOM parse後、DOMContentLoaded前，
 //  為了確保此js能應用到頁面上可能存在以CDN獲取到的其他JS庫，故將所有內容放入window.load
@@ -150,8 +150,7 @@ async function init() {
         }
         if (invalid) {
           G.utils.payload.delete(KEY);
-          $M_UI.form_feedback(
-            FORM_FEEDBACK.STATUS.VALIDATED,
+          $M_UI.form_feedback.validated(
             el_origin_password,
             false,
             result[0].message
@@ -167,12 +166,7 @@ async function init() {
           G.utils.payload.setKVpairs(kv);
           bs5_modal.hide();
         } else {
-          $M_UI.form_feedback(
-            FORM_FEEDBACK.STATUS.VALIDATED,
-            el_origin_password,
-            false,
-            msg
-          );
+          $M_UI.form_feedback.validated(el_origin_password, false, msg);
         }
       }
 
@@ -205,17 +199,13 @@ async function init() {
               ////  password 與 password_again 為關聯關係，必須做特別處理
               el_password_again.validated = true;
               $(el_password_again).prop("disabled", false);
-              $M_UI.form_feedback(
-                FORM_FEEDBACK.STATUS.VALIDATED,
-                el_password_again,
-                false,
-                "必填"
-              );
+              $M_UI.form_feedback.validated(el_password_again, false, "必填");
             }
             if (KEY === field_name) {
               G.utils.payload.setKVpairs({ [field_name]: value });
             }
-            _feedback(FORM_FEEDBACK.STATUS.VALIDATED, el, valid);
+            $M_UI.form_feedback.validated(el, valid);
+            G.utils.payload.check_submit();
           } else {
             G.utils.payload.delete(KEY);
             if (field_name === "password" && el_password_again.validated) {
@@ -224,23 +214,17 @@ async function init() {
               $(el_password_again).prop("disabled", true);
               G.utils.payload.delete("password_again");
               el_password_again.value = "";
-              $M_UI.form_feedback(
-                FORM_FEEDBACK.STATUS.CLEAR,
-                el_password_again
-              );
+              $M_UI.form_feedback.clear(el_password_again);
             }
             let txt_count = $(`[name=${field_name}]`).val().length;
             if (txt_count < 1 && field_name !== "password_again") {
-              _feedback(FORM_FEEDBACK.STATUS.CLEAR, el);
+              $M_UI.form_feedback.clear(el);
+              G.utils.payload.check_submit();
             } else {
-              _feedback(FORM_FEEDBACK.STATUS.VALIDATED, el, valid, message);
+              $M_UI.form_feedback.validated(el, valid, message);
+              G.utils.payload.check_submit();
             }
           }
-        }
-
-        function _feedback(...args) {
-          $M_UI.form_feedback(...args);
-          G.utils.payload.check_submit();
         }
 
         ////  驗證setting
@@ -424,7 +408,7 @@ async function init() {
         jq_avatar.prop("files", undefined);
         jq_avatar.prop("value", "");
         el_origin_password.value = "";
-        $M_UI.form_feedback(FORM_FEEDBACK.STATUS.RESET, jq_settingForm[0]);
+        $M_UI.form_feedback.reset(jq_settingForm[0]);
         G.utils.payload.clear();
         for (let prop in data) {
           G.data.me[prop] = data[prop];

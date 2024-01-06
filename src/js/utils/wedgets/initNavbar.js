@@ -6,15 +6,22 @@ import $M_ui from "../ui";
 import $M_template from "../template";
 import $M_log from "../log";
 /* -------------------- CONFIG CONST -------------------- */
-import { NAVBAR } from "../../config";
+
+const API = `/api/news`;
+const REG = {
+  IGNORE_PAGES: /^\/(login)|(register)|(errPage)/,
+  ACTIVE_PATHNAME: /^\/(?<pathname>\w+)\/?(?<albumList>list\?)?/,
+};
+//  單位ms, 5 min
+const LOAD_NEWS = 5 * 1000 * 60;
 
 /* 初始化 通知列表 功能 */
-export default async function (axios, options = NAVBAR) {
+export default async function (axios) {
   if (!axios) {
     throw new Error("沒提供axios給initNavbar");
   }
   let navbar_data = { me: undefined, news: undefined };
-  if (!options.REG.IGNORE_PAGES.test(location.pathname)) {
+  if (!REG.IGNORE_PAGES.test(location.pathname)) {
     ////  若是可以呈現登入狀態的頁面
     let { errno, data } = await getLoginData();
     if (!errno) {
@@ -47,7 +54,7 @@ export default async function (axios, options = NAVBAR) {
            me: ...
        }
     */
-    return await axios.post(options.API.NEWS, payload);
+    return await axios.post(API, payload);
   }
   //  init navbar fn
   async function initFn(data) {
@@ -291,7 +298,7 @@ export default async function (axios, options = NAVBAR) {
       },
     };
     //  讓readMore自動循環的類
-    let loop = new $C_Loop(readMore.bind(false), options.LOAD_NEWS);
+    let loop = new $C_Loop(readMore.bind(false), { ms: LOAD_NEWS });
     //  啟動 readMore 自動循環
     loop.start();
     //  unRender 條目更新
@@ -373,9 +380,14 @@ export default async function (axios, options = NAVBAR) {
 
     //  渲染 NavItem Active
     function activeNavItem() {
-      let reg_pathname = /^\/(?<pathname>\w+)\/?(?<albumList>list)?/;
-      let { pathname, albumList } = reg_pathname.exec(location.pathname).groups;
-      $(`.nav-link[href^="/${pathname}"]`).addClass("active");
+      let { pathname, albumList } = REG.ACTIVE_PATHNAME.exec(
+        location.pathname
+      ).groups;
+      let href = pathname;
+      if (albumList) {
+        href += `/${albumList}`;
+      }
+      $(`.nav-link[href^="/${href}"]`).addClass("active");
     }
     //  渲染 登出狀態 navbar template
     function renderLogoutNavBar() {

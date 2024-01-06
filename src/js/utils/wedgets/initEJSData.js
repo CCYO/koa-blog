@@ -1,15 +1,26 @@
 import $M_log from "../log";
-import { EJS_DATA } from "../../config";
 
 //  初始化數據
 //  取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
 //  如 { html: `<p>56871139</p>`}
 //     無轉譯 => { "html":"<p>56871139</p>") 會造成<p>直接渲染至頁面
 //     轉譯 => {&#34;html&#34;:&#34;&lt;p&gt;56871139&lt}
+const DATA_SET = "my-data";
+const SELECTOR = `[data-${DATA_SET}]`;
+const KEYS = {
+  BLOG: "blog",
+  ALBUM: "album",
+};
+const REG = {
+  BLOG: {
+    X_IMG:
+      /<x-img.+?data-alt-id='(?<alt_id>\w+?)'.+?(data-style='(?<style>.+?)')?.*?\/>/g,
+  },
+};
 
 //  將ejs傳入el[data-my-data]的純字符數據，轉化為物件數據
-export default function (options = EJS_DATA) {
-  let $container = $(options.SELECTOR);
+export default function () {
+  let $container = $(SELECTOR);
   if (!$container.length) {
     $M_log.dev("此頁無EJS DATA");
     return;
@@ -20,7 +31,7 @@ export default function (options = EJS_DATA) {
   let $box_list = Array.from($container, (box) => $(box).first());
   let res = $box_list.reduce((acc, $box) => {
     //  取得data-set，同時代表此數據的類型
-    let key = $box.data(options.DATA_SET);
+    let key = $box.data(DATA_SET);
     //  該ejs數據元素內，所存放的數據種類名稱
     let kv;
     //  取出元素內的字符，其為ejs data的JSON string 格式
@@ -28,10 +39,10 @@ export default function (options = EJS_DATA) {
     //  JSON String → JSON Obj
     let val = JSON.parse(JSON_string);
     //  統整ejs data
-    if (key === options.KEYS.BLOG) {
+    if (key === KEYS.BLOG) {
       //  blog 數據
       kv = { [key]: initBlog(val) };
-    } else if (key === options.KEYS.ALBUM) {
+    } else if (key === KEYS.ALBUM) {
       //  album 數據
       kv = { [key]: initAlbum(val) };
     } else {

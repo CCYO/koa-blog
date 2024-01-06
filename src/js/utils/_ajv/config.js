@@ -1,3 +1,5 @@
+import SERVER from "../../../../server/config/default";
+
 const HOST = "http://my_ajv";
 
 class Ajv_type extends String {
@@ -9,6 +11,7 @@ class Ajv_type extends String {
 }
 
 const AJV = {
+  SERVER,
   HOST,
   TYPE: {
     AVATAR: new Ajv_type("avatar"),
@@ -37,28 +40,26 @@ const AJV = {
     _notRepeat: "_notRepeat",
     _noSpace: "noSpace",
   },
-  FIELD_NAME: {
-    TOP: "all",
-  },
-  EN_TO_TW: {
-    //	全局錯誤
-    all: "all",
-    //	register
-    email: "信箱",
-    password: "密碼",
-    password_again: "密碼確認",
-    //	blog
-    title: "文章標題",
-    contetn: "文章內文",
-    show: "文章狀態",
-    //	setting
-    nickname: "暱稱",
-    age: "年齡",
-    avatar: "頭像",
-    avatar_hash: "頭像hash",
-    // myKeyword
-    confirm_password: "密碼驗證",
-  },
+
+  // EN_TO_TW: {
+  //   //	全局錯誤
+  //   all: "all",
+  //   //	register
+  //   email: "信箱",
+  //   password: "密碼",
+  //   password_again: "密碼確認",
+  //   //	blog
+  //   title: "文章標題",
+  //   contetn: "文章內文",
+  //   show: "文章狀態",
+  //   //	setting
+  //   nickname: "暱稱",
+  //   age: "年齡",
+  //   avatar: "頭像",
+  //   avatar_hash: "頭像hash",
+  //   // myKeyword
+  //   confirm_password: "密碼驗證",
+  // },
 };
 
 export { AJV };

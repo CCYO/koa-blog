@@ -25,7 +25,7 @@ import {
 /* ------------------------------------------------------------------------------------------ */
 /* Const --------------------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------ */
-import { AJV, PAGE, FORM_FEEDBACK } from "./config";
+import { AJV, PAGE } from "./config";
 
 window.addEventListener("load", init);
 async function init() {
@@ -84,26 +84,17 @@ async function init() {
         validate: _validate_alt,
         open(payload) {
           this.payload = payload;
-          $M_ui.form_feedback(
-            FORM_FEEDBACK.STATUS.VALIDATED,
-            el_input_alt,
-            true
-          );
+          $M_ui.form_feedback.validated(el_input_alt, true);
           jq_submit.prop("disabled", false);
         },
         closet(message) {
           this.payload = undefined;
-          $M_ui.form_feedback(
-            FORM_FEEDBACK.STATUS.VALIDATED,
-            el_input_alt,
-            false,
-            message
-          );
+          $M_ui.form_feedback.validated(el_input_alt, false, message);
           jq_submit.prop("disabled", true);
         },
         reset() {
           this.payload = undefined;
-          $M_ui.form_feedback(FORM_FEEDBACK.STATUS.CLEAR, el_input_alt);
+          $M_ui.form_feedback.clear(el_input_alt);
           jq_submit.prop("disabled", true);
         },
       };
