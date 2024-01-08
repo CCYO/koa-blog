@@ -4,7 +4,7 @@ const C_BlogImg = require("./blogImg"); //  0408
 const C_BlogImgAlt = require("./blogImgAlt"); //  0408
 const C_ArticleReader = require("./articleReader"); //  0406
 const {
-  DEFAULT: { CACHE },
+  DEFAULT: { BLOG, CACHE },
 } = require("../config"); //  0406
 const my_xxs = require("../utils/xss"); //  0406
 const { MyErr, ErrRes, ErrModel, SuccModel } = require("../model"); //  0404
@@ -366,7 +366,10 @@ async function find(blog_id) {
  */
 async function findListForUserPage(
   userId,
-  opts = { public: { limit: 5, offset: 0 }, private: { limit: 5, offset: 0 } }
+  opts = {
+    public: { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 },
+    private: { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 },
+  }
 ) {
   // let blogs = await Blog.readList(Opts.BLOG.findListForUserPage(userId))
   let { data: public } = await findPublicListForUserPage(userId, opts.public);
@@ -380,7 +383,7 @@ async function findListForUserPage(
 }
 async function findPublicListForUserPage(
   userId,
-  opts = { limit: 5, offset: 0 }
+  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
 ) {
   let data = await Blog.readListAndCountAll(
     Opts.BLOG.findPublicBlogForUserPage(userId, opts)
@@ -390,7 +393,7 @@ async function findPublicListForUserPage(
 }
 async function findPrivateListForUserPage(
   userId,
-  opts = { limit: 5, offset: 0 }
+  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
 ) {
   let data = await Blog.readListAndCountAll(
     Opts.BLOG.findPrivateBlogForUserPage(userId, opts)

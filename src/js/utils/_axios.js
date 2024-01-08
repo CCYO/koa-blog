@@ -1,5 +1,5 @@
 import axios from "axios";
-import * as ErrRes from "../../../server/model/errRes";
+import * as ErrRes from "~/server/model/errRes";
 import { error_handle } from "./common/index";
 
 export default class {

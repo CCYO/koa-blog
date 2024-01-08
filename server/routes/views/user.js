@@ -12,6 +12,7 @@ const User = require("../../controller/user");
 //  0501
 const {
   DEFAULT: {
+    BLOG,
     CACHE: { TYPE, STATUS },
   },
 } = require("../../config");
@@ -91,6 +92,7 @@ router.get(
     let isSelf = ctx.session && ctx.session.user.id === user_id;
     await ctx.render("user", {
       ejs_template,
+      pagination: BLOG.PAGINATION,
       isSelf,
       title: `${currentUser.nickname}的主頁`,
       //  主要資訊數據
@@ -130,6 +132,7 @@ router.get("/self", CHECK.login, privateCache, async (ctx, next) => {
   let { currentUser, relationShip, blogs } = data;
   await ctx.render("user", {
     ejs_template,
+    pagination: BLOG.PAGINATION,
     isSelf: user_id === currentUser.id,
     title: `${currentUser.nickname}的主頁`,
     //  主要資訊數據

@@ -1,4 +1,4 @@
-import "../../../css/common/form_feedback.css";
+import "@css/common/form_feedback.css";
 
 function loading(el_input, msg = "") {
   //  input 讀取中
@@ -8,7 +8,7 @@ function loading(el_input, msg = "") {
     .text(msg || "loading...");
   return undefined;
 }
-function validated(el_input, valid, msg) {
+function validated(el_input, valid, msg = "") {
   //  input 有效 || 無效
   $(el_input)
     .removeClass(valid ? "is-invalid" : "is-valid")

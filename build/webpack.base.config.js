@@ -19,7 +19,7 @@ module.exports = {
   output: {
     path: resolve(__dirname, `../${CONFIG.BUILD.DIST}`),
     publicPath: `${CONFIG.PUBLIC_PATH}/`,
-    filename: `${CONFIG.BUILD.SCRIPT}/[name].bundle.js`,
+    // filename: `${CONFIG.BUILD.SCRIPT}/[name].bundle.js`,
     chunkFilename: `${CONFIG.BUILD.SCRIPT}/[name].[contenthash:5].js`,
     clean: true,
   },
@@ -28,9 +28,9 @@ module.exports = {
     alias: {
       "~": resolve(__dirname, "../"),
       "@": resolve(__dirname, "../src"),
-      js: resolve(__dirname, "../src/js"),
-      css: resolve(__dirname, "../src/css"),
-      less: resolve(__dirname, "../src/less"),
+      "@js": resolve(__dirname, "../src/js"),
+      "@css": resolve(__dirname, "../src/css"),
+      "@less": resolve(__dirname, "../src/less"),
     },
     fallback: {
       path: require.resolve("path-browserify"),
@@ -128,7 +128,7 @@ function createEntry() {
       const chunkName = list[list.length - 1].replace(/\.js/g, "");
       // 如果是开发环境，才需要引入 hot module
       // res[key] = filepath
-      res[chunkName] = SERVER_CONFIG.ENV.isDev
+      res[chunkName] = !SERVER_CONFIG.ENV.isProd
         ? // filepath
           [filepath, "webpack-hot-middleware/client?reload=true"]
         : filepath;
@@ -261,7 +261,7 @@ function createHtmlWebpackPlugins() {
     ) {
       //  取 page/[ejs_name]/index.js 的 ejs_name，恰好可以匹配到 entry[chunkName]
       const fileChunk = array_filepath[index_views + 2];
-      const chunks = SERVER_CONFIG.ENV.isDev
+      const chunks = !SERVER_CONFIG.ENV.isProd
         ? [fileChunk]
         : ["manifest", "vendors", fileChunk];
       let item = new HtmlWebpackPlugin({

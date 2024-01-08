@@ -2,6 +2,8 @@ const webpack = require("webpack");
 const { merge } = require("webpack-merge");
 const HtmlWebpackHarddiskPlugin = require("html-webpack-harddisk-plugin");
 const webpackBaseConfig = require("./webpack.base.config");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const path = require("path-browserify");
 module.exports = merge(webpackBaseConfig, {
   plugins: [
     // new webpack.DefinePlugin({
@@ -34,7 +36,7 @@ module.exports = merge(webpackBaseConfig, {
       },
     ],
   },
-
+  // plugins: [new CleanWebpackPlugin()],
   // devtool: 'cheap-module-eval-source-map',
   devtool: "eval-source-map",
   mode: "development",

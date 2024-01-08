@@ -12,22 +12,22 @@ router.prefix("/api/blog");
 
 router.post("/list", CHECK.login, async (ctx, next) => {
   let { id } = ctx.session.user;
-  let { STATUS, PAGINATION } = BLOG;
   let {
     author_id,
-    show: status = STATUS.PUBLIC,
-    limit = PAGINATION.BLOG_COUNT,
+    show,
+    limit = BLOG.PAGINATION.BLOG_COUNT,
     offset = 0,
   } = ctx.request.body;
   if (author_id !== id) {
+    //  如果不是本人，又想讀取隱藏文章，抱錯
   }
   let resModel;
-  if (status === STATUS.PUBLIC) {
+  if (show) {
     resModel = await Blog.findPublicListForUserPage(author_id, {
       limit,
       offset,
     });
-  } else if (status === STATUS.PRIVATE) {
+  } else {
     resModel = await Blog.findPrivateListForUserPage(author_id, {
       limit,
       offset,

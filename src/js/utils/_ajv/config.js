@@ -1,4 +1,4 @@
-import SERVER from "../../../../server/config/default";
+import SERVER from "~/server/config/default";
 
 const HOST = "http://my_ajv";
 
