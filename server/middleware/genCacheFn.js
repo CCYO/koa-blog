@@ -1,14 +1,35 @@
+/**
+ * 系統直接調用的緩存處理
+ */
+
 //  0504
 const {
   DEFAULT: {
     CACHE: { STATUS },
   },
+  ENV,
 } = require("../config");
 //  0504
 const S_Cache = require("../server/cache");
+
 //  0504
-const common = (type) =>
-  async function (ctx, next) {
+/**
+ * @description
+ * @param {*} type
+ * @returns
+ */
+const common = (type) => {
+  let KEY = type;
+  if (ENV.isNoCache) {
+    return async function (ctx, next) {
+      ctx.cache = {
+        [KEY]: { exist: STATUS.NO_CACHE },
+      };
+      await next();
+      return;
+    };
+  }
+  return async function (ctx, next) {
     let KEY = type;
     let id = ctx.params.id * 1;
     let ifNoneMatch = ctx.headers["if-none-match"];
@@ -19,11 +40,9 @@ const common = (type) =>
     ctx.cache = {
       [KEY]: cache,
     };
-    try {
-      await next();
-    } catch (e) {
-      throw e;
-    }
+
+    await next();
+
     //  判斷是否將數據存入系統緩存
     let { exist, data, etag } = ctx.cache[KEY];
     //  當前系統緩存，無資料 || eTag已過期
@@ -42,14 +61,25 @@ const common = (type) =>
     delete ctx.cache;
     return;
   };
+};
 //  0504
-const private = (type) =>
-  async function (ctx, next) {
+const private = (type) => {
+  let KEY = type;
+  if (ENV.isNoCache) {
+    return async function (ctx, next) {
+      ctx.cache = {
+        [KEY]: { exist: STATUS.NO_CACHE },
+      };
+      await next();
+      return;
+    };
+  }
+  return async function (ctx, next) {
     let id = ctx.params.id * 1;
     if (ctx.request.path === "/self") {
       id = ctx.session.user.id;
     }
-    let KEY = type;
+
     //  edit頁面的緩存數據格式
     /**
      * {
@@ -77,7 +107,7 @@ const private = (type) =>
     delete ctx.cache;
     return;
   };
-
+};
 module.exports = {
   //  0504
   common,

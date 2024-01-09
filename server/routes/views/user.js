@@ -53,18 +53,15 @@ router.get(
      ** data: { currentUser, fansList, idolList, blogList } || undefined
      * }
      */
+    // let cache = { exist: STATUS.NO_CACHE, data: undefined };
     let cache = ctx.cache[TYPE.PAGE.USER];
-    let { exist } = cache;
+    // if (ctx.hasOwnProperty("cache")) {
+    //   cache = ctx.cache[TYPE.PAGE.USER];
+    // }
+    // let cache = ctx.cache[TYPE.PAGE.USER];
+    // let { exist } = cache;
     let cacheKey = `${TYPE.PAGE.USER}/${user_id}`;
-    if (exist === STATUS.HAS_FRESH_CACHE) {
-      console.log(`@ ${cacheKey} 響應 304`);
-      ctx.status = 304;
-    } else if (
-      exist === STATUS.NO_IF_NONE_MATCH ||
-      exist == STATUS.IF_NONE_MATCH_IS_NO_FRESH
-    ) {
-      console.log(`@ ${cacheKey} 響應 系統緩存數據`);
-    } else {
+    if (cache.exist === STATUS.NO_CACHE) {
       //  向 DB 撈取數據
       let resModel = await User.findInfoForUserPage(user_id);
       if (resModel.errno) {
@@ -72,10 +69,15 @@ router.get(
       }
       //  將 DB 數據賦予給 ctx.cache
       // cache.data = resModel.data;
-      data = cache.data = resModel.data;
+      cache.data = resModel.data;
+    } else if (exist === STATUS.HAS_FRESH_CACHE) {
+      console.log(`@ ${cacheKey} 響應 304`);
+      ctx.status = 304;
+    } else {
+      console.log(`@ ${cacheKey} 響應 系統緩存數據`);
     }
     // let { currentUser, fansList, idols, blogs } = cache.data;
-    let { currentUser, relationShip, blogs } = data;
+    let { currentUser, relationShip, blogs } = cache.data;
     //  非文章作者，所以不傳入未公開的文章
     delete blogs.hidden;
     /*
@@ -115,10 +117,14 @@ router.get("/self", CHECK.login, privateCache, async (ctx, next) => {
    ** data: { currentUser, fansList, idolList, blogList } || undefined
    * }
    */
+  // let cache = { exist: STATUS.NO_CACHE, data: undefined };
   let cache = ctx.cache[TYPE.PAGE.USER];
+  // if (ctx.hasOwnProperty("cache")) {
+  //   cache = ctx.cache[TYPE.PAGE.USER];
+  // }
   // let { exist, data: relationShip } = cache
-  let { exist, data } = cache;
-  if (exist === STATUS.NO_CACHE) {
+
+  if (cache.exist === STATUS.NO_CACHE) {
     //  向 DB 撈取數據
     let resModel = await User.findInfoForUserPage(user_id);
     if (resModel.errno) {
@@ -126,10 +132,10 @@ router.get("/self", CHECK.login, privateCache, async (ctx, next) => {
     }
     //  將 DB 數據賦予給 ctx.cache
     // relationShip = cache.data = resModel.data
-    data = cache.data = resModel.data;
+    cache.data = resModel.data;
   }
   // let { currentUser, fansList, idols, blogs } = relationShip
-  let { currentUser, relationShip, blogs } = data;
+  let { currentUser, relationShip, blogs } = cache.data;
   await ctx.render("user", {
     ejs_template,
     pagination: BLOG.PAGINATION,

@@ -31,6 +31,7 @@ module.exports = {
       "@js": resolve(__dirname, "../src/js"),
       "@css": resolve(__dirname, "../src/css"),
       "@less": resolve(__dirname, "../src/less"),
+      "@views": resolve(__dirname, "../src/views"),
     },
     fallback: {
       path: require.resolve("path-browserify"),
