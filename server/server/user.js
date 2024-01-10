@@ -19,11 +19,7 @@ async function update({ newData, id }) {
   user = await user.update(data);
   return Init.user(user);
 }
-//  0404
-async function readList(opts) {
-  let users = await User.findAll(opts);
-  return Init.user(users);
-}
+
 //  0404
 /** 創建 User
  * @param {object} param0
@@ -39,6 +35,13 @@ async function create(data) {
     throw MyErr({ ...errRes.USER.CREATE, err });
   }
 }
+// ----------------------------------------------------------------------
+//  0404
+async function readList(opts) {
+  let users = await User.findAll(opts);
+  return Init.user(users);
+}
+
 //  0404
 /** 查找 User 資料
  * @param {{ id: number, email: string, password: string }} param0
@@ -51,6 +54,7 @@ async function read(opts) {
   let user = await User.findOne(opts);
   return Init.user(user);
 }
+
 module.exports = {
   //  0514
   update,

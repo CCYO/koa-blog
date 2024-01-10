@@ -1,6 +1,8 @@
 /**
  * @description Controller user相關
  */
+const SEQ_OPTIONS = require("../utils/seq_options");
+
 const {
   DEFAULT: {
     CACHE: {
@@ -37,7 +39,7 @@ async function modify({ _origin, ...newData }) {
       ////  處理cache
       let {
         data: { fansList, idolList },
-      } = await findRelationShip(user_id);
+      } = await _findRelationship(user_id);
 
       //   let { data: {
       //     relationShip: { fansList, idolList },
@@ -117,49 +119,7 @@ async function findInfoForFollowIdol({ fans_id, idol_id }) {
   let data = { idolFans, articleReaders };
   return new SuccModel({ data });
 }
-//  0404
-async function findInfoForUserPage(userId) {
-  //  向 DB 撈取數據
-  let resModel = await findRelationShip(userId);
-  let {
-    data: { currentUser, fansList, idolList },
-  } = resModel;
-  //  向 DB 撈取數據
-  let { data: blogs } = await C_Blog.findListForUserPage(userId);
-  // let data = { currentUser, fansList, idols, blogs }
-  let data = { currentUser, relationShip: { fansList, idolList }, blogs };
-  return new SuccModel({ data });
-}
-//  0404
-async function findRelationShip(userId) {
-  let userModel = await find(userId);
-  if (userModel.errno) {
-    throw new MyErr({ ...userModel });
-  }
-  let { data: currentUser } = userModel;
-  let { data: idolList } = await _findIdols(userId);
-  let { data: fansList } = await findFansList(userId);
-  let data = { currentUser, idolList, fansList };
-  return new SuccModel({ data });
-}
-//  0404
-async function _findIdols(fans_id) {
-  let data = await User.readList(Opts.USER.findIdols(fans_id));
-  return new SuccModel({ data });
-}
-//  0404
-async function findFansList(idol_id) {
-  let data = await User.readList(Opts.USER.findFansList(idol_id));
-  return new SuccModel({ data });
-}
-//  0404
-async function find(id) {
-  const data = await User.read(Opts.USER.find(id));
-  if (!data) {
-    return new ErrModel(ErrRes.USER.READ.NO_DATA);
-  }
-  return new SuccModel({ data });
-}
+
 //  0404
 /** 登入 user
  * @param {string} email user 的信箱
@@ -208,31 +168,6 @@ async function isEmailExist(email) {
   return new SuccModel();
 }
 
-module.exports = {
-  //  0514
-  modify,
-  //  0421
-  findAlbumListOfUser,
-  //  0406
-  findInfoForFollowIdol,
-  //  0404
-  findOthersInSomeBlogAndPid,
-  //  0404
-  findInfoForUserPage,
-  //  0404
-  findRelationShip,
-  //  0404
-  findFansList,
-  //  0404
-  find,
-  //  0404
-  login,
-  //  0404
-  register,
-  //  0404
-  isEmailExist,
-};
-
 async function findOthersInSomeBlogAndPid({
   commenter_id,
   p_id,
@@ -251,4 +186,69 @@ async function findOthersInSomeBlogAndPid({
   return new SuccModel({ data: commenters });
 }
 
-const CommentController = require("./comment");
+// ----------------------------------------------------------------------------------------------
+async function findInfoForUserPage(userId) {
+  let resModel = await _findRelationship(userId);
+  let { currentUser, fansList, idolList } = resModel.data;
+  let { data: blogs } = await C_Blog.findListForUserPage(userId);
+  let data = { currentUser, relationShip: { fansList, idolList }, blogs };
+  return new SuccModel({ data });
+}
+
+async function _findRelationship(userId) {
+  let resModel = await _find(userId);
+  if (resModel.errno) {
+    throw new MyErr(resModel);
+  }
+  let { data: currentUser } = resModel;
+  let { data: idolList } = await _findIdolList(userId);
+  let { data: fansList } = await findFansList(userId);
+  let data = { currentUser, idolList, fansList };
+  return new SuccModel({ data });
+}
+
+//  0404
+async function _find(user_id) {
+  const data = await User.read(Opts.USER.FIND.one(user_id));
+  if (!data) {
+    return new ErrModel(ErrRes.USER.READ.NO_DATA);
+  }
+  return new SuccModel({ data });
+}
+
+//  0404
+async function _findIdolList(fans_id) {
+  let data = await User.readList(Opts.USER.FIND.idolList(fans_id));
+  return new SuccModel({ data });
+}
+
+//  0404
+async function findFansList(idol_id) {
+  let data = await User.readList(Opts.USER.FIND.fansList(idol_id));
+  return new SuccModel({ data });
+}
+
+module.exports = {
+  //  0514
+  modify,
+  //  0421
+  findAlbumListOfUser,
+  //  0406
+  findInfoForFollowIdol,
+  //  0404
+  findOthersInSomeBlogAndPid,
+  //  0404
+  findInfoForUserPage,
+  //  0404
+  // _findRelationship,
+  //  0404
+  findFansList,
+  //  0404
+  // find,
+  //  0404
+  login,
+  //  0404
+  register,
+  //  0404
+  isEmailExist,
+};

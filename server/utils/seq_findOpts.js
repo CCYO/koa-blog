@@ -1,3 +1,5 @@
+const { USER } = require("./seq_options");
+
 //  0411
 const { Op } = require("sequelize");
 const {
@@ -10,7 +12,120 @@ const {
   Comment,
 } = require("../db/mysql/model");
 const { hash } = require("../utils/crypto"); //  0228
+
 module.exports = {
+  USER: {
+    //  0421
+    findAlbumListOfUser: (user_id) => ({
+      where: { id: user_id },
+      include: {
+        // model: Blog,
+        // as: 'blogs',
+        association: "blogs",
+        attributes: ["id", "title", "show", "showAt", "updatedAt", "createdAt"],
+        include: {
+          model: BlogImg,
+          attributes: [],
+          required: true,
+        },
+      },
+    }),
+    //  0406
+    findInfoForFollowIdol: ({ idol_id, fans_id }) => ({
+      attributes: ["id"],
+      where: { id: fans_id },
+      include: [
+        {
+          association: "idols",
+          attributes: ["id"],
+          where: { id: idol_id },
+          required: false,
+          through: {
+            paranoid: false,
+          },
+        },
+        {
+          association: "articles",
+          attributes: ["id"],
+          where: {
+            author_id: idol_id,
+            show: true,
+          },
+          required: false,
+          through: {
+            attributes: ["id"],
+            paranoid: false,
+          },
+        },
+      ],
+    }),
+    //  0404
+    login: ({ email, password }) => ({
+      attributes: ["id", "email", "nickname", "age", "avatar", "avatar_hash"],
+      where: {
+        email,
+        password: hash(password),
+      },
+    }),
+    //  0404
+    create: ({ email, password }) => ({
+      email,
+      password: hash(password),
+    }),
+    //  0404
+    isEmailExist: (email) => {
+      return {
+        attributes: ["id"],
+        where: { email },
+      };
+    },
+    findOthersInSomeBlogAndPid: ({
+      commenter_id,
+      p_id,
+      blog_id,
+      createdAt,
+    }) => {
+      p_id = p_id ? p_id : 0;
+      return {
+        attributes: ["id", "email", "nickname"],
+        where: { id: { [Op.not]: commenter_id } },
+        include: {
+          model: Comment,
+          attributes: ["id"],
+          where: {
+            p_id,
+            blog_id,
+            createdAt: { [Op.gt]: createdAt },
+          },
+        },
+      };
+    },
+    findArticleReaderByIdolFans: ({ idolId, fansId }) => ({
+      attributes: ["id"],
+      where: { id: idolId },
+      include: {
+        association: "fans",
+        attributes: ["id"],
+        where: {
+          id: fansId,
+        },
+        through: {
+          attributes: [],
+          paranoid: false,
+        },
+        include: {
+          attributes: ["id"],
+          association: "FollowBlog_B",
+          where: { user_id: idolId },
+          through: {
+            attributes: ["id"],
+            paranoid: false,
+          },
+        },
+      },
+    }),
+    ...USER,
+  },
   //  0514
   ARTICLE_READER: {
     //  0514
@@ -501,148 +616,7 @@ module.exports = {
       where: { blogImg_id },
     }),
   },
-  //  0404
-  USER: {
-    //  0421
-    findAlbumListOfUser: (user_id) => ({
-      where: { id: user_id },
-      include: {
-        // model: Blog,
-        // as: 'blogs',
-        association: "blogs",
-        attributes: ["id", "title", "show", "showAt", "updatedAt", "createdAt"],
-        include: {
-          model: BlogImg,
-          attributes: [],
-          required: true,
-        },
-      },
-    }),
-    //  0406
-    findInfoForFollowIdol: ({ idol_id, fans_id }) => ({
-      attributes: ["id"],
-      where: { id: fans_id },
-      include: [
-        {
-          association: "idols",
-          attributes: ["id"],
-          where: { id: idol_id },
-          required: false,
-          through: {
-            paranoid: false,
-          },
-        },
-        {
-          association: "articles",
-          attributes: ["id"],
-          where: {
-            author_id: idol_id,
-            show: true,
-          },
-          required: false,
-          through: {
-            attributes: ["id"],
-            paranoid: false,
-          },
-        },
-      ],
-    }),
-    //  0404
-    findIdols: (fans_id) => ({
-      attributes: ["id", "email", "nickname", "avatar"],
-      include: {
-        association: "fansList",
-        where: { id: fans_id },
-        through: {
-          attributes: [],
-        },
-      },
-    }),
-    //  0404
-    findFansList: (idol_id) => ({
-      attributes: ["id", "email", "nickname", "avatar"],
-      include: {
-        association: "idols",
-        where: { id: idol_id },
-        attributes: ["id"],
-        through: {
-          attributes: [],
-        },
-      },
-    }),
-    //  0404
-    find: (id) => {
-      return {
-        attributes: ["id", "email", "nickname", "avatar"],
-        where: { id },
-      };
-    },
-    //  0404
-    login: ({ email, password }) => ({
-      attributes: ["id", "email", "nickname", "age", "avatar", "avatar_hash"],
-      where: {
-        email,
-        password: hash(password),
-      },
-    }),
-    //  0404
-    create: ({ email, password }) => ({
-      email,
-      password: hash(password),
-    }),
-    //  0404
-    isEmailExist: (email) => {
-      return {
-        attributes: ["id"],
-        where: { email },
-      };
-    },
-    findOthersInSomeBlogAndPid: ({
-      commenter_id,
-      p_id,
-      blog_id,
-      createdAt,
-    }) => {
-      p_id = p_id ? p_id : 0;
-      return {
-        attributes: ["id", "email", "nickname"],
-        where: { id: { [Op.not]: commenter_id } },
-        include: {
-          model: Comment,
-          attributes: ["id"],
-          where: {
-            p_id,
-            blog_id,
-            createdAt: { [Op.gt]: createdAt },
-          },
-        },
-      };
-    },
-    findArticleReaderByIdolFans: ({ idolId, fansId }) => ({
-      attributes: ["id"],
-      where: { id: idolId },
-      include: {
-        association: "fans",
-        attributes: ["id"],
-        where: {
-          id: fansId,
-        },
-        through: {
-          attributes: [],
-          paranoid: false,
-        },
-        include: {
-          attributes: ["id"],
-          association: "FollowBlog_B",
-          where: { user_id: idolId },
-          through: {
-            attributes: ["id"],
-            paranoid: false,
-          },
-        },
-      },
-    }),
-  },
+
   //  0406
   IMG: {
     find: (hash) => ({

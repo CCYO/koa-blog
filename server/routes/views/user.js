@@ -108,47 +108,7 @@ router.get(
 );
 //  0504
 //  個人頁
-router.get("/self", CHECK.login, privateCache, async (ctx, next) => {
-  let { id: user_id } = ctx.session.user;
-  //  從 middleware 取得的緩存數據 ctx.cache[TYPE.PAGE.USER]
-  /**
-   * {
-   ** exist: 提取緩存數據的結果 ,
-   ** data: { currentUser, fansList, idolList, blogList } || undefined
-   * }
-   */
-  // let cache = { exist: STATUS.NO_CACHE, data: undefined };
-  let cache = ctx.cache[TYPE.PAGE.USER];
-  // if (ctx.hasOwnProperty("cache")) {
-  //   cache = ctx.cache[TYPE.PAGE.USER];
-  // }
-  // let { exist, data: relationShip } = cache
 
-  if (cache.exist === STATUS.NO_CACHE) {
-    //  向 DB 撈取數據
-    let resModel = await User.findInfoForUserPage(user_id);
-    if (resModel.errno) {
-      return await ctx.render("page404", { ...resModel });
-    }
-    //  將 DB 數據賦予給 ctx.cache
-    // relationShip = cache.data = resModel.data
-    cache.data = resModel.data;
-  }
-  // let { currentUser, fansList, idols, blogs } = relationShip
-  let { currentUser, relationShip, blogs } = cache.data;
-  await ctx.render("user", {
-    ejs_template,
-    pagination: BLOG.PAGINATION,
-    isSelf: user_id === currentUser.id,
-    title: `${currentUser.nickname}的主頁`,
-    //  主要資訊數據
-    currentUser, //  window.data 數據
-    blogs, //  window.data 數據
-    relationShip,
-    // fansList,       //  window.data 數據
-    // idols,       //  window.data 數據
-  });
-});
 //  0404
 //  登入頁
 router.get("/login", async (ctx, next) => {
@@ -177,6 +137,33 @@ router.get("/register", async (ctx, next) => {
     logging: false,
     //  導覽列數據 & 卡片Tab 數據
     active: "register",
+  });
+});
+
+router.get("/self", CHECK.login, privateCache, async (ctx, next) => {
+  let { id: user_id } = ctx.session.user;
+  //  middleware/privateCache 取得的緩存數據
+  //  ctx.cache[TYPE.PAGE.USER]
+  //  { exist: 提取緩存數據的結果 ,
+  //    data: { currentUser, fansList, idolList, blogList } || undefined }
+  let cache = ctx.cache[TYPE.PAGE.USER];
+  if (cache.exist === STATUS.NO_CACHE) {
+    let resModel = await User.findInfoForUserPage(user_id);
+    if (resModel.errno) {
+      return await ctx.render("page404", { ...resModel });
+    }
+    //  將 DB 數據賦予給 ctx.cache
+    cache.data = resModel.data;
+  }
+  let { currentUser, relationShip, blogs } = cache.data;
+  await ctx.render("user", {
+    ejs_template,
+    pagination: BLOG.PAGINATION,
+    isSelf: user_id === currentUser.id,
+    title: `${currentUser.nickname}的主頁`,
+    currentUser,
+    blogs,
+    relationShip,
   });
 });
 //  0504

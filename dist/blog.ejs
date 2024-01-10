@@ -100,9 +100,14 @@
     <div>
       <!-- EJS DATA -->
       <div style="display: none;">
+  <%
+      let user = ['currentUser', "relationShip", 'blogs'] 
+      let blog = ['blog']
+      let album = ['album'] 
+      let whiteList = [...user, ...blog, ...album] 
+  %>
   <% for(let type in locals){ %>
-  <%# if( type === "partials" || type === "filename" || type === "title" || type === "isSelf" || type === "temFn"){ continue } %>
-  <% if( type === "blogs" || type === "currentUser" || type === "relationShip" || type === "blog" || type === "album"){ %>
+  <% if( whiteList.some(item => item === type)){ %>
   <div data-my-data="<%= type %>">
     <%- JSON.stringify(locals[type]) %>
   </div>

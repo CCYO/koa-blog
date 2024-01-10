@@ -62,6 +62,7 @@ const common = (type) => {
     return;
   };
 };
+
 //  0504
 const private = (type) => {
   let KEY = type;
@@ -108,6 +109,7 @@ const private = (type) => {
     return;
   };
 };
+
 module.exports = {
   //  0504
   common,
