@@ -1,7 +1,7 @@
 /**
  * @description Server User
  */
-const { errRes, MyErr } = require("../model");
+const { ErrRes, MyErr } = require("../model");
 const { hash } = require("../utils/crypto");
 const { User } = require("../db/mysql/model"); //  0404
 const Init = require("../utils/init"); //  040444
@@ -20,7 +20,12 @@ async function update({ newData, id }) {
   return Init.user(user);
 }
 
-//  0404
+// ----------------------------------------------------------------------
+async function readList(opts) {
+  let users = await User.findAll(opts);
+  return Init.user(users);
+}
+
 /** 創建 User
  * @param {object} param0
  * @param {string} param0.email - user email
@@ -32,17 +37,10 @@ async function create(data) {
     const user = await User.create(data);
     return Init.user(user);
   } catch (err) {
-    throw MyErr({ ...errRes.USER.CREATE, err });
+    throw MyErr({ ...ErrRes.USER.CREATE, err });
   }
 }
-// ----------------------------------------------------------------------
-//  0404
-async function readList(opts) {
-  let users = await User.findAll(opts);
-  return Init.user(users);
-}
 
-//  0404
 /** 查找 User 資料
  * @param {{ id: number, email: string, password: string }} param0
  * @param {number} param0.id - user id

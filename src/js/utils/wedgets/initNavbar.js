@@ -34,28 +34,6 @@ export default async function (axios) {
   await initFn(navbar_data);
   return navbar_data;
 
-  //  請求 news
-  async function getLoginData(payload) {
-    /* 響應的數據 { 
-        errno, 
-        data: {
-            news : {
-                newsList: {
-                    unconfirm: [
-                        { type, id, timestamp, confirm, fans: ... }, ...
-                        { type, id, timestamp, confirm, blog: ... }, ...
-                        { type, id, timestamp, confirm, comment: ... }, ...
-                    ],
-                   confirm: [...]
-               },
-               num: { unconfirm, confirm, total },
-               hasNews: boo
-           },
-           me: ...
-       }
-    */
-    return await axios.post(API, payload);
-  }
   //  init navbar fn
   async function initFn(data) {
     if (!data.me) {
@@ -410,5 +388,27 @@ export default async function (axios) {
       $("#noNeedCollapse-list").html($M_template.navbar.uncollapse_list());
       return true;
     }
+  }
+  //  請求 news
+  async function getLoginData(payload) {
+    /* 響應的數據 { 
+        errno, 
+        data: {
+            news : {
+                newsList: {
+                    unconfirm: [
+                        { type, id, timestamp, confirm, fans: ... }, ...
+                        { type, id, timestamp, confirm, blog: ... }, ...
+                        { type, id, timestamp, confirm, comment: ... }, ...
+                    ],
+                   confirm: [...]
+               },
+               num: { unconfirm, confirm, total },
+               hasNews: boo
+           },
+           me: ...
+       }
+    */
+    return await axios.post(API, payload);
   }
 }

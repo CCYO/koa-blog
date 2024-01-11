@@ -1,9 +1,8 @@
 /**
  * @description middleware validate
  */
-const { TYPE } = require("../../../utils/validator/config");
-const { ErrRes, MyErr, ErrModel } = require("../../../model");
-const validator = require("../../../utils/validator");
+const { TYPE } = require("../../utils/validator/config");
+const validator = require("../../utils/validator");
 
 /** Middleware - 校驗 USER 資料
  * @param {*} ctx
@@ -46,8 +45,6 @@ module.exports = async (ctx, next) => {
   if (invalid_list.length) {
     console.log("VALIDATE 捕捉到資料校驗錯誤");
     throw new Error("VALIDATE 捕捉到資料校驗錯誤");
-    ctx.body = new ErrModel(ErrRes.TYPE(validate_result));
-    return;
   }
   return await next();
 };

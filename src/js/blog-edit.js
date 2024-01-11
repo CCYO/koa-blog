@@ -35,7 +35,7 @@ import {
   log as $M_log,
 } from "./utils";
 
-import twResources from "../locale/tw";
+import twResources from "./locale/tw";
 
 /* ------------------------------------------------------------------------------------------ */
 /* Const Module ----------------------------------------------------------------------------- */

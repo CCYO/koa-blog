@@ -1,3 +1,5 @@
+const { hash } = require("../crypto");
+
 const FIND = {
   fansList: (idol_id) => ({
     attributes: ["id", "email", "nickname", "avatar"],
@@ -24,9 +26,27 @@ const FIND = {
     attributes: ["id", "email", "nickname", "avatar"],
     where: { id },
   }),
+  login: ({ email, password }) => ({
+    attributes: ["id", "email", "nickname", "age", "avatar", "avatar_hash"],
+    where: {
+      email,
+      password: hash(password),
+    },
+  }),
+  email: (email) => ({
+    attributes: ["id"],
+    where: { email },
+  }),
 };
-
+//  0404
+const CREATE = {
+  one: ({ email, password }) => ({
+    email,
+    password: hash(password),
+  }),
+};
 module.exports = {
   //  0404
   FIND,
+  CREATE,
 };

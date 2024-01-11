@@ -10,7 +10,7 @@ function from(url) {
 }
 
 function check_login(data) {
-  let login = data.me ? data.me.id : false;
+  let login = data && data.me && data.me.id;
   if (login) {
     return true;
   }

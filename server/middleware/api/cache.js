@@ -4,7 +4,6 @@ const S_Cache = require("../../server/cache");
 //  撈取cacheNews，若沒有或過期，則向DB撈取，並於最後作緩存
 async function news(ctx, next) {
   const { id } = ctx.session.user;
-  //  關於「通知」的數據，是否有變動
   let cache = await S_Cache.getNews();
   let hasNews = cache.has(id);
   let { excepts } = ctx.request.body;
@@ -74,14 +73,10 @@ async function news(ctx, next) {
 //  當 cache 有變動時
 async function modify(ctx, next) {
   await next();
-  let cache = ctx.body.cache;
-  //  SuccessModel.cache 無定義
-  if (!cache) {
-    return;
+  if (ctx.body.hasOwnProperty("cache")) {
+    await S_Cache.modify(ctx.body.cache);
+    delete ctx.body.cache;
   }
-  await S_Cache.modify(cache);
-  //  移除 SuccessModel.cache
-  delete ctx.body.cache;
   return;
 }
 module.exports = {

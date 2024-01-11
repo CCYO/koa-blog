@@ -1,6 +1,9 @@
 import axios from "axios";
 import * as ErrRes from "~/server/model/errRes";
 import { error_handle } from "./common/index";
+import $M_log from "./log";
+import $M_redir from "./redir";
+const REG_API_NEWS = /(^\/api\/news$)/;
 
 export default class {
   //  創建一個axios實例
@@ -36,18 +39,17 @@ export default class {
           data: { errno, msg },
         } = response;
         let res = response.data;
-        if (errno === ErrRes.PERMISSION.NO_LOGIN.errno) {
-          //  響應未登入
-          const reg = /(^\/api\/news$)/;
-          let isNews = reg.test(window.location.pathname);
-          if (isNews) {
-            //  若是 getNews 請求的回應處理
-            console.log("取得news資訊時，發現未登入");
+        if (errno === ErrRes.NEWS.READ.NO_LOGIN.errno) {
+          ////  針對未登入狀態處理
+          if (REG_API_NEWS.test(window.location.pathname)) {
+            //  此請求若來自於 getNews
+            $M_log.dev("取得news資訊時，發現未登入");
             res = { errno, data: { me: {} } };
           } else {
             //  非 getNews 請求的回應處理
-            alert("尚未登入！請先登入帳號！");
-            location.href = `/login?from=${encodeURIComponent(location.href)}`;
+            $M_redir.check_login();
+            // alert("尚未登入！請先登入帳號！");
+            // location.href = `/login?from=${encodeURIComponent(location.href)}`;
           }
         } else if (errno) {
           console.log("@axios response 取得後端發來「否決」結果 => \n", msg);
@@ -56,7 +58,7 @@ export default class {
         return Promise.resolve(res);
       },
       (error) => {
-        console.log("@_axios error => ", error);
+        $M_log.dev("_axios 發生錯誤，交給 $M_common.error_handle 處理");
         error_handle(error);
       }
     );

@@ -1,36 +1,6 @@
-let { USER } = require("./errorReason");
+let { NEWS, USER } = require("./errorReason");
 
 module.exports = {
-  //  0404
-  USER: {
-    PASSWORD_WRONG: { errno: 12004, msg: "原密碼錯誤" },
-    //  0425
-    FIRST_FOLLOW: {
-      errno: 12003,
-      msg: "第一次跟隨此 idol，沒有軟刪除 idolFans 紀錄",
-    },
-    //  0406
-    NO_USER: { errno: 12002, msg: "找不到 USER" },
-    ...USER.READ,
-  },
-  //  0404
-  LOGIN: {
-    //  0404
-    NO_USER: { errno: 11002, msg: "查無此人，email或password有誤" },
-    //  0404
-    DATA_INCOMPLETE: { errno: 11001, msg: "未提供email或password" },
-  },
-  //  0404
-  REGISTER: {
-    //  0404
-    CREATE: { errno: 10004, msg: "USER 創建失敗" },
-    //  0404
-    NO_PASSWORD: { errno: 10003, msg: "密碼未填" },
-    //  0404
-    NO_EMAIL: { errno: 10002, msg: "信箱未填" },
-    //  0404
-    IS_EXIST: { errno: 10001, msg: "此信箱已被登記" },
-  },
   //  0527
   VALIDATE: {
     USER_ERRNO: 123456,
@@ -250,21 +220,9 @@ module.exports = {
   PERMISSION: {
     //  0430
     NOT_OWNER: { errno: 200002, msg: "非擁有者" },
-    //  0404
-    NO_LOGIN: { errno: 111111, msg: "尚未登入" },
-
     NOT_SELF: { errno: 502, msg: "非本人" },
   },
-  //
 
-  NEWS: {
-    FOLLOW_CONFIRM_ERR: { errno: 1101, msg: "Follow.confirm 更新失敗" },
-    BLOG_FANS_CONFIRM_ERR: { errno: 1102, msg: "Blog_Fans.confirm 更新失敗" },
-    FOLLOW_COMMENT_CONFIRM_ERR: {
-      errno: 1103,
-      msg: "Blog_Fans.confirm 更新失敗",
-    },
-  },
   READ: {
     NOT_EXIST: { errno: 201, msg: "沒有相符的使用者資料" },
   },
@@ -290,4 +248,24 @@ module.exports = {
   },
   SERVER_ERR: { errno: 9999, msg: "伺服器錯誤" },
   NOT_FIND: { errno: 9999, msg: "頁面不存在" },
+  //  -----------------------------------------------
+  NEWS: {
+    FOLLOW_CONFIRM_ERR: { errno: 1101, msg: "Follow.confirm 更新失敗" },
+    BLOG_FANS_CONFIRM_ERR: { errno: 1102, msg: "Blog_Fans.confirm 更新失敗" },
+    FOLLOW_COMMENT_CONFIRM_ERR: {
+      errno: 1103,
+      msg: "Blog_Fans.confirm 更新失敗",
+    },
+    READ: NEWS.READ,
+  },
+  USER: {
+    PASSWORD_WRONG: { errno: 12004, msg: "原密碼錯誤" },
+    //  0425
+    FIRST_FOLLOW: {
+      errno: 12003,
+      msg: "第一次跟隨此 idol，沒有軟刪除 idolFans 紀錄",
+    },
+    CREATE: USER.CREATE,
+    READ: USER.READ,
+  },
 };

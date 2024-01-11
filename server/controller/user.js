@@ -99,9 +99,7 @@ async function findAlbumListOfUser(user_id, pagination) {
   let albums = Init.browser.blog.pageTable(blogs, pagination);
   return new SuccModel({ data: { albums, author } });
 }
-async function check_origin_password({ user_id, origin_password }) {
-  await User.read(Opts.USER.login);
-}
+
 //  0406
 async function findInfoForFollowIdol({ fans_id, idol_id }) {
   let user = await User.read(
@@ -118,54 +116,6 @@ async function findInfoForFollowIdol({ fans_id, idol_id }) {
   let articleReaders = articles.map(({ ArticleReader }) => ArticleReader);
   let data = { idolFans, articleReaders };
   return new SuccModel({ data });
-}
-
-//  0404
-/** 登入 user
- * @param {string} email user 的信箱
- * @param {string} password user 的未加密密碼
- * @returns resModel
- */
-async function login(email, password) {
-  if (!email || !password) {
-    return new ErrModel(ErrRes.USER.LOGIN.DATA_INCOMPLETE);
-  }
-  const data = await User.read(Opts.USER.login({ email, password }));
-  if (!data) {
-    return new ErrModel(ErrRes.USER.LOGIN.NO_USER);
-  }
-  return new SuccModel({ data });
-}
-//  0404
-/** 註冊
- * @param {string} email - user 的信箱
- * @param {string} password - user 未加密的密碼
- * @returns {object} SuccessMode || ErrModel Instance
- */
-async function register(email, password) {
-  if (!password) {
-    return new ErrModel(ErrRes.USER.REGISTER.NO_PASSWORD);
-  } else if (!email) {
-    return new ErrModel(ErrRes.USER.REGISTER.NO_EMAIL);
-  }
-  const resModel = await isEmailExist(email);
-  if (resModel.errno) {
-    return resModel;
-  }
-  const data = await User.create(Opts.USER.create({ email, password }));
-  return new SuccModel({ data });
-}
-//  0404
-/** 確認信箱是否已被註冊
- * @param {string} email 信箱
- * @returns {object} resModel
- */
-async function isEmailExist(email) {
-  const exist = await User.read(Opts.USER.isEmailExist(email));
-  if (exist) {
-    return new ErrModel(ErrRes.USER.REGISTER.IS_EXIST);
-  }
-  return new SuccModel();
 }
 
 async function findOthersInSomeBlogAndPid({
@@ -187,6 +137,55 @@ async function findOthersInSomeBlogAndPid({
 }
 
 // ----------------------------------------------------------------------------------------------
+/** 註冊
+ * @param {string} email - user 的信箱
+ * @param {string} password - user 未加密的密碼
+ * @returns {object} SuccessMode || ErrModel Instance
+ */
+async function register(email, password) {
+  if (!password) {
+    return new ErrModel(ErrRes.USER.READNO_PASSWORD);
+  } else if (!email) {
+    return new ErrModel(ErrRes.USER.READ.NO_EMAIL);
+  }
+  const resModel = await isEmailExist(email);
+  if (resModel.errno) {
+    return resModel;
+  }
+  const data = await User.create(Opts.USER.CREATE.one({ email, password }));
+  return new SuccModel({ data });
+}
+
+/** 確認信箱是否已被註冊
+ * @param {string} email 信箱
+ * @returns {object} resModel
+ */
+async function isEmailExist(email) {
+  const exist = await User.read(Opts.USER.FIND.email(email));
+  if (exist) {
+    return new ErrModel(ErrRes.USER.READ.EMAIL_EXIST);
+  }
+  return new SuccModel();
+}
+
+/** 登入 user
+ * @param {string} email user 的信箱
+ * @param {string} password user 的未加密密碼
+ * @returns resModel
+ */
+async function login(email, password) {
+  if (!email) {
+    return new ErrModel(ErrRes.USER.READ.NO_EMAIL);
+  } else if (!password) {
+    return new ErrModel(ErrRes.USER.READ.NO_PASSWORD);
+  }
+  const data = await User.read(Opts.USER.FIND.login({ email, password }));
+  if (!data) {
+    return new ErrModel(ErrRes.USER.READ.LOGIN_FAIL);
+  }
+  return new SuccModel({ data });
+}
+
 async function findInfoForUserPage(userId) {
   let resModel = await _findRelationship(userId);
   let { currentUser, fansList, idolList } = resModel.data;
@@ -237,18 +236,10 @@ module.exports = {
   findInfoForFollowIdol,
   //  0404
   findOthersInSomeBlogAndPid,
-  //  0404
+  //  ------------------------------
   findInfoForUserPage,
-  //  0404
-  // _findRelationship,
-  //  0404
   findFansList,
-  //  0404
-  // find,
-  //  0404
   login,
-  //  0404
   register,
-  //  0404
   isEmailExist,
 };

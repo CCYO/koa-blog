@@ -11,7 +11,6 @@ const {
   BlogImgAlt,
   Comment,
 } = require("../db/mysql/model");
-const { hash } = require("../utils/crypto"); //  0228
 
 module.exports = {
   USER: {
@@ -59,26 +58,6 @@ module.exports = {
         },
       ],
     }),
-    //  0404
-    login: ({ email, password }) => ({
-      attributes: ["id", "email", "nickname", "age", "avatar", "avatar_hash"],
-      where: {
-        email,
-        password: hash(password),
-      },
-    }),
-    //  0404
-    create: ({ email, password }) => ({
-      email,
-      password: hash(password),
-    }),
-    //  0404
-    isEmailExist: (email) => {
-      return {
-        attributes: ["id"],
-        where: { email },
-      };
-    },
     findOthersInSomeBlogAndPid: ({
       commenter_id,
       p_id,

@@ -1,3 +1,4 @@
+import { isProd } from "~/server/config/env";
 window.onerror = (e) => {
   console.log("在window.onerror 捕捉到錯誤", e);
 };
@@ -20,8 +21,17 @@ window.addEventListener("unhandledrejection", function (promiseRejectionEvent) {
   promiseRejectionEvent.preventDefault();
 });
 
-export default function (error) {
-  console.log("error_handle捕獲到錯誤-------start-↓↓↓↓");
-  console.error(error);
-  console.log("error_handle捕獲到錯誤-------end-↑↑↑↑");
+function watchError(error) {
+  let message = `發生未知錯誤，頁面${isProd ? "將" : "不會"}重新整裡`;
+  alert(message);
+  if (isProd) {
+    location.reload();
+  } else {
+    console.log("error_handle捕獲到錯誤-------start-↓↓↓↓");
+    console.log(error);
+    console.log("error_handle捕獲到錯誤-------end-↑↑↑↑");
+  }
+  return;
 }
+
+export default watchError;

@@ -23,7 +23,7 @@ router.patch(
   SESSION.reset,
   CACHE.modify,
   FIREBASE.user,
-  VALIDATE.user,
+  VALIDATE,
   async (ctx, next) => {
     let { body: newData } = ctx.request;
     ctx.body = await User.modify(newData);
@@ -43,25 +43,23 @@ router.post("/follow", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { id: fans_id } = ctx.session.user;
   ctx.body = await IdolFans.follow({ fans_id, idol_id });
 });
-//  0404
+//  ----------------------------------------------------
+
 //  登出
 router.get("/logout", CHECK.login, SESSION.remove);
-//  0404
 //  登入
-router.post("/", SESSION.set, VALIDATE.user, async (ctx, next) => {
+router.post("/", SESSION.set, VALIDATE, async (ctx, next) => {
   const { email, password } = ctx.request.body;
   ctx.body = await User.login(email, password);
 });
-//  0404
-//  驗證信箱是否已被註冊
-router.post("/isEmailExist", VALIDATE.user, async (ctx, next) => {
-  const { email } = ctx.request.body;
-  ctx.body = await User.isEmailExist(email);
-});
-//  0404
 //  註冊
-router.post("/register", VALIDATE.user, async (ctx, next) => {
+router.post("/register", VALIDATE, async (ctx, next) => {
   const { email, password } = ctx.request.body;
   ctx.body = await User.register(email, password);
+});
+//  驗證信箱是否已被註冊
+router.post("/isEmailExist", VALIDATE, async (ctx, next) => {
+  const { email } = ctx.request.body;
+  ctx.body = await User.isEmailExist(email);
 });
 module.exports = router;
