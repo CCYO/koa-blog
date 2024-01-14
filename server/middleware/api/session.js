@@ -1,5 +1,6 @@
 //  0404
 const { SuccModel } = require("../../model");
+const { DEFAULT } = require("../../config");
 
 async function reset(ctx, next) {
   await next();
@@ -27,26 +28,7 @@ async function set(ctx, next) {
       `@ 設置 使用者user_id:${data.id} 的 session，包含【session.user -> 使用者公開資訊】以及【session.news -> 最新通知數據】`
     );
     ctx.session.user = data;
-    ctx.session.news = getSessionNews(ctx);
-  }
-  function getSessionNews(ctx) {
-    return {
-      errno: undefined,
-      data: {
-        news: {
-          newsList: {
-            confirm: [],
-            unconfirm: [],
-          },
-          num: {
-            unconfirm: 0,
-            confirm: 0,
-            total: 0,
-          },
-        },
-        me: ctx.session.user,
-      },
-    };
+    ctx.session.news = DEFAULT.USER.SESSION_NEWS(ctx);
   }
 }
 module.exports = {

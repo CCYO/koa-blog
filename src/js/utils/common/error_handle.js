@@ -28,7 +28,8 @@ function watchError(error) {
     location.reload();
   } else {
     console.log("error_handle捕獲到錯誤-------start-↓↓↓↓");
-    console.log(error);
+    console.log(`message: ${error.message}`);
+    console.log(`stack: ${error.stack}`);
     console.log("error_handle捕獲到錯誤-------end-↑↑↑↑");
   }
   return;

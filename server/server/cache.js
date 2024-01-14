@@ -1,7 +1,5 @@
-//  0501
-const { MyErr, ErrRes } = require("../model");
 //  0430
-const Redis = require("../db/cache/redis/_redis");
+const { getCache } = require("../db/redis");
 //  0503
 const {
   ENV,
@@ -15,49 +13,38 @@ const {
 } = require("../config");
 
 //  0228
-async function modify(cache) {
-  for (let [type, list] of Object.entries(cache)) {
+async function modify(resModelCache) {
+  for (let [type, list] of Object.entries(resModelCache)) {
+    if (!list.length) {
+      continue;
+    }
+    let cache = getTYPE(type);
     if (type === NEWS) {
       //  提醒使用者的通知數據有變動，要重新從DB讀取
-      let cache = await getNews();
-      await cache.addList(list);
+      // let cache = await getNews();
+      // await cache.addList(list);
+      await cache.add(list);
+    } else if (ENV.isNoCache) {
+      continue;
     } else {
       //  移除既存的頁面緩存數據，要重新從DB讀取
-      let cache = await getTYPE(type);
-      await cache.delList(list);
+      // let cache = await getTYPE(type);
+      // await cache.delList(list);
+      await cache.del(list);
     }
   }
   return true;
 }
+
 //  0504
-async function getNews() {
-  //  取出緩存資料 redis/cacheNews
-  let set = await Redis.getSet(NEWS);
-  return {
-    get() {
-      return set.get();
-    },
-    has(id) {
-      return set.has(id);
-    },
-    async addList(list) {
-      if (list.length) {
-        return await set.add(list);
-      }
-      return false;
-    },
-    async delList(list) {
-      if (list.length) {
-        return await set.del(list);
-      }
-      return false;
-    },
-  };
-}
-//  0504
-async function getTYPE(type) {
+function getTYPE(type) {
   //  Map { blog_id => { etag: SuccModel }, ... }
-  let cacheType = await Redis.getMap(type);
+  // let cacheType = await Redis.getMap(type);
+  // let cacheType = Cache[type];
+  let cache = getCache(type);
+  if (type === NEWS) {
+    return cache;
+  }
   return {
     //  0501
     //  取得 blog 緩存
@@ -68,26 +55,32 @@ async function getTYPE(type) {
       }
 
       //  { etag: data }
-      let cache = await cacheType.get(id);
-      if (!cache) {
+      // let cache = await cacheType.get(id);
+      // if (!cache) {
+      if (!(await cache.has(id))) {
         //  沒有緩存
         return res;
       }
       //  使用 if-none-match 取出緩存數據
-      let data = cache[ifNoneMatch];
+      // let data = cache[ifNoneMatch];
+      let kv = await cache.get(id);
+      let [etag, data] = Object.entries(kv);
+      res = { etag, data };
       if (!ifNoneMatch) {
         //  沒有 if-none-match
         res.exist = STATUS.NO_IF_NONE_MATCH;
-      } else if (!data) {
+        // } else if (!data) {
+      } else if (etag !== ifNoneMatch) {
         //  if-none-match 不匹配
         res.exist = STATUS.IF_NONE_MATCH_IS_NO_FRESH;
       } else {
         //  if-none-match 有效
-        return { exist: STATUS.HAS_FRESH_CACHE, data, etag: ifNoneMatch };
+        // return { exist: STATUS.HAS_FRESH_CACHE, data, etag: ifNoneMatch };
+        res.exist = STATUS.HAS_FRESH_CACHE;
       }
       //  分解緩存，取出 etag 與 緩存數據
-      res.etag = Object.keys(cache)[0];
-      res.data = Object.values(cache)[0];
+      // res.etag = Object.keys(cache)[0];
+      // res.data = Object.values(cache)[0];
       return res;
     },
     //  0501
@@ -96,23 +89,23 @@ async function getTYPE(type) {
       if (ENV.isNoCache) {
         return false;
       }
-      let etag = await cacheType.set(id, data);
+      let etag = await cache.set(id, data);
       return etag;
     },
     //  0501
     //  清除緩存
-    async delList(list) {
-      console.log("@要刪除的 list => ", list);
-      if (list.length) {
-        return await cacheType.clear(list);
+    async del(list) {
+      if (ENV.isNoCache) {
+        return false;
       }
-      return false;
+      console.log("@要刪除的 list => ", list);
+      return await cache.del(list);
     },
   };
 }
 module.exports = {
   //  0504
-  getNews,
+  // getNews,
   //  0504
   getTYPE,
   //  0503

@@ -1,4 +1,4 @@
-let { NEWS, USER } = require("./errorReason");
+let { SERVER, CACHE, NEWS, USER } = require("./errorReason");
 
 module.exports = {
   //  0527
@@ -9,19 +9,7 @@ module.exports = {
       return { errno: ErrRes.VALIDATE.USER_ERRNO, msg };
     },
   },
-  //  0501
-  CACHE: {
-    UPDATE: {
-      NO_DATA(type) {
-        return { errno: 50002, msg: `更新 cache/${type} 卻沒提供參數` };
-      },
-    },
-    READ: {
-      NO_DATA(type) {
-        return { errno: 50002, msg: `撈取 cache/${type} 卻沒提供參數` };
-      },
-    },
-  },
+
   //  0411
   MSG_RECEIVER: {
     //  0414
@@ -246,9 +234,22 @@ module.exports = {
   PUB_SUB: {
     REMOVE_ERR: { errno: 1101, msg: "PUB_SUB 刪除失敗" },
   },
-  SERVER_ERR: { errno: 9999, msg: "伺服器錯誤" },
+
   NOT_FIND: { errno: 9999, msg: "頁面不存在" },
   //  -----------------------------------------------
+  SERVER,
+  CACHE: {
+    UPDATE: {
+      NO_DATA(type) {
+        return { errno: 50002, msg: `更新 cache/${type} 卻沒提供參數` };
+      },
+    },
+    READ: {
+      NO_DATA(type) {
+        return { errno: 50002, msg: `撈取 cache/${type} 卻沒提供參數` };
+      },
+    },
+  },
   NEWS: {
     FOLLOW_CONFIRM_ERR: { errno: 1101, msg: "Follow.confirm 更新失敗" },
     BLOG_FANS_CONFIRM_ERR: { errno: 1102, msg: "Blog_Fans.confirm 更新失敗" },

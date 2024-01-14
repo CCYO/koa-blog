@@ -3,6 +3,7 @@ import * as ErrRes from "~/server/model/errRes";
 import { error_handle } from "./common/index";
 import $M_log from "./log";
 import $M_redir from "./redir";
+import ENV from "~/server/config/env";
 const REG_API_NEWS = /(^\/api\/news$)/;
 
 export default class {
@@ -57,9 +58,12 @@ export default class {
         instance.backdrop.hidden();
         return Promise.resolve(res);
       },
-      (error) => {
+      (axiosError) => {
         $M_log.dev("_axios 發生錯誤，交給 $M_common.error_handle 處理");
-        error_handle(error);
+        let responseData = axiosError.response.data;
+        let { serverError, ...errModel } = responseData;
+        serverError && error_handle(serverError);
+        return errModel;
       }
     );
 

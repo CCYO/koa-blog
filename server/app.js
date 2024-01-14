@@ -20,9 +20,9 @@ const json = require("koa-json");
 const webpackDevMiddleware = require("./middleware/_webpackDev");
 let BUILD = require("../build");
 let SERVER_CONFIG = require("./config");
-const { ErrRes } = require("./model");
+const { ErrRes, ErrModel, MyErr } = require("./model");
 //  連接redis-session
-const store = require("./db/cache/redis/sessionStore");
+const { store } = require("./db/redis");
 
 //  設定環境變量，以 ~/.env 作為設定檔
 // require("dotenv").config();
@@ -63,24 +63,19 @@ app.use(async (ctx, next) => {
     }
   } catch (error) {
     ctx.status = 500;
-    let isAPI = /^\/api\//.test(ctx.path);
-    // let isMyErr = error.isMyErr;
-    let responseErr = error;
-    // if (!isMyErr || error.err) {
-    /* 完全無預期的錯誤，或是捕捉到第三方模塊生成的錯誤 */
     ctx.app.emit("error", error, ctx);
-    responseErr = ErrRes.SERVER_ERR;
-    //  公版錯誤提醒
+    // if(!SERVER_CONFIG.ENV.isProd){
+    //   err = JSON.parse(JSON.stringify(err, Object.getOwnPropertyNames(err)))
     // }
+    let errModel = new MyErr({ ...ErrRes.SERVER.ERR_500, error });
+    let isAPI = /^\/api\//.test(ctx.path);
     if (SERVER_CONFIG.ENV.isProd) {
     }
     if (isAPI) {
-      ctx.body = responseErr;
+      ctx.body = errModel;
     } else {
-      if (!responseErr.title) {
-        responseErr.title = "伺服器錯誤";
-      }
-      await ctx.render("page404", responseErr);
+      errModel.title = errModel.msg;
+      await ctx.render("page404", errModel);
     }
     return;
   }
@@ -176,22 +171,7 @@ app.use(viewSquare.routes(), viewSquare.allowedMethods());
 app.use(viewErrPage.routes(), viewErrPage.allowedMethods());
 
 app.on("error", (error, ctx) => {
-  if (error.isMyErr) {
-    console.log("@isMyErr => ", error.isMyErr);
-    console.log("@errno => ", error.errno);
-    console.log("@msg => ", error.msg);
-  }
-  if (error.err) {
-    console.log("@第三方模塊包裝後的Error message: \n", error.message);
-    console.log("@entries => \n ", Object.entries(error.err));
-    console.log(
-      "@原生錯誤 ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓\n",
-      error.err
-    );
-  }
-  if (!error.isMyErr) {
-    console.log("@ 未被預先機制捕捉的錯誤: \n", error);
-  }
+  console.log(`@ emit app.onerror => \n stack: \n ${error.stack}`);
 });
 
 module.exports = app;

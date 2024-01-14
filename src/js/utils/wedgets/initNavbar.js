@@ -27,7 +27,6 @@ export default async function (axios) {
     if (!errno) {
       navbar_data = data;
     }
-    $M_log.dev("初次取得LoginData => ", data);
   }
   render(navbar_data);
   //  初始化nav功能
