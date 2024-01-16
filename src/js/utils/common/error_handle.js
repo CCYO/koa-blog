@@ -22,15 +22,22 @@ window.addEventListener("unhandledrejection", function (promiseRejectionEvent) {
 });
 
 function watchError(error) {
-  let message = `發生未知錯誤，頁面${isProd ? "將" : "不會"}重新整裡`;
+  let message = `${error.model ? "後端" : "前端"}發生未知錯誤，頁面${
+    isProd ? "將" : "不會"
+  }重新整裡`;
   alert(message);
   if (isProd) {
     location.reload();
+  } else if (error.model) {
+    let { serverError, model } = error;
+    console.log("後端代碼錯誤-------start-↓↓↓↓");
+    console.log(`model:\n `, model);
+    console.log(`serverError:\n ${serverError.stack}`);
+    console.log("後端代碼錯誤-------end---↑↑↑↑");
   } else {
-    console.log("error_handle捕獲到錯誤-------start-↓↓↓↓");
-    console.log(`message: ${error.message}`);
-    console.log(`stack: ${error.stack}`);
-    console.log("error_handle捕獲到錯誤-------end-↑↑↑↑");
+    console.log("前端代碼錯誤-------start-↓↓↓↓");
+    console.log("error => ", error);
+    console.log("前端代碼錯誤-------end---↑↑↑↑");
   }
   return;
 }

@@ -1,6 +1,7 @@
 /**
  * @description Model api相關
  */
+const { extend } = require("lodash");
 let { ENV } = require("../config");
 const ErrRes = require("./errRes"); //  0404
 //  0404
@@ -25,23 +26,21 @@ class SuccModel extends _Model {
 }
 //  0404
 class ErrModel extends _Model {
-  constructor({ errno, msg }) {
-    super({ errno, msg });
+  constructor({ errno, msg, data }) {
+    super({ errno, msg, data });
   }
 }
 //  0404
-class MyErr {
+class MyErr extends Error {
   // isMyErr = true;
   constructor({ errno, msg, error }) {
-    let serverError = undefined;
-    if (!ENV.isProd) {
-      serverError = JSON.parse(
-        JSON.stringify(error, Object.getOwnPropertyNames(error))
-      );
-    }
-    this.serverError = serverError;
-    this.errno = errno;
-    this.msg = msg;
+    super(error);
+    // let serverError = undefined;
+    this.model = {
+      errno,
+      msg,
+    };
+    this.serverError = error;
   }
 }
 module.exports = {

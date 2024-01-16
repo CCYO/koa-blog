@@ -21,6 +21,12 @@ async function update({ newData, id }) {
 }
 
 // ----------------------------------------------------------------------
+async function createIdol({ idol_id, fans_id }) {
+  let fans = await User.findByPk(fans_id);
+  //  IdolFans Model instance
+  let res = await fans.addIdol(idol_id);
+  return res;
+}
 async function readList(opts) {
   let users = await User.findAll(opts);
   return Init.user(users);
@@ -56,10 +62,9 @@ async function read(opts) {
 module.exports = {
   //  0514
   update,
-  //  0404
+  //  ------------------------------------
+  createIdol,
   readList,
-  //  0404
   create,
-  //  0404
   read,
 };

@@ -29,6 +29,8 @@ router.patch(
     ctx.body = await User.modify(newData);
   }
 );
+
+//  ----------------------------------------------------
 //  0406
 //  取消追蹤
 router.post("/cancelFollow", CHECK.login, CACHE.modify, async (ctx, next) => {
@@ -36,14 +38,12 @@ router.post("/cancelFollow", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { id: fans_id } = ctx.session.user;
   ctx.body = await IdolFans.cancelFollow({ fans_id, idol_id });
 });
-//  0406
 //  追蹤
 router.post("/follow", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { id: idol_id } = ctx.request.body;
   const { id: fans_id } = ctx.session.user;
   ctx.body = await IdolFans.follow({ fans_id, idol_id });
 });
-//  ----------------------------------------------------
 
 //  登出
 router.get("/logout", CHECK.login, SESSION.remove);

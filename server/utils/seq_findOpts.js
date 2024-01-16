@@ -1,4 +1,4 @@
-const { USER } = require("./seq_options");
+const { FOLLOW, USER } = require("./seq_options");
 
 //  0411
 const { Op } = require("sequelize");
@@ -13,6 +13,19 @@ const {
 } = require("../db/mysql/model");
 
 module.exports = {
+  //  0406
+  FOLLOW: {
+    //  0414
+    forceRemove: (id_list) => ({
+      where: { id: { [Op.in]: id_list } },
+      force: true,
+    }),
+    //  0406
+    restoreList: (id_list) => ({
+      where: { id: { [Op.in]: id_list } },
+    }),
+    ...FOLLOW,
+  },
   USER: {
     //  0421
     findAlbumListOfUser: (user_id) => ({
@@ -29,35 +42,7 @@ module.exports = {
         },
       },
     }),
-    //  0406
-    findInfoForFollowIdol: ({ idol_id, fans_id }) => ({
-      attributes: ["id"],
-      where: { id: fans_id },
-      include: [
-        {
-          association: "idols",
-          attributes: ["id"],
-          where: { id: idol_id },
-          required: false,
-          through: {
-            paranoid: false,
-          },
-        },
-        {
-          association: "articles",
-          attributes: ["id"],
-          where: {
-            author_id: idol_id,
-            show: true,
-          },
-          required: false,
-          through: {
-            attributes: ["id"],
-            paranoid: false,
-          },
-        },
-      ],
-    }),
+
     findOthersInSomeBlogAndPid: ({
       commenter_id,
       p_id,
@@ -603,22 +588,7 @@ module.exports = {
       where: { hash },
     }),
   },
-  //  0406
-  FOLLOW: {
-    //  0414
-    forceRemove: (id_list) => ({
-      where: { id: { [Op.in]: id_list } },
-      force: true,
-    }),
-    //  0406
-    removeList: (id_list) => ({
-      where: { id: { [Op.in]: id_list } },
-    }),
-    //  0406
-    restoreList: (id_list) => ({
-      where: { id: { [Op.in]: id_list } },
-    }),
-  },
+
   //  0303
   findBlogFollowersByBlogId(blog_id) {
     return {

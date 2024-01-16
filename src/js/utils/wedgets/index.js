@@ -1,8 +1,9 @@
 import Loading_backdrop from "./LoadingBackdrop";
 import _axios from "../_axios";
-import initNavbar from "./initNavbar";
+import initNavbar from "./navbar";
 import initEJSData from "./initEJSData";
 import $M_log from "../log";
+import { error_handle } from "../common";
 
 class G {
   utils = {};
@@ -35,6 +36,10 @@ class G {
   }
 }
 
-let ins = new G();
-let init = await ins.init();
-export default init;
+let res;
+try {
+  res = await new G().init();
+} catch (error) {
+  error_handle(error);
+}
+export default res;

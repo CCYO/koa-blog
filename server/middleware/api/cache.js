@@ -14,7 +14,7 @@ async function news(ctx, next) {
   // let cache = await S_Cache.getNews();
   let cache = S_Cache.getTYPE(TYPE.NEWS);
   // let hasNews = cache.has(id);
-  let hasNews = cache.has(id);
+  let hasNews = await cache.has(id);
   let { excepts } = ctx.request.body;
   //  若為頁面初次請求||已確認前端仍有未取得的通知數據，且「通知」數據沒有變動，並有緩存數據
   if (!excepts && !hasNews && ctx.session.news.errno === 0) {
@@ -54,7 +54,7 @@ async function news(ctx, next) {
   for (let prop in newsList) {
     sessionNewsData.newsList[prop] = [
       ...newsList[prop],
-      sessionNewsData.newsList[prop],
+      ...sessionNewsData.newsList[prop],
     ];
   }
   //  更新 unconfirm, confirm, num, errno

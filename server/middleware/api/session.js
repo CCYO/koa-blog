@@ -29,6 +29,7 @@ async function set(ctx, next) {
     );
     ctx.session.user = data;
     ctx.session.news = DEFAULT.USER.SESSION_NEWS(ctx);
+    console.log(123);
   }
 }
 module.exports = {

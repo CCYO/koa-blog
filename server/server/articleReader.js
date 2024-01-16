@@ -1,21 +1,21 @@
-const Init = require('../utils/init')
+const Init = require("../utils/init");
 //  0406
-const { ErrRes, MyErr } = require('../model')
+const { ErrRes, MyErr } = require("../model");
 //  0406
-const { ArticleReader } = require('../db/mysql/model')  //  0406
+const { ArticleReader } = require("../db/mysql/model"); //  0406
 //  0514
-async function readList(opts){
-    let datas = await ArticleReader.findAll(opts)
-    return Init.articleReader(datas)
+async function readList(opts) {
+  let datas = await ArticleReader.findAll(opts);
+  return Init.articleReader(datas);
 }
 //  0423
-async function updateList(datas, updateOnDuplicate){
-    try {
-        let list = await ArticleReader.bulkCreate(datas, { updateOnDuplicate })
-        return Init.articleReader(list)
-    }catch(err){
-        throw new MyErr({ ...ErrRes.ARTICLE_READER.UPDATE.ERR, err})
-    }
+async function updateList(datas, updateOnDuplicate) {
+  try {
+    let list = await ArticleReader.bulkCreate(datas, { updateOnDuplicate });
+    return Init.articleReader(list);
+  } catch (err) {
+    throw new MyErr({ ...ErrRes.ARTICLE_READER.UPDATE.ERR, err });
+  }
 }
 //  0406
 // async function createList(datas) {
@@ -31,62 +31,62 @@ async function updateList(datas, updateOnDuplicate){
 //     }
 // }
 //  0406
-async function deleteList(opts) {
-    try {
-        //  RV row
-        return await ArticleReader.destroy(opts)
-    } catch (err) {
-        throw new MyErr({ ...ErrRes.ARTICLE_READER.DELETE.ERR, err })
-    }
-}
+
 //  0406
 // async function restore(opts) {
 //     let res = await ArticleReader.restore(opts)
 //     return res
 // }
-
-module.exports = {
-    //  0514
-    readList,
-    //  0423
-    updateList,
-    //  0406
-    // createList,
-    //  0406
-    deleteList,
-    //  0406
-    // restore,
-
-    count,
-    hiddenBlog,
-    readFollowers,
+//  ----------------------------------------------------------------------
+async function deleteList(opts) {
+  try {
+    //  RV row
+    return await ArticleReader.destroy(opts);
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.ARTICLE_READER.DELETE.ERR, error });
+  }
 }
+async function restoring(id) {
+  let idolFans = await ArticleReader.findByPk(id, { paranoid: false });
+  let res = await idolFans.restore();
+  return res;
+}
+module.exports = {
+  //  0514
+  readList,
+  //  0423
+  updateList,
+  //  0406
+  // createList,
+  //  0406
 
+  //  0406
+  // restore,
 
+  count,
+  hiddenBlog,
+  readFollowers,
+  //  ----------------------------------------------------
+  deleteList,
+  restoring,
+};
 
 async function count(opts) {
-    let num = await FollowBlog.count(opts)
-    return num
+  let num = await FollowBlog.count(opts);
+  return num;
 }
 
 async function readFollowers(opts) {
-    let followers = await ArticleReader.findAll(opts)
-    return followers.map(follower => follower.toJSON())
+  let followers = await ArticleReader.findAll(opts);
+  return followers.map((follower) => follower.toJSON());
 }
 
 async function hiddenBlog({ where }) {
-    // let { blog_id, confirm } = opts
-    let opts = { where }
-    let row = await ArticleReader.destroy(opts)
-    if (!row) {
-        return false
-    }
-    return true
+  // let { blog_id, confirm } = opts
+  let opts = { where };
+  let row = await ArticleReader.destroy(opts);
+  if (!row) {
+    return false;
+  }
+  return true;
 }
-
-
-
-
-
-
-

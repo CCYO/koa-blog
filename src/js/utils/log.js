@@ -1,5 +1,7 @@
+import { isProd } from "~/server/config/env";
+
 function dev(...msg) {
-  if (process.env.NODE_ENV === "production") {
+  if (isProd) {
     return;
   }
   console.log("【測試提醒】\n", ...msg);

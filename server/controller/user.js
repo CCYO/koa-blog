@@ -100,24 +100,6 @@ async function findAlbumListOfUser(user_id, pagination) {
   return new SuccModel({ data: { albums, author } });
 }
 
-//  0406
-async function findInfoForFollowIdol({ fans_id, idol_id }) {
-  let user = await User.read(
-    Opts.USER.findInfoForFollowIdol({ fans_id, idol_id })
-  );
-  if (!user) {
-    throw new MyErr(ErrRes.USER.READ.NO_USER);
-  }
-  let { idols, articles } = user;
-  if (!idols.length) {
-    return new ErrModel(ErrRes.USER.READ.FIRST_FOLLOW);
-  }
-  let idolFans = idols[0].IdolFans;
-  let articleReaders = articles.map(({ ArticleReader }) => ArticleReader);
-  let data = { idolFans, articleReaders };
-  return new SuccModel({ data });
-}
-
 async function findOthersInSomeBlogAndPid({
   commenter_id,
   p_id,
@@ -137,6 +119,19 @@ async function findOthersInSomeBlogAndPid({
 }
 
 // ----------------------------------------------------------------------------------------------
+
+/** 確認信箱是否已被註冊
+ * @param {string} email 信箱
+ * @returns {object} resModel
+ */
+async function isEmailExist(email) {
+  const exist = await User.read(Opts.USER.FIND.email(email));
+  if (exist) {
+    return new ErrModel(ErrRes.USER.READ.EMAIL_EXIST);
+  }
+  return new SuccModel();
+}
+
 /** 註冊
  * @param {string} email - user 的信箱
  * @param {string} password - user 未加密的密碼
@@ -154,18 +149,6 @@ async function register(email, password) {
   }
   const data = await User.create(Opts.USER.CREATE.one({ email, password }));
   return new SuccModel({ data });
-}
-
-/** 確認信箱是否已被註冊
- * @param {string} email 信箱
- * @returns {object} resModel
- */
-async function isEmailExist(email) {
-  const exist = await User.read(Opts.USER.FIND.email(email));
-  if (exist) {
-    return new ErrModel(ErrRes.USER.READ.EMAIL_EXIST);
-  }
-  return new SuccModel();
 }
 
 /** 登入 user
@@ -194,8 +177,83 @@ async function findInfoForUserPage(userId) {
   return new SuccModel({ data });
 }
 
+async function find(user_id) {
+  const data = await User.read(Opts.USER.FIND.one(user_id));
+  if (!data) {
+    return new ErrModel(ErrRes.USER.READ.NO_DATA);
+  }
+  return new SuccModel({ data });
+}
+
+async function findFansList(idol_id) {
+  let data = await User.readList(Opts.USER.FIND.fansList(idol_id));
+  return new SuccModel({ data });
+}
+
+async function findInfoForFollowIdol({ fans_id, idol_id }) {
+  let { errno } = await find(idol_id);
+  if (errno) {
+    throw new MyErr({
+      ...ErrRes.USER.READ.NO_IDOL,
+      error: new Error(`idol_id: ${idol_id} 不存在`),
+    });
+  }
+  let { idols, articles } = await User.read(
+    Opts.USER.FIND.infoForFollowIdol({ fans_id, idol_id })
+  );
+  if (!idols.length) {
+    return new SuccModel();
+  }
+  let idolFans = idols[0].IdolFans.id;
+  let articleReaders = articles.map(({ ArticleReader }) => ArticleReader.id);
+  let data = { idolFans, articleReaders };
+  return new ErrModel({ ...ErrRes.USER.READ.NOT_FIRST_FOLLOW, data });
+}
+
+async function findInfoForCancelFollow({ fans_id, idol_id }) {
+  let { errno } = await find(idol_id);
+  if (errno) {
+    throw new MyErr({
+      ...ErrRes.USER.READ.NO_IDOL,
+      error: `idol_id: ${idol_id} 不存在`,
+    });
+  }
+  let { idols, articles } = await User.read(
+    Opts.USER.FIND.infoForCancelFollow({ fans_id, idol_id })
+  );
+  let idolFans = idols[0].IdolFans.id;
+  let articleReaders = articles.map(({ ArticleReader }) => ArticleReader.id);
+  let data = { idolFans, articleReaders };
+  return new SuccModel({ data });
+}
+module.exports = {
+  //  0514
+  modify,
+  //  0421
+  findAlbumListOfUser,
+  //  0406
+
+  //  0404
+  findOthersInSomeBlogAndPid,
+  //  ------------------------------
+  findInfoForCancelFollow,
+  findInfoForFollowIdol,
+  findFansList,
+  find,
+  findInfoForUserPage,
+  login,
+  register,
+  isEmailExist,
+};
+
+//  0404
+async function _findIdolList(fans_id) {
+  let data = await User.readList(Opts.USER.FIND.idolList(fans_id));
+  return new SuccModel({ data });
+}
+
 async function _findRelationship(userId) {
-  let resModel = await _find(userId);
+  let resModel = await find(userId);
   if (resModel.errno) {
     throw new MyErr(resModel);
   }
@@ -205,41 +263,3 @@ async function _findRelationship(userId) {
   let data = { currentUser, idolList, fansList };
   return new SuccModel({ data });
 }
-
-//  0404
-async function _find(user_id) {
-  const data = await User.read(Opts.USER.FIND.one(user_id));
-  if (!data) {
-    return new ErrModel(ErrRes.USER.READ.NO_DATA);
-  }
-  return new SuccModel({ data });
-}
-
-//  0404
-async function _findIdolList(fans_id) {
-  let data = await User.readList(Opts.USER.FIND.idolList(fans_id));
-  return new SuccModel({ data });
-}
-
-//  0404
-async function findFansList(idol_id) {
-  let data = await User.readList(Opts.USER.FIND.fansList(idol_id));
-  return new SuccModel({ data });
-}
-
-module.exports = {
-  //  0514
-  modify,
-  //  0421
-  findAlbumListOfUser,
-  //  0406
-  findInfoForFollowIdol,
-  //  0404
-  findOthersInSomeBlogAndPid,
-  //  ------------------------------
-  findInfoForUserPage,
-  findFansList,
-  login,
-  register,
-  isEmailExist,
-};

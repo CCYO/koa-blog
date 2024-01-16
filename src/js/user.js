@@ -39,6 +39,7 @@ import { AJV, PAGE, SERVER } from "./config";
 //  webpack打包後的js，會自動插入< script defer>，而defer的調用會發生在DOM parse後、DOMContentLoaded前，
 //  為了確保此js能應用到頁面上可能存在以CDN獲取到的其他JS庫，故將所有內容放入window.load
 window.addEventListener("load", init);
+window.G = G;
 async function init() {
   try {
     /* ------------------------------------------------------------------------------------------ */
@@ -55,7 +56,6 @@ async function init() {
 
     //  統整頁面數據，並渲染需要用到統整數據的頁面內容
     async function initMain() {
-      console.log(a.b.c);
       /* ------------------------------------------------------------------------------------------ */
       /* JQ Ele in Closure -------------------------------------------------------------------- */
       /* ------------------------------------------------------------------------------------------ */
@@ -430,7 +430,7 @@ async function init() {
           //  同步 fansList 數據
           G.data.relationShip.fansList.unshift(G.data.me);
 
-          let html = $M_template.fans_Item({ user: G.data.me });
+          let html = $M_template.relationship_item({ user: G.data.me });
           //  在粉絲列表中插入 粉絲htmlStr
           if (G.data.relationShip.fansList.length === 1) {
             //  如果追蹤者只有當前的你
@@ -605,7 +605,7 @@ async function init() {
       }
     }
   } catch (e) {
-    $M_log.dev(e);
+    // $M_log.dev(e);
     $M_Common.error_handle(e);
   }
 }

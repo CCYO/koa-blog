@@ -63,19 +63,26 @@ app.use(async (ctx, next) => {
     }
   } catch (error) {
     ctx.status = 500;
-    ctx.app.emit("error", error, ctx);
-    // if(!SERVER_CONFIG.ENV.isProd){
-    //   err = JSON.parse(JSON.stringify(err, Object.getOwnPropertyNames(err)))
-    // }
-    let errModel = new MyErr({ ...ErrRes.SERVER.ERR_500, error });
-    let isAPI = /^\/api\//.test(ctx.path);
-    if (SERVER_CONFIG.ENV.isProd) {
+    let myErr = undefined;
+    if (!(error instanceof MyErr)) {
+      myErr = new MyErr({ ...ErrRes.SERVER.ERR_500, error });
     }
-    if (isAPI) {
-      ctx.body = errModel;
+    ctx.app.emit("error", myErr, ctx);
+    if (SERVER_CONFIG.ENV.isProd) {
+      myErr = myErr.model;
     } else {
-      errModel.title = errModel.msg;
-      await ctx.render("page404", errModel);
+      let serverError = myErr.serverError;
+      //  error property is enumerable，無法傳給前端，故需處理
+      myErr.serverError = JSON.parse(
+        JSON.stringify(serverError, Object.getOwnPropertyNames(serverError))
+      );
+    }
+    let isAPI = /^\/api\//.test(ctx.path);
+    if (isAPI) {
+      ctx.body = myErr;
+    } else {
+      myErr.title = myErr.msg;
+      await ctx.render("page404", myErr);
     }
     return;
   }
@@ -171,7 +178,11 @@ app.use(viewSquare.routes(), viewSquare.allowedMethods());
 app.use(viewErrPage.routes(), viewErrPage.allowedMethods());
 
 app.on("error", (error, ctx) => {
-  console.log(`@ emit app.onerror => \n stack: \n ${error.stack}`);
+  console.log(
+    "@ emit app.onerror => \n model: \n ",
+    error.model,
+    ` \n error: \n ${error.serverError.stack}`
+  );
 });
 
 module.exports = app;
