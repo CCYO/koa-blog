@@ -5,7 +5,6 @@
 const {
   API: { VALIDATE, SESSION, CHECK, CACHE, FIREBASE },
 } = require("../../middleware");
-const IdolFans = require("../../controller/idolFans"); //  0406
 const User = require("../../controller/user"); //  0404
 const router = require("koa-router")(); //  0404
 router.prefix("/api/user");
@@ -36,13 +35,13 @@ router.patch(
 router.post("/cancelFollow", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { id: idol_id } = ctx.request.body;
   const { id: fans_id } = ctx.session.user;
-  ctx.body = await IdolFans.cancelFollow({ fans_id, idol_id });
+  ctx.body = await User.cancelFollow({ fans_id, idol_id });
 });
 //  追蹤
 router.post("/follow", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { id: idol_id } = ctx.request.body;
   const { id: fans_id } = ctx.session.user;
-  ctx.body = await IdolFans.follow({ fans_id, idol_id });
+  ctx.body = await User.follow({ fans_id, idol_id });
 });
 
 //  登出

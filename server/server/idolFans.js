@@ -30,9 +30,13 @@ async function deleteList(opts) {
 
 //  -------------------------------
 async function restoring(id) {
-  let idolFans = await IdolFans.findByPk(id, { paranoid: false });
-  //  RV IdolFans Model instance
-  return await idolFans.restore();
+  try {
+    let idolFans = await IdolFans.findByPk(id, { paranoid: false });
+    //  RV IdolFans Model instance
+    return await idolFans.restore();
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.IDOL_FANS.RESTORE.ERR, error });
+  }
 }
 module.exports = {
   //  0423

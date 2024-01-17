@@ -38,6 +38,15 @@ async function updateList(datas, updateOnDuplicate) {
 //     return res
 // }
 //  ----------------------------------------------------------------------
+async function restoring(id) {
+  try {
+    let articleReader = await ArticleReader.findByPk(id, { paranoid: false });
+    //  RV ArticleReader Model instance
+    return await articleReader.restore();
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.ARTICLE_READER.RESTORE.ERR, error });
+  }
+}
 async function deleteList(opts) {
   try {
     //  RV row
@@ -45,11 +54,6 @@ async function deleteList(opts) {
   } catch (error) {
     throw new MyErr({ ...ErrRes.ARTICLE_READER.DELETE.ERR, error });
   }
-}
-async function restoring(id) {
-  let idolFans = await ArticleReader.findByPk(id, { paranoid: false });
-  let res = await idolFans.restore();
-  return res;
 }
 module.exports = {
   //  0514

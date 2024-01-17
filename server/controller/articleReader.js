@@ -56,10 +56,14 @@ async function addList(datas) {
 //     return new SuccModel()
 // }
 //  ----------------------------------------------------------------------------------------------------
+async function restoringList(id_list) {
+  await Promise.all(id_list.map((id) => ArticleReader.restoring(id)));
+  return new SuccModel();
+}
 async function removeList(id_list) {
   let row = await ArticleReader.deleteList(Opts.FOLLOW.REMOVE.list(id_list));
   if (list.length !== row) {
-    throw new MyErr(ErrRes.ARTICLE_READER.DELETE.ROW);
+    throw new MyErr(ErrRes.ARTICLE_READER.DELETE.ROW_ERR);
   }
   return new SuccModel();
 }
@@ -76,6 +80,7 @@ module.exports = {
   // restoreList,
   count,
   //  -------------------------------------
+  restoringList,
   removeList,
 };
 

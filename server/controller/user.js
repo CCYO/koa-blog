@@ -23,6 +23,11 @@ const { ErrRes, ErrModel, SuccModel, MyErr } = require("../model"); //  0404
 const Opts = require("../utils/seq_findOpts"); //  0404
 const User = require("../server/user"); //  0404
 
+//  --------------------------------------------
+const C_IdolFans = require("./idolFans");
+const C_ArticleReader = require("./articleReader");
+const { ENV } = require("../config");
+
 //  0514
 //  更新user
 async function modify({ _origin, ...newData }) {
@@ -190,7 +195,101 @@ async function findFansList(idol_id) {
   return new SuccModel({ data });
 }
 
-async function findInfoForFollowIdol({ fans_id, idol_id }) {
+/** 追蹤
+ * @param {number} fans_id
+ * @param {number} idol_id
+ * @returns {object} SuccessModel { Follow_People Ins { id, idol_id, fans_id }} | ErrorModel
+ */
+async function follow({ fans_id, idol_id }) {
+  //  若此次 add 不是第一次，代表可能會有軟刪除的 ArticleReader 關係
+  //  尋找軟刪除的 IdolFans + ArticleReader 關係
+  let { errno, data } = await _findInfoForFollowIdol({
+    fans_id,
+    idol_id,
+  });
+  //  恢復軟刪除
+  if (errno) {
+    ////  非初次follow
+    let { idolFans, articleReaders } = data;
+    //  恢復 idolFans 軟刪除狀態
+    await C_IdolFans.restoringList([idolFans]);
+    //  恢復 articleReader 軟刪除狀態
+    await C_ArticleReader.restoringList(articleReaders);
+  } else {
+    ////  初次追蹤
+    await User.createIdol({ fans_id, idol_id });
+  }
+  let cache = { [NEWS]: [idol_id] };
+  if (!ENV.isNoCache) {
+    cache[PAGE.USER] = [fans_id, idol_id];
+  }
+  return new SuccModel({ cache });
+}
+
+//  0406
+/** 取消追蹤
+ * @param {number} fans_id
+ * @param {number} idol_id
+ * @returns {object} SuccessModel | ErrorModel
+ */
+async function cancelFollow({ fans_id, idol_id }) {
+  //  尋找 IdolFans + ArticleReader 關係
+  let {
+    data: { idolFans, articleReaders },
+  } = await _findInfoForCancelFollow({
+    fans_id,
+    idol_id,
+  });
+  await C_IdolFans.removeList([idolFans]);
+  if (articleReaders.length) {
+    await C_ArticleReader.removeList(articleReaders);
+  }
+  let options = undefined;
+  if (!ENV.isNoCache) {
+    cache = { [PAGE.USER]: [fans_id, idol_id] };
+    options = { cache };
+  }
+  return new SuccModel(options);
+}
+
+module.exports = {
+  //  0514
+  modify,
+  //  0421
+  findAlbumListOfUser,
+  //  0406
+
+  //  0404
+  findOthersInSomeBlogAndPid,
+  //  ------------------------------
+  cancelFollow,
+  follow,
+  findFansList,
+  find,
+  findInfoForUserPage,
+  login,
+  register,
+  isEmailExist,
+};
+
+async function _findInfoForCancelFollow({ fans_id, idol_id }) {
+  let { errno } = await find(idol_id);
+  if (errno) {
+    throw new MyErr({
+      ...ErrRes.USER.READ.NO_IDOL,
+      error: `idol_id: ${idol_id} 不存在`,
+    });
+  }
+  let { idols, articles } = await User.read(
+    Opts.USER.FIND.infoForCancelFollow({ fans_id, idol_id })
+  );
+  let idolFans = idols[0].IdolFans.id;
+  let articleReaders = articles.map(({ ArticleReader }) => ArticleReader.id);
+  let data = { idolFans, articleReaders };
+  return new SuccModel({ data });
+}
+
+async function _findInfoForFollowIdol({ fans_id, idol_id }) {
   let { errno } = await find(idol_id);
   if (errno) {
     throw new MyErr({
@@ -210,43 +309,6 @@ async function findInfoForFollowIdol({ fans_id, idol_id }) {
   return new ErrModel({ ...ErrRes.USER.READ.NOT_FIRST_FOLLOW, data });
 }
 
-async function findInfoForCancelFollow({ fans_id, idol_id }) {
-  let { errno } = await find(idol_id);
-  if (errno) {
-    throw new MyErr({
-      ...ErrRes.USER.READ.NO_IDOL,
-      error: `idol_id: ${idol_id} 不存在`,
-    });
-  }
-  let { idols, articles } = await User.read(
-    Opts.USER.FIND.infoForCancelFollow({ fans_id, idol_id })
-  );
-  let idolFans = idols[0].IdolFans.id;
-  let articleReaders = articles.map(({ ArticleReader }) => ArticleReader.id);
-  let data = { idolFans, articleReaders };
-  return new SuccModel({ data });
-}
-module.exports = {
-  //  0514
-  modify,
-  //  0421
-  findAlbumListOfUser,
-  //  0406
-
-  //  0404
-  findOthersInSomeBlogAndPid,
-  //  ------------------------------
-  findInfoForCancelFollow,
-  findInfoForFollowIdol,
-  findFansList,
-  find,
-  findInfoForUserPage,
-  login,
-  register,
-  isEmailExist,
-};
-
-//  0404
 async function _findIdolList(fans_id) {
   let data = await User.readList(Opts.USER.FIND.idolList(fans_id));
   return new SuccModel({ data });

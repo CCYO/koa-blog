@@ -209,7 +209,7 @@ module.exports = {
     },
     //  0406
     RESTORE: {
-      ROW: { errno: 40004, msg: "恢復軟刪除 ArticleReader 的數量不完全" },
+      ...ARTICLE_READER.RESTORE,
     },
     //  0406
     DELETE: {
@@ -230,7 +230,7 @@ module.exports = {
     },
     //  0406
     RESTORE: {
-      ROW: { errno: 40004, msg: "恢復軟刪除 IdolFans 的數量不完全" },
+      ...IDOL_FANS.RESTORE,
     },
     //  0406
     DELETE: {

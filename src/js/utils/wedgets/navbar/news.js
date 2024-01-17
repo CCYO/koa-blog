@@ -108,7 +108,7 @@ Object.defineProperties(htmlStr, {
 function newsUpdate(data, insert) {
   let { newsList, num, hasNews } = data;
   if (hasNews) {
-    this.newsClear();
+    this.clear();
   }
   for (let isConfirm in newsList) {
     //  更新 $news.newsList
@@ -126,7 +126,7 @@ function newsUpdate(data, insert) {
 function newsClear() {
   this.htmlStr.clear();
   this.id_list.clear();
-  _newsDropdownClear();
+  _newsDropdownClear.call(this);
 
   function _newsDropdownClear() {
     $(`li[id$=-news-title]`).hide();
