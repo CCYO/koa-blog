@@ -13,31 +13,37 @@ const REG = {
   ACTIVE_PATHNAME: /^\/(?<pathname>\w+)\/?(?<albumList>list\?)?/,
 };
 //  單位ms, 5 min
-const LOAD_NEWS = 5 * 1000 * 60;
+const LOAD_NEWS = 1000 * 60; //* 60;
 
 /* 初始化 通知列表 功能 */
 export default async function (axios) {
   if (!axios) {
     throw new Error("沒提供axios給initNavbar");
   }
-  let navbar_data = { me: undefined, news: undefined };
+  // let navbar_data = { me: undefined, news: undefined };
+  let user = undefined;
+  let news = undefined;
   if (!REG.IGNORE_PAGES.test(location.pathname)) {
     ////  若是可以呈現登入狀態的頁面
     let { errno, data } = await getLoginData();
     if (!errno) {
-      navbar_data = data;
+      let { news: data_news, ...data_user } = data;
+      user = data_user;
+      news = data_news;
     }
   }
-  render(navbar_data);
+  render(user);
   //  初始化nav功能
-  await initFn(navbar_data);
-  return navbar_data;
+  await initFn(news);
+  let G_news = user ? $M_news : undefined;
+  return { me: user, news: G_news };
 
   //  init navbar fn
-  async function initFn(data) {
-    if (!data.me) {
+  async function initFn(news) {
+    if (!news) {
       return;
     }
+    let newsData = news;
     /* 公用ele */
     //  更多通知BTN
     let $readMore = $("#readMore");
@@ -56,7 +62,7 @@ export default async function (axios) {
     loop.start();
     //  unRender 條目更新
     // $$news.update(data.news, false); ----------------------------------------------
-    $M_news.update(data.news);
+    $M_news.update(newsData);
     //  show/hide about news 提醒
     checkNewsMore();
     //  為 BS5 下拉選單元件 註冊 hide.bs.dropdown handler(選單展開時回調)
@@ -127,21 +133,19 @@ export default async function (axios) {
 
     async function readMore(insert = true) {
       //  當前已收到的通知數據，提供給後端過濾
-      let excepts = { ...$M_news.id_list };
-      let {
-        data: { news },
-      } = await getLoginData({ excepts });
-      $M_news.update(news, insert);
+      let { data: user } = await getLoginData({ excepts: $M_news.id_list });
+      let newsData = user.news;
+      $M_news.update(newsData, insert);
       //  show/hide about news 提醒
       checkNewsMore();
     }
   }
   //  render navbar
-  function render(navbar_data) {
-    if (!navbar_data.me) {
+  function render(user) {
+    if (!user) {
       renderLogoutNavBar();
     } else {
-      renderLoginNav(navbar_data);
+      renderLoginNav(user);
     }
     //  根據 path，顯示當前 active NavItem
     activeNavItem();
@@ -170,11 +174,9 @@ export default async function (axios) {
       $(".navbar-toggler, .offcanvas").remove();
     }
     //  渲染 登入狀態的 navbar template
-    function renderLoginNav(navbar_data) {
+    function renderLoginNav(user) {
       //  #needCollapse-list 之外放入 個人資訊/文章相簿/設置/LOGOUT
-      $("#needCollapse-list").html(
-        $M_template.navbar.collapse_list(navbar_data)
-      );
+      $("#needCollapse-list").html($M_template.navbar.collapse_list(user));
       //  #noNeedCollapse-list 內放入 NEWS
       $("#noNeedCollapse-list").html($M_template.navbar.uncollapse_list());
       return true;

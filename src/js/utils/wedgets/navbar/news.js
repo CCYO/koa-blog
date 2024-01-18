@@ -8,7 +8,9 @@ let id_list = {
   msgReceiver: [],
   clear() {
     for (let prop in this) {
-      this[prop] = [];
+      if (this.prop instanceof Array) {
+        this[prop] = [];
+      }
     }
   },
   update(list) {
@@ -17,6 +19,11 @@ let id_list = {
         type === 1 ? "idolFans" : type === 2 ? "articleReader" : "msgReceiver";
       this[prop].push(id);
     }
+  },
+  get total() {
+    return (
+      this.idolFans.length + this.articleReader.length + this.msgReceiver.length
+    );
   },
 };
 Object.defineProperties(id_list, {
@@ -106,15 +113,15 @@ Object.defineProperties(htmlStr, {
 });
 
 function newsUpdate(data, insert) {
-  let { newsList, num, hasNews } = data;
+  let { list, num, hasNews } = data;
   if (hasNews) {
     this.clear();
   }
-  for (let isConfirm in newsList) {
+  for (let isConfirm in list) {
     //  更新 $news.newsList
-    this.id_list.update(newsList[isConfirm]);
+    this.id_list.update(list[isConfirm]);
     //  更新htmlStr
-    this.htmlStr.update(newsList, isConfirm);
+    this.htmlStr.update(list, isConfirm);
     if (insert) {
       //  insert htmlStr
       this.htmlStr.render(isConfirm);

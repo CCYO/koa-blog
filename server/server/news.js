@@ -4,24 +4,20 @@ const { ErrRes, MyErr } = require("../model");
 const { IdolFans, ArticleReader, MsgReceiver } = require("../db/mysql/model");
 //  0430
 const {
-  DEFAULT: {
-    NEWS: {
-      TYPE: { IDOL_FANS, ARTICLE_READER, MSG_RECEIVER },
-    },
-  },
+  DEFAULT: { QUERY_NEWS },
 } = require("../config");
 //  0423
-const rawQuery = require("../db/mysql/query");
+const rawQuery = require("../utils/rawQuery");
 //  0430
 async function update(type, id, newData) {
   let { table, name } = getTable(type);
   function getTable(type) {
     switch (type) {
-      case IDOL_FANS:
+      case QUERY_NEWS.TYPE.IDOL_FANS:
         return { table: IdolFans, name: "IDOL_NAME" };
-      case ARTICLE_READER:
+      case QUERY_NEWS.TYPE.ARTICLE_READER:
         return { table: ArticleReader, name: "ARTICLE_READER" };
-      case MSG_RECEIVER:
+      case QUERY_NEWS.TYPE.MSG_RECEIVER:
         return { table: MsgReceiver, name: "MSG_RECEIVER" };
     }
   }
@@ -32,21 +28,25 @@ async function update(type, id, newData) {
     throw new MyErr({ ...ErrRes[name].UPDATE.ERR, err });
   }
 }
-//  0423
-async function readList({
-  user_id,
-  excepts = { idolFans: [], articleReader: [], msgReceiver: [] },
-}) {
-  //  尋找 news（撇除 excepts）
-  let newsList = await rawQuery.readNews({ user_id, excepts });
+//  ----------------------------------------------------------------------------------
+async function readList({ user_id, excepts }) {
+  if (!excepts) {
+    excepts = { idolFans: [], articleReader: [], msgReceiver: [], total: 0 };
+  }
+
   //   { num: { unconfirm, confirm, total } }
   //  目前news總數，其中有無確認過的又各有多少
-  let { num } = await rawQuery.count(user_id);
-  return { newsList, num };
+  let num = await rawQuery.count(user_id);
+  let list = { confirm: [], unconfirm: [] };
+  if (num.total && num.total !== excepts.total) {
+    //  尋找 news（撇除 excepts）
+    list = await rawQuery.readNews({ user_id, excepts });
+  }
+  return { list, num };
 }
 module.exports = {
   //  0430
   update,
-  //  0423
+  //  ---------------------------------------------------------------------------------
   readList,
 };

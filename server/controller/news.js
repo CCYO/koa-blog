@@ -2,11 +2,7 @@
 const { SuccModel, ErrRes, MyErr } = require("../model");
 //  0430
 const {
-  DEFAULT: {
-    NEWS: {
-      TYPE: { IDOL_FANS, ARTICLE_READER, MSG_RECEIVER },
-    },
-  },
+  DEFAULT: { QUERY_NEWS },
 } = require("../config");
 /**
  * @description Controller news相關
@@ -24,17 +20,17 @@ async function confirm({ type, id }) {
   return new SuccModel();
   function getTableName(type) {
     switch (type) {
-      case IDOL_FANS:
+      case QUERY_NEWS.TYPE.IDOL_FANS:
         return "IDOL_FANS";
-      case ARTICLE_READER:
+      case QUERY_NEWS.TYPE.ARTICLE_READER:
         return "ARTICLE_READER";
-      case MSG_RECEIVER:
+      case QUERY_NEWS.TYPE.MSG_RECEIVER:
         return "MSG_RECEIVER";
     }
   }
 }
-//  0423
-async function readMore({ me, excepts }) {
+//  -------------------------------------------------------------------------------------------
+async function readMore({ user_id, excepts }) {
   /*
     excepts: {
         idolFans: [ id, ... ],
@@ -43,7 +39,7 @@ async function readMore({ me, excepts }) {
         num: NUMBER
     }
     
-    res: {
+    news: {
         newsList: {
             unconfirm: [
                 { type, id, timestamp, confirm, fans: ... },
@@ -54,33 +50,12 @@ async function readMore({ me, excepts }) {
         },
         num: { unconfirm, confirm, total }
     }*/
-  let news = await News.readList({ user_id: me.id, excepts });
-  return new SuccModel({ data: { news, me } });
-}
-//  0404
-/** 藉由 userID 取得 news
- * @param {number} userId
- * @returns {*} resModel
- */
-async function getFirstNews(me) {
-  /*
-    news: {
-        newsList: {
-            unconfirm: [ { type, id, timestamp, confirm, fans|blog|comment }, ... ],
-            confirm: [...]
-        },
-        num: { unconfirm, confirm, total },
-        limit
-    }*/
-  let news = await News.readList({ user_id: me.id });
-  let data = { me, news };
+  let news = await News.readList({ user_id, excepts });
+  let data = { news };
   return new SuccModel({ data });
 }
+
 module.exports = {
-  //  0423
   confirm,
-  //  0423
   readMore,
-  //  0404
-  getFirstNews,
 };

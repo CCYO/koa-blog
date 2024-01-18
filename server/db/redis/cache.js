@@ -119,15 +119,3 @@ function getCache(type) {
 }
 
 module.exports = getCache;
-// {
-//  0504
-// getSet,
-//  0504
-// getMap,
-// Redis,
-// init,
-// [TYPE.NEWS]: new _Set(TYPE.NEWS),
-// [TYPE.PAGE.BLOG]: new _Map(TYPE.PAGE.BLOG),
-// [TYPE.PAGE.USER]: new _Map(TYPE.PAGE.USER),
-// [TYPE.API.COMMENT]: new _Map(TYPE.API.COMMENT),
-// };

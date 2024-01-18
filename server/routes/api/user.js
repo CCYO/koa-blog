@@ -43,7 +43,6 @@ router.post("/follow", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { id: fans_id } = ctx.session.user;
   ctx.body = await User.follow({ fans_id, idol_id });
 });
-
 //  登出
 router.get("/logout", CHECK.login, SESSION.remove);
 //  登入

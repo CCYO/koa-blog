@@ -38,53 +38,37 @@ async function modify(resModelCache) {
 
 //  0504
 function getTYPE(type) {
-  //  Map { blog_id => { etag: SuccModel }, ... }
-  // let cacheType = await Redis.getMap(type);
-  // let cacheType = Cache[type];
   let cache = getCache(type);
   if (type === NEWS) {
     return cache;
   }
   return {
-    //  0501
-    //  取得 blog 緩存
+    //  取得緩存資訊
     async get(id, ifNoneMatch) {
       let res = { exist: STATUS.NO_CACHE, data: undefined, etag: undefined };
       if (ENV.isNoCache) {
         return res;
       }
-
-      //  { etag: data }
-      // let cache = await cacheType.get(id);
-      // if (!cache) {
       if (!(await cache.has(id))) {
         //  沒有緩存
         return res;
       }
-      //  使用 if-none-match 取出緩存數據
-      // let data = cache[ifNoneMatch];
       let kv = await cache.get(id);
       let [etag, data] = Object.entries(kv);
       res = { etag, data };
       if (!ifNoneMatch) {
         //  沒有 if-none-match
         res.exist = STATUS.NO_IF_NONE_MATCH;
-        // } else if (!data) {
       } else if (etag !== ifNoneMatch) {
         //  if-none-match 不匹配
         res.exist = STATUS.IF_NONE_MATCH_IS_NO_FRESH;
       } else {
         //  if-none-match 有效
-        // return { exist: STATUS.HAS_FRESH_CACHE, data, etag: ifNoneMatch };
         res.exist = STATUS.HAS_FRESH_CACHE;
       }
-      //  分解緩存，取出 etag 與 緩存數據
-      // res.etag = Object.keys(cache)[0];
-      // res.data = Object.values(cache)[0];
       return res;
     },
-    //  0501
-    //  設置 user 緩存
+    //  設置緩存，並返回緩存數據所生成的etag
     async set(id, data) {
       if (ENV.isNoCache) {
         return false;
@@ -92,20 +76,17 @@ function getTYPE(type) {
       let etag = await cache.set(id, data);
       return etag;
     },
-    //  0501
     //  清除緩存
-    async del(list) {
+    async del(id_list) {
       if (ENV.isNoCache) {
         return false;
       }
-      console.log("@要刪除的 list => ", list);
+      console.log(`@ 刪除 cache/${type} 內的指定 id_list => , ${id_list}`);
       return await cache.del(list);
     },
   };
 }
 module.exports = {
-  //  0504
-  // getNews,
   //  0504
   getTYPE,
   //  0503
