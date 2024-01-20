@@ -1,4 +1,5 @@
 <%% let G_CONST = JSON.parse('{"API":{"UPDATE_BLOG":"/api/blog","CREATE_IMG":"/api/blog/img","CREATE_IMG_ALT":"/api/blog/blogImgAlt","UPDATE_ALBUM":"/api/album"},"ID":{"EDITOR_CONTAINER":"editor-container","EDITOR_TOOLBAR_CONTAINER":"toolbar-container","TITLE":"title","STATUS":"status","UPDATE_TITLE":"update_title","UPDATE_BLOG":"update_blog","REMOVE_BLOG":"remove_blog","BLOG_HTML_STRING_COUNT":"content_count"},"REG":{"IMG_NAME_AND_EXT":{},"IMG_ALT_ID":{},"IMG_PARSE_TO_X_IMG":{}}}') %>
+
 <!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
 <%- include('../../wedgets/header.ejs') %>
 
@@ -8,7 +9,7 @@
   <!-- MAIN -->
   <main class="container-md main" style="display: none;">
     <div>
-      <input type="text" id="<%%= G_CONST.ID.TITLE %>" name="title" class="form-control" value="<%%= blog.id ? blog.title : '' %>">
+      <input type="text" id="<%%= G_CONST.ID.TITLE %>" name="title" class="form-control" value="<%%= locals.blog.id ? locals.blog.title : '' %>">
       <div class="valid-feedback">
         Looks good!
       </div>
@@ -19,11 +20,11 @@
       <div id="<%%= G_CONST.ID.EDITOR_CONTAINER %>"></div>
       <span id="<%%= G_CONST.ID.BLOG_HTML_STRING_COUNT %>"></span>
 
-      <label> <input type="checkbox" id="<%%= G_CONST.ID.STATUS %>" <%%= blog.show ? 'checked' : '' %> />公開文章</label>
-      <%% if (blog.show) { %>
-      <p>已於 <%%= blog.showAt %> 發佈</p>
+      <label> <input type="checkbox" id="<%%= G_CONST.ID.STATUS %>" <%%= locals.blog.show ? 'checked' : '' %> />公開文章</label>
+      <%% if (locals.blog.show) { %>
+      <p>已於 <%%= locals.blog.showAt %> 發佈</p>
       <%% } else { %>
-      <p>最近一次於 <%%= blog.updatedAt %> 編輯</p>
+      <p>最近一次於 <%%= locals.blog.updatedAt %> 編輯</p>
       <%% } %>
       <button id="<%%= G_CONST.ID.UPDATE_BLOG %>" disabled>存檔</button>
       <button id="<%%= G_CONST.ID.REMOVE_BLOG %>">刪除此篇文章</button>

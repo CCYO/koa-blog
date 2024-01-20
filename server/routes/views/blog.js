@@ -24,47 +24,7 @@ const router = require("koa-router")();
 const privateCache = GEN_CACHE_FN.private(TYPE.PAGE.BLOG);
 //  0504
 const commonCache = GEN_CACHE_FN.common(TYPE.PAGE.BLOG);
-//  0406
-//  編輯文章
-router.get(
-  "/blog/edit/:id",
-  CHECK.login,
-  CHECK.mustBeOwner,
-  privateCache,
-  async (ctx, next) => {
-    const blog_id = ctx.params.id * 1;
-    //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: initBlog || undefined }
-    let cacheStatus = ctx.cache[TYPE.PAGE.BLOG];
-    let { exist } = cacheStatus;
-    let cacheKey = `${TYPE.PAGE.BLOG}/${blog_id}`;
-    //  系統沒有緩存數據
-    if (exist === STATUS.NO_CACHE) {
-      //  向 DB 撈取數據
-      const resModel = await Blog.findWholeInfo(blog_id);
-      //  DB 沒有相符數據
-      if (resModel.errno) {
-        console.log(`@ DB 不存在 blog/${blog_id} 數據 `);
-        return await ctx.render("page404", {
-          ...resModel,
-          title: "文章不存在",
-        });
-        //  將html數據做百分比編碼，交由前端解碼
-      } else {
-        console.log(`@ 從 DB 取得 ${cacheKey}`);
-        //  將 DB 數據賦予給 ctx.cache
-        cacheStatus.data = resModel.data;
-        cacheStatus.data.html =
-          cacheStatus.data.html && encodeURI(cacheStatus.data.html);
-        //  若html有值，則進行解碼
-      }
-    } else {
-      console.log(`@ ${cacheKey} -> 使用系統緩存`);
-    }
-    return await ctx.render("blog-edit", {
-      blog: { ...cacheStatus.data, showComment: false },
-    });
-  }
-);
+
 //  0406
 //  查看文章
 router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
@@ -121,5 +81,38 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
     me_id,
   };
   return await ctx.render("blog", ejs_data);
+});
+//  ---------------------------------------------------------------------------------------------
+//  編輯文章
+router.get("/blog/edit/:id", CHECK.login, privateCache, async (ctx, next) => {
+  const author_id = ctx.session.user.id;
+  const blog_id = ctx.params.id * 1;
+  //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: initBlog || undefined }
+  let cacheStatus = ctx.cache[TYPE.PAGE.BLOG];
+  let { exist } = cacheStatus;
+  let cacheKey = `${TYPE.PAGE.BLOG}/${blog_id}`;
+  //  系統沒有緩存數據
+  if (exist === STATUS.NO_CACHE) {
+    //  向 DB 撈取數據
+    const resModel = await Blog.findWholeInfo({ blog_id, author_id });
+    //  DB 沒有相符數據
+    if (resModel.errno) {
+      console.log(`@ DB 不存在 blog/${blog_id} 數據 `);
+      return await ctx.render("page404", resModel);
+      //  將html數據做百分比編碼，交由前端解碼
+    } else {
+      console.log(`@ 從 DB 取得 ${cacheKey}`);
+      //  將 DB 數據賦予給 ctx.cache
+      cacheStatus.data = resModel.data;
+      cacheStatus.data.html =
+        cacheStatus.data.html && encodeURI(cacheStatus.data.html);
+      //  若html有值，則進行解碼
+    }
+  } else {
+    console.log(`@ ${cacheKey} -> 使用系統緩存`);
+  }
+  let blog = { ...cacheStatus.data, showComment: false };
+  await ctx.render("blog-edit", { blog });
+  return;
 });
 module.exports = router;

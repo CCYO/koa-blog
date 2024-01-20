@@ -4,7 +4,7 @@ import "@css/wedgets/navbar.css";
 import $M_news from "./news";
 import $C_Loop from "../../Loop";
 import $M_template from "../../template";
-
+import { SERVER as $SERVER_CONFIG } from "@js/config";
 /* -------------------- CONFIG CONST -------------------- */
 
 const API = `/api/news`;
@@ -13,7 +13,7 @@ const REG = {
   ACTIVE_PATHNAME: /^\/(?<pathname>\w+)\/?(?<albumList>list\?)?/,
 };
 //  單位ms, 5 min
-const LOAD_NEWS = 1000 * 60; //* 60;
+const LOAD_NEWS = 1000 * 20; //* 60;
 
 /* 初始化 通知列表 功能 */
 export default async function (axios) {
@@ -21,8 +21,8 @@ export default async function (axios) {
     throw new Error("沒提供axios給initNavbar");
   }
   // let navbar_data = { me: undefined, news: undefined };
-  let user = undefined;
-  let news = undefined;
+  let user = {};
+  let news = {};
   if (!REG.IGNORE_PAGES.test(location.pathname)) {
     ////  若是可以呈現登入狀態的頁面
     let { errno, data } = await getLoginData();
@@ -35,12 +35,12 @@ export default async function (axios) {
   render(user);
   //  初始化nav功能
   await initFn(news);
-  let G_news = user ? $M_news : undefined;
+  let G_news = user.id ? $M_news : news;
   return { me: user, news: G_news };
 
   //  init navbar fn
   async function initFn(news) {
-    if (!news) {
+    if (!Object.getOwnPropertyNames(news).length) {
       return;
     }
     let newsData = news;
@@ -133,7 +133,7 @@ export default async function (axios) {
 
     async function readMore(insert = true) {
       //  當前已收到的通知數據，提供給後端過濾
-      let { data: user } = await getLoginData({ excepts: $M_news.id_list });
+      let { data: user } = await getLoginData();
       let newsData = user.news;
       $M_news.update(newsData, insert);
       //  show/hide about news 提醒
@@ -142,7 +142,7 @@ export default async function (axios) {
   }
   //  render navbar
   function render(user) {
-    if (!user) {
+    if (!user.id) {
       renderLogoutNavBar();
     } else {
       renderLoginNav(user);
@@ -183,7 +183,7 @@ export default async function (axios) {
     }
   }
   //  請求 news
-  async function getLoginData(payload) {
+  async function getLoginData() {
     /* 響應的數據 { 
         errno, 
         data: {
@@ -202,6 +202,15 @@ export default async function (axios) {
            me: ...
        }
     */
+    let payload = {};
+    if ($M_news.id_list.total === 0) {
+      payload.status = $SERVER_CONFIG.NEWS.FRONT_END_STATUS.FIRST;
+    } else if ($M_news.num.db.total > $M_news.id_list.total) {
+      payload.status = $SERVER_CONFIG.NEWS.FRONT_END_STATUS.AGAIN;
+      payload.excepts = $M_news.excepts;
+    } else {
+      payload.status = $SERVER_CONFIG.NEWS.FRONT_END_STATUS.CHECK;
+    }
     return await axios.post(API, payload);
   }
 }

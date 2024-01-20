@@ -1,9 +1,10 @@
 <div style="display: none;">
   <%%
-      let user = ['currentUser', "relationShip", 'blogs'] 
-      let blog = ['blog']
-      let album = ['album'] 
-      let whiteList = [...user, ...blog, ...album] 
+      let whiteList = Object.value({
+        user: ['currentUser', "relationShip", 'blogs'],
+        blog: ['blog'],
+        album: ['album'],
+      }).flat()
   %>
   <%% for(let type in locals){ %>
   <%% if( whiteList.some(item => item === type)){ %>

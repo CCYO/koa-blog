@@ -1,4 +1,4 @@
-const { FOLLOW, USER } = require("./seq_options");
+const { BLOG, FOLLOW, USER } = require("./seq_options");
 
 //  0411
 const { Op } = require("sequelize");
@@ -13,105 +13,6 @@ const {
 } = require("../db/mysql/model");
 
 module.exports = {
-  //  0406
-  FOLLOW: {
-    //  0414
-    forceRemove: (id_list) => ({
-      where: { id: { [Op.in]: id_list } },
-      force: true,
-    }),
-    //  0406
-    restoreList: (id_list) => ({
-      where: { id: { [Op.in]: id_list } },
-    }),
-    ...FOLLOW,
-  },
-  USER: {
-    //  0421
-    findAlbumListOfUser: (user_id) => ({
-      where: { id: user_id },
-      include: {
-        // model: Blog,
-        // as: 'blogs',
-        association: "blogs",
-        attributes: ["id", "title", "show", "showAt", "updatedAt", "createdAt"],
-        include: {
-          model: BlogImg,
-          attributes: [],
-          required: true,
-        },
-      },
-    }),
-
-    findOthersInSomeBlogAndPid: ({
-      commenter_id,
-      p_id,
-      blog_id,
-      createdAt,
-    }) => {
-      p_id = p_id ? p_id : 0;
-      return {
-        attributes: ["id", "email", "nickname"],
-        where: { id: { [Op.not]: commenter_id } },
-        include: {
-          model: Comment,
-          attributes: ["id"],
-          where: {
-            p_id,
-            blog_id,
-            createdAt: { [Op.gt]: createdAt },
-          },
-        },
-      };
-    },
-    findArticleReaderByIdolFans: ({ idolId, fansId }) => ({
-      attributes: ["id"],
-      where: { id: idolId },
-      include: {
-        association: "fans",
-        attributes: ["id"],
-        where: {
-          id: fansId,
-        },
-        through: {
-          attributes: [],
-          paranoid: false,
-        },
-        include: {
-          attributes: ["id"],
-          association: "FollowBlog_B",
-          where: { user_id: idolId },
-          through: {
-            attributes: ["id"],
-            paranoid: false,
-          },
-        },
-      },
-    }),
-    ...USER,
-  },
-  //  0514
-  ARTICLE_READER: {
-    //  0514
-    findReadersForModifiedUserData: (articles) => ({
-      attributes: ["reader_id"],
-      where: {
-        article_id: { [Op.in]: articles },
-      },
-    }),
-    count: (blog_id) => ({
-      where: { blog_id },
-    }),
-  },
-  //  0429
-  BLOG_IMG: {
-    findInfoForRemoveBlog: (blog_id) => ({
-      where: {
-        blog_id,
-      },
-      attributes: ["id"],
-    }),
-  },
   //  0404
   BLOG: {
     //  0427
@@ -273,47 +174,6 @@ module.exports = {
       ],
     }),
     //  0404
-    findWholeInfo: (id) => ({
-      attributes: ["id", "title", "html", "show", "showAt", "updatedAt"],
-      where: { id },
-      include: [
-        {
-          association: "author",
-          attributes: ["id", "email", "nickname"],
-        },
-        {
-          model: BlogImg,
-          attributes: [["id", "blogImg_id"], "name"],
-          include: [
-            {
-              model: Img,
-              attributes: [["id", "img_id"], "url", "hash"],
-            },
-            {
-              model: BlogImgAlt,
-              attributes: [["id", "alt_id"], "alt"],
-            },
-          ],
-        },
-        {
-          association: "replys",
-          attributes: [
-            "id",
-            "html",
-            "commenter_id",
-            "pid",
-            "createdAt",
-            "deletedAt",
-          ],
-          include: {
-            association: "commenter",
-            attributes: ["id", "email", "nickname"],
-          },
-        },
-      ],
-      order: [["replys", "id"]],
-    }),
-    //  0404
     find: (id) => ({
       attributes: ["id", "title", "html", "show", "showAt", "updatedAt"],
       where: { id },
@@ -351,6 +211,107 @@ module.exports = {
       },
       limit: opts.limit,
       offset: opts.offset,
+    }),
+    ...BLOG,
+  },
+  //  0406
+  FOLLOW: {
+    //  0414
+    forceRemove: (id_list) => ({
+      where: { id: { [Op.in]: id_list } },
+      force: true,
+    }),
+    //  0406
+    restoreList: (id_list) => ({
+      where: { id: { [Op.in]: id_list } },
+    }),
+    //  -----------------------------------------------
+    ...FOLLOW,
+  },
+  USER: {
+    //  0421
+    findAlbumListOfUser: (user_id) => ({
+      where: { id: user_id },
+      include: {
+        // model: Blog,
+        // as: 'blogs',
+        association: "blogs",
+        attributes: ["id", "title", "show", "showAt", "updatedAt", "createdAt"],
+        include: {
+          model: BlogImg,
+          attributes: [],
+          required: true,
+        },
+      },
+    }),
+
+    findOthersInSomeBlogAndPid: ({
+      commenter_id,
+      p_id,
+      blog_id,
+      createdAt,
+    }) => {
+      p_id = p_id ? p_id : 0;
+      return {
+        attributes: ["id", "email", "nickname"],
+        where: { id: { [Op.not]: commenter_id } },
+        include: {
+          model: Comment,
+          attributes: ["id"],
+          where: {
+            p_id,
+            blog_id,
+            createdAt: { [Op.gt]: createdAt },
+          },
+        },
+      };
+    },
+    findArticleReaderByIdolFans: ({ idolId, fansId }) => ({
+      attributes: ["id"],
+      where: { id: idolId },
+      include: {
+        association: "fans",
+        attributes: ["id"],
+        where: {
+          id: fansId,
+        },
+        through: {
+          attributes: [],
+          paranoid: false,
+        },
+        include: {
+          attributes: ["id"],
+          association: "FollowBlog_B",
+          where: { user_id: idolId },
+          through: {
+            attributes: ["id"],
+            paranoid: false,
+          },
+        },
+      },
+    }),
+    ...USER,
+  },
+  //  0514
+  ARTICLE_READER: {
+    //  0514
+    findReadersForModifiedUserData: (articles) => ({
+      attributes: ["reader_id"],
+      where: {
+        article_id: { [Op.in]: articles },
+      },
+    }),
+    count: (blog_id) => ({
+      where: { blog_id },
+    }),
+  },
+  //  0429
+  BLOG_IMG: {
+    findInfoForRemoveBlog: (blog_id) => ({
+      where: {
+        blog_id,
+      },
+      attributes: ["id"],
     }),
   },
   //  0404

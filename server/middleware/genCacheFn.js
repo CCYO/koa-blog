@@ -18,7 +18,7 @@ function _noCache(type) {
       [type]: { exist: STATUS.NO_CACHE },
     };
     await next();
-
+    console.log("進入 cache_FN ----------------------------");
     //  不允許前端緩存
     ctx.set({
       ["Cache-Control"]: "no-store",

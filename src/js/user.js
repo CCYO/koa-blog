@@ -35,13 +35,49 @@ import {
 /* ------------------------------------------------------------------------------------------ */
 
 import { AJV, PAGE, SERVER } from "./config";
-
+console.log("import end  ----------------------------------------------");
+console.log("user.js readyState => ", document.readyState);
+let window_load = false;
+let readState_loading = false;
 //  webpack打包後的js，會自動插入< script defer>，而defer的調用會發生在DOM parse後、DOMContentLoaded前，
 //  為了確保此js能應用到頁面上可能存在以CDN獲取到的其他JS庫，故將所有內容放入window.load
 window.addEventListener("load", init);
-window.G = G;
+document.addEventListener("readystatechange", () => {
+  if (document.readyState === "complete") {
+    console.log(
+      "-----------@user.js readyState: complete -----------設置timeout"
+    );
+    setTimeout(() => {
+      if (window_load) {
+        console.log(
+          "@-----------readyState的timeout 發現 load 已完成 init，故取消 init()"
+        );
+      } else {
+        console.log(
+          "@-----------readyState的timeout 發現 load 未完成 init，故協助 init()"
+        );
+        init();
+      }
+      readState_loading = true;
+    }, 1000);
+  }
+});
 async function init() {
   try {
+    if (!window_load) {
+      window_load = true;
+    }
+    if (readState_loading) {
+      console.log(
+        "@------------------------load 發現 readState 已完成 init，故取消init()"
+      );
+      return;
+    } else {
+      console.log(
+        "@------------------------load 發現 readState 未完成 init，故調用 init()"
+      );
+    }
+
     /* ------------------------------------------------------------------------------------------ */
     /* Const ------------------------------------------------------------------------------------ */
     /* ------------------------------------------------------------------------------------------ */
@@ -363,11 +399,11 @@ async function init() {
                   /* 若當前不是可滾動狀態，調用 betterScroll.disable實例方法，禁止滾動功能 */
                   el.betterScroll.disable();
                 }
-                $M_log.dev(
-                  `resetBetterScroll: #${el.id}已${
-                    el.canScroll ? "啟" : "禁"
-                  }用滾動狀態`
-                );
+                // $M_log.dev(
+                //   `resetBetterScroll: #${el.id}已${
+                //     el.canScroll ? "啟" : "禁"
+                //   }用滾動狀態`
+                // );
                 el.betterScroll.refresh();
                 //  調用 betterScroll.refresh實例方法，重整狀態
                 //  betterScroll.enable 不知道為何，有時候仍沒辦法作用，搭配refresh()就不會有意外
@@ -605,7 +641,6 @@ async function init() {
       }
     }
   } catch (e) {
-    // $M_log.dev(e);
     $M_Common.error_handle(e);
   }
 }

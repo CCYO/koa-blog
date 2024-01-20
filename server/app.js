@@ -178,10 +178,16 @@ app.use(viewSquare.routes(), viewSquare.allowedMethods());
 app.use(viewErrPage.routes(), viewErrPage.allowedMethods());
 
 app.on("error", (error, ctx) => {
+  let something = undefined;
+  if (error.serverError.stack) {
+    something = error.serverError.stack;
+  } else {
+    something = error.serverError;
+  }
   console.log(
     "@ emit app.onerror => \n model: \n ",
     error.model,
-    ` \n error: \n ${error.serverError.stack}`
+    ` \n error: \n ${something}`
   );
 });
 

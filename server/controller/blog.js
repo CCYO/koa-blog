@@ -11,8 +11,8 @@ const { MyErr, ErrRes, ErrModel, SuccModel } = require("../model"); //  0404
 const Init = require("../utils/init"); //  0404
 const Opts = require("../utils/seq_findOpts"); //  0404
 const Blog = require("../server/blog"); //  0404
-const { BlogImg } = require("../db/mysql/model");
-
+//  -----------------------------------------------------------------------------------------------
+const { ENV } = require("../config");
 //  0411
 async function findInfoForPageOfSquare(author_id) {
   let list = await Blog.readList(Opts.BLOG.findInfoForPageOfSquare());
@@ -102,7 +102,7 @@ async function removeList(blogList) {
  * @param {object} blog_data 要更新的資料
  * @returns {object} SuccModel || ErrModel
  */
-async function modify(blog_id, blog_data) {
+async function modify(blog_id, blog_data, author_id) {
   // let { title, cancelImgs = [], html, show } = blog_data
   let map = new Map(Object.entries(blog_data));
   let {
@@ -165,7 +165,7 @@ async function modify(blog_id, blog_data) {
     //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
     await removeImgs(cancelImgs);
   }
-  let resModel = await findWholeInfo(blog_id);
+  let resModel = await findWholeInfo({ blog_id, author_id });
   if (resModel.errno) {
     throw new MyErr(resModel);
   }
@@ -320,22 +320,7 @@ async function add(title, author_id) {
   const cache = { [CACHE.TYPE.PAGE.USER]: [author_id] };
   return new SuccModel({ data, cache });
 }
-//  0404
-/** 取得 blog 紀錄
- *
- * @param {number} blog_id blog id
- * @returns
- */
-async function findWholeInfo(blog_id) {
-  if (!blog_id) {
-    throw new MyErr(ErrRes.BLOG.READ.NO_DATA);
-  }
-  let data = await Blog.read(Opts.BLOG.findWholeInfo(blog_id));
-  if (!data) {
-    return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST);
-  }
-  return new SuccModel({ data });
-}
+
 //  0404
 async function find(blog_id) {
   if (!blog_id) {
@@ -407,7 +392,30 @@ async function find_id_list_by_author_id(user_id) {
   return new SuccModel({ data });
 }
 
+//  --------------------------------------------------------------------------------
+/** 取得 blog 紀錄
+ *
+ * @param {number} blog_id blog id
+ * @returns
+ */
+async function findWholeInfo({ author_id, blog_id }) {
+  let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
+  if (!data) {
+    return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST);
+  }
+  if (author_id && data.author.id !== author_id) {
+    return new ErrModel(ErrRes.BLOG.READ.NOT_AUTHOR);
+  }
+  let opts = { data };
+  if (!ENV.isNoCache) {
+    opts.cache[CACHE.TYPE.PAGE.BLOG] = data;
+  }
+  return new SuccModel(opts);
+}
+
 module.exports = {
+  findWholeInfo,
+  //  ----------------------------------------------------
   find_id_list_by_author_id,
   findPublicListForUserPage,
   findPrivateListForUserPage,
@@ -420,7 +428,6 @@ module.exports = {
   //  0406
   add,
   //  0404
-  findWholeInfo,
   //  0404
   find,
   //  0404

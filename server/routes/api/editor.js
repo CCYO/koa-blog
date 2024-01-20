@@ -62,8 +62,9 @@ router.patch(
   CHECK.mustBeOwner,
   CACHE.modify,
   async (ctx, next) => {
+    let author_id = ctx.session.user.id;
     const { owner_id, blog_id, ...blog_data } = ctx.request.body;
-    res = await Blog.modify(blog_id, blog_data);
+    res = await Blog.modify(blog_id, blog_data, author_id);
     ctx.body = res;
   }
 );

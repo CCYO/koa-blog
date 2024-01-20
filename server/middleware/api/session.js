@@ -38,16 +38,14 @@ async function set(ctx, next) {
 //  撈取cacheNews，若沒有或過期，則向DB撈取，並於最後作緩存
 //  依據 Cache News 判斷 session.news 過期與否，並將兩者視情況取用、更新、設置
 async function news(ctx, next) {
+  let default_news = {
+    list: { confirm: [], unconfirm: [] },
+    num: ctx.session.user.news.num,
+  };
+  const { status } = ctx.request.body;
   const { id, news: sessionNews } = ctx.session.user;
   let cache = S_Cache.getTYPE(DEFAULT.CACHE.TYPE.NEWS);
   let hasNews = await cache.has(id);
-  let { excepts } = ctx.request.body;
-  //  若為頁面初次請求 && 沒有新通知 && session.news 已有緩存數據
-  if (!excepts && !hasNews && sessionNews.hasNews !== null) {
-    console.log(`@ user/${id} 直接使用緩存 session.news`);
-    ctx.body = new SuccModel({ data: ctx.session.user });
-    return;
-  }
   //  若有新通知
   if (hasNews) {
     console.log(
@@ -58,6 +56,21 @@ async function news(ctx, next) {
     await cache.del([id]);
     //  恢復session.news預設值
     ctx.session.user.news = DEFAULT.USER.SESSION_NEWS;
+  } else if (status === DEFAULT.NEWS.FRONT_END_STATUS.CHECK) {
+    console.log(
+      `@ user/${id} 前端已經取得當前所有通知，後端也暫無新的news條目`
+    );
+    default_news.hasNews = false;
+    let data = { ...ctx.session.user, news: default_news };
+    ctx.body = new SuccModel({ data });
+    return;
+  } else if (
+    status === DEFAULT.NEWS.FRONT_END_STATUS.FIRST &&
+    ctx.session.user.news.hasNews !== null
+  ) {
+    console.log(`@ user/${id} 直接使用緩存 session.news`);
+    ctx.body = new SuccModel({ data: ctx.session.user });
+    return;
   }
   console.log(`@ user/${id} 向DB查詢 news數據`);
   await next();

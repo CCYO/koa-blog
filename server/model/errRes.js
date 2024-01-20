@@ -5,9 +5,110 @@ let {
   CACHE,
   NEWS,
   USER,
+  BLOG,
 } = require("./errorReason");
 
 module.exports = {
+  BLOG: {
+    //  0411
+    DELETE: {
+      //  0411
+      ROW: { errno: 40003, msg: "刪除 BLOG 的數量不完全" },
+      //  0411
+      ERR: { errno: 801, msg: "刪除 BLOG 失敗" },
+    },
+    //  0411
+    REMOVE: {
+      //  0411
+      NO_DATA: { errno: 30001, msg: "刪除 BLOG 卻沒提供查詢參數" },
+      ERR: { errno: 706, msg: "刪除Blog失敗" },
+    },
+    //  0409
+    UPDATE: { errno: 30004, msg: "BLOG資料更新失敗" },
+    //  0406
+    CREATE: { errno: 30003, msg: "BLOG 創建失敗" },
+    UPLOAD_IMG_ERR: { errno: 704, msg: "Blog內文圖片上傳失敗" }, //  0326
+    IMAGE_REMOVE_ERR: { errno: 705, msg: "刪除BlogImg時，數量對不上" },
+    READ: BLOG.READ,
+  },
+  //  0406
+  ARTICLE_READER: {
+    //  0423
+    UPDATE: {
+      //  0430
+      ERR: { errno: 801, msg: "更新 ArticleReader 失敗" },
+      //  0430
+      CONFIRM: { errno: 1003, msg: "confirm articleReader 失敗" },
+      //  0426
+      ROW: { errno: 10004, msg: " ArticleReader 更新結果的數量不完全" },
+    },
+    //  0406
+    CREATE: {
+      NO_DATA: { errno: 50002, msg: "創建 ArticleReader 卻沒提供參數" },
+      ROW: { errno: 40005, msg: "創建 ArticleReader 的數量不完全" },
+      ERR: { errno: 40005, msg: "ArticleReader 創建失敗" },
+    },
+    //  0406
+    RESTORE: {
+      ...ARTICLE_READER.RESTORE,
+    },
+    //  0406
+    DELETE: {
+      ...ARTICLE_READER.DELETE,
+    },
+  },
+  //  0406
+  IDOL_FANS: {
+    //  0406
+    CREATE: {
+      ROW: { errno: 40001, msg: "IdolFans 創建數量不完全" },
+    },
+    //  0423
+    UPDATE: {
+      //  0430
+      CONFIRM: { errno: 1003, msg: "confirm IdolFans 失敗" },
+      ERR: { errno: 801, msg: "更新 IdolFans 失敗" },
+    },
+    //  0406
+    RESTORE: {
+      ...IDOL_FANS.RESTORE,
+    },
+    //  0406
+    DELETE: {
+      //  0406
+      NO_IDOL: { errno: 40002, msg: "要刪除的 Idol 不存在" },
+      ...IDOL_FANS.DELETE,
+    },
+  },
+  SERVER,
+  CACHE: {
+    UPDATE: {
+      NO_DATA(type) {
+        return { errno: 50002, msg: `更新 cache/${type} 卻沒提供參數` };
+      },
+    },
+    READ: {
+      NO_DATA(type) {
+        return { errno: 50002, msg: `撈取 cache/${type} 卻沒提供參數` };
+      },
+    },
+  },
+  NEWS: {
+    FOLLOW_CONFIRM_ERR: { errno: 1101, msg: "Follow.confirm 更新失敗" },
+    BLOG_FANS_CONFIRM_ERR: { errno: 1102, msg: "Blog_Fans.confirm 更新失敗" },
+    FOLLOW_COMMENT_CONFIRM_ERR: {
+      errno: 1103,
+      msg: "Blog_Fans.confirm 更新失敗",
+    },
+    READ: NEWS.READ,
+  },
+  USER: {
+    PASSWORD_WRONG: { errno: 12004, msg: "原密碼錯誤" },
+
+    CREATE: USER.CREATE,
+    READ: USER.READ,
+  },
+  //  -----------------------------------------------
   //  0527
   VALIDATE: {
     USER_ERRNO: 123456,
@@ -95,35 +196,6 @@ module.exports = {
     },
     REMOVE_ERR: { errno: 903, msg: "BlogImgAlt刪除失敗" }, //  0326
   },
-  //  0404
-  BLOG: {
-    //  0411
-    DELETE: {
-      //  0411
-      ROW: { errno: 40003, msg: "刪除 BLOG 的數量不完全" },
-      //  0411
-      ERR: { errno: 801, msg: "刪除 BLOG 失敗" },
-    },
-    //  0411
-    REMOVE: {
-      //  0411
-      NO_DATA: { errno: 30001, msg: "刪除 BLOG 卻沒提供查詢參數" },
-      ERR: { errno: 706, msg: "刪除Blog失敗" },
-    },
-    //  0409
-    UPDATE: { errno: 30004, msg: "BLOG資料更新失敗" },
-    //  0406
-    CREATE: { errno: 30003, msg: "BLOG 創建失敗" },
-    //  0404
-    READ: {
-      //  0404
-      NOT_EXIST: { errno: 30002, msg: "BLOG不存在" },
-      //  0404
-      NO_DATA: { errno: 30001, msg: "查詢 BLOG 卻沒提供查詢參數" },
-    },
-    UPLOAD_IMG_ERR: { errno: 704, msg: "Blog內文圖片上傳失敗" }, //  0326
-    IMAGE_REMOVE_ERR: { errno: 705, msg: "刪除BlogImg時，數量對不上" },
-  },
   //  0406
   BLOG_IMG: {
     //  0429
@@ -189,82 +261,4 @@ module.exports = {
   },
 
   NOT_FIND: { errno: 9999, msg: "頁面不存在" },
-  //  -----------------------------------------------
-  //  0406
-  ARTICLE_READER: {
-    //  0423
-    UPDATE: {
-      //  0430
-      ERR: { errno: 801, msg: "更新 ArticleReader 失敗" },
-      //  0430
-      CONFIRM: { errno: 1003, msg: "confirm articleReader 失敗" },
-      //  0426
-      ROW: { errno: 10004, msg: " ArticleReader 更新結果的數量不完全" },
-    },
-    //  0406
-    CREATE: {
-      NO_DATA: { errno: 50002, msg: "創建 ArticleReader 卻沒提供參數" },
-      ROW: { errno: 40005, msg: "創建 ArticleReader 的數量不完全" },
-      ERR: { errno: 40005, msg: "ArticleReader 創建失敗" },
-    },
-    //  0406
-    RESTORE: {
-      ...ARTICLE_READER.RESTORE,
-    },
-    //  0406
-    DELETE: {
-      ...ARTICLE_READER.DELETE,
-    },
-  },
-  //  0406
-  IDOL_FANS: {
-    //  0406
-    CREATE: {
-      ROW: { errno: 40001, msg: "IdolFans 創建數量不完全" },
-    },
-    //  0423
-    UPDATE: {
-      //  0430
-      CONFIRM: { errno: 1003, msg: "confirm IdolFans 失敗" },
-      ERR: { errno: 801, msg: "更新 IdolFans 失敗" },
-    },
-    //  0406
-    RESTORE: {
-      ...IDOL_FANS.RESTORE,
-    },
-    //  0406
-    DELETE: {
-      //  0406
-      NO_IDOL: { errno: 40002, msg: "要刪除的 Idol 不存在" },
-      ...IDOL_FANS.DELETE,
-    },
-  },
-  SERVER,
-  CACHE: {
-    UPDATE: {
-      NO_DATA(type) {
-        return { errno: 50002, msg: `更新 cache/${type} 卻沒提供參數` };
-      },
-    },
-    READ: {
-      NO_DATA(type) {
-        return { errno: 50002, msg: `撈取 cache/${type} 卻沒提供參數` };
-      },
-    },
-  },
-  NEWS: {
-    FOLLOW_CONFIRM_ERR: { errno: 1101, msg: "Follow.confirm 更新失敗" },
-    BLOG_FANS_CONFIRM_ERR: { errno: 1102, msg: "Blog_Fans.confirm 更新失敗" },
-    FOLLOW_COMMENT_CONFIRM_ERR: {
-      errno: 1103,
-      msg: "Blog_Fans.confirm 更新失敗",
-    },
-    READ: NEWS.READ,
-  },
-  USER: {
-    PASSWORD_WRONG: { errno: 12004, msg: "原密碼錯誤" },
-
-    CREATE: USER.CREATE,
-    READ: USER.READ,
-  },
 };
