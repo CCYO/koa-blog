@@ -59,7 +59,8 @@ app.use(async (ctx, next) => {
     await next();
     if (ctx.status === 404) {
       //  待處理
-      return ctx.render("page404", ErrRes.NOT_FIND);
+      await ctx.render("page404", ErrRes.NOT_FIND);
+      return;
     }
   } catch (error) {
     ctx.status = 500;
@@ -82,7 +83,12 @@ app.use(async (ctx, next) => {
       ctx.body = myErr;
     } else {
       myErr.title = myErr.msg;
-      await ctx.render("page404", myErr);
+      let opts = {
+        ...myErr.model,
+        model: myErr.model,
+        serverError: myErr.serverError,
+      };
+      await ctx.render("page404", opts);
     }
     return;
   }
@@ -179,14 +185,16 @@ app.use(viewErrPage.routes(), viewErrPage.allowedMethods());
 
 app.on("error", (error, ctx) => {
   let something = undefined;
-  if (error.serverError.stack) {
+  let model = undefined;
+  if (error instanceof MyErr) {
     something = error.serverError.stack;
+    model = error.model;
   } else {
-    something = error.serverError;
+    something = error.stack;
   }
   console.log(
     "@ emit app.onerror => \n model: \n ",
-    error.model,
+    model,
     ` \n error: \n ${something}`
   );
 });

@@ -12,8 +12,8 @@ const REG = {
   IGNORE_PAGES: /^\/(login)|(register)|(errPage)/,
   ACTIVE_PATHNAME: /^\/(?<pathname>\w+)\/?(?<albumList>list\?)?/,
 };
-//  單位ms, 5 min
-const LOAD_NEWS = 1000 * 20; //* 60;
+//  單位ms, 1 min
+const LOAD_NEWS = 1000 * 1 * 60;
 
 /* 初始化 通知列表 功能 */
 export default async function (axios) {
@@ -57,7 +57,7 @@ export default async function (axios) {
     //...................................
 
     //  讓readMore自動循環的類
-    let loop = new $C_Loop(readMore.bind(false), { ms: LOAD_NEWS });
+    let loop = new $C_Loop(readMore.bind(this, false), { ms: LOAD_NEWS });
     //  啟動 readMore 自動循環
     loop.start();
     //  unRender 條目更新

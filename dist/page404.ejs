@@ -7,7 +7,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>
-    <%= locals.blog ? blog.title : title %>
+    <%= locals.blog ? blog.title : locals.title ? title : '錯誤頁' %>
   </title>
   <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
   <!-- BS5 CSS -->
@@ -85,6 +85,25 @@
       <%= msg %>
     </div>
   </main>
+  <!-- EJS DATA -->
+  <div style="display: none;">
+  <%
+      let whiteList = Object.values({
+        user: ['currentUser', "relationShip", 'blogs'],
+        blog: ['blog'],
+        album: ['album'],
+        model: ['model'],
+        serverError: ['serverError']
+      }).flat()
+  %>
+  <% for(let type in locals){ %>
+  <% if( whiteList.some(item => item === type)){ %>
+  <div data-my-data="<%= type %>">
+    <%- JSON.stringify(locals[type]) %>
+  </div>
+  <% } %>
+  <% } %>
+</div>
   <!-- FOOTER -->
   <div class="footer container-fluid" style="display: none;">
   FooterFooterFooterFooter

@@ -66,9 +66,6 @@ async function init() {
       );
       let $newPasswordList = $("[name=password], [name=password_again]");
       let el_password_again = $(`[name=password_again]`).get(0);
-      let lock = {
-        payload: {},
-      };
       let el_model = document.querySelector(
         `#${PAGE.SETTING.ID.MODAL_ORIGIN_PASSWORD}`
       );

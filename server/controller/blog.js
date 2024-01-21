@@ -95,83 +95,7 @@ async function removeList(blogList) {
   }
   return new SuccModel({ cache, data: { author: { id: author_id } } });
 }
-//  0406
-/** 更新 blog
- *
- * @param {number} blog_id blog id
- * @param {object} blog_data 要更新的資料
- * @returns {object} SuccModel || ErrModel
- */
-async function modify(blog_id, blog_data, author_id) {
-  // let { title, cancelImgs = [], html, show } = blog_data
-  let map = new Map(Object.entries(blog_data));
-  let {
-    NEWS,
-    PAGE: { USER, BLOG },
-    API: { COMMENT },
-  } = CACHE.TYPE;
-  let cache = {
-    [NEWS]: [],
-    [USER]: [],
-    [BLOG]: [blog_id],
-    [COMMENT]: (map.has("show") && [blog_id]) || [],
-  };
-  //  存放 blog 要更新的數據
-  let newData = {};
-  if (map.has("html")) {
-    //  存放此次 blog 要更新的數據
-    newData.html = my_xxs(blog_data.html);
-  }
-  //  更新 文章標題
-  if (map.has("title")) {
-    //  存放 blog 要更新的數據
-    newData.title = my_xxs(blog_data.title);
-    //  處理緩存
-    //  若此次更新包含更改文章的公開狀態，可略過，因為下面處理show時會有同樣的操作
-    if (!map.has("show")) {
-      let { errno, data } = await findInfoForModifyTitle(blog_id);
-      if (!errno) {
-        let { author_id, followers } = data;
-        cache[USER] = [author_id];
-        cache[NEWS] = cache[NEWS].concat(followers);
-      }
-    }
-  }
-  //  更新 文章公開狀態
-  if (map.has("show")) {
-    //  存放此次 blog 要更新的數據
-    let show = (newData.show = blog_data.show);
-    let resModel;
-    // 處理緩存
-    if (show) {
-      //  存放此次 blog 要更新的數據
-      newData.showAt = new Date();
-      resModel = await public(blog_id);
-      // 隱藏blog
-    } else if (!show) {
-      resModel = await private(blog_id);
-    }
-    let { author_id, followers } = resModel.data;
-    cache[NEWS] = cache[NEWS].concat(followers);
-    cache[USER].push(author_id);
-  }
-  if (Object.getOwnPropertyNames(newData).length) {
-    //  更新文章
-    await Blog.update(blog_id, newData);
-  }
-  //  刪除圖片
-  if (map.has("cancelImgs")) {
-    let cancelImgs = map.get("cancelImgs");
-    //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
-    await removeImgs(cancelImgs);
-  }
-  let resModel = await findWholeInfo({ blog_id, author_id });
-  if (resModel.errno) {
-    throw new MyErr(resModel);
-  }
-  let data = resModel.data;
-  return new SuccModel({ data, cache });
-}
+
 //  0408
 async function removeImgs(imgs) {
   for (let { blogImg_id, blogImgAlt_list } of imgs) {
@@ -306,20 +230,6 @@ async function findInfoForModifyTitle(blog_id) {
   let data = { author_id, followers };
   return new SuccModel({ data });
 }
-//  0406
-/** 建立 blog
- * @param { string } title 標題
- * @param { number } userId 使用者ID
- * @returns SuccModel for { data: { id, title, html, show, showAt, createdAt, updatedAt }} || ErrModel
- */
-async function add(title, author_id) {
-  const data = await Blog.create({
-    title: my_xxs(title),
-    author_id,
-  });
-  const cache = { [CACHE.TYPE.PAGE.USER]: [author_id] };
-  return new SuccModel({ data, cache });
-}
 
 //  0404
 async function find(blog_id) {
@@ -408,9 +318,105 @@ async function findWholeInfo({ author_id, blog_id }) {
   }
   let opts = { data };
   if (!ENV.isNoCache) {
-    opts.cache[CACHE.TYPE.PAGE.BLOG] = data;
+    opts.cache = { [CACHE.TYPE.PAGE.BLOG]: data };
   }
   return new SuccModel(opts);
+}
+
+//  0406
+/** 建立 blog
+ * @param { string } title 標題
+ * @param { number } userId 使用者ID
+ * @returns SuccModel for { data: { id, title, html, show, showAt, createdAt, updatedAt }} || ErrModel
+ */
+async function add(title, author_id) {
+  const data = await Blog.create({
+    title: my_xxs(title),
+    author_id,
+  });
+  const opts = { data };
+  if (!ENV.isNoCache) {
+    opts.cache = { [CACHE.TYPE.PAGE.USER]: [author_id] };
+  }
+  return new SuccModel(opts);
+}
+
+//  0406
+/** 更新 blog
+ *
+ * @param {number} blog_id blog id
+ * @param {object} blog_data 要更新的資料
+ * @returns {object} SuccModel || ErrModel
+ */
+async function modify(blog_id, blog_data, author_id) {
+  // let { title, cancelImgs = [], html, show } = blog_data
+  let map = new Map(Object.entries(blog_data));
+  let {
+    NEWS,
+    PAGE: { USER, BLOG },
+    API: { COMMENT },
+  } = CACHE.TYPE;
+  let cache = {
+    [NEWS]: [],
+    [USER]: [],
+    [BLOG]: [blog_id],
+    [COMMENT]: (map.has("show") && [blog_id]) || [],
+  };
+  //  存放 blog 要更新的數據
+  let newData = {};
+  if (map.has("html")) {
+    //  存放此次 blog 要更新的數據
+    newData.html = my_xxs(blog_data.html);
+  }
+  //  更新 文章標題
+  if (map.has("title")) {
+    //  存放 blog 要更新的數據
+    newData.title = my_xxs(blog_data.title);
+    //  處理緩存
+    //  若此次更新包含更改文章的公開狀態，可略過，因為下面處理show時會有同樣的操作
+    if (!map.has("show")) {
+      let { errno, data } = await findInfoForModifyTitle(blog_id);
+      if (!errno) {
+        let { author_id, followers } = data;
+        cache[USER] = [author_id];
+        cache[NEWS] = cache[NEWS].concat(followers);
+      }
+    }
+  }
+  //  更新 文章公開狀態
+  if (map.has("show")) {
+    //  存放此次 blog 要更新的數據
+    let show = (newData.show = blog_data.show);
+    let resModel;
+    // 處理緩存
+    if (show) {
+      //  存放此次 blog 要更新的數據
+      newData.showAt = new Date();
+      resModel = await public(blog_id);
+      // 隱藏blog
+    } else if (!show) {
+      resModel = await private(blog_id);
+    }
+    let { author_id, followers } = resModel.data;
+    cache[NEWS] = cache[NEWS].concat(followers);
+    cache[USER].push(author_id);
+  }
+  if (Object.getOwnPropertyNames(newData).length) {
+    //  更新文章
+    await Blog.update(blog_id, newData);
+  }
+  //  刪除圖片
+  if (map.has("cancelImgs")) {
+    let cancelImgs = map.get("cancelImgs");
+    //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
+    await removeImgs(cancelImgs);
+  }
+  let resModel = await findWholeInfo({ blog_id, author_id });
+  if (resModel.errno) {
+    throw new MyErr(resModel);
+  }
+  let data = resModel.data;
+  return new SuccModel({ data, cache });
 }
 
 module.exports = {

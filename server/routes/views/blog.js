@@ -97,7 +97,6 @@ router.get("/blog/edit/:id", CHECK.login, privateCache, async (ctx, next) => {
     const resModel = await Blog.findWholeInfo({ blog_id, author_id });
     //  DB 沒有相符數據
     if (resModel.errno) {
-      console.log(`@ DB 不存在 blog/${blog_id} 數據 `);
       return await ctx.render("page404", resModel);
       //  將html數據做百分比編碼，交由前端解碼
     } else {

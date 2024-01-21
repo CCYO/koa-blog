@@ -50,24 +50,25 @@ function getTYPE(type) {
         return res;
       }
       if (!(await cache.has(id))) {
+        console.log(`取得 cache ${type}/${id} 時，發現不存在`);
         //  沒有緩存
         return res;
       }
       let kv = await cache.get(id);
-      let [etag, data] = Object.entries(kv);
+      let [etag, data] = Object.entries(kv)[0];
       res = { etag, data };
       if (!ifNoneMatch) {
         //  沒有 if-none-match
         res.exist = STATUS.NO_IF_NONE_MATCH;
-        console.log(`針對 cache ${type}/${id} 請求，沒有提供 if-none-match`);
+        console.log(`取得 cache ${type}/${id} 時，沒有提供 if-none-match`);
       } else if (etag !== ifNoneMatch) {
         //  if-none-match 不匹配
         res.exist = STATUS.IF_NONE_MATCH_IS_NO_FRESH;
-        console.log(`針對 cache ${type}/${id} 請求，if-none-match 已過期`);
+        console.log(`取得 cache ${type}/${id} 時，if-none-match 已過期`);
       } else {
         //  if-none-match 有效
         res.exist = STATUS.HAS_FRESH_CACHE;
-        console.log(`針對 cache ${type}/${id} 請求，使用有效緩存`);
+        console.log(`取得 cache ${type}/${id} 時，使用有效緩存`);
       }
       return res;
     },
@@ -77,6 +78,7 @@ function getTYPE(type) {
         return false;
       }
       let etag = await cache.set(id, data);
+      console.log(`設定 cache ${type}/${id} 完成，並生成 etag: ${etag}`);
       return etag;
     },
     //  清除緩存
@@ -84,7 +86,7 @@ function getTYPE(type) {
       if (ENV.isNoCache) {
         return false;
       }
-      console.log(`@ 刪除 cache/${type} 內的指定 id_list => , ${id_list}`);
+      console.log(`@ 完成刪除 cache/${type} 內的指定 id_list => , ${id_list}`);
       return await cache.del(list);
     },
   };

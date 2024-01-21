@@ -1,4 +1,6 @@
-// const CREATE = { errno: 10004, msg: "創建失敗" };
+const CREATE = {
+  ERR: { errno: 10004, msg: "BLOG 創建失敗" },
+};
 //  --------------------------------------------------------
 const READ = {
   NOT_AUTHOR: { errno: 1005, msg: "非作者本人" },
@@ -6,6 +8,7 @@ const READ = {
 };
 
 module.exports = {
+  CREATE,
   READ,
   //    ----------------------------------------------------
 };

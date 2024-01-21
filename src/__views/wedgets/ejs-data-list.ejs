@@ -1,9 +1,11 @@
 <div style="display: none;">
   <%
-      let whiteList = Object.value({
+      let whiteList = Object.values({
         user: ['currentUser', "relationShip", 'blogs'],
         blog: ['blog'],
         album: ['album'],
+        model: ['model'],
+        serverError: ['serverError']
       }).flat()
   %>
   <% for(let type in locals){ %>

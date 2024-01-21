@@ -86,17 +86,21 @@ async function init() {
             }
           }
         }
-        getPayload(kvPairs) {
+        getPayload() {
           let res = {};
           for (let [key, value] of [...this]) {
             res[key] = value;
           }
-          if (kvPairs) {
-            for (let key in kvPairs) {
-              res[key] = kvPairs[key];
-            }
-          }
+          console.log(res);
           return res;
+        }
+        check_submit() {
+          let disabled = true;
+          let keys = [...this.keys()];
+          if (keys.length && this.has("html")) {
+            disabled = $span_content_count.hasClass("text-danger");
+          }
+          $btn_updateBlog.prop("disabled", disabled);
         }
         //  刪除數據
         del(key) {
@@ -105,6 +109,7 @@ async function init() {
             //  若刪除的是title，關閉更新鈕
             $btn_updateTitle.prop("disabled", true);
           }
+          console.log(this.getPayload());
         }
         #set(key, value) {
           if (key === "title") {
@@ -115,7 +120,7 @@ async function init() {
         }
       }
       let $$payload = new $C_genPayload();
-
+      G.utils.payload = $$payload;
       //  初始化 頁面各功能
       G.utils.editor = create_editor();
       G.utils.loading_backdrop.insertEditors([G.utils.editor]);
@@ -417,25 +422,27 @@ async function init() {
           let { keyword, message } = result.find(
             ({ field_name }) => field_name === KEY
           );
-          if (invalid && keyword.length !== 1) {
-            throw new Error(JSON.stringify(result));
-          }
           let text_count =
             SERVER_BLOG.EDITOR.HTML_MAX_LENGTH - cache_content.length;
           let text = `還能輸入${text_count}個字`;
           if (!invalid) {
-            $$payload.setKVpairs(newData);
+            G.utils.payload.setKVpairs(newData);
             $span_content_count.removeClass("text-danger").text(text);
           } else {
             $$payload.del(KEY);
-            if (keyword[0] === "_notEmpty") {
-              text += "，且文章內容不可為空";
+            let set = new Set(keyword);
+            if (set.size > 2) {
+              throw new Error(JSON.stringify(result));
+            }
+            if (set.has("_notEmpty")) {
+              text = "文章內容不可為空";
               $span_content_count.addClass("text-danger").text(text);
-            } else if (keyword[0] === "_notRepeat") {
+            } else if (notRepeat) {
               $span_content_count.removeClass("text-danger").text(text);
             }
           }
-          return;
+          console.log("由editor change 帶動的 check");
+          G.utils.payload.check_submit();
         }
       }
 
@@ -515,7 +522,10 @@ async function init() {
         let invalid = result.some(({ valid }) => !valid);
         if (!invalid) {
           $$payload.setKVpairs(newData);
+        } else {
+          G.utils.payload.del(KEY);
         }
+        G.utils.payload.check_submit();
         return;
       }
       //  關於 更新title 的相關操作
@@ -524,7 +534,7 @@ async function init() {
         const KEY = "title";
         const payload = {
           blog_id: G.data.blog.id,
-          title: $$payload.get(KEY),
+          title: G.utils.payload.get(KEY),
         };
         let response = await G.utils.axios.patch(
           PAGE_BLOG_EDIT.API.UPDATE_BLOG,
@@ -532,8 +542,9 @@ async function init() {
         );
         //  同步數據
         G.data.blog[KEY] = response.data[KEY];
-        $$payload.del(KEY);
-        $M_ui.form_feedback.clear(e.target);
+        G.utils.payload.del(KEY);
+        G.utils.payload.check_submit();
+        $M_ui.form_feedback.clear($inp_title.get(0));
         //  清空提醒
         alert("標題更新完成");
         return;
@@ -542,16 +553,11 @@ async function init() {
       async function handle_blur(e) {
         const KEY = "title";
         const target = e.target;
-        let title = $M_xss.trim(target.value);
-        let newData = { [KEY]: title };
-        let result = await validate(newData);
-        let result_title = result.find(
-          ({ field_name }) => field_name === "title"
-        );
-        if (!result_title.valid) {
+        if (!G.utils.payload.has(KEY)) {
           target.value = G.data.blog.title;
           $M_ui.form_feedback.clear(target);
         }
+        G.utils.payload.check_submit();
         return;
       }
       //  關於 title 輸入新值時的相關操作
@@ -571,8 +577,11 @@ async function init() {
           result_title.message
         );
         if (!invalid) {
-          $$payload.setKVpairs(newData);
+          G.utils.payload.setKVpairs(newData);
+        } else {
+          G.utils.payload.del(KEY);
         }
+        G.utils.payload.check_submit();
         return;
       }
 
@@ -645,8 +654,8 @@ async function init() {
           _old: G.data.blog,
         });
         result = result.filter(({ field_name }) => field_name !== "_old");
-        let disable = result.some(({ valid }) => !valid);
-        $btn_updateBlog.prop("disabled", disable);
+        // let disable = result.some(({ valid }) => !valid);
+        // $btn_updateBlog.prop("disabled", disable);
         return result;
       }
     }

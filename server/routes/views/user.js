@@ -127,7 +127,7 @@ router.get(
     }
     let { currentUser, relationShip, blogs } = cache.data;
     //  非文章作者，所以不傳入未公開的文章
-    delete blogs.hidden;
+    blogs = { public: blogs.public };
     let isSelf = ctx.session && ctx.session.user.id === user_id;
     await ctx.render("user", {
       ejs_template,

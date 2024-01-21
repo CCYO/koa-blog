@@ -55,29 +55,9 @@ router.post("/blogImgAlt", CHECK.login, CACHE.modify, async (ctx, next) => {
   let { blogImg_id } = ctx.request.body;
   ctx.body = await BlogImgAlt.add({ blogImg_id });
 });
-//  更新 blog 資料  0326
-router.patch(
-  "/",
-  CHECK.login,
-  CHECK.mustBeOwner,
-  CACHE.modify,
-  async (ctx, next) => {
-    let author_id = ctx.session.user.id;
-    const { owner_id, blog_id, ...blog_data } = ctx.request.body;
-    res = await Blog.modify(blog_id, blog_data, author_id);
-    ctx.body = res;
-  }
-);
 //  0406
 //  上傳圖片
 router.post("/img", CHECK.login, CACHE.modify, FIREBASE.blogImg);
-//  0406
-//  建立blog
-router.post("/", CHECK.login, CACHE.modify, async (ctx, next) => {
-  const { title } = ctx.request.body;
-  return (ctx.body = await Blog.add(title, ctx.session.user.id));
-});
-module.exports = router;
 
 //  與圖片有關 -------
 
@@ -89,3 +69,20 @@ router.patch("/initImgs", CHECK.login, CACHE.modify, async (ctx, next) => {
   let res = await BlogImgAlt.cutImgsWithBlog(blog_id, cancelImgs, user_id);
   ctx.body = res;
 });
+
+//  -------------------------------------------------------------------------
+//  建立blog
+router.post("/", CHECK.login, CACHE.modify, async (ctx, next) => {
+  const { title } = ctx.request.body;
+  ctx.body = await Blog.add(title, ctx.session.user.id);
+});
+
+//  更新 blog 資料
+router.patch("/", CHECK.login, CACHE.modify, async (ctx, next) => {
+  let author_id = ctx.session.user.id;
+  const { owner_id, blog_id, ...blog_data } = ctx.request.body;
+  res = await Blog.modify(blog_id, blog_data, author_id);
+  ctx.body = res;
+});
+
+module.exports = router;
