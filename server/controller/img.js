@@ -1,17 +1,4 @@
-//  0406
-const { SuccModel, ErrModel, ErrRes, MyErr } = require("../model");
-//  0406
 const Opts = require("../utils/seq_findOpts");
-//  0406
-const Img = require("../server/img");
-//  0406
-async function add(data) {
-  if (!Object.entries(data).length) {
-    throw new MyErr(ErrRes.IMG.CREATE.NO_DATA);
-  }
-  let img = await Img.create(data);
-  return new SuccModel({ data: img });
-}
 //  0406
 async function find(hash) {
   //  找img
@@ -22,10 +9,18 @@ async function find(hash) {
   return new SuccModel({ data });
 }
 
+//  -----------------------------------------------------------------------------------
+const Img = require("../server/img");
+const { SuccModel, ErrModel, ErrRes } = require("../model");
+
+async function add({ hash, url }) {
+  let img = await Img.create({ hash, url });
+  return new SuccModel({ data: img });
+}
+
 module.exports = {
-  //  0406
   add,
-  //  0406
+  //  ------------------------------------------------------------------------------------
   find,
   associateWithBlog,
 

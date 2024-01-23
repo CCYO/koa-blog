@@ -197,8 +197,7 @@ async function find_id_list_by_author_id(user_id) {
 
 const C_MsgReceiver = require("./msgReceiver"); //  0426
 const C_Comment = require("./comment"); //  0425
-const C_BlogImg = require("./blogImg"); //  0408
-const C_BlogImgAlt = require("./blogImgAlt"); //  0408
+
 const C_ArticleReader = require("./articleReader"); //  0406
 
 const { MyErr, ErrRes, ErrModel, SuccModel } = require("../model"); //  0404
@@ -210,11 +209,14 @@ const Opts = require("../utils/seq_findOpts"); //  0404
 const { TYPE } = require("../utils/validator/config");
 const Blog = require("../server/blog");
 const my_xxs = require("../utils/xss");
-const { ENV } = require("../config");
+const { ENV, DEFAULT } = require("../config");
 const {
   DEFAULT: { BLOG, CACHE },
 } = require("../config");
 const C_Img = require("./img");
+const C_BlogImg = require("./blogImg");
+const C_BlogImgAlt = require("./blogImgAlt");
+const { BlogImgAlt } = require("../db/mysql/model");
 /** 取得 blog 紀錄
  *
  * @param {number} blog_id blog id
@@ -344,11 +346,55 @@ async function modify({ blog_id, author_id, ...blog_data }) {
   return new SuccModel(opts);
 }
 async function addImg({ url, hash, name, blog_id }) {
+  let img;
   if (!url) {
-    let imgModel = await C_Img.add({ hash, url });
+    let resModel = await C_Img.add({ hash, url });
+    img = resModel.data;
+  }
+  //  blogImg 處理
+  let {
+    data: { id: blogImg_id },
+  } = await C_BlogImg.add({ blog_id, name, img_id: img.id });
+  //  建立 blogImgAlt
+  await C_BlogImgAlt.add({ blogImg_id });
+  // data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
+  let { data } = await C_BlogImgAlt.findWholeInfo(data.id);
+  let opts = { data };
+  if (!ENV.isNoCache) {
+    opts.cache = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
+  }
+  ctx.body = new SuccModel(opts);
+}
+async function removeImgList({ author_id, blog_id, cancelImgs }) {
+  //  cancelImgs [ { blogImg_id, blogImgAlt_list: [alt_id, ...] }, ...]
+  try {
+    //  確認blog_id是否真為author_id所有
+    await findWholeInfo({ author_id, blog_id });
+    await Promise.all(cancelImgs.map(go));
+    let opts = undefined;
+    if (!ENV.isNoCache) {
+      opts = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
+    }
+    return new SuccModel(opts);
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.BLOG.REMOVE.ERR_REMOVE_BLOG_IMG, error });
+  }
+
+  async function go({ blogImg_id, blogImgAlt_list }) {
+    //  找到blog內，指定的blogImgAlt有幾筆
+    let count = await C_BlogImg.countBlogImgAlt(blogImg_id);
+    if (count === blogImgAlt_list.length) {
+      ////  代表要刪除整筆 blogImg
+      await C_BlogImg.removeList(blogImg_id);
+    } else {
+      ////  代表要刪除個別 blogImgAlt
+      await C_BlogImgAlt.removeList(blogImgAlt_list);
+    }
+    return true;
   }
 }
 module.exports = {
+  removeImgList,
   addImg,
   find,
   add,

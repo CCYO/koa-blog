@@ -49,23 +49,6 @@ router.delete(
     ctx.body = await Blog.removeList(blogList);
   }
 );
-//  0409
-//  為Blog既存圖片建立alt數據
-router.post("/blogImgAlt", CHECK.login, CACHE.modify, async (ctx, next) => {
-  let { blogImg_id } = ctx.request.body;
-  ctx.body = await BlogImgAlt.add({ blogImg_id });
-});
-
-//  與圖片有關 -------
-
-//  初始化blog的圖片列表數據（通常用在上一次Blog有上傳圖片，但未儲存文章時，會導致沒有建立edito需要的<x-img>，因此需要初始化將其刪除）
-router.patch("/initImgs", CHECK.login, CACHE.modify, async (ctx, next) => {
-  const { id: user_id } = ctx.session.user;
-  const { id: blog_id, cancelImgs } = ctx.request.body;
-  //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
-  let res = await BlogImgAlt.cutImgsWithBlog(blog_id, cancelImgs, user_id);
-  ctx.body = res;
-});
 
 //  -------------------------------------------------------------------------
 const Blog = require("../../controller/blog");
@@ -81,11 +64,25 @@ router.post(
   CHECK.login,
   CACHE.modify,
   FIREBASE.blogImg,
-  VALIDATE.BLOG,
   async (ctx, next) => {
     await Blog.addImg(ctx.request.body);
   }
 );
+//  為Blog既存圖片建立alt數據
+router.post("/blogImgAlt", CHECK.login, CACHE.modify, async (ctx, next) => {
+  let { blogImg_id } = ctx.request.body;
+  ctx.body = await BlogImgAlt.add({ blogImg_id });
+});
+//  初始化blog的圖片列表數據（通常用在上一次Blog有上傳圖片，但未儲存文章時，會導致沒有建立edito需要的<x-img>，因此需要初始化將其刪除）
+router.patch("/initImgs", CHECK.login, CACHE.modify, async (ctx, next) => {
+  const { id: author_id } = ctx.session.user;
+  const { id: blog_id, cancelImgs } = ctx.request.body;
+  //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
+  // let res = await BlogImgAlt.cutImgsWithBlog(blog_id, cancelImgs, user_id);
+  let res = await Blog.removeImgList({ author_id, blog_id, cancelImgs });
+  ctx.body = res;
+});
+
 //  更新 blog 資料
 router.patch(
   "/",

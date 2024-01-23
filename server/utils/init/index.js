@@ -25,7 +25,12 @@ function initAlt(data) {
       if (map.has("alt") && !data.alt) {
         data.alt = item.BlogImg.name;
       }
+
       delete data.BlogImg;
+    }
+    if (map.has("Blog")) {
+      data.blog_id = item.Blog.id;
+      delete data.Blog;
     }
     return data;
   }

@@ -45,9 +45,9 @@ async function restoringList(id_list) {
   return new SuccModel();
 }
 async function removeList(id_list) {
-  let row = await IdolFans.deleteList(Opts.FOLLOW.REMOVE.list(id_list));
+  let row = await IdolFans.deleteList(Opts.REMOVE.list(id_list));
   if (id_list.length !== row) {
-    throw new MyErr(ErrRes.IDOL_FANS.DELETE.ROW_ERR);
+    throw new MyErr(ErrRes.IDOL_FANS.REMOVE.ROW_ERR);
   }
   return new SuccModel();
 }

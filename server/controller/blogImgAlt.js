@@ -1,6 +1,8 @@
-const Opts = require("../utils/seq_findOpts"); //  0408
-const { ErrModel, SuccModel, ErrRes, MyErr } = require("../model"); //  0408
-const BlogImgAlt = require("../server/blogImgAlt"); //  0406
+const Opts = require("../utils/seq_findOpts");
+const { ErrModel, SuccModel, ErrRes, MyErr } = require("../model");
+const BlogImgAlt = require("../server/blogImgAlt");
+const { ENV, DEFAULT } = require("../config");
+//  ------------------------------------------------------------------------------------------------
 
 //  0411
 async function modify({ alt_id, blog_id, alt }) {
@@ -9,33 +11,6 @@ async function modify({ alt_id, blog_id, alt }) {
   return new SuccModel({ cache });
 }
 
-//  0406
-async function add(data) {
-  if (!Object.entries(data).length) {
-    throw new MyErr(ErrRes.BLOG_IMG_ALT.CREATE.NO_DATA);
-  }
-  let blogImgAlt = await BlogImgAlt.create(data);
-  return await findWholeInfo(blogImgAlt.id);
-}
-//  0410
-async function findWholeInfo(alt_id) {
-  if (!alt_id) {
-    throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NO_DATA);
-  }
-  let res = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.find(alt_id));
-  if (!res) {
-    throw new ErrModel(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST);
-  }
-  return new SuccModel({ data: res, cache: { [PAGE.BLOG]: [res.blog_id] } });
-}
-//  0408
-async function removeList(id_list) {
-  let raw = await BlogImgAlt.deleteList(Opts.FOLLOW.removeList(id_list));
-  if (id_list.length !== raw) {
-    throw new MyErr(ErrRes.BLOG_IMG_ALT.DELETE.ROW);
-  }
-  return new SuccModel({ data: raw });
-}
 //  0408
 async function count(blogImg_id) {
   let data = await BlogImgAlt.count(Opts.BLOG_IMG_ALT.count(blogImg_id));
@@ -44,21 +19,45 @@ async function count(blogImg_id) {
   }
   return new SuccModel({ data });
 }
+
+//  -------------------------------------------------------------------------------------------------
+async function add(data) {
+  let blogImgAlt = await BlogImgAlt.create(data);
+  // data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
+  let resModel = await _findWholeInfo(blogImgAlt.id);
+  let { blog_id, ...data } = resModel.data;
+  let opts = { data };
+  if (!ENV.isNoCache) {
+    opts.cache = {
+      [DEFAULT.CACHE.TYPE.PAGE.BLOG]: [blog_id],
+    };
+  }
+  return new SuccModel(opts);
+}
+async function removeList(id_list) {
+  let row = await BlogImgAlt.destoryList(Opts.REMOVE.list(id_list));
+  if (id_list.length !== row) {
+    throw new MyErr(ErrRes.BLOG_IMG_ALT.REMOVE.ROW);
+  }
+  return new SuccModel({ data: row });
+}
 module.exports = {
-  //  0411
-  modify,
-  //  0409
-  findWholeInfo,
-  //  0408
   removeList,
+  add,
+  //  ----------------------------------------------------------------------.
+  modify,
   //  0408
   count,
-  //  0406
-  add,
   cancelWithBlog, //  0326
 };
-
-//
+async function _findWholeInfo(alt_id) {
+  let res = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.FIND.wholeInfo(alt_id));
+  if (!res) {
+    throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST);
+  }
+  return new SuccModel({ data: res });
+}
+//  --------------------------------------------------------------------------------------------------------
 async function cancelWithBlog(blogImg_id, blogImgAlt_list) {
   let count = await BlogImgAlt.count(Opts.BLOGIMGALT.count(blogImg_id));
   if (!count) {
@@ -82,6 +81,7 @@ const {
       TYPE: { PAGE },
     },
   },
+  ENV,
 } = require("../config");
 const { BLOG_IMG_ALT } = require("../utils/seq_findOpts");
 

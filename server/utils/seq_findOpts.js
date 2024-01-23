@@ -1,4 +1,4 @@
-const { BLOG, FOLLOW, USER } = require("./seq_options");
+const { BLOG, FOLLOW, USER, BLOG_IMG_ALT, REMOVE } = require("./seq_options");
 
 //  0411
 const { Op } = require("sequelize");
@@ -13,7 +13,10 @@ const {
 } = require("../db/mysql/model");
 
 module.exports = {
-  //  0404
+  REMOVE,
+  BLOG_IMG_ALT: {
+    ...BLOG_IMG_ALT,
+  },
   BLOG: {
     //  0427
     findInfoForModifyTitle: (blog_id) => ({
@@ -517,28 +520,6 @@ module.exports = {
         "createdAt",
       ],
       where: { ...whereOps },
-    }),
-  },
-  //  0408
-  BLOG_IMG_ALT: {
-    //  0409
-    find: (alt_id) => ({
-      where: { id: alt_id },
-      attributes: [["id", "alt_id"], "alt"],
-      include: {
-        model: BlogImg,
-        attributes: [["id", "blogImg_id"], "blog_id", "name"],
-        required: true,
-        include: {
-          model: Img,
-          attribute: [["id", "img_id"], "url", "hash"],
-          required: true,
-        },
-      },
-    }),
-    //  0408
-    count: (blogImg_id) => ({
-      where: { blogImg_id },
     }),
   },
 
