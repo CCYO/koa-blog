@@ -38,20 +38,6 @@ router.get("/setting", CHECK.login, CHECK.mustBeOwner, async (ctx, next) => {
   });
 });
 //  ------------------------------------------------------------------------------------
-//  登入頁
-router.get("/login", async (ctx, next) => {
-  //  若已登入，跳轉到個人頁面
-  if (ctx.session.user) {
-    return ctx.redirect("/self");
-  }
-  await ctx.render("register&login", {
-    title: "LOGIN",
-    //  導覽列數據
-    logging: false,
-    //  導覽列數據 & 卡片Tab 數據
-    active: "login",
-  });
-});
 //  註冊頁
 router.get("/register", async (ctx, next) => {
   //  若已登入，跳轉到個人頁面
@@ -64,6 +50,20 @@ router.get("/register", async (ctx, next) => {
     logging: false,
     //  導覽列數據 & 卡片Tab 數據
     active: "register",
+  });
+});
+//  登入頁
+router.get("/login", async (ctx, next) => {
+  //  若已登入，跳轉到個人頁面
+  if (ctx.session.user) {
+    return ctx.redirect("/self");
+  }
+  await ctx.render("register&login", {
+    title: "LOGIN",
+    //  導覽列數據
+    logging: false,
+    //  導覽列數據 & 卡片Tab 數據
+    active: "login",
   });
 });
 //  個人頁

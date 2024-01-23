@@ -1,3 +1,4 @@
+const {} = require("sequelize");
 const { Img, BlogImg, BlogImgAlt } = require("../../db/mysql/model");
 
 const FIND = {
@@ -40,6 +41,33 @@ const FIND = {
       },
     ],
     order: [["replys", "id"]],
+  }),
+  //  尋找作者粉絲以及blog_id的軟刪除reader
+  fansAndDestoryedReaderList: (id) => ({
+    where: { id },
+    include: [
+      {
+        association: "author",
+        attributes: ["id"],
+        include: {
+          association: "fans",
+          attributes: ["id"],
+        },
+      },
+      {
+        association: "readers",
+        attributes: ["id", "deletedAt"],
+        paranoid: false, //  無視軟刪除
+      },
+    ],
+  }),
+  readerList: (id) => ({
+    where: { id },
+    attributes: [id],
+    include: {
+      association: "readers",
+      attributes: ["id"],
+    },
   }),
 };
 

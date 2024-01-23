@@ -1,3 +1,4 @@
+const { CACHE, CHECK, FIREBASE, VALIDATE } = require("../../middleware/api");
 /**
  * @description API editor 相關
  */
@@ -5,8 +6,7 @@ const {
   DEFAULT: { BLOG },
 } = require("../../config");
 const BlogImgAlt = require("../../controller/blogImgAlt"); //  0409
-const Blog = require("../../controller/blog"); //  0406
-const { CACHE, CHECK, FIREBASE } = require("../../middleware/api"); //  0406
+
 const router = require("koa-router")(); //  0406
 router.prefix("/api/blog");
 
@@ -55,9 +55,6 @@ router.post("/blogImgAlt", CHECK.login, CACHE.modify, async (ctx, next) => {
   let { blogImg_id } = ctx.request.body;
   ctx.body = await BlogImgAlt.add({ blogImg_id });
 });
-//  0406
-//  上傳圖片
-router.post("/img", CHECK.login, CACHE.modify, FIREBASE.blogImg);
 
 //  與圖片有關 -------
 
@@ -71,18 +68,34 @@ router.patch("/initImgs", CHECK.login, CACHE.modify, async (ctx, next) => {
 });
 
 //  -------------------------------------------------------------------------
+const Blog = require("../../controller/blog");
+
 //  建立blog
 router.post("/", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { title } = ctx.request.body;
   ctx.body = await Blog.add(title, ctx.session.user.id);
 });
-
+//  上傳圖片
+router.post(
+  "/img",
+  CHECK.login,
+  CACHE.modify,
+  FIREBASE.blogImg,
+  VALIDATE.BLOG,
+  async (ctx, next) => {
+    await Blog.addImg(ctx.request.body);
+  }
+);
 //  更新 blog 資料
-router.patch("/", CHECK.login, CACHE.modify, async (ctx, next) => {
-  let author_id = ctx.session.user.id;
-  const { owner_id, blog_id, ...blog_data } = ctx.request.body;
-  res = await Blog.modify(blog_id, blog_data, author_id);
-  ctx.body = res;
-});
-
+router.patch(
+  "/",
+  CHECK.login,
+  CACHE.modify,
+  VALIDATE.BLOG,
+  async (ctx, next) => {
+    let author_id = ctx.session.user.id;
+    let resModel = await Blog.modify({ author_id, ...ctx.request.body });
+    ctx.body = resModel;
+  }
+);
 module.exports = router;

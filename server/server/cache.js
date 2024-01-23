@@ -87,7 +87,7 @@ function getTYPE(type) {
         return false;
       }
       console.log(`@ 完成刪除 cache/${type} 內的指定 id_list => , ${id_list}`);
-      return await cache.del(list);
+      return await cache.del(id_list);
     },
   };
 }

@@ -68,6 +68,9 @@ async function removeList(id_list) {
   return new SuccModel();
 }
 module.exports = {
+  removeList,
+  restoringList,
+  //  -------------------------------------
   //  0514
   findReadersForModifiedUserData,
   //  0423
@@ -75,13 +78,7 @@ module.exports = {
   //  0406
   addList,
   //  0406
-
-  //  0406
-  // restoreList,
   count,
-  //  -------------------------------------
-  restoringList,
-  removeList,
 };
 
 async function count(blog_id) {

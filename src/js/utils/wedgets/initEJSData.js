@@ -118,7 +118,7 @@ function initBlog(blog) {
     //  複製一份htmlStr
     let res;
     //  存放 reg 匹配後 的 img src 數據
-    while ((res = INIT_PAGE.EJS_DATA.REG.BLOG.X_IMG.exec(copy))) {
+    while ((res = REG.BLOG.X_IMG.exec(copy))) {
       let { alt_id, style } = res.groups;
       //  找出對應的img數據
       let tt = [...blog.map_imgs];

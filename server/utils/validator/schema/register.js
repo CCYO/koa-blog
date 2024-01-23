@@ -7,16 +7,16 @@ module.exports = {
   properties: {
     email: {
       type: "string",
-      $ref: "defs.json#/definitions/email",
+      $ref: "user.json#/definitions/email",
       isEmailExist: true,
     },
     password: {
       type: "string",
-      $ref: "defs.json#/definitions/password",
+      $ref: "user.json#/definitions/password",
     },
     password_again: {
       type: "string",
-      $ref: "defs.json#/definitions/password_again",
+      $ref: "user.json#/definitions/password_again",
     },
   },
   required: ["email", "password", "password_again"],

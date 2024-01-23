@@ -6,11 +6,11 @@ module.exports = {
   properties: {
     email: {
       type: "string",
-      $ref: "defs.json#/definitions/email",
+      $ref: "user.json#/definitions/email",
     },
     password: {
       type: "string",
-      $ref: "defs.json#/definitions/password",
+      $ref: "user.json#/definitions/password",
     },
   },
   required: ["email", "password"],

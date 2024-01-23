@@ -60,6 +60,9 @@ function initBlog(data) {
     if (map.has("author") && blog.author) {
       blog.author = initUser(blog.author);
     }
+    if (map.has("readers") && blog.readers) {
+      blog.readers = initUser(blog.readers);
+    }
     if (map.has("BlogImgs")) {
       blog.imgs = _initBlogImg(data.BlogImgs);
       delete blog.BlogImgs;
@@ -152,6 +155,9 @@ function initUser(data) {
     //  設置默認的avatar
     if (map.has("avatar") && !map.get("avatar")) {
       data.avatar = SERVER_CONFIG.DEFAULT.USER.AVATAR;
+    }
+    if (map.has("fans")) {
+      data.fans = initUser(fans);
     }
     // if (map.has('comments') && data.comments.length) {
     //     let comments = data.comments

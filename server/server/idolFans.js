@@ -18,15 +18,6 @@ async function updateList(datas, updateOnDuplicate) {
     throw new MyErr({ ...ErrRes.IDOL_FANS.UPDATE.ERR, err });
   }
 }
-//  0406
-async function deleteList(opts) {
-  try {
-    //  RV row
-    return await IdolFans.destroy(opts);
-  } catch (error) {
-    throw new MyErr({ ...ErrRes.IDOL_FANS.DELETE.ERR, error });
-  }
-}
 
 //  -------------------------------
 async function restoring(id) {
@@ -38,11 +29,18 @@ async function restoring(id) {
     throw new MyErr({ ...ErrRes.IDOL_FANS.RESTORE.ERR, error });
   }
 }
+async function deleteList(opts) {
+  try {
+    //  RV row
+    return await IdolFans.destroy(opts);
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.IDOL_FANS.DELETE.ERR, error });
+  }
+}
 module.exports = {
+  deleteList,
+  restoring,
+  //    -----------------------
   //  0423
   updateList,
-  //  0406
-  deleteList,
-  //    -----------------------
-  restoring,
 };

@@ -40,12 +40,10 @@ async function addList(datas) {
 }
 
 //  --------------------------------------------------------------------------------------
-
 async function restoringList(id_list) {
   await Promise.all(id_list.map((id) => IdolFans.restoring(id)));
   return new SuccModel();
 }
-
 async function removeList(id_list) {
   let row = await IdolFans.deleteList(Opts.FOLLOW.REMOVE.list(id_list));
   if (id_list.length !== row) {
@@ -55,9 +53,8 @@ async function removeList(id_list) {
 }
 
 module.exports = {
-  //  0423
-  confirmList,
-  //  ---------------------------------------------------------------------------
-  removeList,
   restoringList,
+  removeList,
+  //  ---------------------------------------------------------------------------
+  confirmList,
 };

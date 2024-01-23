@@ -1,12 +1,6 @@
 /**
  * @description middleware of upload to GCS by Formidable
  */
-//  0406
-const { SuccModel } = require("../../model");
-
-//  0406
-const C_BlogImgAlt = require("../../controller/blogImgAlt");
-//  0406
 const {
   DEFAULT: {
     GCS_ref,
@@ -21,7 +15,25 @@ const { parse } = require("../../utils/gcs");
 const C_BlogImg = require("../../controller/blogImg");
 //  0406
 const C_Img = require("../../controller/img");
-//  0406
+
+async function user(ctx, next) {
+  let data = await parse.user(ctx);
+  if (data.hasOwnProperty("age")) {
+    data.age = Number.parseInt(data.age);
+  }
+  // let $$me = ctx.session.user;
+  // let res = { ...data, $$me };
+  // ctx.request.body = res;
+  ctx.request.body = { ...ctx.request.body, ...data };
+
+  await next();
+  return;
+}
+
+//  -----------------------------------------------------------------------------------------
+
+const C_BlogImgAlt = require("../../controller/blogImgAlt");
+const { SuccModel } = require("../../model");
 /**
  * 上傳圖檔至GCS
  * @param { object } ctx
@@ -39,9 +51,25 @@ async function blogImg(ctx) {
     let res = await parse.blogImg(ctx);
     //  取得 url
     url = res[GCS_ref.BLOG];
+
+    //  db img處理
+
     //  創建 img
     imgModel = await C_Img.add({ hash, url });
   }
+
+  ctx.request.body = {
+    url,
+    hash: ctx.query.hash,
+    name: ctx.query.name,
+    blog_id: ctx.query.blog_id * 1,
+    // img_id: imgModel.data.id,
+  };
+
+  //  blogImg 處理
+
+  //  blogImgAlt 處理
+
   //  建立 blogImg
   const BlogImgData = {
     blog_id: ctx.query.blog_id * 1,
@@ -57,20 +85,8 @@ async function blogImg(ctx) {
   ctx.body = new SuccModel({ data, cache });
 }
 
-async function user(ctx, next) {
-  let data = await parse.user(ctx);
-  if (data.hasOwnProperty("age")) {
-    data.age = Number.parseInt(data.age);
-  }
-  // let $$me = ctx.session.user;
-  // let res = { ...data, $$me };
-  // ctx.request.body = res;
-  ctx.request.body = { ...ctx.request.body, ...data };
-
-  await next();
-  return;
-}
 module.exports = {
-  user,
   blogImg,
+  //  ------------------------------------------------------------------------------------------
+  user,
 };

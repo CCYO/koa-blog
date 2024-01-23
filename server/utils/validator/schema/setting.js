@@ -14,30 +14,30 @@ module.exports = {
     },
     email: {
       // diff: { $data: "1/$$me/email" },
-      $ref: "defs.json#/definitions/email",
+      $ref: "user.json#/definitions/email",
     },
     age: {
       // diff: { $data: "1/$$me/age" },
-      $ref: "defs.json#/definitions/age",
+      $ref: "user.json#/definitions/age",
     },
     nickname: {
       // diff: { $data: "1/$$me/nickname" },
-      $ref: "defs.json#/definitions/nickname",
+      $ref: "user.json#/definitions/nickname",
     },
     avatar: {
-      $ref: "defs.json#/definitions/avatar",
+      $ref: "user.json#/definitions/avatar",
     },
     avatar_hash: {
-      $ref: "defs.json#/definitions/avatar_hash",
+      $ref: "user.json#/definitions/avatar_hash",
     },
     origin_password: {
-      $ref: "defs.json#/definitions/password",
+      $ref: "user.json#/definitions/password",
     },
     password: {
-      $ref: "defs.json#/definitions/password",
+      $ref: "user.json#/definitions/password",
     },
     password_again: {
-      $ref: "defs.json#/definitions/password_again",
+      $ref: "user.json#/definitions/password_again",
     },
   },
   _notOrigin: ["email", "age", "nickname", "avatar", "avatar_hash"],

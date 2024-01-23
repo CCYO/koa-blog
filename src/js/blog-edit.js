@@ -481,7 +481,6 @@ async function init() {
           throw new Error(JSON.stringify(result));
         }
         payload.blog_id = G.data.blog.id;
-        payload.owner_id = G.data.blog.author.id;
         await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, payload);
         for (let [key, value] of $$payload.entries()) {
           G.data.blog[key] = value;

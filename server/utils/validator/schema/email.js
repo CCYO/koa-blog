@@ -6,7 +6,7 @@ module.exports = {
   properties: {
     email: {
       type: "string",
-      $ref: "defs.json#/definitions/email",
+      $ref: "user.json#/definitions/email",
     },
   },
   required: ["email"],

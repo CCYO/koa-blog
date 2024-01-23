@@ -7,15 +7,10 @@ const AjvErrors = require("ajv-errors");
 
 const VALIDATE_CONFIG = require("./config");
 const _notOrigin = require("./keyword/_notOrigin");
-const _origin_password = require("./keyword/_origin_password");
-const _isEmailExist = require("./keyword/_isEmailExist");
 const _noSpace = require("./keyword/_noSpace");
 
-const schema_user = require("./schema/user");
-const schema_setting = require("./schema/setting");
-const schema_register = require("./schema/register");
-const schema_login = require("./schema/login");
-const schema_email = require("./schema/email");
+const schema_blog = require("./schema/blog");
+const schema_update = require("./schema/blog_update");
 
 const handle_error = require("./handle_error");
 
@@ -29,18 +24,9 @@ addFormats(ajv);
 AjvErrors(ajv);
 //  可使用 errorMessage 自定義錯誤提示
 
-let schema_list = [
-  schema_user,
-  schema_register,
-  schema_login,
-  schema_email,
-  schema_setting,
-];
+let schema_list = [schema_blog, schema_update];
 ajv.addSchema(schema_list);
-
 ajv.addKeyword(_notOrigin);
-ajv.addKeyword(_origin_password);
-ajv.addKeyword(_isEmailExist);
 ajv.addKeyword(_noSpace);
 
 module.exports = (type) => {

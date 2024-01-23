@@ -136,7 +136,6 @@ async function isEmailExist(email) {
   }
   return new SuccModel();
 }
-
 /** 註冊
  * @param {string} email - user 的信箱
  * @param {string} password - user 未加密的密碼
@@ -155,7 +154,6 @@ async function register(email, password) {
   const data = await User.create(Opts.USER.CREATE.one({ email, password }));
   return new SuccModel({ data });
 }
-
 /** 登入 user
  * @param {string} email user 的信箱
  * @param {string} password user 的未加密密碼
@@ -173,7 +171,6 @@ async function login(email, password) {
   }
   return new SuccModel({ data });
 }
-
 async function findInfoForUserPage(userId) {
   let resModel = await _findRelationship(userId);
   let { currentUser, fansList, idolList } = resModel.data;
@@ -181,7 +178,6 @@ async function findInfoForUserPage(userId) {
   let data = { currentUser, relationShip: { fansList, idolList }, blogs };
   return new SuccModel({ data });
 }
-
 async function find(user_id) {
   const data = await User.read(Opts.USER.FIND.one(user_id));
   if (!data) {
@@ -189,12 +185,10 @@ async function find(user_id) {
   }
   return new SuccModel({ data });
 }
-
 async function findFansList(idol_id) {
   let data = await User.readList(Opts.USER.FIND.fansList(idol_id));
   return new SuccModel({ data });
 }
-
 /** 追蹤
  * @param {number} fans_id
  * @param {number} idol_id
@@ -225,8 +219,6 @@ async function follow({ fans_id, idol_id }) {
   }
   return new SuccModel({ cache });
 }
-
-//  0406
 /** 取消追蹤
  * @param {number} fans_id
  * @param {number} idol_id
@@ -251,7 +243,6 @@ async function cancelFollow({ fans_id, idol_id }) {
   }
   return new SuccModel(options);
 }
-
 module.exports = {
   //  0514
   modify,
@@ -271,7 +262,6 @@ module.exports = {
   register,
   isEmailExist,
 };
-
 async function _findInfoForCancelFollow({ fans_id, idol_id }) {
   let { errno } = await find(idol_id);
   if (errno) {
@@ -288,7 +278,6 @@ async function _findInfoForCancelFollow({ fans_id, idol_id }) {
   let data = { idolFans, articleReaders };
   return new SuccModel({ data });
 }
-
 async function _findInfoForFollowIdol({ fans_id, idol_id }) {
   let { errno } = await find(idol_id);
   if (errno) {
@@ -308,12 +297,10 @@ async function _findInfoForFollowIdol({ fans_id, idol_id }) {
   let data = { idolFans, articleReaders };
   return new ErrModel({ ...ErrRes.USER.READ.NOT_FIRST_FOLLOW, data });
 }
-
 async function _findIdolList(fans_id) {
   let data = await User.readList(Opts.USER.FIND.idolList(fans_id));
   return new SuccModel({ data });
 }
-
 async function _findRelationship(userId) {
   let resModel = await find(userId);
   if (resModel.errno) {

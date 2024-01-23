@@ -1,8 +1,8 @@
 /**
  * @description middleware validate
  */
-const { TYPE } = require("../../utils/validator/config");
-const validator = require("../../utils/validator");
+const { TYPE } = require("../../../utils/validator/config");
+const validator = require("../../../utils/validator");
 
 /** Middleware - 校驗 USER 資料
  * @param {*} ctx

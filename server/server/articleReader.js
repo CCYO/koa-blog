@@ -56,23 +56,14 @@ async function deleteList(opts) {
   }
 }
 module.exports = {
-  //  0514
+  deleteList,
+  restoring,
+  //  ----------------------------------------------------
   readList,
-  //  0423
   updateList,
-  //  0406
-  // createList,
-  //  0406
-
-  //  0406
-  // restore,
-
   count,
   hiddenBlog,
   readFollowers,
-  //  ----------------------------------------------------
-  deleteList,
-  restoring,
 };
 
 async function count(opts) {

@@ -1,18 +1,3 @@
-const C_MsgReceiver = require("./msgReceiver"); //  0426
-const C_Comment = require("./comment"); //  0425
-const C_BlogImg = require("./blogImg"); //  0408
-const C_BlogImgAlt = require("./blogImgAlt"); //  0408
-const C_ArticleReader = require("./articleReader"); //  0406
-const {
-  DEFAULT: { BLOG, CACHE },
-} = require("../config"); //  0406
-const my_xxs = require("../utils/xss"); //  0406
-const { MyErr, ErrRes, ErrModel, SuccModel } = require("../model"); //  0404
-const Init = require("../utils/init"); //  0404
-const Opts = require("../utils/seq_findOpts"); //  0404
-const Blog = require("../server/blog"); //  0404
-//  -----------------------------------------------------------------------------------------------
-const { ENV } = require("../config");
 //  0411
 async function findInfoForPageOfSquare(author_id) {
   let list = await Blog.readList(Opts.BLOG.findInfoForPageOfSquare());
@@ -192,44 +177,6 @@ async function private(blog_id, forDelete = false) {
   };
   return new SuccModel({ data });
 }
-//  0426
-async function findInfoForModifyTitle(blog_id) {
-  let blog = await Blog.read(Opts.BLOG.findInfoForModifyTitle(blog_id));
-  if (!blog) {
-    throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST);
-  }
-  // let { author, readers, replys } = blog
-  let { author, readers, comment } = blog;
-  let author_id = author.id;
-  let fansList = new Set(author.fansList.map(({ id }) => id));
-  let followers = [...fansList];
-  let articleReaders = [];
-  //  過濾出新粉絲
-  for (let { id: reader_id } of readers) {
-    fansList.has(reader_id) && fansList.delete(reader_id);
-  }
-  //  整理新粉絲要建立的 articleReaders 的數據
-  for (let reader_id of [...fansList]) {
-    articleReaders.push({ reader_id, article_id: blog_id });
-  }
-  if (articleReaders.length) {
-    //  建立新粉絲的 articleReaders 的數據
-    await C_ArticleReader.addList(articleReaders);
-  }
-  //  整理出 receivers
-  // for (let reply of replys) {
-  //     for (let { id: receiver_id } of reply.receivers) {
-  //         followers.push(receiver_id)
-  //     }
-  // }
-  for (let { commenter } of comment.list) {
-    for (let { id } of commenter) {
-      followers.push(id);
-    }
-  }
-  let data = { author_id, followers };
-  return new SuccModel({ data });
-}
 
 //  0404
 async function find(blog_id) {
@@ -242,7 +189,51 @@ async function find(blog_id) {
   }
   return new SuccModel({ data });
 }
-//  0404
+
+async function find_id_list_by_author_id(user_id) {
+  let data = await Blog.readList(Opts.BLOG.find_id_List_by_author(user_id));
+  return new SuccModel({ data });
+}
+
+const C_MsgReceiver = require("./msgReceiver"); //  0426
+const C_Comment = require("./comment"); //  0425
+const C_BlogImg = require("./blogImg"); //  0408
+const C_BlogImgAlt = require("./blogImgAlt"); //  0408
+const C_ArticleReader = require("./articleReader"); //  0406
+
+const { MyErr, ErrRes, ErrModel, SuccModel } = require("../model"); //  0404
+const Init = require("../utils/init"); //  0404
+
+//  --------------------------------------------------------------------------------
+
+const Opts = require("../utils/seq_findOpts"); //  0404
+const { TYPE } = require("../utils/validator/config");
+const Blog = require("../server/blog");
+const my_xxs = require("../utils/xss");
+const { ENV } = require("../config");
+const {
+  DEFAULT: { BLOG, CACHE },
+} = require("../config");
+const C_Img = require("./img");
+/** 取得 blog 紀錄
+ *
+ * @param {number} blog_id blog id
+ * @returns
+ */
+async function findWholeInfo({ author_id, blog_id }) {
+  let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
+  if (!data) {
+    return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST);
+  }
+  if (author_id && data.author.id !== author_id) {
+    throw new MyErr(ErrRes.BLOG.READ.NOT_AUTHOR);
+  }
+  let opts = { data };
+  if (!ENV.isNoCache) {
+    opts.cache = { [CACHE.TYPE.PAGE.BLOG]: data };
+  }
+  return new SuccModel(opts);
+}
 /** 取得 blogList
  * @param {number} user_id user id
  * @param {boolean} is_author 是否作者本人
@@ -266,64 +257,14 @@ async function findListForUserPage(
     private: { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 },
   }
 ) {
-  // let blogs = await Blog.readList(Opts.BLOG.findListForUserPage(userId))
-  let { data: public } = await findPublicListForUserPage(userId, opts.public);
-  let { data: private } = await findPrivateListForUserPage(
+  let { data: public } = await _findPublicListForUserPage(userId, opts.public);
+  let { data: private } = await _findPrivateListForUserPage(
     userId,
     opts.private
   );
-  // let data = Init.browser.blog.pageTable(blogs, options)
   let data = { public, private };
   return new SuccModel({ data });
 }
-async function findPublicListForUserPage(
-  userId,
-  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
-) {
-  let data = await Blog.readListAndCountAll(
-    Opts.BLOG.findPublicBlogForUserPage(userId, opts)
-  );
-  // let data = Init.browser.blog.pageTable(blogs, options)
-  return new SuccModel({ data });
-}
-async function findPrivateListForUserPage(
-  userId,
-  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
-) {
-  let data = await Blog.readListAndCountAll(
-    Opts.BLOG.findPrivateBlogForUserPage(userId, opts)
-  );
-  // let data = Init.browser.blog.pageTable(blogs, options)
-  return new SuccModel({ data });
-}
-
-async function find_id_list_by_author_id(user_id) {
-  let data = await Blog.readList(Opts.BLOG.find_id_List_by_author(user_id));
-  return new SuccModel({ data });
-}
-
-//  --------------------------------------------------------------------------------
-/** 取得 blog 紀錄
- *
- * @param {number} blog_id blog id
- * @returns
- */
-async function findWholeInfo({ author_id, blog_id }) {
-  let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
-  if (!data) {
-    return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST);
-  }
-  if (author_id && data.author.id !== author_id) {
-    return new ErrModel(ErrRes.BLOG.READ.NOT_AUTHOR);
-  }
-  let opts = { data };
-  if (!ENV.isNoCache) {
-    opts.cache = { [CACHE.TYPE.PAGE.BLOG]: data };
-  }
-  return new SuccModel(opts);
-}
-
-//  0406
 /** 建立 blog
  * @param { string } title 標題
  * @param { number } userId 使用者ID
@@ -340,28 +281,22 @@ async function add(title, author_id) {
   }
   return new SuccModel(opts);
 }
-
-//  0406
 /** 更新 blog
  *
  * @param {number} blog_id blog id
  * @param {object} blog_data 要更新的資料
  * @returns {object} SuccModel || ErrModel
  */
-async function modify(blog_id, blog_data, author_id) {
+async function modify({ blog_id, author_id, ...blog_data }) {
   // let { title, cancelImgs = [], html, show } = blog_data
   let map = new Map(Object.entries(blog_data));
-  let {
-    NEWS,
-    PAGE: { USER, BLOG },
-    API: { COMMENT },
-  } = CACHE.TYPE;
-  let cache = {
-    [NEWS]: [],
-    [USER]: [],
-    [BLOG]: [blog_id],
-    [COMMENT]: (map.has("show") && [blog_id]) || [],
-  };
+  let cache = undefined;
+  if (!ENV.isNoCache) {
+    cache = {
+      [CACHE.TYPE.PAGE.USER]: [author_id],
+      [CACHE.TYPE.PAGE.BLOG]: [blog_id],
+    };
+  }
   //  存放 blog 要更新的數據
   let newData = {};
   if (map.has("html")) {
@@ -372,72 +307,124 @@ async function modify(blog_id, blog_data, author_id) {
   if (map.has("title")) {
     //  存放 blog 要更新的數據
     newData.title = my_xxs(blog_data.title);
-    //  處理緩存
-    //  若此次更新包含更改文章的公開狀態，可略過，因為下面處理show時會有同樣的操作
-    if (!map.has("show")) {
-      let { errno, data } = await findInfoForModifyTitle(blog_id);
-      if (!errno) {
-        let { author_id, followers } = data;
-        cache[USER] = [author_id];
-        cache[NEWS] = cache[NEWS].concat(followers);
-      }
-    }
   }
   //  更新 文章公開狀態
   if (map.has("show")) {
-    //  存放此次 blog 要更新的數據
-    let show = (newData.show = blog_data.show);
-    let resModel;
-    // 處理緩存
-    if (show) {
-      //  存放此次 blog 要更新的數據
-      newData.showAt = new Date();
-      resModel = await public(blog_id);
-      // 隱藏blog
-    } else if (!show) {
-      resModel = await private(blog_id);
+    newData.show = map.get(show);
+    if (newData.show) {
+      let { data: list } = await _addReaders(blog_id);
+      if (cache && list.length) {
+        cache[CACHE.TYPE.NEWS] = list;
+      }
+    } else {
+      await _destoryReaders(blog_id);
     }
-    let { author_id, followers } = resModel.data;
-    cache[NEWS] = cache[NEWS].concat(followers);
-    cache[USER].push(author_id);
   }
   if (Object.getOwnPropertyNames(newData).length) {
     //  更新文章
     await Blog.update(blog_id, newData);
   }
+  //  -------↓待調整----------------------------------------------
   //  刪除圖片
   if (map.has("cancelImgs")) {
     let cancelImgs = map.get("cancelImgs");
     //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
     await removeImgs(cancelImgs);
   }
+  //  -------↑待調整----------------------------------------------
   let resModel = await findWholeInfo({ blog_id, author_id });
   if (resModel.errno) {
     throw new MyErr(resModel);
   }
   let data = resModel.data;
-  return new SuccModel({ data, cache });
+  let opts = { data };
+  if (cache) {
+    opts.cache = cache;
+  }
+  return new SuccModel(opts);
 }
-
+async function addImg({ url, hash, name, blog_id }) {
+  if (!url) {
+    let imgModel = await C_Img.add({ hash, url });
+  }
+}
 module.exports = {
+  addImg,
+  find,
+  add,
+  modify,
   findWholeInfo,
   //  ----------------------------------------------------
   find_id_list_by_author_id,
-  findPublicListForUserPage,
-  findPrivateListForUserPage,
+
   //  0411
   // findInfoForPageOfAlbumList,
   //  0411
   removeList,
   //  0406
-  modify,
+
   //  0406
-  add,
+
   //  0404
   //  0404
-  find,
+
   //  0404
   findListForUserPage,
   //  0411
   findInfoForPageOfSquare,
 };
+async function _destoryReaders(blog_id) {
+  let blog = Blog.read(Opts.BLOG.FIND.readerList(blog_id));
+  if (!blog) {
+    throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST);
+  }
+  let readers = blog.readers.map(({ id }) => id);
+  if (readers.length) {
+    await Blog.destoryReaders(blog_id, readers);
+  }
+  let data = { list: readers };
+  return new SuccModel({ data });
+}
+async function _addReaders(blog_id) {
+  let blog = Blog.read(Opts.BLOG.FIND.fansAndDestoryedReaderList(blog_id));
+  if (!blog) {
+    throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST);
+  }
+  let fans = blog.author.fans.map(({ id }) => id);
+  let readers = blog.readers.map(({ deletedAt }) => !deletedAt);
+  if (readers.length !== blog.readers.length) {
+    let list = blog.readers.filter(({ deletedAt }) => deletedAt);
+    throw new MyErr({
+      ...ErrRes.BLOG.READ.ERR,
+      error: `準備恢復blog/${blog_id}的軟刪除reader時，發現未被軟刪除reader,id為${list}`,
+    });
+  }
+  if (readers.length) {
+    await C_ArticleReader.restoringList(readers);
+  }
+  if (fans.length) {
+    await Blog.createReaders(blog_id, fans);
+  }
+  let data = { list: [...fans, ...readers] };
+  return new SuccModel({ data });
+}
+async function _findPublicListForUserPage(
+  userId,
+  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
+) {
+  let data = await Blog.readListAndCountAll(
+    Opts.BLOG.findPublicBlogForUserPage(userId, opts)
+  );
+  // let data = Init.browser.blog.pageTable(blogs, options)
+  return new SuccModel({ data });
+}
+async function _findPrivateListForUserPage(
+  userId,
+  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
+) {
+  let data = await Blog.readListAndCountAll(
+    Opts.BLOG.findPrivateBlogForUserPage(userId, opts)
+  );
+  // let data = Init.browser.blog.pageTable(blogs, options)
+  return new SuccModel({ data });
+}

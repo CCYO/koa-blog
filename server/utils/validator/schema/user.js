@@ -1,7 +1,7 @@
 const { URL } = require("../config");
 
 module.exports = {
-  $id: `${URL}/defs.json`,
+  $id: `${URL}/user.json`,
   definitions: {
     email: {
       type: "string",

@@ -5,6 +5,7 @@ module.exports = {
     REGISTER: "register",
     LOGIN: "login",
     SETTING: "setting",
+    BLOG_UPDATE: "blog_update",
   },
   ERROR_PARAMS: {
     required: "missingProperty",

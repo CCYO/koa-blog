@@ -1,18 +1,3 @@
-const {
-  //  0406
-  ErrRes,
-  //  0406
-  MyErr,
-} = require("../model"); //  0406
-const Init = require("../utils/init"); //  0404
-const { Blog } = require("../db/mysql/model"); //  0404
-
-async function readListAndCountAll(opts) {
-  let { rows, count } = await Blog.findAndCountAll(opts);
-  let blogs = Init.blog(rows);
-  return { blogs, count };
-}
-
 //  0411
 /**批量刪除
  *
@@ -28,24 +13,7 @@ async function deleteList(opts) {
     throw new MyErr({ ...ErrRes.BLOG.DELETE.ERR, err });
   }
 }
-//  0409
-/** 更新blog
- * @param {number} blog_id blog id
- * @param {object} blog_data 要更新的資料
- * @returns {number} 1代表更新成功，0代表失敗
- */
-async function update(id, data) {
-  let [row] = await Blog.update(data, { where: { id } });
-  if (!row) {
-    throw new MyErr(ErrRes.BLOG.UPDATE);
-  }
-  return row;
-}
-//  0406
-async function read(opts) {
-  let blog = await Blog.findOne(opts);
-  return Init.blog(blog);
-}
+
 //  0406
 /** 創建Blog
  * @param {string} title 文章表提
@@ -77,15 +45,54 @@ async function readList(opts) {
   return Init.blog(blogs);
 }
 
+async function readListAndCountAll(opts) {
+  let { rows, count } = await Blog.findAndCountAll(opts);
+  let blogs = Init.blog(rows);
+  return { blogs, count };
+}
+
+//  -------------------------------------------------------------------------
+const { Blog } = require("../db/mysql/model");
+const Init = require("../utils/init");
+const { ErrRes, MyErr } = require("../model");
+
+async function read(opts) {
+  let blog = await Blog.findOne(opts);
+  return Init.blog(blog);
+}
+async function createReaders(blog_id, reader_list) {
+  let blog = await Blog.findByPk(blog_id);
+  //  IdolFans Model instances
+  let list = await blog.addReaders(reader_list);
+  return list;
+}
+async function destoryReaders(blog_id, reader_list) {
+  let blog = await Blog.findByPk(blog_id);
+  //  IdolFans Model instances
+  let row = await blog.removeReaders(reader_list);
+  return row;
+}
+/** 更新blog
+ * @param {number} blog_id blog id
+ * @param {object} blog_data 要更新的資料
+ * @returns {number} 1代表更新成功，0代表失敗
+ */
+async function update(id, data) {
+  let [row] = await Blog.update(data, { where: { id } });
+  if (!row) {
+    throw new MyErr(ErrRes.BLOG.UPDATE);
+  }
+  return row;
+}
 module.exports = {
+  update,
+  destoryReaders,
+  createReaders,
+  read,
+  //  -------------------------------------------------------------------------
   readListAndCountAll,
   //  0411
   deleteList,
-  //  0409
-  update,
-  //  0406
-  read,
-  //  0406
   create,
   //  0404
   readList,
