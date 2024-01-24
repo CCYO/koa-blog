@@ -22,7 +22,7 @@ async function count(blogImg_id) {
 
 //  -------------------------------------------------------------------------------------------------
 async function add(blogImg_id) {
-  let resModel = await BlogImgAlt.create(blogImg_id);
+  let resModel = await BlogImgAlt.create({ blogImg_id });
   // data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
   let { data } = await _findWholeInfo(resModel.id);
   let { blog_id, ...blogImgAlt } = data;
