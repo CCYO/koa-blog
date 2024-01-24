@@ -80,7 +80,10 @@ async function destoryReaders(blog_id, reader_list) {
 async function update(id, data) {
   let [row] = await Blog.update(data, { where: { id } });
   if (!row) {
-    throw new MyErr(ErrRes.BLOG.UPDATE);
+    throw new MyErr({
+      ...ErrRes.BLOG.UPDATE.ERR,
+      error: `blog/${id} 更新失敗`,
+    });
   }
   return row;
 }

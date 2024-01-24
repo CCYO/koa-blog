@@ -7,7 +7,7 @@ const { ENV, DEFAULT } = require("../config");
 //  0411
 async function modify({ alt_id, blog_id, alt }) {
   await BlogImgAlt.update(alt_id, { alt });
-  let cache = { [PAGE.BLOG]: [blog_id] };
+  let cache = { [DEFAULT.CACHE.TYPE.PAGE.BLOG]: [blog_id] };
   return new SuccModel({ cache });
 }
 
@@ -21,12 +21,12 @@ async function count(blogImg_id) {
 }
 
 //  -------------------------------------------------------------------------------------------------
-async function add(data) {
-  let blogImgAlt = await BlogImgAlt.create(data);
+async function add(blogImg_id) {
+  let resModel = await BlogImgAlt.create(blogImg_id);
   // data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
-  let resModel = await _findWholeInfo(blogImgAlt.id);
-  let { blog_id, ...data } = resModel.data;
-  let opts = { data };
+  let { data } = await _findWholeInfo(resModel.id);
+  let { blog_id, ...blogImgAlt } = data;
+  let opts = { data: blogImgAlt };
   if (!ENV.isNoCache) {
     opts.cache = {
       [DEFAULT.CACHE.TYPE.PAGE.BLOG]: [blog_id],
@@ -62,7 +62,7 @@ async function cancelWithBlog(blogImg_id, blogImgAlt_list) {
   let count = await BlogImgAlt.count(Opts.BLOGIMGALT.count(blogImg_id));
   if (!count) {
     console.log("沒有count");
-    return new ErrModel(BLOG_IMG_ALT.NOT_EXIST);
+    return new ErrModel(ErrRes.BLOG_IMG_ALT.NOT_EXIST);
   }
 
   //  既存數量 = 要刪除的數量，刪除整筆 blogImg
@@ -74,16 +74,6 @@ async function cancelWithBlog(blogImg_id, blogImgAlt_list) {
   //  各別刪除 blogImgAlt
   return await _removeBlogImgAlts(blogImgAlt_list);
 }
-
-const {
-  DEFAULT: {
-    CACHE: {
-      TYPE: { PAGE },
-    },
-  },
-  ENV,
-} = require("../config");
-const { BLOG_IMG_ALT } = require("../utils/seq_findOpts");
 
 //  0326
 async function _removeBlogImgAlts(blogImgAlt_list) {

@@ -96,8 +96,7 @@ async function init() {
         }
         check_submit() {
           let disabled = true;
-          let keys = [...this.keys()];
-          if (keys.length && this.has("html")) {
+          if (this.size) {
             disabled = $span_content_count.hasClass("text-danger");
           }
           $btn_updateBlog.prop("disabled", disabled);
@@ -437,7 +436,7 @@ async function init() {
             if (set.has("_notEmpty")) {
               text = "文章內容不可為空";
               $span_content_count.addClass("text-danger").text(text);
-            } else if (notRepeat) {
+            } else {
               $span_content_count.removeClass("text-danger").text(text);
             }
           }

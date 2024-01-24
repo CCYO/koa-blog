@@ -161,8 +161,8 @@ function initUser(data) {
     if (map.has("avatar") && !map.get("avatar")) {
       data.avatar = SERVER_CONFIG.DEFAULT.USER.AVATAR;
     }
-    if (map.has("fans")) {
-      data.fans = initUser(fans);
+    if (map.has("fansList")) {
+      data.fansList = initUser(data.fansList);
     }
     // if (map.has('comments') && data.comments.length) {
     //     let comments = data.comments

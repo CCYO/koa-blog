@@ -1,3 +1,4 @@
+const seq = require("../db/mysql/seq");
 //  0411
 async function findInfoForPageOfSquare(author_id) {
   let list = await Blog.readList(Opts.BLOG.findInfoForPageOfSquare());
@@ -217,6 +218,7 @@ const C_Img = require("./img");
 const C_BlogImg = require("./blogImg");
 const C_BlogImgAlt = require("./blogImgAlt");
 const { BlogImgAlt } = require("../db/mysql/model");
+const { Sequelize } = require("sequelize");
 /** 取得 blog 紀錄
  *
  * @param {number} blog_id blog id
@@ -295,7 +297,6 @@ async function modify({ blog_id, author_id, ...blog_data }) {
   let cache = undefined;
   if (!ENV.isNoCache) {
     cache = {
-      [CACHE.TYPE.PAGE.USER]: [author_id],
       [CACHE.TYPE.PAGE.BLOG]: [blog_id],
     };
   }
@@ -310,30 +311,35 @@ async function modify({ blog_id, author_id, ...blog_data }) {
     //  存放 blog 要更新的數據
     newData.title = my_xxs(blog_data.title);
   }
-  //  更新 文章公開狀態
-  if (map.has("show")) {
-    newData.show = map.get(show);
-    if (newData.show) {
-      let { data: list } = await _addReaders(blog_id);
-      if (cache && list.length) {
-        cache[CACHE.TYPE.NEWS] = list;
+  await seq.transaction(async (t) => {
+    //  更新 文章公開狀態
+    if (map.has("show")) {
+      newData.show = map.get("show");
+      if (newData.show) {
+        let { data: list } = await _addReaders(blog_id);
+        if (cache && list.length) {
+          cache[CACHE.TYPE.NEWS] = list;
+        }
+      } else {
+        await _destoryReaders(blog_id);
       }
-    } else {
-      await _destoryReaders(blog_id);
     }
-  }
-  if (Object.getOwnPropertyNames(newData).length) {
+    if (cache && (map.has("title") || map.has("show"))) {
+      cache[CACHE.TYPE.PAGE.USER] = [author_id];
+    }
+
     //  更新文章
     await Blog.update(blog_id, newData);
-  }
-  //  -------↓待調整----------------------------------------------
-  //  刪除圖片
-  if (map.has("cancelImgs")) {
-    let cancelImgs = map.get("cancelImgs");
-    //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
-    await removeImgs(cancelImgs);
-  }
-  //  -------↑待調整----------------------------------------------
+
+    //  -------↓待調整----------------------------------------------
+    //  刪除圖片
+    if (map.has("cancelImgs")) {
+      let cancelImgs = map.get("cancelImgs");
+      //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
+      await removeImgs(cancelImgs);
+    }
+    //  -------↑待調整----------------------------------------------
+  });
   let resModel = await findWholeInfo({ blog_id, author_id });
   if (resModel.errno) {
     throw new MyErr(resModel);
@@ -432,11 +438,13 @@ async function _destoryReaders(blog_id) {
   return new SuccModel({ data });
 }
 async function _addReaders(blog_id) {
-  let blog = Blog.read(Opts.BLOG.FIND.fansAndDestoryedReaderList(blog_id));
+  let blog = await Blog.read(
+    Opts.BLOG.FIND.fansAndDestoryedReaderList(blog_id)
+  );
   if (!blog) {
     throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST);
   }
-  let fans = blog.author.fans.map(({ id }) => id);
+  let fansList = blog.author.fansList.map(({ id }) => id);
   let readers = blog.readers.map(({ deletedAt }) => !deletedAt);
   if (readers.length !== blog.readers.length) {
     let list = blog.readers.filter(({ deletedAt }) => deletedAt);
@@ -446,12 +454,13 @@ async function _addReaders(blog_id) {
     });
   }
   if (readers.length) {
+    readers = readers.map(({ id }) => id);
     await C_ArticleReader.restoringList(readers);
   }
-  if (fans.length) {
-    await Blog.createReaders(blog_id, fans);
+  if (fansList.length) {
+    await Blog.createReaders(blog_id, fansList);
   }
-  let data = { list: [...fans, ...readers] };
+  let data = [...fansList, ...readers];
   return new SuccModel({ data });
 }
 async function _findPublicListForUserPage(

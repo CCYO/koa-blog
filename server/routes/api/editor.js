@@ -71,7 +71,7 @@ router.post(
 //  為Blog既存圖片建立alt數據
 router.post("/blogImgAlt", CHECK.login, CACHE.modify, async (ctx, next) => {
   let { blogImg_id } = ctx.request.body;
-  ctx.body = await BlogImgAlt.add({ blogImg_id });
+  ctx.body = await BlogImgAlt.add(blogImg_id);
 });
 //  初始化blog的圖片列表數據（通常用在上一次Blog有上傳圖片，但未儲存文章時，會導致沒有建立edito需要的<x-img>，因此需要初始化將其刪除）
 router.patch("/initImgs", CHECK.login, CACHE.modify, async (ctx, next) => {

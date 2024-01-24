@@ -10,7 +10,11 @@ const READ = {
 const REMOVE = {
   ERR_REMOVE_BLOG_IMG: { errno: 1001, msg: "移除Blog內文的圖片時發生錯誤" },
 };
+const UPDATE = {
+  ERR: { errno: 30004, msg: "BLOG資料更新失敗" },
+};
 module.exports = {
+  UPDATE,
   REMOVE,
   CREATE,
   READ,

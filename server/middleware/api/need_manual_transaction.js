@@ -1,7 +1,8 @@
 const { seq } = require("../../db/mysql/model");
 const kv_pairs = [
   //  刪除comment，controller裡面必須 manual commit，才能取得 deletedAt。
-  { method: "DELETE", path: "/api/comment" },
+  // { method: "DELETE", path: "/api/comment" },
+  { method: "PATCH", path: "/api/blog" },
 ];
 
 exports.need_manual_transaction = async function (ctx, next) {

@@ -1,5 +1,4 @@
-const {} = require("sequelize");
-const { Img, BlogImg, BlogImgAlt } = require("../../db/mysql/model");
+const { Img, BlogImg, BlogImgAlt, User } = require("../../db/mysql/model");
 
 const FIND = {
   wholeInfo: (id) => ({
@@ -48,10 +47,16 @@ const FIND = {
     include: [
       {
         association: "author",
+        // model: User,
+        // as: "author",
         attributes: ["id"],
         include: {
-          association: "fans",
+          model: User,
+          as: "fansList",
           attributes: ["id"],
+          through: {
+            attributes: [],
+          },
         },
       },
       {

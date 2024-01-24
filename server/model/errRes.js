@@ -52,11 +52,10 @@ module.exports = {
       NO_DATA: { errno: 30001, msg: "刪除 BLOG 卻沒提供查詢參數" },
       ERR: { errno: 706, msg: "刪除Blog失敗" },
     },
-    //  0409
-    UPDATE: { errno: 30004, msg: "BLOG資料更新失敗" },
     UPLOAD_IMG_ERR: { errno: 704, msg: "Blog內文圖片上傳失敗" }, //  0326
     IMAGE_REMOVE_ERR: { errno: 705, msg: "刪除BlogImg時，數量對不上" },
     //  ---------------------------------------------------------------------------
+    UPDATE: BLOG.UPDATE,
     REMOVE: BLOG.REMOVE,
     CREATE: BLOG.CREATE,
     READ: BLOG.READ,
