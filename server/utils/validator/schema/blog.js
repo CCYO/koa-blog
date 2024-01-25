@@ -31,6 +31,12 @@ module.exports = {
       },
     },
     cancelImgs: {
+      type: "array",
+      items: {
+        $ref: `#/definitions/cancelImgItem`,
+      },
+    },
+    cancelImgItem: {
       type: "object",
       properties: {
         blogImg_id: {

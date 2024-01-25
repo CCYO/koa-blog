@@ -11,28 +11,9 @@ async function modify({ alt_id, blog_id, alt }) {
   return new SuccModel({ cache });
 }
 
-//  0408
-async function count(blogImg_id) {
-  let data = await BlogImgAlt.count(Opts.BLOG_IMG_ALT.count(blogImg_id));
-  if (!data) {
-    return new ErrModel(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST);
-  }
-  return new SuccModel({ data });
-}
-
 //  -------------------------------------------------------------------------------------------------
 async function add(blogImg_id) {
-  let resModel = await BlogImgAlt.create({ blogImg_id });
-  let { data } = resModel;
-  // data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
-  // let { data } = await findWholeInfo(resModel.id);
-  // let { blog_id, ...blogImgAlt } = data;
-  // let opts = { data: blogImgAlt };
-  // if (!ENV.isNoCache) {
-  //   opts.cache = {
-  //     [DEFAULT.CACHE.TYPE.PAGE.BLOG]: [blog_id],
-  //   };
-  // }
+  let data = await BlogImgAlt.create({ blogImg_id });
   return new SuccModel({ data });
 }
 async function findWholeInfo(alt_id) {
@@ -56,7 +37,7 @@ module.exports = {
   //  ----------------------------------------------------------------------.
   modify,
   //  0408
-  count,
+
   cancelWithBlog, //  0326
 };
 

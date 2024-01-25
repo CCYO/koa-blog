@@ -329,7 +329,7 @@ async function init() {
             // res = await G.utils.axios.post(PAGE_BLOG_EDIT.API.CREATE_IMG_ALT, {
             //   blogImg_id,
             // });
-            api += `&blogImg_id=${blogImg}`;
+            api += `&blogImg_id=${blogImg.blogImg_id}`;
           }
 
           let res = await G.utils.axios.post(api, formdata);

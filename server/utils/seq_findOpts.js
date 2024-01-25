@@ -295,7 +295,15 @@ module.exports = {
     }),
     ...USER,
   },
-  //  0514
+  //  -------------------------------------------------------------------------------------
+  BLOG_IMG: {
+    findInfoForRemoveBlog: (blog_id) => ({
+      where: {
+        blog_id,
+      },
+      attributes: ["id"],
+    }),
+  },
   ARTICLE_READER: {
     //  0514
     findReadersForModifiedUserData: (articles) => ({
@@ -308,15 +316,7 @@ module.exports = {
       where: { blog_id },
     }),
   },
-  //  0429
-  BLOG_IMG: {
-    findInfoForRemoveBlog: (blog_id) => ({
-      where: {
-        blog_id,
-      },
-      attributes: ["id"],
-    }),
-  },
+
   //  0404
   COMMENT: {
     //  0514

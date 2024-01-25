@@ -82,25 +82,6 @@ async function removeList(blogList) {
   return new SuccModel({ cache, data: { author: { id: author_id } } });
 }
 
-//  0408
-async function removeImgs(imgs) {
-  for (let { blogImg_id, blogImgAlt_list } of imgs) {
-    //  確認 blog 內同樣 blogImg 的 blogImgAlt 有幾張
-    let countModel = await C_BlogImgAlt.count(blogImg_id);
-    let { errno, data: count } = countModel;
-    if (errno) {
-      throw new MyErr({ ...countModel });
-    }
-    //  若查詢結果 === blogImgAlt_list.length，直接刪掉 blogImg
-    if (count === blogImgAlt_list.length) {
-      await C_BlogImg.removeList([blogImg_id]);
-      //  僅刪除 blogImgAlt.list 內的資料
-    } else {
-      await C_BlogImgAlt.removeList(blogImgAlt_list);
-    }
-  }
-  return new SuccModel();
-}
 //  0406
 async function public(blog_id) {
   let blog = await Blog.read(Opts.BLOG.findInfoForShow(blog_id));
@@ -328,19 +309,22 @@ async function modify({ blog_id, author_id, ...blog_data }) {
       cache[CACHE.TYPE.PAGE.USER] = [author_id];
     }
 
-    //  更新文章
-    await Blog.update(blog_id, newData);
-
-    //  -------↓待調整----------------------------------------------
+    if (map.has("html") || map.has("title") || map.has("show")) {
+      //  更新文章
+      await Blog.update(blog_id, newData);
+    }
     //  刪除圖片
     if (map.has("cancelImgs")) {
       let cancelImgs = map.get("cancelImgs");
       //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
-      await removeImgs(cancelImgs);
+      // await removeImgs(cancelImgs);
+      await _removeImgList({ author_id, blog_id, cancelImgs });
     }
-    //  -------↑待調整----------------------------------------------
   });
-  let resModel = await findWholeInfo({ blog_id, author_id });
+  //  -------↓待調整----------------------------------------------
+
+  //  -------↑待調整----------------------------------------------
+  let resModel = await findWholeInfo({ author_id, blog_id });
   if (resModel.errno) {
     throw new MyErr(resModel);
   }
@@ -352,84 +336,43 @@ async function modify({ blog_id, author_id, ...blog_data }) {
   return new SuccModel(opts);
 }
 async function addImg(data) {
-  // let img;
-  // if (!url) {
-  //   let resModel = await C_Img.add({ hash, url });
-  //   img = resModel.data;
-  // }
-  // //  blogImg 處理
-  // let {
-  //   data: { id: blogImg_id },
-  // } = await C_BlogImg.add({ blog_id, name, img_id: img.id });
-  // //  建立 blogImgAlt
-  // await C_BlogImgAlt.add({ blogImg_id });
-  // // data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
-  // let { data } = await C_BlogImgAlt.findWholeInfo(data.id);
   // data { url, hash, name, blog_id, img_id }
-  let alt_id = await getAltId(data);
+  let alt_id = await _getAltId(data);
   let resModel = await C_BlogImgAlt.findWholeInfo(alt_id);
+  // let  { blog_id, alt_id, alt, blogImg_id, name, img_id, url, hash } = resModel.data
   let opts = { data: resModel.data };
   if (!ENV.isNoCache) {
-    opts.cache = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
+    opts.cache = { [CACHE.TYPE.PAGE.BLOG]: [data.blog_id] };
   }
   return new SuccModel(opts);
 
-  async function getAltId(data) {
+  async function _getAltId(data) {
     //  blog_id, hash, url  ->  固定參數
     //  blogImg_id          ->  直接加 blogImgAlt
     //  name, img_id    xx  ->  從加   img開始
     let { blog_id, img_id, url, hash, name, blogImg_id } = data;
-    let keys = Object.keys(data);
-    if (keys.has("blogImg_id")) {
+    let map = new Map(Object.entries(data));
+    if (map.get("blogImg_id")) {
       let {
         data: { id: alt_id },
       } = await C_BlogImgAlt.add(blogImg_id);
       return alt_id;
       //  data { blog_id, name, img_id }
-    } else if (keys.has("img_id")) {
+    } else if (map.get("img_id")) {
       let {
         data: { id: blogImg_id },
       } = await C_BlogImg.add({ blog_id, name, img_id });
-      return await check({ blogImg_id });
+      return await _getAltId({ blogImg_id });
     } else {
       //  data { blog_id, hash, url, name, img_id }
       let {
         data: { id: img_id },
       } = await C_Img.add({ url, hash });
-      return await check({ blog_id, img_id, name });
+      return await _getAltId({ blog_id, img_id, name });
     }
-  }
-}
-async function removeImgList({ author_id, blog_id, cancelImgs }) {
-  //  cancelImgs [ { blogImg_id, blogImgAlt_list: [alt_id, ...] }, ...]
-  try {
-    //  確認blog_id是否真為author_id所有
-    await findWholeInfo({ author_id, blog_id });
-    await Promise.all(cancelImgs.map(go));
-    let opts = undefined;
-    if (!ENV.isNoCache) {
-      opts = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
-    }
-    return new SuccModel(opts);
-  } catch (error) {
-    throw new MyErr({ ...ErrRes.BLOG.REMOVE.ERR_REMOVE_BLOG_IMG, error });
-  }
-
-  async function go({ blogImg_id, blogImgAlt_list }) {
-    //  找到blog內，指定的blogImgAlt有幾筆
-    let count = await C_BlogImg.countBlogImgAlt(blogImg_id);
-    if (count === blogImgAlt_list.length) {
-      ////  代表要刪除整筆 blogImg
-      await C_BlogImg.removeList(blogImg_id);
-    } else {
-      ////  代表要刪除個別 blogImgAlt
-      await C_BlogImgAlt.removeList(blogImgAlt_list);
-    }
-    return true;
   }
 }
 module.exports = {
-  removeImgList,
   addImg,
   find,
   add,
@@ -454,6 +397,36 @@ module.exports = {
   //  0411
   findInfoForPageOfSquare,
 };
+async function _removeImgList({ author_id, blog_id, cancelImgs }) {
+  //  cancelImgs [ { blogImg_id, blogImgAlt_list: [alt_id, ...] }, ...]
+  try {
+    //  確認blog_id是否真為author_id所有
+    await Promise.all(cancelImgs.map(_removeImg));
+    let opts = undefined;
+    if (!ENV.isNoCache) {
+      opts = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
+    }
+    return new SuccModel(opts);
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.BLOG.REMOVE.ERR_REMOVE_BLOG_IMG, error });
+  }
+
+  async function _removeImg({ blogImg_id, blogImgAlt_list }) {
+    //  找到blog內，指定的blogImgAlt有幾筆
+    let resModel = await C_BlogImg.countBlogImgAlt(blogImg_id);
+    if (resModel.errno) {
+      throw new MyErr(resModel);
+    }
+    if (resModel.data === blogImgAlt_list.length) {
+      ////  代表要刪除整筆 blogImg
+      await C_BlogImg.removeList([blogImg_id]);
+    } else {
+      ////  代表要刪除個別 blogImgAlt
+      await C_BlogImgAlt.removeList(blogImgAlt_list);
+    }
+    return true;
+  }
+}
 async function _destoryReaders(blog_id) {
   let blog = Blog.read(Opts.BLOG.FIND.readerList(blog_id));
   if (!blog) {

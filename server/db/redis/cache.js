@@ -15,11 +15,14 @@ const {
 //  0501
 const redis = require("redis");
 const client = redis.createClient(DB.REDIS_CONF.port, DB.REDIS_CONF.host);
-client.connect();
+
 client
-  .on("connect", () => console.log("@ Redis cache connect"))
+  .on("connect", () => {
+    console.log("@ Redis cache connect");
+  })
   .on("ready", () => console.log("@ Redis cache ready"))
   .on("error", (e) => console.error("@ Redis cache error ==> \n", e));
+client.connect();
 
 function _set(type) {
   const KEY = type;

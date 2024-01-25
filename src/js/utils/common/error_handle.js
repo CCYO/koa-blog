@@ -30,12 +30,12 @@ function watchError(error) {
     location.reload();
   } else if (error.model) {
     let { serverError, model } = error;
-    console.log("後端代碼錯誤-------start-↓↓↓↓");
+    console.log("【後端】代碼錯誤-------start-↓↓↓↓");
     console.log(`model:\n `, model);
     console.log(`serverError:\n ${serverError.stack}`);
     console.log("後端代碼錯誤-------end---↑↑↑↑");
   } else {
-    console.log("前端代碼錯誤-------start-↓↓↓↓");
+    console.log("【前端】代碼錯誤-------start-↓↓↓↓");
     console.log("error => ", error);
     console.log("前端代碼錯誤-------end---↑↑↑↑");
   }

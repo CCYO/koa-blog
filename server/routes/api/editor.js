@@ -74,14 +74,14 @@ router.post("/blogImgAlt", CHECK.login, CACHE.modify, async (ctx, next) => {
   ctx.body = await BlogImgAlt.add(blogImg_id);
 });
 //  初始化blog的圖片列表數據（通常用在上一次Blog有上傳圖片，但未儲存文章時，會導致沒有建立edito需要的<x-img>，因此需要初始化將其刪除）
-router.patch("/initImgs", CHECK.login, CACHE.modify, async (ctx, next) => {
-  const { id: author_id } = ctx.session.user;
-  const { id: blog_id, cancelImgs } = ctx.request.body;
-  //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
-  // let res = await BlogImgAlt.cutImgsWithBlog(blog_id, cancelImgs, user_id);
-  let res = await Blog.removeImgList({ author_id, blog_id, cancelImgs });
-  ctx.body = res;
-});
+// router.patch("/initImgs", CHECK.login, CACHE.modify, async (ctx, next) => {
+//   const { id: author_id } = ctx.session.user;
+//   const { id: blog_id, cancelImgs } = ctx.request.body;
+//   //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
+//   // let res = await BlogImgAlt.cutImgsWithBlog(blog_id, cancelImgs, user_id);
+//   let res = await Blog.removeImgList({ author_id, blog_id, cancelImgs });
+//   ctx.body = res;
+// });
 
 //  更新 blog 資料
 router.patch(

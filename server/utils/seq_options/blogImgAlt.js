@@ -1,8 +1,5 @@
 const { Blog, BlogImg, Img } = require("../../db/mysql/model");
 const FIND = {
-  //   count: (blogImg_id) => ({
-  //     where: { blogImg_id },
-  //   }),
   wholeInfo: (alt_id) => ({
     where: { id: alt_id },
     attributes: [["id", "alt_id"], "alt"],

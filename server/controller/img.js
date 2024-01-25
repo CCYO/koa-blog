@@ -14,8 +14,8 @@ const Img = require("../server/img");
 const { SuccModel, ErrModel, ErrRes } = require("../model");
 
 async function add({ hash, url }) {
-  let img = await Img.create({ hash, url });
-  return new SuccModel({ data: img });
+  let data = await Img.create({ hash, url });
+  return new SuccModel({ data });
 }
 
 module.exports = {

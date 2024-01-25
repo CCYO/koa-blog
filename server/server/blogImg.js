@@ -15,9 +15,9 @@ async function create(data) {
     throw new MyErr({ ...ErrRes.BLOG_IMG.CREATE.ERR, error });
   }
 }
-async function readCountOfBlogImgAlt(id) {
-  let blogImg = await BlogImg.findByPk(id);
-  let count = blogImg.countBlogImgAlts();
+async function countBlogImgAlt(blogImg_id) {
+  let blogImg = await BlogImg.findByPk(blogImg_id);
+  let count = await blogImg.countBlogImgAlts();
   return count;
 }
 async function destoryList(opts) {
@@ -30,7 +30,7 @@ async function destoryList(opts) {
 }
 module.exports = {
   destoryList,
-  readCountOfBlogImgAlt,
+  countBlogImgAlt,
   create,
   //  --------------------------------------------------------------------------------------------
   readList,

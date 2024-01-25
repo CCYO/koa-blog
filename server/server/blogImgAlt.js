@@ -9,11 +9,6 @@ async function update(id, data) {
   }
   return row;
 }
-
-//  0408
-async function count(opt) {
-  return await BlogImgAlt.count(opt);
-}
 //  ------------------------------------------------------------------------------------
 async function create(data) {
   try {
@@ -41,8 +36,6 @@ module.exports = {
   create,
   //    -------------------------------------------------------------------------------
   update,
-  //  0408
-  count,
 };
 
 async function courtOfSomeImgInBlog({ blog_id, blogImg_id }) {

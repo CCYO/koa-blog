@@ -12,11 +12,10 @@ let {
 
 module.exports = {
   BLOG_IMG: {
-    //  0429
-    READ: {
-      NOT_EXIST: { errno: 1111, msg: "沒有相符的 BlogImg" },
-    },
-    //  0406
+    READ: BLOG_IMG.READ,
+    REMOVE: BLOG_IMG.REMOVE,
+
+    //  ---------------------------------------------------------
     CREATE: {
       //  0406
       NO_DATA: { errno: 50002, msg: "創建 BLOG_IMG 卻沒提供參數" },
@@ -25,8 +24,6 @@ module.exports = {
     },
     UPDATE_ERR: { errno: 802, msg: "更新失敗" },
     CREATE_ERR: { errno: 803, msg: "創建失敗" },
-    //  ---------------------------------------------------------
-    REMOVE: BLOG_IMG.REMOVE,
   },
   BLOG_IMG_ALT: {
     UPDATE: { errno: 902, msg: "BLOG_IMG_ALT 更新失敗" },
