@@ -206,7 +206,7 @@ const parse = {
       ctx._my = { gceFile: { ref } };
       //  建立 formidable Ins
       await _parse(ctx);
-      res[BLOG] = ctx._my.gceFile.ref.publicUrl();
+      res[BLOG] = ref.publicUrl();
       delete ctx._my;
     }
     return res;

@@ -23,16 +23,24 @@ async function count(blogImg_id) {
 //  -------------------------------------------------------------------------------------------------
 async function add(blogImg_id) {
   let resModel = await BlogImgAlt.create({ blogImg_id });
+  let { data } = resModel;
   // data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
-  let { data } = await _findWholeInfo(resModel.id);
-  let { blog_id, ...blogImgAlt } = data;
-  let opts = { data: blogImgAlt };
-  if (!ENV.isNoCache) {
-    opts.cache = {
-      [DEFAULT.CACHE.TYPE.PAGE.BLOG]: [blog_id],
-    };
+  // let { data } = await findWholeInfo(resModel.id);
+  // let { blog_id, ...blogImgAlt } = data;
+  // let opts = { data: blogImgAlt };
+  // if (!ENV.isNoCache) {
+  //   opts.cache = {
+  //     [DEFAULT.CACHE.TYPE.PAGE.BLOG]: [blog_id],
+  //   };
+  // }
+  return new SuccModel({ data });
+}
+async function findWholeInfo(alt_id) {
+  let res = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.FIND.wholeInfo(alt_id));
+  if (!res) {
+    throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST);
   }
-  return new SuccModel(opts);
+  return new SuccModel({ data: res });
 }
 async function removeList(id_list) {
   let row = await BlogImgAlt.destoryList(Opts.REMOVE.list(id_list));
@@ -43,6 +51,7 @@ async function removeList(id_list) {
 }
 module.exports = {
   removeList,
+  findWholeInfo,
   add,
   //  ----------------------------------------------------------------------.
   modify,
@@ -50,13 +59,7 @@ module.exports = {
   count,
   cancelWithBlog, //  0326
 };
-async function _findWholeInfo(alt_id) {
-  let res = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.FIND.wholeInfo(alt_id));
-  if (!res) {
-    throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST);
-  }
-  return new SuccModel({ data: res });
-}
+
 //  --------------------------------------------------------------------------------------------------------
 async function cancelWithBlog(blogImg_id, blogImgAlt_list) {
   let count = await BlogImgAlt.count(Opts.BLOGIMGALT.count(blogImg_id));

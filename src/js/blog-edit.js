@@ -311,23 +311,29 @@ async function init() {
           //  生成 img 的 hash(hex格式)
           //  取得 img 的 MD5 Hash(hex格式)
           let hash = await _getMD5Hash(img);
-          let blogImg_id = await _findExistBlogImgId(hash);
-
-          let res;
-          if (!blogImg_id) {
+          // let blogImg_id = await _findExistBlogImgId(hash);
+          let blogImg = await _findExistBlogImgId(hash);
+          //  blogImg = { blogImg_id, url, hash, img_id}
+          let api = `${PAGE_BLOG_EDIT.API.CREATE_IMG}?hash=${hash}&blog_id=${G.data.blog.id}`;
+          let formdata = new FormData();
+          if (!blogImg) {
             ////  img為新圖，傳給後端新建一個blogImgAlt
             //  imgName要作為query參數傳送，必須先作百分比編碼
             name = encodeURIComponent(name);
-            let api = `${PAGE_BLOG_EDIT.API.CREATE_IMG}?hash=${hash}&name=${name}&ext=${ext}&blog_id=${G.data.blog.id}`;
-            let formdata = new FormData();
+            api += `&name=${name}&ext=${ext}`;
+
             formdata.append("blogImg", img);
-            res = await G.utils.axios.post(api, formdata);
+            // res = await G.utils.axios.post(api, formdata);
           } else {
-            ////  img為重覆的舊圖，傳給後端新建一個blogImgAlt
-            res = await G.utils.axios.post(PAGE_BLOG_EDIT.API.CREATE_IMG_ALT, {
-              blogImg_id,
-            });
+            // ////  img為重覆的舊圖，傳給後端新建一個blogImgAlt
+            // res = await G.utils.axios.post(PAGE_BLOG_EDIT.API.CREATE_IMG_ALT, {
+            //   blogImg_id,
+            // });
+            api += `&blogImg_id=${blogImg}`;
           }
+
+          let res = await G.utils.axios.post(api, formdata);
+
           let { data: newImg } = res;
           //  上傳成功
           //  newImg格式:
@@ -349,7 +355,8 @@ async function init() {
           return;
           //  取得圖片的 hash
           async function _findExistBlogImgId(hash) {
-            let blogImg_id = undefined;
+            // let blogImg_id = undefined;
+            let res;
             let { map_imgs } = G.data.blog;
             if (map_imgs.size) {
               ////  確認此時要上傳的img是否為舊圖
@@ -360,10 +367,14 @@ async function init() {
               //  img { alt_id, alt, blogImg_id, name, img_id, hash, url }
               let target = imgs.find((img) => img.hash === hash);
               if (target) {
-                blogImg_id = target.blogImg_id;
+                // blogImg_id = target.blogImg_id;
+                let { alt_id, alt, blogImg_id, name, img_id, hash, url } =
+                  target;
+                res = { blogImg_id, url, hash, img_id };
               }
             }
-            return blogImg_id;
+            // return blogImg_id;
+            return res;
           }
 
           //  計算 file 的 MD5 Hash

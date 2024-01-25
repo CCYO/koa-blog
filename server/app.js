@@ -67,6 +67,8 @@ app.use(async (ctx, next) => {
     let myErr = undefined;
     if (!(error instanceof MyErr)) {
       myErr = new MyErr({ ...ErrRes.SERVER.ERR_500, error });
+    } else {
+      myErr = error;
     }
     ctx.app.emit("error", myErr, ctx);
     if (SERVER_CONFIG.ENV.isProd) {

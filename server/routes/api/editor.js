@@ -65,7 +65,7 @@ router.post(
   CACHE.modify,
   FIREBASE.blogImg,
   async (ctx, next) => {
-    await Blog.addImg(ctx.request.body);
+    ctx.body = await Blog.addImg(ctx.request.body);
   }
 );
 //  為Blog既存圖片建立alt數據

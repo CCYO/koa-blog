@@ -351,25 +351,54 @@ async function modify({ blog_id, author_id, ...blog_data }) {
   }
   return new SuccModel(opts);
 }
-async function addImg({ url, hash, name, blog_id }) {
-  let img;
-  if (!url) {
-    let resModel = await C_Img.add({ hash, url });
-    img = resModel.data;
-  }
-  //  blogImg 處理
-  let {
-    data: { id: blogImg_id },
-  } = await C_BlogImg.add({ blog_id, name, img_id: img.id });
-  //  建立 blogImgAlt
-  await C_BlogImgAlt.add({ blogImg_id });
-  // data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
-  let { data } = await C_BlogImgAlt.findWholeInfo(data.id);
-  let opts = { data };
+async function addImg(data) {
+  // let img;
+  // if (!url) {
+  //   let resModel = await C_Img.add({ hash, url });
+  //   img = resModel.data;
+  // }
+  // //  blogImg 處理
+  // let {
+  //   data: { id: blogImg_id },
+  // } = await C_BlogImg.add({ blog_id, name, img_id: img.id });
+  // //  建立 blogImgAlt
+  // await C_BlogImgAlt.add({ blogImg_id });
+  // // data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
+  // let { data } = await C_BlogImgAlt.findWholeInfo(data.id);
+  // data { url, hash, name, blog_id, img_id }
+  let alt_id = await getAltId(data);
+  let resModel = await C_BlogImgAlt.findWholeInfo(alt_id);
+  let opts = { data: resModel.data };
   if (!ENV.isNoCache) {
     opts.cache = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
   }
-  ctx.body = new SuccModel(opts);
+  return new SuccModel(opts);
+
+  async function getAltId(data) {
+    //  blog_id, hash, url  ->  固定參數
+    //  blogImg_id          ->  直接加 blogImgAlt
+    //  name, img_id    xx  ->  從加   img開始
+    let { blog_id, img_id, url, hash, name, blogImg_id } = data;
+    let keys = Object.keys(data);
+    if (keys.has("blogImg_id")) {
+      let {
+        data: { id: alt_id },
+      } = await C_BlogImgAlt.add(blogImg_id);
+      return alt_id;
+      //  data { blog_id, name, img_id }
+    } else if (keys.has("img_id")) {
+      let {
+        data: { id: blogImg_id },
+      } = await C_BlogImg.add({ blog_id, name, img_id });
+      return await check({ blogImg_id });
+    } else {
+      //  data { blog_id, hash, url, name, img_id }
+      let {
+        data: { id: img_id },
+      } = await C_Img.add({ url, hash });
+      return await check({ blog_id, img_id, name });
+    }
+  }
 }
 async function removeImgList({ author_id, blog_id, cancelImgs }) {
   //  cancelImgs [ { blogImg_id, blogImgAlt_list: [alt_id, ...] }, ...]
