@@ -11,15 +11,15 @@ const FIND = {
       },
       {
         model: BlogImg,
-        attributes: [["id", "blogImg_id"], "name"],
+        attributes: ["id", "name"],
         include: [
           {
             model: Img,
-            attributes: [["id", "img_id"], "url", "hash"],
+            attributes: ["id", "url", "hash"],
           },
           {
             model: BlogImgAlt,
-            attributes: [["id", "alt_id"], "alt"],
+            attributes: ["id", "alt"],
           },
         ],
       },

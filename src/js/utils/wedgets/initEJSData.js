@@ -11,12 +11,6 @@ const KEYS = {
   BLOG: "blog",
   ALBUM: "album",
 };
-const REG = {
-  BLOG: {
-    X_IMG:
-      /<x-img.+?data-alt-id='(?<alt_id>\w+?)'.+?(data-style='(?<style>.*?)')?.*?\/>/g,
-  },
-};
 
 //  將ejs傳入el[data-my-data]的純字符數據，轉化為物件數據
 export default function () {
@@ -120,8 +114,11 @@ function initBlog(blog) {
 function init_map_imgs(imgs) {
   let map = new Map();
   /* 以 alt_id 作為 Map key，整理為格式 img.key → img 的數據 */
-  imgs.forEach((img) => {
-    map.set(img.alt_id * 1, { ...img });
-  });
+  for (let alt_id in imgs) {
+    map.set(alt_id * 1, imgs[alt_id]);
+  }
+  // imgs.forEach((img) => {
+  //   map.set(img.alt_id * 1, { ...img });
+  // });
   return map;
 }

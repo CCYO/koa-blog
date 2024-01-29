@@ -15,24 +15,39 @@ const {
 function initBlogImgAlt(data) {
   return init(data, go);
   function go(item) {
-    let data = { ...item };
-    let map = new Map(Object.entries(item));
+    // let data = { ...item };
+    // let map = new Map(Object.entries(item));
     //  { alt_id, alt, BlogImg: { blogImg_id, name , Img: { img_id, url, hash }} }
+    // if (map.has("alt") && !data.alt) {
+    //   data.alt = item.BlogImg.name;
+    // }
+    // delete data.BlogImg;
+    // if (data.hasOwnProperty("Blog")) {
+    //   data.blog_id = blogImg.Blog.id;
+    //   data.author_id = blogImg.Blog.author_id;
+    //   delete data.Blog;
+    // }
+    // return data
+    //  { id, alt, BlogImg: {id, name, Blog: { id, author_id}, Img: {id, url, hash} }}
+    let res = { id: item.id, alt: item.alt, ...data };
+    let map = new Map(Object.entries(data));
     if (map.has("BlogImg")) {
-      let { Img, ...blogImg } = item.BlogImg;
-      data = { ...data, ...blogImg, ...Img };
-
-      if (map.has("alt") && !data.alt) {
-        data.alt = item.BlogImg.name;
+      // let { Img, ...blogImg } = item.BlogImg;
+      // data = { ...data, ...blogImg, ...Img };
+      res.blogImg = map.get("BlogImg");
+      if (!res.alt) {
+        res.alt = res.blogImg.name;
       }
-      delete data.BlogImg;
-      if (data.hasOwnProperty("Blog")) {
-        data.blog_id = blogImg.Blog.id;
-        data.author_id = blogImg.Blog.author_id;
-        delete data.Blog;
+      if (res.blogImg.hasOwnProperty("Blog")) {
+        res.blog = { ...blogImg.Blog };
+        delete res.blogImg.Blog;
+      }
+      if (res.blogImg.hasOwnProperty("Img")) {
+        res.img = { ...blogImg.Img };
+        delete res.blogImg.Img;
       }
     }
-    return data;
+    return res;
   }
 }
 //  0404
@@ -100,44 +115,70 @@ function initBlog(data) {
 function _initBlogImg(blogImgs) {
   //  正常來說，blogImgs會是arr
   return initArr(blogImgs, go);
-  function go(blogImgs) {
-    let container = [];
-    for (let blogImg of blogImgs) {
-      let map = new Map(Object.entries(blogImg));
-      let res = {};
-      if (map.has("blogImg_id")) {
-        res.blogImg_id = blogImg.blogImg_id;
+  function go(datas) {
+    // let container = [];
+    // for (let blogImg of blogImgs) {
+    //   let map = new Map(Object.entries(blogImg));
+    //   let res = {};
+    //   if (map.has("blogImg_id")) {
+    //     res.blogImg_id = blogImg.blogImg_id;
+    //   }
+    //   if (map.has("name")) {
+    //     res.name = blogImg.name;
+    //   }
+    //   if (map.has("Img")) {
+    //     let img = init(blogImg.Img);
+    //     res = { ...res, ...img };
+    //   }
+    //   if (map.has("BlogImgAlts")) {
+    //     let imgAlts = init(blogImg.BlogImgAlts);
+    //     for (let imgAlt of imgAlts) {
+    //       if (!imgAlt.alt) {
+    //         imgAlt.alt = res.name;
+    //       }
+    //       container.push({ ...res, ...imgAlt });
+    //     }
+    //     continue;
+    //   }
+    //   /*
+    //    ** res: {
+    //    **     // alt.id → alt_id 是在 Opts.findWholeInfo 轉換的
+    //    **     alt_id, alt,
+    //    **     // blogImg.id → blogImg_id 是在 Opts.findWholeInfo 轉換的
+    //    **     blogImg_id, name,
+    //    **     // img.id → img_id 是在 Opts.findWholeInfo 轉換的
+    //    **     img_id, url, hash
+    //    ** }
+    //    */
+    //   container.push(res);
+    // }
+
+    //  blogImg { id, name, Img: { id, url, hash }, BlogImgAlts: [{ id, alt }, ...] }
+    let blogImgs = new Map();
+    let alts = new Map();
+    let imgs = new Map();
+    for (let { id: blogImg_id, name, ...data } of datas) {
+      blogImgs.set(blogImg_id, { name });
+      if (data.hasOwnProperty("Img")) {
+        let { id, url, hash } = data.Img;
+        !imgs.has(id) && imgs.set(id, { url, hash });
       }
-      if (map.has("name")) {
-        res.name = blogImg.name;
-      }
-      if (map.has("Img")) {
-        let img = init(blogImg.Img);
-        res = { ...res, ...img };
-      }
-      if (map.has("BlogImgAlts")) {
-        let imgAlts = init(blogImg.BlogImgAlts);
-        for (let imgAlt of imgAlts) {
-          if (!imgAlt.alt) {
-            imgAlt.alt = res.name;
-          }
-          container.push({ ...res, ...imgAlt });
+      if (data.hasOwnProperty("BlogImgAlts")) {
+        for (let { id, alt } of data.BlogImgAlts) {
+          alt = !alt ? blogImgs.get(blogImg_id).name : alt;
+          alts.set(id, {
+            alt,
+            blogImg: blogImgs.get(blogImg_id),
+            img: imgs.get(data.Img.id),
+          });
         }
-        continue;
       }
-      /*
-       ** res: {
-       **     // alt.id → alt_id 是在 Opts.findWholeInfo 轉換的
-       **     alt_id, alt,
-       **     // blogImg.id → blogImg_id 是在 Opts.findWholeInfo 轉換的
-       **     blogImg_id, name,
-       **     // img.id → img_id 是在 Opts.findWholeInfo 轉換的
-       **     img_id, url, hash
-       ** }
-       */
-      container.push(res);
     }
-    return container;
+    alts = [...alts].reduce((acc, [alt_id, alt_data]) => {
+      acc[alt_id] = alt_data;
+      return acc;
+    }, {});
+    return alts;
   }
 }
 //  0404
@@ -186,6 +227,7 @@ function init(data, ...fns) {
 }
 
 const { init_newsOfFollowId, init_excepts } = require("./news");
+const { blogImg } = require("../../middleware/api/firebase");
 
 module.exports = {
   //  0423

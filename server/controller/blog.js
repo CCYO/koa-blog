@@ -211,9 +211,6 @@ async function findWholeInfo({ author_id, blog_id }) {
     throw new MyErr(ErrRes.BLOG.READ.NOT_AUTHOR);
   }
   let opts = { data };
-  if (!ENV.isNoCache) {
-    opts.cache = { [CACHE.TYPE.PAGE.BLOG]: data };
-  }
   return new SuccModel(opts);
 }
 /** 取得 blogList
@@ -340,7 +337,7 @@ async function addImg({ author_id, ...data }) {
   // let  { blog_id, alt_id, alt, blogImg_id, name, img_id, url, hash } = resModel.data
   let opts = { data: resModel.data };
   if (!ENV.isNoCache) {
-    opts.cache = { [CACHE.TYPE.PAGE.BLOG]: [data.blog_id] };
+    opts.cache = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
   }
   return new SuccModel(opts);
 

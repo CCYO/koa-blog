@@ -28,8 +28,6 @@ async function removeList(id_list) {
   }
   return new SuccModel({ data: row });
 }
-
-//  0411
 async function modify({ author_id, alt_id, blog_id, alt }) {
   await BlogImgAlt.update(alt_id, { alt });
   let { data } = await findWholeInfo({ author_id, blog_id, alt_id });
