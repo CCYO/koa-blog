@@ -188,18 +188,15 @@ const Init = require("../utils/init"); //  0404
 //  --------------------------------------------------------------------------------
 
 const Opts = require("../utils/seq_findOpts"); //  0404
-const { TYPE } = require("../utils/validator/config");
 const Blog = require("../server/blog");
 const my_xxs = require("../utils/xss");
-const { ENV, DEFAULT } = require("../config");
+const { ENV } = require("../config");
 const {
   DEFAULT: { BLOG, CACHE },
 } = require("../config");
 const C_Img = require("./img");
 const C_BlogImg = require("./blogImg");
 const C_BlogImgAlt = require("./blogImgAlt");
-const { BlogImgAlt } = require("../db/mysql/model");
-const { Sequelize } = require("sequelize");
 /** 取得 blog 紀錄
  *
  * @param {number} blog_id blog id
@@ -308,7 +305,6 @@ async function modify({ blog_id, author_id, ...blog_data }) {
     if (cache && (map.has("title") || map.has("show"))) {
       cache[CACHE.TYPE.PAGE.USER] = [author_id];
     }
-
     if (map.has("html") || map.has("title") || map.has("show")) {
       //  更新文章
       await Blog.update(blog_id, newData);
@@ -321,8 +317,6 @@ async function modify({ blog_id, author_id, ...blog_data }) {
       await _removeImgList({ author_id, blog_id, cancelImgs });
     }
   });
-  //  -------↓待調整----------------------------------------------
-
   //  -------↑待調整----------------------------------------------
   let resModel = await findWholeInfo({ author_id, blog_id });
   if (resModel.errno) {
@@ -335,10 +329,14 @@ async function modify({ blog_id, author_id, ...blog_data }) {
   }
   return new SuccModel(opts);
 }
-async function addImg(data) {
-  // data { url, hash, name, blog_id, img_id }
+async function addImg({ author_id, ...data }) {
+  let { blog_id } = data;
   let alt_id = await _getAltId(data);
-  let resModel = await C_BlogImgAlt.findWholeInfo(alt_id);
+  let resModel = await C_BlogImgAlt.findWholeInfo({
+    author_id,
+    blog_id,
+    alt_id,
+  });
   // let  { blog_id, alt_id, alt, blogImg_id, name, img_id, url, hash } = resModel.data
   let opts = { data: resModel.data };
   if (!ENV.isNoCache) {
@@ -385,31 +383,20 @@ module.exports = {
   // findInfoForPageOfAlbumList,
   //  0411
   removeList,
-  //  0406
-
-  //  0406
-
-  //  0404
-  //  0404
-
-  //  0404
   findListForUserPage,
   //  0411
   findInfoForPageOfSquare,
 };
-async function _removeImgList({ author_id, blog_id, cancelImgs }) {
+async function _removeImgList({ blog_id, cancelImgs }) {
   //  cancelImgs [ { blogImg_id, blogImgAlt_list: [alt_id, ...] }, ...]
-  try {
-    //  確認blog_id是否真為author_id所有
-    await Promise.all(cancelImgs.map(_removeImg));
-    let opts = undefined;
-    if (!ENV.isNoCache) {
-      opts = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
-    }
-    return new SuccModel(opts);
-  } catch (error) {
-    throw new MyErr({ ...ErrRes.BLOG.REMOVE.ERR_REMOVE_BLOG_IMG, error });
+  // try {
+  //  確認blog_id是否真為author_id所有
+  await Promise.all(cancelImgs.map(_removeImg));
+  let opts = undefined;
+  if (!ENV.isNoCache) {
+    opts = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
   }
+  return new SuccModel(opts);
 
   async function _removeImg({ blogImg_id, blogImgAlt_list }) {
     //  找到blog內，指定的blogImgAlt有幾筆

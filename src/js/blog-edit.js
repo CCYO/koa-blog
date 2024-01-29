@@ -74,66 +74,24 @@ async function init() {
       /* ------------------------------------------------------------------------------------------ */
       /* Public Var in Closure -------------------------------------------------------------------- */
       /* ------------------------------------------------------------------------------------------ */
-      //  let { blog } = G.data
-
-      class $C_genPayload extends Map {
-        setKVpairs(dataObj) {
-          //  將kv資料存入
-          const entries = Object.entries(dataObj);
-          if (entries.length) {
-            for (let [key, value] of entries) {
-              this.#set(key, value);
-            }
-          }
-        }
-        getPayload() {
-          let res = {};
-          for (let [key, value] of [...this]) {
-            res[key] = value;
-          }
-          console.log(res);
-          return res;
-        }
-        check_submit() {
-          let disabled = true;
-          if (this.size) {
-            disabled = $span_content_count.hasClass("text-danger");
-          }
-          $btn_updateBlog.prop("disabled", disabled);
-        }
-        //  刪除數據
-        del(key) {
-          this.delete(key);
-          if (key === "title") {
-            //  若刪除的是title，關閉更新鈕
-            $btn_updateTitle.prop("disabled", true);
-          }
-          console.log(this.getPayload());
-        }
-        #set(key, value) {
-          if (key === "title") {
-            //  若設定的是title，開啟更新鈕
-            $btn_updateTitle.prop("disabled", false);
-          }
-          this.set(key, value);
-        }
-      }
-      let $$payload = new $C_genPayload();
-      G.utils.payload = $$payload;
       //  初始化 頁面各功能
+      G.utils.lock = initLock();
       G.utils.editor = create_editor();
       G.utils.loading_backdrop.insertEditors([G.utils.editor]);
+      //  整理圖片數據
       await initImgData();
+      //  focus editor
       G.utils.editor.focus();
-      //  游標移至尾端
-      G.utils.editor.move(SERVER.BLOG.EDITOR.HTML_MAX_LENGTH);
-      let { debounce: handle_debounce_input } = new $C_Debounce(handle_input, {
-        //  debounce階段時，限制更新鈕
-        loading: () => $btn_updateTitle.prop("disabled", true),
-      });
-
+      //  生成 blog title 的 input handle
+      let { debounce: handle_debounce_input_for_title } = new $C_Debounce(
+        handle_input,
+        {
+          //  debounce階段時，限制更新鈕
+          loading: () => $btn_updateTitle.prop("disabled", true),
+        }
+      );
       //  $title handleInput => 驗證標題合法性
-      $inp_title.on("input", handle_debounce_input);
+      $inp_title.on("input", handle_debounce_input_for_title);
       //  $title handleBlur => 若標題非法，恢復原標題
       $inp_title.on("blur", handle_blur);
       //  $btn_updateTitlebtn handleClick => 送出新標題
@@ -209,7 +167,7 @@ async function init() {
         //  editor 編輯欄 創建
         const editor = createEditor({
           //  插入後端取得的 html
-          html: G.data.blog.html || "",
+          html: _parseHtmlStr_XImgToImg(G.data.blog.html) || "",
           selector: `#${PAGE_BLOG_EDIT.ID.EDITOR_CONTAINER}`,
           config: editorConfig,
         });
@@ -424,38 +382,117 @@ async function init() {
             return;
           }
           let content = G.utils.editor.getHtml();
-          cache_content = $M_xss.remove_editor_empty(content);
+          // xss + 將<img>轉換為自定義<x-img>
+          cache_content = _parseHtmlStr_ImgToXImg($M_xss.blog(content));
           let newData = { [KEY]: cache_content };
           //  校證html
           let result = await validate(newData);
-          let invalid = result.some(({ valid }) => !valid);
-          let { keyword, message } = result.find(
-            ({ field_name }) => field_name === KEY
-          );
+          let { keyword } = result.find(({ field_name }) => field_name === KEY);
           let text_count =
             SERVER_BLOG.EDITOR.HTML_MAX_LENGTH - cache_content.length;
           let text = `還能輸入${text_count}個字`;
-          if (!invalid) {
-            G.utils.payload.setKVpairs(newData);
+          if (!result.invalid) {
+            G.utils.lock.setKVpairs(newData);
             $span_content_count.removeClass("text-danger").text(text);
           } else {
-            $$payload.del(KEY);
+            G.utils.lock.del(KEY);
             let set = new Set(keyword);
             if (set.size > 2) {
+              //  合理的情況下，最多同時 _notEmpty + _notRepeat
               throw new Error(JSON.stringify(result));
-            }
-            if (set.has("_notEmpty")) {
+            } else if (set.has("_notEmpty")) {
               text = "文章內容不可為空";
               $span_content_count.addClass("text-danger").text(text);
             } else {
+              //  _notRepeat 不用報錯
               $span_content_count.removeClass("text-danger").text(text);
             }
           }
-          console.log("由editor change 帶動的 check");
-          G.utils.payload.check_submit();
+          G.utils.lock.check_submit();
+
+          //  將<img>替換為自定義<x-img>
+          function _parseHtmlStr_ImgToXImg(html) {
+            let reg = PAGE_BLOG_EDIT.REG.IMG_PARSE_TO_X_IMG;
+            let res;
+            while ((res = reg.exec(html))) {
+              let { alt_id, style } = res.groups;
+              html = html.replace(
+                res[0],
+                //  此次匹配到的整條字符串
+                `<x-img data-alt-id='${alt_id}' data-style='${style}'/>`
+              );
+            }
+            return html;
+          }
+        }
+        function _parseHtmlStr_XImgToImg() {
+          /* 將 <x-img> 數據轉回 <img> */
+          let htmlStr = G.data.blog.html;
+          //  複製一份htmlStr
+          let reg = PAGE_BLOG_EDIT.REG.X_IMG_PARSE_TO_IMG;
+          let res;
+          //  存放 reg 匹配後 的 img src 數據
+          while ((res = reg.exec(htmlStr))) {
+            let { alt_id, style } = res.groups;
+            //  找出對應的img數據
+            let ggg = G.data.blog.map_imgs.get(alt_id * 1);
+            let { url, alt } = ggg;
+            //  MAP: alt_id → img { alt_id, alt, blogImg_id, name, img_id, hash, url}
+            let imgEle = `<img src="${url}?alt_id=${alt_id}" alt="${alt}"`;
+            let replaceStr = style
+              ? `${imgEle} style="${style}"/>`
+              : `${imgEle}/>`;
+            //  修改 _html 內對應的 img相關字符
+            htmlStr = htmlStr.replace(res[0], replaceStr);
+            $M_log.dev(`html內blogImgAlt/${alt_id}的tag數據-----parse完成`);
+          }
+          return htmlStr;
         }
       }
 
+      //  初始化 更新紐的lock
+      function initLock() {
+        return new (class Lock extends Map {
+          setKVpairs(dataObj) {
+            //  將kv資料存入
+            const entries = Object.entries(dataObj);
+            if (entries.length) {
+              for (let [key, value] of entries) {
+                this.#set(key, value);
+              }
+            }
+          }
+          getPayload() {
+            let res = {};
+            for (let [key, value] of [...this]) {
+              res[key] = value;
+            }
+            return res;
+          }
+          check_submit() {
+            let disabled = true;
+            if (this.size) {
+              disabled = $span_content_count.hasClass("text-danger");
+            }
+            $btn_updateBlog.prop("disabled", disabled);
+          }
+          //  刪除數據
+          del(key) {
+            this.delete(key);
+            if (key === "title") {
+              //  若刪除的是title，關閉更新鈕
+              $btn_updateTitle.prop("disabled", true);
+            }
+          }
+          #set(key, value) {
+            if (key === "title") {
+              //  若設定的是title，開啟更新鈕
+              $btn_updateTitle.prop("disabled", false);
+            }
+            this.set(key, value);
+          }
+        })();
+      }
       /* ------------------------------------------------------------------------------------------ */
       /* Handle ------------------------------------------------------------------------------------ */
       /* ------------------------------------------------------------------------------------------ */
@@ -466,75 +503,49 @@ async function init() {
         }
         const data = {
           blogList: [G.data.blog.id],
-          owner_id: G.data.blog.author.id,
         };
         await G.utils.axios.delete(PAGE_BLOG_EDIT.API.UPDATE_BLOG, { data });
-        alert("已成功刪除此篇文章");
+        alert("已成功刪除此篇文章，現在將跳往個人頁面");
         location.href = "/self";
       }
       //  關於 更新文章的相關操作
       async function handle_updateBlog(e) {
-        let payload = $$payload.getPayload();
-        if ($$payload.has("html")) {
-          payload.html = parseImgToXImg(payload.html);
-          //  將<img>轉換為自定義<x-img>
-        }
+        let payload = G.utils.lock.getPayload();
         //  整理出「預計刪除BLOG→IMG關聯」的數據
-        let cancelImgs = getBlogImgIdList_needToRemoveAssociate();
+        let cancelImgs = getBlogImgIdList_needToRemove();
         if (cancelImgs.length) {
           //  若cancel有值
           payload.cancelImgs = cancelImgs; //  放入payload
         }
         let result = await validate(payload);
-        let invalid = result.some(({ valid }) => !valid);
-        if (invalid) {
+        if (result.invalid) {
           throw new Error(JSON.stringify(result));
         }
         payload.blog_id = G.data.blog.id;
         await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, payload);
-        for (let [key, value] of $$payload.entries()) {
+        for (let [key, value] of G.utils.lock.entries()) {
           G.data.blog[key] = value;
-          //  同步數據
         }
-        $$payload.clear();
-        //  清空$$payload
-        $btn_updateBlog.prop("disabled", true);
-        //  此時文章更新鈕無法點擊
+        G.utils.lock.clear();
+        G.utils.lock.check_submit();
         if (confirm("儲存成功！是否預覽？（新開視窗）")) {
           window.open(
             `/blog/${G.data.blog.id}?${SERVER_BLOG.SEARCH_PARAMS.PREVIEW}=true`
           );
         }
         return;
-
-        //  將<img>替換為自定義<x-img>
-        function parseImgToXImg(html) {
-          let reg = PAGE_BLOG_EDIT.REG.IMG_PARSE_TO_X_IMG;
-          let res;
-          let _html = html;
-          while ((res = reg.exec(html))) {
-            let { alt_id, style } = res.groups;
-            _html = _html.replace(
-              res[0],
-              //  此次匹配到的整條字符串
-              `<x-img data-alt-id='${alt_id}' data-style='${style}'/>`
-            );
-          }
-          return _html;
-        }
       }
       //  關於 設定文章公開/隱藏時的操作
       async function handle_pubOrPri(e) {
         let KEY = "show";
         let newData = { [KEY]: e.target.checked };
         let result = await validate(newData);
-        let invalid = result.some(({ valid }) => !valid);
-        if (!invalid) {
-          $$payload.setKVpairs(newData);
+        if (!result.invalid) {
+          G.utils.lock.setKVpairs(newData);
         } else {
-          G.utils.payload.del(KEY);
+          G.utils.lock.del(KEY);
         }
-        G.utils.payload.check_submit();
+        G.utils.lock.check_submit();
         return;
       }
       //  關於 更新title 的相關操作
@@ -543,7 +554,7 @@ async function init() {
         const KEY = "title";
         const payload = {
           blog_id: G.data.blog.id,
-          title: G.utils.payload.get(KEY),
+          title: G.utils.lock.get(KEY),
         };
         let response = await G.utils.axios.patch(
           PAGE_BLOG_EDIT.API.UPDATE_BLOG,
@@ -551,8 +562,8 @@ async function init() {
         );
         //  同步數據
         G.data.blog[KEY] = response.data[KEY];
-        G.utils.payload.del(KEY);
-        G.utils.payload.check_submit();
+        G.utils.lock.del(KEY);
+        G.utils.lock.check_submit();
         $M_ui.form_feedback.clear($inp_title.get(0));
         //  清空提醒
         alert("標題更新完成");
@@ -562,11 +573,11 @@ async function init() {
       async function handle_blur(e) {
         const KEY = "title";
         const target = e.target;
-        if (!G.utils.payload.has(KEY)) {
+        if (!G.utils.lock.has(KEY)) {
           target.value = G.data.blog.title;
           $M_ui.form_feedback.clear(target);
         }
-        G.utils.payload.check_submit();
+        G.utils.lock.check_submit();
         return;
       }
       //  關於 title 輸入新值時的相關操作
@@ -576,7 +587,6 @@ async function init() {
         let title = $M_xss.trim(target.value);
         let newData = { [KEY]: title };
         let result = await validate(newData);
-        let invalid = result.some(({ valid }) => !valid);
         let result_title = result.find(
           ({ field_name }) => field_name === "title"
         );
@@ -585,21 +595,22 @@ async function init() {
           result_title.valid,
           result_title.message
         );
-        if (!invalid) {
-          G.utils.payload.setKVpairs(newData);
+        if (!result.invalid) {
+          G.utils.lock.setKVpairs(newData);
         } else {
-          G.utils.payload.del(KEY);
+          G.utils.lock.del(KEY);
         }
-        G.utils.payload.check_submit();
+        G.utils.lock.check_submit();
         return;
       }
 
       /* UTILS ------------------- */
+
       async function initImgData() {
         ////  取出存在pageData.imgs的圖數據，但editor沒有的
         ////  通常是因為先前editor有做updateImg，但沒有存文章，導致後端有數據，但editor的html沒有
         //  整理要與該blog切斷關聯的圖片，格式為[{blogImg_id, blogImgAlt_list}, ...]
-        let cancelImgs = getBlogImgIdList_needToRemoveAssociate();
+        let cancelImgs = getBlogImgIdList_needToRemove();
 
         if (!cancelImgs.length) {
           return;
@@ -607,9 +618,8 @@ async function init() {
         const res = await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, {
           cancelImgs,
           blog_id: G.data.blog.id,
-          owner_id: G.data.blog.author.id,
         });
-        $M_log.dev("initImgData 已將 imgs 刪除 => ", cancelImgs);
+        $M_log.dev("發現需通知後端重整圖片數據，必須移除 => ", cancelImgs);
         //  整理img數據
         cancelImgs.forEach(({ blogImgAlt_list }) => {
           blogImgAlt_list.forEach((alt_id) => {
@@ -620,40 +630,38 @@ async function init() {
       /*  取出要移除的 blogImgAlt_id  */
       ////  移除上一次編輯時，有上傳的圖片卻沒有儲存文章，導致這次編輯時，
       ////  G.data.blog.map_imgs 內可能存在 G.data.blog.html 所沒有的圖片
-      function getBlogImgIdList_needToRemoveAssociate() {
-        let map_imgs_needRemove = new Map(G.data.blog.map_imgs);
+      function getBlogImgIdList_needToRemove() {
+        // let map_imgs_needRemove = new Map(G.data.blog.map_imgs);
+        let set = new Set(G.data.blog.map_imgs.keys());
         let reg = PAGE_BLOG_EDIT.REG.IMG_ALT_ID;
         //  找出editor內的<img>數據，格式為 [{src, alt, href}, ...]
-        let imgs = G.utils.editor.getElemsByType("image");
-        ////  從 map_imgs_needRemove 過濾掉 editor 擁有的 img
-        for (let { src } of imgs) {
-          let res = reg.exec(src);
-          if (!res || !res.groups.alt_id) {
-            continue;
-          }
-          map_imgs_needRemove.delete(res.groups.alt_id * 1);
-        }
-        ////  整理出要給後端移除照片的資訊
-        let cancelImgs = Array.from(map_imgs_needRemove).reduce(
-          (acc, [alt_id, { blogImg_id }]) => {
-            const index = acc.findIndex((img) => img.blogImg_id === blogImg_id);
-            if (index < 0) {
-              ////  代表須被移除的圖檔，目前僅有一張
-              acc.push({
-                blogImg_id,
-                blogImgAlt_list: [alt_id],
-              });
-            } else {
-              ////  這張需被移除的圖片，目前已有一張以上的同檔
-              acc[index]["blogImgAlt_list"].push(alt_id);
+        let alt_list = G.utils.editor
+          .getElemsByType("image")
+          .reduce((acc, { src }) => {
+            let res = reg.exec(src);
+            if (!res || !res.groups.alt_id) {
+              return null;
             }
+            let alt_id = res.groups.alt_id * 1;
+            acc.delete(alt_id);
             return acc;
-          },
-          []
-        );
-        if (!cancelImgs.length) {
-          $M_log.dev("initImgData 沒有要刪除的 imgs");
-        }
+          }, set);
+        ////  整理出要給後端移除照片的資訊
+        let cancelImgs = Array.from(alt_list).reduce((acc, alt_id) => {
+          let { blogImg_id } = G.data.blog.map_imgs.get(alt_id);
+          let index = acc.findIndex((img) => img.blogImg_id === blogImg_id);
+          if (index < 0) {
+            ////  代表須被移除的圖檔，目前僅發現當前這一張
+            acc.push({
+              blogImg_id,
+              blogImgAlt_list: [alt_id],
+            });
+          } else {
+            ////  這張需被移除的圖片，目前已有一張以上的同檔
+            acc[index]["blogImgAlt_list"].push(alt_id);
+          }
+          return acc;
+        }, []);
         return cancelImgs;
       }
       //  校驗blog數據，且決定submit可否點擊
@@ -662,9 +670,9 @@ async function init() {
           ...newData,
           _old: G.data.blog,
         });
+        //  過濾掉 _old
         result = result.filter(({ field_name }) => field_name !== "_old");
-        // let disable = result.some(({ valid }) => !valid);
-        // $btn_updateBlog.prop("disabled", disable);
+        result.invalid = result.some(({ valid }) => !valid);
         return result;
       }
     }

@@ -20,7 +20,7 @@ async function create(data) {
 }
 async function find(opts) {
   let alt = await BlogImgAlt.findOne(opts);
-  return Init.alt(alt);
+  return Init.blogImgAlt(alt);
 }
 async function destoryList(opts) {
   try {

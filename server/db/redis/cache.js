@@ -72,6 +72,7 @@ function _obj(type) {
     const etag = crypto.hash_obj(data);
     let obj = { [etag]: data };
     await Redis.set(KEY, obj);
+    console.log(`系統緩存數據 ${KEY} 的 etag: ${etag}`);
     return etag;
   }
   async function get(id) {
@@ -101,6 +102,7 @@ const Redis = {
       }
       await client.set(key, val);
       await client.expire(key, timeout);
+      console.log(`@ 設置系統緩存 --> cache/${key}`);
     } catch (err) {
       throw err;
     }

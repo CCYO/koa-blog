@@ -48,8 +48,8 @@ function trim(data) {
 }
 
 //  去除空格與進行xss
-function remove_editor_empty(data) {
-  //  xss
+function blog(data) {
+  //  移除前後空格
   let curHtml = trim(data.trim());
   //  移除開頭、結尾的空格與空行
   let reg_start = /^((<p><br><\/p>)|(<p>(\s|&nbsp;)*<\/p>))*/g;
@@ -59,5 +59,5 @@ function remove_editor_empty(data) {
   return curHtml;
 }
 
-export default { myXss, trim, remove_editor_empty };
-export { myXss, trim, remove_editor_empty };
+export default { myXss, trim, blog };
+export { myXss, trim, blog };

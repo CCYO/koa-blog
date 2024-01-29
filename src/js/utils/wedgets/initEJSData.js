@@ -14,7 +14,7 @@ const KEYS = {
 const REG = {
   BLOG: {
     X_IMG:
-      /<x-img.+?data-alt-id='(?<alt_id>\w+?)'.+?(data-style='(?<style>.+?)')?.*?\/>/g,
+      /<x-img.+?data-alt-id='(?<alt_id>\w+?)'.+?(data-style='(?<style>.*?)')?.*?\/>/g,
   },
 };
 
@@ -62,11 +62,12 @@ export default function () {
 function initAlbum({ blog, imgs }) {
   let map_imgs = init_map_imgs(imgs);
   //  img數據map化
-  return { blog, imgs, map_imgs };
+  return { blog, map_imgs };
 }
 //  初始化blog數據
 function initBlog(blog) {
   blog.map_imgs = init_map_imgs(blog.imgs);
+  delete blog.imgs;
   //  處理blog內的img數據
   //  blog.imgs: [ img { alt_id, alt, blogImg_id, name, img_id, hash, url }]
   //  blog.map_imgs: alt_id → img
@@ -111,26 +112,8 @@ function initBlog(blog) {
     if (!URI_String) {
       return "";
     }
-    let htmlStr = decodeURI(URI_String);
     //  百分比編碼 解碼
-    /* 將 <x-img> 數據轉回 <img> */
-    let copy = htmlStr;
-    //  複製一份htmlStr
-    let res;
-    //  存放 reg 匹配後 的 img src 數據
-    while ((res = REG.BLOG.X_IMG.exec(copy))) {
-      let { alt_id, style } = res.groups;
-      //  找出對應的img數據
-      let tt = [...blog.map_imgs];
-      let ggg = blog.map_imgs.get(alt_id * 1);
-      let { url, alt } = ggg;
-      //  MAP: alt_id → img { alt_id, alt, blogImg_id, name, img_id, hash, url}
-      let imgEle = `<img src="${url}?alt_id=${alt_id}" alt="${alt}"`;
-      let replaceStr = style ? `${imgEle} style="${style}"/>` : `${imgEle}/>`;
-      //  修改 _html 內對應的 img相關字符
-      htmlStr = htmlStr.replace(res[0], replaceStr);
-    }
-    return htmlStr;
+    return decodeURI(URI_String);
   }
 }
 //  將 img 數據 map化

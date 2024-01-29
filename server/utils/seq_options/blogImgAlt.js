@@ -10,7 +10,8 @@ const FIND = {
       include: [
         {
           model: Blog,
-          attribute: ["id"],
+          attribute: ["id", "author_id"],
+          required: true,
         },
         {
           model: Img,

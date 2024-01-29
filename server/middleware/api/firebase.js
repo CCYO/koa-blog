@@ -85,23 +85,6 @@ async function blogImg(ctx, next) {
   };
   await next();
   return;
-  //  blogImg 處理
-
-  //  blogImgAlt 處理
-
-  //  建立 blogImg
-  // const BlogImgData = {
-  //   blog_id: ctx.query.blog_id * 1,
-  //   name: ctx.query.name,
-  //   img_id: imgModel.data.id,
-  // };
-  // let {
-  //   data: { id: blogImg_id },
-  // } = await C_BlogImg.add(BlogImgData);
-  // //  建立 blogImgAlt - data: { alt_id, alt, blogImg_id, name, img_id, url, hash }
-  // let { data } = await C_BlogImgAlt.add({ blogImg_id });
-  // let cache = { [PAGE.BLOG]: [ctx.query.blog_id * 1] };
-  // ctx.body = new SuccModel({ data, cache });
 }
 
 module.exports = {

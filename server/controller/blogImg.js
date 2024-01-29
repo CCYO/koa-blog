@@ -29,7 +29,7 @@ async function countBlogImgAlt(blogImg_id) {
   if (!count) {
     return new ErrModel({
       ...ErrRes.BLOG_IMG.READ.NO_BLOG_IMG_ALT,
-      msg: `找不到對應 blogImg_id/${blogImg_id} 的 blogImgAlt`,
+      error: `找不到對應 blogImg_id/${blogImg_id} 的 blogImgAlt`,
     });
   }
   return new SuccModel({ data: count });

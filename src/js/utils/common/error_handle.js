@@ -19,6 +19,12 @@ window.addEventListener("unhandledrejection", function (promiseRejectionEvent) {
   }
   //  阻止冒泡
   promiseRejectionEvent.preventDefault();
+  if (isProd) {
+    this.alert("發生未錯誤，頁面將重新整理。");
+    window.reload();
+  } else {
+    console.log("unhandledrejection -> 非isProd模式，不會重整");
+  }
 });
 
 function watchError(error) {

@@ -2,24 +2,22 @@ const Opts = require("../utils/seq_findOpts");
 const { ErrModel, SuccModel, ErrRes, MyErr } = require("../model");
 const BlogImgAlt = require("../server/blogImgAlt");
 const { ENV, DEFAULT } = require("../config");
-//  ------------------------------------------------------------------------------------------------
-
-//  0411
-async function modify({ alt_id, blog_id, alt }) {
-  await BlogImgAlt.update(alt_id, { alt });
-  let cache = { [DEFAULT.CACHE.TYPE.PAGE.BLOG]: [blog_id] };
-  return new SuccModel({ cache });
-}
 
 //  -------------------------------------------------------------------------------------------------
 async function add(blogImg_id) {
   let data = await BlogImgAlt.create({ blogImg_id });
   return new SuccModel({ data });
 }
-async function findWholeInfo(alt_id) {
+async function findWholeInfo({ author_id, blog_id, alt_id }) {
   let res = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.FIND.wholeInfo(alt_id));
   if (!res) {
     throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST);
+  }
+  if (author_id && data.author.id !== author_id) {
+    throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_AUTHOR);
+  }
+  if (blog_id && data.blog_id !== blog_id) {
+    throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_BLOG);
   }
   return new SuccModel({ data: res });
 }
@@ -30,14 +28,25 @@ async function removeList(id_list) {
   }
   return new SuccModel({ data: row });
 }
+
+//  0411
+async function modify({ author_id, alt_id, blog_id, alt }) {
+  await BlogImgAlt.update(alt_id, { alt });
+  let { data } = await findWholeInfo({ author_id, blog_id, alt_id });
+  let opts = { data };
+  if (!ENV.isNoCache) {
+    opts.cache = {
+      [DEFAULT.CACHE.TYPE.PAGE.BLOG]: [blog_id],
+    };
+  }
+  return new SuccModel(opts);
+}
 module.exports = {
+  modify,
   removeList,
   findWholeInfo,
   add,
-  //  ----------------------------------------------------------------------.
-  modify,
-  //  0408
-
+  //  --------------------------------------------------------
   cancelWithBlog, //  0326
 };
 

@@ -77,16 +77,14 @@ function getTYPE(type) {
       if (ENV.isNoCache) {
         return false;
       }
-      let etag = await cache.set(id, data);
-      console.log(`設定 cache ${type}/${id} 完成，並生成 etag: ${etag}`);
-      return etag;
+      //  RV: etag
+      return await cache.set(id, data);
     },
     //  清除緩存
     async del(id_list) {
       if (ENV.isNoCache) {
         return false;
       }
-      console.log(`@ 完成刪除 cache/${type} 內的指定 id_list => , ${id_list}`);
       return await cache.del(id_list);
     },
   };

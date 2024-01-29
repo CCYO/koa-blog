@@ -12,7 +12,7 @@ const {
 } = require("../filterEmpty"); //  0404
 
 //  0409
-function initAlt(data) {
+function initBlogImgAlt(data) {
   return init(data, go);
   function go(item) {
     let data = { ...item };
@@ -28,6 +28,7 @@ function initAlt(data) {
       delete data.BlogImg;
       if (data.hasOwnProperty("Blog")) {
         data.blog_id = blogImg.Blog.id;
+        data.author_id = blogImg.Blog.author_id;
         delete data.Blog;
       }
     }
@@ -192,7 +193,7 @@ module.exports = {
   //  0423
   idolFans: init,
   //  0409
-  alt: initAlt,
+  blogImgAlt: initBlogImgAlt,
   //  0404
   comment: initComment,
   browser: {
@@ -211,7 +212,6 @@ module.exports = {
   blog: initBlog,
 
   msgReceiver: init, //  0328
-  blogImgAlt: init, //  0326
   blogImg: init, //  0326
   img: init, //  0326
 

@@ -20,7 +20,7 @@ const json = require("koa-json");
 const webpackDevMiddleware = require("./middleware/_webpackDev");
 let BUILD = require("../build");
 let SERVER_CONFIG = require("./config");
-const { ErrRes, ErrModel, MyErr } = require("./model");
+const { ErrRes, MyErr } = require("./model");
 //  連接redis-session
 const { store } = require("./db/redis");
 
@@ -165,7 +165,7 @@ app.use(
   })
 );
 //  處理 mysql transaction
-app.use(Middleware.need_manual_transaction);
+app.use(Middleware.SEQ_TRANSACTION);
 
 // app.use(views(__dirname + '/views', {
 //     extension: 'ejs'

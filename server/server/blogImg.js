@@ -17,6 +17,12 @@ async function create(data) {
 }
 async function countBlogImgAlt(blogImg_id) {
   let blogImg = await BlogImg.findByPk(blogImg_id);
+  if (!blogImg) {
+    throw new MyErr({
+      ...ErrRes.BLOG_IMG.READ.NOT_EXIST,
+      error: `${ErrRes.BLOG_IMG.READ.NOT_EXIST.msg},blogImg/${blogImg_id} 不存在`,
+    });
+  }
   let count = await blogImg.countBlogImgAlts();
   return count;
 }
