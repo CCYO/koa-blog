@@ -22,10 +22,8 @@ const Blog = require("../../controller/blog");
 const router = require("koa-router")();
 //  0504
 const privateCache = GEN_CACHE_FN.private(TYPE.PAGE.BLOG);
-//  0504
 const commonCache = GEN_CACHE_FN.common(TYPE.PAGE.BLOG);
-
-//  0406
+const { ErrRes, ErrModel } = require("../../model");
 //  查看文章
 router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
   const blog_id = ctx.params.id * 1;
@@ -39,17 +37,10 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
   let cache = ctx.cache[TYPE.PAGE.BLOG];
   let { exist } = cache;
   let cacheKey = `${TYPE.PAGE.BLOG}/${blog_id}`;
-  if (exist === STATUS.HAS_FRESH_CACHE) {
-    console.log(`@ ${cacheKey} 響應 304`);
-    ctx.status = 304;
-  } else if (
-    exist === STATUS.NO_IF_NONE_MATCH ||
-    exist == STATUS.IF_NONE_MATCH_IS_NO_FRESH
-  ) {
-    console.log(`@ ${cacheKey} 響應 系統緩存數據`);
-  } else {
+
+  if (exist === STATUS.NO_CACHE) {
     //  向 DB 提取數據
-    let resModel = await Blog.findWholeInfo(blog_id);
+    let resModel = await Blog.findWholeInfo({ blog_id });
     //  DB 沒有相符數據
     if (resModel.errno) {
       return await ctx.render("page404", resModel);
@@ -61,10 +52,24 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
     // cache.data.html = encodeURI(cache.data.html);
     cache.data.html = cache.data.html && encodeURI(cache.data.html);
     //  若html有值，則進行解碼
+  } else if (
+    cache.data &&
+    !cache.data.show &&
+    (!ctx.session.user || ctx.session.user.id !== cache.data.author.id)
+  ) {
+    ////  若是未公開狀態的文章，必須要是作者本人才允許取得
+    return await ctx.render(
+      "page404",
+      new ErrModel(ErrRes.BLOG.READ.NOT_AUTHOR)
+    );
+  } else if (exist === STATUS.HAS_FRESH_CACHE) {
+    console.log(`@ ${cacheKey} 響應 304`);
+    ctx.status = 304;
+  } else {
+    console.log(`@ ${cacheKey} 響應 系統緩存數據`);
   }
   let url = new URL(ctx.href);
   let params = url.searchParams;
-
   let showComment =
     //  是否由預覽文章發來的請求
     !params.get(BLOG.SEARCH_PARAMS.PREVIEW) &&
@@ -72,8 +77,6 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
     cache.data.show;
   let isLogin = ctx.session.user ? true : false;
   let me_id = isLogin ? ctx.session.user.id : 0;
-  console.log("blog => ", cache.data.html);
-  console.log(typeof cache.data.html);
   let ejs_data = {
     blog: { ...cache.data, showComment },
     ejs_template,
@@ -82,7 +85,6 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
   };
   return await ctx.render("blog", ejs_data);
 });
-//  ---------------------------------------------------------------------------------------------
 //  編輯文章
 router.get("/blog/edit/:id", CHECK.login, privateCache, async (ctx, next) => {
   const author_id = ctx.session.user.id;

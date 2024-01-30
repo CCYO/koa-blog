@@ -29,24 +29,25 @@ function initBlogImgAlt(data) {
     // }
     // return data
     //  { id, alt, BlogImg: {id, name, Blog: { id, author_id}, Img: {id, url, hash} }}
-    let res = { id: item.id, alt: item.alt, ...data };
-    let map = new Map(Object.entries(data));
-    if (map.has("BlogImg")) {
+    let { id, alt, ...otherData } = item;
+    let res = { id, alt };
+    if (otherData.hasOwnProperty("BlogImg")) {
       // let { Img, ...blogImg } = item.BlogImg;
       // data = { ...data, ...blogImg, ...Img };
-      res.blogImg = map.get("BlogImg");
+      res.blogImg = otherData.BlogImg;
       if (!res.alt) {
         res.alt = res.blogImg.name;
       }
       if (res.blogImg.hasOwnProperty("Blog")) {
-        res.blog = { ...blogImg.Blog };
+        res.blog = { ...res.blogImg.Blog };
         delete res.blogImg.Blog;
       }
       if (res.blogImg.hasOwnProperty("Img")) {
-        res.img = { ...blogImg.Img };
+        res.img = { ...res.blogImg.Img };
         delete res.blogImg.Img;
       }
     }
+    //  { id, alt, blog: { id, author_id }, blogImg: { id, name }, img: { id, url, hash }}
     return res;
   }
 }
@@ -157,11 +158,12 @@ function _initBlogImg(blogImgs) {
     let blogImgs = new Map();
     let alts = new Map();
     let imgs = new Map();
-    for (let { id: blogImg_id, name, ...data } of datas) {
-      blogImgs.set(blogImg_id, { name });
+    for (let { id, name, ...data } of datas) {
+      let blogImg_id = id;
+      blogImgs.set(id, { id, name });
       if (data.hasOwnProperty("Img")) {
         let { id, url, hash } = data.Img;
-        !imgs.has(id) && imgs.set(id, { url, hash });
+        !imgs.has(id) && imgs.set(id, { id, url, hash });
       }
       if (data.hasOwnProperty("BlogImgAlts")) {
         for (let { id, alt } of data.BlogImgAlts) {
@@ -178,6 +180,7 @@ function _initBlogImg(blogImgs) {
       acc[alt_id] = alt_data;
       return acc;
     }, {});
+    //  { [alt_id]: { alt, blogImg: { id, name }, img: { id, hash, url } }}
     return alts;
   }
 }

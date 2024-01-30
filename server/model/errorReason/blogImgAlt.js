@@ -10,7 +10,11 @@ const REMOVE = {
   ERR: { errno: 801, msg: "刪除 BlogImgAlt 失敗" },
   ROW: { errno: 40003, msg: "刪除 BlogImgAlt 的數量不完全" },
 };
+const UPDATE = {
+  ERR: { errno: 902, msg: "BLOG_IMG_ALT 更新失敗" },
+};
 module.exports = {
+  UPDATE,
   REMOVE,
   READ,
   CREATE,

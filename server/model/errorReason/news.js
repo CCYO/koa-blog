@@ -5,7 +5,7 @@
 //     msg: "Blog_Fans.confirm 更新失敗",
 //   },
 const READ = {
-  NO_LOGIN: { errno: 10001, msg: "尚未登入" },
+  NO_LOGIN: { errno: 10000000001, msg: "尚未登入" },
 };
 
 module.exports = {

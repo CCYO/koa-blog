@@ -240,13 +240,18 @@ async function init() {
         }
         //  editor 的 修改圖片資訊前的檢查函數
         async function checkImage(src, new_alt, url) {
-          if (url || src) {
-            //  RV會自動被化作警告
-            return "不能修改src與url";
-          }
           let res = PAGE_BLOG_EDIT.REG.IMG_ALT_ID.exec(src);
           //  取得要修改的alt_id
           let alt_id = (res.groups.alt_id *= 1);
+          let { img } = G.data.blog.map_imgs.get(alt_id);
+          if (`${img.url}?alt_id=${alt_id}` !== src) {
+            return "不能修改src";
+          }
+          if (url) {
+            //  RV會自動被化作警告
+            return "不能修改url";
+          }
+
           let blog_id = G.data.blog.id;
           let alt = $M_xss.trim(new_alt);
           await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_ALBUM, {
@@ -270,16 +275,15 @@ async function init() {
           //  取得 img 的 MD5 Hash(hex格式)
           let hash = await _getMD5Hash(img);
           // let blogImg_id = await _findExistBlogImgId(hash);
-          let blogImg = await _findExistBlogImgId(hash);
-          //  blogImg = { blogImg_id, url, hash, img_id}
+          // exist = { blogImg_id, url, hash, img_id };
+          let blogImg_id = await _findExistBlogImgId(hash);
           let api = `${PAGE_BLOG_EDIT.API.CREATE_IMG}?hash=${hash}&blog_id=${G.data.blog.id}`;
           let formdata = new FormData();
-          if (!blogImg) {
+          if (!blogImg_id) {
             ////  img為新圖，傳給後端新建一個blogImgAlt
             //  imgName要作為query參數傳送，必須先作百分比編碼
             name = encodeURIComponent(name);
             api += `&name=${name}&ext=${ext}`;
-
             formdata.append("blogImg", img);
             // res = await G.utils.axios.post(api, formdata);
           } else {
@@ -287,12 +291,12 @@ async function init() {
             // res = await G.utils.axios.post(PAGE_BLOG_EDIT.API.CREATE_IMG_ALT, {
             //   blogImg_id,
             // });
-            api += `&blogImg_id=${blogImg.blogImg_id}`;
+            api += `&blogImg_id=${blogImg_id}`;
           }
-
           let res = await G.utils.axios.post(api, formdata);
-
-          let { data: newImg } = res;
+          //  blogImgAlt { id, alt, blog: { id, author_id }, blogImg: { id, name }, img: { id, url, hash }}
+          let { data: blogImgAlt } = res;
+          let { id, blog, ...alt_data } = blogImgAlt;
           //  上傳成功
           //  newImg格式:
           /*{
@@ -304,12 +308,11 @@ async function init() {
                         "url": xxxxx
                     }
                     */
-          //  回傳的圖片名要做百分比解碼
-          newImg.name = decodeURIComponent(newImg.name);
           //  同步數據
-          G.data.blog.map_imgs.set(newImg.alt_id, newImg);
+          //  { [alt_id]: { alt, blogImg: { id, name }, img: { id, hash, url } }}
+          G.data.blog.map_imgs.set(id, alt_data);
           //  將圖片插入 editor
-          insertFn(`${newImg.url}?alt_id=${newImg.alt_id}`, newImg.name);
+          insertFn(`${alt_data.img.url}?alt_id=${id}`, alt_data.alt);
           return;
           //  取得圖片的 hash
           async function _findExistBlogImgId(hash) {
@@ -318,17 +321,15 @@ async function init() {
             let { map_imgs } = G.data.blog;
             if (map_imgs.size) {
               ////  確認此時要上傳的img是否為舊圖
-              //  map_imgs: { MAP [
-              //    <alt_id>: { alt, alt_id, blogImg_id, hash, img_id, name, url},
-              //  ...] }
-              let imgs = [...map_imgs.values()];
+              //  map_imgs: { MAP [alt_id] -> { alt, blogImg: { id, name }, img: { id, hash, url } } }
+              let values = [...map_imgs.values()];
               //  img { alt_id, alt, blogImg_id, name, img_id, hash, url }
-              let target = imgs.find((img) => img.hash === hash);
+              let target = values.find(({ img }) => img.hash === hash);
               if (target) {
                 // blogImg_id = target.blogImg_id;
-                let { alt_id, alt, blogImg_id, name, img_id, hash, url } =
-                  target;
-                res = { blogImg_id, url, hash, img_id };
+                // let { alt_id, alt, blogImg_id, name, img_id, hash, url } =
+                //   target;
+                res = target.img.blogImg.id;
               }
             }
             // return blogImg_id;
@@ -360,8 +361,8 @@ async function init() {
             if (!name || !ext) {
               result = false;
             }
-            name = name.trim().toUpperCase();
-            ext = ext.trim().toUpperCase();
+            name = $M_xss.trim(name).toUpperCase();
+            ext = $M_xss.trim(ext).toUpperCase();
             if (ext !== "PNG" && ext !== "JPG") {
               result = false;
             }
@@ -414,15 +415,16 @@ async function init() {
           function _parseHtmlStr_ImgToXImg(html) {
             let reg = PAGE_BLOG_EDIT.REG.IMG_PARSE_TO_X_IMG;
             let res;
+            let copy = html;
             while ((res = reg.exec(html))) {
               let { alt_id, style } = res.groups;
-              html = html.replace(
+              copy = copy.replace(
                 res[0],
                 //  此次匹配到的整條字符串
                 `<x-img data-alt-id='${alt_id}' data-style='${style}'/>`
               );
             }
-            return html;
+            return copy;
           }
         }
         function _parseHtmlStr_XImgToImg() {
@@ -434,10 +436,11 @@ async function init() {
           //  存放 reg 匹配後 的 img src 數據
           while ((res = reg.exec(htmlStr))) {
             let { alt_id, style } = res.groups;
-            //  找出對應的img數據
-            let ggg = G.data.blog.map_imgs.get(alt_id * 1);
-            let { url, alt } = ggg;
-            //  MAP: alt_id → img { alt_id, alt, blogImg_id, name, img_id, hash, url}
+            //  MAP: alt_id → { alt, blogImg: {id, name}, img: {id, hash, url}}
+            let {
+              alt,
+              img: { url },
+            } = G.data.blog.map_imgs.get(alt_id * 1);
             let imgEle = `<img src="${url}?alt_id=${alt_id}" alt="${alt}"`;
             let replaceStr = style
               ? `${imgEle} style="${style}"/>`
@@ -615,23 +618,25 @@ async function init() {
         if (!cancelImgs.length) {
           return;
         }
-        const res = await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, {
+        await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, {
           cancelImgs,
           blog_id: G.data.blog.id,
         });
-        $M_log.dev("發現需通知後端重整圖片數據，必須移除 => ", cancelImgs);
         //  整理img數據
         cancelImgs.forEach(({ blogImgAlt_list }) => {
           blogImgAlt_list.forEach((alt_id) => {
             G.data.blog.map_imgs.delete(alt_id);
           });
         });
+        $M_log.dev(
+          "初始化頁面數據時重整圖片數據，已完成前/後端移除 => ",
+          cancelImgs
+        );
       }
       /*  取出要移除的 blogImgAlt_id  */
       ////  移除上一次編輯時，有上傳的圖片卻沒有儲存文章，導致這次編輯時，
       ////  G.data.blog.map_imgs 內可能存在 G.data.blog.html 所沒有的圖片
       function getBlogImgIdList_needToRemove() {
-        // let map_imgs_needRemove = new Map(G.data.blog.map_imgs);
         let set = new Set(G.data.blog.map_imgs.keys());
         let reg = PAGE_BLOG_EDIT.REG.IMG_ALT_ID;
         //  找出editor內的<img>數據，格式為 [{src, alt, href}, ...]
@@ -648,7 +653,9 @@ async function init() {
           }, set);
         ////  整理出要給後端移除照片的資訊
         let cancelImgs = Array.from(alt_list).reduce((acc, alt_id) => {
-          let { blogImg_id } = G.data.blog.map_imgs.get(alt_id);
+          let {
+            blogImg: { id: blogImg_id },
+          } = G.data.blog.map_imgs.get(alt_id);
           let index = acc.findIndex((img) => img.blogImg_id === blogImg_id);
           if (index < 0) {
             ////  代表須被移除的圖檔，目前僅發現當前這一張

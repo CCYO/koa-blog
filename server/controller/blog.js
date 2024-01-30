@@ -354,6 +354,7 @@ async function addImg({ author_id, ...data }) {
       return alt_id;
       //  data { blog_id, name, img_id }
     } else if (map.get("img_id")) {
+      name = my_xxs(name);
       let {
         data: { id: blogImg_id },
       } = await C_BlogImg.add({ blog_id, name, img_id });

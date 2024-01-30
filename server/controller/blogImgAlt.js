@@ -9,17 +9,18 @@ async function add(blogImg_id) {
   return new SuccModel({ data });
 }
 async function findWholeInfo({ author_id, blog_id, alt_id }) {
-  let res = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.FIND.wholeInfo(alt_id));
-  if (!res) {
+  //  { id, alt, blog: { id, author_id }, blogImg: { id, name }, img: { id, url, hash }}
+  let data = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.FIND.wholeInfo(alt_id));
+  if (!data) {
     throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST);
   }
-  if (author_id && data.author.id !== author_id) {
+  if (author_id && data.blog.author_id !== author_id) {
     throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_AUTHOR);
   }
-  if (blog_id && data.blog_id !== blog_id) {
+  if (blog_id && data.blog.id !== blog_id) {
     throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_BLOG);
   }
-  return new SuccModel({ data: res });
+  return new SuccModel({ data });
 }
 async function removeList(id_list) {
   let row = await BlogImgAlt.destoryList(Opts.REMOVE.list(id_list));
@@ -30,6 +31,7 @@ async function removeList(id_list) {
 }
 async function modify({ author_id, alt_id, blog_id, alt }) {
   await BlogImgAlt.update(alt_id, { alt });
+  //  { id, alt, blog: { id, author_id }, blogImg: { id, name }, img: { id, url, hash }}
   let { data } = await findWholeInfo({ author_id, blog_id, alt_id });
   let opts = { data };
   if (!ENV.isNoCache) {

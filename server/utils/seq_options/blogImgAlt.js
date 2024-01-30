@@ -10,12 +10,12 @@ const FIND = {
       include: [
         {
           model: Blog,
-          attribute: ["id", "author_id"],
+          attributes: ["id", "author_id"],
           required: true,
         },
         {
           model: Img,
-          attribute: ["id", "url", "hash"],
+          attributes: ["id", "url", "hash"],
           required: true,
         },
       ],

@@ -11,30 +11,6 @@ let {
 } = require("./errorReason");
 
 module.exports = {
-  BLOG_IMG: {
-    READ: BLOG_IMG.READ,
-    REMOVE: BLOG_IMG.REMOVE,
-
-    //  ---------------------------------------------------------
-    CREATE: {
-      //  0406
-      NO_DATA: { errno: 50002, msg: "創建 BLOG_IMG 卻沒提供參數" },
-      //  0406
-      ERR: { errno: 50001, msg: "BlogImg創建失敗" },
-    },
-    UPDATE_ERR: { errno: 802, msg: "更新失敗" },
-    CREATE_ERR: { errno: 803, msg: "創建失敗" },
-  },
-  BLOG_IMG_ALT: {
-    UPDATE: { errno: 902, msg: "BLOG_IMG_ALT 更新失敗" },
-    //  0408
-
-    REMOVE_ERR: { errno: 903, msg: "BlogImgAlt刪除失敗" }, //  0326
-    //  ----------------------------------------------------------------------------
-    REMOVE: BLOG_IMG_ALT.REMOVE,
-    CREATE: BLOG_IMG_ALT.CREATE,
-    READ: BLOG_IMG_ALT.READ,
-  },
   BLOG: {
     //  0411
     DELETE: {
@@ -56,6 +32,27 @@ module.exports = {
     REMOVE: BLOG.REMOVE,
     CREATE: BLOG.CREATE,
     READ: BLOG.READ,
+  },
+  BLOG_IMG: {
+    READ: BLOG_IMG.READ,
+    REMOVE: BLOG_IMG.REMOVE,
+    //  ---------------------------------------------------------
+    CREATE: {
+      //  0406
+      NO_DATA: { errno: 50002, msg: "創建 BLOG_IMG 卻沒提供參數" },
+      //  0406
+      ERR: { errno: 50001, msg: "BlogImg創建失敗" },
+    },
+    UPDATE_ERR: { errno: 802, msg: "更新失敗" },
+    CREATE_ERR: { errno: 803, msg: "創建失敗" },
+  },
+  BLOG_IMG_ALT: {
+    UPDATE: BLOG_IMG_ALT.UPDATE,
+    REMOVE: BLOG_IMG_ALT.REMOVE,
+    CREATE: BLOG_IMG_ALT.CREATE,
+    READ: BLOG_IMG_ALT.READ,
+    //  ----------------------------------------------------------------------------
+    REMOVE_ERR: { errno: 903, msg: "BlogImgAlt刪除失敗" }, //  0326
   },
   //  0406
   ARTICLE_READER: {

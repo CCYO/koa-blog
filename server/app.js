@@ -70,7 +70,7 @@ app.use(async (ctx, next) => {
     } else {
       myErr = error;
     }
-    ctx.app.emit("error", myErr, ctx);
+    ctx.app.emit("error", error, ctx);
     if (SERVER_CONFIG.ENV.isProd) {
       myErr = myErr.model;
     } else {
@@ -186,11 +186,13 @@ app.use(viewSquare.routes(), viewSquare.allowedMethods());
 app.use(viewErrPage.routes(), viewErrPage.allowedMethods());
 
 app.on("error", (error, ctx) => {
-  console.log(
-    "@ emit app.onerror => \n model: \n ",
-    error.model,
-    ` \n error: \n ${error.stack}`
-  );
+  let isMyErr = error instanceof MyErr;
+  console.log(`@ emit app.onerror => \n is MyErr: ${isMyErr}`);
+  if (isMyErr) {
+    console.log("model: \n", error.model);
+  }
+  console.log(error.stack);
+  console.log("@------------------------------------------------------------@");
 });
 
 module.exports = app;

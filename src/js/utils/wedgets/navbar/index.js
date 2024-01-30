@@ -9,7 +9,7 @@ import { SERVER as $SERVER_CONFIG } from "@js/config";
 
 const API = `/api/news`;
 const REG = {
-  IGNORE_PAGES: /^\/(login)|(register)|(errPage)/,
+  IGNORE_PAGES: /^\/(login)|(register)|(errPage)|blog\/\w+?(\?preview=true)$/,
   ACTIVE_PATHNAME: /^\/(?<pathname>\w+)\/?(?<albumList>list\?)?/,
 };
 //  單位ms, 1 min

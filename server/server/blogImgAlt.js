@@ -5,7 +5,10 @@ const { BlogImgAlt } = require("../db/mysql/model"); //  0406
 async function update(id, data) {
   let [row] = await BlogImgAlt.update(data, { where: { id } });
   if (!row) {
-    throw new MyErr(ErrRes.BLOG_IMG_ALT.UPDATE);
+    throw new MyErr({
+      ...ErrRes.BLOG_IMG_ALT.UPDATE.ERR,
+      error: `blogImgAlt/${id} 更新失敗`,
+    });
   }
   return row;
 }
@@ -20,6 +23,7 @@ async function create(data) {
 }
 async function find(opts) {
   let alt = await BlogImgAlt.findOne(opts);
+  //  { id, alt, blog: { id, author_id }, blogImg: { id, name }, img: { id, url, hash }}
   return Init.blogImgAlt(alt);
 }
 async function destoryList(opts) {

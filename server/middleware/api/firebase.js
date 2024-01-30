@@ -58,30 +58,20 @@ async function blogImg(ctx, next) {
       let res = await parse.blogImg(ctx);
       //  取得 url
       url = res[GCS_ref.BLOG];
-
-      //  db img處理
-
-      //  創建 img
-      // imgModel = await C_Img.add({ hash, url });
     } else {
       url = data.url;
       img_id = data.id;
     }
+    name = decodeURIComponent(name);
   }
-  //  blog_id, hash, url
-  //  blogImg_id
-  //  name, img_id    xx / ext
+
   ctx.request.body = {
     blog_id: blog_id * 1,
     hash,
     url,
-
     img_id,
     name,
-
     blogImg_id,
-
-    // img_id: imgModel.data.id,
   };
   await next();
   return;
