@@ -14,14 +14,16 @@ const router = require("koa-router")();
 
 router.get("/permission/:errno", async (ctx) => {
   let errno = ctx.params.errno * 1;
-  let errModel;
+  let opts = {};
   if (errno === ErrRes.PAGE.NO_LOGIN.errno) {
-    errModel = new ErrModel(ErrRes.PAGE.NO_LOGIN);
-    errModel.from = ctx.query.from;
+    opts.errModel = new ErrModel(ErrRes.PAGE.NO_LOGIN);
+    opts.from = ctx.query.from;
+    opts.title = "提醒頁";
   } else if (errno === ErrRes.PAGE.NO_PAGE.errno) {
-    errModel = new ErrModel(ErrRes.PAGE.NO_PAGE);
+    opts.errModel = new ErrModel(ErrRes.PAGE.NO_PAGE);
+    opts.title = "404";
   }
-  await ctx.render("page404", { errModel });
+  await ctx.render("page404", opts);
 });
 
 module.exports = router;

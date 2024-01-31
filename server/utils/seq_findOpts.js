@@ -18,6 +18,7 @@ module.exports = {
     ...BLOG_IMG_ALT,
   },
   BLOG: {
+    FIND: BLOG.FIND,
     //  0427
     findInfoForModifyTitle: (blog_id) => ({
       where: { id: blog_id /*show: true*/ },
@@ -147,19 +148,6 @@ module.exports = {
       ],
     }),
     //  0411
-    findInfoForPageOfSquare() {
-      return {
-        attributes: ["id", "title", "show", "showAt", "createdAt"],
-        where: {
-          show: true,
-        },
-        include: {
-          association: "author",
-          attributes: ["id", "email", "nickname"],
-        },
-      };
-    },
-    //  0411
     findInfoForPageOfAlbumList: (author_id) => ({
       attributes: ["id", "title", "show", "showAt", "updatedAt", "createdAt"],
       where: { author_id },
@@ -215,7 +203,6 @@ module.exports = {
       limit: opts.limit,
       offset: opts.offset,
     }),
-    ...BLOG,
   },
   //  0406
   FOLLOW: {

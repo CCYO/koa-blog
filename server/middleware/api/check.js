@@ -44,8 +44,7 @@ async function login(ctx, next) {
 }
 
 module.exports = {
-  //  0505
-  mustBeOwner,
-  //  ---------------
   login,
+  //  ---------------
+  mustBeOwner,
 };

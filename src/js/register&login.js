@@ -70,6 +70,7 @@ async function init() {
       /* 登入表單 submit Event handler */
       async function handle_submit_login(e) {
         e.preventDefault();
+
         let alert_message = PAGE_REGISTER_LOGIN.MESSAGE.LOGIN_FAIL;
         let validated_list = await G.utils.validate.login(axios_payload);
         //  校驗 payload

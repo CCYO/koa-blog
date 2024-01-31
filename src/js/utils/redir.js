@@ -4,9 +4,10 @@ const REDIR = "from";
 function from(url) {
   let searchParams = new URLSearchParams(location.search);
   if (searchParams.size) {
-    url = decodeURIComponent(searchParams.get(REDIR));
+    //  searchParams 取得的query，已經完成decodeURIComponent
+    url = searchParams.get(REDIR);
   }
-  location.href = url;
+  location.replace(url);
 }
 
 function check_login(data) {

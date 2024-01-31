@@ -4,7 +4,7 @@
 const ejs_template = require("../../utils/ejs_template");
 //  0516
 const {
-  VIEWS: { CHECK, NEWS },
+  VIEWS: { CHECK, NEWS, CACHE },
   GEN_CACHE_FN,
 } = require("../../middleware");
 //  0504
@@ -53,7 +53,7 @@ router.get("/register", async (ctx, next) => {
   });
 });
 //  登入頁
-router.get("/login", async (ctx, next) => {
+router.get("/login", CACHE.static, async (ctx, next) => {
   //  若已登入，跳轉到個人頁面
   if (ctx.session.user) {
     return ctx.redirect("/self");

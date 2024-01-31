@@ -108,6 +108,7 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
   } else if (exist === STATUS.HAS_FRESH_CACHE) {
     console.log(`@ ${cacheKey} 響應 304`);
     ctx.status = 304;
+    return;
   } else {
     console.log(`@ ${cacheKey} 響應 系統緩存數據`);
   }

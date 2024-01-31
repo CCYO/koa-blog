@@ -1,11 +1,6 @@
 const seq = require("../db/mysql/seq");
 //  0411
-async function findInfoForPageOfSquare(author_id) {
-  let list = await Blog.readList(Opts.BLOG.findInfoForPageOfSquare());
-  let blogs = list.filter(({ author }) => author.id !== author_id);
-  let data = Init.browser.blog.sortAndInitTimeFormat(blogs);
-  return new SuccModel({ data });
-}
+
 // //  0411
 // async function findInfoForPageOfAlbumList(userId, { pagination } ) {
 //     let blogs = await Blog.readList(Opts.BLOG.findInfoForPageOfAlbumList(userId))
@@ -367,6 +362,14 @@ async function addImg({ author_id, ...data }) {
       return await _getAltId({ blog_id, img_id, name });
     }
   }
+}
+//  --------------- 刪除blog ------------------------
+//  廣場數據
+async function findInfoForPageOfSquare(author_id) {
+  let list = await Blog.readList(Opts.BLOG.FIND.allOfPublicList());
+  let blogs = list.filter(({ author }) => author.id !== author_id);
+  let data = Init.browser.blog.sortAndInitTimeFormat(blogs);
+  return new SuccModel({ data });
 }
 module.exports = {
   addImg,

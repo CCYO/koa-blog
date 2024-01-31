@@ -31,10 +31,13 @@ async function init() {
       let target;
       //  404 -> 上一頁 || 廣場頁
       if (errno === ErrRes.PAGE.NO_PAGE.errno) {
-        if (
-          document.referrer &&
-          /34\.80\.51\.244:8080/.test(document.referrer)
-        ) {
+        let hasReferrer = !!document.referrer;
+        let someOrigin =
+          hasReferrer && /34\.80\.51\.244:8080/.test(document.referrer);
+        let notLoginPage =
+          (someOrigin && !G.data.me.id) || !/\/login/.test(document.referrer);
+        if (notLoginPage) {
+          target = document.referrer;
           alertMsg = "五秒後將自動回到上一頁";
         } else {
           target = "/square";
@@ -43,25 +46,15 @@ async function init() {
       } else if (errno === ErrRes.PAGE.NO_LOGIN.errno) {
         //  需登入 -> 登入頁 -> 目的地
         alertMsg = "五秒後將自動往登陸頁";
-        target = `/login?from=${encodeURIComponent(G.data.errModel.from)}`;
+        target = `/login?from=${encodeURIComponent(G.data.from)}`;
         //  無權限 -> 後端以404處理
       }
-
       setTimeout(() => {
         alert(alertMsg);
         setTimeout(() => {
-          console.log("settimeout內的href => ", target);
-          redir(target);
+          location.replace(target);
         }, 6000);
       }, 0);
-
-      function redir(href) {
-        if (href) {
-          location.href = href;
-        } else {
-          history.go(-1);
-        }
-      }
     }
   } catch (e) {
     $M_Common.error_handle(e);

@@ -74,6 +74,17 @@ const FIND = {
       attributes: ["id"],
     },
   }),
+  //  廣場頁
+  allOfPublicList: () => ({
+    attributes: ["id", "title", "show", "showAt", "createdAt"],
+    where: {
+      show: true,
+    },
+    include: {
+      association: "author",
+      attributes: ["id", "email", "nickname"],
+    },
+  }),
 };
 
 module.exports = {

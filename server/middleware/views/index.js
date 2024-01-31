@@ -1,11 +1,11 @@
 //  0501
-const NEWS = require('./news')
+const NEWS = require("./news");
 //  0501
-const CHECK = require('./check')
-
+const CHECK = require("./check");
+const CACHE = require("./cache");
 module.exports = {
-    //  0501
-    NEWS,
-    //  0501
-    CHECK
-}
+  CACHE,
+  //  -------------------------------------------
+  NEWS,
+  CHECK,
+};
