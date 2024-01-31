@@ -5,6 +5,10 @@ import $M_log from "./log";
 import $M_redir from "./redir";
 const REG_API_NEWS = /(^\/api\/news$)/;
 
+const REG = {
+  IGNORE_PATH: /^\/(login)|(register)|(errPage)|(blog\/preview\/\d+)/,
+};
+
 export default class {
   //  創建一個axios實例
 
@@ -34,28 +38,47 @@ export default class {
     /* 配置 axios 的 響應攔截器，統一處理報錯 */
     instance.interceptors.response.use(
       (response) => {
+        let resolve = true; // 1: Promise.resolve, 2: redir login page
         let {
           config: { url },
           data: { errno, msg },
         } = response;
         let res = response.data;
-        if (errno === ErrRes.NEWS.READ.NO_LOGIN.errno) {
-          ////  針對未登入狀態處理
-          if (REG_API_NEWS.test(window.location.pathname)) {
-            //  此請求若來自於 getNews
-            $M_log.dev("取得news資訊時，發現未登入");
-            res = { errno, data: { me: {} } };
-          } else {
-            //  非 getNews 請求的回應處理
-            $M_redir.check_login();
-            // alert("尚未登入！請先登入帳號！");
-            // location.href = `/login?from=${encodeURIComponent(location.href)}`;
-          }
-        } else if (errno) {
-          console.log("@axios response 取得後端發來「否決」結果 => \n", msg);
+        // if (errno === 0) {
+        //   status = 1;
+        // } else
+        if (
+          errno === ErrRes.NEWS.READ.NO_LOGIN &&
+          !REG.IGNORE_PATH.test(location.pathname)
+        ) {
+          resolve = false;
+        } else if (errno === ErrRes.PAGE.NO_LOGIN) {
+          resolve = false;
         }
+        // else {
+        //   status = 1
+        // }
+
+        // if (errno === ErrRes.NEWS.READ.NO_LOGIN.errno) {
+        //   ////  針對未登入狀態處理
+        //   if (REG_API_NEWS.test(window.location.pathname)) {
+        //     //  此請求若來自於 getNews
+        //     $M_log.dev("取得news資訊時，發現未登入");
+        //     res = { errno, data: { me: {} } };
+        //   } else {
+        //     //  非 getNews 請求的回應處理
+        //     $M_redir.check_login();
+        //     // alert("尚未登入！請先登入帳號！");
+        //     // location.href = `/login?from=${encodeURIComponent(location.href)}`;
+        //   }
+        // } else if (errno) {
+        //   console.log("@axios response 取得後端發來「否決」結果 => \n", msg);
+        // }
         instance.backdrop.hidden();
-        return Promise.resolve(res);
+        if (resolve) {
+          return Promise.resolve(res);
+        }
+        $M_redir.check_login();
       },
       (axiosError) => {
         $M_log.dev("_axios 發生錯誤，交給 $M_common.error_handle 處理");

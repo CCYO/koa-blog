@@ -7,7 +7,9 @@ const ARTICLE_READER = require("./articleReader");
 const BLOG = require("./blog");
 const BLOG_IMG_ALT = require("./blogImgAlt");
 const BLOG_IMG = require("./blogImg");
+const PAGE = require("./page");
 module.exports = {
+  PAGE,
   BLOG_IMG,
   BLOG,
   ARTICLE_READER,

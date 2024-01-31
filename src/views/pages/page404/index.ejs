@@ -6,12 +6,9 @@
   <%- include('../../wedgets/navbar.ejs') %>
   <!-- MAIN -->
   <main class="container-md" style="display: none;">
-    <h1>發生未預期的錯誤</h1>
+    <h1><%%= errModel.errno %></h1>
     <div>
-      <%%= errno %>
-    </div>
-    <div>
-      <%%= msg %>
+      <%%= errModel.msg %>
     </div>
   </main>
   <!-- EJS DATA -->

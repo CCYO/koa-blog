@@ -23,15 +23,15 @@ export default async function (axios) {
   // let navbar_data = { me: undefined, news: undefined };
   let user = {};
   let news = {};
-  if (!REG.IGNORE_PAGES.test(location.pathname)) {
-    ////  若是可以呈現登入狀態的頁面
-    let { errno, data } = await getLoginData();
-    if (!errno) {
-      let { news: data_news, ...data_user } = data;
-      user = data_user;
-      news = data_news;
-    }
+  // if (!REG.IGNORE_PAGES.test(location.pathname)) {
+  //   ////  若是可以呈現登入狀態的頁面
+  let { errno, data } = await getLoginData();
+  if (!errno) {
+    let { news: data_news, ...data_user } = data;
+    user = data_user;
+    news = data_news;
   }
+  // }
   render(user);
   //  初始化nav功能
   await initFn(news);

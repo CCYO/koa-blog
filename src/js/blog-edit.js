@@ -167,7 +167,7 @@ async function init() {
         //  editor 編輯欄 創建
         const editor = createEditor({
           //  插入後端取得的 html
-          html: _parseHtmlStr_XImgToImg(G.data.blog.html) || "",
+          html: _parseHtmlStr_XImgToImg() || "",
           selector: `#${PAGE_BLOG_EDIT.ID.EDITOR_CONTAINER}`,
           config: editorConfig,
         });
@@ -532,9 +532,7 @@ async function init() {
         G.utils.lock.clear();
         G.utils.lock.check_submit();
         if (confirm("儲存成功！是否預覽？（新開視窗）")) {
-          window.open(
-            `/blog/${G.data.blog.id}?${SERVER_BLOG.SEARCH_PARAMS.PREVIEW}=true`
-          );
+          window.open(`/blog/preview/${G.data.blog.id}`);
         }
         return;
       }

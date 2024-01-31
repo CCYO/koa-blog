@@ -77,12 +77,9 @@
 </nav>
   <!-- MAIN -->
   <main class="container-md" style="display: none;">
-    <h1>發生未預期的錯誤</h1>
+    <h1><%= errModel.errno %></h1>
     <div>
-      <%= errno %>
-    </div>
-    <div>
-      <%= msg %>
+      <%= errModel.msg %>
     </div>
   </main>
   <!-- EJS DATA -->
@@ -92,8 +89,7 @@
         user: ['currentUser', "relationShip", 'blogs'],
         blog: ['blog'],
         album: ['album'],
-        model: ['model'],
-        serverError: ['serverError']
+        errPage: ['errModel']
       }).flat()
   %>
   <% for(let type in locals){ %>

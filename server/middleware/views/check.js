@@ -37,11 +37,8 @@ async function login(ctx, next) {
   } else {
     let url = new URL(ctx.href);
     let search = url.search;
-    let query = encodeURIComponent(search);
-    //  包含 search 開頭的 "?" 都一起編碼
-    let from = url.pathname + query;
-    // ctx.redirect(`/login?from=${encodeURIComponent(ctx.path)}`)
-    ctx.redirect(`/login?from=${from}`);
+    let from = encodeURIComponent(url.pathname + search);
+    ctx.redirect(`/permission/${ErrRes.PAGE.NO_LOGIN.errno}?from=${from}`);
   }
   return;
 }

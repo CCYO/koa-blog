@@ -8,9 +8,16 @@ let {
   BLOG,
   BLOG_IMG_ALT,
   BLOG_IMG,
+  PAGE,
 } = require("./errorReason");
 
 module.exports = {
+  PAGE: {
+    ...PAGE,
+    //  --------------------------------------------------------------------------
+    // NOT_OWNER: { errno: 200002, msg: "非擁有者" },
+    // NOT_SELF: { errno: 502, msg: "非本人" },
+  },
   BLOG: {
     //  0411
     DELETE: {
@@ -205,11 +212,6 @@ module.exports = {
     NO_DATA: { errno: 40001, msg: "沒有相符的 IMG" },
   },
   //  0404
-  PERMISSION: {
-    //  0430
-    NOT_OWNER: { errno: 200002, msg: "非擁有者" },
-    NOT_SELF: { errno: 502, msg: "非本人" },
-  },
 
   READ: {
     NOT_EXIST: { errno: 201, msg: "沒有相符的使用者資料" },
@@ -234,6 +236,4 @@ module.exports = {
   PUB_SUB: {
     REMOVE_ERR: { errno: 1101, msg: "PUB_SUB 刪除失敗" },
   },
-
-  NOT_FIND: { errno: 9999, msg: "頁面不存在" },
 };

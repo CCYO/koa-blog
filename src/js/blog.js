@@ -39,6 +39,7 @@ async function init() {
     /* Const ------------------------------------------------------------------------------------ */
     /* ------------------------------------------------------------------------------------------ */
     const PAGE_BLOG = PAGE.BLOG;
+    const PAGE_BLOG_EDIT = PAGE.BLOG_EDIT;
 
     await G.main(initMain);
     //  若是因為comment通知前來此頁面，可以直接滑動至錨點
@@ -46,7 +47,32 @@ async function init() {
       location.href = location.hash;
     }
     async function initMain() {
-      $(`.${PAGE_BLOG.CLASS.BLOG_CONTENT}`).html(G.data.blog.html);
+      function _parseHtmlStr_XImgToImg() {
+        /* 將 <x-img> 數據轉回 <img> */
+        let htmlStr = G.data.blog.html;
+        //  複製一份htmlStr
+        let reg = PAGE_BLOG_EDIT.REG.X_IMG_PARSE_TO_IMG;
+        let res;
+        //  存放 reg 匹配後 的 img src 數據
+        while ((res = reg.exec(htmlStr))) {
+          let { alt_id, style } = res.groups;
+          //  MAP: alt_id → { alt, blogImg: {id, name}, img: {id, hash, url}}
+          let {
+            alt,
+            img: { url },
+          } = G.data.blog.map_imgs.get(alt_id * 1);
+          let imgEle = `<img src="${url}?alt_id=${alt_id}" alt="${alt}"`;
+          let replaceStr = style
+            ? `${imgEle} style="${style}"/>`
+            : `${imgEle}/>`;
+          //  修改 _html 內對應的 img相關字符
+          htmlStr = htmlStr.replace(res[0], replaceStr);
+          $M_log.dev(`html內blogImgAlt/${alt_id}的tag數據-----parse完成`);
+        }
+        return htmlStr;
+      }
+      // $(`.${PAGE_BLOG.CLASS.BLOG_CONTENT}`).html(G.data.blog.html);
+      $(`.${PAGE_BLOG.CLASS.BLOG_CONTENT}`).html(_parseHtmlStr_XImgToImg());
       if (!G.data.blog.showComment) {
         $M_log.dev("不需要渲染評論");
         return;

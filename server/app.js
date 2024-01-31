@@ -59,7 +59,7 @@ app.use(async (ctx, next) => {
     await next();
     if (ctx.status === 404) {
       //  待處理
-      await ctx.render("page404", ErrRes.NOT_FIND);
+      ctx.redirect(`/permission/${ErrRes.PAGE.NO_PAGE.errno}`);
       return;
     }
   } catch (error) {
@@ -90,7 +90,8 @@ app.use(async (ctx, next) => {
         model: myErr.model,
         serverError: myErr.serverError,
       };
-      await ctx.render("page404", opts);
+      let errModel = MyErr.model;
+      ctx.redirect(`/errPage?errModel=${JSON.stringify(errModel)}`);
     }
     return;
   }

@@ -35,8 +35,10 @@ async function mustBeOwner(ctx, next) {
 async function login(ctx, next) {
   if (ctx.session.user) {
     await next();
-  } else {
+  } else if (ctx.path === "/api/news") {
     ctx.body = new ErrModel(ErrRes.NEWS.READ.NO_LOGIN);
+  } else {
+    ctx.body = new ErrModel(ErrRes.PAGE.NO_LOGIN);
   }
   return;
 }
