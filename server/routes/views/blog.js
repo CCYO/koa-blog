@@ -113,12 +113,7 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
     console.log(`@ ${cacheKey} 響應 系統緩存數據`);
   }
   let url = new URL(ctx.href);
-  let params = url.searchParams;
-  let showComment =
-    //  是否由預覽文章發來的請求
-    !params.get(BLOG.SEARCH_PARAMS.PREVIEW) &&
-    //  是否為發布狀態
-    cache.data.show;
+  let showComment = true;
   let isLogin = ctx.session.user ? true : false;
   let me_id = isLogin ? ctx.session.user.id : 0;
   let ejs_data = {

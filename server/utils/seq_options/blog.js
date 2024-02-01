@@ -68,7 +68,7 @@ const FIND = {
   }),
   readerList: (id) => ({
     where: { id },
-    attributes: [id],
+    attributes: ["id"],
     include: {
       association: "readers",
       attributes: ["id"],

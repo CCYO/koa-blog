@@ -1,0 +1,12 @@
+@import "./common/basic.css";
+.list-group-item > span {
+  font-size: 0.5rem;
+}
+
+.list-group-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+.list-group-item > span > a:hover {
+  color: green;
+}

@@ -98,10 +98,17 @@ function initBlog(data) {
       let status = map.get("show");
       // let status = map.get('show') ? 'public' : 'private'
       if (status && map.has("showAt")) {
-        blog.time = date.format(
-          map.get("showAt"),
-          SERVER_CONFIG.DEFAULT.BLOG.TIME_FORMAT
-        );
+        if (!map.get("showAt")) {
+          blog.time = date.format(
+            new Date(),
+            SERVER_CONFIG.DEFAULT.BLOG.TIME_FORMAT
+          );
+        } else {
+          blog.time = date.format(
+            map.get("showAt"),
+            SERVER_CONFIG.DEFAULT.BLOG.TIME_FORMAT
+          );
+        }
       } else if (!status && map.get("updatedAt")) {
         blog.time = date.format(
           map.get("updatedAt"),

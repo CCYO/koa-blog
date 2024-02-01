@@ -1,15 +1,124 @@
-Html Webpack Plugin:
-<pre>
-  Error: The loader "/home/ccy009ccy/koa-blog/src/views/pages/square/index.ejs" didn't return ht  ml.
-  
-  - index.js:151 HtmlWebpackPlugin.evaluateCompilationResult
-    [koa-blog]/[html-webpack-plugin]/index.js:151:24
-  
-  - index.js:324 
-    [koa-blog]/[html-webpack-plugin]/index.js:324:26
-  
-  - async Promise.all
-  
-  - async Promise.all
-  
-</pre>
+<!-- 主導覽： NAV_CSS + NAV第一層template + backdrop Ele -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= locals.blog ? blog.title : locals.title ? title : '錯誤頁' %>
+  </title>
+  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
+  <!-- BS5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+<script defer src="/public/square.js"></script></head>
+
+<body>
+  <div id="loadingBackdrop"
+    style="
+    width: 100vw;
+    height: 100vh;
+    color: red;
+    background: rgba(255, 255, 255, .5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: black;
+    font-size: 50px;
+    font-family: 'JetBrainsMono', 'NotoSerifTC', 'Courier New', Courier, monospace !important;
+    "
+    tabindex="0"
+>
+  <div>
+    LOADING
+  </div>
+</div>
+  <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top" style="display: none">
+  <div class="container-fluid flex-nowrap">
+    <!-- 首頁/廣場頁 -->
+    <a class="navbar-brand" href="/square">KOA-BLOG</a>
+    <!-- 廣場頁 + 註冊/登入 -->
+    <ul class="nav ms-auto flex-grow-1 justify-content-end" id="noNeedCollapse-list">
+      <li class="nav-item d-none d-sm-inline-block">
+        <a class="nav-link" href="/square">廣場頁</a>
+      </li>
+      <li style="flex-grow: 1;"></li>
+      <li class="nav-item">
+        <a class="nav-link nav-tab" href="/register" data-my-tab="#register">註冊</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link nav-tab" href="/login" data-my-tab="#login">登入</a>
+      </li>
+    </ul>
+    <!-- 收合鈕 -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <!-- 收合內容 -->
+    <div class="offcanvas offcanvas-start flex-grow-0" id="offcanvasNavbar">
+      <!-- 收合內容 標題-->
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+
+      <!-- 收合內容 表單列 -->
+      <div class="offcanvas-body">
+        <ul class="navbar-nav w-100" id="needCollapse-list">
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+  <!-- MAIN -->
+  <main class="container-md main" style="display: none;">
+    <h1>文章列表</h1>
+    <% if(blogs.length){ %>
+    <ul class="list-group">
+      <% blogs.forEach( ({ id, title, author, time }) => { %>
+      <li class="list-group-item">
+        <a href="/blog/<%= id %>"><%= title %></a>
+        <span>by<a href="/other/<%= author.id %>"><%= author.nickname %></a></span>
+        <span>公開於<%= time %></span>
+      </li>
+      <% }) %>
+    </ul>
+    <% } else { %>
+    <p>沒有任何文章</p>
+    <% } %>
+    </div>
+  </main>
+  <!-- EJS DATA -->
+  <div style="display: none;">
+  <%
+      let whiteList = Object.values({
+        user: ['currentUser', "relationShip", 'blogs'],
+        blog: ['blog'],
+        album: ['album'],
+        errPage: ['errModel', 'from']
+      }).flat()
+  %>
+  <% for(let type in locals){ %>
+  <% if( whiteList.some(item => item === type)){ %>
+  <div data-my-data="<%= type %>">
+    <%- JSON.stringify(locals[type]) %>
+  </div>
+  <% } %>
+  <% } %>
+</div>
+  <!-- FOOTER -->
+  <div class="footer container-fluid" style="display: none;">
+  FooterFooterFooterFooter
+</div>
+  <!-- BS5 / POPPER -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.1/dist/umd/popper.min.js" integrity="sha384-W8fXfP3gkOKtndU4JGtKDvXbO53Wy8SZCQHczT5FMiiqmQfUpWbYdTil/SxwZgAN" crossorigin="anonymous"></script>
+<!-- BS5 / JS Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.min.js" integrity="sha384-skAcpIdS7UcVUC05LJ9Dxay8AXcDYfBJqt1CJ85S/CFujBsIzCIv+l9liuYLaMQ/" crossorigin="anonymous"></script>
+</body>
+
+</html>

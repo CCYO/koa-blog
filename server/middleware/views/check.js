@@ -38,7 +38,8 @@ async function login(ctx, next) {
     let url = new URL(ctx.href);
     let search = url.search;
     let from = encodeURIComponent(url.pathname + search);
-    ctx.redirect(`/permission/${ErrRes.PAGE.NO_LOGIN.errno}?from=${from}`);
+    // ctx.redirect(`/permission/${ErrRes.PAGE.NO_LOGIN.errno}?from=${from}`);
+    ctx.redirect(`/login?from=${from}`);
   }
   return;
 }

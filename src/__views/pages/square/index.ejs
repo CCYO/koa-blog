@@ -5,10 +5,21 @@
   <%- include('../../wedgets/pageLoading.ejs') %>
   <%- include('../../wedgets/navbar.ejs') %>
   <!-- MAIN -->
-  <main class="container-md" style="display: none;">
-    <h1><%= errModel.errno %></h1>
-    <div>
-      <%= errModel.msg %>
+  <main class="container-md main" style="display: none;">
+    <h1>文章列表</h1>
+    <% if(blogs.length){ %>
+    <ul class="list-group">
+      <% blogs.forEach( ({ id, title, author, time }) => { %>
+      <li class="list-group-item">
+        <a href="/blog/<%= id %>"><%= title %></a>
+        <span>by<a href="/other/<%= author.id %>"><%= author.nickname %></a></span>
+        <span>公開於<%= time %></span>
+      </li>
+      <% }) %>
+    </ul>
+    <% } else { %>
+    <p>沒有任何文章</p>
+    <% } %>
     </div>
   </main>
   <!-- EJS DATA -->

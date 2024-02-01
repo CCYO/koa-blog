@@ -52,6 +52,12 @@ async function init() {
       //  初始化 Register Form 功能
       initLoginFn(`#${PAGE_REGISTER_LOGIN.ID.LOGIN_FORM}`);
       //  初始化 Register Form 功能
+      setTimeout(() => {
+        let params = new URL(location.href).searchParams;
+        if (params.has("from")) {
+          alert("需要登入才能前往目標頁面");
+        }
+      }, 0);
     }
     /* ------------------------------------------------------------------------------------------ */
     /* Init ------------------------------------------------------------------------------------ */

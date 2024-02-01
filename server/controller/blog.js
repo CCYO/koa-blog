@@ -286,11 +286,13 @@ async function modify({ blog_id, author_id, ...blog_data }) {
     if (map.has("show")) {
       newData.show = map.get("show");
       if (newData.show) {
+        newData.showAt = new Date();
         let { data: list } = await _addReaders(blog_id);
         if (cache && list.length) {
           cache[CACHE.TYPE.NEWS] = list;
         }
       } else {
+        newData.showAt = null;
         await _destoryReaders(blog_id);
       }
     }
@@ -416,6 +418,7 @@ async function _removeImgList({ blog_id, cancelImgs }) {
   }
 }
 async function _destoryReaders(blog_id) {
+  //  ---------------------發生問題
   let blog = Blog.read(Opts.BLOG.FIND.readerList(blog_id));
   if (!blog) {
     throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST);

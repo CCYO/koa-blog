@@ -53,11 +53,14 @@ router.get("/register", async (ctx, next) => {
   });
 });
 //  登入頁
-router.get("/login", CACHE.static, async (ctx, next) => {
+router.get("/login", async (ctx, next) => {
   //  若已登入，跳轉到個人頁面
   if (ctx.session.user) {
     return ctx.redirect("/self");
   }
+  ctx.set({
+    ["Cache-Control"]: "no-store",
+  });
   await ctx.render("register&login", {
     title: "LOGIN",
     //  導覽列數據

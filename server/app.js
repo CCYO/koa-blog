@@ -111,6 +111,14 @@ if (!SERVER_CONFIG.ENV.isProd) {
       stats: {
         colors: true,
       },
+      //  webpack-dev-middleware時，針對靜態資源傳遞max-age
+      headers: (req, res, context) => {
+        if (/^\/public\//.test(req.url)) {
+          res.setHeader({
+            "cache-control": "max-age=" + 300, //sec
+          });
+        }
+      },
     })
   );
   // 使用 webpack-hot-middleware 支持热更新
@@ -124,10 +132,6 @@ if (!SERVER_CONFIG.ENV.isProd) {
     )
   );
   // 指定开发环境下的静态资源目录
-  // app.use(koaMount(
-  // 	SERVER_CONFIG.PUBLIC_PATH,
-  // 	koaStatic(resolve(__dirname, '../src'), { maxage: 60 * 60 * 1000 })
-  // ))
   viewRoot = resolve(__dirname, `../${BUILD.CONFIG.BUILD.DIST}`);
 } else {
   viewRoot = resolve(__dirname, `./${BUILD.CONFIG.BUILD.VIEW}`);
