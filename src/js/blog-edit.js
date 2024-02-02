@@ -525,9 +525,28 @@ async function init() {
           throw new Error(JSON.stringify(result));
         }
         payload.blog_id = G.data.blog.id;
-        await G.utils.axios.patch(PAGE_BLOG_EDIT.API.UPDATE_BLOG, payload);
-        for (let [key, value] of G.utils.lock.entries()) {
-          G.data.blog[key] = value;
+        let { data } = await G.utils.axios.patch(
+          PAGE_BLOG_EDIT.API.UPDATE_BLOG,
+          payload
+        );
+        let { title, html, show, time } = data;
+        let newData = { title, html, show, time };
+        //  畫面內容處理
+        if (payload.hasOwnProperty("show")) {
+          $("#time").text(time);
+        }
+        //  數據同步
+        if (payload.hasOwnProperty("cancelImgs")) {
+          for (let { blogImgAlt_list } of cancelImgs) {
+            for (let alt_id of blogImgAlt_list) {
+              G.data.blog.map_imgs.delete(alt_id);
+            }
+          }
+        }
+        for (let [key, value] of Object.entries(newData)) {
+          if (G.data.blog.hasOwnProperty(key)) {
+            G.data.blog[key] = value;
+          }
         }
         G.utils.lock.clear();
         G.utils.lock.check_submit();

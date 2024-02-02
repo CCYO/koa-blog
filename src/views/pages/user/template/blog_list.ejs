@@ -13,7 +13,7 @@
       </div>
       <%% if(isSelf){ %>
       <div class="flex-shrink-0" style="z-index: 200;">
-        <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%%= id %>?owner_id=<%%= author_id %>">編輯</a>
+        <a class='btn btn-outline-primary btn-sm' href="/blog/edit/<%%= id %>">編輯</a>
         <a class='btn btn-outline-primary btn-sm' data-<%%= G_PAGE.DATASET.KEY.REMOVE_BLOG %>=<%%= G_PAGE.DATASET.VALUE.REMOVE_BLOG_ITEM %>>刪除</a>
       </div>
       <%% } %>

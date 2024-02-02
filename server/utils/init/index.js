@@ -82,7 +82,11 @@ function initBlog(data) {
       blog.author = initUser(blog.author);
     }
     if (map.has("readers") && blog.readers) {
-      blog.readers = initUser(blog.readers);
+      let _readers = [];
+      for (let reader of blog.readers) {
+        _readers.push(initUser(reader));
+      }
+      blog.readers = _readers;
     }
     if (map.has("BlogImgs")) {
       blog.imgs = _initBlogImg(data.BlogImgs);

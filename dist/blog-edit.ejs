@@ -92,11 +92,13 @@
       <span id="<%= G_CONST.ID.BLOG_HTML_STRING_COUNT %>"></span>
       <br>
       <label> <input type="checkbox" id="<%= G_CONST.ID.STATUS %>" <%= locals.blog.show ? 'checked' : '' %> />公開文章</label>
-      <% if (locals.blog.show) { %>
-      <p>已於 <%= locals.blog.showAt %> 發佈</p>
-      <% } else { %>
-      <p>最近一次於 <%= locals.blog.updatedAt %> 編輯</p>
-      <% } %>
+      <p>
+        <% if (locals.blog.show) { %>
+        已於 <span id="time"><%= locals.blog.showAt %></span> 發佈
+        <% } else { %>
+        最近一次於 <span id="time"><%= locals.blog.updatedAt %></span> 編輯
+        <% } %>
+      </p>
       <button id="<%= G_CONST.ID.UPDATE_BLOG %>" disabled>存檔</button>
       <button id="<%= G_CONST.ID.REMOVE_BLOG %>">刪除此篇文章</button>
     </div>

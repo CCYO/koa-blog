@@ -101,7 +101,7 @@ export default {
         type: "必須是boolean",
       },
     },
-    cancelImgs: {
+    cancelImgItem: {
       type: "object",
       properties: {
         blogImg_id: {
@@ -133,6 +133,12 @@ export default {
       errorMessage: {
         type: "必須是object",
         additionalProperties: "不允許除了blogImg_id與blogImgAlt_list以外的數據",
+      },
+    },
+    cancelImgs: {
+      type: "array",
+      items: {
+        $ref: `#/definitions/cancelImgItem`,
       },
     },
     blogImgAlt: {

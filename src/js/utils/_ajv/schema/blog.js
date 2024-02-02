@@ -23,7 +23,6 @@ export default {
       $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/show`,
     },
     cancelImgs: {
-      type: "string",
       $ref: `${AJV_CONFIG.TYPE.DEFAULT.ref}#/definitions/cancelImgs`,
     },
   },

@@ -281,38 +281,42 @@ async function modify({ blog_id, author_id, ...blog_data }) {
     //  存放 blog 要更新的數據
     newData.title = my_xxs(blog_data.title);
   }
-  await seq.transaction(async (t) => {
-    //  更新 文章公開狀態
-    if (map.has("show")) {
-      newData.show = map.get("show");
-      if (newData.show) {
-        newData.showAt = new Date();
-        let { data: list } = await _addReaders(blog_id);
-        if (cache && list.length) {
-          cache[CACHE.TYPE.NEWS] = list;
-        }
-      } else {
-        newData.showAt = null;
-        await _destoryReaders(blog_id);
+
+  // await seq.transaction(async (t) => {
+  //  更新 文章公開狀態
+  if (map.has("show")) {
+    newData.show = map.get("show");
+    if (newData.show) {
+      newData.showAt = new Date();
+      let { data: list } = await _addReaders(blog_id);
+      if (cache && list.length) {
+        cache[CACHE.TYPE.NEWS] = list;
       }
+    } else {
+      newData.showAt = null;
+      await _destoryReaders(blog_id);
     }
-    if (cache && (map.has("title") || map.has("show"))) {
-      cache[CACHE.TYPE.PAGE.USER] = [author_id];
-    }
-    if (map.has("html") || map.has("title") || map.has("show")) {
-      //  更新文章
-      await Blog.update(blog_id, newData);
-    }
-    //  刪除圖片
-    if (map.has("cancelImgs")) {
-      let cancelImgs = map.get("cancelImgs");
-      //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
-      // await removeImgs(cancelImgs);
-      await _removeImgList({ author_id, blog_id, cancelImgs });
-    }
-  });
-  //  -------↑待調整----------------------------------------------
+  }
+  if (cache && (map.has("title") || map.has("show"))) {
+    cache[CACHE.TYPE.PAGE.USER] = [author_id];
+  }
+  if (map.has("html") || map.has("title") || map.has("show")) {
+    //  更新文章
+    await Blog.update(blog_id, newData);
+  }
+  //  刪除圖片
+  if (map.has("cancelImgs")) {
+    let cancelImgs = map.get("cancelImgs");
+    //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
+    // await removeImgs(cancelImgs);
+    await _removeImgList({ author_id, blog_id, cancelImgs });
+  }
   let resModel = await findWholeInfo({ author_id, blog_id });
+  // });
+  //  -------↑待調整----------------------------------------------
+  // if (!resModel) {
+  //   resModel = await findWholeInfo({ author_id, blog_id });
+  // }
   if (resModel.errno) {
     throw new MyErr(resModel);
   }
@@ -395,12 +399,12 @@ async function _removeImgList({ blog_id, cancelImgs }) {
   // try {
   //  確認blog_id是否真為author_id所有
   await Promise.all(cancelImgs.map(_removeImg));
-  let opts = undefined;
-  if (!ENV.isNoCache) {
-    opts = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
-  }
-  return new SuccModel(opts);
-
+  // let opts = undefined;
+  // if (!ENV.isNoCache) {
+  //   opts = { [CACHE.TYPE.PAGE.BLOG]: [blog_id] };
+  // }
+  // return new SuccModel(opts);
+  return new SuccModel();
   async function _removeImg({ blogImg_id, blogImgAlt_list }) {
     //  找到blog內，指定的blogImgAlt有幾筆
     let resModel = await C_BlogImg.countBlogImgAlt(blogImg_id);
@@ -419,7 +423,7 @@ async function _removeImgList({ blog_id, cancelImgs }) {
 }
 async function _destoryReaders(blog_id) {
   //  ---------------------發生問題
-  let blog = Blog.read(Opts.BLOG.FIND.readerList(blog_id));
+  let blog = await Blog.read(Opts.BLOG.FIND.readerList(blog_id));
   if (!blog) {
     throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST);
   }
