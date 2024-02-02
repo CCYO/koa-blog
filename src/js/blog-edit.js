@@ -533,7 +533,13 @@ async function init() {
         let newData = { title, html, show, time };
         //  畫面內容處理
         if (payload.hasOwnProperty("show")) {
-          $("#time").text(time);
+          let text;
+          if (show) {
+            text = `已於 ${time} 發佈`;
+          } else {
+            text = `最近一次於 ${time} 編輯`;
+          }
+          $("#time").text(text);
         }
         //  數據同步
         if (payload.hasOwnProperty("cancelImgs")) {

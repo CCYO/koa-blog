@@ -1,8 +1,10 @@
 import { isProd } from "~/server/config/env";
 window.onerror = (e) => {
+  console.log("---111111111111111111111");
   console.log("在window.onerror 捕捉到錯誤", e);
 };
 window.addEventListener("error", (e) => {
+  console.log("---222222222222222222222");
   console.log("在window.addEventListener('error') 捕捉到錯誤", e);
 });
 window.addEventListener("unhandledrejection", function (promiseRejectionEvent) {

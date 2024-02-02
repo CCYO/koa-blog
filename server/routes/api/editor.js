@@ -36,23 +36,14 @@ router.post("/list", CHECK.login, async (ctx, next) => {
   ctx.body = resModel;
 });
 
-//  0411
-//  刪除 blogs
-router.delete(
-  "/",
-  CHECK.login,
-  CHECK.mustBeOwner,
-  CACHE.modify,
-  async (ctx, next) => {
-    // const author_id = ctx.session.user.id
-    const { blogList } = ctx.request.body;
-    ctx.body = await Blog.removeList(blogList);
-  }
-);
-
 //  -------------------------------------------------------------------------
 const Blog = require("../../controller/blog");
-
+//  刪除 blogs
+router.delete("/", CHECK.login, CACHE.modify, async (ctx, next) => {
+  const author_id = ctx.session.user.id;
+  const { blogList } = ctx.request.body;
+  ctx.body = await Blog.removeList({ blogList, author_id });
+});
 //  建立blog
 router.post("/", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { title } = ctx.request.body;

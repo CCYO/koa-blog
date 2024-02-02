@@ -85,17 +85,22 @@ const FIND = {
       },
     },
   }),
-  //  廣場頁
-  allOfPublicList: () => ({
-    attributes: ["id", "title", "show", "showAt", "createdAt"],
-    where: {
-      show: true,
-    },
-    include: {
-      association: "author",
-      attributes: ["id", "email", "nickname"],
-    },
-  }),
+  listOfSquare: (id) => {
+    let res = {
+      attributes: ["id", "title", "show", "showAt", "createdAt"],
+      where: {
+        show: true,
+      },
+      include: {
+        association: "author",
+        attributes: ["id", "email", "nickname"],
+      },
+    };
+    if (id) {
+      res.where.author_id = { [Op.ne]: id };
+    }
+    return res;
+  },
 };
 
 module.exports = {

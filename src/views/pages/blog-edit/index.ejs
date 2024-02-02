@@ -23,9 +23,9 @@
       <label> <input type="checkbox" id="<%%= G_CONST.ID.STATUS %>" <%%= locals.blog.show ? 'checked' : '' %> />公開文章</label>
       <p>
         <%% if (locals.blog.show) { %>
-        已於 <span id="time"><%%= locals.blog.showAt %></span> 發佈
+        <span id="time">已於 <%%= locals.blog.time %> 發佈</span>
         <%% } else { %>
-        最近一次於 <span id="time"><%%= locals.blog.updatedAt %></span> 編輯
+        <span id="time">最近一次於 <%%= locals.blog.time %> 編輯</span>
         <%% } %>
       </p>
       <button id="<%%= G_CONST.ID.UPDATE_BLOG %>" disabled>存檔</button>

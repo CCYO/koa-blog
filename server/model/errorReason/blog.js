@@ -8,6 +8,7 @@ const READ = {
   NOT_EXIST: { errno: 1005, msg: "該文章不存在" },
 };
 const REMOVE = {
+  NO_DATA: { errno: 1002, msg: "刪除BLOG時，沒有提供blogList數據" },
   // ERR_REMOVE_BLOG_IMG: { errno: 1001, msg: "移除Blog內文的圖片時發生錯誤" },
 };
 const UPDATE = {

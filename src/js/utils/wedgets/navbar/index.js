@@ -13,7 +13,7 @@ const REG = {
   ACTIVE_PATHNAME: /^\/(?<pathname>\w+)\/?(?<albumList>list\?)?/,
 };
 //  單位ms, 1 min
-const LOAD_NEWS = 1000 * 1 * 60;
+const LOAD_NEWS = 1000 * 5 * 60;
 
 /* 初始化 通知列表 功能 */
 export default async function (axios) {

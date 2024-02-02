@@ -1,7 +1,4 @@
 const seq = require("../db/mysql/seq");
-//  0411
-
-// //  0411
 // async function findInfoForPageOfAlbumList(userId, { pagination } ) {
 //     let blogs = await Blog.readList(Opts.BLOG.findInfoForPageOfAlbumList(userId))
 //     let author = blogs.length ? blogs[0].author : undefined
@@ -9,73 +6,6 @@ const seq = require("../db/mysql/seq");
 //     let data = { author, albums }
 //     return new SuccModel({ data })
 // }
-//  0411
-/** 刪除 blogs
- * @param {number} blog_id
- * @returns {object} SuccModel || ErrModel
- */
-async function removeList(blogList) {
-  if (!Array.isArray(blogList) || !blogList.length) {
-    throw new MyErr(ErrRes.BLOG.REMOVE.NO_DATA);
-  }
-  let {
-    TYPE: {
-      NEWS,
-      PAGE: { USER, BLOG },
-      API: { COMMENT },
-    },
-  } = CACHE;
-  //  處理cache -----
-  let cache = {
-    [NEWS]: [],
-    [USER]: [],
-    [BLOG]: blogList,
-    [COMMENT]: blogList,
-  };
-  let { followers, replys, author_id } = await blogList.reduce(
-    async (acc, blog_id) => {
-      let {
-        data: { author_id, followers, replys },
-      } = await private(blog_id, true);
-
-      let res = await acc;
-      if (!res.author_id) {
-        res.author_id = author_id;
-      }
-      for (let follower of followers) {
-        res.followers.add(follower);
-      }
-      res.replys = res.replys.concat(replys);
-      return res;
-    },
-    { followers: new Set(), replys: [], author_id: undefined }
-  );
-  cache[USER].push(author_id);
-  //  緩存: 告知使用者，重新爬 news
-
-  cache[NEWS] = [...followers];
-  //  軟刪除 comments(內部也會軟刪除msgReceiver)
-  if (replys.length) {
-    await C_Comment.removeListForRemoveBlog(replys);
-  }
-  //  找出 所有 blog 內的 blogImg
-  let blogImgs = await blogList.reduce(async (acc, blog_id) => {
-    let { errno, data } = await C_BlogImg.findInfoForRemoveBlog(blog_id);
-    let blogImgs = await acc;
-    if (!errno) {
-      blogImgs = blogImgs.concat(data.map(({ id: blogImg_id }) => blogImg_id));
-    }
-    return blogImgs;
-  }, []);
-  //  刪除 所有 blog 內的 blogImg
-  await C_BlogImg.removeList(blogImgs);
-  //  刪除 blogList
-  let row = await Blog.deleteList(Opts.FOLLOW.removeList(blogList));
-  if (row !== blogList.length) {
-    throw new MyErr(ErrRes.BLOG.DELETE.ROW);
-  }
-  return new SuccModel({ cache, data: { author: { id: author_id } } });
-}
 
 //  0406
 async function public(blog_id) {
@@ -369,15 +299,85 @@ async function addImg({ author_id, ...data }) {
     }
   }
 }
-//  --------------- 刪除blog ------------------------
+/** 刪除 blogs
+ * @param {number} blog_id
+ * @returns {object} SuccModel || ErrModel
+ */
+async function removeList({ blogList, author_id }) {
+  if (!Array.isArray(blogList) || !blogList.length) {
+    throw new MyErr(ErrRes.BLOG.REMOVE.NO_DATA);
+  }
+  let {
+    TYPE: {
+      NEWS,
+      PAGE: { USER, BLOG },
+      API: { COMMENT },
+    },
+  } = CACHE;
+  //  處理cache -----
+  let cache = {
+    [NEWS]: [],
+    [USER]: [],
+    [BLOG]: blogList,
+    [COMMENT]: blogList,
+  };
+
+  //  未公開的blog -> reader已經是軟刪除狀態 -> 直接軟刪除 blog -?-> 是否需要手動軟刪除img
+
+  //  公開的blog -> 軟刪除 blog -?-是否需要自己軟刪除 -> reader -> 軟刪除 articleReader
+
+  let { followers, replys, author_id } = await blogList.reduce(
+    async (acc, blog_id) => {
+      let {
+        data: { author_id, followers, replys },
+      } = await private(blog_id, true);
+
+      let res = await acc;
+      if (!res.author_id) {
+        res.author_id = author_id;
+      }
+      for (let follower of followers) {
+        res.followers.add(follower);
+      }
+      res.replys = res.replys.concat(replys);
+      return res;
+    },
+    { followers: new Set(), replys: [], author_id: undefined }
+  );
+  cache[USER].push(author_id);
+  //  緩存: 告知使用者，重新爬 news
+
+  cache[NEWS] = [...followers];
+  //  軟刪除 comments(內部也會軟刪除msgReceiver)
+  if (replys.length) {
+    await C_Comment.removeListForRemoveBlog(replys);
+  }
+  //  找出 所有 blog 內的 blogImg
+  let blogImgs = await blogList.reduce(async (acc, blog_id) => {
+    let { errno, data } = await C_BlogImg.findInfoForRemoveBlog(blog_id);
+    let blogImgs = await acc;
+    if (!errno) {
+      blogImgs = blogImgs.concat(data.map(({ id: blogImg_id }) => blogImg_id));
+    }
+    return blogImgs;
+  }, []);
+  //  刪除 所有 blog 內的 blogImg
+  await C_BlogImg.removeList(blogImgs);
+  //  刪除 blogList
+  let row = await Blog.deleteList(Opts.FOLLOW.removeList(blogList));
+  if (row !== blogList.length) {
+    throw new MyErr(ErrRes.BLOG.DELETE.ROW);
+  }
+  return new SuccModel({ cache, data: { author: { id: author_id } } });
+}
 //  廣場數據
-async function findInfoForPageOfSquare(author_id) {
-  let list = await Blog.readList(Opts.BLOG.FIND.allOfPublicList());
-  let blogs = list.filter(({ author }) => author.id !== author_id);
-  let data = Init.browser.blog.sortAndInitTimeFormat(blogs);
+async function findListOfSquare(author_id) {
+  let list = await Blog.readList(Opts.BLOG.FIND.listOfSquare(author_id));
+  let data = Init.browser.blog.sortAndInitTimeFormat(list);
   return new SuccModel({ data });
 }
 module.exports = {
+  findListOfSquare,
   addImg,
   find,
   add,
@@ -391,8 +391,6 @@ module.exports = {
   //  0411
   removeList,
   findListForUserPage,
-  //  0411
-  findInfoForPageOfSquare,
 };
 async function _removeImgList({ blog_id, cancelImgs }) {
   //  cancelImgs [ { blogImg_id, blogImgAlt_list: [alt_id, ...] }, ...]
@@ -441,18 +439,22 @@ async function _addReaders(blog_id) {
   if (!blog) {
     throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST);
   }
-  let fansList = blog.author.fansList.map(({ id }) => id);
-  let readers = blog.readers.map(({ deletedAt }) => !deletedAt);
-  if (readers.length !== blog.readers.length) {
-    let list = blog.readers.filter(({ deletedAt }) => deletedAt);
-    throw new MyErr({
-      ...ErrRes.BLOG.READ.ERR,
-      error: `準備恢復blog/${blog_id}的軟刪除reader時，發現未被軟刪除reader,id為${list}`,
-    });
-  }
-  if (readers.length) {
-    readers = readers.map(({ id }) => id);
-    await C_ArticleReader.restoringList(readers);
+  let { readers, articleReaders } = blog.readers.reduce(
+    (acc, reader) => {
+      acc.readers.push(reader.id);
+      acc.articleReaders.push(reader.ArticleReader.id);
+      return acc;
+    },
+    { readers: [], articleReaders: [] }
+  );
+  let fansList = blog.author.fansList
+    .filter(({ id }) => {
+      return !readers.some((reader_id) => reader_id === id);
+    })
+    .map(({ id }) => id);
+
+  if (articleReaders.length) {
+    await C_ArticleReader.restoringList(articleReaders);
   }
   if (fansList.length) {
     await Blog.createReaders(blog_id, fansList);
