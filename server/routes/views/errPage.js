@@ -1,3 +1,4 @@
+const { ENV } = require("../../config");
 const { ErrModel, ErrRes } = require("../../model");
 
 const router = require("koa-router")();
@@ -22,6 +23,21 @@ router.get("/permission/:errno", async (ctx) => {
   } else if (errno === ErrRes.PAGE.NO_PAGE.errno) {
     opts.errModel = new ErrModel(ErrRes.PAGE.NO_PAGE);
     opts.title = "404";
+  }
+  await ctx.render("page404", opts);
+});
+
+router.get("/serverError", async (ctx) => {
+  let opts = {
+    title: "serverError",
+    errModel: new ErrModel(ErrRes.SERVER.ERR_500),
+  };
+  ctx.request.query.hasOwnProperty;
+  ctx.query.hasOwnProperty;
+  if (!ENV.isProd && ctx.query.serverError) {
+    let { serverError } = ctx.query;
+    serverError = JSON.parse(decodeURIComponent(serverError));
+    opts.serverError = serverError;
   }
   await ctx.render("page404", opts);
 });

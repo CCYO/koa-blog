@@ -31,6 +31,27 @@ async function init() {
       let target;
       //  404 -> 上一頁 || 廣場頁
       if (errno === ErrRes.PAGE.NO_PAGE.errno) {
+        BackPage();
+      } else if (errno === ErrRes.PAGE.NO_LOGIN.errno) {
+        //  需登入 -> 登入頁 -> 目的地
+        alertMsg = "五秒後將自動往登陸頁";
+        target = `/login?from=${encodeURIComponent(G.data.from)}`;
+        //  無權限 -> 後端以404處理
+      } else if (errno === ErrRes.SERVER.ERR_500.errno) {
+        BackPage();
+        alertMsg = ErrRes.SERVER.ERR_500.msg;
+      }
+      if (G.data.hasOwnProperty("serverError")) {
+        console.log(G.data.serverError);
+      }
+      setTimeout(() => {
+        alert(alertMsg);
+        setTimeout(() => {
+          location.replace(target);
+        }, 6000);
+      }, 0);
+
+      function BackPage() {
         let hasReferrer = !!document.referrer;
         let someOrigin =
           hasReferrer && /34\.80\.51\.244:8080/.test(document.referrer);
@@ -43,18 +64,7 @@ async function init() {
           target = "/square";
           alertMsg = "五秒後將自動跳往廣場頁";
         }
-      } else if (errno === ErrRes.PAGE.NO_LOGIN.errno) {
-        //  需登入 -> 登入頁 -> 目的地
-        alertMsg = "五秒後將自動往登陸頁";
-        target = `/login?from=${encodeURIComponent(G.data.from)}`;
-        //  無權限 -> 後端以404處理
       }
-      setTimeout(() => {
-        alert(alertMsg);
-        setTimeout(() => {
-          location.replace(target);
-        }, 6000);
-      }, 0);
     }
   } catch (e) {
     $M_Common.error_handle(e);

@@ -2,7 +2,7 @@ const { Op } = require("sequelize");
 const { Img, BlogImg, BlogImgAlt, User } = require("../../db/mysql/model");
 
 const FIND = {
-  wholeInfo: (id) => ({
+  wholeInfo: (id, options) => ({
     attributes: ["id", "title", "html", "show", "showAt", "updatedAt"],
     where: { id },
     include: [
@@ -101,6 +101,47 @@ const FIND = {
     }
     return res;
   },
+  wholeInfoIncludeSoftDelete: (id) => ({
+    attributes: ["id", "title", "html", "show", "showAt", "updatedAt"],
+    where: { id },
+    paranoid: false,
+    include: [
+      {
+        association: "author",
+        attributes: ["id", "email", "nickname"],
+      },
+      {
+        model: BlogImg,
+        attributes: ["id", "name"],
+        include: [
+          {
+            model: Img,
+            attributes: ["id", "url", "hash"],
+          },
+          {
+            model: BlogImgAlt,
+            attributes: ["id", "alt"],
+          },
+        ],
+      },
+      {
+        association: "replys",
+        attributes: [
+          "id",
+          "html",
+          "commenter_id",
+          "pid",
+          "createdAt",
+          "deletedAt",
+        ],
+        include: {
+          association: "commenter",
+          attributes: ["id", "email", "nickname"],
+        },
+      },
+    ],
+    order: [["replys", "id"]],
+  }),
 };
 
 module.exports = {

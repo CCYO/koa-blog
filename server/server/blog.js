@@ -9,8 +9,8 @@ async function deleteList(opts) {
   try {
     //  RV row
     return await Blog.destroy(opts);
-  } catch (err) {
-    throw new MyErr({ ...ErrRes.BLOG.DELETE.ERR, err });
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.BLOG.DELETE.ERR, error });
   }
 }
 

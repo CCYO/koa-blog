@@ -74,7 +74,7 @@ router.get("/blog/preview/:id", CHECK.login, privateCache, async (ctx) => {
 });
 //  編輯文章
 router.get("/blog/edit/:id", CHECK.login, privateCache, async (ctx, next) => {
-  console.log("觸發edit ---> url: ", ctx.path);
+  throw new Error("測試views 錯誤");
   const author_id = ctx.session.user.id;
   const blog_id = ctx.params.id * 1;
   //  從 middleware 取得的緩存數據 { exist: 提取緩存數據的結果 , data: initBlog || undefined }

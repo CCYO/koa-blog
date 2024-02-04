@@ -43,6 +43,7 @@ const viewBlog = require("./routes/views/blog");
 const viewAlbum = require("./routes/views/album");
 const viewSquare = require("./routes/views/square");
 const viewErrPage = require("./routes/views/errPage");
+const { irregular } = require("i/lib/inflections");
 
 // const isDev = process.env.NODE_ENV === "development";
 
@@ -64,34 +65,36 @@ app.use(async (ctx, next) => {
     }
   } catch (error) {
     ctx.status = 500;
+    ctx.app.emit("error", error, ctx);
+
     let myErr = undefined;
     if (!(error instanceof MyErr)) {
       myErr = new MyErr({ ...ErrRes.SERVER.ERR_500, error });
     } else {
       myErr = error;
     }
-    ctx.app.emit("error", error, ctx);
+
     if (SERVER_CONFIG.ENV.isProd) {
       myErr = myErr.model;
     } else {
-      let serverError = myErr.serverError;
       //  error property is enumerable，無法傳給前端，故需處理
-      myErr.serverError = JSON.parse(
-        JSON.stringify(serverError, Object.getOwnPropertyNames(serverError))
+      myErr.serverError = JSON.stringify(
+        myErr.serverError,
+        Object.getOwnPropertyNames(myErr.serverError)
       );
     }
+    //  -------------------調整
+
     let isAPI = /^\/api\//.test(ctx.path);
     if (isAPI) {
+      myErr.serverError = JSON.parse(myErr.serverError);
       ctx.body = myErr;
     } else {
-      myErr.title = myErr.msg;
-      let opts = {
-        ...myErr.model,
-        model: myErr.model,
-        serverError: myErr.serverError,
-      };
-      let errModel = MyErr.model;
-      ctx.redirect(`/errPage?errModel=${JSON.stringify(errModel)}`);
+      let url = "/serverError";
+      if (!SERVER_CONFIG.ENV.isProd) {
+        url += `?serverError=${encodeURIComponent(myErr.serverError)}`;
+      }
+      ctx.redirect(url);
     }
     return;
   }

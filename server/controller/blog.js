@@ -127,8 +127,13 @@ const C_BlogImgAlt = require("./blogImgAlt");
  * @param {number} blog_id blog id
  * @returns
  */
-async function findWholeInfo({ author_id, blog_id }) {
-  let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
+async function findWholeInfo({ author_id, blog_id, paranoid = true }) {
+  let data;
+  if (paranoid) {
+    data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
+  } else {
+    data = await Blog.read(Opts.BLOG.FIND.wholeInfoIncludeSoftDelete(blog_id));
+  }
   if (!data) {
     return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST);
   }
@@ -307,68 +312,78 @@ async function removeList({ blogList, author_id }) {
   if (!Array.isArray(blogList) || !blogList.length) {
     throw new MyErr(ErrRes.BLOG.REMOVE.NO_DATA);
   }
-  let {
-    TYPE: {
-      NEWS,
-      PAGE: { USER, BLOG },
-      API: { COMMENT },
-    },
-  } = CACHE;
-  //  處理cache -----
-  let cache = {
-    [NEWS]: [],
-    [USER]: [],
-    [BLOG]: blogList,
-    [COMMENT]: blogList,
-  };
 
+  //  測試: 刪除blog
+  await Blog.deleteList(blogList);
+  let res_list = await Promise.all(() =>
+    findWholeInfo({ author_id, blog_id, paranoid: false })
+  );
+  throw new MyErr({ errno: 733, msg: "測試刪除" });
+
+  //  -> 自動"軟|硬"刪除 reader?
+  //  -> 自動"硬"刪除 blogImg
+  //  -> 自動"硬"刪除 blogImgAlt
   //  未公開的blog -> reader已經是軟刪除狀態 -> 直接軟刪除 blog -?-> 是否需要手動軟刪除img
 
   //  公開的blog -> 軟刪除 blog -?-是否需要自己軟刪除 -> reader -> 軟刪除 articleReader
 
-  let { followers, replys, author_id } = await blogList.reduce(
-    async (acc, blog_id) => {
-      let {
-        data: { author_id, followers, replys },
-      } = await private(blog_id, true);
+  // let {
+  //   TYPE: {
+  //     NEWS,
+  //     PAGE: { USER, BLOG },
+  //     API: { COMMENT },
+  //   },
+  // } = CACHE;
+  // //  處理cache -----
+  // let cache = {
+  //   [NEWS]: [],
+  //   [USER]: [],
+  //   [BLOG]: blogList,
+  //   [COMMENT]: blogList,
+  // };
+  // let { followers, replys, _author_id } = await blogList.reduce(
+  //   async (acc, blog_id) => {
+  //     let {
+  //       data: { author_id, followers, replys },
+  //     } = await private(blog_id, true);
 
-      let res = await acc;
-      if (!res.author_id) {
-        res.author_id = author_id;
-      }
-      for (let follower of followers) {
-        res.followers.add(follower);
-      }
-      res.replys = res.replys.concat(replys);
-      return res;
-    },
-    { followers: new Set(), replys: [], author_id: undefined }
-  );
-  cache[USER].push(author_id);
-  //  緩存: 告知使用者，重新爬 news
+  //     let res = await acc;
+  //     if (!res.author_id) {
+  //       res.author_id = author_id;
+  //     }
+  //     for (let follower of followers) {
+  //       res.followers.add(follower);
+  //     }
+  //     res.replys = res.replys.concat(replys);
+  //     return res;
+  //   },
+  //   { followers: new Set(), replys: [], _author_id: undefined }
+  // );
+  // cache[USER].push(_author_id);
+  // //  緩存: 告知使用者，重新爬 news
 
-  cache[NEWS] = [...followers];
-  //  軟刪除 comments(內部也會軟刪除msgReceiver)
-  if (replys.length) {
-    await C_Comment.removeListForRemoveBlog(replys);
-  }
-  //  找出 所有 blog 內的 blogImg
-  let blogImgs = await blogList.reduce(async (acc, blog_id) => {
-    let { errno, data } = await C_BlogImg.findInfoForRemoveBlog(blog_id);
-    let blogImgs = await acc;
-    if (!errno) {
-      blogImgs = blogImgs.concat(data.map(({ id: blogImg_id }) => blogImg_id));
-    }
-    return blogImgs;
-  }, []);
-  //  刪除 所有 blog 內的 blogImg
-  await C_BlogImg.removeList(blogImgs);
-  //  刪除 blogList
-  let row = await Blog.deleteList(Opts.FOLLOW.removeList(blogList));
-  if (row !== blogList.length) {
-    throw new MyErr(ErrRes.BLOG.DELETE.ROW);
-  }
-  return new SuccModel({ cache, data: { author: { id: author_id } } });
+  // cache[NEWS] = [...followers];
+  // //  軟刪除 comments(內部也會軟刪除msgReceiver)
+  // if (replys.length) {
+  //   await C_Comment.removeListForRemoveBlog(replys);
+  // }
+  // //  找出 所有 blog 內的 blogImg
+  // let blogImgs = await blogList.reduce(async (acc, blog_id) => {
+  //   let { errno, data } = await C_BlogImg.findInfoForRemoveBlog(blog_id);
+  //   let blogImgs = await acc;
+  //   if (!errno) {
+  //     blogImgs = blogImgs.concat(data.map(({ id: blogImg_id }) => blogImg_id));
+  //   }
+  //   return blogImgs;
+  // }, []);
+  // //  刪除 所有 blog 內的 blogImg
+  // await C_BlogImg.removeList(blogImgs);
+  // //  刪除 blogList
+  // let row = await Blog.deleteList(Opts.FOLLOW.removeList(blogList));
+  // if (row !== blogList.length) {
+  //   throw new MyErr(ErrRes.BLOG.DELETE.ROW);
+  // }
+  // return new SuccModel({ cache, data: { author: { id: _author_id } } });
 }
 //  廣場數據
 async function findListOfSquare(author_id) {

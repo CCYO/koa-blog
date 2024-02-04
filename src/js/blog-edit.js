@@ -509,7 +509,7 @@ async function init() {
         };
         await G.utils.axios.delete(PAGE_BLOG_EDIT.API.UPDATE_BLOG, { data });
         alert("已成功刪除此篇文章，現在將跳往個人頁面");
-        location.href = "/self";
+        // location.href = "/self";
       }
       //  關於 更新文章的相關操作
       async function handle_updateBlog(e) {
