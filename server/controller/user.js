@@ -94,16 +94,6 @@ async function modify({ _origin, ...newData }) {
   let user = await User.update({ newData, id: user_id });
   return new SuccModel({ data: user, cache });
 }
-//  0421 因為使用 C_BLOG 會造成迴圈，故直接以USER做查詢
-async function findAlbumListOfUser(user_id, pagination) {
-  let res = await User.read(Opts.USER.findAlbumListOfUser(user_id));
-  if (!res) {
-    return ErrModel(ErrRes.USER.READ.NO_USER);
-  }
-  let { blogs, ...author } = res;
-  let albums = Init.browser.blog.pageTable(blogs, pagination);
-  return new SuccModel({ data: { albums, author } });
-}
 
 async function findOthersInSomeBlogAndPid({
   commenter_id,
@@ -246,8 +236,6 @@ async function cancelFollow({ fans_id, idol_id }) {
 module.exports = {
   //  0514
   modify,
-  //  0421
-  findAlbumListOfUser,
   //  0406
 
   //  0404

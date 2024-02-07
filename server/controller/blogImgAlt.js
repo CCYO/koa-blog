@@ -9,15 +9,16 @@ async function add(blogImg_id) {
   return new SuccModel({ data });
 }
 async function findWholeInfo({ author_id, blog_id, alt_id }) {
-  //  { id, alt, blog: { id, author_id }, blogImg: { id, name }, img: { id, url, hash }}
+  if (!author_id || !blog_id || !alt_id) {
+    throw new MyErr(ErrRes.BLOG_IMG.READ.NO_ARGS);
+  }
+  //  data { id, alt, blog: { id, author_id }, blogImg: { id, name }, img: { id, url, hash }}
   let data = await BlogImgAlt.find(Opts.BLOG_IMG_ALT.FIND.wholeInfo(alt_id));
   if (!data) {
     throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_EXIST);
-  }
-  if (author_id && data.blog.author_id !== author_id) {
+  } else if (data.blog.author_id !== author_id) {
     throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_AUTHOR);
-  }
-  if (blog_id && data.blog.id !== blog_id) {
+  } else if (data.blog.id !== blog_id) {
     throw new MyErr(ErrRes.BLOG_IMG_ALT.READ.NOT_BLOG);
   }
   return new SuccModel({ data });

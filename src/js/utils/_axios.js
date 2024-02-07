@@ -44,9 +44,7 @@ export default class {
           data: { errno, msg },
         } = response;
         let res = response.data;
-        // if (errno === 0) {
-        //   status = 1;
-        // } else
+
         if (
           errno === ErrRes.NEWS.READ.NO_LOGIN &&
           !REG.IGNORE_PATH.test(location.pathname)
@@ -55,25 +53,6 @@ export default class {
         } else if (errno === ErrRes.PAGE.NO_LOGIN) {
           resolve = false;
         }
-        // else {
-        //   status = 1
-        // }
-
-        // if (errno === ErrRes.NEWS.READ.NO_LOGIN.errno) {
-        //   ////  針對未登入狀態處理
-        //   if (REG_API_NEWS.test(window.location.pathname)) {
-        //     //  此請求若來自於 getNews
-        //     $M_log.dev("取得news資訊時，發現未登入");
-        //     res = { errno, data: { me: {} } };
-        //   } else {
-        //     //  非 getNews 請求的回應處理
-        //     $M_redir.check_login();
-        //     // alert("尚未登入！請先登入帳號！");
-        //     // location.href = `/login?from=${encodeURIComponent(location.href)}`;
-        //   }
-        // } else if (errno) {
-        //   console.log("@axios response 取得後端發來「否決」結果 => \n", msg);
-        // }
         instance.backdrop.hidden();
         if (resolve) {
           return Promise.resolve(res);

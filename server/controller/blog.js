@@ -127,15 +127,13 @@ const C_BlogImgAlt = require("./blogImgAlt");
  * @param {number} blog_id blog id
  * @returns
  */
-async function findWholeInfo({ author_id, blog_id, paranoid = true }) {
-  let data;
-  if (paranoid) {
-    data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
-  } else {
-    data = await Blog.read(Opts.BLOG.FIND.wholeInfoIncludeSoftDelete(blog_id));
-  }
+async function findWholeInfo({ author_id, blog_id }) {
+  let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
   if (!data) {
-    return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST);
+    return new ErrModel({
+      ...ErrRes.BLOG.READ.NOT_EXIST,
+      msg: `blog/${blog_id}不存在`,
+    });
   }
   if (author_id && data.author.id !== author_id) {
     throw new MyErr(ErrRes.BLOG.READ.NOT_AUTHOR);
@@ -246,15 +244,7 @@ async function modify({ blog_id, author_id, ...blog_data }) {
     // await removeImgs(cancelImgs);
     await _removeImgList({ author_id, blog_id, cancelImgs });
   }
-  let resModel = await findWholeInfo({ author_id, blog_id });
-  // });
-  //  -------↑待調整----------------------------------------------
-  // if (!resModel) {
-  //   resModel = await findWholeInfo({ author_id, blog_id });
-  // }
-  if (resModel.errno) {
-    throw new MyErr(resModel);
-  }
+  await _checkPermission({ author_id, blog_id });
   let data = resModel.data;
   let opts = { data };
   if (cache) {
@@ -312,78 +302,15 @@ async function removeList({ blogList, author_id }) {
   if (!Array.isArray(blogList) || !blogList.length) {
     throw new MyErr(ErrRes.BLOG.REMOVE.NO_DATA);
   }
-
-  //  測試: 刪除blog
-  await Blog.deleteList(blogList);
-  let res_list = await Promise.all(() =>
-    findWholeInfo({ author_id, blog_id, paranoid: false })
+  await Promise.all(
+    blogList.map((blog_id) => _checkPermission({ author_id, blog_id }))
   );
-  throw new MyErr({ errno: 733, msg: "測試刪除" });
-
-  //  -> 自動"軟|硬"刪除 reader?
-  //  -> 自動"硬"刪除 blogImg
-  //  -> 自動"硬"刪除 blogImgAlt
-  //  未公開的blog -> reader已經是軟刪除狀態 -> 直接軟刪除 blog -?-> 是否需要手動軟刪除img
-
-  //  公開的blog -> 軟刪除 blog -?-是否需要自己軟刪除 -> reader -> 軟刪除 articleReader
-
-  // let {
-  //   TYPE: {
-  //     NEWS,
-  //     PAGE: { USER, BLOG },
-  //     API: { COMMENT },
-  //   },
-  // } = CACHE;
-  // //  處理cache -----
-  // let cache = {
-  //   [NEWS]: [],
-  //   [USER]: [],
-  //   [BLOG]: blogList,
-  //   [COMMENT]: blogList,
-  // };
-  // let { followers, replys, _author_id } = await blogList.reduce(
-  //   async (acc, blog_id) => {
-  //     let {
-  //       data: { author_id, followers, replys },
-  //     } = await private(blog_id, true);
-
-  //     let res = await acc;
-  //     if (!res.author_id) {
-  //       res.author_id = author_id;
-  //     }
-  //     for (let follower of followers) {
-  //       res.followers.add(follower);
-  //     }
-  //     res.replys = res.replys.concat(replys);
-  //     return res;
-  //   },
-  //   { followers: new Set(), replys: [], _author_id: undefined }
-  // );
-  // cache[USER].push(_author_id);
-  // //  緩存: 告知使用者，重新爬 news
-
-  // cache[NEWS] = [...followers];
-  // //  軟刪除 comments(內部也會軟刪除msgReceiver)
-  // if (replys.length) {
-  //   await C_Comment.removeListForRemoveBlog(replys);
-  // }
-  // //  找出 所有 blog 內的 blogImg
-  // let blogImgs = await blogList.reduce(async (acc, blog_id) => {
-  //   let { errno, data } = await C_BlogImg.findInfoForRemoveBlog(blog_id);
-  //   let blogImgs = await acc;
-  //   if (!errno) {
-  //     blogImgs = blogImgs.concat(data.map(({ id: blogImg_id }) => blogImg_id));
-  //   }
-  //   return blogImgs;
-  // }, []);
-  // //  刪除 所有 blog 內的 blogImg
-  // await C_BlogImg.removeList(blogImgs);
-  // //  刪除 blogList
-  // let row = await Blog.deleteList(Opts.FOLLOW.removeList(blogList));
-  // if (row !== blogList.length) {
-  //   throw new MyErr(ErrRes.BLOG.DELETE.ROW);
-  // }
-  // return new SuccModel({ cache, data: { author: { id: _author_id } } });
+  await Promise.all(blogList.map(_destoryReaders));
+  let row = await Blog.destroyList(Opts.BLOG.REMOVE.list(blogList));
+  if (row !== blogList.length) {
+    throw new MyErr(ErrRes.BLOG.REMOVE.ROW);
+  }
+  return new SuccModel();
 }
 //  廣場數據
 async function findListOfSquare(author_id) {
@@ -391,7 +318,36 @@ async function findListOfSquare(author_id) {
   let data = Init.browser.blog.sortAndInitTimeFormat(list);
   return new SuccModel({ data });
 }
+
+//  0421 因為使用 C_BLOG 會造成迴圈，故直接以USER做查詢
+async function findAlbumList(author_id, pagination) {
+  let blogs = await Blog.readList(Opts.BLOG.FIND.listOfHaveImg(author_id));
+  if (!blogs.length) {
+    return new ErrModel(ErrRes.BLOG.READ.NO_LIST);
+  }
+  await Promise.all(
+    blogs.map((blog) => _checkPermission({ author_id, blog_id: blog.id }))
+  );
+  let albums = Init.browser.blog.pageTable(blogs, pagination);
+  return new SuccModel({ data: { albums } });
+}
+
+async function findAlbum({ author_id, blog_id }) {
+  let data = await Blog.read(Opts.BLOG.FIND.album(blog_id));
+  await _checkPermission({ author_id, blog_id });
+  if (data) {
+    return new SuccModel({ data });
+  } else {
+    throw new ErrModel({
+      ...ErrRes.BLOG.READ.NO_ALBUM,
+      error: `blog/${blog_id} 沒有相片`,
+    });
+  }
+}
+
 module.exports = {
+  findAlbum,
+  findAlbumList,
   findListOfSquare,
   addImg,
   find,
@@ -435,7 +391,6 @@ async function _removeImgList({ blog_id, cancelImgs }) {
   }
 }
 async function _destoryReaders(blog_id) {
-  //  ---------------------發生問題
   let blog = await Blog.read(Opts.BLOG.FIND.readerList(blog_id));
   if (!blog) {
     throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST);
@@ -496,4 +451,19 @@ async function _findPrivateListForUserPage(
   );
   // let data = Init.browser.blog.pageTable(blogs, options)
   return new SuccModel({ data });
+}
+
+async function _checkPermission({ author_id, blog_id, paranoid = true }) {
+  let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id, paranoid));
+  if (!data) {
+    throw new MyErr({
+      ...ErrRes.BLOG.READ.NOT_EXIST,
+      msg: `blog/${blog_id}不存在`,
+    });
+  }
+  if (data.author.id !== author_id) {
+    throw new MyErr(ErrRes.BLOG.READ.NOT_AUTHOR);
+  }
+  let opts = { data };
+  return new SuccModel(opts);
 }

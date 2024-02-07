@@ -76,14 +76,18 @@ app.use(async (ctx, next) => {
 
     if (SERVER_CONFIG.ENV.isProd) {
       myErr = myErr.model;
-    } else {
+    } else if (myErr.serverError) {
       //  error property is enumerable，無法傳給前端，故需處理
       myErr.serverError = JSON.stringify(
         myErr.serverError,
         Object.getOwnPropertyNames(myErr.serverError)
       );
+    } else {
+      myErr.serverError = JSON.stringify({
+        message: undefined,
+        stack: myErr.stack,
+      });
     }
-    //  -------------------調整
 
     let isAPI = /^\/api\//.test(ctx.path);
     if (isAPI) {

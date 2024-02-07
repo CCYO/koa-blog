@@ -6,6 +6,7 @@ module.exports = {
     LOGIN: "login",
     SETTING: "setting",
     BLOG_UPDATE: "blog_update",
+    ALT_UPDATE: "alt_update",
   },
   ERROR_PARAMS: {
     required: "missingProperty",

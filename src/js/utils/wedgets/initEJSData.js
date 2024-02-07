@@ -9,7 +9,7 @@ const DATA_SET = "my-data";
 const SELECTOR = `[data-${DATA_SET}]`;
 const KEYS = {
   BLOG: "blog",
-  ALBUM: "album",
+  ALBUM: "imgs",
 };
 
 //  將ejs傳入el[data-my-data]的純字符數據，轉化為物件數據
@@ -38,7 +38,7 @@ export default function () {
       kv = { [key]: initBlog(val) };
     } else if (key === KEYS.ALBUM) {
       //  album 數據
-      kv = { [key]: initAlbum(val) };
+      kv = { map_imgs: initAlbum(val) };
     } else {
       //  其餘數據
       kv = { [key]: val };
@@ -53,26 +53,31 @@ export default function () {
 }
 
 //  初始化album數據
-function initAlbum({ blog, imgs }) {
-  let map_imgs = init_map_imgs(imgs);
+function initAlbum(imgs) {
   //  img數據map化
-  return { blog, map_imgs };
+  return init_map_imgs(imgs);
 }
 //  初始化blog數據
 function initBlog(blog) {
-  blog.map_imgs = init_map_imgs(blog.imgs);
-  delete blog.imgs;
-  //  處理blog內的img數據
-  //  blog.imgs: [ img { alt_id, alt, blogImg_id, name, img_id, hash, url }]
-  //  blog.map_imgs: alt_id → img
-  blog.html = parseBlogContent(blog.html);
+  if (blog.hasOwnProperty("imgs")) {
+    blog.map_imgs = init_map_imgs(blog.imgs);
+    delete blog.imgs;
+  }
+  if (blog.hasOwnProperty("html")) {
+    //  處理blog內的img數據
+    //  blog.imgs: [ img { alt_id, alt, blogImg_id, name, img_id, hash, url }]
+    //  blog.map_imgs: alt_id → img
+    blog.html = parseBlogContent(blog.html);
+  }
   //  對 blog.html(百分比編碼格式) 進行解碼
-  if (blog.showComment) {
+  if (blog.hasOwnProperty("showComment") && blog.showComment) {
     /* 不是編輯頁與預覽頁，請求comment數據 */
     blog.comment.map = init_map_comment(blog.comment);
   }
-  delete blog.comment.tree;
-  delete blog.comment.list;
+  if (blog.hasOwnProperty("comment")) {
+    delete blog.comment.tree;
+    delete blog.comment.list;
+  }
   return blog; //  再將整體轉為字符
 
   function init_map_comment({ tree, list }) {

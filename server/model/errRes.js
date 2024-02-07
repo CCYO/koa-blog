@@ -21,9 +21,6 @@ module.exports = {
   BLOG: {
     //  0411
     DELETE: {
-      //  0411
-      ROW: { errno: 40003, msg: "刪除 BLOG 的數量不完全" },
-      //  0411
       ERR: { errno: 801, msg: "刪除 BLOG 失敗" },
     },
     //  0411

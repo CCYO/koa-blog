@@ -13,7 +13,7 @@
       <% albums.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
       <ul class="list-group">
         <li class="list-group-item">
-          <a href="/album/<%= id %>?owner_id=<%= author.id %>"><%= title %></a>
+          <a href="/album/<%= id %>"><%= title %></a>
           <span>文章公開於 <%= time %></span>
         </li>
       </ul>
@@ -28,7 +28,7 @@
       <% albums.hidden.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
       <ul class="list-group">
         <li class="list-group-item">
-          <a href="/album/<%= id %>?owner_id=<%= author.id %>"><%= title %></a>
+          <a href="/album/<%= id %>"><%= title %></a>
           <span>文章最近一次更新於 <%= time %></span>
         </li>
       </ul>

@@ -1,18 +1,4 @@
 //  0411
-/**批量刪除
- *
- * @param {*} blog_id
- * @param {*} needComment
- * @returns
- */
-async function deleteList(opts) {
-  try {
-    //  RV row
-    return await Blog.destroy(opts);
-  } catch (error) {
-    throw new MyErr({ ...ErrRes.BLOG.DELETE.ERR, error });
-  }
-}
 
 //  0406
 /** 創建Blog
@@ -87,7 +73,17 @@ async function update(id, data) {
   }
   return row;
 }
+//  刪除
+async function destroyList(opts, force = false) {
+  try {
+    //  RV: row
+    return await Blog.destroy({ ...opts, force });
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.BLOG.DELETE.ERR, error });
+  }
+}
 module.exports = {
+  destroyList,
   update,
   destoryReaders,
   createReaders,
@@ -95,7 +91,6 @@ module.exports = {
   //  -------------------------------------------------------------------------
   readListAndCountAll,
   //  0411
-  deleteList,
   create,
   //  0404
   readList,

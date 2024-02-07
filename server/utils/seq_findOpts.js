@@ -18,7 +18,7 @@ module.exports = {
     ...BLOG_IMG_ALT,
   },
   BLOG: {
-    FIND: BLOG.FIND,
+    ...BLOG,
     //  0427
     findInfoForModifyTitle: (blog_id) => ({
       where: { id: blog_id /*show: true*/ },
@@ -190,18 +190,28 @@ module.exports = {
       },
       limit: opts.limit,
       offset: opts.offset,
+      order: [["showAt", "DESC"]],
     }),
     findPrivateBlogForUserPage: (
       author_id,
       opts = { limit: 5, offset: 0 }
     ) => ({
-      attributes: ["id", "title", "author_id", "show", "showAt", "updatedAt"],
+      attributes: [
+        "id",
+        "title",
+        "author_id",
+        "show",
+        "showAt",
+        "updatedAt",
+        "createdAt",
+      ],
       where: {
         author_id,
         show: false,
       },
       limit: opts.limit,
       offset: opts.offset,
+      order: [["createdAt", "DESC"]],
     }),
   },
   //  0406
@@ -219,22 +229,6 @@ module.exports = {
     ...FOLLOW,
   },
   USER: {
-    //  0421
-    findAlbumListOfUser: (user_id) => ({
-      where: { id: user_id },
-      include: {
-        // model: Blog,
-        // as: 'blogs',
-        association: "blogs",
-        attributes: ["id", "title", "show", "showAt", "updatedAt", "createdAt"],
-        include: {
-          model: BlogImg,
-          attributes: [],
-          required: true,
-        },
-      },
-    }),
-
     findOthersInSomeBlogAndPid: ({
       commenter_id,
       p_id,

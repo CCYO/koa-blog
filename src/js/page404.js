@@ -39,7 +39,7 @@ async function init() {
         //  無權限 -> 後端以404處理
       } else if (errno === ErrRes.SERVER.ERR_500.errno) {
         BackPage();
-        alertMsg = ErrRes.SERVER.ERR_500.msg;
+        alertMsg = `${ErrRes.SERVER.ERR_500.msg},${alertMsg}`;
       }
       if (G.data.hasOwnProperty("serverError")) {
         console.log(G.data.serverError);

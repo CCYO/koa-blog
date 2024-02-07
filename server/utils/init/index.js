@@ -174,7 +174,14 @@ function _initBlogImg(blogImgs) {
       blogImgs.set(id, { id, name });
       if (data.hasOwnProperty("Img")) {
         let { id, url, hash } = data.Img;
-        !imgs.has(id) && imgs.set(id, { id, url, hash });
+        let img = { id };
+        if (url) {
+          img.url = url;
+        }
+        if (hash) {
+          img.hash = hash;
+        }
+        !imgs.has(id) && imgs.set(id, img);
       }
       if (data.hasOwnProperty("BlogImgAlts")) {
         for (let { id, alt } of data.BlogImgAlts) {

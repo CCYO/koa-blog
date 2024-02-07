@@ -2,7 +2,13 @@ const { Op } = require("sequelize");
 const { Img, BlogImg, BlogImgAlt, User } = require("../../db/mysql/model");
 
 const FIND = {
-  wholeInfo: (id, options) => ({
+  permission: (id, paranoid) => ({
+    where: { id },
+    attributes: ["id", "author_id"],
+    paranoid,
+  }),
+  wholeInfo: (id, paranoid) => ({
+    paranoid,
     attributes: ["id", "title", "html", "show", "showAt", "updatedAt"],
     where: { id },
     include: [
@@ -87,7 +93,7 @@ const FIND = {
   }),
   listOfSquare: (id) => {
     let res = {
-      attributes: ["id", "title", "show", "showAt", "createdAt"],
+      attributes: ["id", "title", "show", "showAt"],
       where: {
         show: true,
       },
@@ -101,22 +107,26 @@ const FIND = {
     }
     return res;
   },
-  wholeInfoIncludeSoftDelete: (id) => ({
-    attributes: ["id", "title", "html", "show", "showAt", "updatedAt"],
+  listOfHaveImg: (author_id) => ({
+    where: { author_id },
+    attributes: ["id", "title", "show", "showAt", "updatedAt", "createdAt"],
+    include: {
+      model: BlogImg,
+      attributes: [],
+      required: true,
+    },
+  }),
+  album: (id) => ({
     where: { id },
-    paranoid: false,
+    attributes: ["id", "title"],
     include: [
-      {
-        association: "author",
-        attributes: ["id", "email", "nickname"],
-      },
       {
         model: BlogImg,
         attributes: ["id", "name"],
         include: [
           {
             model: Img,
-            attributes: ["id", "url", "hash"],
+            attributes: ["id", "url"],
           },
           {
             model: BlogImgAlt,
@@ -124,26 +134,18 @@ const FIND = {
           },
         ],
       },
-      {
-        association: "replys",
-        attributes: [
-          "id",
-          "html",
-          "commenter_id",
-          "pid",
-          "createdAt",
-          "deletedAt",
-        ],
-        include: {
-          association: "commenter",
-          attributes: ["id", "email", "nickname"],
-        },
-      },
     ],
-    order: [["replys", "id"]],
   }),
 };
 
+const REMOVE = {
+  list: (id_list) => ({
+    where: {
+      id: { [Op.in]: id_list },
+    },
+  }),
+};
 module.exports = {
+  REMOVE,
   FIND,
 };

@@ -7,7 +7,6 @@ const {
   ErrModel,
 } = require("../model");
 const BlogImg = require("../server/blogImg"); //  0406
-const { Blog } = require("../db/mysql/model");
 //  0429
 async function findInfoForRemoveBlog(blog_id) {
   let list = await BlogImg.readList(

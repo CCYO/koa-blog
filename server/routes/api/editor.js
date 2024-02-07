@@ -5,7 +5,6 @@ const { CACHE, CHECK, FIREBASE, VALIDATE } = require("../../middleware/api");
 const {
   DEFAULT: { BLOG },
 } = require("../../config");
-const BlogImgAlt = require("../../controller/blogImgAlt"); //  0409
 
 const router = require("koa-router")(); //  0406
 router.prefix("/api/blog");

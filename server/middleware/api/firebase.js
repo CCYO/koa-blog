@@ -9,11 +9,7 @@ const {
     },
   },
 } = require("../../config");
-//  0406
 const { parse } = require("../../utils/gcs");
-//  0406
-const C_BlogImg = require("../../controller/blogImg");
-//  0406
 const C_Img = require("../../controller/img");
 
 async function user(ctx, next) {
@@ -32,8 +28,6 @@ async function user(ctx, next) {
 
 //  -----------------------------------------------------------------------------------------
 
-const C_BlogImgAlt = require("../../controller/blogImgAlt");
-const { SuccModel } = require("../../model");
 /**
  * 上傳圖檔至GCS
  * @param { object } ctx

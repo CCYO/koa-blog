@@ -75,7 +75,8 @@ function pagination(list, options) {
       let curPage = pageData.length - 1;
       //  當前頁數中的數據數
       let DataCountInCurPage = pageData[curPage].length;
-      if (DataCountInCurPage < pagination) {
+      let s = DataCountInCurPage < pagination.BLOG_COUNT;
+      if (DataCountInCurPage < pagination.BLOG_COUNT) {
         pageData[curPage].push(item);
       } else {
         pageData.push([item]);

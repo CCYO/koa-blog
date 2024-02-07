@@ -1,17 +1,7 @@
 const { ErrRes, MyErr } = require("../model"); //  0406
 const Init = require("../utils/init"); //  0406
 const { BlogImgAlt } = require("../db/mysql/model"); //  0406
-//  0411
-async function update(id, data) {
-  let [row] = await BlogImgAlt.update(data, { where: { id } });
-  if (!row) {
-    throw new MyErr({
-      ...ErrRes.BLOG_IMG_ALT.UPDATE.ERR,
-      error: `blogImgAlt/${id} 更新失敗`,
-    });
-  }
-  return row;
-}
+
 //  ------------------------------------------------------------------------------------
 async function create(data) {
   try {
@@ -34,11 +24,20 @@ async function destoryList(opts) {
     throw new MyErr({ ...ErrRes.BLOG_IMG_ALT.REMOVE.ERR, error });
   }
 }
+async function update(id, data) {
+  let [row] = await BlogImgAlt.update(data, { where: { id } });
+  if (!row) {
+    throw new MyErr({
+      ...ErrRes.BLOG_IMG_ALT.UPDATE.ERR,
+      error: `blogImgAlt/${id} 更新失敗`,
+    });
+  }
+  return row;
+}
 module.exports = {
   destoryList,
   find,
   create,
-  //    -------------------------------------------------------------------------------
   update,
 };
 

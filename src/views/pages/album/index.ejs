@@ -7,18 +7,18 @@
   <!-- MAIN -->
   <main class="container-md" style="display: none;">
     <h1 class="mb-3">
-      <%%= title %>的照片列表
+      <%%= blog.title %>的照片列表
     </h1>
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
-      <%% album.imgs.forEach( ({alt_id, img_id, blogImg_id, url, alt})=> { %>
+      <%% for( let alt_id in imgs ){  %>
       <div>
         <div class="card border-dark" data-<%%= G_CONST.DATASET.KEY.ALT_ID %>="<%%= alt_id %>">
           <div class="ratio ratio-1x1 border-bottom border-secondary">
-            <img class="card-img-top" src="<%%= url %>?blogImgAlt=<%%= alt_id %>" alt="<%%= alt %>" />
+            <img class="card-img-top" src="<%%= imgs[alt_id].img.url %>?blogImgAlt=<%%= alt_id %>" alt="<%%= imgs[alt_id].alt %>" />
           </div>
           <div class="card-body">
             <p class="card-text text-truncate mb-0" style="height: 2rem; line-height: 2rem;">
-              <%%= alt %>
+              <%%= imgs[alt_id].alt %>
             </p>
             <button type="button" class="btn btn-primary">
               修改照片名稱
@@ -26,16 +26,11 @@
           </div>
         </div>
       </div>
-      <%% }) %>
-    </div>
-    <div>
-      <!-- 當前使用者頁面的使用者資料 -->
-      <div data-my-data="album" style="display: none;">
-        <%%- JSON.stringify(album) %>
-      </div>
-    </div>
+      <%% } %>
     </div>
     <%- include('./components/modal.ejs') %>
+    <!-- EJS DATA -->
+    <%- include('../../wedgets/ejs-data-list') %>
   </main>
 
   <!-- FOOTER -->

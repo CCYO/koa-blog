@@ -1,2 +1,10 @@
 /* album CSS */
-@import './common/basic.css';
+@import "./common/basic.css";
+
+#modal_album input + div {
+  display: block;
+}
+.modal-body > input + div::before {
+  display: inline-block;
+  content: " ";
+}

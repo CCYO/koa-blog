@@ -145,10 +145,10 @@ export default {
       type: "string",
       minLength: 1,
       maxLength: 20,
-      pattern: "^[\\u4e00-\\u9fa5a-zA-Z\\d]+$",
+      pattern: "^[\\u4e00-\\u9fa5a-zA-Z\\d\\-]+$",
       errorMessage: {
         type: "必須是字符串",
-        pattern: "必須由中文、英文、數字以及底線組成",
+        pattern: "必須由中文、英文、數字以及底線與連接線組成",
         minLength: "長度要1個字符以上",
         maxLength: "長度需小於20個字",
       },

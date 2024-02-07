@@ -32,7 +32,7 @@ export default async function (axios) {
     news = data_news;
   }
   // }
-  render(user);
+  render(user.id);
   //  初始化nav功能
   await initFn(news);
   let G_news = user.id ? $M_news : news;
@@ -141,11 +141,11 @@ export default async function (axios) {
     }
   }
   //  render navbar
-  function render(user) {
-    if (!user.id) {
+  function render(isLogin) {
+    if (!isLogin) {
       renderLogoutNavBar();
     } else {
-      renderLoginNav(user);
+      renderLoginNav();
     }
     //  根據 path，顯示當前 active NavItem
     activeNavItem();
@@ -174,9 +174,9 @@ export default async function (axios) {
       $(".navbar-toggler, .offcanvas").remove();
     }
     //  渲染 登入狀態的 navbar template
-    function renderLoginNav(user) {
+    function renderLoginNav() {
       //  #needCollapse-list 之外放入 個人資訊/文章相簿/設置/LOGOUT
-      $("#needCollapse-list").html($M_template.navbar.collapse_list(user));
+      $("#needCollapse-list").html($M_template.navbar.collapse_list());
       //  #noNeedCollapse-list 內放入 NEWS
       $("#noNeedCollapse-list").html($M_template.navbar.uncollapse_list());
       return true;

@@ -4,8 +4,10 @@
 
 const user = require("./user");
 const blog = require("./blog");
+const alt = require("./alt");
 
 module.exports = {
+  alt,
   blog,
   user,
 };
