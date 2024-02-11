@@ -5,19 +5,17 @@ const { ErrRes, MyErr } = require("../model");
 const { hash } = require("../utils/crypto");
 const { User } = require("../db/mysql/model"); //  0404
 const Init = require("../utils/init"); //  040444
-//  0514
+
 //  更新user數據
-async function update({ newData, id }) {
-  let data = { ...newData };
-  if (data.hasOwnProperty("age")) {
-    newData.age *= 1;
+async function update(id, data) {
+  let [row] = await User.update(data, { where: { id } });
+  if (!row) {
+    throw new MyErr({
+      ...ErrRes.USER.UPDATE.ERR,
+      error: `blog/${id} 更新失敗`,
+    });
   }
-  if (data.hasOwnProperty("password")) {
-    data.password = hash(data.password);
-  }
-  let user = await User.findByPk(id);
-  user = await user.update(data);
-  return Init.user(user);
+  return row;
 }
 
 // ----------------------------------------------------------------------

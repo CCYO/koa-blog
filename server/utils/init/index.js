@@ -222,9 +222,13 @@ function initUser(data) {
     //  設置默認的avatar
     if (map.has("avatar") && !map.get("avatar")) {
       data.avatar = SERVER_CONFIG.DEFAULT.USER.AVATAR;
+      data.avatar_hash = SERVER_CONFIG.DEFAULT.USER.AVARAR_HASH;
     }
     if (map.has("fansList")) {
       data.fansList = initUser(data.fansList);
+    }
+    if (map.has("blogs")) {
+      data.blogs = initBlog(data.blogs);
     }
     // if (map.has('comments') && data.comments.length) {
     //     let comments = data.comments

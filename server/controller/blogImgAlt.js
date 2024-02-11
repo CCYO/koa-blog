@@ -8,6 +8,7 @@ async function add(blogImg_id) {
   let data = await BlogImgAlt.create({ blogImg_id });
   return new SuccModel({ data });
 }
+//  查詢 alt 的完整數據，且以author_id 與 blog_id 校驗是否有權利更改
 async function findWholeInfo({ author_id, blog_id, alt_id }) {
   if (!author_id || !blog_id || !alt_id) {
     throw new MyErr(ErrRes.BLOG_IMG.READ.NO_ARGS);

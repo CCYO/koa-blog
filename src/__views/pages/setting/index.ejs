@@ -75,18 +75,10 @@
               <input type="file" id="avatar" class="form-control" name="avatar" autocomplete="off">
               <div>&nbsp;</div>
             </label>
-
           </div>
           <button type="submit" name="submit" class="btn btn-primary mt-3">送出</button>
         </div>
       </form>
-    </div>
-
-    <div>
-      <!-- 當前使用者頁面的使用者資料 -->
-      <div data-my-data="currentUser" style="display: none;">
-        <%- JSON.stringify(currentUser) %>
-      </div>
     </div>
     <!-- EJS DATA -->
     <%- include('../../wedgets/ejs-data-list') %>

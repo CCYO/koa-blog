@@ -13,13 +13,84 @@ const {
     GCS_ref: { BLOG, AVATAR },
   },
 } = require("../config");
+//  處理 blog 內文圖片
+async function blogImg(ctx) {
+  //  上傳 blog 內文圖片時，會附上圖片相關資料
+  let { ext, hash } = ctx.query;
+  if (ext) {
+    ext = ext.toUpperCase();
+    if (ext !== "JPG" && ext !== "PNG") {
+      throw new MyErr(ErrRes.UPDATE.AVATAR_FORMAT_ERR);
+    }
+  } else {
+    throw new MyErr(ErrRes.UPDATE.NO_EXT);
+  }
+  if (!hash) {
+    throw new MyErr(ErrRes.UPDATE.NO_HASH);
+  }
+  let res = { [BLOG]: undefined };
+  //  即將存入遠端庫的圖片路徑
+  let ref = storage.bucket().file(`${BLOG}/${hash}.${ext}`);
+  let [exist] = await ref.exists();
+  if (exist) {
+    res[BLOG] = ref.publicUrl();
+  } else {
+    ctx._my = { gceFile: { ref } };
+    //  建立 formidable Ins
+    await _parse(ctx);
+    res[BLOG] = ref.publicUrl();
+    delete ctx._my;
+  }
+  return res;
+}
+//  處理 user avatar
+async function user(ctx) {
+  let { avatar_ext, avatar_hash } = ctx.request.query;
+  if (avatar_ext && !avatar_hash) {
+    throw new MyErr(ErrRes.USER.UPDATE.AVATAR_NO_ARGS_HASH);
+  } else if (avatar_hash && !avatar_ext) {
+    throw new MyErr(ErrRes.USER.UPDATE.AVATAR_NO_ARGS_EXT);
+  } else if (avatar_hash === ctx.session.user.avatar_hash) {
+    throw new MyErr(ErrRes.USER.UPDATE.SAME_AVATAR_HASH);
+  }
+  let res;
+  let ref;
+  if (avatar_ext && avatar_hash) {
+    avatar_ext = avatar_ext.toUpperCase();
+    if (avatar_ext !== "JPG" && avatar_ext !== "PNG") {
+      throw new MyErr(ErrRes.USER.UPDATE.AVATAR_FORMAT_ERR);
+    }
+    //  即將存入遠端庫的圖片路徑
+    ref = storage.bucket().file(`${AVATAR}/${avatar_hash}.${avatar_ext}`);
+    let [exist] = await ref.exists();
+    if (!exist) {
+      ctx._my = { gceFile: { ref } };
+    }
+  }
+  let { fields } = await _parse(ctx);
+  if (!ref && !Object.getOwnPropertyNames(fields).length) {
+    throw new MyErr(ErrRes.USER.UPDATE.NO_DATA);
+  }
+  res = { ...fields };
+  if (ref) {
+    delete ctx._my;
+    //  解析
+    res[AVATAR] = ref.publicUrl();
+  }
+  return res;
+}
+
+module.exports = {
+  user,
+  blogImg,
+};
 
 /** 生成 formidable Ins
  * @param {object} bar 此物件負責提供建立 formidable Ins 之 fileWriteStreamHandler 方法的 file_ref 參數，且為了能撈取 fileWriteStreamHandler 運行 GCS上傳發生的錯誤，_genFormidable 內部會在 bar 新增 promise 屬性
  * @returns {object} writeableStream 可寫流
  */
 const _parse = (ctx) => {
-  let gceFile = ctx._my.gceFile;
+  let gceFile = ctx._my?.gceFile;
   //  取自定義、用來生成 formidable Ins 的參數
   let formidableIns;
   //  創建 formidable Ins
@@ -48,12 +119,15 @@ const _parse = (ctx) => {
   }
   //  執行 formidableIns.parse
   return new Promise((resolve, reject) => {
-    formidableIns.parse(ctx.req, async (err, fields, files) => {
-      if (err) {
-        throw new MyErr({ ...ErrRes.UPDATE.FORMIDABLE_ERR, err });
+    formidableIns.parse(ctx.req, async (error, fields, files) => {
+      if (error) {
+        throw new MyErr({ ...ErrRes.USER.UPDATE.FORMIDABLE_ERR, error });
         //  拋出 formidable 解析錯誤
       }
       if (!gceFile) {
+        if (!Object.getOwnPropertyNames(fields).length) {
+          throw new MyErr(ErrRes.USER.UPDATE.NO_ARGS_DATA);
+        }
         //  請求內沒有夾帶 files，返回 fields
         return resolve({ fields });
       }
@@ -64,83 +138,10 @@ const _parse = (ctx) => {
         await gceFile.ref.makePublic();
         //  將圖檔在GFB的遠端路徑設為公開
         return resolve({ fields, files });
-      } catch (err) {
-        throw new MyErr({ ...ErrRes.UPDATE.UPDATE_GCE_ERR, err });
+      } catch (error) {
+        throw new MyErr({ ...ErrRes.USER.UPDATE.GCE_ERR, error });
         //  拋出圖檔上傳GFB發生的錯誤
       }
     });
   });
-};
-const parse = {
-  async user(ctx) {
-    ctx._my = {
-      gceFile: undefined,
-    };
-    let ref = undefined;
-    let { avatar_ext, avatar_hash } = ctx.request.query;
-    //  avatar 的 hash 與 ext
-    if (avatar_ext && avatar_hash) {
-      if (avatar_hash === ctx.session.user.avatar_hash) {
-        throw new MyErr(ErrRes.UPDATE.AVATAR_HASH_ERR);
-      }
-      avatar_ext = avatar_ext.toUpperCase();
-      if (avatar_ext !== "JPG" && avatar_ext !== "PNG") {
-        throw new MyErr(ErrRes.UPDATE.AVATAR_FORMAT_ERR);
-      }
-      //  即將存入遠端庫的圖片路徑
-      ref = storage.bucket().file(`${AVATAR}/${avatar_hash}.${avatar_ext}`);
-      let [exist] = await ref.exists();
-      if (!exist) {
-        ctx._my.gceFile = { ref };
-      }
-    } else if (avatar_ext && !avatar_hash) {
-      throw new MyErr(ErrRes.UPDATE.NO_HASH);
-    } else if (!avatar_ext && avatar_hash) {
-      throw new MyErr(ErrRes.UPDATE.NO_EXT);
-    }
-    let { fields } = await _parse(ctx);
-    if (!ref && !Object.getOwnPropertyNames(fields).length) {
-      throw new MyErr(ErrRes.UPDATE.NO_DATA);
-    }
-    let res = { ...fields };
-    //  解析
-    if (ref) {
-      res[AVATAR] = ref.publicUrl();
-    }
-    delete ctx._my;
-    return res;
-  },
-  async blogImg(ctx) {
-    //  上傳 blog 內文圖片時，會附上圖片相關資料
-    let { ext, hash } = ctx.query;
-    if (ext) {
-      ext = ext.toUpperCase();
-      if (ext !== "JPG" && ext !== "PNG") {
-        throw new MyErr(ErrRes.UPDATE.AVATAR_FORMAT_ERR);
-      }
-    } else {
-      throw new MyErr(ErrRes.UPDATE.NO_EXT);
-    }
-    if (!hash) {
-      throw new MyErr(ErrRes.UPDATE.NO_HASH);
-    }
-    let res = { [BLOG]: undefined };
-    //  即將存入遠端庫的圖片路徑
-    let ref = storage.bucket().file(`${BLOG}/${hash}.${ext}`);
-    let [exist] = await ref.exists();
-    if (exist) {
-      res[BLOG] = ref.publicUrl();
-    } else {
-      ctx._my = { gceFile: { ref } };
-      //  建立 formidable Ins
-      await _parse(ctx);
-      res[BLOG] = ref.publicUrl();
-      delete ctx._my;
-    }
-    return res;
-  },
-};
-
-module.exports = {
-  parse,
 };

@@ -287,12 +287,12 @@ module.exports = {
   },
   ARTICLE_READER: {
     //  0514
-    findReadersForModifiedUserData: (articles) => ({
-      attributes: ["reader_id"],
-      where: {
-        article_id: { [Op.in]: articles },
-      },
-    }),
+    // findReadersForModifiedUserData: (articles) => ({
+    //   attributes: ["reader_id"],
+    //   where: {
+    //     article_id: { [Op.in]: articles },
+    //   },
+    // }),
     count: (blog_id) => ({
       where: { blog_id },
     }),
@@ -475,10 +475,10 @@ module.exports = {
   //  0411
   MSG_RECEIVER: {
     //  0514
-    findListForModifiedUserData: (msgs) => ({
-      attributes: ["receiver_id"],
-      where: { msg_id: { [Op.in]: msgs } },
-    }),
+    // findListForModifiedUserData: (msgs) => ({
+    //   attributes: ["receiver_id"],
+    //   where: { msg_id: { [Op.in]: msgs } },
+    // }),
     //  0414
     findList: (msg_id) => ({
       where: { msg_id },

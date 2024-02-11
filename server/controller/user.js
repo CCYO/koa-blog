@@ -27,73 +27,10 @@ const User = require("../server/user"); //  0404
 const C_IdolFans = require("./idolFans");
 const C_ArticleReader = require("./articleReader");
 const { ENV } = require("../config");
+const { cache } = require("ejs");
 
 //  0514
 //  更新user
-async function modify({ _origin, ...newData }) {
-  let { id: user_id } = _origin;
-  let cache = undefined;
-  if (process.env.NODE_ENV !== "nocache") {
-    cache = {
-      [PAGE.USER]: [user_id],
-      [PAGE.BLOG]: [],
-      [API.COMMENT]: [],
-      [NEWS]: [],
-    };
-    if (newData.nickname || newData.email || newData.avatar) {
-      ////  處理cache
-      let {
-        data: { fansList, idolList },
-      } = await _findRelationship(user_id);
-
-      //   let { data: {
-      //     relationShip: { fansList, idolList },
-      //     blogs,
-      //   }
-      // } = await findInfoForUserPage(user_id);
-      //  找出 idolFans
-      // let people = [...fansList, ...idols].map(({ id }) => id);
-      let people = [...fansList, ...idolList].map(({ id }) => id);
-      cache[PAGE.USER] = cache[PAGE.USER].concat(people);
-      let { data: blogList } = await C_Blog.find_id_list_by_author_id(user_id);
-      // let blogList = [];
-      //  找出 自己的 blog
-      // for (let isShow in blogs) {
-      //   //  公開/隱藏的blog
-      //   for (let pagination of blogs[isShow]) {
-      //     //  分頁
-      //     let blog_id_list = pagination.map(({ id }) => id);
-      //     blogList = blogList.concat(blog_id_list);
-      //   }
-      // }
-      cache[PAGE.BLOG] = cache[PAGE.BLOG].concat(blogList);
-      //  找出 reader
-      let { data: readers } =
-        await C_ArticlReader.findReadersForModifiedUserData(blogList);
-      cache[NEWS] = cache[NEWS].concat(readers);
-      //  找出 評論 與 被評論的文章
-      let {
-        data: { articles, comments },
-      } = await C_Comment.findArticlesOfCommented(user_id);
-      cache[API.COMMENT] = cache[API.COMMENT].concat(articles);
-      if (comments.length) {
-        //  找出 receiver
-        let { data: receivers } =
-          await C_MsgReceiver.findListForModifiedUserData(comments);
-        cache[NEWS] = cache[NEWS].concat(receivers);
-      }
-    }
-  }
-  //  測試舊密碼是否正確
-  if (newData.hasOwnProperty("password")) {
-    let { errno } = await login(_origin.email, newData.origin_password);
-    if (errno) {
-      return new ErrModel(ErrRes.USER.READ.PASSWORD_WRONG);
-    }
-  }
-  let user = await User.update({ newData, id: user_id });
-  return new SuccModel({ data: user, cache });
-}
 
 async function findOthersInSomeBlogAndPid({
   commenter_id,
@@ -168,13 +105,7 @@ async function findInfoForUserPage(userId) {
   let data = { currentUser, relationShip: { fansList, idolList }, blogs };
   return new SuccModel({ data });
 }
-async function find(user_id) {
-  const data = await User.read(Opts.USER.FIND.one(user_id));
-  if (!data) {
-    return new ErrModel(ErrRes.USER.READ.NO_DATA);
-  }
-  return new SuccModel({ data });
-}
+
 async function findFansList(idol_id) {
   let data = await User.readList(Opts.USER.FIND.fansList(idol_id));
   return new SuccModel({ data });
@@ -233,25 +164,115 @@ async function cancelFollow({ fans_id, idol_id }) {
   }
   return new SuccModel(options);
 }
+async function modify({ _origin, ...newData }) {
+  let { id: user_id } = _origin;
+  //  測試舊密碼是否正確
+  if (newData.hasOwnProperty("password")) {
+    let { errno } = await login(_origin.email, newData.origin_password);
+    if (errno) {
+      throw new MyErr(ErrRes.USER.UPDATE.ORIGIN_PASSWORD_ERR);
+    }
+  }
+  await User.update(user_id, newData);
+  let data = await _find(user_id);
+  let opts = { data };
+  //  ------------------------------------------------------------------
+  if (process.env.NODE_ENV !== "nocache") {
+    //  更新數據，不是新增數據
+    let cache = {
+      //  個人頁 緩存肯定要刪除
+      [PAGE.USER]: [user_id],
+    };
+
+    if (newData.nickname || newData.email || newData.avatar) {
+      ////  處理cache
+      //  偶像、粉絲 的 個人頁緩存也要更新
+      let {
+        data: { fansList, idolList },
+      } = await _findRelationship(user_id);
+      //   let { data: {
+      //     relationShip: { fansList, idolList },
+      //     blogs,
+      //   }
+      // } = await findInfoForUserPage(user_id);
+      //  找出 idolFans
+      // let people = [...fansList, ...idols].map(({ id }) => id);
+      let people = [...fansList, ...idolList].map(({ id }) => id);
+      if (people.length) {
+        cache[PAGE.USER] = cache[PAGE.USER].concat(people);
+      }
+      //  個人的文章緩存 肯定要刪除
+      let { errno, data } = await _findBlogList(user_id);
+      if (!errno) {
+        cache[PAGE.BLOG] = data;
+      }
+
+      // let { data: blogList } = await C_Blog.find_id_list_by_author_id(user_id);
+      // let blogList = [];
+      //  找出 自己的 blog
+      // for (let isShow in blogs) {
+      //   //  公開/隱藏的blog
+      //   for (let pagination of blogs[isShow]) {
+      //     //  分頁
+      //     let blog_id_list = pagination.map(({ id }) => id);
+      //     blogList = blogList.concat(blog_id_list);
+      //   }
+      // }
+      // cache[PAGE.BLOG] = cache[PAGE.BLOG].concat(blogList);
+      //  找出 reader
+      // let { data: readers } =
+      //   await C_ArticlReader.findReadersForModifiedUserData(blogList);
+      // cache[NEWS] = cache[NEWS].concat(readers);
+
+      //  找出 評論 與 被評論的文章 --------------------------------------------
+      // let {
+      //   data: { articles, comments },
+      // } = await C_Comment.findArticlesOfCommented(user_id);
+      // cache[API.COMMENT] = cache[API.COMMENT].concat(articles);
+
+      // if (comments.length) {
+      //   //  找出 receiver
+      //   let { data: receivers } =
+      //     await C_MsgReceiver.findListForModifiedUserData(comments);
+      //   cache[NEWS] = cache[NEWS].concat(receivers);
+      // }
+    }
+    opts.cache = cache;
+  }
+  //  ------------------------------------------------------------------
+  throw new MyErr({ errno: 123, msg: "測試" });
+  return new SuccModel(opts);
+}
 module.exports = {
   //  0514
   modify,
-  //  0406
-
-  //  0404
   findOthersInSomeBlogAndPid,
   //  ------------------------------
   cancelFollow,
   follow,
   findFansList,
-  find,
   findInfoForUserPage,
   login,
   register,
   isEmailExist,
 };
+async function _findBlogList(user_id) {
+  let user = await User.read(Opts.USER.FIND.blogList(user_id));
+  if (!user.blogs.length) {
+    return new ErrModel(ErrRes.BLOG.READ.NO_LIST);
+  }
+  let data = user.blogs.map(({ id }) => id).filter((id) => id);
+  return new SuccModel({ data });
+}
+async function _find(user_id) {
+  const data = await User.read(Opts.USER.FIND.one(user_id));
+  if (!data) {
+    return new ErrModel(ErrRes.USER.READ.NO_DATA);
+  }
+  return new SuccModel({ data });
+}
 async function _findInfoForCancelFollow({ fans_id, idol_id }) {
-  let { errno } = await find(idol_id);
+  let { errno } = await _find(idol_id);
   if (errno) {
     throw new MyErr({
       ...ErrRes.USER.READ.NO_IDOL,
@@ -267,7 +288,7 @@ async function _findInfoForCancelFollow({ fans_id, idol_id }) {
   return new SuccModel({ data });
 }
 async function _findInfoForFollowIdol({ fans_id, idol_id }) {
-  let { errno } = await find(idol_id);
+  let { errno } = await _find(idol_id);
   if (errno) {
     throw new MyErr({
       ...ErrRes.USER.READ.NO_IDOL,
@@ -290,7 +311,7 @@ async function _findIdolList(fans_id) {
   return new SuccModel({ data });
 }
 async function _findRelationship(userId) {
-  let resModel = await find(userId);
+  let resModel = await _find(userId);
   if (resModel.errno) {
     throw new MyErr(resModel);
   }

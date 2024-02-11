@@ -6,15 +6,10 @@ const {
   API: { VALIDATE, SESSION, CHECK, CACHE, FIREBASE },
 } = require("../../middleware");
 const User = require("../../controller/user"); //  0404
+const { MyErr, ErrRes } = require("../../model");
 const router = require("koa-router")(); //  0404
 router.prefix("/api/user");
 
-router.post("/confirmPassword", CHECK.login, async (ctx, next) => {
-  let { email } = ctx.session.user;
-  let { origin_password: password } = ctx.request.body;
-  ctx.body = await User.login(email, password);
-});
-//  0514
 //  setting
 router.patch(
   "/",
@@ -24,12 +19,19 @@ router.patch(
   FIREBASE.user,
   VALIDATE.USER,
   async (ctx, next) => {
-    let { body: newData } = ctx.request;
-    ctx.body = await User.modify(newData);
+    ctx.body = await User.modify(ctx.request.body);
   }
 );
-
-//  ----------------------------------------------------
+//  驗證舊密碼
+router.post("/confirmPassword", CHECK.login, async (ctx, next) => {
+  let { email } = ctx.session.user;
+  let { origin_password: password } = ctx.request.body;
+  let resModel = await User.login(email, password);
+  if (resModel.errno) {
+    throw new MyErr(ErrRes.USER.UPDATE.ORIGIN_PASSWORD_ERR);
+  }
+  ctx.body = resModel;
+});
 //  取消追蹤
 router.post("/cancelFollow", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { id: idol_id } = ctx.request.body;

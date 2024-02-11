@@ -9,8 +9,23 @@ const READ = {
   NO_EMAIL: { errno: 1002, msg: "缺少信箱" },
   EMAIL_EXIST: { errno: 1001, msg: "信箱已有人註冊" },
 };
+const UPDATE = {
+  AVATAR_NO_ARGS_EXT: { errno: 305, msg: "少了ext數據" },
+  AVATAR_NO_ARGS_HASH: { errno: 305, msg: "少了hash數據" },
+  SAME_AVATAR_HASH: { errno: 1001, msg: "avatar hash相同，應該是同一圖檔" },
+  AVATAR_FORMAT_ERR: {
+    errno: 1001,
+    msg: "avatar圖檔格式錯誤，只接受JPG或PNG",
+  },
+  FORMIDABLE_ERR: { errno: 306, msg: "formidable 解析發生錯誤" },
+  NO_ARGS_DATA: { errno: 333, msg: "更新 User Data 卻沒提供任何數據" },
+  GCE_ERR: { errno: 307, msg: "上傳圖片給GFB時， 發生錯誤" },
+  ORIGIN_PASSWORD_ERR: { errno: 308, msg: "舊密碼不符合" },
+  ERR: { errno: 30004, msg: "USER資料更新失敗" },
+};
 
 module.exports = {
+  UPDATE,
   CREATE,
   READ,
 };

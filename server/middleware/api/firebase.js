@@ -9,22 +9,8 @@ const {
     },
   },
 } = require("../../config");
-const { parse } = require("../../utils/gcs");
+const parse = require("../../utils/gcs");
 const C_Img = require("../../controller/img");
-
-async function user(ctx, next) {
-  let data = await parse.user(ctx);
-  if (data.hasOwnProperty("age")) {
-    data.age = Number.parseInt(data.age);
-  }
-  // let $$me = ctx.session.user;
-  // let res = { ...data, $$me };
-  // ctx.request.body = res;
-  ctx.request.body = { ...ctx.request.body, ...data };
-
-  await next();
-  return;
-}
 
 //  -----------------------------------------------------------------------------------------
 
@@ -71,8 +57,17 @@ async function blogImg(ctx, next) {
   return;
 }
 
+async function user(ctx, next) {
+  let data = await parse.user(ctx);
+  if (data.hasOwnProperty("age")) {
+    data.age = Number.parseInt(data.age);
+  }
+  ctx.request.body = data;
+  await next();
+  return;
+}
+
 module.exports = {
-  blogImg,
-  //  ------------------------------------------------------------------------------------------
   user,
+  blogImg,
 };

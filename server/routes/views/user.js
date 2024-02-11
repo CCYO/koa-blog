@@ -23,20 +23,6 @@ const commonCache = GEN_CACHE_FN.common(TYPE.PAGE.USER);
 //  0516
 const router = require("koa-router")();
 
-//  0516
-//  個資更新頁
-router.get("/setting", CHECK.login, CHECK.mustBeOwner, async (ctx, next) => {
-  let currentUser = ctx.session.user;
-  //  不允許前端緩存
-  ctx.set({
-    ["Cache-Control"]: "no-store",
-  });
-  await ctx.render("setting", {
-    title: `${currentUser.nickname}的個資`,
-    //  window.data 數據
-    currentUser,
-  });
-});
 //  ------------------------------------------------------------------------------------
 //  註冊頁
 router.get("/register", async (ctx, next) => {
@@ -144,5 +130,17 @@ router.get(
     });
   }
 );
+//  設置頁
+router.get("/setting", CHECK.login, async (ctx, next) => {
+  let currentUser = ctx.session.user;
+  //  不允許前端緩存
+  ctx.set({
+    ["Cache-Control"]: "no-store",
+  });
+  await ctx.render("setting", {
+    title: `${currentUser.nickname}個人資料設置`,
+    currentUser,
+  });
+});
 //  0504
 module.exports = router;

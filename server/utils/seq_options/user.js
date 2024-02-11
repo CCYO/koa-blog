@@ -84,7 +84,7 @@ const FIND = {
     },
   }),
   one: (id) => ({
-    attributes: ["id", "email", "nickname", "avatar"],
+    attributes: ["id", "email", "nickname", "age", "avatar", "avatar_hash"],
     where: { id },
   }),
   login: ({ email, password }) => ({
@@ -97,6 +97,14 @@ const FIND = {
   email: (email) => ({
     attributes: ["id"],
     where: { email },
+  }),
+  blogList: (id) => ({
+    where: { id },
+    attributes: ["id"],
+    include: {
+      association: "blogs",
+      attributes: ["id"],
+    },
   }),
 };
 //  0404

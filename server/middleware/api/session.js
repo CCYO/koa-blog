@@ -25,9 +25,6 @@ async function set(ctx, next) {
     return;
   }
   if (!ctx.session.user) {
-    console.log(
-      `@ 設置 使用者user_id:${data.id} 的 session，包含【session.user -> 使用者公開資訊】以及【session.news -> 最新通知數據】`
-    );
     ctx.session.user = {
       ...data,
       news: DEFAULT.USER.SESSION_NEWS,

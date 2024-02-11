@@ -97,10 +97,10 @@ async function find(blog_id) {
   return new SuccModel({ data });
 }
 
-async function find_id_list_by_author_id(user_id) {
-  let data = await Blog.readList(Opts.BLOG.find_id_List_by_author(user_id));
-  return new SuccModel({ data });
-}
+// async function find_id_list_by_author_id(user_id) {
+//   let data = await Blog.readList(Opts.BLOG.find_id_List_by_author(user_id));
+//   return new SuccModel({ data });
+// }
 
 const C_MsgReceiver = require("./msgReceiver"); //  0426
 const C_Comment = require("./comment"); //  0425
@@ -117,7 +117,7 @@ const Blog = require("../server/blog");
 const my_xxs = require("../utils/xss");
 const { ENV } = require("../config");
 const {
-  DEFAULT: { BLOG, CACHE },
+  DEFAULT: { BLOG, ALBUM_LIST, CACHE },
 } = require("../config");
 const C_Img = require("./img");
 const C_BlogImg = require("./blogImg");
@@ -164,12 +164,32 @@ async function findListForUserPage(
     private: { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 },
   }
 ) {
-  let { data: public } = await _findPublicListForUserPage(userId, opts.public);
-  let { data: private } = await _findPrivateListForUserPage(
+  let { data: public } = await findPublicListForUserPage(userId, opts.public);
+  let { data: private } = await findPrivateListForUserPage(
     userId,
     opts.private
   );
   let data = { public, private };
+  return new SuccModel({ data });
+}
+async function findPublicListForUserPage(
+  userId,
+  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
+) {
+  let data = await Blog.readListAndCountAll(
+    Opts.BLOG.findPublicBlogForUserPage(userId, opts)
+  );
+  // let data = Init.browser.blog.pageTable(blogs, options)
+  return new SuccModel({ data });
+}
+async function findPrivateListForUserPage(
+  userId,
+  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
+) {
+  let data = await Blog.readListAndCountAll(
+    Opts.BLOG.findPrivateBlogForUserPage(userId, opts)
+  );
+  // let data = Init.browser.blog.pageTable(blogs, options)
   return new SuccModel({ data });
 }
 /** 建立 blog
@@ -215,7 +235,6 @@ async function modify({ blog_id, author_id, ...blog_data }) {
     newData.title = my_xxs(blog_data.title);
   }
 
-  // await seq.transaction(async (t) => {
   //  更新 文章公開狀態
   if (map.has("show")) {
     newData.show = map.get("show");
@@ -241,10 +260,9 @@ async function modify({ blog_id, author_id, ...blog_data }) {
   if (map.has("cancelImgs")) {
     let cancelImgs = map.get("cancelImgs");
     //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
-    // await removeImgs(cancelImgs);
     await _removeImgList({ author_id, blog_id, cancelImgs });
   }
-  await _checkPermission({ author_id, blog_id });
+  let resModel = await _checkPermission({ author_id, blog_id });
   let data = resModel.data;
   let opts = { data };
   if (cache) {
@@ -320,7 +338,7 @@ async function findListOfSquare(author_id) {
 }
 
 //  0421 因為使用 C_BLOG 會造成迴圈，故直接以USER做查詢
-async function findAlbumList(author_id, pagination) {
+async function findAlbumList(author_id, pagination = ALBUM_LIST.PAGINATION) {
   let blogs = await Blog.readList(Opts.BLOG.FIND.listOfHaveImg(author_id));
   if (!blogs.length) {
     return new ErrModel(ErrRes.BLOG.READ.NO_LIST);
@@ -328,7 +346,7 @@ async function findAlbumList(author_id, pagination) {
   await Promise.all(
     blogs.map((blog) => _checkPermission({ author_id, blog_id: blog.id }))
   );
-  let albums = Init.browser.blog.pageTable(blogs, pagination);
+  let albums = Init.browser.blog.pageTable(blogs, { pagination });
   return new SuccModel({ data: { albums } });
 }
 
@@ -353,9 +371,11 @@ module.exports = {
   find,
   add,
   modify,
+  findPrivateListForUserPage,
+  findPublicListForUserPage,
   findWholeInfo,
   //  ----------------------------------------------------
-  find_id_list_by_author_id,
+  // find_id_list_by_author_id,
 
   //  0411
   // findInfoForPageOfAlbumList,
@@ -432,27 +452,6 @@ async function _addReaders(blog_id) {
   let data = [...fansList, ...readers];
   return new SuccModel({ data });
 }
-async function _findPublicListForUserPage(
-  userId,
-  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
-) {
-  let data = await Blog.readListAndCountAll(
-    Opts.BLOG.findPublicBlogForUserPage(userId, opts)
-  );
-  // let data = Init.browser.blog.pageTable(blogs, options)
-  return new SuccModel({ data });
-}
-async function _findPrivateListForUserPage(
-  userId,
-  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
-) {
-  let data = await Blog.readListAndCountAll(
-    Opts.BLOG.findPrivateBlogForUserPage(userId, opts)
-  );
-  // let data = Init.browser.blog.pageTable(blogs, options)
-  return new SuccModel({ data });
-}
-
 async function _checkPermission({ author_id, blog_id, paranoid = true }) {
   let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id, paranoid));
   if (!data) {

@@ -10,14 +10,48 @@
     <div class="box-albumList">
       <h3>公開的文章相簿</h3>
       <% if(albums.show.length){ %>
-      <% albums.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
       <ul class="list-group">
+        <% albums.show.forEach( albums => { albums.forEach( ({ id, title, time }) => { %>
         <li class="list-group-item">
           <a href="/album/<%= id %>"><%= title %></a>
           <span>文章公開於 <%= time %></span>
         </li>
+        <% }) }) %>
       </ul>
-      <% }) }) %>
+      <% if (albums.show.length && albums.show[0].length > 1) { %>
+      <nav aria-label="navigation">
+        <ul class="pagination">
+          <% if (albums.show.length > pagination.PAGE_COUNT) { %>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Previous">
+              <span aria-hidden="true">
+                ← </span>
+            </a>
+          </li>
+          <% } %>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          <% for( let page = 1; page < albums.show.length + 1; page++ ) { %>
+          <li class="page-item"><a class="page-link" href="#"><%= page %></a></li>
+          <% } %>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          <% if (albums.show.length > pagination.PAGE_COUNT) { %>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">→</span>
+            </a>
+          </li>
+          <% } %>
+        </ul>
+      </nav>
+      <% } %>
       <% } else { %>
       <p>沒有相簿</p>
       <% } %>
@@ -33,6 +67,29 @@
         </li>
       </ul>
       <% }) }) %>
+      <% if (albums.show.length > 2) { %>
+      <nav aria-label="navigation">
+        <ul class="pagination">
+          <% if (!(albums.show.length % 2)) { %>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          <% } %>
+          <% for( let page = 1; page < albums.show.length + 1; page++ ) { %>
+          <li class="page-item"><a class="page-link" href="#"><%= page %></a></li>
+          <% } %>
+          <% if (!(albums.show.length % 2)) { %>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          <% } %>
+        </ul>
+      </nav>
+      <% } %>
       <% } else { %>
       <p>沒有相簿</p>
       <% } %>

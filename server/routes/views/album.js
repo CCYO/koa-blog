@@ -1,6 +1,9 @@
 const {
   VIEWS: { CHECK },
 } = require("../../middleware");
+const {
+  DEFAULT: { ALBUM_LIST },
+} = require("../../config");
 const Blog = require("../../controller/blog"); //  0411
 let router = require("koa-router")(); //  0411
 router.prefix("/album"); //  0411
@@ -8,8 +11,7 @@ router.prefix("/album"); //  0411
 router.get("/list", CHECK.login, async (ctx, next) => {
   let author = ctx.session.user;
   let author_id = author.id;
-  let pagination = ctx.query;
-  let resModel = await Blog.findAlbumList(author_id, pagination);
+  let resModel = await Blog.findAlbumList(author_id);
   let {
     data: { albums },
   } = resModel;
@@ -17,6 +19,7 @@ router.get("/list", CHECK.login, async (ctx, next) => {
     title: "文章照片列表",
     author,
     albums,
+    pagination: ALBUM_LIST.PAGINATION,
   });
 });
 //  0411
