@@ -11,14 +11,11 @@ router.prefix("/album"); //  0411
 router.get("/list", CHECK.login, async (ctx, next) => {
   let author = ctx.session.user;
   let author_id = author.id;
-  let resModel = await Blog.findAlbumList(author_id);
-  let {
-    data: { albums },
-  } = resModel;
+  let { data: album } = await Blog.findListForAlbumListPage(author_id);
   await ctx.render("albumList", {
     title: "文章照片列表",
     author,
-    albums,
+    album,
     pagination: ALBUM_LIST.PAGINATION,
   });
 });

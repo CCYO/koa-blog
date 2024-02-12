@@ -1,5 +1,6 @@
 const {
   DEFAULT: { CACHE },
+  ENV,
 } = require("../config"); //  0411
 const C_MsgReceiver = require("./msgReceiver"); //  0411
 const Init = require("../utils/init"); //  0404
@@ -93,7 +94,209 @@ async function _findUnconfirmListBeforeNews({
   let data = Init.comment(comments);
   return new SuccModel({ data });
 }
+//  0414
+async function _findLastItemOfPidAndNotSelf(
+  article_id,
+  commenter_id,
+  time,
+  pid
+) {
+  let comment = await Comment.read(
+    Opts.COMMENT._findLastItemOfPidAndNotSelf(
+      article_id,
+      commenter_id,
+      time,
+      pid
+    )
+  );
+  if (!comment) {
+    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
+  }
+  return new SuccModel({ data: comment });
+}
+//  0414
+async function _findLastItemOfNotSelf(article_id, commenter_id, time) {
+  let comment = await Comment.read(
+    Opts.COMMENT.findLastItemOfNotSelf(article_id, commenter_id, time)
+  );
+  if (!comment) {
+    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
+  }
+  return new SuccModel({ data: comment });
+}
+
+async function _findDeletedItem(comment_id) {
+  let comment = await Comment.read(Opts.COMMENT.findDeletedItem(comment_id));
+  if (!comment) {
+    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
+  }
+  let [data] = Init.browser.comment([comment]);
+  // let data = Init.browser.comment(comment)
+  return new SuccModel({ data });
+}
 //  0411
+async function findInfoForPageOfBlog(article_id) {
+  let comments = await Comment.readList(
+    Opts.COMMENT.findInfoForPageOfBlog(article_id)
+  );
+  let data = Init.browser.comment(comments);
+  return new SuccModel({ data });
+}
+
+//  --------------------------------------------------------------------------------------------------------------
+async function add({ commenter_id, article_id, html, pid, author_id }) {
+  //  創建 comment
+  let newComment = await Comment.create({
+    commenter_id,
+    article_id,
+    html,
+    pid,
+  });
+
+  //  處理緩存 ----------------------------------------------------------
+  //  找出相關的 comments
+  //  目的：同一pid下的commenter要收到news
+  //  狀況1
+  //  作者留言
+  //  *不需要通知作者
+  //  *判斷作者有沒有尚未確認的pid通知
+  //  **有的話，判斷是否『已確認』
+  //  ***『未確認』，更新為「已確認」
+  //  狀況2
+  //  非作者留言
+  //  *
+  //  *
+
+  let info = await _findInfoForAdd({ ...newComment, author_id });
+  let {
+    msgReceiver: { author, curCommenter, others },
+    commenters: { notReceiver, other },
+  } = info.data;
+
+  //  存放要更新的數據
+  let newDatas = [];
+  //  存放待整理為 newDatas Item
+  let container = [];
+  //  必定會更新到的數據屬性
+  let defProp = { msg_id: newComment.id, updatedAt: newComment.createdAt };
+  //  確認 commenter === author
+  let isAuthor = commenter_id === author_id;
+
+  if (isAuthor) {
+    ////  若留言者是文章作者
+
+    //  若作者沒有「與 pid 相關的 msgReceiver」
+    if (!author) {
+      //  找出作者「與article_id相關的 msgReceiver」
+      let { errno, data } = await _findMsgReceiverOfAuthor({
+        author_id,
+        article_id,
+      });
+      //  若存在，則賦值給 author，稍後提供給newData使用
+      if (!errno) {
+        author = data;
+      }
+      //  若不存在，代表目前為止，文章只有作者自己在留言
+    }
+    //  若作者與pid之間，有相關的msgReceiver存在，且
+    author &&
+      //  msgReveiver尚未確認，則
+      !author.confirm &&
+      //  將 msgReviever 改為{ confirm: true, updatedAt: 同 newComment 創建時間 }
+      //  並存入 newDatas 備用
+      newDatas.push({
+        ...author,
+        updatedAt: newComment.createdAt,
+        confirm: true,
+      });
+  } else {
+    ////  若留言者不是文章作者
+
+    //  若作者也擁有「與 pid 相關的 msgReceiver」
+    if (author) {
+      //  放入待處理的數據列表 container 中
+      container.push(author);
+    } else {
+      //  若作者沒有「與 pid 相關的 msgReceiver」
+      //  找出作者「與article_id相關的 msgReceiver」
+      let { errno, data } = await _findMsgReceiverOfAuthor({
+        author_id,
+        article_id,
+      });
+      if (!errno) {
+        //  若存在，則放入待處理的數據列表 container 中
+        container.push(data);
+      } else {
+        //  若不存在，則創建全新通知，並放入 newsDatas 備用
+        // newDatas.push({
+        //   ...defProp,
+        //   receiver_id: author_id,
+        //   createdAt: newComment.createdAt,
+        //   confirm: false,
+        // });
+
+        //  若不存在，則將作者列入 notReceiver 之中，待後續創建全新通知
+        notReceiver.add(author_id);
+      }
+    }
+    //  若符合 pid 的 留言者自身通知 存在，且處於「未確認」狀態
+    if (curCommenter && !curCommenter.confirm) {
+      //  改為「已確認狀態」，存入 newDatas
+      newDatas.push({
+        ...curCommenter,
+        updatedAt: newComment.createdAt,
+        confirm: true,
+      });
+    }
+  }
+  //  將作者與留言者以外，其他評論者所擁有的「與 pid 相關的 msgReceiver」
+  //  放入待處理的數據列表 container 中
+  if (others.length) {
+    container = container.concat(others);
+  }
+  //  整理待更新數據
+  for (let msgReceiver of container) {
+    if (msgReceiver.confirm) {
+      //  針對「已確認」狀態的msgReceiver，更新為新創見的狀態
+      newDatas.push({
+        ...msgReceiver,
+        ...defProp,
+        createdAt: newComment.createdAt,
+        confirm: false,
+      });
+    } else {
+      //  針對「未確認」狀態的msgReceiver，更新為新創見的狀態
+      //  更新 { msg_id: newComment.id, updatedAt: newComment.createdAt };
+      newDatas.push({ ...msgReceiver, ...defProp });
+    }
+  }
+  //  針對既非作者與非留言者，尚未建立「與 pid 相關的 msgReceiver」的receiver，創建全新通知
+  for (let receiver_id of notReceiver) {
+    newDatas.push({
+      ...defProp,
+      receiver_id,
+      createdAt: newComment.createdAt,
+      confirm: false,
+    });
+  }
+  //  更新
+  if (newDatas.length) {
+    await C_MsgReceiver.addList(newDatas);
+  }
+
+  //  讀取符合Blog格式數據格式的新Comment
+  let { data } = await _findItem(newComment.id);
+  let opts = { data };
+  if (!ENV.isNoCache) {
+    opts.cache = {
+      [CACHE.TYPE.PAGE.BLOG]: [article_id],
+      // [CACHE.TYPE.API.COMMENT]: [article_id],
+      [CACHE.TYPE.NEWS]: [...other],
+    };
+  }
+
+  return new SuccModel(opts);
+}
 async function remove({ comment_id }) {
   const transaction = await seq.transaction();
   try {
@@ -264,200 +467,20 @@ async function remove({ comment_id }) {
     throw e;
   }
 }
-//  0414
-async function _findLastItemOfPidAndNotSelf(
-  article_id,
-  commenter_id,
-  time,
-  pid
-) {
-  let comment = await Comment.read(
-    Opts.COMMENT._findLastItemOfPidAndNotSelf(
-      article_id,
-      commenter_id,
-      time,
-      pid
-    )
-  );
-  if (!comment) {
-    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
-  }
-  return new SuccModel({ data: comment });
-}
-//  0414
-async function _findLastItemOfNotSelf(article_id, commenter_id, time) {
-  let comment = await Comment.read(
-    Opts.COMMENT.findLastItemOfNotSelf(article_id, commenter_id, time)
-  );
-  if (!comment) {
-    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
-  }
-  return new SuccModel({ data: comment });
-}
-//  0411
-async function add({ commenter_id, article_id, html, pid, author_id }) {
-  //  創建 comment
-  let newComment = await Comment.create({
-    commenter_id,
-    article_id,
-    html,
-    pid,
-  });
+module.exports = {
+  add,
+  //  -------------------------------------------------------------------------
+  findArticlesOfCommented,
+  //  0425
+  removeListForRemoveBlog,
+  //  0411
+  remove,
+  //  0411
+  findInfoForPageOfBlog,
+  //  0404
+  findInfoForNews,
+};
 
-  //  找出相關的 comments
-  let { data } = await _findInfoForAdd({ ...newComment, author_id });
-  let {
-    msgReceiver: { author, curCommenter, others },
-    commenters: { notReceiver, other },
-  } = data;
-
-  //  存放要更新的數據
-  let newDatas = [];
-  //  存放待整理為 newDatas Item
-  let container = [];
-  //  必定會更新到的數據屬性
-  let defProp = { msg_id: newComment.id, updatedAt: newComment.createdAt };
-  //  確認 commenter === author
-  let isAuthor = commenter_id === author_id;
-  //  若是留言者是文章作者
-  if (isAuthor) {
-    //  若不存在符合pid的作者通知
-    if (!author) {
-      //  找出文章中對作者的通知
-      let { errno, data } = await _findMsgReceiverOfAuthor({
-        author_id,
-        article_id,
-      });
-      //  若存在，賦值給 author
-      if (!errno) {
-        author = data;
-      }
-    }
-    //  若author存在，且未確認，則改為「已確認狀態」，存入 newDatas
-    author &&
-      !author.confirm &&
-      newDatas.push({
-        ...author,
-        updatedAt: newComment.createdAt,
-        confirm: true,
-      });
-  } else {
-    //  留言者不是文章作者，將作者添入 other，待處理 cache 時使用
-    other.add(author_id);
-    //  若符合 pid 的作者通知存在
-    if (author) {
-      //  放入待處理的數據列表 container 中
-      container.push(author);
-    } else {
-      //  如果符合 pid 的作者通知不存在
-      //  找出文章中對作者的通知
-      let { errno, data } = await _findMsgReceiverOfAuthor({
-        author_id,
-        article_id,
-      });
-      //  若存在，則放入 待處理的數據列表 container 中
-      if (!errno) {
-        container.push(data);
-      } else {
-        //  若不存在，創建全新通知
-        newDatas.push({
-          ...defProp,
-          receiver_id: author_id,
-          createdAt: newComment.createdAt,
-          confirm: false,
-        });
-      }
-    }
-    //  若符合 pid 的 留言者自身通知 存在，且處於「未確認」狀態
-    if (curCommenter && !curCommenter.confirm) {
-      //  改為「已確認狀態」，存入 newDatas
-      newDatas.push({
-        ...curCommenter,
-        updatedAt: newComment.createdAt,
-        confirm: true,
-      });
-    }
-  }
-  //  若留言者本人或是作者本人以外的 使用者通知 存在，則一併放入 待處理的數據列表 container 中
-  if (others.length) {
-    container = container.concat(others);
-  }
-  //  遞歸整理待更新數據
-  for (let msgReceiver of container) {
-    //  若數據為「已確認」狀態
-    if (msgReceiver.confirm) {
-      newDatas.push({
-        ...msgReceiver,
-        ...defProp,
-        createdAt: newComment.createdAt,
-        confirm: false,
-      });
-    } else {
-      newDatas.push({ ...msgReceiver, ...defProp });
-    }
-  }
-  //  為尚未成為 receiver 的 commenter 建立 msgReceiver
-  for (let receiver_id of [...notReceiver]) {
-    newDatas.push({
-      ...defProp,
-      receiver_id,
-      createdAt: newComment.createdAt,
-      confirm: false,
-    });
-  }
-  //  更新
-  if (newDatas.length) {
-    await C_MsgReceiver.addList(newDatas);
-  }
-
-  let cache = {
-    [CACHE.TYPE.API.COMMENT]: [article_id],
-    [CACHE.TYPE.NEWS]: [...other],
-  };
-
-  //  讀取符合Blog格式數據格式的新Comment
-  let resModel = await _findItem(newComment.id);
-  if (resModel.errno) {
-    throw new MyErr(resModel);
-  }
-
-  return new SuccModel({
-    data: resModel.data,
-    cache,
-  });
-}
-//  0420
-async function _findMsgReceiverOfAuthor({ article_id, author_id }) {
-  let comment = await Comment.read(
-    Opts.COMMENT._findMsgReceiverOfAuthor({ article_id, author_id })
-  );
-  if (!comment) {
-    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
-  }
-  let data = comment.receivers[0].MsgReceiver;
-  return new SuccModel({ data });
-}
-//  0411
-async function _findItem(comment_id) {
-  let comment = await Comment.read(Opts.COMMENT.findItem(comment_id));
-  if (!comment) {
-    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
-  }
-  let [data] = Init.browser.comment([comment]);
-  // let data = Init.browser.comment(comment)
-  return new SuccModel({ data });
-}
-
-async function _findDeletedItem(comment_id) {
-  let comment = await Comment.read(Opts.COMMENT.findDeletedItem(comment_id));
-  if (!comment) {
-    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
-  }
-  let [data] = Init.browser.comment([comment]);
-  // let data = Init.browser.comment(comment)
-  return new SuccModel({ data });
-}
-//  0420
 async function _findInfoForAdd({ article_id, commenter_id, pid, author_id }) {
   //  [ comment { id,
   //      receivers: [ { id,
@@ -468,7 +491,7 @@ async function _findInfoForAdd({ article_id, commenter_id, pid, author_id }) {
 
   //  尋找 pid、author 相符的 msgReciever
   let list = await Comment.readList(
-    Opts.COMMENT._findInfoAboutItem({ article_id, pid })
+    Opts.COMMENT.FIND._infoAboutItem({ article_id, pid })
   );
 
   let res = {
@@ -477,60 +500,78 @@ async function _findInfoForAdd({ article_id, commenter_id, pid, author_id }) {
       author: undefined,
       curCommenter: undefined,
     },
+    //  紀錄作者與留言者以外，與pid相關的commenter
     commenters: {
+      //  無論有沒有被登記過
       other: new Set(),
+      //  不曾被登記過
       notReceiver: new Set(),
     },
   };
+  if (commenter_id !== author_id) {
+    res.commenters.other.add(author_id);
+  }
   let off = new Set();
+  //  receivers: [{ id, msgReceiver: {id, msg_id, receiver_id, confirm, deletedAt, ...time} }]
+  //  comment: { id, commenter_id }
   let data = list.reduce((acc, { receivers, ...comment }) => {
     let { msgReceiver, commenters } = acc;
     //  沒有 msgReceiver 的 item
     //  若 reveiver 已經存在其他 item.msgReceiver 時
     //  不須再重複加入 notReceiver 與 other
+
+    //  整理 與pid相關的commenter
     if (
+      //  忽略作者
       comment.commenter_id !== author_id &&
+      //  忽略留言者
       comment.commenter_id !== commenter_id &&
+      //  忽略重複的人
       !off.has(commenter_id)
     ) {
+      //  紀錄，避免重複登記
       off.add(commenter_id);
+      //  不曾登記過
       commenters.notReceiver.add(comment.commenter_id);
+      //  無論有沒有被登記過
       commenters.other.add(comment.commenter_id);
     }
     for (let { id, MsgReceiver } of receivers) {
+      ////  整理與此pid有關的receiver
       if (id === author_id) {
+        //  紀錄與 作者 有關的 msgReceiver
         msgReceiver.author = MsgReceiver;
       } else if (id === commenter_id) {
+        //  紀錄與 留言者 有關的 msgReceiver
         msgReceiver.curCommenter = MsgReceiver;
       } else {
+        //  紀錄與 評論者 有關的 msgReceiver
         msgReceiver.others.push(MsgReceiver);
       }
+      //  從不曾被列入msgReceiver的評論者名單中過濾掉
       commenters.notReceiver.delete(id);
     }
     return acc;
   }, res);
   return new SuccModel({ data });
 }
-//  0411
-async function findInfoForPageOfBlog(article_id) {
-  let comments = await Comment.readList(
-    Opts.COMMENT.findInfoForPageOfBlog(article_id)
+
+async function _findMsgReceiverOfAuthor({ article_id, author_id }) {
+  let comment = await Comment.read(
+    Opts.COMMENT.FIND._msgReceiverOfAuthor({ article_id, author_id })
   );
-  let data = Init.browser.comment(comments);
+  if (!comment) {
+    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
+  }
+  let data = comment.receivers[0].MsgReceiver;
   return new SuccModel({ data });
 }
 
-module.exports = {
-  //  0514
-  findArticlesOfCommented,
-  //  0425
-  removeListForRemoveBlog,
-  //  0411
-  remove,
-  //  0411
-  add,
-  //  0411
-  findInfoForPageOfBlog,
-  //  0404
-  findInfoForNews,
-};
+async function _findItem(comment_id) {
+  let comment = await Comment.read(Opts.COMMENT.FIND._one(comment_id));
+  if (!comment) {
+    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
+  }
+  let [data] = Init.browser.comment([comment]);
+  return new SuccModel({ data });
+}

@@ -1,4 +1,11 @@
-const { BLOG, FOLLOW, USER, BLOG_IMG_ALT, REMOVE } = require("./seq_options");
+const {
+  BLOG,
+  FOLLOW,
+  USER,
+  BLOG_IMG_ALT,
+  REMOVE,
+  COMMENT,
+} = require("./seq_options");
 
 //  0411
 const { Op } = require("sequelize");
@@ -13,6 +20,133 @@ const {
 } = require("../db/mysql/model");
 
 module.exports = {
+  COMMENT: {
+    //  0514
+    findArticlesOfCommented: (commenter_id) => ({
+      attributes: ["id", "article_id"],
+      where: {
+        commenter_id,
+      },
+    }),
+    //  0423
+    _findUnconfirmListBeforeNews: ({
+      comment_id,
+      pid,
+      article_id,
+      createdAt,
+    }) => ({
+      attributes: ["id"],
+      where: {
+        id: { [Op.not]: comment_id },
+        article_id,
+        pid: pid === 0 ? null : pid,
+        createdAt: { [Op.gte]: createdAt },
+      },
+      include: {
+        association: "commenter",
+        attributes: ["id", "email", "nickname"],
+      },
+    }),
+    //  0414
+    _findLastItemOfPidAndNotSelf: (article_id, commenter_id, time, pid) => ({
+      attributes: [
+        "id",
+        "html",
+        "article_id",
+        "commenter_id",
+        "updatedAt",
+        "createdAt",
+        "deletedAt",
+        "pid",
+      ],
+      where: {
+        article_id,
+        commenter_id: { [Op.not]: commenter_id },
+        pid: pid ? pid : null,
+        createdAt: { [Op.lte]: time },
+      },
+      order: [["createdAt", "DESC"]],
+    }),
+    //  0411
+    findLastItemOfNotSelf: (article_id, commenter_id, time) => ({
+      attributes: [
+        "id",
+        "html",
+        "article_id",
+        "commenter_id",
+        "updatedAt",
+        "createdAt",
+        "deletedAt",
+        "pid",
+      ],
+      where: {
+        article_id,
+        commenter_id: { [Op.not]: commenter_id },
+        createdAt: { [Op.lte]: time },
+      },
+      order: [["createdAt", "DESC"]],
+    }),
+    findDeletedItem: (id) => ({
+      attributes: [
+        "id",
+        "html",
+        "updatedAt",
+        "createdAt",
+        "deletedAt",
+        "pid",
+        "commenter_id",
+      ],
+      where: {
+        id,
+        deletedAt: { [Op.not]: null },
+      },
+      paranoid: false,
+      include: {
+        association: "commenter",
+        attributes: ["id", "email", "nickname"],
+      },
+    }),
+    //  0411
+    findInfoForPageOfBlog: (article_id) => {
+      return {
+        attributes: ["id", "html", "pid", "createdAt", "deletedAt"],
+        where: { article_id },
+        paranoid: false, //  包含已軟刪除的條目
+        include: {
+          association: "commenter",
+          attributes: ["id", "email", "nickname"],
+        },
+      };
+    },
+    //  0404
+    findWholeInfo: (id) => ({
+      attributes: [
+        "id",
+        "html",
+        "article_id",
+        "updatedAt",
+        "createdAt",
+        "deletedAt",
+        "pid",
+      ],
+      where: { id },
+      include: [
+        {
+          association: "commenter",
+          attributes: ["id", "email", "nickname"],
+        },
+        {
+          association: "article",
+          attributes: ["id", "title"],
+          include: {
+            association: "author",
+            attributes: ["id", "email", "nickname"],
+          },
+        },
+      ],
+    }),
+    ...COMMENT,
+  },
   REMOVE,
   BLOG_IMG_ALT: {
     ...BLOG_IMG_ALT,
@@ -182,37 +316,6 @@ module.exports = {
       attributes: ["id", "title", "author_id", "show", "showAt", "updatedAt"],
       where: { author_id },
     }),
-    findPublicBlogForUserPage: (author_id, opts = { limit: 5, offset: 0 }) => ({
-      attributes: ["id", "title", "author_id", "show", "showAt", "updatedAt"],
-      where: {
-        author_id,
-        show: true,
-      },
-      limit: opts.limit,
-      offset: opts.offset,
-      order: [["showAt", "DESC"]],
-    }),
-    findPrivateBlogForUserPage: (
-      author_id,
-      opts = { limit: 5, offset: 0 }
-    ) => ({
-      attributes: [
-        "id",
-        "title",
-        "author_id",
-        "show",
-        "showAt",
-        "updatedAt",
-        "createdAt",
-      ],
-      where: {
-        author_id,
-        show: false,
-      },
-      limit: opts.limit,
-      offset: opts.offset,
-      order: [["createdAt", "DESC"]],
-    }),
   },
   //  0406
   FOLLOW: {
@@ -295,181 +398,6 @@ module.exports = {
     // }),
     count: (blog_id) => ({
       where: { blog_id },
-    }),
-  },
-
-  //  0404
-  COMMENT: {
-    //  0514
-    findArticlesOfCommented: (commenter_id) => ({
-      attributes: ["id", "article_id"],
-      where: {
-        commenter_id,
-      },
-    }),
-    //  0423
-    _findUnconfirmListBeforeNews: ({
-      comment_id,
-      pid,
-      article_id,
-      createdAt,
-    }) => ({
-      attributes: ["id"],
-      where: {
-        id: { [Op.not]: comment_id },
-        article_id,
-        pid: pid === 0 ? null : pid,
-        createdAt: { [Op.gte]: createdAt },
-      },
-      include: {
-        association: "commenter",
-        attributes: ["id", "email", "nickname"],
-      },
-    }),
-    //  0420
-    _findMsgReceiverOfAuthor: ({ article_id, author_id }) => ({
-      attributes: ["id"],
-      where: { article_id },
-      include: {
-        association: "receivers",
-        attributes: ["id"],
-        where: { id: author_id },
-      },
-    }),
-    //  0411
-    _findInfoAboutItem: ({ article_id, pid }) => {
-      //  找尋指定 blogId
-      let where = { article_id };
-      //  根評論，找同樣是 pid = null 的根評論即可
-      if (!pid) {
-        where.pid = null;
-        //  子評論，找id=pid的父評論 and pid=pid 的兄弟評論
-      } else {
-        where[Op.or] = [{ id: pid }, { pid }];
-      }
-      return {
-        attributes: ["id", "commenter_id"],
-        where,
-        include: {
-          association: "receivers",
-          attribute: ["id"],
-        },
-      };
-    },
-    //  0414
-    _findLastItemOfPidAndNotSelf: (article_id, commenter_id, time, pid) => ({
-      attributes: [
-        "id",
-        "html",
-        "article_id",
-        "commenter_id",
-        "updatedAt",
-        "createdAt",
-        "deletedAt",
-        "pid",
-      ],
-      where: {
-        article_id,
-        commenter_id: { [Op.not]: commenter_id },
-        pid: pid ? pid : null,
-        createdAt: { [Op.lte]: time },
-      },
-      order: [["createdAt", "DESC"]],
-    }),
-    //  0411
-    findLastItemOfNotSelf: (article_id, commenter_id, time) => ({
-      attributes: [
-        "id",
-        "html",
-        "article_id",
-        "commenter_id",
-        "updatedAt",
-        "createdAt",
-        "deletedAt",
-        "pid",
-      ],
-      where: {
-        article_id,
-        commenter_id: { [Op.not]: commenter_id },
-        createdAt: { [Op.lte]: time },
-      },
-      order: [["createdAt", "DESC"]],
-    }),
-    //  0411
-    findItem: (id) => ({
-      attributes: [
-        "id",
-        "html",
-        "updatedAt",
-        "createdAt",
-        "deletedAt",
-        "pid",
-        "commenter_id",
-      ],
-      where: { id },
-      include: {
-        association: "commenter",
-        attributes: ["id", "email", "nickname"],
-      },
-    }),
-    findDeletedItem: (id) => ({
-      attributes: [
-        "id",
-        "html",
-        "updatedAt",
-        "createdAt",
-        "deletedAt",
-        "pid",
-        "commenter_id",
-      ],
-      where: {
-        id,
-        deletedAt: { [Op.not]: null },
-      },
-      paranoid: false,
-      include: {
-        association: "commenter",
-        attributes: ["id", "email", "nickname"],
-      },
-    }),
-    //  0411
-    findInfoForPageOfBlog: (article_id) => {
-      return {
-        attributes: ["id", "html", "pid", "createdAt", "deletedAt"],
-        where: { article_id },
-        paranoid: false, //  包含已軟刪除的條目
-        include: {
-          association: "commenter",
-          attributes: ["id", "email", "nickname"],
-        },
-      };
-    },
-    //  0404
-    findWholeInfo: (id) => ({
-      attributes: [
-        "id",
-        "html",
-        "article_id",
-        "updatedAt",
-        "createdAt",
-        "deletedAt",
-        "pid",
-      ],
-      where: { id },
-      include: [
-        {
-          association: "commenter",
-          attributes: ["id", "email", "nickname"],
-        },
-        {
-          association: "article",
-          attributes: ["id", "title"],
-          include: {
-            association: "author",
-            attributes: ["id", "email", "nickname"],
-          },
-        },
-      ],
     }),
   },
   //  0411

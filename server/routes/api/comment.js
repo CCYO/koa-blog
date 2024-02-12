@@ -66,7 +66,7 @@ router.delete("/", CHECK.login, CACHE.modify, async (ctx, next) => {
   ctx.body = await Comment.remove(ctx.request.body);
   //  await Comment.findDeletedItem(ctx.request.body);
 });
-//  0411
+//  --------------------------------------------------------------------------------------
 //  創建comment
 router.post("/", CHECK.login, CACHE.modify, async (ctx, next) => {
   ctx.body = await Comment.add(ctx.request.body);

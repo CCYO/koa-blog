@@ -1,8 +1,6 @@
 /**
  * @description Controller user相關
  */
-const SEQ_OPTIONS = require("../utils/seq_options");
-
 const {
   DEFAULT: {
     CACHE: {
@@ -14,10 +12,6 @@ const {
     },
   },
 } = require("../config");
-const C_MsgReceiver = require("./msgReceiver");
-const C_Comment = require("./comment");
-const C_ArticlReader = require("./articleReader");
-const Init = require("../utils/init"); //  0421
 const C_Blog = require("./blog"); //  0309
 const { ErrRes, ErrModel, SuccModel, MyErr } = require("../model"); //  0404
 const Opts = require("../utils/seq_findOpts"); //  0404
@@ -28,9 +22,6 @@ const C_IdolFans = require("./idolFans");
 const C_ArticleReader = require("./articleReader");
 const { ENV } = require("../config");
 const { cache } = require("ejs");
-
-//  0514
-//  更新user
 
 async function findOthersInSomeBlogAndPid({
   commenter_id,
@@ -190,13 +181,7 @@ async function modify({ _origin, ...newData }) {
       let {
         data: { fansList, idolList },
       } = await _findRelationship(user_id);
-      //   let { data: {
-      //     relationShip: { fansList, idolList },
-      //     blogs,
-      //   }
-      // } = await findInfoForUserPage(user_id);
       //  找出 idolFans
-      // let people = [...fansList, ...idols].map(({ id }) => id);
       let people = [...fansList, ...idolList].map(({ id }) => id);
       if (people.length) {
         cache[PAGE.USER] = cache[PAGE.USER].concat(people);
@@ -207,18 +192,6 @@ async function modify({ _origin, ...newData }) {
         cache[PAGE.BLOG] = data;
       }
 
-      // let { data: blogList } = await C_Blog.find_id_list_by_author_id(user_id);
-      // let blogList = [];
-      //  找出 自己的 blog
-      // for (let isShow in blogs) {
-      //   //  公開/隱藏的blog
-      //   for (let pagination of blogs[isShow]) {
-      //     //  分頁
-      //     let blog_id_list = pagination.map(({ id }) => id);
-      //     blogList = blogList.concat(blog_id_list);
-      //   }
-      // }
-      // cache[PAGE.BLOG] = cache[PAGE.BLOG].concat(blogList);
       //  找出 reader
       // let { data: readers } =
       //   await C_ArticlReader.findReadersForModifiedUserData(blogList);

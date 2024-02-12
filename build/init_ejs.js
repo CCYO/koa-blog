@@ -153,6 +153,11 @@ const PAGE = {
       AVATAR_data_url: /\bdata:.*;base64,(?<data_url>.*)/,
     },
   },
+  PAGINATION: {
+    SELECTOR: {
+      PAGE_NUM_LINK: ".pagination .pagination .page-link",
+    },
+  },
 };
 const PREFIX = "CONS";
 const REG = {

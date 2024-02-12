@@ -15,21 +15,7 @@ async function deleteList(opts) {
     throw new MyErr({ ...ErrRes.COMMENT.DELETE.ERR, err });
   }
 }
-//  0411
-async function create({ commenter_id, article_id, html, pid }) {
-  try {
-    let data = {
-      html: xss(html),
-      article_id,
-      commenter_id,
-      pid: !pid ? null : pid,
-    };
-    let comment = await Comment.create(data);
-    return Init.comment(comment);
-  } catch (err) {
-    throw new MyErr({ ...ErrRes.MSG_RECEIVER.CREATE.ERR, err });
-  }
-}
+
 //  0411
 async function readList(opts) {
   let comments = await Comment.findAll(opts);
@@ -40,11 +26,26 @@ async function read(opts) {
   let comment = await Comment.findOne(opts);
   return Init.comment(comment);
 }
+
+//  --------------------------------------------------------------------------------
+async function create({ commenter_id, article_id, html, pid }) {
+  try {
+    let data = {
+      html: xss(html),
+      article_id,
+      commenter_id,
+      pid: !pid ? null : pid,
+    };
+    let comment = await Comment.create(data);
+    return Init.comment(comment);
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.COMMENT.CREATE.ERR, error });
+  }
+}
 module.exports = {
-  //  0414
-  deleteList,
-  //  0411
   create,
+  //  ---------------------------------------------------------------
+  deleteList,
   //  0411
   readList,
   //  0404

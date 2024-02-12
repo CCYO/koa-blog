@@ -72,35 +72,23 @@ function initBlog(blog) {
   //  對 blog.html(百分比編碼格式) 進行解碼
   if (blog.hasOwnProperty("showComment") && blog.showComment) {
     /* 不是編輯頁與預覽頁，請求comment數據 */
-    blog.comment.map = init_map_comment(blog.comment);
+    blog.map_comment = init_map_comment(blog.comment.list);
   }
-  if (blog.hasOwnProperty("comment")) {
-    delete blog.comment.tree;
-    delete blog.comment.list;
-  }
+  delete blog.comment;
   return blog; //  再將整體轉為字符
 
-  function init_map_comment({ tree, list }) {
-    class Comment {
-      #map;
-      constructor({ tree, list }) {
+  function init_map_comment(list) {
+    class Comment extends Map {
+      constructor(list) {
         let kv_list = list.map((comment) => [comment.id, comment]);
-        this.#map = new Map(kv_list);
+        super(kv_list);
       }
-      get(id) {
-        return this.#map.get(id);
-      }
-      set(comment) {
-        this.#map.set(comment.id, comment);
-        return this._map.get(comment.id);
-      }
-      delete(id) {
-        this.#map.delete(id);
-        return true;
+      mset(comment) {
+        this.set(comment.id, comment);
+        return this.get(comment.id);
       }
     }
-
-    return new Comment({ tree, list });
+    return new Comment(list);
   }
   //  因為「後端存放的blog.html數據」是以
   //  1.百分比編碼存放

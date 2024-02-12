@@ -1,21 +1,21 @@
-<% let G_DATA = JSON.parse(--CONS.SERVER.BLOG--) %>
+<% let G_DATA = JSON.parse(--CONS.SERVER.PAGINATION--) %>
 <% let G_PAGE = JSON.parse(--CONS.PAGE.USER--) %>
-<% for(let status in blogs){ %>
+<% for(let status in paginationData){ %>
 <% let isPublic = status === G_DATA.STATUS.PUBLIC %>
 <% if(!isSelf && !isPublic){ continue }%>
-<% let blogData = blogs[status] %>
+<% let pagination = paginationData[status] %>
 
-<div class="card blogList bg-light" data-<%= G_PAGE.DATASET.KEY.BLOG_STATUS %>="<%= status %>">
-  <div class="card-header blogList-header align-items-center">
+<div class="card pagination-target bg-light" data-<%= G_PAGE.DATASET.KEY.BLOG_STATUS %>="<%= status %>">
+  <div class="card-header pagination-target-header align-items-center">
     <h5><%= isPublic ? '公開的BLOG' : '編輯中的BLOG' %></h5>
-    <% if(isSelf && blogData.count) { %>
+    <% if(isSelf && pagination.count) { %>
     <button type="button" class="btn btn-sm btn-outline-danger" data-<%= G_PAGE.DATASET.KEY.REMOVE_BLOG %>="<%= G_PAGE.DATASET.VALUE.REMOVE_BLOG_LIST %>">全部刪除</button>
     <% } %>
   </div>
-  <% if(blogData.count){ %>
+  <% if(pagination.count){ %>
   <ul>
     <% let page = 1 %>
-    <% let blogs = blogData.blogs %>
+    <% let blogs = pagination.blogs %>
     <%- ejs_template.blog_list({ blogs, page, isSelf, isPublic }) %>
   </ul>
   <% if (blogData.count / pagination.BLOG_COUNT > 1) { %>

@@ -195,7 +195,7 @@
   <% } %>
 
   <% } else { %>
-  <p class="p-3">沒有<%= isPublic ? '公開' : '編輯中' %>的BLOG <%= blogs.public.count %>
+  <p class="p-3">沒有<%= isPublic ? '公開' : '編輯中' %>的BLOG
   </p>
   <% } %>
 </div>
@@ -230,6 +230,7 @@
       let whiteList = Object.values({
         user: ['currentUser', "relationShip", 'blogs'],
         blog: ['blog'],
+        albumList: ['album'],
         album: ['blog', 'imgs'],
         setting: ['currentUser'],
         errPage: ['errModel', 'from', 'serverError']

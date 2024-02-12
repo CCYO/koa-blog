@@ -48,6 +48,34 @@ const FIND = {
     ],
     order: [["replys", "id"]],
   }),
+  publicBlogForUserPage: (author_id, opts) => ({
+    attributes: ["id", "title", "author_id", "show", "showAt", "updatedAt"],
+    where: {
+      author_id,
+      show: true,
+    },
+    limit: opts.limit,
+    offset: opts.offset,
+    order: [["showAt", "DESC"]],
+  }),
+  privateBlogForUserPage: (author_id, opts) => ({
+    attributes: [
+      "id",
+      "title",
+      "author_id",
+      "show",
+      "showAt",
+      "updatedAt",
+      "createdAt",
+    ],
+    where: {
+      author_id,
+      show: false,
+    },
+    limit: opts.limit,
+    offset: opts.offset,
+    order: [["createdAt", "DESC"]],
+  }),
   //  尋找作者粉絲以及blog_id的軟刪除reader
   fansAndDestoryedReaderList: (id) => ({
     where: { id },
@@ -107,15 +135,25 @@ const FIND = {
     }
     return res;
   },
-  listOfHaveImg: (author_id) => ({
-    where: { author_id },
-    attributes: ["id", "title", "show", "showAt", "updatedAt", "createdAt"],
-    include: {
-      model: BlogImg,
-      attributes: [],
-      required: true,
-    },
-  }),
+  listOfHaveImg: (author_id, opts) => {
+    let res = {
+      where: { author_id },
+      attributes: ["id", "title", "show", "showAt", "updatedAt", "createdAt"],
+      include: {
+        model: BlogImg,
+        attributes: [],
+        required: true,
+      },
+      order: [["createdAt", "DESC"]],
+    };
+    if (opts.hasOwnProperty("show")) {
+      res.where.show = opts.show;
+      if (opts.show) {
+        res.order = [["showAt", "DESC"]];
+      }
+    }
+    return res;
+  },
   album: (id) => ({
     where: { id },
     attributes: ["id", "title"],

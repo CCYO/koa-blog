@@ -9,9 +9,28 @@ let {
   BLOG_IMG_ALT,
   BLOG_IMG,
   PAGE,
+  COMMENT,
 } = require("./errorReason");
 
 module.exports = {
+  TEST: { errno: 666, msg: "測試" },
+  COMMENT: {
+    //  0414
+    DELETE: {
+      //  0429
+      NOT_DATA: { errno: 50002, msg: "刪除 COMMENT 卻沒提供參數" },
+      //  0414
+      ERR: { errno: 801, msg: "刪除 COMMENT 失敗" },
+      ROW: { errno: 40003, msg: "刪除 BLOG 的數量不完全" },
+    },
+    READ: {
+      //  0411
+      NOT_EXIST: { errno: 50003, msg: "不存在任何相符的 Comment" },
+    },
+    NOT_EXIST: { errno: 1102, msg: "評論不存在" },
+    REMOVE_ERR: { errno: 1101, msg: "文章刪除失敗" },
+    ...COMMENT,
+  },
   PAGE: {
     ...PAGE,
     //  --------------------------------------------------------------------------
@@ -178,25 +197,6 @@ module.exports = {
       //  0411
       NOT_EXIST: { errno: 50003, msg: "不存在任何相符的 MsgReceiver" },
     },
-  },
-
-  //  0411
-  COMMENT: {
-    //  0414
-    DELETE: {
-      //  0429
-      NOT_DATA: { errno: 50002, msg: "刪除 COMMENT 卻沒提供參數" },
-      //  0414
-      ERR: { errno: 801, msg: "刪除 COMMENT 失敗" },
-      ROW: { errno: 40003, msg: "刪除 BLOG 的數量不完全" },
-    },
-    READ: {
-      //  0411
-      NOT_EXIST: { errno: 50003, msg: "不存在任何相符的 Comment" },
-    },
-    CREATE_ERR: { errno: 1103, msg: "COMMENT 創建失敗" },
-    NOT_EXIST: { errno: 1102, msg: "評論不存在" },
-    REMOVE_ERR: { errno: 1101, msg: "文章刪除失敗" },
   },
 
   //  0406

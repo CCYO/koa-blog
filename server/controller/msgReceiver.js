@@ -54,8 +54,17 @@ async function findList(msg_id) {
   }
   return new SuccModel({ data: list });
 }
-//  0406
-async function addList(datas, transaction = undefined) {
+
+//  0411
+async function find(whereOps) {
+  let data = await MsgReceiver.read(Opts.MSG_RECEIVER.find(whereOps));
+  if (!data) {
+    return new ErrModel(ErrRes.MSG_RECEIVER.READ.NOT_EXIST);
+  }
+  return new SuccModel(data);
+}
+//  -------------------------------------------------------------------------------
+async function addList(datas) {
   if (!datas.length) {
     throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.NO_DATA);
   }
@@ -68,23 +77,11 @@ async function addList(datas, transaction = undefined) {
     "updatedAt",
     "deletedAt",
   ];
-  let list = await MsgReceiver.updateList(
-    datas,
-    updateOnDuplicate,
-    transaction
-  );
+  let list = await MsgReceiver.updateList(datas, updateOnDuplicate);
   if (list.length !== datas.length) {
     throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.ROW);
   }
   return new SuccModel({ data: list });
-}
-//  0411
-async function find(whereOps) {
-  let data = await MsgReceiver.read(Opts.MSG_RECEIVER.find(whereOps));
-  if (!data) {
-    return new ErrModel(ErrRes.MSG_RECEIVER.READ.NOT_EXIST);
-  }
-  return new SuccModel(data);
 }
 module.exports = {
   //  0514

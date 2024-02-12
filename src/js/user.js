@@ -212,7 +212,7 @@ async function init() {
                 data: { blogs },
               } = await G.utils.axios.post(PAGE_USER.API.GET_BLOG_LIST, {
                 author_id: G.data.currentUser.id,
-                limit: DATA_BLOG.PAGINATION.BLOG_COUNT, //123
+                limit: DATA_BLOG.PAGINATION.BLOG_COUNT,
                 //  前端分頁index從1開始，後端分頁index從0開始，所以要-1
                 offset: (targetPage - 1) * DATA_BLOG.PAGINATION.BLOG_COUNT,
                 show: $$status,

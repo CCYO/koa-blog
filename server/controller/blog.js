@@ -1,12 +1,3 @@
-const seq = require("../db/mysql/seq");
-// async function findInfoForPageOfAlbumList(userId, { pagination } ) {
-//     let blogs = await Blog.readList(Opts.BLOG.findInfoForPageOfAlbumList(userId))
-//     let author = blogs.length ? blogs[0].author : undefined
-//     let albums = Init.browser.blog.pageTable(blogs, { pagination })
-//     let data = { author, albums }
-//     return new SuccModel({ data })
-// }
-
 //  0406
 async function public(blog_id) {
   let blog = await Blog.read(Opts.BLOG.findInfoForShow(blog_id));
@@ -97,11 +88,6 @@ async function find(blog_id) {
   return new SuccModel({ data });
 }
 
-// async function find_id_list_by_author_id(user_id) {
-//   let data = await Blog.readList(Opts.BLOG.find_id_List_by_author(user_id));
-//   return new SuccModel({ data });
-// }
-
 const C_MsgReceiver = require("./msgReceiver"); //  0426
 const C_Comment = require("./comment"); //  0425
 
@@ -177,7 +163,7 @@ async function findPublicListForUserPage(
   opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
 ) {
   let data = await Blog.readListAndCountAll(
-    Opts.BLOG.findPublicBlogForUserPage(userId, opts)
+    Opts.BLOG.FIND.publicBlogForUserPage(userId, opts)
   );
   // let data = Init.browser.blog.pageTable(blogs, options)
   return new SuccModel({ data });
@@ -187,7 +173,7 @@ async function findPrivateListForUserPage(
   opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
 ) {
   let data = await Blog.readListAndCountAll(
-    Opts.BLOG.findPrivateBlogForUserPage(userId, opts)
+    Opts.BLOG.FIND.privateBlogForUserPage(userId, opts)
   );
   // let data = Init.browser.blog.pageTable(blogs, options)
   return new SuccModel({ data });
@@ -337,19 +323,25 @@ async function findListOfSquare(author_id) {
   return new SuccModel({ data });
 }
 
-//  0421 因為使用 C_BLOG 會造成迴圈，故直接以USER做查詢
-async function findAlbumList(author_id, pagination = ALBUM_LIST.PAGINATION) {
-  let blogs = await Blog.readList(Opts.BLOG.FIND.listOfHaveImg(author_id));
-  if (!blogs.length) {
-    return new ErrModel(ErrRes.BLOG.READ.NO_LIST);
-  }
-  await Promise.all(
-    blogs.map((blog) => _checkPermission({ author_id, blog_id: blog.id }))
+async function findListForAlbumListPage(author_id) {
+  let public = await Blog.readList(
+    Opts.BLOG.FIND.listOfHaveImg(author_id, { show: true })
   );
-  let albums = Init.browser.blog.pageTable(blogs, { pagination });
-  return new SuccModel({ data: { albums } });
+  let private = await Blog.readList(
+    Opts.BLOG.FIND.listOfHaveImg(author_id, { show: false })
+  );
+  let data = {
+    public: {
+      list: public,
+      count: public.length,
+    },
+    private: {
+      list: private,
+      count: private.length,
+    },
+  };
+  return new SuccModel({ data });
 }
-
 async function findAlbum({ author_id, blog_id }) {
   let data = await Blog.read(Opts.BLOG.FIND.album(blog_id));
   await _checkPermission({ author_id, blog_id });
@@ -362,26 +354,19 @@ async function findAlbum({ author_id, blog_id }) {
     });
   }
 }
-
 module.exports = {
   findAlbum,
-  findAlbumList,
+  findListForAlbumListPage,
   findListOfSquare,
+  removeList,
   addImg,
   find,
   add,
   modify,
   findPrivateListForUserPage,
   findPublicListForUserPage,
-  findWholeInfo,
-  //  ----------------------------------------------------
-  // find_id_list_by_author_id,
-
-  //  0411
-  // findInfoForPageOfAlbumList,
-  //  0411
-  removeList,
   findListForUserPage,
+  findWholeInfo,
 };
 async function _removeImgList({ blog_id, cancelImgs }) {
   //  cancelImgs [ { blogImg_id, blogImgAlt_list: [alt_id, ...] }, ...]

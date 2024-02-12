@@ -172,7 +172,7 @@ async function init() {
           .first()
           .html(htmlStr);
         //  同步G.data
-        G.data.blog.comment.map.delete($remove_comment_id);
+        G.data.blog.map_comment.delete($remove_comment_id);
         return;
       }
 
@@ -280,16 +280,11 @@ async function init() {
               return;
             }
             //  送出請求
-            let responseData = await postComment();
-            if (responseData.errno) {
-              alert("留言失敗");
-              console.log(responseData.msg);
-              return;
-            }
+            let { data } = await postComment();
             //  渲染此次送出的評論
-            renderComment(responseData.data);
+            renderComment(data);
             //  更新評論數據    { id, html, time, pid, commenter: { id, email, nickname}}
-            G.data.blog.comment.map.set(responseData.data);
+            G.data.blog.map_comment.mset(data);
             //  清空評論框
             editor.clear();
 
@@ -298,17 +293,20 @@ async function init() {
             //  要修改
             //  ------------------------------------------------------------------------
             function renderComment(new_comment) {
-              let commenter_id = G.data.me.id;
+              //  new_comment { item ↓ }
+              //  commenter { email, id, nickname}
+              //  commenter_id,
+              //  html,
+              //  id,
+              //  isDeleted,
+              //  pid,
+              //  reply [],
+              //  time,
+              //  updatedAt
               let template_values = {
-                tree: [
-                  {
-                    ...new_comment,
-                    reply: [],
-                    isDeleted: false,
-                  },
-                ],
+                tree: [{ ...new_comment }],
                 isLogin: true,
-                me_id: commenter_id,
+                me_id: G.data.me.id, // commenter_id
                 ejs_template: $M_template,
               };
               let html_str = $M_template.comment.tree(template_values);

@@ -105,7 +105,6 @@ router.get("/blog/edit/:id", CHECK.login, privateCache, async (ctx, next) => {
 });
 //  查看文章
 router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
-  console.log("觸發blog ---> url: ", ctx.path);
   const blog_id = ctx.params.id * 1;
   //  從 middleware 取得的緩存數據 ctx.cache[PAGE.BLOG]
   /**
@@ -145,7 +144,6 @@ router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx, next) => {
   } else {
     console.log(`@ ${cacheKey} 響應 系統緩存數據`);
   }
-  let url = new URL(ctx.href);
   let showComment = true;
   let isLogin = ctx.session.user ? true : false;
   let me_id = isLogin ? ctx.session.user.id : 0;
