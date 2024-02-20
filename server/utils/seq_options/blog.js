@@ -186,10 +186,11 @@ const FIND = {
     attributes: ["id"],
     include: {
       association: "readers",
+      attributes: ["id"],
       where: { id: reader_id },
       through: {
         attributes: ["id", "confirm"],
-        where: { id, articleReader_id },
+        where: { id: articleReader_id },
       },
     },
   }),

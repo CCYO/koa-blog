@@ -69,8 +69,20 @@ async function addList(datas) {
   }
   return new SuccModel({ data: list });
 }
+async function modify(id, newData) {
+  let row = await MsgReceiver.update(id, newData);
+  if (!row) {
+    throw new MyErr({
+      ...ErrRes.MSG_RECEIVER.UPDATE.ERR,
+      error: `msgReceiver/${id} 未更新`,
+    });
+  }
+  return new SuccModel({ data: row });
+}
 module.exports = {
-  //  0426
+  modify,
+  addList,
+  //  ----------------------------------------
   removeList,
   //  0414
   modifyList,
@@ -79,7 +91,7 @@ module.exports = {
   //  0414
   findList,
   //  0411
-  addList,
+
   //  0411
   find,
 };

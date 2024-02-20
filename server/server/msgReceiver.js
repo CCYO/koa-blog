@@ -3,10 +3,7 @@ const Init = require("../utils/init");
 const { ErrRes, MyErr } = require("../model");
 //  0411
 const { MsgReceiver } = require("../db/mysql/model");
-async function update(id, newData) {
-  let [row] = await MsgReceiver.update(newData, { where: id });
-  return row;
-}
+
 //  0414
 async function updateList(newDatas) {
   try {
@@ -63,10 +60,19 @@ async function read(opts) {
   let list = await MsgReceiver.findOne(opts);
   return list.map((item) => item.toJSON());
 }
+
+//  -----------------------------------------------------------------------------
+async function update(id, newData) {
+  try {
+    let [row] = await MsgReceiver.update(newData, { where: { id } });
+    return row;
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.MSG_RECEIVER.UPDATE.ERR, error });
+  }
+}
 module.exports = {
-  //  0430
   update,
-  //  0414
+  //  ----------------------------------------------------------------------------
   updateList,
   //  0414
   deleteList,

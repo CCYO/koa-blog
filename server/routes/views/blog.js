@@ -27,23 +27,6 @@ const privateCache = GEN_CACHE_FN.private(TYPE.PAGE.BLOG);
 const commonCache = GEN_CACHE_FN.common(TYPE.PAGE.BLOG);
 const { ErrRes, ErrModel } = require("../../model");
 
-//  確認articleReader
-router.get(
-  "/blog/confirm/:articleReader_id",
-  CHECK.login,
-  CACHE.modify,
-  async (ctx) => {
-    let { errno, data } = await Blog.updateConfirm({
-      reader_id: ctx.session.user.id,
-      articleReader_id: ctx.params.articleReader_id * 1,
-    });
-    if (errno === ErrRes.BLOG.READ.NOT_EXIST.errno) {
-      ctx.redirect(`/permission/${resModel.errno}`);
-    } else {
-      ctx.redirect(`/blog/${data.id}`);
-    }
-  }
-);
 router.get("/blog/preview/:id", CHECK.login, privateCache, async (ctx) => {
   console.log("觸發previews ---> url: ", ctx.path);
   const blog_id = ctx.params.id * 1;

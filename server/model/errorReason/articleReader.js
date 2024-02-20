@@ -8,6 +8,7 @@ const RESTORE = {
 };
 const UPDATE = {
   ERR: { errno: 801, msg: "更新 ArticleReader 失敗" },
+  ERR_ROW: { errno: 802, msg: "ArticleReader 更新條數不如預期" },
 };
 module.exports = {
   UPDATE,

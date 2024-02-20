@@ -67,6 +67,18 @@ router.delete("/", CHECK.login, CACHE.modify, async (ctx, next) => {
   //  await Comment.findDeletedItem(ctx.request.body);
 });
 //  --------------------------------------------------------------------------------------
+router.get(
+  "/confirm/:msgReceiver_id",
+  CHECK.login,
+  CACHE.modify,
+  async (ctx) => {
+    let resModel = await Comment.updateConfirm({
+      receiver_id: ctx.session.user.id,
+      msgReceiver_id: ctx.params.msgReceiver_id * 1,
+    });
+    ctx.body = resModel;
+  }
+);
 //  創建comment
 router.post("/", CHECK.login, CACHE.modify, async (ctx, next) => {
   ctx.body = await Comment.add(ctx.request.body);

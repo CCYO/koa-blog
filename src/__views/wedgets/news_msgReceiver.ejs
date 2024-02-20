@@ -6,7 +6,8 @@
 <!-- let author = comment.article.author.id === data.me.id ? "你" : comment.article.author.id === comment.commenter.id ? "自己" : comment.blog.author.nickname %> -->
 <% let query = confirm ? "" : `?type=3&id=${id}` %>
 <li class="dropdown-item  position-relative news-item">
-  <a href="/blog/<%= comment.article.id %><%= query %>#comment_<%= comment.id %>" class="stretched-link text-wrap">
+  <!-- <a href="/blog/< %= comment.article.id %>< %= query %>#comment_< %= comment.id %>" class="stretched-link text-wrap"> -->
+  <a href="/api/comment/confirm/<%= id %>" class="stretched-link text-wrap">
     <div>
       <span><%= nicknames %>在「<%= comment.article.title %>」留言囉！</span><br>
       <span class='text-end mb-0'><%= timestamp %></span>

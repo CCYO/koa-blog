@@ -356,7 +356,7 @@ async function findAlbum({ author_id, blog_id }) {
   }
 }
 async function updateConfirm({ reader_id, articleReader_id }) {
-  let blog = Blog.read(
+  let blog = await Blog.read(
     Opts.BLOG.FIND.itemByArticleReader({ reader_id, articleReader_id })
   );
   if (!blog) {
@@ -368,11 +368,11 @@ async function updateConfirm({ reader_id, articleReader_id }) {
     return new ErrModel(opts);
   }
   let { ArticleReader } = blog.readers[0];
-  if (!ArticleReader.comfirm) {
+  if (!ArticleReader.confirm) {
     //  更新 articleReader
-    await C_ArticleReader.modify(articleReader_id, { confrim: true });
+    await C_ArticleReader.modify(articleReader_id, { confirm: true });
   }
-  return new SuccModel();
+  return new SuccModel({ data: `/blog/${blog.id}` });
 }
 module.exports = {
   updateConfirm,

@@ -37,6 +37,19 @@ router.post("/list", CHECK.login, async (ctx, next) => {
 
 //  -------------------------------------------------------------------------
 const Blog = require("../../controller/blog");
+//  確認articleReader
+router.get(
+  "/confirm/:articleReader_id",
+  CHECK.login,
+  CACHE.modify,
+  async (ctx) => {
+    let resModel = await Blog.updateConfirm({
+      reader_id: ctx.session.user.id,
+      articleReader_id: ctx.params.articleReader_id * 1,
+    });
+    ctx.body = resModel;
+  }
+);
 //  刪除 blogs
 router.delete("/", CHECK.login, CACHE.modify, async (ctx, next) => {
   const author_id = ctx.session.user.id;

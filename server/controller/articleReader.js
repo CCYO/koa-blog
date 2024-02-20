@@ -61,6 +61,12 @@ async function removeList(id_list) {
 }
 async function modify(id, newData) {
   let row = await ArticleReader.update(id, newData);
+  if (!row) {
+    throw new MyErr({
+      ...ErrRes.ARTICLE_READER.UPDATE.ERR,
+      error: `articleReader/${id} 未更新`,
+    });
+  }
   return new SuccModel({ data: row });
 }
 module.exports = {

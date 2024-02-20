@@ -1,4 +1,5 @@
 const { Op } = require("sequelize");
+const { Blog, User } = require("../../db/mysql/model");
 const FIND = {
   _infoAboutItem: (id, paranoid = true) => ({
     where: { id },
@@ -97,6 +98,24 @@ const FIND = {
           association: "author",
           attributes: ["id", "email", "nickname"],
         },
+      },
+    ],
+  }),
+  itemByMsgReceiver: ({ receiver_id, msgReceiver_id }) => ({
+    attributes: ["id"],
+    include: [
+      {
+        association: "receivers",
+        attributes: ["id"],
+        where: { id: receiver_id },
+        through: {
+          attributes: ["id", "confirm"],
+          where: { id: msgReceiver_id },
+        },
+      },
+      {
+        association: "article",
+        attributes: ["id"],
       },
     ],
   }),

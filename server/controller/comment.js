@@ -385,7 +385,30 @@ async function remove({ comment_id }) {
     return container;
   }
 }
+async function updateConfirm({ receiver_id, msgReceiver_id }) {
+  let comment = await Comment.read(
+    Opts.COMMENT.FIND.itemByMsgReceiver({ receiver_id, msgReceiver_id })
+  );
+  if (!comment) {
+    //  comment不存在
+    let opts = ErrRes.COMMENT.READ.NOT_EXIST;
+    if (!ENV.isNoCache) {
+      opts.cache = { [CACHE.TYPE.NEWS]: [receiver_id] };
+    }
+    return new ErrModel(opts);
+  }
+  let { MsgReceiver } = comment.receivers[0];
+  if (!MsgReceiver.confirm) {
+    //  更新 msgReceiver
+    await C_MsgReceiver.modify(msgReceiver_id, { confirm: true });
+  }
+
+  return new SuccModel({
+    data: `/blog/${comment.article.id}#comment_${comment.id}`,
+  });
+}
 module.exports = {
+  updateConfirm,
   remove,
   add,
   //  -------------------------------------------------------------------------

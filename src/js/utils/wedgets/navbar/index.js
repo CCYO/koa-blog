@@ -13,7 +13,7 @@ const REG = {
   ACTIVE_PATHNAME: /^\/(?<pathname>\w+)\/?(?<albumList>list\?)?/,
 };
 //  單位ms, 1 min
-const LOAD_NEWS = 1000 * 5;
+const LOAD_NEWS = 1000 * 5 * 60;
 
 /* 初始化 通知列表 功能 */
 export default async function (axios) {
@@ -82,6 +82,25 @@ export default async function (axios) {
     $readMore.on("click", loop.now.bind(loop, true));
     //  綁定「登出鈕」click handle → 登出功能
     $("#logout").on("click", logout);
+    $(`#newsList`).on("click", confirmNews);
+    async function confirmNews(event) {
+      event.preventDefault();
+      let eventTarget = event.target;
+      let $eventTarget = $(event.target);
+      let tag = eventTarget.tagName.toUpperCase();
+      let api = $eventTarget.attr("href");
+      if (tag !== "A" || !/^\/api/.test(api)) {
+        return false;
+      }
+      let response = await axios.get(api);
+      let url;
+      if (response.errno) {
+        url = `/permission/${response.errno}`;
+      } else {
+        url = response.data;
+      }
+      location.href = url;
+    }
     //  自動讀取更多
     async function logout() {
       if (!confirm("真的要登出?")) {
