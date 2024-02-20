@@ -23,6 +23,9 @@ router.get("/permission/:errno", async (ctx) => {
   } else if (errno === ErrRes.PAGE.NO_PAGE.errno) {
     opts.errModel = new ErrModel(ErrRes.PAGE.NO_PAGE);
     opts.title = "404";
+  } else if (errno === ErrRes.BLOG.READ.NOT_EXIST) {
+    opts.errModel = new ErrModel(ErrRes.BLOG.READ.NOT_EXIST);
+    opts.title = ErrRes.BLOG.READ.NOT_EXIST.msg;
   }
   await ctx.render("page404", opts);
 });

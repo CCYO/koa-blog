@@ -8,14 +8,6 @@ const {
 } = require("../model");
 const Opts = require("../utils/seq_findOpts"); //  0406
 const ArticleReader = require("../server/articleReader"); //  0406
-//  0514
-// async function findReadersForModifiedUserData(articles) {
-//   let datas = await ArticleReader.readList(
-//     Opts.ARTICLE_READER.findReadersForModifiedUserData(articles)
-//   );
-//   let data = datas.map(({ reader_id }) => reader_id);
-//   return new SuccModel({ data });
-// }
 //  0423
 async function confirmList(datas) {
   let updatedAt = new Date();
@@ -67,7 +59,12 @@ async function removeList(id_list) {
   }
   return new SuccModel();
 }
+async function modify(id, newData) {
+  let row = await ArticleReader.update(id, newData);
+  return new SuccModel({ data: row });
+}
 module.exports = {
+  modify,
   removeList,
   restoringList,
   //  -------------------------------------

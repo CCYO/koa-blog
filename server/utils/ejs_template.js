@@ -3,8 +3,8 @@ const lodash = require("lodash");
 const { resolve } = require("path");
 const filePath = {
   comment: {
-    tree: resolve(__dirname, "../views/template/tree.ejs"),
-    item: resolve(__dirname, "../views/template/item.ejs"),
+    tree: resolve(__dirname, "../views/template/comment-tree.ejs"),
+    item: resolve(__dirname, "../views/template/comment-item.ejs"),
   },
   blog_list: resolve(__dirname, "../views/template/blog_list.ejs"),
   relationship_item: resolve(

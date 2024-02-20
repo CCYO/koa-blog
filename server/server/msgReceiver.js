@@ -8,16 +8,25 @@ async function update(id, newData) {
   return row;
 }
 //  0414
-async function updateList(datas, updateOnDuplicate, transaction = undefined) {
+async function updateList(newDatas) {
   try {
-    let options = { updateOnDuplicate };
-    if (transaction) {
-      options.transaction = transaction;
-    }
-    let list = await MsgReceiver.bulkCreate(datas, options);
-    return Init.msgReceiver(list);
-  } catch (err) {
-    throw new MyErr({ ...ErrRes.MSG_RECEIVER.UPDATE.ERR, err });
+    let updateOnDuplicate = [
+      "id",
+      "msg_id",
+      "receiver_id",
+      "confirm",
+      "createdAt",
+      "updatedAt",
+      "deletedAt",
+    ];
+    //  注意，無論要更新的資料是否被 updateOnDuplicate 標示，RV 顯示的數據皆會符合newDatas
+    //  但實際上DB內的數據有沒有被更新，還是要看有沒有被 updateOnDuplicate 標示
+    let list = await MsgReceiver.bulkCreate(newDatas, { updateOnDuplicate });
+    list = Init.msgReceiver(list);
+    return list;
+    // return Init.msgReceiver(list);
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.MSG_RECEIVER.UPDATE.ERR, error });
   }
 }
 //  0414

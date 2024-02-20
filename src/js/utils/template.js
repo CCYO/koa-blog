@@ -1,6 +1,6 @@
 import lodash from "lodash";
-import comment_tree from "@views/pages/blog/template/tree.ejs";
-import comment_item from "@views/pages/blog/template/item.ejs";
+import comment_tree from "@views/pages/blog/template/comment-tree.ejs";
+import comment_item from "@views/pages/blog/template/comment-item.ejs";
 
 import navbar_login_uncollapse_list from "@views/wedgets/navbar_login_uncollapse_list.ejs";
 import navbar_login_collapse_list from "@views/wedgets/navbar_login_collapse_list.ejs";

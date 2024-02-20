@@ -1,6 +1,14 @@
 const { Op } = require("sequelize");
 const { Img, BlogImg, BlogImgAlt, User } = require("../../db/mysql/model");
 
+const REMOVE = {
+  list: (id_list) => ({
+    where: {
+      id: { [Op.in]: id_list },
+    },
+  }),
+};
+
 const FIND = {
   permission: (id, paranoid) => ({
     where: { id },
@@ -174,12 +182,15 @@ const FIND = {
       },
     ],
   }),
-};
-
-const REMOVE = {
-  list: (id_list) => ({
-    where: {
-      id: { [Op.in]: id_list },
+  itemByArticleReader: ({ reader_id, articleReader_id }) => ({
+    attributes: ["id"],
+    include: {
+      association: "readers",
+      where: { id: reader_id },
+      through: {
+        attributes: ["id", "confirm"],
+        where: { id, articleReader_id },
+      },
     },
   }),
 };

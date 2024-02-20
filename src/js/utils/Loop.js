@@ -33,7 +33,8 @@ export default class {
   async now() {
     this.stop();
     $M_log.dev(`loop now --- 立即運行一次 callback/${this.callback.name}`);
-    let res = await this.callback(...arguments);
+    console.log("cb的arguments => ", ...arguments);
+    let res = await this.callback.call(this, ...arguments);
     $M_log.dev(`loop now --- 這次跑完了`);
     this.start();
     return res;

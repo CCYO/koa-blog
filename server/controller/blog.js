@@ -108,6 +108,7 @@ const {
 const C_Img = require("./img");
 const C_BlogImg = require("./blogImg");
 const C_BlogImgAlt = require("./blogImgAlt");
+
 /** 取得 blog 紀錄
  *
  * @param {number} blog_id blog id
@@ -354,7 +355,27 @@ async function findAlbum({ author_id, blog_id }) {
     });
   }
 }
+async function updateConfirm({ reader_id, articleReader_id }) {
+  let blog = Blog.read(
+    Opts.BLOG.FIND.itemByArticleReader({ reader_id, articleReader_id })
+  );
+  if (!blog) {
+    //  blog不存在
+    let opts = ErrRes.BLOG.READ.NOT_EXIST;
+    if (!ENV.isNoCache) {
+      opts.cache = { [CACHE.TYPE.NEWS]: [reader_id] };
+    }
+    return new ErrModel(opts);
+  }
+  let { ArticleReader } = blog.readers[0];
+  if (!ArticleReader.comfirm) {
+    //  更新 articleReader
+    await C_ArticleReader.modify(articleReader_id, { confrim: true });
+  }
+  return new SuccModel();
+}
 module.exports = {
+  updateConfirm,
   findAlbum,
   findListForAlbumListPage,
   findListOfSquare,

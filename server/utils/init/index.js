@@ -69,6 +69,9 @@ function initComment(data) {
       //     data.article.author = initUser(data.article.author)
       // }
     }
+    if (map.has("receivers")) {
+      data.receivers = initUser(data.receivers);
+    }
     return data;
   }
 }
@@ -230,9 +233,9 @@ function initUser(data) {
     if (map.has("blogs")) {
       data.blogs = initBlog(data.blogs);
     }
-    // if (map.has('comments') && data.comments.length) {
-    //     let comments = data.comments
-    // }
+    if (map.has("comments") && data.comments.length) {
+      data.comments = initComment(data.comments);
+    }
     return data;
   }
 }

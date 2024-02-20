@@ -68,24 +68,7 @@ module.exports = {
       order: [["createdAt", "DESC"]],
     }),
     //  0411
-    findLastItemOfNotSelf: (article_id, commenter_id, time) => ({
-      attributes: [
-        "id",
-        "html",
-        "article_id",
-        "commenter_id",
-        "updatedAt",
-        "createdAt",
-        "deletedAt",
-        "pid",
-      ],
-      where: {
-        article_id,
-        commenter_id: { [Op.not]: commenter_id },
-        createdAt: { [Op.lte]: time },
-      },
-      order: [["createdAt", "DESC"]],
-    }),
+
     findDeletedItem: (id) => ({
       attributes: [
         "id",
@@ -118,33 +101,6 @@ module.exports = {
         },
       };
     },
-    //  0404
-    findWholeInfo: (id) => ({
-      attributes: [
-        "id",
-        "html",
-        "article_id",
-        "updatedAt",
-        "createdAt",
-        "deletedAt",
-        "pid",
-      ],
-      where: { id },
-      include: [
-        {
-          association: "commenter",
-          attributes: ["id", "email", "nickname"],
-        },
-        {
-          association: "article",
-          attributes: ["id", "title"],
-          include: {
-            association: "author",
-            attributes: ["id", "email", "nickname"],
-          },
-        },
-      ],
-    }),
     ...COMMENT,
   },
   REMOVE,
@@ -389,24 +345,12 @@ module.exports = {
     }),
   },
   ARTICLE_READER: {
-    //  0514
-    // findReadersForModifiedUserData: (articles) => ({
-    //   attributes: ["reader_id"],
-    //   where: {
-    //     article_id: { [Op.in]: articles },
-    //   },
-    // }),
     count: (blog_id) => ({
       where: { blog_id },
     }),
   },
   //  0411
   MSG_RECEIVER: {
-    //  0514
-    // findListForModifiedUserData: (msgs) => ({
-    //   attributes: ["receiver_id"],
-    //   where: { msg_id: { [Op.in]: msgs } },
-    // }),
     //  0414
     findList: (msg_id) => ({
       where: { msg_id },

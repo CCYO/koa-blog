@@ -1,6 +1,6 @@
 const Init = require("../utils/init");
 //  0406
-const { ErrRes, MyErr } = require("../model");
+const { ErrRes, MyErr, ErrModel } = require("../model");
 //  0406
 const { ArticleReader } = require("../db/mysql/model"); //  0406
 //  0514
@@ -17,6 +17,7 @@ async function updateList(datas, updateOnDuplicate) {
     throw new MyErr({ ...ErrRes.ARTICLE_READER.UPDATE.ERR, err });
   }
 }
+//  -----------------------------------------------------------------
 //  0406
 // async function createList(datas) {
 //     try {
@@ -55,7 +56,18 @@ async function deleteList(opts) {
     throw new MyErr({ ...ErrRes.ARTICLE_READER.DELETE.ERR, error });
   }
 }
+async function update(id, newData) {
+  try {
+    let [row] = await ArticleReader.update(newData, {
+      where: { id },
+    });
+    return row;
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.ARTICLE_READER.UPDATE.ERR, error });
+  }
+}
 module.exports = {
+  update,
   deleteList,
   restoring,
   //  ----------------------------------------------------

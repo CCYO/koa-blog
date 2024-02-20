@@ -2,13 +2,13 @@
 <%% let count = otherComments.commenters.length %>
 <%% let others = otherComments.commenters.map(({ nickname }) => nickname) %>
 <%% let other_nicknames = count > 1 ? others.slice(0, 2).join(",") + (count > 2 ? `與其他${count - 2}人` : "" + `，都`) : count === 1 ? others[0] : comment.commenter.nickname; %>
-<%% let nicknames = comment.commenter.nickname + other_nicknames %>
-<%% let author = comment.article.author.id === data.me.id ? "你" : comment.article.author.id === comment.commenter.id ? "自己" : comment.blog.author.nickname %>
+<%% let nicknames = count > 1 ? `${comment.commenter.nickname} ${other_nicknames}` :  other_nicknames %>
+<!-- let author = comment.article.author.id === data.me.id ? "你" : comment.article.author.id === comment.commenter.id ? "自己" : comment.blog.author.nickname %> -->
 <%% let query = confirm ? "" : `?type=3&id=${id}` %>
 <li class="dropdown-item  position-relative news-item">
   <a href="/blog/<%%= comment.article.id %><%%= query %>#comment_<%%= comment.id %>" class="stretched-link text-wrap">
     <div>
-      <span><%%= nicknames %>在<%%= author %>的文章「<%%= comment.article.title %>」留言囉！</span><br>
+      <span><%%= nicknames %>在「<%%= comment.article.title %>」留言囉！</span><br>
       <span class='text-end mb-0'><%%= timestamp %></span>
     </div>
   </a>

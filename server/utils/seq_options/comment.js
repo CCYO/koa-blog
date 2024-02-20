@@ -1,6 +1,17 @@
 const { Op } = require("sequelize");
 const FIND = {
-  _infoAboutItem: ({ article_id, pid }) => {
+  _infoAboutItem: (id, paranoid = true) => ({
+    where: { id },
+    paranoid,
+    include: {
+      association: "receivers",
+      attributes: ["id"],
+      through: {
+        paranoid: false,
+      },
+    },
+  }),
+  _infoAboutPid: ({ article_id, pid }) => {
     //  找尋指定 blogId
     let where = { article_id };
     if (!pid) {
@@ -43,6 +54,51 @@ const FIND = {
       attributes: ["id"],
       where: { id: author_id },
     },
+  }),
+  lastItemOfNotSelf: (article_id, commenter_id, time) => ({
+    attributes: [
+      "id",
+      "html",
+      "article_id",
+      "commenter_id",
+      "updatedAt",
+      "createdAt",
+      "deletedAt",
+      "pid",
+    ],
+    where: {
+      article_id,
+      commenter_id: { [Op.not]: commenter_id },
+      createdAt: { [Op.lte]: time },
+    },
+    order: [["createdAt", "DESC"]],
+  }),
+  _wholeInfo: (id, paranoid = true) => ({
+    attributes: [
+      "id",
+      "html",
+      "article_id",
+      "updatedAt",
+      "createdAt",
+      "deletedAt",
+      "pid",
+    ],
+    where: { id },
+    paranoid,
+    include: [
+      {
+        association: "commenter",
+        attributes: ["id", "email", "nickname"],
+      },
+      {
+        association: "article",
+        attributes: ["id", "title"],
+        include: {
+          association: "author",
+          attributes: ["id", "email", "nickname"],
+        },
+      },
+    ],
   }),
 };
 

@@ -8,6 +8,7 @@ router.prefix("/api/news");
 //  鑒察
 router.post("/", CHECK.login, SESSION.news, async (ctx, next) => {
   //  let { page, newsList, excepts } = ctx.request.body
+  //  ler { } = ctx.request.body
   let { excepts } = ctx.request.body;
   let user_id = ctx.session.user.id;
   let options = { user_id, excepts };

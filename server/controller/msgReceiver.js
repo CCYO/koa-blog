@@ -4,14 +4,7 @@ const { MyErr, SuccModel, ErrRes, ErrModel } = require("../model");
 const Opts = require("../utils/seq_findOpts");
 //  0411
 const MsgReceiver = require("../server/msgReceiver");
-//  0514
-// async function findListForModifiedUserData(msgs) {
-//   let list = await MsgReceiver.readList(
-//     Opts.MSG_RECEIVER.findListForModifiedUserData(msgs)
-//   );
-//   let data = list.map(({ receiver_id }) => receiver_id);
-//   return new SuccModel({ data });
-// }
+
 //  0423
 async function confirm(id) {
   let row = await MsgReceiver.update(id, { confirm: true });
@@ -68,24 +61,15 @@ async function addList(datas) {
   if (!datas.length) {
     throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.NO_DATA);
   }
-  let updateOnDuplicate = [
-    "id",
-    "msg_id",
-    "receiver_id",
-    "confirm",
-    "createdAt",
-    "updatedAt",
-    "deletedAt",
-  ];
-  let list = await MsgReceiver.updateList(datas, updateOnDuplicate);
+
+  // let list = await MsgReceiver.updateList(datas, updateOnDuplicate);
+  let list = await MsgReceiver.updateList(datas);
   if (list.length !== datas.length) {
     throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.ROW);
   }
   return new SuccModel({ data: list });
 }
 module.exports = {
-  //  0514
-  // findListForModifiedUserData,
   //  0426
   removeList,
   //  0414

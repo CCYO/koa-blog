@@ -13,7 +13,7 @@ const REG = {
   ACTIVE_PATHNAME: /^\/(?<pathname>\w+)\/?(?<albumList>list\?)?/,
 };
 //  單位ms, 1 min
-const LOAD_NEWS = 1000 * 5 * 60;
+const LOAD_NEWS = 1000 * 5;
 
 /* 初始化 通知列表 功能 */
 export default async function (axios) {
@@ -43,6 +43,7 @@ export default async function (axios) {
     if (!Object.getOwnPropertyNames(news).length) {
       return;
     }
+    // let newsData = news;
     let newsData = news;
     /* 公用ele */
     //  更多通知BTN
@@ -57,7 +58,7 @@ export default async function (axios) {
     //...................................
 
     //  讓readMore自動循環的類
-    let loop = new $C_Loop(readMore.bind(this, false), { ms: LOAD_NEWS });
+    let loop = new $C_Loop(readMore, { ms: LOAD_NEWS });
     //  啟動 readMore 自動循環
     loop.start();
     //  unRender 條目更新
@@ -131,7 +132,7 @@ export default async function (axios) {
       }
     }
 
-    async function readMore(insert = true) {
+    async function readMore(insert = false) {
       //  當前已收到的通知數據，提供給後端過濾
       let { data: user } = await getLoginData();
       let newsData = user.news;
@@ -207,7 +208,7 @@ export default async function (axios) {
       payload.status = $SERVER_CONFIG.NEWS.FRONT_END_STATUS.FIRST;
     } else if ($M_news.num.db.total > $M_news.id_list.total) {
       payload.status = $SERVER_CONFIG.NEWS.FRONT_END_STATUS.AGAIN;
-      payload.excepts = $M_news.excepts;
+      payload.excepts = $M_news.id_list;
     } else {
       payload.status = $SERVER_CONFIG.NEWS.FRONT_END_STATUS.CHECK;
     }

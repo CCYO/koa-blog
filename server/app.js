@@ -203,7 +203,11 @@ app.on("error", (error, ctx) => {
   if (isMyErr) {
     console.log("model: \n", error.model);
   }
-  console.log(error.stack);
+  if (error.serverError) {
+    console.log("serverError: \n", error.serverError);
+  } else {
+    console.log("error stack: \n", error.stack);
+  }
   console.log("@------------------------------------------------------------@");
 });
 

@@ -5,7 +5,6 @@ const {
   DEFAULT: {
     CACHE: {
       TYPE: {
-        API,
         PAGE, //  0228
         NEWS, //  0228
       },
@@ -165,9 +164,9 @@ async function modify({ _origin, ...newData }) {
     }
   }
   await User.update(user_id, newData);
-  let data = await _find(user_id);
+  let data = await find(user_id);
   let opts = { data };
-  //  ------------------------------------------------------------------
+  //
   if (process.env.NODE_ENV !== "nocache") {
     //  更新數據，不是新增數據
     let cache = {
@@ -177,7 +176,7 @@ async function modify({ _origin, ...newData }) {
 
     if (newData.nickname || newData.email || newData.avatar) {
       ////  處理cache
-      //  偶像、粉絲 的 個人頁緩存也要更新
+      //  偶像、粉絲 的 個人頁，刪除緩存
       let {
         data: { fansList, idolList },
       } = await _findRelationship(user_id);
@@ -186,41 +185,29 @@ async function modify({ _origin, ...newData }) {
       if (people.length) {
         cache[PAGE.USER] = cache[PAGE.USER].concat(people);
       }
-      //  個人的文章緩存 肯定要刪除
+      //  個人的文章緩存，刪除緩存
       let { errno, data } = await _findBlogList(user_id);
       if (!errno) {
         cache[PAGE.BLOG] = data;
       }
-
-      //  找出 reader
-      // let { data: readers } =
-      //   await C_ArticlReader.findReadersForModifiedUserData(blogList);
-      // cache[NEWS] = cache[NEWS].concat(readers);
-
-      //  找出 評論 與 被評論的文章 --------------------------------------------
-      // let {
-      //   data: { articles, comments },
-      // } = await C_Comment.findArticlesOfCommented(user_id);
-      // cache[API.COMMENT] = cache[API.COMMENT].concat(articles);
-
-      // if (comments.length) {
-      //   //  找出 receiver
-      //   let { data: receivers } =
-      //     await C_MsgReceiver.findListForModifiedUserData(comments);
-      //   cache[NEWS] = cache[NEWS].concat(receivers);
-      // }
+      //  曾留言的文章頁面，刪除緩存
+      let blogs = await _findBlogListHasCommented(user_id);
+      cache[PAGE.BLOG].concat(blogs);
     }
     opts.cache = cache;
   }
-  //  ------------------------------------------------------------------
-  throw new MyErr({ errno: 123, msg: "測試" });
   return new SuccModel(opts);
 }
+async function find(user_id) {
+  const data = await User.read(Opts.USER.FIND.one(user_id));
+  if (!data) {
+    return new ErrModel(ErrRes.USER.READ.NO_DATA);
+  }
+  return new SuccModel({ data });
+}
 module.exports = {
-  //  0514
+  find,
   modify,
-  findOthersInSomeBlogAndPid,
-  //  ------------------------------
   cancelFollow,
   follow,
   findFansList,
@@ -228,7 +215,22 @@ module.exports = {
   login,
   register,
   isEmailExist,
+  //  ------------------------------
+  findOthersInSomeBlogAndPid,
 };
+
+//  尋找曾留言過的文章
+async function _findBlogListHasCommented(user_id) {
+  let { comments } = await User.read(
+    Opts.USER.FIND._blogListHasCommented(user_id)
+  );
+  let set_blogs = comments.reduce((acc, { article }) => {
+    acc.add(article.id);
+    return acc;
+  }, new Set());
+  return [...set_blogs];
+}
+//  尋找user的文章列表
 async function _findBlogList(user_id) {
   let user = await User.read(Opts.USER.FIND.blogList(user_id));
   if (!user.blogs.length) {
@@ -237,15 +239,9 @@ async function _findBlogList(user_id) {
   let data = user.blogs.map(({ id }) => id).filter((id) => id);
   return new SuccModel({ data });
 }
-async function _find(user_id) {
-  const data = await User.read(Opts.USER.FIND.one(user_id));
-  if (!data) {
-    return new ErrModel(ErrRes.USER.READ.NO_DATA);
-  }
-  return new SuccModel({ data });
-}
+
 async function _findInfoForCancelFollow({ fans_id, idol_id }) {
-  let { errno } = await _find(idol_id);
+  let { errno } = await find(idol_id);
   if (errno) {
     throw new MyErr({
       ...ErrRes.USER.READ.NO_IDOL,
@@ -261,7 +257,7 @@ async function _findInfoForCancelFollow({ fans_id, idol_id }) {
   return new SuccModel({ data });
 }
 async function _findInfoForFollowIdol({ fans_id, idol_id }) {
-  let { errno } = await _find(idol_id);
+  let { errno } = await find(idol_id);
   if (errno) {
     throw new MyErr({
       ...ErrRes.USER.READ.NO_IDOL,
@@ -284,7 +280,7 @@ async function _findIdolList(fans_id) {
   return new SuccModel({ data });
 }
 async function _findRelationship(userId) {
-  let resModel = await _find(userId);
+  let resModel = await find(userId);
   if (resModel.errno) {
     throw new MyErr(resModel);
   }

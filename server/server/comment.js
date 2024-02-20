@@ -7,14 +7,6 @@ const {
   FollowComment,
 } = require("../db/mysql/model");
 //  0414
-async function deleteList(opts) {
-  try {
-    //  RV row
-    return await Comment.destroy(opts);
-  } catch (err) {
-    throw new MyErr({ ...ErrRes.COMMENT.DELETE.ERR, err });
-  }
-}
 
 //  0411
 async function readList(opts) {
@@ -42,10 +34,18 @@ async function create({ commenter_id, article_id, html, pid }) {
     throw new MyErr({ ...ErrRes.COMMENT.CREATE.ERR, error });
   }
 }
+async function deleteList(opts) {
+  try {
+    //  RV row
+    return await Comment.destroy(opts);
+  } catch (err) {
+    throw new MyErr({ ...ErrRes.COMMENT.DELETE.ERR, err });
+  }
+}
 module.exports = {
+  deleteList,
   create,
   //  ---------------------------------------------------------------
-  deleteList,
   //  0411
   readList,
   //  0404

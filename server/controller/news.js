@@ -36,7 +36,7 @@ async function readMore({ user_id, excepts }) {
         idolFans: [ id, ... ],
         articleReader: [ id, ... ],
         msgReceiver: [ id, ...],
-        num: NUMBER
+        total: NUMBER
     }
     
     news: {

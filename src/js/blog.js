@@ -151,22 +151,14 @@ async function init() {
           comment_id: $remove_comment_id,
           pid: $pid,
         };
-        let response = await G.utils.axios.delete(
+        let { data } = await G.utils.axios.delete(
           PAGE_BLOG.API.REMOVE_COMMENT,
           {
             data: payload,
           }
         );
-        if (response.errno) {
-          alert(response.msg);
-          return;
-        }
-        let htmlStr = $M_template.comment.item({
-          commenter: G.data.me,
-          time: response.data.time,
-          isDeleted: true,
-          isLogin: true,
-        });
+        //  data { commenter, time, isDeleted, ... }
+        let htmlStr = $M_template.comment.item({ ...data, isLogin: true });
         $btn_remove
           .parents(`.${PAGE_BLOG.CLASS.COMMENT_ITEM_CONTENT}`)
           .first()
@@ -318,7 +310,6 @@ async function init() {
             async function postComment() {
               let article_id = G.data.blog.id;
               let commenter_id = G.data.me.id;
-              //  若 文章作者 = 留言者，payload加入author: 留言者id，否則undefined
 
               let payload = {
                 article_id,

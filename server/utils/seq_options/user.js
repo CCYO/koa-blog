@@ -1,3 +1,5 @@
+const { Op } = require("sequelize");
+const { Blog } = require("../../db/mysql/model");
 const { hash } = require("../crypto");
 //  0406
 
@@ -104,6 +106,19 @@ const FIND = {
     include: {
       association: "blogs",
       attributes: ["id"],
+    },
+  }),
+  _blogListHasCommented: (id) => ({
+    where: { id },
+    include: {
+      association: "comments",
+      attributes: ["id", "article_id"],
+      include: {
+        model: Blog,
+        as: "article",
+        attributes: ["id"],
+        where: { author_id: { [Op.not]: id } },
+      },
     },
   }),
 };
