@@ -103,12 +103,35 @@ const Blog = require("../server/blog");
 const my_xxs = require("../utils/xss");
 const { ENV } = require("../config");
 const {
-  DEFAULT: { BLOG, ALBUM_LIST, CACHE },
+  DEFAULT: { BLOG, CACHE },
 } = require("../config");
 const C_Img = require("./img");
 const C_BlogImg = require("./blogImg");
 const C_BlogImgAlt = require("./blogImgAlt");
-
+//  查詢 blog 分頁列表數據
+async function findListForPagination({
+  currentUser,
+  author_id,
+  show,
+  limit = BLOG.PAGINATION.BLOG_COUNT,
+  offset,
+}) {
+  let resModel;
+  if (!show) {
+    resModel = await _findPrivateListForUserPage(author_id, {
+      limit,
+      offset,
+    });
+  } else if (!currentUser || currentUser.id !== author_id) {
+    throw new MyErr(ErrRes.BLOG.READ.NO_PERMISSION);
+  } else {
+    resModel = await _findPublicListForUserPage(author_id, {
+      limit,
+      offset,
+    });
+  }
+  return resModel;
+}
 /** 取得 blog 紀錄
  *
  * @param {number} blog_id blog id
@@ -151,34 +174,15 @@ async function findListForUserPage(
     private: { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 },
   }
 ) {
-  let { data: public } = await findPublicListForUserPage(userId, opts.public);
-  let { data: private } = await findPrivateListForUserPage(
+  let { data: public } = await _findPublicListForUserPage(userId, opts.public);
+  let { data: private } = await _findPrivateListForUserPage(
     userId,
     opts.private
   );
   let data = { public, private };
   return new SuccModel({ data });
 }
-async function findPublicListForUserPage(
-  userId,
-  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
-) {
-  let data = await Blog.readListAndCountAll(
-    Opts.BLOG.FIND.publicBlogForUserPage(userId, opts)
-  );
-  // let data = Init.browser.blog.pageTable(blogs, options)
-  return new SuccModel({ data });
-}
-async function findPrivateListForUserPage(
-  userId,
-  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
-) {
-  let data = await Blog.readListAndCountAll(
-    Opts.BLOG.FIND.privateBlogForUserPage(userId, opts)
-  );
-  // let data = Init.browser.blog.pageTable(blogs, options)
-  return new SuccModel({ data });
-}
+
 /** 建立 blog
  * @param { string } title 標題
  * @param { number } userId 使用者ID
@@ -315,7 +319,11 @@ async function removeList({ blogList, author_id }) {
   if (row !== blogList.length) {
     throw new MyErr(ErrRes.BLOG.REMOVE.ROW);
   }
-  return new SuccModel();
+  let opts = {};
+  if (!ENV.isNoCache) {
+    opts.cache = { [CACHE.TYPE.PAGE.USER]: [author_id] };
+  }
+  return new SuccModel(opts);
 }
 //  廣場數據
 async function findListOfSquare(author_id) {
@@ -385,10 +393,9 @@ module.exports = {
   find,
   add,
   modify,
-  findPrivateListForUserPage,
-  findPublicListForUserPage,
   findListForUserPage,
   findWholeInfo,
+  findListForPagination,
 };
 async function _removeImgList({ blog_id, cancelImgs }) {
   //  cancelImgs [ { blogImg_id, blogImgAlt_list: [alt_id, ...] }, ...]
@@ -457,6 +464,24 @@ async function _addReaders(blog_id) {
     await Blog.createReaders(blog_id, fansList);
   }
   let data = [...fansList, ...readers];
+  return new SuccModel({ data });
+}
+async function _findPublicListForUserPage(
+  userId,
+  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
+) {
+  let data = await Blog.readListAndCountAll(
+    Opts.BLOG.FIND.publicBlogForUserPage(userId, opts)
+  );
+  return new SuccModel({ data });
+}
+async function _findPrivateListForUserPage(
+  userId,
+  opts = { limit: BLOG.PAGINATION.BLOG_COUNT, offset: 0 }
+) {
+  let data = await Blog.readListAndCountAll(
+    Opts.BLOG.FIND.privateBlogForUserPage(userId, opts)
+  );
   return new SuccModel({ data });
 }
 async function _checkPermission({ author_id, blog_id }) {

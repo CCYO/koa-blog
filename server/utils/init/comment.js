@@ -10,8 +10,9 @@ const {
 } = require("../../config"); //  0411
 //  0404
 function initListForBrowser(data) {
-  //  排序 + 時間數據序列化
+  //  嵌套 + 排序
   let comments = filterEmptyAndFranferFnsForArray(data, nestAndSort);
+  //  序列化 時間數據
   filterEmptyAndFranferFns(data, initTime);
   return comments;
 }

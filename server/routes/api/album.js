@@ -1,12 +1,17 @@
-const BlogImgAlt = require("../../controller/blogImgAlt");
+const router = require("koa-router")();
 const {
   API: { CHECK, CACHE, VALIDATE },
 } = require("../../middleware");
-const router = require("koa-router")();
+const BlogImgAlt = require("../../controller/blogImgAlt");
 router.prefix("/api/album");
+
+// update alt of blog's img
 router.patch("/", CHECK.login, CACHE.modify, VALIDATE.ALT, async (ctx) => {
-  const { blog_id, alt, alt_id } = ctx.request.body;
-  let { id: author_id } = ctx.session.user;
-  ctx.body = await BlogImgAlt.modify({ author_id, alt_id, blog_id, alt });
+  let opts = {
+    author_id: ctx.session.user.id,
+    ...ctx.request.body,
+  };
+  ctx.body = await BlogImgAlt.modify(opts);
 });
+
 module.exports = router;

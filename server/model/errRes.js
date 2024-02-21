@@ -71,8 +71,6 @@ module.exports = {
     DELETE: {
       //  0429
       NOT_DATA: { errno: 50002, msg: "刪除 COMMENT 卻沒提供參數" },
-      //  0414
-
       ROW: { errno: 40003, msg: "刪除 BLOG 的數量不完全" },
     },
     NOT_EXIST: { errno: 1102, msg: "評論不存在" },
@@ -99,10 +97,7 @@ module.exports = {
     UPLOAD_IMG_ERR: { errno: 704, msg: "Blog內文圖片上傳失敗" }, //  0326
     IMAGE_REMOVE_ERR: { errno: 705, msg: "刪除BlogImg時，數量對不上" },
     //  ---------------------------------------------------------------------------
-    UPDATE: BLOG.UPDATE,
-    REMOVE: BLOG.REMOVE,
-    CREATE: BLOG.CREATE,
-    READ: BLOG.READ,
+    ...BLOG,
   },
   BLOG_IMG: {
     READ: BLOG_IMG.READ,

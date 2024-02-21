@@ -553,7 +553,8 @@ async function init() {
             return;
           }
           e.preventDefault();
-          $M_redir.check_login(data);
+          //  確認是否為登入狀態
+          $M_redir.check_login(G.data);
           let blogList = [];
           if (action === PAGE_USER.DATASET.VALUE.REMOVE_BLOG_ITEM) {
             blogList.push(
@@ -572,15 +573,12 @@ async function init() {
               $(li).data(PAGE_USER.DATASET.KEY.BLOG_ID)
             );
           }
-
-          let owner_id = G.data.me.id;
           //  送出刪除命令
           let { errno } = await G.utils.axios.delete(
             PAGE_USER.API.REMOVE_BLOGS,
             {
               data: {
                 blogList,
-                owner_id,
               },
             }
           );

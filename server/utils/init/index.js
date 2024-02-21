@@ -98,8 +98,6 @@ function initBlog(data) {
     }
     if (map.has("replys")) {
       let list = initComment(data.replys);
-      // list = list.map((item) => initTime(item));
-      // let x = removeDeletedComment(list);
       let tree = initListForBrowser(list);
       tree = removeDeletedComment(tree);
       list = list.filter((item) => !item.isDeleted);

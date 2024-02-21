@@ -7,11 +7,14 @@ const {
 } = require("../../middleware");
 const News = require("../../controller/news");
 router.prefix("/api/news");
+
 //  get news data
-router.post("/", CHECK.login, SESSION.news, async (ctx, next) => {
-  let { excepts } = ctx.request.body;
-  let user_id = ctx.session.user.id;
-  let options = { user_id, excepts };
-  ctx.body = await News.readMore(options);
+router.post("/", CHECK.login, SESSION.news, async (ctx) => {
+  let opts = {
+    user_id: ctx.session.user.id,
+    excepts: ctx.request.body.excepts,
+  };
+  ctx.body = await News.readMore(opts);
 });
+
 module.exports = router;

@@ -6,16 +6,15 @@ const {
   API: { VALIDATE, SESSION, CHECK, CACHE, FIREBASE },
 } = require("../../middleware");
 const User = require("../../controller/user");
-const { MyErr, ErrRes } = require("../../model");
-
 router.prefix("/api/user");
+
 //  confirm news/idolFans
 router.get("/confirm/:idolFans_id", CHECK.login, CACHE.modify, async (ctx) => {
-  let resModel = await User.confirmNews({
+  let opts = {
     idol_id: ctx.session.user.id,
     idolFans_id: ctx.params.idolFans_id * 1,
-  });
-  ctx.body = resModel;
+  };
+  ctx.body = await User.confirmNews(opts);
 });
 //  modify setting info
 router.patch(
@@ -31,41 +30,41 @@ router.patch(
 );
 //  check current password
 router.post("/confirmPassword", CHECK.login, async (ctx, next) => {
-  let { email } = ctx.session.user;
-  let { origin_password: password } = ctx.request.body;
-  let resModel = await User.login(email, password);
-  if (resModel.errno) {
-    throw new MyErr(ErrRes.USER.UPDATE.ORIGIN_PASSWORD_ERR);
-  }
-  ctx.body = resModel;
+  let opts = {
+    email: ctx.session.user.email,
+    password: ctx.request.body.origin_password,
+  };
+  ctx.body = await User.checkOriginPassword(opts);
 });
 //  cancel follow
 router.post("/cancelFollow", CHECK.login, CACHE.modify, async (ctx, next) => {
-  const { id: idol_id } = ctx.request.body;
-  const { id: fans_id } = ctx.session.user;
-  ctx.body = await User.cancelFollow({ fans_id, idol_id });
+  let opts = {
+    idol_id: ctx.request.body.id,
+    fans_id: ctx.session.user.id,
+  };
+  ctx.body = await User.cancelFollow(opts);
 });
 //  follow
 router.post("/follow", CHECK.login, CACHE.modify, async (ctx, next) => {
-  const { id: idol_id } = ctx.request.body;
-  const { id: fans_id } = ctx.session.user;
-  ctx.body = await User.follow({ fans_id, idol_id });
+  let opts = {
+    idol_id: ctx.request.body.id,
+    fans_id: ctx.session.user.id,
+  };
+  ctx.body = await User.follow(opts);
 });
 //  check email has been registered
 router.post("/isEmailExist", VALIDATE.USER, async (ctx, next) => {
-  const { email } = ctx.request.body;
-  ctx.body = await User.isEmailExist(email);
+  ctx.body = await User.isEmailExist(ctx.request.body.email);
 });
 //  register
 router.post("/register", VALIDATE.USER, async (ctx, next) => {
-  const { email, password } = ctx.request.body;
-  ctx.body = await User.register(email, password);
+  ctx.body = await User.register(ctx.request.body);
 });
 //  login
 router.post("/", SESSION.set, VALIDATE.USER, async (ctx, next) => {
-  const { email, password } = ctx.request.body;
-  ctx.body = await User.login(email, password);
+  ctx.body = await User.login(ctx.request.body);
 });
 //  logout
 router.get("/logout", CHECK.login, SESSION.remove);
+
 module.exports = router;

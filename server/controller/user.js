@@ -58,7 +58,7 @@ async function isEmailExist(email) {
  * @param {string} password - user 未加密的密碼
  * @returns {object} SuccessMode || ErrModel Instance
  */
-async function register(email, password) {
+async function register({ email, password }) {
   if (!password) {
     return new ErrModel(ErrRes.USER.READNO_PASSWORD);
   } else if (!email) {
@@ -76,7 +76,7 @@ async function register(email, password) {
  * @param {string} password user 的未加密密碼
  * @returns resModel
  */
-async function login(email, password) {
+async function login({ email, password }) {
   if (!email) {
     return new ErrModel(ErrRes.USER.READ.NO_EMAIL);
   } else if (!password) {
@@ -154,6 +154,13 @@ async function cancelFollow({ fans_id, idol_id }) {
   }
   return new SuccModel(options);
 }
+async function checkOriginPassword({ email, password }) {
+  let resModel = await login({ email, password });
+  if (resModel.errno) {
+    throw new MyErr(ErrRes.USER.UPDATE.ORIGIN_PASSWORD_ERR);
+  }
+  return resModel;
+}
 async function modifyInfo({ _origin, ...newData }) {
   let { id: user_id } = _origin;
   //  測試舊密碼是否正確
@@ -228,6 +235,7 @@ module.exports = {
   confirmNews,
   find,
   modifyInfo,
+  checkOriginPassword,
   cancelFollow,
   follow,
   findFansList,

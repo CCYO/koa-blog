@@ -1,87 +1,70 @@
-const { CACHE, CHECK, FIREBASE, VALIDATE } = require("../../middleware/api");
 /**
  * @description API editor 相關
  */
+const router = require("koa-router")();
 const {
-  DEFAULT: { BLOG },
-} = require("../../config");
+  API: { CACHE, CHECK, FIREBASE, VALIDATE },
+} = require("../../middleware");
+const Blog = require("../../controller/blog");
 
-const router = require("koa-router")(); //  0406
 router.prefix("/api/blog");
 
-router.post("/list", CHECK.login, async (ctx, next) => {
-  let { id } = ctx.session.user;
-  let {
-    author_id,
-    show,
-    limit = BLOG.PAGINATION.BLOG_COUNT,
-    offset = 0,
-  } = ctx.request.body;
-  if (author_id !== id) {
-    //  如果不是本人，又想讀取隱藏文章，抱錯
-  }
-  let resModel;
-  if (show) {
-    resModel = await Blog.findPublicListForUserPage(author_id, {
-      limit,
-      offset,
-    });
-  } else {
-    resModel = await Blog.findPrivateListForUserPage(author_id, {
-      limit,
-      offset,
-    });
-  }
-  ctx.body = resModel;
+//  get data for userPage then turn pagination of blogList
+router.post("/list", async (ctx) => {
+  let opts = {
+    currentUser: ctx.session.user,
+    ...ctx.request.body,
+  };
+  ctx.body = await Blog.findListForPagination(opts);
 });
 
-//  -------------------------------------------------------------------------
-const Blog = require("../../controller/blog");
 //  confirm articleReader
 router.get(
   "/confirm/:articleReader_id",
   CHECK.login,
   CACHE.modify,
   async (ctx) => {
-    let resModel = await Blog.confirmNews({
+    let opts = {
       reader_id: ctx.session.user.id,
       articleReader_id: ctx.params.articleReader_id * 1,
-    });
-    ctx.body = resModel;
+    };
+    ctx.body = await Blog.confirmNews(opts);
   }
 );
-//  刪除 blogs
-router.delete("/", CHECK.login, CACHE.modify, async (ctx, next) => {
-  const author_id = ctx.session.user.id;
-  const { blogList } = ctx.request.body;
-  ctx.body = await Blog.removeList({ blogList, author_id });
+//  delete blogs
+router.delete("/", CHECK.login, CACHE.modify, async (ctx) => {
+  let opts = {
+    author_id: ctx.session.user.id,
+    blogList: ctx.request.body.blogList,
+  };
+  ctx.body = await Blog.removeList(opts);
 });
-//  建立blog
+//  add blog
 router.post("/", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { title } = ctx.request.body;
   ctx.body = await Blog.add(title, ctx.session.user.id);
 });
-//  上傳圖片
+//  update blog img
 router.post(
   "/img",
   CHECK.login,
   CACHE.modify,
   FIREBASE.blogImg,
-  async (ctx, next) => {
-    let author_id = ctx.session.user.id;
-    ctx.body = await Blog.addImg({ author_id, ...ctx.request.body });
+  async (ctx) => {
+    let opts = {
+      author_id: ctx.session.user.id,
+      ...ctx.request.body,
+    };
+    ctx.body = await Blog.addImg(opts);
   }
 );
-//  更新 blog 資料
-router.patch(
-  "/",
-  CHECK.login,
-  CACHE.modify,
-  VALIDATE.BLOG,
-  async (ctx, next) => {
-    let author_id = ctx.session.user.id;
-    let resModel = await Blog.modify({ author_id, ...ctx.request.body });
-    ctx.body = resModel;
-  }
-);
+//  update blog
+router.patch("/", CHECK.login, CACHE.modify, VALIDATE.BLOG, async (ctx) => {
+  let opts = {
+    author_id: ctx.session.user.id,
+    ...ctx.request.body,
+  };
+  ctx.body = await Blog.modify(opts);
+});
+
 module.exports = router;

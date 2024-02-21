@@ -243,7 +243,7 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
   }
   return new SuccModel(opts);
 }
-async function remove({ comment_id }) {
+async function remove({ user_id, comment_id }) {
   //  刪除comment
   await Comment.deleteList(Opts.FOLLOW.REMOVE.list([comment_id]));
   let removedComment = await Comment.read(
@@ -257,7 +257,13 @@ async function remove({ comment_id }) {
       author: { id: author_id },
     },
   } = removedComment;
-
+  //  確認 user_id 是否有刪除權限(必須是 留言者本人 或 author_id)
+  if (commenter_id !== user_id && commenter_id !== author_id) {
+    throw new MyErr({
+      ...ErrRes.COMMENT.REMOVE.ERR_NO_PERMISSION,
+      error: `comment/${comment_id} 刪除失敗`,
+    });
+  }
   //  找出符合 msg_id = comment_id 的 msgReceiver
   let { receivers } = await Comment.read(
     Opts.COMMENT.FIND._infoAboutItem(comment_id, false)
@@ -322,8 +328,6 @@ async function remove({ comment_id }) {
       await C_MsgReceiver.forceRemoveList(deleteList);
     }
   }
-
-  // let { data } = await _findDeletedItemForRender(comment_id);
   let data = initComment.initTime(removedComment);
   let opts = {
     data,
@@ -420,16 +424,6 @@ module.exports = {
   //  0404
   findInfoForNews,
 };
-//  只是為了給前端渲染deletedAt time
-async function _findDeletedItemForRender(comment_id) {
-  let comment = await Comment.read(Opts.COMMENT.findDeletedItem(comment_id));
-  if (!comment) {
-    return new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
-  }
-  let [data] = Init.browser.comment([comment]);
-  // let data = Init.browser.comment(comment)
-  return new SuccModel({ data });
-}
 //  找出指定article內，最新 + 與pid相關 + 非commenter_id的評論
 async function _findLastItemOfPidAndNotSelf(
   article_id,
