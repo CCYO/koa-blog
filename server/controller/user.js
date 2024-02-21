@@ -154,7 +154,7 @@ async function cancelFollow({ fans_id, idol_id }) {
   }
   return new SuccModel(options);
 }
-async function modify({ _origin, ...newData }) {
+async function modifyInfo({ _origin, ...newData }) {
   let { id: user_id } = _origin;
   //  測試舊密碼是否正確
   if (newData.hasOwnProperty("password")) {
@@ -205,9 +205,29 @@ async function find(user_id) {
   }
   return new SuccModel({ data });
 }
+async function confirmNews({ idol_id, idolFans_id }) {
+  let idol = await User.read(
+    Opts.USER.FIND.itemByIdolFans({ idol_id, idolFans_id })
+  );
+  if (!idol) {
+    let opts = ErrRes.NEWS.READ.NOT_EXIST;
+    if (!ENV.isNoCache) {
+      opts.cache = { [NEWS]: [idol_id] };
+    }
+    return new ErrModel(opts);
+  }
+  let fans = idol.fansList[0];
+  if (!fans.IdolFans.confirm) {
+    //  更新 articleReader
+    await C_IdolFans.modify(idolFans_id, { confirm: true });
+  }
+  let url = `/other/${fans.id}`;
+  return new SuccModel({ data: { url } });
+}
 module.exports = {
+  confirmNews,
   find,
-  modify,
+  modifyInfo,
   cancelFollow,
   follow,
   findFansList,

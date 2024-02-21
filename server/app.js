@@ -33,7 +33,7 @@ const Middleware = require("./middleware/api");
 
 //  router - API
 const apiUser = require("./routes/api/user");
-const apiEditor = require("./routes/api/editor");
+const apiBlog = require("./routes/api/blog");
 const apiNews = require("./routes/api/news");
 const apiComment = require("./routes/api/comment");
 const apiAlbum = require("./routes/api/album");
@@ -185,7 +185,7 @@ app.use(Middleware.SEQ_TRANSACTION);
 
 // Router - API
 app.use(apiUser.routes(), apiUser.allowedMethods());
-app.use(apiEditor.routes(), apiEditor.allowedMethods());
+app.use(apiBlog.routes(), apiBlog.allowedMethods());
 app.use(apiNews.routes(), apiNews.allowedMethods());
 app.use(apiComment.routes(), apiComment.allowedMethods());
 app.use(apiAlbum.routes(), apiAlbum.allowedMethods());

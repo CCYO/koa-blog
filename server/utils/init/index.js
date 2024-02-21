@@ -1,6 +1,7 @@
 const date = require("date-and-time");
 const SERVER_CONFIG = require("../../config");
-const { initListForBrowser } = require("./comment"); //  0411
+const removeDeletedComment = require("../hiddenRemovedComments");
+const { initListForBrowser, initTime } = require("./comment"); //  0411
 const {
   //  0404
   pageTable,
@@ -97,7 +98,11 @@ function initBlog(data) {
     }
     if (map.has("replys")) {
       let list = initComment(data.replys);
+      // list = list.map((item) => initTime(item));
+      // let x = removeDeletedComment(list);
       let tree = initListForBrowser(list);
+      tree = removeDeletedComment(tree);
+      list = list.filter((item) => !item.isDeleted);
       blog.comment = { list, tree };
       delete blog.replys;
     }

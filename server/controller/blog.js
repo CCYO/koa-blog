@@ -355,13 +355,13 @@ async function findAlbum({ author_id, blog_id }) {
     });
   }
 }
-async function updateConfirm({ reader_id, articleReader_id }) {
+async function confirmNews({ reader_id, articleReader_id }) {
   let blog = await Blog.read(
     Opts.BLOG.FIND.itemByArticleReader({ reader_id, articleReader_id })
   );
   if (!blog) {
     //  blog不存在
-    let opts = ErrRes.BLOG.READ.NOT_EXIST;
+    let opts = ErrRes.NEWS.READ.NOT_EXIST;
     if (!ENV.isNoCache) {
       opts.cache = { [CACHE.TYPE.NEWS]: [reader_id] };
     }
@@ -372,10 +372,11 @@ async function updateConfirm({ reader_id, articleReader_id }) {
     //  更新 articleReader
     await C_ArticleReader.modify(articleReader_id, { confirm: true });
   }
-  return new SuccModel({ data: `/blog/${blog.id}` });
+  let url = `/blog/${blog.id}`;
+  return new SuccModel({ data: { url } });
 }
 module.exports = {
-  updateConfirm,
+  confirmNews,
   findAlbum,
   findListForAlbumListPage,
   findListOfSquare,
@@ -458,8 +459,8 @@ async function _addReaders(blog_id) {
   let data = [...fansList, ...readers];
   return new SuccModel({ data });
 }
-async function _checkPermission({ author_id, blog_id, paranoid = true }) {
-  let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id, paranoid));
+async function _checkPermission({ author_id, blog_id }) {
+  let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
   if (!data) {
     throw new MyErr({
       ...ErrRes.BLOG.READ.NOT_EXIST,

@@ -1,6 +1,5 @@
 const CREATE = { errno: 10004, msg: "創建失敗" };
 const READ = {
-  //  0425
   NOT_FIRST_FOLLOW: { errno: 1007, msg: "非初次 follow" },
   NO_IDOL: { errno: 1006, msg: "找不到 idol" },
   NO_DATA: { errno: 1005, msg: "找不到此帳戶" },

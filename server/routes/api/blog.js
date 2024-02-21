@@ -37,13 +37,13 @@ router.post("/list", CHECK.login, async (ctx, next) => {
 
 //  -------------------------------------------------------------------------
 const Blog = require("../../controller/blog");
-//  確認articleReader
+//  confirm articleReader
 router.get(
   "/confirm/:articleReader_id",
   CHECK.login,
   CACHE.modify,
   async (ctx) => {
-    let resModel = await Blog.updateConfirm({
+    let resModel = await Blog.confirmNews({
       reader_id: ctx.session.user.id,
       articleReader_id: ctx.params.articleReader_id * 1,
     });

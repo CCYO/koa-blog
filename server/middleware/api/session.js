@@ -39,6 +39,7 @@ async function news(ctx, next) {
     list: { confirm: [], unconfirm: [] },
     num: ctx.session.user.news.num,
   };
+  //  body { status, excepts }
   const { status } = ctx.request.body;
   const { id, news: sessionNews } = ctx.session.user;
   let cache = S_Cache.getTYPE(DEFAULT.CACHE.TYPE.NEWS);

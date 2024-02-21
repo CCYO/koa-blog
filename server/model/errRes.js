@@ -15,6 +15,25 @@ let {
 
 module.exports = {
   TEST: { errno: 666, msg: "測試" },
+  //  0406
+  IDOL_FANS: {
+    //  0406
+    CREATE: {
+      ROW: { errno: 40001, msg: "IdolFans 創建數量不完全" },
+    },
+    //  0423
+    UPDATE: {
+      //  0430
+      CONFIRM: { errno: 1003, msg: "confirm IdolFans 失敗" },
+      ERR: { errno: 801, msg: "更新 IdolFans 失敗" },
+    },
+    //  0406
+    REMOVE: {
+      //  0406
+      NO_IDOL: { errno: 40002, msg: "要刪除的 Idol 不存在" },
+    },
+    ...IDOL_FANS,
+  },
   MSG_RECEIVER: {
     //  0414
     UPDATE: {
@@ -125,29 +144,6 @@ module.exports = {
     },
     ...ARTICLE_READER,
   },
-  //  0406
-  IDOL_FANS: {
-    //  0406
-    CREATE: {
-      ROW: { errno: 40001, msg: "IdolFans 創建數量不完全" },
-    },
-    //  0423
-    UPDATE: {
-      //  0430
-      CONFIRM: { errno: 1003, msg: "confirm IdolFans 失敗" },
-      ERR: { errno: 801, msg: "更新 IdolFans 失敗" },
-    },
-    //  0406
-    RESTORE: {
-      ...IDOL_FANS.RESTORE,
-    },
-    //  0406
-    REMOVE: {
-      //  0406
-      NO_IDOL: { errno: 40002, msg: "要刪除的 Idol 不存在" },
-      ...IDOL_FANS.REMOVE,
-    },
-  },
   SERVER,
   CACHE: {
     UPDATE: {
@@ -168,7 +164,7 @@ module.exports = {
       errno: 1103,
       msg: "Blog_Fans.confirm 更新失敗",
     },
-    READ: NEWS.READ,
+    ...NEWS,
   },
   USER: {
     PASSWORD_WRONG: { errno: 12004, msg: "原密碼錯誤" },

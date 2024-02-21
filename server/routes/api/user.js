@@ -1,16 +1,23 @@
 /**
  * @description API user相關
  */
-//  0516
+const router = require("koa-router")();
 const {
   API: { VALIDATE, SESSION, CHECK, CACHE, FIREBASE },
 } = require("../../middleware");
-const User = require("../../controller/user"); //  0404
+const User = require("../../controller/user");
 const { MyErr, ErrRes } = require("../../model");
-const router = require("koa-router")(); //  0404
-router.prefix("/api/user");
 
-//  setting
+router.prefix("/api/user");
+//  confirm news/idolFans
+router.get("/confirm/:idolFans_id", CHECK.login, CACHE.modify, async (ctx) => {
+  let resModel = await User.confirmNews({
+    idol_id: ctx.session.user.id,
+    idolFans_id: ctx.params.idolFans_id * 1,
+  });
+  ctx.body = resModel;
+});
+//  modify setting info
 router.patch(
   "/",
   CHECK.login,
@@ -18,11 +25,11 @@ router.patch(
   CACHE.modify,
   FIREBASE.user,
   VALIDATE.USER,
-  async (ctx, next) => {
-    ctx.body = await User.modify(ctx.request.body);
+  async (ctx) => {
+    ctx.body = await User.modifyInfo(ctx.request.body);
   }
 );
-//  驗證舊密碼
+//  check current password
 router.post("/confirmPassword", CHECK.login, async (ctx, next) => {
   let { email } = ctx.session.user;
   let { origin_password: password } = ctx.request.body;
@@ -32,33 +39,33 @@ router.post("/confirmPassword", CHECK.login, async (ctx, next) => {
   }
   ctx.body = resModel;
 });
-//  取消追蹤
+//  cancel follow
 router.post("/cancelFollow", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { id: idol_id } = ctx.request.body;
   const { id: fans_id } = ctx.session.user;
   ctx.body = await User.cancelFollow({ fans_id, idol_id });
 });
-//  追蹤
+//  follow
 router.post("/follow", CHECK.login, CACHE.modify, async (ctx, next) => {
   const { id: idol_id } = ctx.request.body;
   const { id: fans_id } = ctx.session.user;
   ctx.body = await User.follow({ fans_id, idol_id });
 });
-//  驗證信箱是否已被註冊
+//  check email has been registered
 router.post("/isEmailExist", VALIDATE.USER, async (ctx, next) => {
   const { email } = ctx.request.body;
   ctx.body = await User.isEmailExist(email);
 });
-//  註冊
+//  register
 router.post("/register", VALIDATE.USER, async (ctx, next) => {
   const { email, password } = ctx.request.body;
   ctx.body = await User.register(email, password);
 });
-//  登入
+//  login
 router.post("/", SESSION.set, VALIDATE.USER, async (ctx, next) => {
   const { email, password } = ctx.request.body;
   ctx.body = await User.login(email, password);
 });
-//  登出
+//  logout
 router.get("/logout", CHECK.login, SESSION.remove);
 module.exports = router;

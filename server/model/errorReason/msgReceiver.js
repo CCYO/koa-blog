@@ -4,6 +4,7 @@ const READ = {
 
 const UPDATE = {
   ERR: { errno: 801, msg: "更新 MsgReceiver 失敗" },
+  ERR_ROW: { errno: 802, msg: "MsgReceiver 更新條數不如預期" },
 };
 
 module.exports = {

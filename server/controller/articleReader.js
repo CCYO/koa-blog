@@ -63,7 +63,7 @@ async function modify(id, newData) {
   let row = await ArticleReader.update(id, newData);
   if (!row) {
     throw new MyErr({
-      ...ErrRes.ARTICLE_READER.UPDATE.ERR,
+      ...ErrRes.ARTICLE_READER.UPDATE.ERR_ROW,
       error: `articleReader/${id} 未更新`,
     });
   }

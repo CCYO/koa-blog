@@ -51,8 +51,19 @@ async function removeList(id_list) {
   }
   return new SuccModel();
 }
+async function modify(id, newData) {
+  let row = await IdolFans.update(id, newData);
+  if (!row) {
+    throw new MyErr({
+      ...ErrRes.IDOL_FANS.UPDATE.ERR_ROW,
+      error: `idolFans/${id} 未更新`,
+    });
+  }
+  return new SuccModel({ data: row });
+}
 
 module.exports = {
+  modify,
   restoringList,
   removeList,
   //  ---------------------------------------------------------------------------

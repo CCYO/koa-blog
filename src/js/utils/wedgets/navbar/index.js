@@ -97,7 +97,7 @@ export default async function (axios) {
       if (response.errno) {
         url = `/permission/${response.errno}`;
       } else {
-        url = response.data;
+        url = response.data.url;
       }
       location.href = url;
     }

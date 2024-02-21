@@ -1,16 +1,13 @@
 /**
  * @description API commond相關
  */
-//  0504
+const router = require("koa-router")();
 const {
   GEN_CACHE_FN,
   API: { CACHE, CHECK },
 } = require("../../middleware");
-//  0411    ----------------------------------------------------------------未整理
-const { commentsToHtml } = require("../../utils/ejs-render");
-//  0411    ----------------------------------------------------------------未整理
 const removeDeletedComment = require("../../utils/hiddenRemovedComments");
-const Comment = require("../../controller/comment"); //  0411
+const Comment = require("../../controller/comment");
 const {
   DEFAULT: {
     //  0411
@@ -22,7 +19,7 @@ const {
     },
   },
 } = require("../../config");
-const router = require("koa-router")(); //  0411
+
 router.prefix("/api/comment"); //  0411
 //  0504
 const commonCaChe = GEN_CACHE_FN.common(TYPE.API.COMMENT);
@@ -67,12 +64,13 @@ router.delete("/", CHECK.login, CACHE.modify, async (ctx, next) => {
   //  await Comment.findDeletedItem(ctx.request.body);
 });
 //  --------------------------------------------------------------------------------------
+//  confirm msgReceiver
 router.get(
   "/confirm/:msgReceiver_id",
   CHECK.login,
   CACHE.modify,
   async (ctx) => {
-    let resModel = await Comment.updateConfirm({
+    let resModel = await Comment.confirmNews({
       receiver_id: ctx.session.user.id,
       msgReceiver_id: ctx.params.msgReceiver_id * 1,
     });

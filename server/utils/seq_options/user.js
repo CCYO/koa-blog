@@ -1,7 +1,13 @@
 const { Op } = require("sequelize");
 const { Blog } = require("../../db/mysql/model");
 const { hash } = require("../crypto");
-//  0406
+
+const CREATE = {
+  one: ({ email, password }) => ({
+    email,
+    password: hash(password),
+  }),
+};
 
 const FIND = {
   infoForCancelFollow: ({ idol_id, fans_id }) => ({
@@ -121,12 +127,18 @@ const FIND = {
       },
     },
   }),
-};
-//  0404
-const CREATE = {
-  one: ({ email, password }) => ({
-    email,
-    password: hash(password),
+  itemByIdolFans: ({ idol_id, idolFans_id }) => ({
+    where: { id: idol_id },
+    attributes: ["id"],
+    include: {
+      association: "fansList",
+      attributes: ["id"],
+      required: true,
+      through: {
+        where: { id: idolFans_id },
+        attributes: ["id", "confirm"],
+      },
+    },
   }),
 };
 module.exports = {

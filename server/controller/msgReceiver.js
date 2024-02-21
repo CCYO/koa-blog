@@ -73,7 +73,7 @@ async function modify(id, newData) {
   let row = await MsgReceiver.update(id, newData);
   if (!row) {
     throw new MyErr({
-      ...ErrRes.MSG_RECEIVER.UPDATE.ERR,
+      ...ErrRes.MSG_RECEIVER.UPDATE.ERR_ROW,
       error: `msgReceiver/${id} 未更新`,
     });
   }

@@ -32,6 +32,7 @@ Object.defineProperties(id_list, {
 });
 
 //  操作 $$news.htmlStr 的方法
+
 let htmlStr = {
   confirm: "",
   unconfirm: "",
