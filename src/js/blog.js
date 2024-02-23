@@ -71,11 +71,32 @@ async function init() {
         }
         return htmlStr;
       }
-      // $(`.${PAGE_BLOG.CLASS.BLOG_CONTENT}`).html(G.data.blog.html);
       $(`.${PAGE_BLOG.CLASS.BLOG_CONTENT}`).html(_parseHtmlStr_XImgToImg());
       if (!G.data.blog.showComment) {
         $M_log.dev("不需要渲染評論");
         return;
+      }
+      ////  根據使用者身分，顯示/移除刪除紐
+      if (G.data.me?.id) {
+        let isAuthor = G.data.me.id === G.data.blog.author.id;
+        $(`button[data-${PAGE_BLOG.DATASET.KEY.REMOVE_COMMENT}]`).each(
+          (i, el) => {
+            let $el = $(el);
+            if (isAuthor) {
+              $el.show();
+              return;
+            }
+            let url = $el.parent("div").children("a").attr("href");
+            let res = /\/other\/(?<commenter_id>\d+)/.exec(url);
+            let commenter_id = res.groups.commenter_id * 1;
+            console.log("commenter_id => ", commenter_id);
+            if (G.data.me.id === commenter_id) {
+              $el.show();
+            } else {
+              $el.remove();
+            }
+          }
+        );
       }
       /* ------------------------------------------------------------------------------------------ */
       /* JQ Ele in Closure -------------------------------------------------------------------- */
@@ -130,42 +151,31 @@ async function init() {
           //  初始化editor
           init_editor(replyBox);
         }
-      }
 
-      async function removeComment(btn_remove) {
-        let $btn_remove = $(btn_remove);
-        let $comment_item_container = $btn_remove
-          .parents(`.${PAGE_BLOG.CLASS.COMMENT_ITEM_CONTAINER}`)
-          .first();
-        let $remove_comment_id = $btn_remove.data(
-          PAGE_BLOG.DATASET.KEY.REMOVE_COMMENT
-        );
-        let $pid = $comment_item_container
-          .parents(`[data-${PAGE_BLOG.DATASET.KEY.PID}]`)
-          .first()
-          .data(PAGE_BLOG.DATASET.KEY.PID);
-        let payload = {
-          author_id: G.data.blog.author.id,
-          commenter_id: G.data.me.id,
-          blog_id: G.data.blog.id,
-          comment_id: $remove_comment_id,
-          pid: $pid,
-        };
-        let { data } = await G.utils.axios.delete(
-          PAGE_BLOG.API.REMOVE_COMMENT,
-          {
-            data: payload,
-          }
-        );
-        //  data { commenter, time, isDeleted, ... }
-        let htmlStr = $M_template.comment.item({ ...data, isLogin: true });
-        $btn_remove
-          .parents(`.${PAGE_BLOG.CLASS.COMMENT_ITEM_CONTENT}`)
-          .first()
-          .html(htmlStr);
-        //  同步G.data
-        G.data.blog.map_comment.delete($remove_comment_id);
-        return;
+        async function removeComment(btn_remove) {
+          let $btn_remove = $(btn_remove);
+          let $remove_comment_id = $btn_remove.data(
+            PAGE_BLOG.DATASET.KEY.REMOVE_COMMENT
+          );
+          let payload = {
+            comment_id: $remove_comment_id,
+          };
+          let { data } = await G.utils.axios.delete(
+            PAGE_BLOG.API.REMOVE_COMMENT,
+            {
+              data: payload,
+            }
+          );
+          //  data { commenter, time, isDeleted, ... }
+          let htmlStr = $M_template.comment.item({ ...data, isLogin: true });
+          $btn_remove
+            .parents(`.${PAGE_BLOG.CLASS.COMMENT_ITEM_CONTENT}`)
+            .first()
+            .html(htmlStr);
+          //  同步G.data
+          G.data.blog.map_comment.delete($remove_comment_id);
+          return;
+        }
       }
 
       //  初始化editor
@@ -297,7 +307,7 @@ async function init() {
               //  updatedAt
               let template_values = {
                 tree: [{ ...new_comment }],
-                isLogin: true,
+                author_id: G.data.blog.author.id,
                 me_id: G.data.me.id, // commenter_id
                 ejs_template: $M_template,
               };

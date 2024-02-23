@@ -132,24 +132,48 @@ async function findListForPagination({
   }
   return resModel;
 }
+async function findInfoForPrivatePage({ cache, blog_id, author_id }) {
+  let { exist, data } = cache;
+  if (exist === CACHE.STATUS.NO_CACHE) {
+    let resModel = await _checkPermission({ blog_id, author_id });
+    if (errno) {
+      resModel.data.html = encodeURI(
+        resModel.data.html ? resModel.data.html : ""
+      );
+    }
+    return resModel;
+  } else {
+    return new SuccModel({ data });
+  }
+}
+async function findInfoForCommonPage({ cache, blog_id, user_id }) {
+  let { exist, data } = cache;
+  if (exist === CACHE.STATUS.NO_CACHE) {
+    let resModel = await findInfoOfPublic({ blog_id, user_id });
+    if (!resModel.errno) {
+      resModel.data.html = encodeURI(
+        resModel.data.html ? resModel.data.html : ""
+      );
+    }
+    return resModel;
+  } else {
+    return new SuccModel({ data });
+  }
+}
 /** 取得 blog 紀錄
  *
  * @param {number} blog_id blog id
  * @returns
  */
-async function findWholeInfo({ author_id, blog_id }) {
+async function findInfoOfPublic({ blog_id, user_id }) {
   let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
-  if (!data) {
+  if (!data || (!data.show && data.author.id !== user_id)) {
     return new ErrModel({
       ...ErrRes.BLOG.READ.NOT_EXIST,
-      msg: `blog/${blog_id}不存在`,
+      msg: `blog/${id}不存在`,
     });
   }
-  if (author_id && data.author.id !== author_id) {
-    throw new MyErr(ErrRes.BLOG.READ.NOT_AUTHOR);
-  }
-  let opts = { data };
-  return new SuccModel(opts);
+  return new SuccModel({ data });
 }
 /** 取得 blogList
  * @param {number} user_id user id
@@ -327,9 +351,9 @@ async function removeList({ blogList, author_id }) {
 }
 //  廣場數據
 async function findListOfSquare(author_id) {
-  let list = await Blog.readList(Opts.BLOG.FIND.listOfSquare(author_id));
-  let data = Init.browser.blog.sortAndInitTimeFormat(list);
-  return new SuccModel({ data });
+  let blogs = await Blog.readList(Opts.BLOG.FIND.listOfSquare(author_id));
+  blogs = Init.browser.blog.sortAndInitTimeFormat(blogs);
+  return new SuccModel({ data: { blogs } });
 }
 
 async function findListForAlbumListPage(author_id) {
@@ -352,15 +376,15 @@ async function findListForAlbumListPage(author_id) {
   return new SuccModel({ data });
 }
 async function findAlbum({ author_id, blog_id }) {
+  let resModel = await _checkPermission({ author_id, blog_id });
+  if (resModel.errno) {
+    return resModel;
+  }
   let data = await Blog.read(Opts.BLOG.FIND.album(blog_id));
-  await _checkPermission({ author_id, blog_id });
   if (data) {
     return new SuccModel({ data });
   } else {
-    throw new ErrModel({
-      ...ErrRes.BLOG.READ.NO_ALBUM,
-      error: `blog/${blog_id} 沒有相片`,
-    });
+    return new ErrModel(ErrRes.BLOG.READ.NO_ALBUM);
   }
 }
 async function confirmNews({ reader_id, articleReader_id }) {
@@ -393,8 +417,9 @@ module.exports = {
   find,
   add,
   modify,
+  findInfoForCommonPage,
+  findInfoForPrivatePage,
   findListForUserPage,
-  findWholeInfo,
   findListForPagination,
 };
 async function _removeImgList({ blog_id, cancelImgs }) {
@@ -487,7 +512,7 @@ async function _findPrivateListForUserPage(
 async function _checkPermission({ author_id, blog_id }) {
   let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
   if (!data) {
-    throw new MyErr({
+    return new ErrModel({
       ...ErrRes.BLOG.READ.NOT_EXIST,
       msg: `blog/${blog_id}不存在`,
     });

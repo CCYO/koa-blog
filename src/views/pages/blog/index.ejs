@@ -19,7 +19,7 @@
       <div class="<%%= G_CONST.CLASS.COMMENT_LIST_CONTAINER %>">
         <div class="<%%= G_CONST.CLASS.COMMENT_LIST %>" data-<%%= G_CONST.DATASET.KEY.PID %>="0">
           <%% if(blog.comment.tree){ %>
-          <%%- ejs_template.comment.tree({tree: blog.comment.tree, ejs_template, isLogin, me_id}) %>
+          <%%- ejs_template.comment.tree({tree: blog.comment.tree, ejs_template, me_id, author_id: blog.author.id }) %>
           <%% } %>
         </div>
       </div>

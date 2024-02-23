@@ -258,7 +258,7 @@ async function remove({ user_id, comment_id }) {
     },
   } = removedComment;
   //  確認 user_id 是否有刪除權限(必須是 留言者本人 或 author_id)
-  if (commenter_id !== user_id && commenter_id !== author_id) {
+  if (user_id !== commenter_id && user_id !== author_id) {
     throw new MyErr({
       ...ErrRes.COMMENT.REMOVE.ERR_NO_PERMISSION,
       error: `comment/${comment_id} 刪除失敗`,

@@ -26,8 +26,20 @@ async function login(ctx, next) {
   }
   return;
 }
-
+async function skipLogin(ctx, next) {
+  if (ctx.session.user) {
+    //  若已登入，跳轉到個人頁面
+    ctx.redirect("/self");
+    return;
+  }
+  await next();
+  //  避免登入狀態時點擊上一頁，到達未登入狀態才允許看得到的頁面，故不允許緩存
+  ctx.set({
+    ["Cache-Control"]: "no-store",
+  });
+}
 module.exports = {
+  skipLogin,
   //  0501
   isSelf,
   //  0501

@@ -15,7 +15,7 @@ const READ = {
   NOT_AUTHOR: { errno: 1005, msg: "非作者本人" },
   NOT_EXIST: { errno: 1005, msg: "該文章不存在" },
   NO_LIST: { errno: 1005, msg: "沒有文章" },
-  NO_ALBUM: { errno: 1005, msg: "沒有相本" },
+  NO_ALBUM: { errno: 1005, msg: "此相本不存在" },
   NO_PERMISSION: { errno: 1005, msg: "沒有權限查看" },
 };
 module.exports = {

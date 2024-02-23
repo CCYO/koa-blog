@@ -2,39 +2,27 @@
  * 系統直接調用的緩存處理
  */
 
-//  0504
+const S_Cache = require("../server/cache");
 const {
   DEFAULT: {
     CACHE: { STATUS },
   },
   ENV,
 } = require("../config");
-//  0504
-const S_Cache = require("../server/cache");
 
 function _noCache(type) {
   return async function (ctx, next) {
-    ctx.cache = {
-      [type]: { exist: STATUS.NO_CACHE },
-    };
+    ctx.cache = { exist: STATUS.NO_CACHE };
     await next();
-    console.log("進入 cache_FN ----------------------------");
     //  不允許前端緩存
     ctx.set({
       ["Cache-Control"]: "no-store",
     });
     console.log(`@noCache模式，不替 ${ctx.request.path} 處理緩存`);
     delete ctx.cache;
-    return;
   };
 }
 
-//  0504
-/**
- * @description
- * @param {*} type
- * @returns
- */
 let common = (type) => {
   let TYPE = type;
   return async function (ctx, next) {
@@ -43,35 +31,33 @@ let common = (type) => {
     //  向系統cache撈資料 { exist: 提取緩存數據的結果 , data: initBlog || undefined }
     let cache = S_Cache.getTYPE(TYPE);
     //  將數據綁在 ctx.cache
-    ctx.cache = {
-      [TYPE]: await cache.get(id, ifNoneMatch),
-    };
-
+    ctx.cache = await cache.get(id, ifNoneMatch);
+    if (ctx.cache.exist === STATUS.HAS_FRESH_CACHE) {
+      ctx.status = 304;
+      return;
+    }
     await next();
 
     //  判斷是否將數據存入系統緩存
-    let { exist, data, etag } = ctx.cache[TYPE];
+    let { exist, data, etag } = ctx.cache;
     //  當前系統緩存，無資料 || eTag已過期
     if (exist === STATUS.NO_CACHE) {
       //  將blog存入系統緩存
       etag = await cache.set(id, data);
     }
     //  將etag傳給前端做緩存
-    if (exist !== STATUS.HAS_FRESH_CACHE) {
-      ctx.set({
-        etag,
-        ["Cache-Control"]: "no-cache",
-      });
-      console.log(`${TYPE}/${id} 提供前端 etag 做緩存`);
-    }
+    ctx.set({
+      etag,
+      ["Cache-Control"]: "no-cache",
+    });
+    console.log(`${TYPE}/${id} 提供前端 etag 做緩存`);
     delete ctx.cache;
-    return;
   };
 };
 
-//  0504
 let private = (type) => {
   let TYPE = type;
+
   return async function (ctx, next) {
     let id = ctx.params.id * 1;
     if (ctx.request.path === "/self") {
@@ -86,11 +72,13 @@ let private = (type) => {
      * }
      */
     let cache = S_Cache.getTYPE(TYPE);
-    ctx.cache = {
-      [TYPE]: await cache.get(id),
-    };
+    // ctx.cache = {
+    //   [TYPE]: await cache.get(id),
+    // };
+    ctx.cache = await cache.get(id);
     await next();
-    let { exist, data } = ctx.cache[TYPE];
+    // let { exist, data } = ctx.cache[TYPE];
+    let { exist, data } = ctx.cache;
     //  系統沒有應對的緩存資料
     if (exist === STATUS.NO_CACHE && data) {
       //  將blog存入系統緩存
@@ -102,7 +90,6 @@ let private = (type) => {
     });
     console.log(`不允許前端緩存 ${ctx.request.path} 響應的數據`);
     delete ctx.cache;
-    return;
   };
 };
 
@@ -112,8 +99,6 @@ if (ENV.isNoCache) {
 }
 
 module.exports = {
-  //  0504
   common,
-  //  0504
   private,
 };

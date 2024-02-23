@@ -25,9 +25,9 @@ async function init() {
   try {
     await G.main(initMain);
 
-    let opts = {
-      list: G.albums.show,
-    };
+    // let opts = {
+    //   list: G.albums.show,
+    // };
     async function initMain() {
       /*  初始化文章列表的分頁功能 */
       class initPagination {

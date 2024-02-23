@@ -8,6 +8,7 @@ const {
         PAGE, //  0228
         NEWS, //  0228
       },
+      STATUS,
     },
   },
 } = require("../config");
@@ -88,6 +89,14 @@ async function login({ email, password }) {
   }
   return new SuccModel({ data });
 }
+async function findDataForUserPage({ cache, user_id }) {
+  if (cache.exist === STATUS.NO_CACHE) {
+    return await findInfoForUserPage(user_id);
+  } else {
+    return new SuccModel({ data: cache.data });
+  }
+}
+
 async function findInfoForUserPage(userId) {
   let resModel = await _findRelationship(userId);
   let { currentUser, fansList, idolList } = resModel.data;
@@ -239,7 +248,8 @@ module.exports = {
   cancelFollow,
   follow,
   findFansList,
-  findInfoForUserPage,
+  findDataForUserPage,
+  // findInfoForUserPage,
   login,
   register,
   isEmailExist,

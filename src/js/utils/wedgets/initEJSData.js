@@ -100,7 +100,8 @@ function initBlog(blog) {
       return "";
     }
     //  百分比編碼 解碼
-    return decodeURI(URI_String);
+    let res = decodeURI(URI_String);
+    return res;
   }
 }
 //  將 img 數據 map化

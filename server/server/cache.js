@@ -50,7 +50,7 @@ function getTYPE(type) {
         return res;
       }
       if (!(await cache.has(id))) {
-        console.log(`取得 cache ${type}/${id} 時，發現不存在`);
+        console.log(`請求取得 cache ${type}/${id}時，發現無緩存`);
         //  沒有緩存
         return res;
       }
@@ -60,15 +60,15 @@ function getTYPE(type) {
       if (!ifNoneMatch) {
         //  沒有 if-none-match
         res.exist = STATUS.NO_IF_NONE_MATCH;
-        console.log(`取得 cache ${type}/${id} 時，沒有提供 if-none-match`);
+        console.log(`請求取得 cache ${type}/${id} 時，沒有提供 if-none-match`);
       } else if (etag !== ifNoneMatch) {
         //  if-none-match 不匹配
         res.exist = STATUS.IF_NONE_MATCH_IS_NO_FRESH;
-        console.log(`取得 cache ${type}/${id} 時，if-none-match 已過期`);
+        console.log(`請求取得 cache ${type}/${id} 時，if-none-match 已過期`);
       } else {
         //  if-none-match 有效
         res.exist = STATUS.HAS_FRESH_CACHE;
-        console.log(`取得 cache ${type}/${id} 時，使用有效緩存`);
+        console.log(`請求取得 cache ${type}/${id} 時，直接使用有效緩存`);
       }
       return res;
     },
