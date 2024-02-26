@@ -25,6 +25,19 @@ async function init() {
   try {
     await G.main(initMain);
 
+    //  考慮到緩存
+    //  要分public與private
+
+    //  ejs parse 取得所有 相本數據
+    //  js渲染
+    //  將 data 丟入 template 取得 htmlStr
+    //  渲染
+
+    //  框架功能
+    //  渲染list
+    //  上/下一頁功能
+    //  上/下一批分頁
+
     // let opts = {
     //   list: G.albums.show,
     // };

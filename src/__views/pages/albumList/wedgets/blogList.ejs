@@ -1,0 +1,59 @@
+<div class="box-albumList">
+  <h3><%= status === "public" ? "公開" : "未公開" %>的文章相簿</h3>
+  <% if(album[status].count){ %>
+  <ul class="list-group">
+    <% album[status].list.forEach( ({ id, title, time }) => { %>
+    <li class="list-group-item">
+      <a href="/album/<%= id %>"><%= title %></a>
+      <span>文章公開於 <%= time %></span>
+    </li>
+    <% }) %>
+  </ul>
+  <% let pageCount = Math.ceil(album[status].count / pagination.BLOG_COUNT) %>
+  <% let scopeCount = Math.ceil(pageCount / pagination.PAGE_COUNT) %>
+  <% if (pageCount > 1) { %>
+  <nav aria-label="navigation">
+    <ul class="pagination">
+      <% if (scopeCount > 1) { %>
+      <li class="page-item">
+        <a class="page-link" href="#" aria-label="Previous">
+          <span aria-hidden="true">
+            ← </span>
+        </a>
+      </li>
+      <% } %>
+      <li class="page-item">
+        <a class="page-link pe-none" href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.PREVIOUS_PAGE %>">Previous</a>
+      </li>
+      <% for( let page = 1; pageCount >= page; page++ ){ %>
+      <% if((page % pagination.PAGE_COUNT)===1){ %>
+      <% let curScopeCount = Math.ceil(page / pagination.PAGE_COUNT) %>
+      <ul class="pagination" data-<%= G_PAGE.DATASET.KEY.PAGINATION_NUM %>="<%= curScopeCount %>" <% if(curScopeCount > 1){ %> style="display: none;" <% } %>>
+        <% } %>
+        <li class="page-item <%= page === 1 ? 'active' : '' %>">
+          <a class="page-link" href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= page %>">
+            <%= page %>
+          </a>
+        </li>
+        <% if( !(page % pagination.PAGE_COUNT) || page === pageCount ){ %>
+      </ul>
+      <% } %>
+      <% } %>
+      <li class="page-item">
+        <a href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.NEXT_PAGE %>" class="page-link <%= pageCount < 2 ? "pe-none" : '' %>">Next</a>
+      </li>
+      <% if (album[status].length > pagination.PAGE_COUNT) { %>
+      <li class="page-item">
+        <a class="page-link" href="#" aria-label="Next">
+          <span aria-hidden="true">→</span>
+        </a>
+      </li>
+      <% } %>
+    </ul>
+  </nav>
+
+  <% } else { %>
+  <p>沒有相簿</p>
+  <% } %>
+</div>
+<% } %>
