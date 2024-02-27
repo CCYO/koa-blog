@@ -1,4 +1,5 @@
 import $M_log from "../log";
+import { SERVER, PAGE } from "../../config";
 
 //  初始化數據
 //  取得由 JSON.stringify(data) 轉譯過的純跳脫字符，
@@ -9,6 +10,7 @@ const DATA_SET = "my-data";
 const SELECTOR = `[data-${DATA_SET}]`;
 const KEYS = {
   BLOG: "blog",
+  ALBUM_LIST: "album",
   ALBUM: "imgs",
 };
 
@@ -39,6 +41,8 @@ export default function () {
     } else if (key === KEYS.ALBUM) {
       //  album 數據
       kv = { map_imgs: initAlbum(val) };
+    } else if (key === KEYS.ALBUM_LIST) {
+      kv = { album: initAlbumList(val) };
     } else {
       //  其餘數據
       kv = { [key]: val };
@@ -52,6 +56,36 @@ export default function () {
   //  返回整理後的EJS數據
 }
 
+function initAlbumList(albumList) {
+  let album = {};
+  for (let status in albumList) {
+    let { list, count } = albumList[status];
+    list = list.reduce((acc, blog, index) => {
+      let i = Math.floor(index / SERVER.ALBUM_LIST.PAGINATION.BLOG_COUNT);
+      if (!acc[i]) {
+        acc[i] = [];
+      }
+      acc[i].push(blog);
+      return acc;
+    }, []);
+    let totalPage = Math.ceil(count / SERVER.ALBUM_LIST.PAGINATION.BLOG_COUNT);
+    let totalPagination = Math.ceil(
+      totalPage / SERVER.ALBUM_LIST.PAGINATION.PAGE_COUNT
+    );
+    album[status] = {
+      list,
+      page: {
+        total: totalPage,
+        current: 1,
+      },
+      pagination: {
+        total: totalPagination,
+        current: 1,
+      },
+    };
+  }
+  return album;
+}
 //  初始化album數據
 function initAlbum(imgs) {
   //  img數據map化

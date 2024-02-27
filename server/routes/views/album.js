@@ -26,7 +26,7 @@ router.get("/:blog_id", CHECK.login, async (ctx) => {
     blog_id: ctx.params.blog_id * 1,
     author_id: ctx.session.user.id,
   };
-  let { errno } = await Blog.findAlbum(opts);
+  let { errno, data } = await Blog.findAlbum(opts);
   if (errno) {
     ctx.redirect(`/permission/${errno}`);
   } else {

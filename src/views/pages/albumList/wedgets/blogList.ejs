@@ -1,16 +1,24 @@
+<%% let G_PAGE = JSON.parse('{"API":{"FOLLOW":"/api/user/follow","CANCEL_FOLLOW":"/api/user/cancelFollow","CREATE_BLOG":"/api/blog","REMOVE_BLOGS":"/api/blog","GET_BLOG_LIST":"/api/blog/list","EDIT_BLOG":"/blog/edit"},"SELECTOR":{"PAGE_NUM_LINK":".pagination .pagination .page-link"},"ID":{"NEW_BLOG_TITLE":"new_blog_title","NEW_BLOG":"new_blog","FANS_LIST":"fansList","IDOL_LIST":"idolList","FOLLOW":"follow","CANCEL_FOLLOW":"cancelFollow"},"DATASET":{"KEY":{"BLOG_STATUS":"status","PAGE_TURN":"turn","PAGE_NUM":"page","PAGINATION_NUM":"pagination","REMOVE_BLOG":"remove-blog","BLOG_ID":"blog-id","USER_ID":"user-id"},"VALUE":{"NEXT_PAGE":"next-page","PREVIOUS_PAGE":"previous-page","NEXT_PAGINATION":"next-pagination","PREVIOUS_PAGINATION":"previous-pagination","REMOVE_BLOG_ITEM":"item","REMOVE_BLOG_LIST":"list"}}}') %>
+<%% let _album = album[status] %>
+
 <div class="box-albumList">
-  <h3><%%= status === "public" ? "公開" : "未公開" %>的文章相簿</h3>
-  <%% if(album[status].count){ %>
-  <ul class="list-group">
-    <%% album[status].list.forEach( ({ id, title, time }) => { %>
-    <li class="list-group-item">
-      <a href="/album/<%%= id %>"><%%= title %></a>
-      <span>文章公開於 <%%= time %></span>
+  <h3><%%= status === "public" ? "公開" : "編輯中" %>的文章相簿</h3>
+  <%% if(_album.count){ %>
+  <%% _album.forEach(( list, index ) => { %>
+  <%% let first = (index + 1) % pagination.BLOG_COUNT === 1 %>
+  <%% if (first) { %>
+  <ul class="list-group" style=`<%%= index ? "display: none;" : "" %>`>
+    <%% } >
+    <li class=" list-group-item">
+    <a href="/album/<%%= id %>"><%%= title %></a>
+    <span>文章公開於 <%%= time %></span>
     </li>
     <%% }) %>
   </ul>
-  <%% let pageCount = Math.ceil(album[status].count / pagination.BLOG_COUNT) %>
+
+  <%% let pageCount = Math.ceil(_album.count / pagination.BLOG_COUNT) %>
   <%% let scopeCount = Math.ceil(pageCount / pagination.PAGE_COUNT) %>
+
   <%% if (pageCount > 1) { %>
   <nav aria-label="navigation">
     <ul class="pagination">
@@ -42,7 +50,7 @@
       <li class="page-item">
         <a href="#" data-<%%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%%= G_PAGE.DATASET.VALUE.NEXT_PAGE %>" class="page-link <%%= pageCount < 2 ? "pe-none" : '' %>">Next</a>
       </li>
-      <%% if (album[status].length > pagination.PAGE_COUNT) { %>
+      <%% if (_album.length > pagination.PAGE_COUNT) { %>
       <li class="page-item">
         <a class="page-link" href="#" aria-label="Next">
           <span aria-hidden="true">→</span>
@@ -51,9 +59,9 @@
       <%% } %>
     </ul>
   </nav>
+  <%% } %>
 
   <%% } else { %>
   <p>沒有相簿</p>
   <%% } %>
 </div>
-<%% } %>

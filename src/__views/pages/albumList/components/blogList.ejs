@@ -1,0 +1,80 @@
+<% let _album = album[status] %>
+<% let blogList = _album.list %>
+<% let blogCount = _album.count %>
+<% let pageCount = Math.ceil(blogCount / pagination.BLOG_COUNT) %>
+<% let paginationCount = Math.ceil(pageCount / pagination.PAGE_COUNT) %>
+
+<div class="card bg-light blogList" data-status="<%= status %>">
+  <div class="card-header blogList-header">
+    <h5><%= status === "public" ? "公開" : "編輯中" %>的文章相簿</h3>
+  </div>
+  <% if(blogCount){ %>
+  <% blogList.forEach(( blog, index ) => { %>
+  <% let curPage = Math.ceil( (index + 1) / pagination.BLOG_COUNT) %>
+  <% let ul_start_tag = index % pagination.BLOG_COUNT === 0 %>
+  <% let ul_close_tag = (index + 1) % pagination.BLOG_COUNT === 0 || index + 1 === blogCount %>
+  <% if (ul_start_tag) { %>
+  <ul class="list-group list-group-flush" data-page="<%= curPage %>" style=<%= index ? "display:none" : ''%>>
+    <% } %>
+    <li class="list-group-item">
+      <a href="/album/<%= blog.id %>"><%= blog.title %></a>
+      <span>文章公開於 <%= blog.time %></span>
+    </li>
+    <% if(ul_close_tag){ %>
+  </ul>
+  <% } %>
+  <% }) %>
+
+
+
+  <% if (pageCount > 1) { %>
+  <nav aria-label="navigation">
+    <ul class="pagination">
+      <% if (paginationCount > 1) { %>
+      <li class="page-item">
+        <a class="page-link pe-none" href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.PREVIOUS_PAGINATION %>">
+          << </a>
+      </li>
+      <% } %>
+
+      <li class="page-item">
+        <a class="page-link pe-none" href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.PREVIOUS_PAGE %>">Previous</a>
+      </li>
+      <% for( let page = 1; pageCount >= page; page++ ){ %>
+
+      <% let curScopeCount = Math.ceil(page / pagination.PAGE_COUNT) %>
+      <% let ul_start_tag = page % pagination.PAGE_COUNT === 1 %>
+      <% let ul_close_tag = !(page % pagination.PAGE_COUNT) || page === pageCount %>
+
+      <% if(ul_start_tag){ %>
+      <ul class="pagination" data-<%= G_PAGE.DATASET.KEY.PAGINATION_NUM %>="<%= curScopeCount %>" style=<%= curScopeCount > 1 ? "display:none" : ''%>>
+        <% } %>
+        <li class="page-item <%= page === 1 ? 'active' : '' %>">
+          <a class="page-link <%= page === 1 ? "pe-none" : "" %>" href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= page %>">
+            <%= page %>
+          </a>
+        </li>
+        <% if( ul_close_tag){ %>
+      </ul>
+      <% } %>
+      <% } %>
+
+      <li class="page-item">
+        <a href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.NEXT_PAGE %>" class="page-link">Next</a>
+      </li>
+
+      <% if (paginationCount > 1) { %>
+      <li class="page-item">
+        <a href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.NEXT_PAGINATION %>" class="page-link"> >> </a>
+      </li>
+      <% } %>
+    </ul>
+  </nav>
+  <% } %>
+
+
+  <% } else { %>
+  <p>沒有相簿</p>
+  <% } %>
+
+</div>
