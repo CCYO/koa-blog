@@ -9,22 +9,37 @@
     <h5><%= status === "public" ? "公開" : "編輯中" %>的文章相簿</h3>
   </div>
   <% if(blogCount){ %>
-  <% blogList.forEach(( blog, index ) => { %>
-  <% let curPage = Math.ceil( (index + 1) / pagination.BLOG_COUNT) %>
-  <% let ul_start_tag = index % pagination.BLOG_COUNT === 0 %>
-  <% let ul_close_tag = (index + 1) % pagination.BLOG_COUNT === 0 || index + 1 === blogCount %>
-  <% if (ul_start_tag) { %>
-  <ul class="list-group list-group-flush" data-page="<%= curPage %>" style=<%= index ? "display:none" : ''%>>
-    <% } %>
-    <li class="list-group-item">
-      <a href="/album/<%= blog.id %>"><%= blog.title %></a>
-      <span>文章公開於 <%= blog.time %></span>
-    </li>
-    <% if(ul_close_tag){ %>
-  </ul>
-  <% } %>
-  <% }) %>
+  <ul>
+    <% blogList.forEach(( blog, index ) => { %>
+    <% let curPage = Math.ceil( (index + 1) / pagination.BLOG_COUNT) %>
 
+    <% let ul_start_tag = index % pagination.BLOG_COUNT === 0 %>
+    <% let ul_close_tag = (index + 1) % pagination.BLOG_COUNT === 0 || index + 1 === blogCount %>
+
+    <% if (ul_start_tag) { %>
+    <li class="blogList-page fade <%= index ? "" : "show" %>" data-page="<%= curPage %>" style="<%= index ? "display: none" : ""%>">
+      <ul class="list-group list-group-flush">
+        <% } %>
+        <li class="list-group-item list-group-item-info list-group-item-action ">
+          <a href="/album/<%= blog.id %>"><%= blog.title %></a>
+          <span>文章公開於 <%= blog.time %></span>
+        </li>
+        <!-- 假使 -->
+        <% if (index + 1 === blogCount ) { %>
+        <% let n = pagination.BLOG_COUNT - ((index + 1) % pagination.BLOG_COUNT) %>
+        <% for( let i = n; pagination.BLOG_COUNT > i; i++ ) { %>
+        <li class="list-group-item fill-item">
+          <a href="#" class="pe-none"></a>
+        </li>
+        <% } %>
+        <% } %>
+        <% if(ul_close_tag){ %>
+      </ul>
+    </li>
+    <% } %>
+
+    <% }) %>
+  </ul>
 
 
   <% if (pageCount > 1) { %>
@@ -32,13 +47,12 @@
     <ul class="pagination">
       <% if (paginationCount > 1) { %>
       <li class="page-item">
-        <a class="page-link pe-none" href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.PREVIOUS_PAGINATION %>">
-          << </a>
+        <a class="page-link pe-none" href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.PREVIOUS_PAGINATION %>">&#10913;</a>
       </li>
       <% } %>
 
       <li class="page-item">
-        <a class="page-link pe-none" href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.PREVIOUS_PAGE %>">Previous</a>
+        <a class="page-link pe-none" href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.PREVIOUS_PAGE %>">&#60;</a>
       </li>
       <% for( let page = 1; pageCount >= page; page++ ){ %>
 
@@ -60,12 +74,12 @@
       <% } %>
 
       <li class="page-item">
-        <a href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.NEXT_PAGE %>" class="page-link">Next</a>
+        <a href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.NEXT_PAGE %>" class="page-link">&#62;</a>
       </li>
 
       <% if (paginationCount > 1) { %>
       <li class="page-item">
-        <a href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.NEXT_PAGINATION %>" class="page-link"> >> </a>
+        <a href="#" data-<%= G_PAGE.DATASET.KEY.PAGE_TURN %>="<%= G_PAGE.DATASET.VALUE.NEXT_PAGINATION %>" class="page-link">&#10914;</a>
       </li>
       <% } %>
     </ul>
@@ -74,7 +88,7 @@
 
 
   <% } else { %>
-  <p>沒有相簿</p>
+  <p class="p-3">沒有相簿</p>
   <% } %>
 
 </div>

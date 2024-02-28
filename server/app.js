@@ -206,6 +206,7 @@ app.on("error", (error, ctx) => {
   if (error.serverError) {
     console.log("serverError: \n", error.serverError);
   } else {
+    console.log("error message: \n", error.message);
     console.log("error stack: \n", error.stack);
   }
   console.log("@------------------------------------------------------------@");

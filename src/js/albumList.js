@@ -28,7 +28,8 @@ async function init() {
       //  上/下一頁功能
       $(".page-link").on("click", async (event) => {
         //  當前page
-        let status = $(event.target).parents("[data-status]").data("status");
+        let $target = $(event.target);
+        let status = $target.parents("[data-status]").data("status");
         let $container = $(`[data-status=${status}]`);
         let $curPage_li = $container.find(".page-item.active");
         let curPage = G.data.album[status].page.current;
@@ -44,8 +45,6 @@ async function init() {
               targetPage =
                 (curPagination - 2) * SERVER.ALBUM_LIST.PAGINATION.BLOG_COUNT +
                 1;
-              // 2 -> 1   ---> 4 -> 1
-              // 3 -> 2   ---> 6 -> 3
               break;
             case "next-pagination":
               targetPage =
@@ -75,11 +74,15 @@ async function init() {
         let $targetPage_a = $container.find(`[data-turn=${targetPage}]`);
 
         //  blogList 顯示
-        $container.find(`[data-page=${curPage}]`).hide();
-        $container.find(`[data-page=${targetPage}]`).show();
+        $container.find(`[data-page=${curPage}]`).hide().removeClass("show");
+        $container.find(`[data-page=${targetPage}]`).show().addClass("show");
+
         //  頁碼 顯示
         $curPage_li.removeClass("active").children().removeClass("pe-none");
         $targetPage_a.addClass("pe-none").parent().addClass("active");
+        //  翻頁鈕失焦
+        $target.get(0).blur();
+
         //  上/下頁鈕 顯示
         if (curPage === 1) {
           $("[data-turn=previous-page]").removeClass("pe-none");

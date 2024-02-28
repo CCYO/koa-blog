@@ -1,6 +1,19 @@
 /* blog CSS */
 @import "./common/basic.css";
 
+.fill-item {
+  text-align: center;
+}
+
+.fill-item > a {
+  text-decoration: none;
+}
+
+.fill-item > a::before {
+  content: "--";
+  color: darkgray;
+}
+
 .blogList {
   border: 1px solid rgba(0, 0, 0, 0.3);
   margin-bottom: 0.5rem;
@@ -11,6 +24,17 @@
 }
 .blogList-header > h5 {
   margin: 0;
+}
+
+.blogList > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+[data-page] {
+  border-top: 0px !important;
+  border-bottom: 0px !important;
 }
 
 .pagination .pagination > .page-item .page-link {

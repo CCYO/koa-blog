@@ -1,4 +1,4 @@
-const { Op } = require("sequelize");
+const { Op, col, fn } = require("sequelize");
 const { Img, BlogImg, BlogImgAlt, User } = require("../../db/mysql/model");
 
 const REMOVE = {
