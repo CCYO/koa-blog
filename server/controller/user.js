@@ -1,47 +1,22 @@
 /**
  * @description Controller user相關
  */
+const { ErrRes, ErrModel, SuccModel, MyErr } = require("../model");
+const User = require("../server/user"); //  0404
+const C_Blog = require("./blog");
+const C_IdolFans = require("./idolFans");
+const C_ArticleReader = require("./articleReader");
+const { hash } = require("../utils/crypto");
+const Opts = require("../utils/seq_findOpts");
 const {
+  ENV,
   DEFAULT: {
     CACHE: {
-      TYPE: {
-        PAGE, //  0228
-        NEWS, //  0228
-      },
+      TYPE: { PAGE, NEWS },
       STATUS,
     },
   },
 } = require("../config");
-const C_Blog = require("./blog"); //  0309
-const { ErrRes, ErrModel, SuccModel, MyErr } = require("../model"); //  0404
-const Opts = require("../utils/seq_findOpts"); //  0404
-const User = require("../server/user"); //  0404
-
-//  --------------------------------------------
-const C_IdolFans = require("./idolFans");
-const C_ArticleReader = require("./articleReader");
-const { ENV } = require("../config");
-const { cache } = require("ejs");
-
-async function findOthersInSomeBlogAndPid({
-  commenter_id,
-  p_id,
-  blog_id,
-  createdAt,
-}) {
-  //  [ { id, nickname, email, comments: [id, ...] }, ... ]
-  let commenters = await User.readUsers(
-    Opts.USER.findOthersInSomeBlogAndPid({
-      commenter_id,
-      p_id,
-      blog_id,
-      createdAt,
-    })
-  );
-  return new SuccModel({ data: commenters });
-}
-
-// ----------------------------------------------------------------------------------------------
 
 /** 確認信箱是否已被註冊
  * @param {string} email 信箱
@@ -69,7 +44,9 @@ async function register({ email, password }) {
   if (resModel.errno) {
     return resModel;
   }
-  const data = await User.create(Opts.USER.CREATE.one({ email, password }));
+  const data = await User.create(
+    Opts.USER.CREATE.one({ email, password: hash(password) })
+  );
   return new SuccModel({ data });
 }
 /** 登入 user
@@ -83,7 +60,9 @@ async function login({ email, password }) {
   } else if (!password) {
     return new ErrModel(ErrRes.USER.READ.NO_PASSWORD);
   }
-  const data = await User.read(Opts.USER.FIND.login({ email, password }));
+  const data = await User.read(
+    Opts.USER.FIND.login({ email, password: hash(password) })
+  );
   if (!data) {
     return new ErrModel(ErrRes.USER.READ.LOGIN_FAIL);
   }
@@ -91,18 +70,10 @@ async function login({ email, password }) {
 }
 async function findDataForUserPage({ cache, user_id }) {
   if (cache.exist === STATUS.NO_CACHE) {
-    return await findInfoForUserPage(user_id);
+    return await _findInfoForUserPage(user_id);
   } else {
     return new SuccModel({ data: cache.data });
   }
-}
-
-async function findInfoForUserPage(userId) {
-  let resModel = await _findRelationship(userId);
-  let { currentUser, fansList, idolList } = resModel.data;
-  let { data: blogs } = await C_Blog.findListForUserPage(userId);
-  let data = { currentUser, relationShip: { fansList, idolList }, blogs };
-  return new SuccModel({ data });
 }
 
 async function findFansList(idol_id) {
@@ -174,15 +145,20 @@ async function modifyInfo({ _origin, ...newData }) {
   let { id: user_id } = _origin;
   //  測試舊密碼是否正確
   if (newData.hasOwnProperty("password")) {
-    let { errno } = await login(_origin.email, newData.origin_password);
+    let { errno } = await login({
+      email: _origin.email,
+      password: newData.origin_password,
+    });
     if (errno) {
       throw new MyErr(ErrRes.USER.UPDATE.ORIGIN_PASSWORD_ERR);
     }
+    newData.password = hash(newData.password);
+    delete newData.origin_password;
+    delete newData.password_again;
   }
   await User.update(user_id, newData);
   let data = await find(user_id);
   let opts = { data };
-  //
   if (process.env.NODE_ENV !== "nocache") {
     //  更新數據，不是新增數據
     let cache = {
@@ -249,12 +225,9 @@ module.exports = {
   follow,
   findFansList,
   findDataForUserPage,
-  // findInfoForUserPage,
   login,
   register,
   isEmailExist,
-  //  ------------------------------
-  findOthersInSomeBlogAndPid,
 };
 
 //  尋找曾留言過的文章
@@ -267,6 +240,13 @@ async function _findBlogListHasCommented(user_id) {
     return acc;
   }, new Set());
   return [...set_blogs];
+}
+async function _findInfoForUserPage(userId) {
+  let resModel = await _findRelationship(userId);
+  let { currentUser, fansList, idolList } = resModel.data;
+  let { data: blogs } = await C_Blog.findListForUserPage(userId);
+  let data = { currentUser, relationShip: { fansList, idolList }, blogs };
+  return new SuccModel({ data });
 }
 //  尋找user的文章列表
 async function _findBlogList(user_id) {

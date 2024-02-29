@@ -2,9 +2,8 @@
  * @description Server User
  */
 const { ErrRes, MyErr } = require("../model");
-const { hash } = require("../utils/crypto");
-const { User } = require("../db/mysql/model"); //  0404
-const Init = require("../utils/init"); //  040444
+const { User } = require("../db/mysql/model");
+const Init = require("../utils/init");
 
 //  更新user數據
 async function update(id, data) {
@@ -17,8 +16,6 @@ async function update(id, data) {
   }
   return row;
 }
-
-// ----------------------------------------------------------------------
 /** 查找 User 資料
  * @param {{ id: number, email: string, password: string }} param0
  * @param {number} param0.id - user id
@@ -40,25 +37,24 @@ async function create(data) {
   try {
     const user = await User.create(data);
     return Init.user(user);
-  } catch (err) {
-    throw MyErr({ ...ErrRes.USER.CREATE, err });
+  } catch (error) {
+    throw MyErr({ ...ErrRes.USER.CREATE, error });
   }
 }
 async function createIdol({ idol_id, fans_id }) {
   let fans = await User.findByPk(fans_id);
   //  IdolFans Model instance
-  let res = await fans.addIdol(idol_id);
-  return res;
+  return await fans.addIdol(idol_id);
 }
 async function readList(opts) {
   let users = await User.findAll(opts);
   return Init.user(users);
 }
+
 module.exports = {
+  update,
   readList,
   createIdol,
   create,
   read,
-  //  ------------------------------------
-  update,
 };

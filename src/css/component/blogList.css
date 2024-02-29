@@ -1,0 +1,40 @@
+@import "./pagination.css";
+
+/* blogList */
+.blogList {
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  margin-bottom: 0.5rem;
+}
+
+.blogList > .card-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.blogList > .card-header > h5 {
+  margin: 0;
+}
+
+.blogList > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+li[data-page] {
+  border-top: 0px !important;
+  border-bottom: 0px !important;
+}
+
+li[data-page] .invisible::after {
+  content: "&#160;";
+}
+
+/* pagination */
+ul[data-pagination] > .page-item > .page-link {
+  border-radius: 0;
+}
+
+.timestamp {
+  font-size: 0.8rem;
+}

@@ -8,38 +8,37 @@
   <main class="container-md" style="display: none;">
     <!-- 使用者資訊 + 文章列表 -->
     <div class="row">
-      <div class="col-md-8">
+      <div class="col-lg-8">
         <!-- User container -->
-        <div class="userInfo">
-          <div class="card">
-            <div class="row align-items-center justify-content-center">
-              <div class="col-sm-4">
-                <div class="avatar-box">
-                  <div class="ratio ratio-1x1">
-                    <img src="<%= currentUser.avatar %>" class="img-fluid" alt="...">
-                  </div>
-                  <% if(!isSelf){ %>
-                  <button id="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
-                  <button id="follow" type="button" class="btn btn-success btn-sm follow">追蹤</button>
-                  <% } %>
+        <div id="user-info" class="card">
+          <div class="row align-items-center justify-content-center">
+            <div class="col-sm-4">
+              <div class="avatar-box">
+                <div class="ratio ratio-1x1">
+                  <img src="<%= currentUser.avatar %>" class="img-fluid" alt="...">
                 </div>
-
               </div>
-              <div class="col-sm-8">
-                <div class="card-body">
-                  <h5 class="card-title">主要資料</h5>
-                  <hr>
-                  <p>信箱： <%= currentUser.email %>
-                  </p>
-                  <p>暱稱： <%= currentUser.nickname %>
-                  </p>
-                </div>
+              <% if(!isSelf){ %>
+              <div class="text-center mb-3">
+                <button id="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
+                <button id="follow" type="button" class="btn btn-success btn-sm follow">追蹤</button>
+              </div>
+              <% } %>
+            </div>
+            <div class="col-sm-8">
+              <div class="card-body">
+                <h5 class="card-title">主要資料</h5>
+                <hr>
+                <p>信箱： <%= currentUser.email %>
+                </p>
+                <p>暱稱： <%= currentUser.nickname %>
+                </p>
               </div>
             </div>
           </div>
         </div>
         <!-- Blog container -->
-        <div class="blogs-container">
+        <div id="blog-info">
           <!-- create Blog Modal -->
           <% if(isSelf){ %>
           <!-- Button for Modal -->
@@ -70,9 +69,11 @@
           <%- include('components/blog_card') %>
         </div>
       </div>
-      <hr class="d-md-none">
-      <div class="col-md-4">
-        <%- include('components/relationship_list') %>
+
+      <div class="col-lg-4">
+        <div id="follow-info">
+          <%- include('components/relationship_list') %>
+        </div>
       </div>
     </div>
     <!-- EJS DATA -->

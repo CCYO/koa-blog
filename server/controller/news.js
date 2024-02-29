@@ -1,34 +1,12 @@
 //  0430
-const { SuccModel, ErrRes, MyErr } = require("../model");
-//  0430
-const {
-  DEFAULT: { QUERY_NEWS },
-} = require("../config");
+const { SuccModel } = require("../model");
+
 /**
  * @description Controller news相關
  */
 //  0426
 const News = require("../server/news");
 
-//  0430
-async function confirm({ type, id }) {
-  let row = await News.update(type, id, { confirm: true });
-  if (row !== 1) {
-    let TABLE = getTableName(type);
-    throw new MyErr(ErrRes[TABLE].UPDATE.CONFIRM);
-  }
-  return new SuccModel();
-  function getTableName(type) {
-    switch (type) {
-      case QUERY_NEWS.TYPE.IDOL_FANS:
-        return "IDOL_FANS";
-      case QUERY_NEWS.TYPE.ARTICLE_READER:
-        return "ARTICLE_READER";
-      case QUERY_NEWS.TYPE.MSG_RECEIVER:
-        return "MSG_RECEIVER";
-    }
-  }
-}
 //  -------------------------------------------------------------------------------------------
 async function readMore({ user_id, excepts }) {
   /*
@@ -56,6 +34,5 @@ async function readMore({ user_id, excepts }) {
 }
 
 module.exports = {
-  confirm,
   readMore,
 };

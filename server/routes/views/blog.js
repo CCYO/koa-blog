@@ -4,8 +4,7 @@
 
 const router = require("koa-router")();
 const {
-  VIEWS: { CHECK, NEWS },
-  GEN_CACHE_FN,
+  VIEWS: { CHECK },
 } = require("../../middleware");
 const Blog = require("../../controller/blog");
 const {
@@ -14,11 +13,11 @@ const {
   },
 } = require("../../config");
 const ejs_template = require("../../utils/ejs_template");
-const privateCache = GEN_CACHE_FN.private(TYPE.PAGE.BLOG);
-const commonCache = GEN_CACHE_FN.common(TYPE.PAGE.BLOG);
+const privateCache = CHECK.private(TYPE.PAGE.BLOG);
+const commonCache = CHECK.common(TYPE.PAGE.BLOG);
 
 //  preview blog page
-router.get("/blog/preview/:id", CHECK.login, privateCache, async (ctx) => {
+router.get("/blog/preview/:id", privateCache, async (ctx) => {
   let opts = {
     //  來自 privateCache
     cache: ctx.cache,
@@ -39,7 +38,7 @@ router.get("/blog/preview/:id", CHECK.login, privateCache, async (ctx) => {
   }
 });
 //  blog editor pge
-router.get("/blog/edit/:id", CHECK.login, privateCache, async (ctx, next) => {
+router.get("/blog/edit/:id", privateCache, async (ctx, next) => {
   let opts = {
     //  來自 privateCache
     cache: ctx.cache,
@@ -58,7 +57,7 @@ router.get("/blog/edit/:id", CHECK.login, privateCache, async (ctx, next) => {
   }
 });
 //  blog page
-router.get("/blog/:id", NEWS.confirm, commonCache, async (ctx) => {
+router.get("/blog/:id", commonCache, async (ctx) => {
   let opts = {
     //  來自 privateCache
     cache: ctx.cache,

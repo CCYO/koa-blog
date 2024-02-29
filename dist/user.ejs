@@ -79,38 +79,37 @@
   <main class="container-md" style="display: none;">
     <!-- 使用者資訊 + 文章列表 -->
     <div class="row">
-      <div class="col-md-8">
+      <div class="col-lg-8">
         <!-- User container -->
-        <div class="userInfo">
-          <div class="card">
-            <div class="row align-items-center justify-content-center">
-              <div class="col-sm-4">
-                <div class="avatar-box">
-                  <div class="ratio ratio-1x1">
-                    <img src="<%= currentUser.avatar %>" class="img-fluid" alt="...">
-                  </div>
-                  <% if(!isSelf){ %>
-                  <button id="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
-                  <button id="follow" type="button" class="btn btn-success btn-sm follow">追蹤</button>
-                  <% } %>
+        <div id="user-info" class="card">
+          <div class="row align-items-center justify-content-center">
+            <div class="col-sm-4">
+              <div class="avatar-box">
+                <div class="ratio ratio-1x1">
+                  <img src="<%= currentUser.avatar %>" class="img-fluid" alt="...">
                 </div>
-
               </div>
-              <div class="col-sm-8">
-                <div class="card-body">
-                  <h5 class="card-title">主要資料</h5>
-                  <hr>
-                  <p>信箱： <%= currentUser.email %>
-                  </p>
-                  <p>暱稱： <%= currentUser.nickname %>
-                  </p>
-                </div>
+              <% if(!isSelf){ %>
+              <div class="text-center mb-3">
+                <button id="cancelFollow" type="button" class="btn btn-danger btn-sm follow">取消追蹤</button>
+                <button id="follow" type="button" class="btn btn-success btn-sm follow">追蹤</button>
+              </div>
+              <% } %>
+            </div>
+            <div class="col-sm-8">
+              <div class="card-body">
+                <h5 class="card-title">主要資料</h5>
+                <hr>
+                <p>信箱： <%= currentUser.email %>
+                </p>
+                <p>暱稱： <%= currentUser.nickname %>
+                </p>
               </div>
             </div>
           </div>
         </div>
         <!-- Blog container -->
-        <div class="blogs-container">
+        <div id="blog-info">
           <!-- create Blog Modal -->
           <% if(isSelf){ %>
           <!-- Button for Modal -->
@@ -145,8 +144,8 @@
 <% if(!isSelf && !isPublic){ continue }%>
 <% let blogData = blogs[status] %>
 
-<div class="card blogList bg-light" data-<%= G_PAGE.DATASET.KEY.BLOG_STATUS %>="<%= status %>">
-  <div class="card-header blogList-header align-items-center">
+<div class="blogList card bg-light" data-<%= G_PAGE.DATASET.KEY.BLOG_STATUS %>="<%= status %>">
+  <div class="card-header align-items-center">
     <h5><%= isPublic ? '公開的BLOG' : '編輯中的BLOG' %></h5>
     <% if(isSelf && blogData.count) { %>
     <button type="button" class="btn btn-sm btn-outline-danger" data-<%= G_PAGE.DATASET.KEY.REMOVE_BLOG %>="<%= G_PAGE.DATASET.VALUE.REMOVE_BLOG_LIST %>">全部刪除</button>
@@ -203,15 +202,18 @@
 <% } %>
         </div>
       </div>
-      <hr class="d-md-none">
-      <div class="col-md-4">
-        <% for( type in relationShip){ %>
+
+      <div class="col-lg-4">
+        <div id="follow-info">
+          <% for( type in relationShip){ %>
 <% let list = relationShip[type] %>
-<div class="relationShip-box">
-  <h3><%= type === "fansList" ? "粉絲" : "偶像" %>列表</h3>
-  <div id=<%= type %> class="relationShip-list-box">
+<div class="card">
+  <div class="card-header">
+    <h5><%= type === "fansList" ? "粉絲" : "偶像" %>列表</h5>
+  </div>
+  <div id=<%= type %> class="card-body">
     <% if(list.length) {%>
-    <ul>
+    <ul class="list-group list-group-horizontal">
       <% list.forEach( user => { %>
       <%- ejs_template.relationship_item({ user }) %>
       <% }) %>
@@ -222,6 +224,7 @@
   </div>
 </div>
 <% } %>
+        </div>
       </div>
     </div>
     <!-- EJS DATA -->

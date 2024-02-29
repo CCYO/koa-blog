@@ -9,15 +9,7 @@ const {
 
 //  0411
 const { Op } = require("sequelize");
-const {
-  //  0409
-  Img,
-  //  0409
-  BlogImg,
-  //  0409
-  BlogImgAlt,
-  Comment,
-} = require("../db/mysql/model");
+const { BlogImg, Comment } = require("../db/mysql/model");
 
 module.exports = {
   COMMENT: {
@@ -288,27 +280,6 @@ module.exports = {
     ...FOLLOW,
   },
   USER: {
-    findOthersInSomeBlogAndPid: ({
-      commenter_id,
-      p_id,
-      blog_id,
-      createdAt,
-    }) => {
-      p_id = p_id ? p_id : 0;
-      return {
-        attributes: ["id", "email", "nickname"],
-        where: { id: { [Op.not]: commenter_id } },
-        include: {
-          model: Comment,
-          attributes: ["id"],
-          where: {
-            p_id,
-            blog_id,
-            createdAt: { [Op.gt]: createdAt },
-          },
-        },
-      };
-    },
     findArticleReaderByIdolFans: ({ idolId, fansId }) => ({
       attributes: ["id"],
       where: { id: idolId },

@@ -1,10 +1,12 @@
 <%% for( type in relationShip){ %>
 <%% let list = relationShip[type] %>
-<div class="relationShip-box">
-  <h3><%%= type === "fansList" ? "粉絲" : "偶像" %>列表</h3>
-  <div id=<%%= type %> class="relationShip-list-box">
+<div class="card">
+  <div class="card-header">
+    <h5><%%= type === "fansList" ? "粉絲" : "偶像" %>列表</h5>
+  </div>
+  <div id=<%%= type %> class="card-body">
     <%% if(list.length) {%>
-    <ul>
+    <ul class="list-group list-group-horizontal">
       <%% list.forEach( user => { %>
       <%%- ejs_template.relationship_item({ user }) %>
       <%% }) %>

@@ -3,12 +3,12 @@
   <ul class="list-group list-group-flush">
     <%% blogs.forEach( ( {id, author_id, title, time } ) => { %>
     <li data-<%%= G_PAGE.DATASET.KEY.BLOG_ID %>="<%%= id %>" class="list-group-item list-group-item-action list-group-item-info d-flex align-items-center justify-content-between">
-      <div class="text-truncate me-3">
+      <div class="a-truncate me-3">
         <a class="stretched-link" href="/blog/<%%= isPublic ? id : `preview/${id}` %>">
           <%%= title %>
         </a>
       </div>
-      <div class="d-none d-sm-block">
+      <div class="d-none d-sm-block text-truncate">
         <span class="timestamp"><%%= isPublic ? '發布時間' : '上一次編輯時間' %><%%= time %></span>
       </div>
       <%% if(isSelf){ %>
@@ -24,9 +24,7 @@
     <%% if(blogs.length < 5) {%>
     <%% for(let i=5 - blogs.length; i> 0; i-- ){ %>
     <li class="list-group-item list-group-item-info d-flex align-items-center justify-content-between">
-      <div class="text-truncate me-3">
-        <span class="invisible">x</span>
-      </div>
+      <div class="invisible me-3"></div>
       <%% if(isSelf){ %>
       <div class="flex-shrink-0 invisible">
         <a class='btn btn-outline-primary btn-sm'>編輯</a>

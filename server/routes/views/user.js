@@ -2,21 +2,20 @@
  * @description Router/Views user
  */
 const {
-  VIEWS: { CHECK, NEWS },
-  GEN_CACHE_FN,
+  VIEWS: { CHECK },
 } = require("../../middleware");
 const User = require("../../controller/user");
 const ejs_template = require("../../utils/ejs_template");
 const {
   DEFAULT: {
     BLOG,
-    CACHE: { TYPE, STATUS },
+    CACHE: { TYPE },
   },
 } = require("../../config");
 
 const router = require("koa-router")();
-const privateCache = GEN_CACHE_FN.private(TYPE.PAGE.USER);
-const commonCache = GEN_CACHE_FN.common(TYPE.PAGE.USER);
+const privateCache = CHECK.private(TYPE.PAGE.USER);
+const commonCache = CHECK.common(TYPE.PAGE.USER);
 
 //  register page
 router.get("/register", CHECK.skipLogin, async (ctx) => {
@@ -57,41 +56,35 @@ router.get("/self", CHECK.login, privateCache, async (ctx, next) => {
   });
 });
 //  他人頁
-router.get(
-  "/other/:id",
-  CHECK.isSelf,
-  NEWS.confirm,
-  commonCache,
-  async (ctx) => {
-    //  從 middleware 取得的緩存數據 ctx.cache[PAGE.USER]
-    /**
-     * {
-     ** exist: 提取緩存數據的結果 ,
-     ** data: { currentUser, fansList, idolList, blogList } || undefined
-     * }
-     */
-    // cache = { exist: STATUS.NO_CACHE, data: undefined };
+router.get("/other/:id", CHECK.isSelf, commonCache, async (ctx) => {
+  //  從 middleware 取得的緩存數據 ctx.cache[PAGE.USER]
+  /**
+   * {
+   ** exist: 提取緩存數據的結果 ,
+   ** data: { currentUser, fansList, idolList, blogList } || undefined
+   * }
+   */
+  // cache = { exist: STATUS.NO_CACHE, data: undefined };
 
-    let opts = {
-      cache: ctx.cache,
-      user_id: ctx.params.id * 1,
-    };
-    let { data } = await User.findDataForUserPage(opts);
-    //  將 DB 數據賦予給 ctx.cache
-    let { currentUser, relationShip, blogs } = (ctx.cache.data = data);
-    //  非文章作者，所以不傳入未公開的文章
-    blogs = { public: blogs.public };
-    await ctx.render("user", {
-      ejs_template,
-      pagination: BLOG.PAGINATION,
-      isSelf: false,
-      title: `${currentUser.nickname}的主頁`,
-      currentUser,
-      blogs,
-      relationShip,
-    });
-  }
-);
+  let opts = {
+    cache: ctx.cache,
+    user_id: ctx.params.id * 1,
+  };
+  let { data } = await User.findDataForUserPage(opts);
+  //  將 DB 數據賦予給 ctx.cache
+  let { currentUser, relationShip, blogs } = (ctx.cache.data = data);
+  //  非文章作者，所以不傳入未公開的文章
+  blogs = { public: blogs.public };
+  await ctx.render("user", {
+    ejs_template,
+    pagination: BLOG.PAGINATION,
+    isSelf: false,
+    title: `${currentUser.nickname}的主頁`,
+    currentUser,
+    blogs,
+    relationShip,
+  });
+});
 //  設置頁
 router.get("/setting", CHECK.login, async (ctx, next) => {
   let currentUser = ctx.session.user;

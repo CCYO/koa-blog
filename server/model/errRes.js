@@ -2,7 +2,6 @@ let {
   ARTICLE_READER,
   IDOL_FANS,
   SERVER,
-  CACHE,
   NEWS,
   USER,
   BLOG,

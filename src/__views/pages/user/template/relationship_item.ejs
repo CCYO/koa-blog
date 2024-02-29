@@ -1,9 +1,9 @@
 <% let G_PAGE = JSON.parse(--CONS.PAGE.USER--) %>
-<li class="card" data-<%= G_PAGE.DATASET.KEY.USER_ID %>="<%= user.id %>">
+<li class="list-group-item" data-<%= G_PAGE.DATASET.KEY.USER_ID %>="<%= user.id %>">
   <div class="ratio ratio-1x1">
-    <img src="<%= user.avatar %>" class="card-img-top" alt="">
+    <img src="<%= user.avatar %>" alt="">
   </div>
-  <div class="text-truncate">
+  <div class="a-truncate">
     <a href="/other/<%= user.id %>" class="stretched-link">
       <%= user.nickname %>
     </a>

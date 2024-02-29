@@ -2,7 +2,7 @@ const { ENV } = require("../../config");
 const { ErrModel, ErrRes } = require("../../model");
 
 const router = require("koa-router")();
-
+//  預判過的錯誤
 router.get("/permission/:errno", async (ctx) => {
   let opts = {};
   switch (ctx.params.errno * 1) {
@@ -29,14 +29,12 @@ router.get("/permission/:errno", async (ctx) => {
   }
   await ctx.render("page404", opts);
 });
-
+//  意料外的錯誤
 router.get("/serverError", async (ctx) => {
   let opts = {
     title: "serverError",
     errModel: new ErrModel(ErrRes.SERVER.ERR_500),
   };
-  ctx.request.query.hasOwnProperty;
-  ctx.query.hasOwnProperty;
   if (!ENV.isProd && ctx.query.serverError) {
     let { serverError } = ctx.query;
     serverError = JSON.parse(decodeURIComponent(serverError));

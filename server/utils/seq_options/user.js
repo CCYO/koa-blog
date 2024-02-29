@@ -1,11 +1,10 @@
 const { Op } = require("sequelize");
 const { Blog } = require("../../db/mysql/model");
-const { hash } = require("../crypto");
 
 const CREATE = {
   one: ({ email, password }) => ({
     email,
-    password: hash(password),
+    password,
   }),
 };
 
@@ -99,7 +98,7 @@ const FIND = {
     attributes: ["id", "email", "nickname", "age", "avatar", "avatar_hash"],
     where: {
       email,
-      password: hash(password),
+      password,
     },
   }),
   email: (email) => ({

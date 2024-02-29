@@ -1,55 +1,15 @@
-const { MyErr } = require("../model");
+const { QueryTypes } = require("sequelize");
+const moment = require("moment");
+const { seq } = require("../db/mysql/model");
 const C_Comment = require("../controller/comment");
 const C_Blog = require("../controller/blog");
 const C_User = require("../controller/user");
-const moment = require("moment");
-const { QueryTypes } = require("sequelize");
-const { seq } = require("../db/mysql/model");
+const { MyErr } = require("../model");
 const {
   DEFAULT: { QUERY_NEWS },
 } = require("../config");
 
-async function countNewsTotalAndUnconfirm({ user_id, options }) {
-  let { markTime, fromFront } = options;
-
-  let select = !fromFront
-    ? `SELECT COUNT(if(confirm < 1, true, null))`
-    : `SELECT COUNT(if(DATE_FORMAT('${markTime}', '%Y-%m-%d %T') < DATE_FORMAT(createdAt, '%Y-%m-%d %T'), true, null)) `;
-
-  let query = `
-    ${select} as numOfUnconfirm, COUNT(*) as total
-    FROM (
-        SELECT 1 as type, id, confirm, createdAt
-        FROM FollowPeople
-        WHERE
-            idol_id=${user_id} 
-
-        UNION
-
-        SELECT 2 as type, id, confirm, createdAt
-        FROM FollowBlogs
-        WHERE 
-            follower_id=${user_id}
-            AND deletedAt IS NULL 
-
-        UNION
-
-        SELECT 3 as type, id, confirm, updatedAt
-        FROM FollowComments
-        WHERE
-            follower_id=${user_id}
-    ) AS X
-    `;
-  let [{ numOfUnconfirm, total }] = await seq.query(query, {
-    type: QueryTypes.SELECT,
-  });
-
-  return { numOfUnconfirm, total };
-}
-
-//  ---------------------------------------------------------------------------------------
 async function readNews({ user_id, excepts }) {
-  let query = _queryString.newsList(user_id, excepts);
   /*
     {
         unconfirm: [
@@ -59,96 +19,93 @@ async function readNews({ user_id, excepts }) {
         ... ],
         confirm: [...] 
     }*/
-  let newsList = await seq.query(query, { type: QueryTypes.SELECT });
-  return await _initNews(newsList);
-}
-
-async function count(user_id) {
-  let query = _queryString.count(user_id);
-  let [{ unconfirm, confirm, total }] = await seq.query(query, {
+  let newsList = await seq.query(_genQuery(user_id, excepts), {
     type: QueryTypes.SELECT,
   });
-  return { unconfirm, confirm, total };
-}
+  return await _initNews(newsList);
 
-module.exports = {
-  countNewsTotalAndUnconfirm,
-  //  --------------------------------------------------------------------------------------------
-  count,
-  readNews,
-};
+  function _genQuery(user_id, excepts) {
+    let list = { idolFans: "", articleReader: "", msgReceiver: "" };
 
-function _newsList(user_id, excepts) {
-  let list = { idolFans: "", articleReader: "", msgReceiver: "" };
-
-  for (key in list) {
-    list[key] =
-      (excepts[key].length && ` AND id NOT IN (${excepts[key].join(",")})`) ||
-      "";
-  }
-  return `
-  SELECT type, id, target_id, follow_id, confirm, createdAt
-  FROM (
-      SELECT ${QUERY_NEWS.TYPE.IDOL_FANS} as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt
-      FROM IdolFans
-      WHERE 
-          idol_id=${user_id}
-          ${list.idolFans}
-
-      UNION
-
-      SELECT ${QUERY_NEWS.TYPE.ARTICLE_READER} as type, id, article_id as target_id, reader_id as follow_id, confirm, createdAt 
-      FROM ArticleReaders
-      WHERE 
-          reader_id=${user_id}
-          AND deletedAt IS NULL
-          ${list.articleReader}
-
-      UNION
-
-      SELECT ${QUERY_NEWS.TYPE.MSG_RECEIVER} as type, id, msg_id as target_id, receiver_id as follow_id, confirm, createdAt 
-      FROM MsgReceivers
-      WHERE 
-          receiver_id=${user_id}
-          AND deletedAt IS NULL
-          ${list.msgReceiver}
-
-  ) AS X
-  ORDER BY confirm=1, createdAt DESC
-  LIMIT ${QUERY_NEWS.LIMIT}
-  `;
-}
-function _count(user_id) {
-  return `
-    SELECT
-        COUNT(if(confirm < 1, true, null)) as unconfirm, 
-        COUNT(if(confirm = 1, true, null)) as confirm, 
-        COUNT(*) as total
+    for (key in list) {
+      list[key] =
+        (excepts[key].length && ` AND id NOT IN (${excepts[key].join(",")})`) ||
+        "";
+    }
+    return `
+    SELECT type, id, target_id, follow_id, confirm, createdAt
     FROM (
-        SELECT ${QUERY_NEWS.TYPE.IDOL_FANS} as type, id, confirm
+        SELECT ${QUERY_NEWS.TYPE.IDOL_FANS} as type, id , idol_id as target_id , fans_id as follow_id, confirm, createdAt
         FROM IdolFans
-        WHERE
-            idol_id=${user_id} 
+        WHERE 
+            idol_id=${user_id}
+            ${list.idolFans}
+  
         UNION
-
-        SELECT ${QUERY_NEWS.TYPE.ARTICLE_READER} as type, id, confirm
+  
+        SELECT ${QUERY_NEWS.TYPE.ARTICLE_READER} as type, id, article_id as target_id, reader_id as follow_id, confirm, createdAt 
         FROM ArticleReaders
         WHERE 
             reader_id=${user_id}
-            AND deletedAt IS NULL 
+            AND deletedAt IS NULL
+            ${list.articleReader}
+  
         UNION
-
-        SELECT ${QUERY_NEWS.TYPE.MSG_RECEIVER} as type, id, confirm
+  
+        SELECT ${QUERY_NEWS.TYPE.MSG_RECEIVER} as type, id, msg_id as target_id, receiver_id as follow_id, confirm, createdAt 
         FROM MsgReceivers
-        WHERE
+        WHERE 
             receiver_id=${user_id}
-            AND deletedAt IS NULL 
-    ) AS X
+            AND deletedAt IS NULL
+            ${list.msgReceiver}
+  
+    ) AS DUAL
+    ORDER BY confirm, createdAt DESC
+    LIMIT ${QUERY_NEWS.LIMIT}
     `;
+  }
 }
-const _queryString = {
-  count: _count,
-  newsList: _newsList,
+
+async function count(user_id) {
+  let [{ unconfirm, confirm, total }] = await seq.query(_genQuery(user_id), {
+    type: QueryTypes.SELECT,
+  });
+  return { unconfirm, confirm, total };
+
+  function _genQuery(user_id) {
+    return `
+      SELECT
+          COUNT(if(confirm < 1, true, null)) as unconfirm, 
+          COUNT(if(confirm = 1, true, null)) as confirm, 
+          COUNT(*) as total
+      FROM (
+          SELECT ${QUERY_NEWS.TYPE.IDOL_FANS} as type, id, confirm
+          FROM IdolFans
+          WHERE
+              idol_id=${user_id} 
+              AND deletedAt IS NULL 
+          UNION
+  
+          SELECT ${QUERY_NEWS.TYPE.ARTICLE_READER} as type, id, confirm
+          FROM ArticleReaders
+          WHERE 
+              reader_id=${user_id}
+              AND deletedAt IS NULL 
+          UNION
+  
+          SELECT ${QUERY_NEWS.TYPE.MSG_RECEIVER} as type, id, confirm
+          FROM MsgReceivers
+          WHERE
+              receiver_id=${user_id}
+              AND deletedAt IS NULL 
+      ) AS DUAL
+      `;
+  }
+}
+
+module.exports = {
+  count,
+  readNews,
 };
 
 // ----------------------------------------------------------------------------------------

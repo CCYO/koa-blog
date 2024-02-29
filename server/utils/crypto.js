@@ -1,19 +1,18 @@
 /**
  * @description 加密
  */
-const crypto = require('crypto')    //  0404
-//  0404
+const crypto = require("crypto");
+//  針對STR MD5加密
 const hash = (data) => {
-    const md5 = crypto.createHash('md5')
-    return md5.update(data).digest('hex')
-}
-
+  const md5 = crypto.createHash("md5");
+  return md5.update(data).digest("hex");
+};
+//  針對OBJ MD5加密
 const hash_obj = (obj) => {
-    return hash(JSON.stringify(obj))
-}
+  return hash(JSON.stringify(obj));
+};
 
 module.exports = {
-    //  0404
-    hash, 
-    hash_obj
-}
+  hash,
+  hash_obj,
+};

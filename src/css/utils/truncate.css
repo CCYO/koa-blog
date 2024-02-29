@@ -1,0 +1,7 @@
+/* 沿用BS5的text-truncate，添加針對連結文字的color */
+.a-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #0d6efd;
+}

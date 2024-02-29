@@ -1,3 +1,6 @@
+/**
+ * @description Router/Views album
+ */
 let router = require("koa-router")();
 const {
   VIEWS: { CHECK },
@@ -8,11 +11,10 @@ const {
 } = require("../../config");
 router.prefix("/album");
 
-//  0411
+//  album list page
 router.get("/list", CHECK.login, async (ctx) => {
   let author = ctx.session.user;
-  let author_id = author.id;
-  let { data: album } = await Blog.findListForAlbumListPage(author_id);
+  let { data: album } = await Blog.findListForAlbumListPage(author.id);
   await ctx.render("albumList", {
     title: "文章照片列表",
     author,

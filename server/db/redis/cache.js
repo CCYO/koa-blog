@@ -1,10 +1,8 @@
 /**
  * @description redis methods: set & get
  */
-//  0501
+const redis = require("redis");
 const crypto = require("../../utils/crypto");
-//  0501
-//  0501
 const {
   DEFAULT: {
     CACHE: { TYPE },
@@ -12,10 +10,7 @@ const {
   DB,
 } = require("../../config");
 
-//  0501
-const redis = require("redis");
 const client = redis.createClient(DB.REDIS_CONF.port, DB.REDIS_CONF.host);
-
 client
   .on("connect", () => {
     console.log("@ Redis cache connect");
@@ -24,6 +19,7 @@ client
   .on("error", (e) => console.error("@ Redis cache error ==> \n", e));
 client.connect();
 
+//  處理 set 格式的緩存(此專案中，拿來系統紀錄user有無新通知)
 function _set(type) {
   const KEY = type;
   return { del, add, get, has };
@@ -54,7 +50,7 @@ function _set(type) {
     return new Set(arr);
   }
 }
-
+//  處理 obj 格式的緩存(此專案中，拿來記錄user與blog的頁面數據)
 function _obj(type) {
   return { get, set, has, del };
   async function del(list) {
@@ -80,9 +76,8 @@ function _obj(type) {
     return await Redis.get(KEY);
   }
 }
-//  0501
+//  輔助 redis 存取數據
 const Redis = {
-  //  0501
   async get(key) {
     let val = await client.get(key);
     if (val === null) {
@@ -94,7 +89,6 @@ const Redis = {
       return val;
     }
   },
-  //  0501
   async set(key, val, timeout = 60 * 60) {
     try {
       if (typeof val === "object") {
@@ -107,14 +101,15 @@ const Redis = {
       throw err;
     }
   },
-  //  0501
   async del(key) {
     await client.del(key);
     console.log(`@ 清除系統緩存 --> cache/${key}`);
     return true;
   },
 };
-
+/**
+ * @description 生成一個obj，具有可以直接針對Redis，進行指定緩存類型的存取方法
+ */
 function getCache(type) {
   if (type === TYPE.NEWS) {
     return _set(type);

@@ -4,8 +4,8 @@
 <% let pageCount = Math.ceil(blogCount / pagination.BLOG_COUNT) %>
 <% let paginationCount = Math.ceil(pageCount / pagination.PAGE_COUNT) %>
 
-<div class="card bg-light blogList" data-status="<%= status %>">
-  <div class="card-header blogList-header">
+<div class="blogList card bg-light" data-status="<%= status %>">
+  <div class="card-header">
     <h5><%= status === "public" ? "公開" : "編輯中" %>的文章相簿</h3>
   </div>
   <% if(blogCount){ %>
@@ -17,19 +17,23 @@
     <% let ul_close_tag = (index + 1) % pagination.BLOG_COUNT === 0 || index + 1 === blogCount %>
 
     <% if (ul_start_tag) { %>
-    <li class="blogList-page fade <%= index ? "" : "show" %>" data-page="<%= curPage %>" style="<%= index ? "display: none" : ""%>">
+    <li class="fade <%= index ? "" : "show" %>" data-page="<%= curPage %>" style="<%= index ? "display: none" : ""%>">
       <ul class="list-group list-group-flush">
         <% } %>
-        <li class="list-group-item list-group-item-info list-group-item-action ">
-          <a href="/album/<%= blog.id %>"><%= blog.title %></a>
-          <span>文章公開於 <%= blog.time %></span>
+        <li class="list-group-item list-group-item-info list-group-item-action d-flex align-items-center justify-content-between">
+          <div class="a-truncate me-3">
+            <a href="/album/<%= blog.id %>"><%= blog.title %></a>
+          </div>
+          <div class="text-truncate">
+            <span class="timestamp"><%= status === "public" ? '發布時間' : '上一次編輯時間' %><%= blog.time %></span>
+          </div>
         </li>
-        <!-- 假使 -->
+        <!-- 假使來到最後一個blog，判斷是否需要填補item -->
         <% if (index + 1 === blogCount ) { %>
         <% let n = pagination.BLOG_COUNT - ((index + 1) % pagination.BLOG_COUNT) %>
         <% for( let i = n; pagination.BLOG_COUNT > i; i++ ) { %>
-        <li class="list-group-item fill-item">
-          <a href="#" class="pe-none"></a>
+        <li class="list-group-item list-group-item-info">
+          <a href="#" class="pe-none invisible"></a>
         </li>
         <% } %>
         <% } %>

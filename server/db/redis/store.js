@@ -1,8 +1,6 @@
-// const redis = require("redis");
 const redisStore = require("koa-redis");
 const { DB } = require("../../config");
 
-// redis.createClient();
 const store = redisStore({
   port: DB.REDIS_CONF.port,
   host: DB.REDIS_CONF.host,
