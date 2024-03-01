@@ -1,51 +1,13 @@
-const {
-  DEFAULT: { CACHE },
-  ENV,
-} = require("../config"); //  0411
-const C_MsgReceiver = require("./msgReceiver"); //  0411
-const Init = require("../utils/init"); //  0404
-const { SuccModel, ErrModel, MyErr, ErrRes } = require("../model"); //  0404
-const Opts = require("../utils/seq_findOpts"); //  0404
-const Comment = require("../server/comment"); //  0404
+const Comment = require("../server/comment");
+const C_MsgReceiver = require("./msgReceiver");
 const initComment = require("../utils/init/comment");
-//  0303
-async function findArticlesOfCommented(commenter_id) {
-  let comments = await Comment.readList(
-    Opts.COMMENT.findArticlesOfCommented(commenter_id)
-  );
-  let data = comments.reduce(
-    (init, { id: comment_id, article_id }) => {
-      init.comments.push(comment_id);
-      init.articles.push(article_id);
-      return init;
-    },
-    { comments: [], articles: [] }
-  );
-  return new SuccModel({ data });
-}
-//  0425
-async function removeListForRemoveBlog(list) {
-  if (!list.length) {
-    throw new MyErr(ErrRes.COMMENT.DELETE.NOT_DATA);
-  }
-  let row = await Comment.deleteList(Opts.FOLLOW.removeList(list));
-  if (row !== list.legnth) {
-    return new MyErr(ErrRes.COMMENT.DELETE.ROW);
-  }
-  return new SuccModel();
-}
-
-//  0411
-async function findInfoForPageOfBlog(article_id) {
-  let comments = await Comment.readList(
-    Opts.COMMENT.findInfoForPageOfBlog(article_id)
-  );
-  let data = Init.browser.comment(comments);
-  return new SuccModel({ data });
-}
-
-//  --------------------------------------------------------------------------------------------------------------
-//  提供給前端，渲染newsItem的數據
+const {
+  ENV,
+  DEFAULT: { CACHE },
+} = require("../config");
+const Opts = require("../utils/seq_findOpts");
+const Init = require("../utils/init");
+const { SuccModel, ErrModel, MyErr, ErrRes } = require("../model"); //  0404
 
 async function add({ commenter_id, article_id, html, pid, author_id }) {
   //  創建 comment
@@ -326,6 +288,7 @@ async function remove({ user_id, comment_id }) {
     return container;
   }
 }
+//  提供給前端，渲染newsItem的數據
 async function findInfoForNews(comment_id) {
   let info = await Comment.read(Opts.COMMENT.FIND._wholeInfo(comment_id));
   if (!info) {
