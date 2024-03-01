@@ -119,8 +119,26 @@ const FIND = {
       },
     ],
   }),
+  _unconfirmListBeforeNews: ({ comment_id, pid, article_id, createdAt }) => ({
+    attributes: ["id"],
+    where: {
+      id: { [Op.not]: comment_id },
+      article_id,
+      pid: pid === 0 ? null : pid,
+      createdAt: { [Op.gte]: createdAt },
+    },
+    include: {
+      association: "commenter",
+      attributes: ["id", "email", "nickname"],
+    },
+  }),
 };
-
+const REMOVE = {
+  list: (id_list) => ({
+    where: { id: { [Op.in]: id_list } },
+  }),
+};
 module.exports = {
+  REMOVE,
   FIND,
 };

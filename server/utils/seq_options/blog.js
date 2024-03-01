@@ -194,6 +194,14 @@ const FIND = {
       },
     },
   }),
+  itemForNews: (id) => ({
+    attributes: ["id", "title", "show", "showAt"],
+    where: { id },
+    include: {
+      association: "author",
+      attributes: ["id", "email", "nickname"],
+    },
+  }),
 };
 module.exports = {
   REMOVE,

@@ -108,9 +108,8 @@ module.exports = {
   readNews,
 };
 
-// ----------------------------------------------------------------------------------------
 async function _initNews(newsList) {
-  let list = await Promise.all(newsList.map(findNews));
+  let list = await Promise.all(newsList.map(_findNews));
   //  分為 讀過/未讀過
   let res = list.reduce(
     (acc, news) => {
@@ -124,8 +123,8 @@ async function _initNews(newsList) {
     { unconfirm: [], confirm: [] }
   );
   return res;
-  //  0404
-  async function findNews(news) {
+
+  async function _findNews(news) {
     let { type, id, target_id, follow_id, confirm, createdAt } = news;
     //  序列化時間數據
     let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow();
@@ -134,18 +133,21 @@ async function _initNews(newsList) {
     if (type === QUERY_NEWS.TYPE.IDOL_FANS) {
       let resModel = await C_User.find(follow_id);
       if (resModel.errno) {
-        throw new MyErr(resModel);
+        throw new MyErr({ ...resModel, error: `user/${follow_id} 不存在` });
       }
       return { ...res, fans: resModel.data };
     } else if (type === QUERY_NEWS.TYPE.ARTICLE_READER) {
-      let resModel = await C_Blog.find(target_id);
+      let resModel = await C_Blog.findItemForNews(target_id);
       if (resModel.errno) {
-        throw new MyErr(resModel);
+        throw new MyErr({ ...resModel, error: `blog/${target_id} 不存在` });
       }
       return { ...res, blog: resModel.data };
     } else if (type === QUERY_NEWS.TYPE.MSG_RECEIVER) {
-      let { data: comment } = await C_Comment.findInfoForNews(target_id);
-      return { ...res, comment };
+      let resModel = await C_Comment.findInfoForNews(target_id);
+      if (resModel.errno) {
+        throw new MyErr({ ...resModel, error: `comment/${target_id} 不存在` });
+      }
+      return { ...res, comment: resModel.data };
     }
   }
 }

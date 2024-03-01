@@ -28,17 +28,7 @@ async function modifyList(datas) {
   return new SuccModel({ data: list });
 }
 //  0414
-async function forceRemoveList(list, transaction = undefined) {
-  let options = Opts.FOLLOW.forceRemove(list);
-  if (transaction) {
-    options.transaction = transaction;
-  }
-  let row = await MsgReceiver.deleteList(options);
-  if (list.length !== row) {
-    throw new MyErr(ErrRes.MSG_RECEIVER.DELETE.ROW);
-  }
-  return new SuccModel();
-}
+
 //  0414
 async function findList(msg_id) {
   let list = await MsgReceiver.readList(Opts.MSG_RECEIVER.findList(msg_id));
@@ -58,16 +48,21 @@ async function find(whereOps) {
 }
 //  -------------------------------------------------------------------------------
 async function addList(datas) {
-  if (!datas.length) {
-    throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.NO_DATA);
-  }
-
-  // let list = await MsgReceiver.updateList(datas, updateOnDuplicate);
   let list = await MsgReceiver.updateList(datas);
   if (list.length !== datas.length) {
     throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.ROW);
   }
   return new SuccModel({ data: list });
+}
+async function forceRemoveList(list) {
+  let row = await MsgReceiver.deleteList(Opts.FOLLOW.REMOVE.listByForce(list));
+  if (list.length !== row) {
+    throw new MyErr({
+      ...ErrRes.MSG_RECEIVER.REMOVE.ERR_ROW,
+      error: `要刪除的list為 ${list}`,
+    });
+  }
+  return new SuccModel();
 }
 async function modify(id, newData) {
   let row = await MsgReceiver.update(id, newData);
@@ -81,13 +76,14 @@ async function modify(id, newData) {
 }
 module.exports = {
   modify,
+  forceRemoveList,
   addList,
   //  ----------------------------------------
   removeList,
   //  0414
   modifyList,
   //  0414
-  forceRemoveList,
+
   //  0414
   findList,
   //  0411

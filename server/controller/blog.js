@@ -1,113 +1,16 @@
-//  0406
-async function public(blog_id) {
-  let blog = await Blog.read(Opts.BLOG.findInfoForShow(blog_id));
-  if (!blog) {
-    throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST);
-  }
-  let { author, readers, replys } = blog;
-  let author_id = author.id;
-  let fansList = new Set(author.fansList.map(({ id }) => id));
-  let followers = [...fansList];
-  let articleReaders = [];
-  for (let { id: reader_id, ArticleReader } of readers) {
-    if (fansList.has(reader_id)) {
-      fansList.delete(reader_id);
-      articleReaders.push({ ...ArticleReader, deletedAt: null });
-    }
-  }
-  for (let reader_id of [...fansList]) {
-    articleReaders.push({ reader_id, article_id: blog_id });
-  }
-  //  恢復軟刪除 + 新增
-  if (articleReaders.length) {
-    await C_ArticleReader.addList(articleReaders);
-  }
-  let msgReceivers = [];
-  for (let reply of replys) {
-    for (let { receiver_id, MsgReceiver } of reply.receivers) {
-      followers.push(receiver_id);
-      msgReceivers.push({ ...MsgReceiver, deletedAt: null });
-    }
-  }
-  //  恢復軟刪除
-  if (msgReceivers.length) {
-    await C_MsgReceiver.addList(msgReceivers);
-  }
-  let data = { author_id, followers };
-  return new SuccModel({ data });
-}
-//  0406
-async function private(blog_id, forDelete = false) {
-  let blog = await Blog.read(Opts.BLOG.findInfoForHidden(blog_id, forDelete));
-  if (!blog) {
-    throw new MyErr(ErrRes.BLOG.READ.NOT_EXIST);
-  }
-  let {
-    author: { id: author_id },
-    readers,
-    replys,
-  } = blog;
-  let followers = [];
-  let articleReaders = [];
-  for (let { id: reader_id, ArticleReader } of readers) {
-    followers.push(reader_id);
-    articleReaders.push(ArticleReader);
-  }
-  //  軟刪除 articleReaders
-  if (articleReaders.length) {
-    await C_ArticleReader.removeList(articleReaders);
-  }
-  let msgReceivers = [];
-  for (let reply of replys) {
-    for (let { id: receiver_id, MsgReceiver } of reply.receivers) {
-      followers.push(receiver_id);
-      msgReceivers.push(MsgReceiver);
-    }
-  }
-  //  軟刪除 msgReceivers
-  if (msgReceivers.length) {
-    await C_MsgReceiver.removeList(msgReceivers);
-  }
-  let data = {
-    author_id,
-    followers,
-    replys: replys.map(({ id: reply_id }) => reply_id),
-  };
-  return new SuccModel({ data });
-}
-
-//  0404
-async function find(blog_id) {
-  if (!blog_id) {
-    throw new MyErr(ErrRes.BLOG.READ.NO_DATA);
-  }
-  let data = await Blog.read(Opts.BLOG.find(blog_id));
-  if (!data) {
-    return new ErrModel(ErrRes.BLOG.READ.NOT_EXIST);
-  }
-  return new SuccModel({ data });
-}
-
-const C_MsgReceiver = require("./msgReceiver"); //  0426
-const C_Comment = require("./comment"); //  0425
-
-const C_ArticleReader = require("./articleReader"); //  0406
-
-const { MyErr, ErrRes, ErrModel, SuccModel } = require("../model"); //  0404
-const Init = require("../utils/init"); //  0404
-
-//  --------------------------------------------------------------------------------
-
-const Opts = require("../utils/seq_findOpts"); //  0404
+const Opts = require("../utils/seq_findOpts");
 const Blog = require("../server/blog");
 const my_xxs = require("../utils/xss");
-const { ENV } = require("../config");
-const {
-  DEFAULT: { BLOG, CACHE },
-} = require("../config");
 const C_Img = require("./img");
 const C_BlogImg = require("./blogImg");
 const C_BlogImgAlt = require("./blogImgAlt");
+const C_ArticleReader = require("./articleReader");
+const Init = require("../utils/init");
+const { MyErr, ErrRes, ErrModel, SuccModel } = require("../model");
+const {
+  ENV,
+  DEFAULT: { BLOG, CACHE },
+} = require("../config");
 //  查詢 blog 分頁列表數據
 async function findListForPagination({
   currentUser,
@@ -407,6 +310,19 @@ async function confirmNews({ reader_id, articleReader_id }) {
   let url = `/blog/${blog.id}`;
   return new SuccModel({ data: { url } });
 }
+async function findItemForNews(blog_id) {
+  if (!blog_id) {
+    throw new MyErr(ErrRes.BLOG.READ.NO_DATA);
+  }
+  let data = await Blog.read(Opts.BLOG.FIND.itemForNews(blog_id));
+  if (!data) {
+    throw new MyErr({
+      ...ErrRes.BLOG.READ.NOT_EXIST,
+      error: `blog/${blog_id} 不存在`,
+    });
+  }
+  return new SuccModel({ data });
+}
 module.exports = {
   confirmNews,
   findAlbum,
@@ -414,13 +330,13 @@ module.exports = {
   findListOfSquare,
   removeList,
   addImg,
-  find,
   add,
   modify,
   findInfoForCommonPage,
   findInfoForPrivatePage,
   findListForUserPage,
   findListForPagination,
+  findItemForNews,
 };
 async function _removeImgList({ blog_id, cancelImgs }) {
   //  cancelImgs [ { blogImg_id, blogImgAlt_list: [alt_id, ...] }, ...]

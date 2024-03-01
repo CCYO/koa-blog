@@ -241,10 +241,9 @@ async function _findBlogListHasCommented(user_id) {
   }, new Set());
   return [...set_blogs];
 }
-async function _findInfoForUserPage(userId) {
-  let resModel = await _findRelationship(userId);
-  let { currentUser, fansList, idolList } = resModel.data;
-  let { data: blogs } = await C_Blog.findListForUserPage(userId);
+async function _findInfoForUserPage(user_id) {
+  let { currentUser, fansList, idolList } = await _findRelationship(user_id);
+  let { data: blogs } = await C_Blog.findListForUserPage(user_id);
   let data = { currentUser, relationShip: { fansList, idolList }, blogs };
   return new SuccModel({ data });
 }

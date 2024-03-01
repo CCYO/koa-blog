@@ -21,24 +21,7 @@ module.exports = {
       },
     }),
     //  0423
-    _findUnconfirmListBeforeNews: ({
-      comment_id,
-      pid,
-      article_id,
-      createdAt,
-    }) => ({
-      attributes: ["id"],
-      where: {
-        id: { [Op.not]: comment_id },
-        article_id,
-        pid: pid === 0 ? null : pid,
-        createdAt: { [Op.gte]: createdAt },
-      },
-      include: {
-        association: "commenter",
-        attributes: ["id", "email", "nickname"],
-      },
-    }),
+
     //  0414
     _findLastItemOfPidAndNotSelf: (article_id, commenter_id, time, pid) => ({
       attributes: [
@@ -246,15 +229,6 @@ module.exports = {
         },
       ],
     }),
-    //  0404
-    find: (id) => ({
-      attributes: ["id", "title", "html", "show", "showAt", "updatedAt"],
-      where: { id },
-      include: {
-        association: "author",
-        attributes: ["id", "email", "nickname"],
-      },
-    }),
     find_id_List_by_author: (author_id) => ({
       attributes: ["id"],
       where: { author_id },
@@ -268,10 +242,7 @@ module.exports = {
   //  0406
   FOLLOW: {
     //  0414
-    forceRemove: (id_list) => ({
-      where: { id: { [Op.in]: id_list } },
-      force: true,
-    }),
+
     //  0406
     restoreList: (id_list) => ({
       where: { id: { [Op.in]: id_list } },

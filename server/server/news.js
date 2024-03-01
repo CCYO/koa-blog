@@ -9,7 +9,6 @@ async function readList({ user_id, excepts }) {
   let num = await rawQuery.count(user_id);
   let list = { confirm: [], unconfirm: [] };
   if (num.total && num.total !== excepts.total) {
-    //  尋找 news（撇除 excepts）
     list = await rawQuery.readNews({ user_id, excepts });
   }
   return { list, num };

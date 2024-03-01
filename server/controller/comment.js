@@ -34,66 +34,6 @@ async function removeListForRemoveBlog(list) {
   }
   return new SuccModel();
 }
-//  0423
-async function findInfoForNews(comment_id) {
-  // let comment = await Comment.read(Opts.COMMENT.find(comment_id))
-  let info = await Comment.read(Opts.COMMENT.FIND._wholeInfo(comment_id));
-  if (!info) {
-    throw new MyErr(ErrRes.COMMENT.READ.NOT_EXIST);
-  }
-  // let comment = Init.browser.comment(data)
-  let { createdAt, pid, article } = info;
-  // let { id, pid, html, commenter, article} = resModel.data
-
-  //  獲取早前未確認到的comment資訊
-  //  同樣Pid + 晚於 time(createdAt) 的 comment資料
-  let { data: earlierComments } = await _findUnconfirmListBeforeNews({
-    comment_id,
-    pid,
-    article_id: article.id,
-    createdAt,
-  });
-  //  分類為 commenter (不重複 + 非此 msg 留言者 ) + commentId
-  let otherComments = earlierComments.reduce(
-    (acc, comment) => {
-      let { commenters, comments } = acc;
-      let {
-        id,
-        commenter: { id: commenter_id },
-      } = comment;
-      let isExist = commenters.some(
-        (commenter) => commenter.id === commenter_id
-      );
-      if (!isExist) {
-        let { id, nickname } = comment.commenter;
-        commenters.push({ id, nickname });
-      }
-      comments.push(id);
-      return acc;
-    },
-    { commenters: [], comments: [] }
-  );
-  let data = { ...info, otherComments };
-  return new SuccModel({ data });
-}
-//  0423
-async function _findUnconfirmListBeforeNews({
-  comment_id,
-  pid,
-  article_id,
-  createdAt,
-}) {
-  let comments = await Comment.readList(
-    Opts.COMMENT._findUnconfirmListBeforeNews({
-      comment_id,
-      pid,
-      article_id,
-      createdAt,
-    })
-  );
-  let data = Init.comment(comments);
-  return new SuccModel({ data });
-}
 
 //  0411
 async function findInfoForPageOfBlog(article_id) {
@@ -105,6 +45,8 @@ async function findInfoForPageOfBlog(article_id) {
 }
 
 //  --------------------------------------------------------------------------------------------------------------
+//  提供給前端，渲染newsItem的數據
+
 async function add({ commenter_id, article_id, html, pid, author_id }) {
   //  創建 comment
   let newComment = await Comment.create({
@@ -176,14 +118,6 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
         //  若存在，則放入待處理的數據列表 container 中
         container.push(data);
       } else {
-        //  若不存在，則創建全新通知，並放入 newsDatas 備用
-        // newDatas.push({
-        //   ...defProp,
-        //   receiver_id: author_id,
-        //   createdAt: newComment.createdAt,
-        //   confirm: false,
-        // });
-
         //  若不存在，則將作者列入 notReceiver 之中，待後續創建全新通知
         notReceiver.add(author_id);
       }
@@ -245,7 +179,13 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
 }
 async function remove({ user_id, comment_id }) {
   //  刪除comment
-  await Comment.deleteList(Opts.FOLLOW.REMOVE.list([comment_id]));
+  let row = await Comment.deleteList(Opts.COMMENT.REMOVE.list([comment_id]));
+  if (!row) {
+    throw new MyErr({
+      ...ErrRes.COMMENT.DELETE.ROW,
+      error: `刪除 comment/${comment_id} 失敗`,
+    });
+  }
   let removedComment = await Comment.read(
     Opts.COMMENT.FIND._wholeInfo(comment_id, (paranoid = false))
   );
@@ -280,9 +220,6 @@ async function remove({ user_id, comment_id }) {
     { msgReceiverOfAuthor: undefined, msgReceiverOfOthers: [] }
   );
   let { msgReceiverOfAuthor, msgReceiverOfOthers } = msgReceivers;
-  // let { errno, data: msgReceivers } = await C_MsgReceiver.findList(comment_id);
-  // let updateList = [];
-  // let deleteList = [];
   let container;
   let isAuthor = commenter_id === author_id;
   //  從作者的通知開始分析
@@ -337,7 +274,7 @@ async function remove({ user_id, comment_id }) {
   }
 
   return new SuccModel(opts);
-
+  //  整理出要刪除與更新的msgReceiver
   function _resetMsgReceiver(
     resModelOfLastComment,
     msgReceiver,
@@ -389,6 +326,63 @@ async function remove({ user_id, comment_id }) {
     return container;
   }
 }
+async function findInfoForNews(comment_id) {
+  let info = await Comment.read(Opts.COMMENT.FIND._wholeInfo(comment_id));
+  if (!info) {
+    throw new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
+  }
+  let { createdAt, pid, article } = info;
+
+  //  使前端的通知數據，能呈現「某某,某某,...以及其他N人，都回覆你的留言or文章」
+  let { data: earlierComments } = await _findUnconfirmListBeforeNews({
+    comment_id,
+    pid,
+    article_id: article.id,
+    createdAt,
+  });
+  //  分類為 commenter (不重複 + 非此 msg 留言者 ) + commentId
+  let otherComments = earlierComments.reduce(
+    (acc, comment) => {
+      let { commenters, comments } = acc;
+      let {
+        id,
+        commenter: { id: commenter_id },
+      } = comment;
+      let isExist = commenters.some(
+        (commenter) => commenter.id === commenter_id
+      );
+      if (!isExist) {
+        let { id, nickname } = comment.commenter;
+        commenters.push({ id, nickname });
+      }
+      comments.push(id);
+      return acc;
+    },
+    { commenters: [], comments: [] }
+  );
+  let data = { ...info, otherComments };
+  return new SuccModel({ data });
+
+  //  獲取早前未確認到的comment資訊
+  //  同樣Pid + 晚於 time(createdAt) 的 comment資料
+  async function _findUnconfirmListBeforeNews({
+    comment_id,
+    pid,
+    article_id,
+    createdAt,
+  }) {
+    let comments = await Comment.readList(
+      Opts.COMMENT.FIND._unconfirmListBeforeNews({
+        comment_id,
+        pid,
+        article_id,
+        createdAt,
+      })
+    );
+    let data = Init.comment(comments);
+    return new SuccModel({ data });
+  }
+}
 async function confirmNews({ receiver_id, msgReceiver_id }) {
   let comment = await Comment.read(
     Opts.COMMENT.FIND.itemByMsgReceiver({ receiver_id, msgReceiver_id })
@@ -411,8 +405,10 @@ async function confirmNews({ receiver_id, msgReceiver_id }) {
     data: { url },
   });
 }
+
 module.exports = {
   confirmNews,
+  findInfoForNews,
   remove,
   add,
   //  -------------------------------------------------------------------------
@@ -422,7 +418,6 @@ module.exports = {
   //  0411
   findInfoForPageOfBlog,
   //  0404
-  findInfoForNews,
 };
 //  找出指定article內，最新 + 與pid相關 + 非commenter_id的評論
 async function _findLastItemOfPidAndNotSelf(

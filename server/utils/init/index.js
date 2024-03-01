@@ -105,21 +105,12 @@ function initBlog(data) {
       delete blog.replys;
     }
     if (map.has("show")) {
-      let status = map.get("show");
-      // let status = map.get('show') ? 'public' : 'private'
-      if (status && map.has("showAt")) {
-        if (!map.get("showAt")) {
-          blog.time = date.format(
-            new Date(),
-            SERVER_CONFIG.DEFAULT.BLOG.TIME_FORMAT
-          );
-        } else {
-          blog.time = date.format(
-            map.get("showAt"),
-            SERVER_CONFIG.DEFAULT.BLOG.TIME_FORMAT
-          );
-        }
-      } else if (!status && map.get("updatedAt")) {
+      if (map.get("show") && map.get("showAt")) {
+        blog.time = date.format(
+          map.get("showAt"),
+          SERVER_CONFIG.DEFAULT.BLOG.TIME_FORMAT
+        );
+      } else if (!map.get("show") && map.get("updatedAt")) {
         blog.time = date.format(
           map.get("updatedAt"),
           SERVER_CONFIG.DEFAULT.BLOG.TIME_FORMAT

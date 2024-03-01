@@ -32,7 +32,7 @@ router.get("/login", CHECK.skipLogin, async (ctx) => {
   });
 });
 //  個人頁
-router.get("/self", CHECK.login, privateCache, async (ctx, next) => {
+router.get("/self", privateCache, async (ctx) => {
   //  middleware/privateCache 取得的緩存數據
   //  ctx.cache[TYPE.PAGE.USER]
   //  { exist: 提取緩存數據的結果 ,
