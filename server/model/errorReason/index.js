@@ -9,6 +9,7 @@ const BLOG_IMG = require("./blogImg");
 const PAGE = require("./page");
 const COMMENT = require("./comment");
 const MSG_RECEIVER = require("./msgReceiver");
+const IMG = require("./img");
 module.exports = {
   MSG_RECEIVER,
   COMMENT,
@@ -21,4 +22,5 @@ module.exports = {
   NEWS,
   USER,
   BLOG_IMG_ALT,
+  IMG,
 };

@@ -5,6 +5,7 @@ const {
   BLOG_IMG_ALT,
   REMOVE,
   COMMENT,
+  IMG,
 } = require("./seq_options");
 
 //  0411
@@ -12,6 +13,7 @@ const { Op } = require("sequelize");
 const { BlogImg, Comment } = require("../db/mysql/model");
 
 module.exports = {
+  IMG,
   COMMENT: {
     //  0514
     findArticlesOfCommented: (commenter_id) => ({
@@ -319,12 +321,6 @@ module.exports = {
   },
 
   //  0406
-  IMG: {
-    find: (hash) => ({
-      attributes: ["id", "url", "hash"],
-      where: { hash },
-    }),
-  },
 
   //  0303
   findBlogFollowersByBlogId(blog_id) {

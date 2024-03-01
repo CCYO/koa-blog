@@ -10,10 +10,12 @@ let {
   PAGE,
   COMMENT,
   MSG_RECEIVER,
+  IMG,
 } = require("./errorReason");
 
 module.exports = {
   TEST: { errno: 666, msg: "測試" },
+  IMG,
   //  0406
   IDOL_FANS: {
     //  0406
@@ -166,6 +168,7 @@ module.exports = {
     CREATE: USER.CREATE,
     READ: USER.READ,
   },
+
   //  -----------------------------------------------
   //  0527
   VALIDATE: {
@@ -179,14 +182,7 @@ module.exports = {
   //  0411
 
   //  0406
-  IMG: {
-    //  0406
-    CREATE: {
-      //  0406
-      ERR: { errno: 50001, msg: "IMG 創建失敗" },
-    },
-    NO_DATA: { errno: 40001, msg: "沒有相符的 IMG" },
-  },
+
   //  0404
 
   READ: {

@@ -4,11 +4,7 @@ const { ErrRes, MyErr } = require("../model");
 const init = require("../utils/init");
 //  0406
 const { Img } = require("../db/mysql/model");
-async function read(opts) {
-  let img = await Img.findOne(opts);
-  return init.img(img);
-}
-//  ------------------------------------------------------------------------------------
+
 async function create(data) {
   try {
     let img = await Img.create(data);
@@ -17,8 +13,11 @@ async function create(data) {
     throw new MyErr({ ...ErrRes.IMG.CREATE.ERR, error });
   }
 }
+async function read(opts) {
+  let img = await Img.findOne(opts);
+  return init.img(img);
+}
 module.exports = {
-  create,
-  //  -----------------------------------------------------------------------------------
   read,
+  create,
 };
