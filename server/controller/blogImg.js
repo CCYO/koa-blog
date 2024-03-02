@@ -1,24 +1,7 @@
+const BlogImg = require("../server/blogImg");
 const Opts = require("../utils/seq_findOpts");
-const {
-  //  0406
-  MyErr,
-  ErrRes,
-  SuccModel,
-  ErrModel,
-} = require("../model");
-const BlogImg = require("../server/blogImg"); //  0406
-//  0429
-async function findInfoForRemoveBlog(blog_id) {
-  let list = await BlogImg.readList(
-    Opts.BLOG_IMG.findInfoForRemoveBlog(blog_id)
-  );
-  if (!list.length) {
-    return new ErrModel(ErrRes.BLOG_IMG.READ.NOT_EXIST);
-  }
-  return new SuccModel({ data: list });
-}
+const { ErrRes, SuccModel, ErrModel, MyErr } = require("../model");
 
-//  --------------------------------------------------------------------------------
 async function add({ blog_id, name, img_id }) {
   let data = await BlogImg.create({ blog_id, name, img_id });
   return new SuccModel({ data });
@@ -45,20 +28,4 @@ module.exports = {
   removeList,
   countBlogImgAlt,
   add,
-  //  ----------------------------------------------------------------------------
-  findInfoForRemoveBlog,
-  //  0408
-
-  modifyBlogImg,
 };
-
-//  0327
-async function modifyBlogImg({ id, blog_id, alt }) {
-  let data = [{ id, blog_id, alt }];
-  let ok = await BlogImg.updateBlogImg(data);
-  if (!ok) {
-    return new ErrModel(UPDATE_ERR);
-  }
-  console.log("成功");
-  return new SuccModel(null, { blog: [blog_id] });
-}

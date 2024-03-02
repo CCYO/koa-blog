@@ -374,13 +374,6 @@ module.exports = {
   findInfoForNews,
   remove,
   add,
-  //  -------------------------------------------------------------------------
-  findArticlesOfCommented,
-  //  0425
-  removeListForRemoveBlog,
-  //  0411
-  findInfoForPageOfBlog,
-  //  0404
 };
 //  找出指定article內，最新 + 與pid相關 + 非commenter_id的評論
 async function _findLastItemOfPidAndNotSelf(
