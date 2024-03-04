@@ -1,8 +1,7 @@
-const { ErrRes, MyErr } = require("../model"); //  0406
-const Init = require("../utils/init"); //  0406
-const { BlogImgAlt } = require("../db/mysql/model"); //  0406
+const { BlogImgAlt } = require("../db/mysql/model");
+const { ErrRes, MyErr } = require("../model");
+const Init = require("../utils/init");
 
-//  ------------------------------------------------------------------------------------
 async function create(data) {
   try {
     let blogImgAlt = await BlogImgAlt.create(data);
@@ -34,15 +33,10 @@ async function update({ id, alt }) {
   }
   return row;
 }
+
 module.exports = {
   destoryList,
   find,
   create,
   update,
 };
-
-async function courtOfSomeImgInBlog({ blog_id, blogImg_id }) {
-  let {} = await BlogImgAlt.findAndCountAll({
-    where: { blogImg_id },
-  });
-}
