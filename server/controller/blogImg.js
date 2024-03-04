@@ -3,7 +3,9 @@ const Opts = require("../utils/seq_findOpts");
 const { ErrRes, SuccModel, ErrModel, MyErr } = require("../model");
 
 async function add({ blog_id, name, img_id }) {
-  let data = await BlogImg.create({ blog_id, name, img_id });
+  let data = await BlogImg.create(
+    Opts.BLOG_IMG.CREATE.one({ blog_id, name, img_id })
+  );
   return new SuccModel({ data });
 }
 async function countBlogImgAlt(blogImg_id) {

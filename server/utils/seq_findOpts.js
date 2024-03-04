@@ -6,6 +6,7 @@ const {
   REMOVE,
   COMMENT,
   IMG,
+  BLOG_IMG,
 } = require("./seq_options");
 
 //  0411
@@ -287,6 +288,7 @@ module.exports = {
       },
       attributes: ["id"],
     }),
+    ...BLOG_IMG,
   },
   ARTICLE_READER: {
     count: (blog_id) => ({

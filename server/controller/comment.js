@@ -11,12 +11,9 @@ const { SuccModel, ErrModel, MyErr, ErrRes } = require("../model"); //  0404
 
 async function add({ commenter_id, article_id, html, pid, author_id }) {
   //  創建 comment
-  let newComment = await Comment.create({
-    commenter_id,
-    article_id,
-    html,
-    pid,
-  });
+  let newComment = await Comment.create(
+    Opts.COMMENT.CREATE.one({ commenter_id, article_id, html, pid })
+  );
   //  尋找
   //  *既存且須要更新的 msgReceiver
   //  *newComment 建立關係的 commenter
@@ -141,7 +138,7 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
 }
 async function remove({ user_id, comment_id }) {
   //  刪除comment
-  let row = await Comment.deleteList(Opts.COMMENT.REMOVE.list([comment_id]));
+  let row = await Comment.deleteList(Opts.REMOVE.list([comment_id]));
   if (!row) {
     throw new MyErr({
       ...ErrRes.COMMENT.DELETE.ROW,

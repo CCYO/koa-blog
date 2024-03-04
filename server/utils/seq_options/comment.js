@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { Blog, User } = require("../../db/mysql/model");
+const xss = require("xss");
 const FIND = {
   _infoAboutItem: (id, paranoid = true) => ({
     where: { id },
@@ -138,7 +138,16 @@ const REMOVE = {
     where: { id: { [Op.in]: id_list } },
   }),
 };
+const CREATE = {
+  one: ({ commenter_id, article_id, html, pid }) => ({
+    html: xss(html),
+    article_id,
+    commenter_id,
+    pid: !pid ? null : pid,
+  }),
+};
 module.exports = {
+  CREATE,
   REMOVE,
   FIND,
 };

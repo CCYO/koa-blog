@@ -6,7 +6,7 @@ const { User } = require("../db/mysql/model");
 const Init = require("../utils/init");
 
 //  更新user數據
-async function update(id, data) {
+async function update({ id, ...data }) {
   let [row] = await User.update(data, { where: { id } });
   if (!row) {
     throw new MyErr({

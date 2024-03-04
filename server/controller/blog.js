@@ -1,6 +1,5 @@
 const Opts = require("../utils/seq_findOpts");
 const Blog = require("../server/blog");
-const my_xxs = require("../utils/xss");
 const C_Img = require("./img");
 const C_BlogImg = require("./blogImg");
 const C_BlogImgAlt = require("./blogImgAlt");
@@ -116,10 +115,7 @@ async function findListForUserPage(
  * @returns SuccModel for { data: { id, title, html, show, showAt, createdAt, updatedAt }} || ErrModel
  */
 async function add(title, author_id) {
-  const data = await Blog.create({
-    title: my_xxs(title),
-    author_id,
-  });
+  const data = await Blog.create(Opts.BLOG.CREATE.one({ title, author_id }));
   const opts = { data };
   if (!ENV.isNoCache) {
     opts.cache = { [CACHE.TYPE.PAGE.USER]: [author_id] };
@@ -143,15 +139,6 @@ async function modify({ blog_id, author_id, ...blog_data }) {
   }
   //  存放 blog 要更新的數據
   let newData = {};
-  if (map.has("html")) {
-    //  存放此次 blog 要更新的數據
-    newData.html = my_xxs(blog_data.html);
-  }
-  //  更新 文章標題
-  if (map.has("title")) {
-    //  存放 blog 要更新的數據
-    newData.title = my_xxs(blog_data.title);
-  }
 
   //  更新 文章公開狀態
   if (map.has("show")) {
@@ -172,7 +159,7 @@ async function modify({ blog_id, author_id, ...blog_data }) {
   }
   if (map.has("html") || map.has("title") || map.has("show")) {
     //  更新文章
-    await Blog.update(blog_id, newData);
+    await Blog.update(Opts.BLOG.UPDATE.one({ blog_id, newData }));
   }
   //  刪除圖片
   if (map.has("cancelImgs")) {
@@ -216,7 +203,6 @@ async function addImg({ author_id, ...data }) {
       return alt_id;
       //  data { blog_id, name, img_id }
     } else if (map.get("img_id")) {
-      name = my_xxs(name);
       let {
         data: { id: blogImg_id },
       } = await C_BlogImg.add({ blog_id, name, img_id });

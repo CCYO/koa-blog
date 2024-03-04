@@ -156,7 +156,7 @@ async function modifyInfo({ _origin, ...newData }) {
     delete newData.origin_password;
     delete newData.password_again;
   }
-  await User.update(user_id, newData);
+  await User.update(Opts.USER.UPDATE.one({ user_id, newData }));
   let data = await find(user_id);
   let opts = { data };
   if (process.env.NODE_ENV !== "nocache") {

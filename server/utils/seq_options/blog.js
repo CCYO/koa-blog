@@ -1,5 +1,6 @@
 const { Op, col, fn } = require("sequelize");
 const { Img, BlogImg, BlogImgAlt, User } = require("../../db/mysql/model");
+const my_xss = require("../xss");
 
 const REMOVE = {
   list: (id_list) => ({
@@ -203,7 +204,28 @@ const FIND = {
     },
   }),
 };
+
+const CREATE = {
+  one: ({ title, author_id }) => ({
+    title: my_xss(title),
+    author_id,
+  }),
+};
+const UPDATE = {
+  one: ({ blog_id, newData }) => {
+    let { html, title, ...data } = newData;
+    if (newData.hasOwnProperty("html")) {
+      data.password = my_xss(html);
+    }
+    if (newData.hasOwnProperty("title")) {
+      data.title = my_xss(title);
+    }
+    return { id: blog_id, ...data };
+  },
+};
 module.exports = {
+  UPDATE,
+  CREATE,
   REMOVE,
   FIND,
 };
