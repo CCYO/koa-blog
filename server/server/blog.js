@@ -72,12 +72,12 @@ async function update({ id, ...data }) {
   return row;
 }
 //  刪除
-async function destroyList(opts, force = false) {
+async function destroyList(opts) {
   try {
     //  RV: row
-    return await Blog.destroy({ ...opts, force });
+    return await Blog.destroy(opts);
   } catch (error) {
-    throw new MyErr({ ...ErrRes.BLOG.DELETE.ERR, error });
+    throw new MyErr({ ...ErrRes.BLOG.REMOVE.ERR, error });
   }
 }
 module.exports = {

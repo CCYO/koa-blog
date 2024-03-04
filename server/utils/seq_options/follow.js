@@ -1,7 +1,7 @@
 const { Op } = require("sequelize");
 
 const REMOVE = {
-  list: (id_list) => ({
+  list: (id_list, force = false) => ({
     where: { id: { [Op.in]: id_list } },
   }),
   listByForce: (id_list) => ({

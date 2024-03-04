@@ -1,13 +1,13 @@
-const Comment = require("../server/comment");
 const C_MsgReceiver = require("./msgReceiver");
-const initComment = require("../utils/init/comment");
+const Comment = require("../server/comment");
+const Opts = require("../utils/seq_findOpts");
 const {
   ENV,
   DEFAULT: { CACHE },
 } = require("../config");
-const Opts = require("../utils/seq_findOpts");
+const { SuccModel, ErrModel, MyErr, ErrRes } = require("../model");
 const Init = require("../utils/init");
-const { SuccModel, ErrModel, MyErr, ErrRes } = require("../model"); //  0404
+const initComment = require("../utils/init/comment");
 
 async function add({ commenter_id, article_id, html, pid, author_id }) {
   //  創建 comment
@@ -18,9 +18,12 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
   //  *既存且須要更新的 msgReceiver
   //  *newComment 建立關係的 commenter
   let info = await _findInfoForAdd({ ...newComment, author_id });
+  //  找出新創comment時，需更新、新創的 *msgReceiver，以及既存與尚未建立關聯的 receiver
   let {
-    msgReceiver: { author, curCommenter, others },
-    commenters: { notReceiver, other },
+    //  與newComment有關係的 msgReceiver
+    msgReceiver: { author, curCommenter, others }, //  other 評論過的紀錄
+    //  與newComment有關係的 user
+    commenters: { notReceiver, other }, //  other 無論有無評論
   } = info.data;
 
   //  存放要更新的數據
@@ -91,6 +94,13 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
       });
     }
   }
+  let cache = undefined;
+  if (!ENV.isNoCache) {
+    cache = {
+      [CACHE.TYPE.PAGE.BLOG]: [article_id],
+      [CACHE.TYPE.NEWS]: [],
+    };
+  }
   //  將作者與留言者以外，其他評論者所擁有的「與 pid 相關的 msgReceiver」
   //  放入待處理的數據列表 container 中
   if (others.length) {
@@ -99,20 +109,23 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
   //  整理待更新數據
   for (let msgReceiver of container) {
     if (msgReceiver.confirm) {
-      //  針對「已確認」狀態的msgReceiver，更新為新創見的狀態
+      //  針對「已確認」狀態的msgReceiver，更新為新創見的狀態 ---------------------------------> 新通知 -----> 納入 newsCache
       newDatas.push({
         ...msgReceiver,
         ...defProp,
         createdAt: newComment.createdAt,
         confirm: false,
       });
+      if (!ENV.isNoCache) {
+        cache[CACHE.TYPE.NEWS].push(msgReceiver.receiver_id);
+      }
     } else {
-      //  針對「未確認」狀態的msgReceiver，更新為新創見的狀態
+      //  針對「未確認」狀態的msgReceiver，更新為新創見的狀態 ---------------------------------> 更新舊通知
       //  更新 { msg_id: newComment.id, updatedAt: newComment.createdAt };
       newDatas.push({ ...msgReceiver, ...defProp });
     }
   }
-  //  針對既非作者與非留言者，尚未建立「與 pid 相關的 msgReceiver」的receiver，創建全新通知
+  //  針對既非作者與非留言者，尚未建立「與 pid 相關的 msgReceiver」的receiver，創建全新通知 ----> 新通知 -----> 納入 newsCache
   for (let receiver_id of notReceiver) {
     newDatas.push({
       ...defProp,
@@ -120,28 +133,28 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
       createdAt: newComment.createdAt,
       confirm: false,
     });
+    if (!ENV.isNoCache) {
+      cache[CACHE.TYPE.NEWS].push(receiver_id);
+    }
   }
   //  更新
   if (newDatas.length) {
-    await C_MsgReceiver.addList(newDatas);
+    await C_MsgReceiver.setList(newDatas);
   }
   //  讀取符合Blog格式數據格式的新Comment
   let { data } = await _findItemForRender(newComment.id);
   let opts = { data };
   if (!ENV.isNoCache) {
-    opts.cache = {
-      [CACHE.TYPE.PAGE.BLOG]: [article_id],
-      [CACHE.TYPE.NEWS]: [...other],
-    };
+    opts.cache = cache;
   }
   return new SuccModel(opts);
 }
 async function remove({ user_id, comment_id }) {
   //  刪除comment
-  let row = await Comment.deleteList(Opts.REMOVE.list([comment_id]));
+  let row = await Comment.destroyList(Opts.REMOVE.list([comment_id]));
   if (!row) {
     throw new MyErr({
-      ...ErrRes.COMMENT.DELETE.ROW,
+      ...ErrRes.COMMENT.REMOVE.ROW,
       error: `刪除 comment/${comment_id} 失敗`,
     });
   }
@@ -165,7 +178,7 @@ async function remove({ user_id, comment_id }) {
   }
   //  找出符合 msg_id = comment_id 的 msgReceiver
   let { receivers } = await Comment.read(
-    Opts.COMMENT.FIND._infoAboutItem(comment_id, false)
+    Opts.COMMENT.FIND._infoAboutItem(comment_id, (paranoid = false))
   );
   let msgReceivers = receivers.reduce(
     (acc, { MsgReceiver }) => {
@@ -217,11 +230,11 @@ async function remove({ user_id, comment_id }) {
     let { updateList, deleteList } = container;
     //  更新數據
     if (updateList.length) {
-      await C_MsgReceiver.addList(updateList);
+      await C_MsgReceiver.setList(updateList);
     }
     //  硬刪除
     if (deleteList.length) {
-      await C_MsgReceiver.forceRemoveList(deleteList);
+      await C_MsgReceiver.removeList(deleteList, (force = true));
     }
   }
   let data = initComment.initTime(removedComment);
@@ -245,7 +258,6 @@ async function remove({ user_id, comment_id }) {
     //  存放需要更新的msgReceiver
     let updateList = container.updateList;
     if (errno) {
-      //  將目前這篇文章中屬於作者的通知，硬刪除
       deleteList.push(msgReceiver.id);
     } else {
       ////  假使存在，依屬於作者通知的comfirm值來判斷要如何更新數據
@@ -349,6 +361,7 @@ async function confirmNews({ receiver_id, msgReceiver_id }) {
   );
   if (!comment) {
     //  comment不存在
+    //  譬如comment已刪除，但newsCache不會針對刪除做更新，故使用者可能在session.news中取得已被刪除的msgReceiver_id
     let opts = ErrRes.NEWS.READ.NOT_EXIST;
     if (!ENV.isNoCache) {
       opts.cache = { [CACHE.TYPE.NEWS]: [receiver_id] };
@@ -361,9 +374,7 @@ async function confirmNews({ receiver_id, msgReceiver_id }) {
     await C_MsgReceiver.modify(msgReceiver_id, { confirm: true });
   }
   let url = `/blog/${comment.article.id}#comment_${comment.id}`;
-  return new SuccModel({
-    data: { url },
-  });
+  return new SuccModel({ data: { url } });
 }
 
 module.exports = {
@@ -442,7 +453,7 @@ async function _findInfoForAdd({ article_id, commenter_id, pid, author_id }) {
       author: undefined,
       curCommenter: undefined,
     },
-    //  紀錄作者與留言者以外，與pid相關的commenter
+    //  紀錄author與curCommenter以外，與pid相關的commenter
     commenters: {
       //  無論有沒有被登記過
       other: new Set(),
@@ -472,7 +483,7 @@ async function _findInfoForAdd({ article_id, commenter_id, pid, author_id }) {
       !off.has(commenter_id)
     ) {
       //  紀錄，避免重複登記
-      off.add(commenter_id);
+      off.add(comment.commenter_id);
       //  不曾登記過
       commenters.notReceiver.add(comment.commenter_id);
       //  無論有沒有被登記過

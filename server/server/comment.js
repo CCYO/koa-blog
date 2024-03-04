@@ -18,16 +18,16 @@ async function create(data) {
     throw new MyErr({ ...ErrRes.COMMENT.CREATE.ERR, error });
   }
 }
-async function deleteList(opts) {
+async function destroyList(opts) {
   try {
     //  RV row
     return await Comment.destroy(opts);
   } catch (error) {
-    throw new MyErr({ ...ErrRes.COMMENT.DELETE.ERR, error });
+    throw new MyErr({ ...ErrRes.COMMENT.REMOVE.ERR, error });
   }
 }
 module.exports = {
-  deleteList,
+  destroyList,
   create,
   readList,
   read,

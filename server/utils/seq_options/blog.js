@@ -1,13 +1,10 @@
-const { Op, col, fn } = require("sequelize");
+const { Op } = require("sequelize");
 const { Img, BlogImg, BlogImgAlt, User } = require("../../db/mysql/model");
+const { list } = require("./remove");
 const my_xss = require("../xss");
 
 const REMOVE = {
-  list: (id_list) => ({
-    where: {
-      id: { [Op.in]: id_list },
-    },
-  }),
+  list,
 };
 
 const FIND = {

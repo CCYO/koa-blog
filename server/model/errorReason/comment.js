@@ -7,6 +7,8 @@ const READ = {
 };
 
 const REMOVE = {
+  ERR: { errno: 801, msg: "刪除 comment 失敗" },
+  ROW: { errno: 40003, msg: "刪除 COMMENT 的條目數量不如預期" },
   ERR_NO_PERMISSION: { errno: 801, msg: "沒有刪除權限" },
 };
 

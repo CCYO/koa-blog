@@ -3,6 +3,7 @@ const CREATE = {
   ERR: { errno: 10004, msg: "BLOG 創建失敗" },
 };
 const REMOVE = {
+  ERR: { errno: 801, msg: "刪除 Blog 失敗" },
   ROW: { errno: 40003, msg: "刪除 BLOG 的數量不完全" },
   NO_DATA: { errno: 1002, msg: "刪除BLOG時，沒有提供blogList數據" },
   // ERR_REMOVE_BLOG_IMG: { errno: 1001, msg: "移除Blog內文的圖片時發生錯誤" },

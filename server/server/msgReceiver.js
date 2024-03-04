@@ -4,34 +4,24 @@ const { ErrRes, MyErr } = require("../model");
 //  0411
 const { MsgReceiver } = require("../db/mysql/model");
 
-//  0414
-
-//  0414
-
-//  0414
-async function readList(opts) {
-  let list = MsgReceiver.findAll(opts);
-  return Init.msgReceiver(list);
-}
-//  0411
-async function bulkCreate(datas, opts) {
+async function bulkCreate({ datas, updateOnDuplicate }) {
   try {
-    let list = await MsgReceiver.bulkCreate(datas, opts);
-    if (list.length !== datas.length) {
-      throw new MyErr(ErrRes.MSG_RECEIVER.CREATE.ROW);
-    }
-    return Init.msgReceiver(list);
-  } catch (err) {
-    throw new MyErr({ ...ErrRes.MSG_RECEIVER.CREATE.ERR, err });
+    //  注意，無論要更新的資料是否被 updateOnDuplicate 標示，RV 顯示的數據皆會符合newDatas
+    //  但實際上DB內的數據有沒有被更新，還是要看有沒有被 updateOnDuplicate 標示
+    let ins = await MsgReceiver.bulkCreate(datas, { updateOnDuplicate });
+    return Init.msgReceiver(ins);
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.MSG_RECEIVER.UPDATE.ERR, error });
   }
 }
-//  0411
-async function read(opts) {
-  let list = await MsgReceiver.findOne(opts);
-  return list.map((item) => item.toJSON());
+async function destroyList(opts) {
+  try {
+    //  RV: row
+    return await MsgReceiver.destroy(opts);
+  } catch (error) {
+    throw new MyErr({ ...ErrRes.MSG_RECEIVER.REMOVE.ERR, error });
+  }
 }
-
-//  -----------------------------------------------------------------------------
 async function update(id, newData) {
   try {
     let [row] = await MsgReceiver.update(newData, { where: { id } });
@@ -40,44 +30,8 @@ async function update(id, newData) {
     throw new MyErr({ ...ErrRes.MSG_RECEIVER.UPDATE.ERR, error });
   }
 }
-async function deleteList(opts) {
-  try {
-    //  RV: row
-    return await MsgReceiver.destroy(opts);
-  } catch (error) {
-    throw new MyErr({ ...ErrRes.MSG_RECEIVER.REMOVE.ERR, error });
-  }
-}
-async function updateList(newDatas) {
-  try {
-    let updateOnDuplicate = [
-      "id",
-      "msg_id",
-      "receiver_id",
-      "confirm",
-      "createdAt",
-      "updatedAt",
-      "deletedAt",
-    ];
-    //  注意，無論要更新的資料是否被 updateOnDuplicate 標示，RV 顯示的數據皆會符合newDatas
-    //  但實際上DB內的數據有沒有被更新，還是要看有沒有被 updateOnDuplicate 標示
-    let list = await MsgReceiver.bulkCreate(newDatas, { updateOnDuplicate });
-    return Init.msgReceiver(list);
-  } catch (error) {
-    throw new MyErr({ ...ErrRes.MSG_RECEIVER.UPDATE.ERR, error });
-  }
-}
 module.exports = {
   update,
-  deleteList,
-  //  ----------------------------------------------------------------------------
-  updateList,
-  //  0414
-
-  //  0414
-  readList,
-  //  0411
+  destroyList,
   bulkCreate,
-  //  0411
-  read,
 };

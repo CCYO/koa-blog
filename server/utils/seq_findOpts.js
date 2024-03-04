@@ -8,6 +8,8 @@ const {
   IMG,
   BLOG_IMG,
   IDOL_FANS,
+  ARTICLE_READER,
+  MSG_RECEIVER,
 } = require("./seq_options");
 
 //  0411
@@ -15,7 +17,33 @@ const { Op } = require("sequelize");
 const { BlogImg, Comment } = require("../db/mysql/model");
 
 module.exports = {
+  MSG_RECEIVER: {
+    //  0414
+    findList: (msg_id) => ({
+      where: { msg_id },
+    }),
+    //  0411
+    find: (whereOps) => ({
+      attributes: [
+        "id",
+        "receiver_id",
+        "msg_id",
+        "confirm",
+        "deletedAt",
+        "createdAt",
+      ],
+      where: { ...whereOps },
+    }),
+    bulkCreate: (datas) => {
+      let keys = [...Object.keys(datas)];
+      return {
+        updateOnDuplicate: [...keys],
+      };
+    },
+    ...MSG_RECEIVER,
+  },
   IDOL_FANS,
+  ARTICLE_READER,
   IMG,
   COMMENT: {
     //  0514
@@ -292,41 +320,6 @@ module.exports = {
     }),
     ...BLOG_IMG,
   },
-  ARTICLE_READER: {
-    count: (blog_id) => ({
-      where: { blog_id },
-    }),
-  },
-  //  0411
-  MSG_RECEIVER: {
-    //  0414
-    findList: (msg_id) => ({
-      where: { msg_id },
-    }),
-    //  0411
-    bulkCreate: (datas) => {
-      let keys = [...Object.keys(datas)];
-      return {
-        updateOnDuplicate: [...keys],
-      };
-    },
-    //  0411
-    find: (whereOps) => ({
-      attributes: [
-        "id",
-        "receiver_id",
-        "msg_id",
-        "confirm",
-        "deletedAt",
-        "createdAt",
-      ],
-      where: { ...whereOps },
-    }),
-  },
-
-  //  0406
-
-  //  0303
   findBlogFollowersByBlogId(blog_id) {
     return {
       attributes: ["follower_id"],
