@@ -1,3 +1,10 @@
+//  0404
+
+//  -------------------------------------------------------------------------
+const { Blog } = require("../db/mysql/model");
+const Init = require("../utils/init");
+const { ErrRes, MyErr } = require("../model");
+
 /** 創建Blog
  * @param {string} title 文章表提
  * @param {number} user_id 作者id
@@ -11,7 +18,23 @@ async function create(data) {
     throw new MyErr({ ...ErrRes.BLOG.CREATE.ERR, error });
   }
 }
-//  0404
+
+async function read(opts) {
+  let blog = await Blog.findOne(opts);
+  return Init.blog(blog);
+}
+async function createReaders(blog_id, reader_list) {
+  let blog = await Blog.findByPk(blog_id);
+  //  IdolFans Model instances
+  let list = await blog.addReaders(reader_list);
+  return list;
+}
+async function destoryReaders(blog_id, reader_list) {
+  let blog = await Blog.findByPk(blog_id);
+  //  IdolFans Model instances
+  let row = await blog.removeReaders(reader_list);
+  return row;
+}
 /** 查詢 blogs
  * @param {object} param0 查詢 blogs 紀錄所需的參數
  * @param {number} param0.user_id user id
@@ -32,28 +55,6 @@ async function readListAndCountAll(opts) {
   let { rows, count } = await Blog.findAndCountAll(opts);
   let blogs = Init.blog(rows);
   return { blogs, count };
-}
-
-//  -------------------------------------------------------------------------
-const { Blog } = require("../db/mysql/model");
-const Init = require("../utils/init");
-const { ErrRes, MyErr } = require("../model");
-
-async function read(opts) {
-  let blog = await Blog.findOne(opts);
-  return Init.blog(blog);
-}
-async function createReaders(blog_id, reader_list) {
-  let blog = await Blog.findByPk(blog_id);
-  //  IdolFans Model instances
-  let list = await blog.addReaders(reader_list);
-  return list;
-}
-async function destoryReaders(blog_id, reader_list) {
-  let blog = await Blog.findByPk(blog_id);
-  //  IdolFans Model instances
-  let row = await blog.removeReaders(reader_list);
-  return row;
 }
 /** 更新blog
  * @param {number} blog_id blog id
@@ -82,13 +83,10 @@ async function destroyList(opts, force = false) {
 module.exports = {
   destroyList,
   update,
+  readListAndCountAll,
+  readList,
   destoryReaders,
   createReaders,
   read,
-  //  -------------------------------------------------------------------------
-  readListAndCountAll,
-  //  0411
   create,
-  //  0404
-  readList,
 };
