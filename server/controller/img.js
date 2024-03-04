@@ -13,6 +13,7 @@ async function find(hash) {
   }
   return new SuccModel({ data });
 }
+
 module.exports = {
   add,
   find,

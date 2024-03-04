@@ -52,6 +52,7 @@ async function restoringList(id_list) {
   await Promise.all(id_list.map((id) => ArticleReader.restoring(id)));
   return new SuccModel();
 }
+//  soft remove list
 async function removeList(id_list) {
   let row = await ArticleReader.deleteList(Opts.FOLLOW.REMOVE.list(id_list));
   if (list.length !== row) {
