@@ -1,3 +1,4 @@
+const xss = require("../xss");
 const { Blog, BlogImg, Img } = require("../../db/mysql/model");
 const FIND = {
   wholeInfo: (alt_id) => ({
@@ -22,7 +23,13 @@ const FIND = {
     },
   }),
 };
-
+const UPDATE = {
+  one: ({ alt_id, alt }) => ({
+    id: alt_id,
+    alt: xss(alt),
+  }),
+};
 module.exports = {
+  UPDATE,
   FIND,
 };

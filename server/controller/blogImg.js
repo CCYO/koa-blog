@@ -11,10 +11,7 @@ async function add({ blog_id, name, img_id }) {
 async function countBlogImgAlt(blogImg_id) {
   let count = await BlogImg.countBlogImgAlt(blogImg_id);
   if (!count) {
-    return new ErrModel({
-      ...ErrRes.BLOG_IMG.READ.NO_BLOG_IMG_ALT,
-      error: `找不到對應 blogImg_id/${blogImg_id} 的 blogImgAlt`,
-    });
+    return new ErrModel(ErrRes.BLOG_IMG.READ.NO_BLOG_IMG_ALT);
   }
   return new SuccModel({ data: count });
 }

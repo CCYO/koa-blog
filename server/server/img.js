@@ -1,9 +1,6 @@
-//  0406
-const { ErrRes, MyErr } = require("../model");
-//  0406
-const init = require("../utils/init");
-//  0406
 const { Img } = require("../db/mysql/model");
+const { ErrRes, MyErr } = require("../model");
+const init = require("../utils/init");
 
 async function create(data) {
   try {
@@ -17,6 +14,7 @@ async function read(opts) {
   let img = await Img.findOne(opts);
   return init.img(img);
 }
+
 module.exports = {
   read,
   create,

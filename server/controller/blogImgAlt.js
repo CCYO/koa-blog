@@ -31,7 +31,7 @@ async function removeList(id_list) {
   return new SuccModel({ data: row });
 }
 async function modify({ author_id, alt_id, blog_id, alt }) {
-  await BlogImgAlt.update(alt_id, { alt });
+  await BlogImgAlt.update(Opts.BLOG_IMG_ALT.UPDATE.one({ alt_id, alt }));
   //  { id, alt, blog: { id, author_id }, blogImg: { id, name }, img: { id, url, hash }}
   let { data } = await findWholeInfo({ author_id, blog_id, alt_id });
   let opts = { data };

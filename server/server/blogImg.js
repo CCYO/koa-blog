@@ -1,12 +1,7 @@
-const { BlogImg } = require("../db/mysql/model"); //  0406
-const { ErrRes, MyErr } = require("../model"); //  0406
-const Init = require("../utils/init"); //  0406
-async function readList(opts) {
-  let list = await BlogImg.findAll(opts);
-  return Init.blogImg(list);
-}
+const { BlogImg } = require("../db/mysql/model");
+const { ErrRes, MyErr } = require("../model");
+const Init = require("../utils/init");
 
-//  -----------------------------------------------------------------------------------------------
 async function create(data) {
   try {
     let blogImg = await BlogImg.create(data);
@@ -20,16 +15,16 @@ async function countBlogImgAlt(blogImg_id) {
   if (!blogImg) {
     throw new MyErr({
       ...ErrRes.BLOG_IMG.READ.NOT_EXIST,
-      error: `${ErrRes.BLOG_IMG.READ.NOT_EXIST.msg},blogImg/${blogImg_id} 不存在`,
+      error: `blogImg/${blogImg_id} 不存在`,
     });
   }
-  let count = await blogImg.countBlogImgAlts();
-  return count;
+  //  RV count
+  return await blogImg.countBlogImgAlts();
 }
 async function destoryList(opts) {
   try {
-    let row = await BlogImg.destroy(opts);
-    return row;
+    //  RV row
+    return await BlogImg.destroy(opts);
   } catch (error) {
     throw new MyErr({ ...ErrRes.BLOG_IMG.REMOVE.ERR, error });
   }
@@ -38,6 +33,4 @@ module.exports = {
   destoryList,
   countBlogImgAlt,
   create,
-  //  --------------------------------------------------------------------------------------------
-  readList,
 };

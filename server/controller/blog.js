@@ -339,7 +339,10 @@ async function _removeImgList({ blog_id, cancelImgs }) {
     //  找到blog內，指定的blogImgAlt有幾筆
     let resModel = await C_BlogImg.countBlogImgAlt(blogImg_id);
     if (resModel.errno) {
-      throw new MyErr(resModel);
+      throw new MyErr({
+        ...resModel,
+        error: `blogImg/${blogImg_id} 不具備任何有關聯的 blogImgAlt`,
+      });
     }
     if (resModel.data === blogImgAlt_list.length) {
       ////  代表要刪除整筆 blogImg

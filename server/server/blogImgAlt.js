@@ -24,8 +24,8 @@ async function destoryList(opts) {
     throw new MyErr({ ...ErrRes.BLOG_IMG_ALT.REMOVE.ERR, error });
   }
 }
-async function update(id, data) {
-  let [row] = await BlogImgAlt.update(data, { where: { id } });
+async function update({ id, alt }) {
+  let [row] = await BlogImgAlt.update({ alt }, { where: { id } });
   if (!row) {
     throw new MyErr({
       ...ErrRes.BLOG_IMG_ALT.UPDATE.ERR,
