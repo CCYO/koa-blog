@@ -249,7 +249,6 @@ function init(data, ...fns) {
 }
 
 const { init_newsOfFollowId, init_excepts } = require("./news");
-const { blogImg } = require("../../middleware/api/firebase");
 
 module.exports = {
   //  0423

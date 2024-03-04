@@ -1,6 +1,6 @@
 const Init = require("../utils/init");
 //  0406
-const { ErrRes, MyErr, ErrModel } = require("../model");
+const { ErrRes, MyErr } = require("../model");
 //  0406
 const { ArticleReader } = require("../db/mysql/model"); //  0406
 //  0514

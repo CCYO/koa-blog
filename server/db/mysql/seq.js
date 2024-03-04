@@ -1,7 +1,7 @@
 /**
  * @description Sequelize Ins
  */
-const { Sequelize, DataTypes } = require("sequelize");
+const { Sequelize } = require("sequelize");
 const cls = require("cls-hooked");
 const { DB } = require("../../config");
 let seqOps = { ...DB.MYSQL_CONF, logging: false };

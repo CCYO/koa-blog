@@ -1,6 +1,3 @@
-//  0411
-
-//  0406
 /** 創建Blog
  * @param {string} title 文章表提
  * @param {number} user_id 作者id

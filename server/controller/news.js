@@ -1,13 +1,9 @@
-//  0430
-const { SuccModel } = require("../model");
-
 /**
  * @description Controller news相關
  */
-//  0426
 const News = require("../server/news");
+const { SuccModel } = require("../model");
 
-//  -------------------------------------------------------------------------------------------
 async function readMore({ user_id, excepts }) {
   /*
     excepts: {
