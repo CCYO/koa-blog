@@ -69,10 +69,11 @@ async function updateList(newDatas) {
 }
 module.exports = {
   update,
+  deleteList,
   //  ----------------------------------------------------------------------------
   updateList,
   //  0414
-  deleteList,
+
   //  0414
   readList,
   //  0411
