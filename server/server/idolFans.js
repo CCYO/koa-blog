@@ -9,25 +9,9 @@ const {
   ErrRes,
 } = require("../model");
 
-//  0423
-async function updateList(datas, updateOnDuplicate) {
-  try {
-    let list = await IdolFans.bulkCreate(datas, { updateOnDuplicate });
-    return Init.idolFans(list);
-  } catch (err) {
-    throw new MyErr({ ...ErrRes.IDOL_FANS.UPDATE.ERR, err });
-  }
-}
-
-//  -------------------------------
-async function restoring(id) {
-  try {
-    let idolFans = await IdolFans.findByPk(id, { paranoid: false });
-    //  RV IdolFans Model instance
-    return await idolFans.restore();
-  } catch (error) {
-    throw new MyErr({ ...ErrRes.IDOL_FANS.RESTORE.ERR, error });
-  }
+async function restore(opts) {
+  let x = await IdolFans.restore(opts);
+  return x;
 }
 async function deleteList(opts) {
   try {
@@ -50,8 +34,5 @@ async function update(id, newData) {
 module.exports = {
   update,
   deleteList,
-  restoring,
-  //    -----------------------
-  //  0423
-  updateList,
+  restore,
 };

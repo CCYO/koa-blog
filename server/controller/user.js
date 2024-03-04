@@ -87,7 +87,6 @@ async function follow({ fans_id, idol_id }) {
     fans_id,
     idol_id,
   });
-  //  恢復軟刪除
   if (errno) {
     ////  非初次follow
     let { idolFans, articleReaders } = data;

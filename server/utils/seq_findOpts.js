@@ -7,6 +7,7 @@ const {
   COMMENT,
   IMG,
   BLOG_IMG,
+  IDOL_FANS,
 } = require("./seq_options");
 
 //  0411
@@ -14,6 +15,7 @@ const { Op } = require("sequelize");
 const { BlogImg, Comment } = require("../db/mysql/model");
 
 module.exports = {
+  IDOL_FANS,
   IMG,
   COMMENT: {
     //  0514

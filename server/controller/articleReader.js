@@ -22,7 +22,7 @@ async function modify(id, newData) {
       error: `articleReader/${id} 未更新`,
     });
   }
-  return new SuccModel({ data: row });
+  return new SuccModel();
 }
 
 module.exports = {

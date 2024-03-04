@@ -3,7 +3,10 @@ const { SuccModel, ErrRes, MyErr } = require("../model");
 const Opts = require("../utils/seq_findOpts");
 
 async function restoringList(id_list) {
-  await Promise.all(id_list.map((id) => IdolFans.restoring(id)));
+  let row = await IdolFans.restore(Opts.IDOL_FANS.RESTORY.list(id_list));
+  if (id_list.length !== row) {
+    throw new MyErr(ErrRes.IDOL_FANS.RESTORE.ROW_ERR);
+  }
   return new SuccModel();
 }
 
@@ -23,7 +26,7 @@ async function modify(id, newData) {
       error: `idolFans/${id} 未更新`,
     });
   }
-  return new SuccModel({ data: row });
+  return new SuccModel();
 }
 
 module.exports = {
