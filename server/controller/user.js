@@ -6,7 +6,6 @@ const User = require("../server/user"); //  0404
 const C_Blog = require("./blog");
 const C_IdolFans = require("./idolFans");
 const C_ArticleReader = require("./articleReader");
-const { hash } = require("../utils/crypto");
 const Opts = require("../utils/seq_findOpts");
 const {
   ENV,
@@ -44,9 +43,7 @@ async function register({ email, password }) {
   if (resModel.errno) {
     return resModel;
   }
-  const data = await User.create(
-    Opts.USER.CREATE.one({ email, password: hash(password) })
-  );
+  const data = await User.create(Opts.USER.CREATE.one({ email, password }));
   return new SuccModel({ data });
 }
 /** 登入 user
@@ -60,9 +57,7 @@ async function login({ email, password }) {
   } else if (!password) {
     return new ErrModel(ErrRes.USER.READ.NO_PASSWORD);
   }
-  const data = await User.read(
-    Opts.USER.FIND.login({ email, password: hash(password) })
-  );
+  const data = await User.read(Opts.USER.FIND.login({ email, password }));
   if (!data) {
     return new ErrModel(ErrRes.USER.READ.LOGIN_FAIL);
   }
@@ -152,12 +147,11 @@ async function modifyInfo({ _origin, ...newData }) {
     if (errno) {
       throw new MyErr(ErrRes.USER.UPDATE.ORIGIN_PASSWORD_ERR);
     }
-    newData.password = hash(newData.password);
     delete newData.origin_password;
     delete newData.password_again;
   }
   await User.update(Opts.USER.UPDATE.one({ user_id, newData }));
-  let data = await find(user_id);
+  let { data } = await find(user_id);
   let opts = { data };
   if (process.env.NODE_ENV !== "nocache") {
     //  更新數據，不是新增數據
@@ -242,7 +236,9 @@ async function _findBlogListHasCommented(user_id) {
   return [...set_blogs];
 }
 async function _findInfoForUserPage(user_id) {
-  let { currentUser, fansList, idolList } = await _findRelationship(user_id);
+  let {
+    data: { currentUser, fansList, idolList },
+  } = await _findRelationship(user_id);
   let { data: blogs } = await C_Blog.findListForUserPage(user_id);
   let data = { currentUser, relationShip: { fansList, idolList }, blogs };
   return new SuccModel({ data });

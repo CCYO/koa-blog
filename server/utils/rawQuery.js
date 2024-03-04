@@ -59,7 +59,7 @@ async function readNews({ user_id, excepts }) {
             AND deletedAt IS NULL
             ${list.msgReceiver}
   
-    ) AS DUAL
+    ) AS table_dual
     ORDER BY confirm, createdAt DESC
     LIMIT ${QUERY_NEWS.LIMIT}
     `;
@@ -98,7 +98,7 @@ async function count(user_id) {
           WHERE
               receiver_id=${user_id}
               AND deletedAt IS NULL 
-      ) AS DUAL
+      ) AS table_dual
       `;
   }
 }

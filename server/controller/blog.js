@@ -37,12 +37,10 @@ async function findListForPagination({
 async function findInfoForPrivatePage({ cache, blog_id, author_id }) {
   let { exist, data } = cache;
   if (exist === CACHE.STATUS.NO_CACHE) {
-    let resModel = await _checkPermission({ blog_id, author_id });
-    if (errno) {
-      resModel.data.html = encodeURI(
-        resModel.data.html ? resModel.data.html : ""
-      );
-    }
+    let resModel = await checkPermission({ blog_id, author_id });
+    resModel.data.html = encodeURI(
+      resModel.data.html ? resModel.data.html : ""
+    );
     return resModel;
   } else {
     return new SuccModel({ data });
@@ -140,6 +138,7 @@ async function modify({ blog_id, author_id, ...blog_data }) {
   //  存放 blog 要更新的數據
   let newData = {};
 
+  let go = false;
   //  更新 文章公開狀態
   if (map.has("show")) {
     newData.show = map.get("show");
@@ -153,11 +152,17 @@ async function modify({ blog_id, author_id, ...blog_data }) {
       newData.showAt = null;
       await _destoryReaders(blog_id);
     }
+    go = true;
   }
-  if (cache && (map.has("title") || map.has("show"))) {
-    cache[CACHE.TYPE.PAGE.USER] = [author_id];
+  if (map.has("html")) {
+    newData.html = map.get("html");
+    go = true;
   }
-  if (map.has("html") || map.has("title") || map.has("show")) {
+  if (map.has("title")) {
+    newData.title = map.get("title");
+    go = true;
+  }
+  if (go) {
     //  更新文章
     await Blog.update(Opts.BLOG.UPDATE.one({ blog_id, newData }));
   }
@@ -167,10 +172,14 @@ async function modify({ blog_id, author_id, ...blog_data }) {
     //  cancelImgs [{blogImg_id, blogImgAlt_list}, ...]
     await _removeImgList({ author_id, blog_id, cancelImgs });
   }
-  let resModel = await _checkPermission({ author_id, blog_id });
+  let resModel = await checkPermission({ author_id, blog_id });
   let data = resModel.data;
   let opts = { data };
+
   if (cache) {
+    if (map.has("title") || map.has("show")) {
+      cache[CACHE.TYPE.PAGE.USER] = [author_id];
+    }
     opts.cache = cache;
   }
   return new SuccModel(opts);
@@ -225,7 +234,7 @@ async function removeList({ blogList, author_id }) {
     throw new MyErr(ErrRes.BLOG.REMOVE.NO_DATA);
   }
   await Promise.all(
-    blogList.map((blog_id) => _checkPermission({ author_id, blog_id }))
+    blogList.map((blog_id) => checkPermission({ author_id, blog_id }))
   );
   await Promise.all(blogList.map(_destoryReaders));
   let row = await Blog.destroyList(Opts.BLOG.REMOVE.list(blogList));
@@ -265,7 +274,7 @@ async function findListForAlbumListPage(author_id) {
   return new SuccModel({ data });
 }
 async function findAlbum({ author_id, blog_id }) {
-  let resModel = await _checkPermission({ author_id, blog_id });
+  let resModel = await checkPermission({ author_id, blog_id });
   if (resModel.errno) {
     return resModel;
   }
@@ -319,6 +328,7 @@ module.exports = {
   add,
   modify,
   findInfoForCommonPage,
+  checkPermission,
   findInfoForPrivatePage,
   findListForUserPage,
   findListForPagination,
@@ -414,16 +424,19 @@ async function _findPrivateListForUserPage(
   );
   return new SuccModel({ data });
 }
-async function _checkPermission({ author_id, blog_id }) {
+async function checkPermission({ author_id, blog_id }) {
   let data = await Blog.read(Opts.BLOG.FIND.wholeInfo(blog_id));
   if (!data) {
-    return new ErrModel({
+    throw new MyErr({
       ...ErrRes.BLOG.READ.NOT_EXIST,
-      msg: `blog/${blog_id}不存在`,
+      error: `blog/${blog_id}不存在`,
     });
   }
   if (data.author.id !== author_id) {
-    throw new MyErr(ErrRes.BLOG.READ.NOT_AUTHOR);
+    throw new MyErr({
+      ...ErrRes.BLOG.READ.NOT_AUTHOR,
+      error: `user/${author_id} 不是 blog/${blog_id} 的作者`,
+    });
   }
   let opts = { data };
   return new SuccModel(opts);

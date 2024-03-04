@@ -29,14 +29,7 @@ module.exports = async (ctx, next) => {
         author_id: ctx.session.user.id,
         blog_id: ctx.request.body.blog_id,
       };
-      let resModel = await C_Blog.findWholeInfo(opts);
-      let { errno, data } = resModel;
-      if (errno) {
-        throw new MyErr({
-          ...resModel,
-          error: `${action}/${blog_id}時，發生錯誤`,
-        });
-      }
+      let { data } = await C_Blog.checkPermission(opts);
       let { title, html, show } = data;
       let _origin = { title, html, show };
       let newData = { ...ctx.request.body, _origin };

@@ -215,7 +215,7 @@ const UPDATE = {
   one: ({ blog_id, newData }) => {
     let { html, title, ...data } = newData;
     if (newData.hasOwnProperty("html")) {
-      data.password = my_xss(html);
+      data.html = my_xss(html);
     }
     if (newData.hasOwnProperty("title")) {
       data.title = my_xss(title);

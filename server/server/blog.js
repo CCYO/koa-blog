@@ -61,7 +61,7 @@ async function readListAndCountAll(opts) {
  * @param {object} blog_data 要更新的資料
  * @returns {number} 1代表更新成功，0代表失敗
  */
-async function update({ id, data }) {
+async function update({ id, ...data }) {
   let [row] = await Blog.update(data, { where: { id } });
   if (!row) {
     throw new MyErr({
