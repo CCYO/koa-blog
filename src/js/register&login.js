@@ -55,7 +55,7 @@ async function init() {
       setTimeout(() => {
         let params = new URL(location.href).searchParams;
         if (params.has("from")) {
-          alert("需要登入才能前往目標頁面");
+          alert("需要登入才能使用頁面功能");
         }
       }, 0);
     }

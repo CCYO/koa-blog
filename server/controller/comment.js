@@ -23,7 +23,7 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
     //  與newComment有關係的 msgReceiver
     msgReceiver: { author, curCommenter, others }, //  other 評論過的紀錄
     //  與newComment有關係的 user
-    commenters: { notReceiver, other }, //  other 無論有無評論
+    commenters: { notReceiver, all }, //  other 無論有無評論
   } = info.data;
 
   //  存放要更新的數據
@@ -94,13 +94,7 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
       });
     }
   }
-  let cache = undefined;
-  if (!ENV.isNoCache) {
-    cache = {
-      [CACHE.TYPE.PAGE.BLOG]: [article_id],
-      [CACHE.TYPE.NEWS]: [],
-    };
-  }
+
   //  將作者與留言者以外，其他評論者所擁有的「與 pid 相關的 msgReceiver」
   //  放入待處理的數據列表 container 中
   if (others.length) {
@@ -109,23 +103,20 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
   //  整理待更新數據
   for (let msgReceiver of container) {
     if (msgReceiver.confirm) {
-      //  針對「已確認」狀態的msgReceiver，更新為新創見的狀態 ---------------------------------> 新通知 -----> 納入 newsCache
+      //  針對「已確認」狀態的msgReceiver，更新為新創見的狀態 ---------------------------------> 新通知
       newDatas.push({
         ...msgReceiver,
         ...defProp,
         createdAt: newComment.createdAt,
         confirm: false,
       });
-      if (!ENV.isNoCache) {
-        cache[CACHE.TYPE.NEWS].push(msgReceiver.receiver_id);
-      }
     } else {
       //  針對「未確認」狀態的msgReceiver，更新為新創見的狀態 ---------------------------------> 更新舊通知
       //  更新 { msg_id: newComment.id, updatedAt: newComment.createdAt };
       newDatas.push({ ...msgReceiver, ...defProp });
     }
   }
-  //  針對既非作者與非留言者，尚未建立「與 pid 相關的 msgReceiver」的receiver，創建全新通知 ----> 新通知 -----> 納入 newsCache
+  //  針對既非作者與非留言者，尚未建立「與 pid 相關的 msgReceiver」的receiver，創建全新通知 ----> 新通知
   for (let receiver_id of notReceiver) {
     newDatas.push({
       ...defProp,
@@ -133,9 +124,6 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
       createdAt: newComment.createdAt,
       confirm: false,
     });
-    if (!ENV.isNoCache) {
-      cache[CACHE.TYPE.NEWS].push(receiver_id);
-    }
   }
   //  更新
   if (newDatas.length) {
@@ -145,7 +133,10 @@ async function add({ commenter_id, article_id, html, pid, author_id }) {
   let { data } = await _findItemForRender(newComment.id);
   let opts = { data };
   if (!ENV.isNoCache) {
-    opts.cache = cache;
+    opts.cache = {
+      [CACHE.TYPE.PAGE.BLOG]: [article_id],
+      [CACHE.TYPE.NEWS]: [...all],
+    };
   }
   return new SuccModel(opts);
 }
@@ -244,7 +235,6 @@ async function remove({ user_id, comment_id }) {
   if (!ENV.isNoCache) {
     opts.cache = { [CACHE.TYPE.PAGE.BLOG]: [article_id] };
   }
-
   return new SuccModel(opts);
   //  整理出要刪除與更新的msgReceiver
   function _resetMsgReceiver(
@@ -456,13 +446,13 @@ async function _findInfoForAdd({ article_id, commenter_id, pid, author_id }) {
     //  紀錄author與curCommenter以外，與pid相關的commenter
     commenters: {
       //  無論有沒有被登記過
-      other: new Set(),
+      all: new Set(),
       //  不曾被登記過
       notReceiver: new Set(),
     },
   };
   if (commenter_id !== author_id) {
-    res.commenters.other.add(author_id);
+    res.commenters.all.add(author_id);
   }
   let off = new Set();
   //  receivers: [{ id, msgReceiver: {id, msg_id, receiver_id, confirm, deletedAt, ...time} }]
@@ -487,7 +477,7 @@ async function _findInfoForAdd({ article_id, commenter_id, pid, author_id }) {
       //  不曾登記過
       commenters.notReceiver.add(comment.commenter_id);
       //  無論有沒有被登記過
-      commenters.other.add(comment.commenter_id);
+      commenters.all.add(comment.commenter_id);
     }
     for (let { id, MsgReceiver } of receivers) {
       ////  整理與此pid有關的receiver

@@ -1,8 +1,6 @@
-const Init = require("../utils/init");
-//  0411
-const { ErrRes, MyErr } = require("../model");
-//  0411
 const { MsgReceiver } = require("../db/mysql/model");
+const Init = require("../utils/init");
+const { ErrRes, MyErr } = require("../model");
 
 async function bulkCreate({ datas, updateOnDuplicate }) {
   try {
@@ -14,6 +12,7 @@ async function bulkCreate({ datas, updateOnDuplicate }) {
     throw new MyErr({ ...ErrRes.MSG_RECEIVER.UPDATE.ERR, error });
   }
 }
+
 async function destroyList(opts) {
   try {
     //  RV: row
@@ -22,6 +21,7 @@ async function destroyList(opts) {
     throw new MyErr({ ...ErrRes.MSG_RECEIVER.REMOVE.ERR, error });
   }
 }
+
 async function update(id, newData) {
   try {
     let [row] = await MsgReceiver.update(newData, { where: { id } });
@@ -30,6 +30,7 @@ async function update(id, newData) {
     throw new MyErr({ ...ErrRes.MSG_RECEIVER.UPDATE.ERR, error });
   }
 }
+
 module.exports = {
   update,
   destroyList,
