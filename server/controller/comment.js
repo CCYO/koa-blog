@@ -350,8 +350,8 @@ async function confirmNews({ receiver_id, msgReceiver_id }) {
     Opts.COMMENT.FIND.itemByMsgReceiver({ receiver_id, msgReceiver_id })
   );
   if (!comment) {
-    //  comment不存在
-    //  譬如comment已刪除，但newsCache不會針對刪除做更新，故使用者可能在session.news中取得已被刪除的msgReceiver_id
+    //  msg不存在
+    //  譬如msg已刪除，但newsCache不會針對刪除做更新，故receiver可能在session.news中取得已被刪除的msgReceiver_id
     let opts = ErrRes.NEWS.READ.NOT_EXIST;
     if (!ENV.isNoCache) {
       opts.cache = { [CACHE.TYPE.NEWS]: [receiver_id] };

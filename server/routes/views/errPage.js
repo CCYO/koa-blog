@@ -15,12 +15,17 @@ router.get("/permission/:errno", async (ctx) => {
       opts.errModel = new ErrModel(ErrRes.PAGE.NO_PAGE);
       opts.title = "404";
       break;
+    //  失效的通知
+    case ErrRes.NEWS.READ.NOT_EXIST:
+      opts.errModel = new ErrModel(ErrRes.NEWS.READ.NOT_EXIST);
+      opts.title = ErrRes.NEWS.READ.NOT_EXIST.msg;
+      break;
     case ErrRes.BLOG.READ.NOT_EXIST.errno:
       opts.errModel = new ErrModel(ErrRes.BLOG.READ.NOT_EXIST);
       opts.title = ErrRes.BLOG.READ.NOT_EXIST.msg;
       break;
     case ErrRes.COMMENT.READ.NOT_EXIST.errno:
-      opts.errModel = new ErrModel(ErrRes.BLOG.READ.NOT_EXIST);
+      opts.errModel = new ErrModel(ErrRes.COMMENT.READ.NOT_EXIST);
       opts.title = ErrRes.COMMENT.READ.NOT_EXIST.msg;
       break;
     case ErrRes.BLOG.READ.NO_ALBUM.errno:

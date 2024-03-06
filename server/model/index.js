@@ -26,8 +26,8 @@ class SuccModel extends _Model {
 }
 //  0404
 class ErrModel extends _Model {
-  constructor({ errno, msg, data }) {
-    super({ errno, msg, data });
+  constructor({ errno, msg, data, cache }) {
+    super({ errno, msg, data, cache });
   }
 }
 //  0404

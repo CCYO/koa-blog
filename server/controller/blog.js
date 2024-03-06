@@ -290,7 +290,8 @@ async function confirmNews({ reader_id, articleReader_id }) {
     Opts.BLOG.FIND.itemByArticleReader({ reader_id, articleReader_id })
   );
   if (!blog) {
-    //  blog不存在
+    //  article不存在
+    //  譬如article已刪除或隱藏，但newsCache不會針對刪除做更新，故reader可能在session.news中取得已被刪除的articleReceiver_id
     let opts = ErrRes.NEWS.READ.NOT_EXIST;
     if (!ENV.isNoCache) {
       opts.cache = { [CACHE.TYPE.NEWS]: [reader_id] };

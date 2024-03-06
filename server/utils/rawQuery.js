@@ -1,10 +1,5 @@
 const { QueryTypes } = require("sequelize");
-const moment = require("moment");
 const { seq } = require("../db/mysql/model");
-const C_Comment = require("../controller/comment");
-const C_Blog = require("../controller/blog");
-const C_User = require("../controller/user");
-const { MyErr } = require("../model");
 const {
   DEFAULT: { QUERY_NEWS },
 } = require("../config");
@@ -19,10 +14,9 @@ async function readNews({ user_id, excepts }) {
         ... ],
         confirm: [...] 
     }*/
-  let newsList = await seq.query(_genQuery(user_id, excepts), {
+  return await seq.query(_genQuery(user_id, excepts), {
     type: QueryTypes.SELECT,
   });
-  return await _initNews(newsList);
 
   function _genQuery(user_id, excepts) {
     let list = { idolFans: "", articleReader: "", msgReceiver: "" };
@@ -66,7 +60,7 @@ async function readNews({ user_id, excepts }) {
   }
 }
 
-async function count(user_id) {
+async function countNews(user_id) {
   let [{ unconfirm, confirm, total }] = await seq.query(_genQuery(user_id), {
     type: QueryTypes.SELECT,
   });
@@ -104,50 +98,6 @@ async function count(user_id) {
 }
 
 module.exports = {
-  count,
+  countNews,
   readNews,
 };
-
-async function _initNews(newsList) {
-  let list = await Promise.all(newsList.map(_findNews));
-  //  分為 讀過/未讀過
-  let res = list.reduce(
-    (acc, news) => {
-      if (news.confirm) {
-        acc.confirm.push(news);
-      } else {
-        acc.unconfirm.push(news);
-      }
-      return acc;
-    },
-    { unconfirm: [], confirm: [] }
-  );
-  return res;
-
-  async function _findNews(news) {
-    let { type, id, target_id, follow_id, confirm, createdAt } = news;
-    //  序列化時間數據
-    let timestamp = moment(createdAt, "YYYY-MM-DD[T]hh:mm:ss.sss[Z]").fromNow();
-    //  結果的預設值
-    let res = { type, id, timestamp, confirm };
-    if (type === QUERY_NEWS.TYPE.IDOL_FANS) {
-      let resModel = await C_User.find(follow_id);
-      if (resModel.errno) {
-        throw new MyErr({ ...resModel, error: `user/${follow_id} 不存在` });
-      }
-      return { ...res, fans: resModel.data };
-    } else if (type === QUERY_NEWS.TYPE.ARTICLE_READER) {
-      let resModel = await C_Blog.findItemForNews(target_id);
-      if (resModel.errno) {
-        throw new MyErr({ ...resModel, error: `blog/${target_id} 不存在` });
-      }
-      return { ...res, blog: resModel.data };
-    } else if (type === QUERY_NEWS.TYPE.MSG_RECEIVER) {
-      let resModel = await C_Comment.findInfoForNews(target_id);
-      if (resModel.errno) {
-        throw new MyErr({ ...resModel, error: `comment/${target_id} 不存在` });
-      }
-      return { ...res, comment: resModel.data };
-    }
-  }
-}

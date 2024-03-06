@@ -43,9 +43,18 @@ async function init() {
 
     await G.main(initMain);
     //  若是因為comment通知前來此頁面，可以直接滑動至錨點
-    if (location.hash) {
-      location.href = location.hash;
-    }
+    (function () {
+      let res = /#comment_\d+/.exec(location.href);
+      if (res) {
+        let rect = $(res[0]).parent().get(0).getBoundingClientRect();
+        let { top: commentYcoord } = rect;
+        let { height: navHeight } = document
+          .querySelector("nav.navbar")
+          .getBoundingClientRect();
+        let targetY = Math.ceil(commentYcoord - navHeight);
+        window.scrollTo(0, targetY);
+      }
+    })();
     async function initMain() {
       function _parseHtmlStr_XImgToImg() {
         /* 將 <x-img> 數據轉回 <img> */

@@ -29,8 +29,11 @@ async function init() {
       let alertMsg;
       let errno = G.data.errModel.errno;
       let target;
-      //  404 -> 上一頁 || 廣場頁
-      if (errno === ErrRes.PAGE.NO_PAGE.errno) {
+      if (
+        errno === ErrRes.PAGE.NO_PAGE.errno ||
+        errno === ErrRes.NEWS.READ.NOT_EXIST
+      ) {
+        //  404 || 通知已過期
         BackPage();
       } else if (errno === ErrRes.PAGE.NO_LOGIN.errno) {
         //  需登入 -> 登入頁 -> 目的地
@@ -50,7 +53,7 @@ async function init() {
           location.replace(target);
         }, 6000);
       }, 0);
-
+      //  上一頁or廣場頁
       function BackPage() {
         let hasReferrer = !!document.referrer;
         let someOrigin =

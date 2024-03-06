@@ -195,6 +195,8 @@ async function confirmNews({ idol_id, idolFans_id }) {
     Opts.USER.FIND.itemByIdolFans({ idol_id, idolFans_id })
   );
   if (!idol) {
+    //  idol不存在
+    //  譬如fans已退追，但newsCache不會針對退追做更新，故idol可能在session.news中取得已被刪除的idolFans_id
     let opts = ErrRes.NEWS.READ.NOT_EXIST;
     if (!ENV.isNoCache) {
       opts.cache = { [NEWS]: [idol_id] };
