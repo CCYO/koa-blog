@@ -22,13 +22,13 @@ client.connect();
 //  處理 set 格式的緩存(此專案中，拿來系統紀錄user有無新通知)
 function _set(type) {
   const KEY = type;
-  return { del, add, get, has };
+  return { has, get, del, add };
   async function has(id) {
-    let set = await get();
+    let set = await _get();
     return set.has(id);
   }
   async function del(list) {
-    let set = await get();
+    let set = await _get();
     for (let item of list) {
       set.delete(item);
     }
@@ -37,7 +37,7 @@ function _set(type) {
     return set;
   }
   async function add(list) {
-    let set = await get();
+    let set = await _get();
     for (let item of list) {
       set.add(item);
     }
@@ -45,14 +45,14 @@ function _set(type) {
     await Redis.set(KEY, arr);
     return set;
   }
-  async function get() {
+  async function _get() {
     let arr = await Redis.get(KEY);
     return new Set(arr);
   }
 }
 //  處理 obj 格式的緩存(此專案中，拿來記錄user與blog的頁面數據)
 function _obj(type) {
-  return { get, set, has, del };
+  return { has, get, set, del };
   async function del(list) {
     for (let item of list) {
       const KEY = `${type}:${item}`;

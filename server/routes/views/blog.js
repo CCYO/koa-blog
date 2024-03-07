@@ -3,18 +3,19 @@
  */
 
 const router = require("koa-router")();
-const {
-  VIEWS: { CHECK },
-} = require("../../middleware");
 const Blog = require("../../controller/blog");
+const ejs_template = require("../../utils/ejs_template");
+
 const {
   DEFAULT: {
     CACHE: { TYPE },
   },
 } = require("../../config");
-const ejs_template = require("../../utils/ejs_template");
-const privateCache = CHECK.private(TYPE.PAGE.BLOG);
-const commonCache = CHECK.common(TYPE.PAGE.BLOG);
+const {
+  VIEWS: { CACHE },
+} = require("../../middleware");
+const privateCache = CACHE.genPrivate(TYPE.PAGE.BLOG);
+const commonCache = CACHE.genCommon(TYPE.PAGE.BLOG);
 
 //  preview blog page
 router.get("/blog/preview/:id", privateCache, async (ctx) => {

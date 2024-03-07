@@ -12,6 +12,5 @@ async function modify(ctx, next) {
 }
 
 module.exports = {
-  //  0504
   modify,
 };

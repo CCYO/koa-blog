@@ -3,7 +3,7 @@
  */
 let router = require("koa-router")();
 const {
-  VIEWS: { CHECK },
+  VIEWS: { CHECK, CACHE },
 } = require("../../middleware");
 const Blog = require("../../controller/blog");
 const {
@@ -12,7 +12,7 @@ const {
 router.prefix("/album");
 
 //  album list page
-router.get("/list", CHECK.login, async (ctx) => {
+router.get("/list", CACHE.noCache, CHECK.login, async (ctx) => {
   let author = ctx.session.user;
   let { data: album } = await Blog.findListForAlbumListPage(author.id);
   await ctx.render("albumList", {
@@ -23,7 +23,7 @@ router.get("/list", CHECK.login, async (ctx) => {
   });
 });
 //  album page of blog_id
-router.get("/:blog_id", CHECK.login, async (ctx) => {
+router.get("/:blog_id", CACHE.noCache, CHECK.login, async (ctx) => {
   let opts = {
     blog_id: ctx.params.blog_id * 1,
     author_id: ctx.session.user.id,

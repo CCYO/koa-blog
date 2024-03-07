@@ -30,7 +30,6 @@ async function update(id, newData) {
 }
 module.exports = {
   restore,
-
   update,
   deleteList,
 };

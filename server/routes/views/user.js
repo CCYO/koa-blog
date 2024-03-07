@@ -2,7 +2,7 @@
  * @description Router/Views user
  */
 const {
-  VIEWS: { CHECK },
+  VIEWS: { CHECK, CACHE },
 } = require("../../middleware");
 const User = require("../../controller/user");
 const ejs_template = require("../../utils/ejs_template");
@@ -14,18 +14,18 @@ const {
 } = require("../../config");
 
 const router = require("koa-router")();
-const privateCache = CHECK.private(TYPE.PAGE.USER);
-const commonCache = CHECK.common(TYPE.PAGE.USER);
+const privateCache = CACHE.genPrivate(TYPE.PAGE.USER);
+const commonCache = CACHE.genCommon(TYPE.PAGE.USER);
 
 //  register page
-router.get("/register", CHECK.skipLogin, async (ctx) => {
+router.get("/register", CACHE.noCache, CHECK.skipLogin, async (ctx) => {
   await ctx.render("register&login", {
     title: "註冊",
     active: "register",
   });
 });
 //  login page
-router.get("/login", CHECK.skipLogin, async (ctx) => {
+router.get("/login", CACHE.noCache, CHECK.skipLogin, async (ctx) => {
   await ctx.render("register&login", {
     title: "登入",
     active: "login",
@@ -86,12 +86,8 @@ router.get("/other/:id", CHECK.isSelf, commonCache, async (ctx) => {
   });
 });
 //  設置頁
-router.get("/setting", CHECK.login, async (ctx, next) => {
+router.get("/setting", CACHE.noCache, CHECK.login, async (ctx, next) => {
   let currentUser = ctx.session.user;
-  //  不允許前端緩存
-  ctx.set({
-    ["Cache-Control"]: "no-store",
-  });
   await ctx.render("setting", {
     title: `${currentUser.nickname}個人資料設置`,
     currentUser,

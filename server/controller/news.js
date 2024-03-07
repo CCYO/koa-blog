@@ -31,7 +31,16 @@ async function readMore({ user_id, excepts }) {
         },
         num: { unconfirm, confirm, total }
     }*/
-  let { list, num } = await News.readList({ user_id, excepts });
+  if (!excepts) {
+    excepts = { idolFans: [], articleReader: [], msgReceiver: [], total: 0 };
+  }
+  let list = { confirm: [], unconfirm: [] };
+  //  目前news總數，其中有無確認過的又各有多少
+  //  num { unconfirm, confirm, total }
+  let num = await News.count(user_id);
+  if (num.total && num.total !== excepts.total) {
+    list = await News.readList({ user_id, excepts });
+  }
   list = await _findThroughData(list);
   let data = { news: { list, num } };
   return new SuccModel({ data });

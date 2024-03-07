@@ -5,24 +5,6 @@ const {
 } = require("../config");
 
 async function readList({ user_id, excepts }) {
-  if (!excepts) {
-    excepts = { idolFans: [], articleReader: [], msgReceiver: [], total: 0 };
-  }
-  //  目前news總數，其中有無確認過的又各有多少
-  //  num { unconfirm, confirm, total }
-  let num = await _queryCount(user_id);
-  let list = { confirm: [], unconfirm: [] };
-  if (num.total && num.total !== excepts.total) {
-    list = await _queryReadList({ user_id, excepts });
-  }
-  return { list, num };
-}
-
-module.exports = {
-  readList,
-};
-
-async function _queryReadList({ user_id, excepts }) {
   /*
     {
         unconfirm: [
@@ -78,7 +60,7 @@ async function _queryReadList({ user_id, excepts }) {
   }
 }
 
-async function _queryCount(user_id) {
+async function count(user_id) {
   let [{ unconfirm, confirm, total }] = await seq.query(genQuery(user_id), {
     type: QueryTypes.SELECT,
   });
@@ -114,3 +96,8 @@ async function _queryCount(user_id) {
       `;
   }
 }
+
+module.exports = {
+  readList,
+  count,
+};
