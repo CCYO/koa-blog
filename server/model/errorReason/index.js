@@ -10,7 +10,9 @@ const PAGE = require("./page");
 const COMMENT = require("./comment");
 const MSG_RECEIVER = require("./msgReceiver");
 const IMG = require("./img");
+const CACHE = require("./cache");
 module.exports = {
+  CACHE,
   MSG_RECEIVER,
   COMMENT,
   PAGE,

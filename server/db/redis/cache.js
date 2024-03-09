@@ -22,7 +22,7 @@ client.connect();
 //  處理 set 格式的緩存(此專案中，拿來系統紀錄user有無新通知)
 function _set(type) {
   const KEY = type;
-  return { has, get, del, add };
+  return { has, del, add };
   async function has(id) {
     let set = await _get();
     return set.has(id);

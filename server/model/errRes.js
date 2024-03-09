@@ -11,10 +11,24 @@ let {
   COMMENT,
   MSG_RECEIVER,
   IMG,
+  CACHE,
 } = require("./errorReason");
 
 module.exports = {
   TEST: { errno: 666, msg: "測試" },
+  CACHE: {
+    UPDATE: {
+      NO_DATA(type) {
+        return { errno: 50002, msg: `更新 cache/${type} 卻沒提供參數` };
+      },
+    },
+    READ: {
+      NO_DATA(type) {
+        return { errno: 50002, msg: `撈取 cache/${type} 卻沒提供參數` };
+      },
+    },
+    ...CACHE,
+  },
   IMG,
   //  0406
   IDOL_FANS: {
@@ -141,18 +155,7 @@ module.exports = {
     ...ARTICLE_READER,
   },
   SERVER,
-  CACHE: {
-    UPDATE: {
-      NO_DATA(type) {
-        return { errno: 50002, msg: `更新 cache/${type} 卻沒提供參數` };
-      },
-    },
-    READ: {
-      NO_DATA(type) {
-        return { errno: 50002, msg: `撈取 cache/${type} 卻沒提供參數` };
-      },
-    },
-  },
+
   NEWS: {
     FOLLOW_CONFIRM_ERR: { errno: 1101, msg: "Follow.confirm 更新失敗" },
     BLOG_FANS_CONFIRM_ERR: { errno: 1102, msg: "Blog_Fans.confirm 更新失敗" },

@@ -1,4 +1,4 @@
-const S_Cache = require("../../server/cache");
+const C_CacheNews = require("../../controller/cache_news");
 const { log } = require("../../utils/log");
 const { SuccModel } = require("../../model");
 const { DEFAULT } = require("../../config");
@@ -39,14 +39,14 @@ async function news(ctx, next) {
   //  body { status, excepts }
   const { status } = ctx.request.body;
   const { id, news: sessionNews } = ctx.session.user;
-  let cache = S_Cache.getTYPE(DEFAULT.CACHE.TYPE.NEWS);
-  let hasNews = await cache.has(id);
+  let resModel = await C_CacheNews.isExist(id);
+  let hasNews = resModel.errno ? false : true;
   //  若有新通知
   if (hasNews) {
     log(`@ 根據 cache/${DEFAULT.CACHE.TYPE.NEWS} 得知，user/${id} 有新通知`);
     //  清除請求數據
     ctx.request.body = {};
-    await cache.del([id]);
+    await C_CacheNews.removeList([id]);
     //  恢復session.news預設值
     ctx.session.user.news = DEFAULT.USER.SESSION_NEWS;
   } else if (status === DEFAULT.NEWS.FRONT_END_STATUS.CHECK) {
