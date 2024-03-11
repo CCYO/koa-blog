@@ -6,9 +6,9 @@
   <%- include('../../wedgets/navbar.ejs') %>
   <!-- MAIN -->
   <main class="container-md" style="display: none;">
-    <h1 class="mb-3">
-      <%%= blog.title %>的照片列表
-    </h1>
+    <h5>
+      <a href="/blog/<%%= blog.id %>"><%%= blog.title %></a>的照片列表
+    </h5>
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
       <%% for( let alt_id in imgs ){  %>
       <div>

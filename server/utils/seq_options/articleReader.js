@@ -1,7 +1,9 @@
 const { Op } = require("sequelize");
 const RESTORY = {
   list: (id_list) => ({
-    id: { [Op.in]: id_list },
+    where: {
+      id: { [Op.in]: id_list },
+    },
   }),
 };
 

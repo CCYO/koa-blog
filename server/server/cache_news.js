@@ -18,7 +18,7 @@ async function destroyList(id_list) {
 
 async function createList(id_list) {
   let news = getCache(NEWS);
-  return await news._cache.add(id_list);
+  return await news.add(id_list);
 }
 
 module.exports = {

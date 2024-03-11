@@ -6,12 +6,12 @@ const { DEFAULT } = require("../../config");
 async function reset(ctx, next) {
   await next();
   let { data } = ctx.body;
-  log(`@ 重設 user/${data.id} 的 session`);
+  log(`重設 user/${data.id} 的 session`);
   ctx.session.user = { ...data, news: ctx.session.user.news };
 }
 //  remove session
 async function remove(ctx) {
-  log(`@ 移除 使用者user_id:${ctx.session.user.id} 的 session`);
+  log(`移除 使用者user_id:${ctx.session.user.id} 的 session`);
   ctx.session = null;
   ctx.body = new SuccModel({ data: "成功登出" });
 }
@@ -43,14 +43,14 @@ async function news(ctx, next) {
   let hasNews = resModel.errno ? false : true;
   //  若有新通知
   if (hasNews) {
-    log(`@ 根據 cache/${DEFAULT.CACHE.TYPE.NEWS} 得知，user/${id} 有新通知`);
+    log(`根據 cache/${DEFAULT.CACHE.TYPE.NEWS} 得知，user/${id} 有新通知`);
     //  清除請求數據
     ctx.request.body = {};
     await C_CacheNews.removeList([id]);
     //  恢復session.news預設值
     ctx.session.user.news = DEFAULT.USER.SESSION_NEWS;
   } else if (status === DEFAULT.NEWS.FRONT_END_STATUS.CHECK) {
-    log(`@ user/${id} 前端已經取得當前所有通知，後端也暫無新的news條目`);
+    log(`user/${id} 前端已經取得當前所有通知，後端也暫無新的news條目`);
     default_news.hasNews = false;
     let data = { ...ctx.session.user, news: default_news };
     ctx.body = new SuccModel({ data });
@@ -59,11 +59,11 @@ async function news(ctx, next) {
     status === DEFAULT.NEWS.FRONT_END_STATUS.FIRST &&
     ctx.session.user.news.hasNews !== null
   ) {
-    log(`@ user/${id} 直接使用緩存 session.news`);
+    log(`user/${id} 直接使用緩存 session.news`);
     ctx.body = new SuccModel({ data: ctx.session.user });
     return;
   }
-  log(`@ user/${id} 向DB查詢 news數據`);
+  log(`user/${id} 向DB查詢 news數據`);
   await next();
 
   let { errno, data } = ctx.body;
@@ -79,7 +79,7 @@ async function news(ctx, next) {
     ];
   }
   sessionNews.num = data.news.num;
-  log(`@ user/${id} 的 session.user.news 已更新`);
+  log(`user/${id} 的 session.user.news 已更新`);
   //  ctx.body { errno, data: { ctx.session.user } }
   //  ctx.session.user { news, ...user session data }
   //  news { list, num, hasNews }

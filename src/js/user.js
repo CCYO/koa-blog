@@ -215,11 +215,11 @@ async function init() {
                 limit: DATA_BLOG.PAGINATION.BLOG_COUNT,
                 //  前端分頁index從1開始，後端分頁index從0開始，所以要-1
                 offset: (targetPage - 1) * DATA_BLOG.PAGINATION.BLOG_COUNT,
-                show: $$status,
+                show: $$status === "public" ? true : false,
               });
               //  生成html
               let html = $M_template.blog_list({
-                isPublic: $$status ? true : false,
+                isPublic: $$status === "public" ? true : false,
                 isSelf: $$isSelf,
                 page: targetPage,
                 blogs,

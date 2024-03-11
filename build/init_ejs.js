@@ -92,7 +92,8 @@ const PAGE = {
       IMG_NAME_AND_EXT: /^(.+)\.(.+?)$/,
       IMG_ALT_ID: /alt_id=(?<alt_id>\w+)/,
       IMG_PARSE_TO_X_IMG:
-        /<img.+?src=".+?alt_id=(?<alt_id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g,
+        /<img\ssrc="[^=]+?alt_id=(?<alt_id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g,
+      // /<img.+?(?!)src=".+?alt_id=(?<alt_id>\d+?)"(.+?style="(?<style>.*?)")?(.*?)\/>/g,
       X_IMG_PARSE_TO_IMG:
         /<x-img.+?data-alt-id='(?<alt_id>\w+?)'.+?(data-style='(?<style>.*?)')?.*?\/>/g,
     },

@@ -20,12 +20,13 @@ async function findListForPagination({
 }) {
   let resModel;
   if (!show) {
+    if (!currentUser || currentUser.id !== author_id) {
+      throw new MyErr(ErrRes.BLOG.READ.NO_PERMISSION);
+    }
     resModel = await _findPrivateListForUserPage(author_id, {
       limit,
       offset,
     });
-  } else if (!currentUser || currentUser.id !== author_id) {
-    throw new MyErr(ErrRes.BLOG.READ.NO_PERMISSION);
   } else {
     resModel = await _findPublicListForUserPage(author_id, {
       limit,

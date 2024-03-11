@@ -59,7 +59,6 @@ async function init() {
       blog: $$ajv.get_validate(AJV.TYPE.BLOG),
     };
     await G.main(initMain);
-
     async function initMain() {
       /* ------------------------------------------------------------------------------------------ */
       /* JQ Ele in Closure -------------------------------------------------------------------- */
@@ -103,7 +102,6 @@ async function init() {
       $btn_updateBlog.on("click", handle_updateBlog);
       //  btn#remove 綁定 click handle => 刪除 blog
       $btn_removeBlog.on("click", handle_removeBlog);
-
       /* ------------------------------------------------------------------------------------------ */
       /* Init ------------------------------------------------------------------------------------ */
       /* ------------------------------------------------------------------------------------------ */
@@ -112,6 +110,13 @@ async function init() {
         const KEY = "html";
         let cache_content = "";
         let first = true;
+        //  判斷如何顯示modal的表格內容
+        //  0 -> 修改圖片
+        //  1 -> 網路圖片
+        //  2 -> 上傳圖片
+        let setImgMode = 0;
+        //  當插入網路圖片被點擊，model只顯示url，
+        //  若是上傳圖片被點擊，model只顯示alt
         //  editor 的 繁中設定
         i18nAddResources("tw", twResources);
         i18nChangeLanguage("tw");
@@ -146,6 +151,9 @@ async function init() {
           //  每次editor焦點/內容變動時調用
           onChange: handle_debounce_change,
           MENU_CONF: {
+            insertImage: {
+              checkImage: insertCheckImgage,
+            },
             //  關於 upload img 的配置
             uploadImage: {
               //  圖片的上傳函數
@@ -160,8 +168,9 @@ async function init() {
               onInsertedVideo(videoNode) {
                 if (videoNode == null) return;
                 const { src } = videoNode;
+                console.log("inserted video", src);
               },
-              parseVideoSrc: customParseVideoSrc,
+              // parseVideoSrc: customParseVideoSrc,
             },
           },
         };
@@ -176,10 +185,15 @@ async function init() {
         createToolbar({
           editor,
           selector: `#${PAGE_BLOG_EDIT.ID.EDITOR_TOOLBAR_CONTAINER}`,
+          mode: "simple",
+          config: {
+            excludeKeys: ["insertVideo"],
+          },
         });
-        const handle_modalShow = gen_handle_modalShow();
+        // const handle_modalShow = gen_handle_modalShow();
         //  handle 用來隱藏 image modal 的 src & url 編輯功能
         editor.on("modalOrPanelShow", handle_modalShow);
+        editor.on("modalOrPanelHide", handle_modalHide);
         $span_content_count.text(
           `還能輸入${
             SERVER_BLOG.EDITOR.HTML_MAX_LENGTH - editor.getHtml().length
@@ -187,16 +201,43 @@ async function init() {
         );
         //  初始化 payload.html
         return editor;
-        // 自定义转换视频
-        function customParseVideoSrc(src) {
-          const reg = /^https:\/\/youtu.be\/(?<hash>.{11})/;
-          const res = reg.exec(src);
-          if (!res) {
+        //  handle 恢復 setImgMode
+        function handle_modalHide(modalOrPanel) {
+          setImgMode = 0;
+          return;
+        }
+        //  handle 用來隱藏 image modal 的 src & url 編輯功能
+        function handle_modalShow(modalOrPanel) {
+          const $modal = $(modalOrPanel.$elem).first();
+          const $containerList = $modal.find("div > label.babel-container");
+          const isImgModel =
+            $containerList.first().children("span").text() ===
+            twResources.image.src;
+          //  若匹配，代表是 Image modal
+          if (!isImgModel) {
             return;
           }
-          const template = `
+          //  關於編輯圖片資訊的model，每次modalOrPanelShow都會重新創建子表格
+          //  $containerList [ 圖片位置表格, 圖片說明表格, 圖片連結表格]
+          if (setImgMode === 0) {
+            $containerList.eq(1).hide();
+          }
+          $containerList.eq(2).hide();
+          return;
+        }
+
+        // 自定义转换视频
+        function customParseVideoSrc(src) {
+          // const reg = /^https:\/\/youtu.be\/(?<hash>.{11})/;
+          // const res = reg.exec(src);
+          // if (!res) {
+          //   return;
+          // }
+          return genTemplate(res.groups.hash);
+          function genTemplate(hash) {
+            return `
                     <iframe 
-                        src="https://www.youtube.com/embed/${res.groups.hash}"
+                        src="https://www.youtube.com/embed/${hash}"
                         width="570" height="370"
                         title="YouTube video player"
                         frameborder="0"
@@ -211,34 +252,9 @@ async function init() {
                         allowfullscreen
                     ></iframe>
                     `;
-          return template;
+          }
         }
 
-        //  handle 用來隱藏 image modal 的 src & url 編輯功能
-        function gen_handle_modalShow() {
-          let turnoff = true;
-          return function (modalOrPanel) {
-            if (!turnoff) {
-              return;
-            }
-            turnoff = true;
-            //  關閉handle
-            const $modal = $(modalOrPanel.$elem).first();
-            const $containerList = $modal.find("div > label.babel-container");
-            const isImgModel =
-              $containerList.first().children("span").text() ===
-              twResources.image.src;
-            //  若匹配，代表是 Image modal
-            if (!isImgModel) {
-              return;
-            }
-            $containerList.eq(0).hide();
-            //  隱藏image modal修改src選項
-            $containerList.eq(2).hide();
-            //  隱藏image modal修改href選項
-            return;
-          };
-        }
         //  editor 的 修改圖片資訊前的檢查函數
         async function checkImage(src, new_alt, url) {
           let res = PAGE_BLOG_EDIT.REG.IMG_ALT_ID.exec(src);
@@ -381,6 +397,12 @@ async function init() {
           if (first) {
             ////  迴避editor創建後，首次因為editor.focus觸發的changeEvent
             first = false;
+            $("[data-menu-key=insertImage] > .title").on("click", () => {
+              setImgMode = 1;
+            });
+            $("[data-menu-key=uploadImage] > .title").on("click", () => {
+              setImgMode = 2;
+            });
             return;
           }
           let content = G.utils.editor.getHtml();
@@ -451,6 +473,22 @@ async function init() {
             $M_log.dev(`html內blogImgAlt/${alt_id}的tag數據-----parse完成`);
           }
           return htmlStr;
+        }
+
+        function insertCheckImgage(src, alt, url) {
+          // JS 语法
+          if (!src) {
+            return;
+          }
+          if (src.indexOf("http") !== 0) {
+            return "图片网址必须以 http/https 开头";
+          }
+          return true;
+
+          // 返回值有三种选择：
+          // 1. 返回 true ，说明检查通过，编辑器将正常插入图片
+          // 2. 返回一个字符串，说明检查未通过，编辑器会阻止插入。会 alert 出错误信息（即返回的字符串）
+          // 3. 返回 undefined（即没有任何返回），说明检查未通过，编辑器会阻止插入。但不会提示任何信息
         }
       }
 
@@ -668,11 +706,11 @@ async function init() {
           .getElemsByType("image")
           .reduce((acc, { src }) => {
             let res = reg.exec(src);
-            if (!res || !res.groups.alt_id) {
-              return null;
+            if (res && res.groups.alt_id) {
+              //  由電腦上傳的圖片
+              let alt_id = res.groups.alt_id * 1;
+              acc.delete(alt_id);
             }
-            let alt_id = res.groups.alt_id * 1;
-            acc.delete(alt_id);
             return acc;
           }, set);
         ////  整理出要給後端移除照片的資訊

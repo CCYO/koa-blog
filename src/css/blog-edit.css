@@ -1,25 +1,28 @@
-@import './common/basic.css';
+@import "./common/basic.css";
 
 #editor-container {
-    border: 1px solid rgba(200, 200, 200, .8);
-    height: 400px;
-    min-height: 300px;
+  border: 1px solid rgba(200, 200, 200, 0.8);
+  height: 400px;
+  min-height: 300px;
+}
+.w-e-text-container:hover {
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 div.w-e-modal > span.btn-close {
-	background: none
+  background: none;
 }
 .w-e-textarea-video-container {
-    max-width: 650px;
-    width: 100%;
-    height: 0;
-    padding: 0 0 56% 0!important;
-    position: relative;
+  max-width: 650px;
+  width: 100%;
+  height: 0;
+  padding: 0 0 56% 0 !important;
+  position: relative;
 }
 .w-e-textarea-video-container > iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }

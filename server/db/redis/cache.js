@@ -3,6 +3,7 @@
  */
 const redis = require("redis");
 const crypto = require("../../utils/crypto");
+const { log } = require("../../utils/log");
 const {
   DEFAULT: {
     CACHE: { TYPE },
@@ -13,10 +14,10 @@ const {
 const client = redis.createClient(DB.REDIS_CONF.port, DB.REDIS_CONF.host);
 client
   .on("connect", () => {
-    console.log("@ Redis cache connect");
+    log("Redis cache connect");
   })
-  .on("ready", () => console.log("@ Redis cache ready"))
-  .on("error", (e) => console.error("@ Redis cache error ==> \n", e));
+  .on("ready", () => log("Redis cache ready"))
+  .on("error", (e) => console.error("Redis cache error ==> \n", e));
 client.connect();
 
 //  處理 set 格式的緩存(此專案中，拿來系統紀錄user有無新通知)
@@ -68,7 +69,7 @@ function _obj(type) {
     const etag = crypto.hash_obj(data);
     let obj = { [etag]: data };
     await Redis.set(KEY, obj);
-    console.log(`系統緩存數據 ${KEY} 的 etag: ${etag}`);
+    log(`系統緩存數據 ${KEY} 的 etag: ${etag}`);
     return etag;
   }
   async function get(id) {
@@ -96,14 +97,16 @@ const Redis = {
       }
       await client.set(key, val);
       await client.expire(key, timeout);
-      console.log(`@ 設置系統緩存 --> cache/${key}`);
+      let msg = `設置系統緩存 --> cache/${key}`;
+      msg = key === TYPE.NEWS ? `${msg} ${val}` : msg;
+      log(msg);
     } catch (err) {
       throw err;
     }
   },
   async del(key) {
     await client.del(key);
-    console.log(`@ 清除系統緩存 --> cache/${key}`);
+    log(`清除系統緩存 --> cache/${key}`);
     return true;
   },
 };

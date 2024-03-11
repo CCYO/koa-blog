@@ -1,4 +1,7 @@
-const { ENV } = require("../../config");
+const {
+  ENV,
+  DEFAULT: { CACHE },
+} = require("../../config");
 const C_CacheNews = require("../../controller/cache_news");
 const C_CachePage = require("../../controller/cache_page");
 //  處理 resModel.cache
@@ -12,7 +15,6 @@ async function modify(ctx, next) {
     if (!list.length) {
       continue;
     }
-    //   let cache = Cache.getTYPE(type);
     if (type === CACHE.TYPE.NEWS) {
       //  提醒使用者的通知數據有變動，要重新從DB讀取
       await C_CacheNews.addList(list);

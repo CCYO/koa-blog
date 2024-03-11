@@ -60,6 +60,7 @@ nav .nav-link:hover {
   background: rgba(200, 200, 200, 0.5);
   color: #0d6efd !important;
   border-bottom: 1.5px solid;
+  margin-bottom: -1.5px;
 }
 
 nav .nav-link.active {
